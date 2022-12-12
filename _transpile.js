@@ -5,13 +5,13 @@
  * 3. As each component is found, read the file and inject it's contents,
  * 3a. this is done recursively for components in components
  */
-import { readdir, open, writeFile, readFile } from 'node:fs/promises'
-import fs from 'node:fs'
-import readline from 'node:readline'
-import { Readable } from 'node:stream'
+import { readdir, open, writeFile, readFile } from "node:fs/promises";
+import fs from "node:fs";
+import readline from "node:readline";
+import { Readable } from "node:stream";
 
 /* const read = async ({ componentName, componentNames, componentTags }) => {
-  const file = await open(`./src/components/${componentName}.html`)
+  const file = await open(`./components/${componentName}.html`)
   for await (const line of file.readLines()) {
     const nestedComponentTag = line
       .trim()
@@ -35,7 +35,7 @@ import { Readable } from 'node:stream'
 } */
 
 /* const componentNames = new Set(
-  (await readdir('./src/components')).map((file) =>
+  (await readdir('./components')).map((file) =>
     file.substring(0, file.indexOf('.'))
   )
 )
@@ -47,7 +47,7 @@ const componentTags = new Set(
  * 
  * @param {*} filePath 
  * @returns 
- * @example const rl = createReadInterface('./src/components/my-footer.html')
+ * @example const rl = createReadInterface('./components/my-footer.html')
 console.log(rl)
 rl.on('line', (line) => console.log(line))
 
@@ -58,27 +58,27 @@ const createReadInterface = (filePath) => {
     //input: fileHandle.createReadStream(),
     input: fs.createReadStream(filePath),
     crlfDelay: Infinity,
-  })
-}
+  });
+};
 
 const createListofComponents = async () => {
-  const componentFileNames = await readdir('./src/components')
+  const componentFileNames = await readdir("./components");
   const components = await Promise.all(
     componentFileNames.map(async (fileName) => {
-      const name = fileName.substring(0, fileName.indexOf('.'))
-      const tag = `<${name} />`
-      const readInterface = createReadInterface(`./src/components/${fileName}`)
+      const name = fileName.substring(0, fileName.indexOf("."));
+      const tag = `<${name} />`;
+      const readInterface = createReadInterface(`./components/${fileName}`);
       return {
         fileName,
         name,
         tag,
         readInterface,
-      }
+      };
     })
-  )
-  return { components }
-}
-const { components } = await createListofComponents()
+  );
+  return { components };
+};
+const { components } = await createListofComponents();
 
 // make component dependancy graph, this way we can inline components once.
 // a -> b -> c
@@ -126,8 +126,8 @@ const createReadStream = (readableStream) => {
 // look through each one and see if they are nested and inline those.
 
 for (let index = 0; index < components.length; index++) {
-  const component = components[index]
-  component.readInterface.on('line', (line) => console.log(line))
+  const component = components[index];
+  component.readInterface.on("line", (line) => console.log(line));
 }
 
 //buf.write('qq', 2)
