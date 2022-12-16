@@ -7,10 +7,44 @@
     <title>Document</title>
   </head>
   <body>
-    <my-header />
+    <!-- I don't it's nescessary to use data-* for attrs becuase the custom tag is already invalid -->
+    <my-header title="test page" />
+    <!-- ignore <my-header /> -->
     <main>
       <p>hello world</p>
+      <p></p>
+      <input />
     </main>
-    <my-footer />
+    <!--
+      <my-self-closing />
+    -->
+    <input /><!--
+      <my-self-closing />
+    -->
+    <img />
+    <my-self-closing />
+    <my-self-closing with="attr" />
+    <my-tag>
+      <p>stuff</p>
+    </my-tag>
+    <my-tag>
+      <p>stuff</p>
+    </my-tag>
+    <my-tag></my-tag>
+    <my-footer><p>some footer info</p></my-footer>
+    <my-footer>
+      <p>some other footer data</p>
+    </my-footer>
+    <!-- <my-footer><my-nested /></my-footer> -->
+    <!-- <my-footer>
+      <my-tag></my-tag>
+    </my-footer>
+    <my-tag>
+      <my-footer></my-footer>
+    </my-tag> -->
+    <!-- <my-footer>
+      <template data-bascik-slot>default slot data</tempalte>
+      <template data-bascik-slot="my-named-slot">default slot data</template>
+    </my-footer> -->
   </body>
 </html>

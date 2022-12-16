@@ -1,4 +1,49 @@
 <nav>
   <p>nav</p>
+  <p id="title"></p>
   <my-logo /><!-- nested -->
 </nav>
+
+<!-- 
+  The html could get injected in a div that has an a generated id tag
+  Then the javascript execution could be modified to first select that element
+  That makes sense for build time, but what about runtime?
+  Yes you could modify vanilla js code, maybe, 
+  but what if you injected vuejs or something, then i guess vue would take care of it?
+  You could force the hand a little bit, even thought I want to stay completely out of it
+  by forcing the user to write a wrapping element and selector
+  
+  For build time, it could be really simple, let whatever tool render the page.
+  For runtime, still have to choose how we want to scope the javascript.
+
+  There is a random half baked poly fill for scoped script tags
+  https://gist.github.com/dy/2124c2dfcbdd071f38e866b85436c6c5
+ -->
+
+<!-- 
+  Using an invalid type is valid, and it causes the browser to not process it
+  However, I don't like how it breaks script highlighting.
+  But instead it's probably cleaner to use a data-* attr.
+ -->
+<!-- <script type="bascik-build"> -->
+
+<!-- Turns out scripts are global, so you can't declare the same var in both -->
+<script data-bascik-attrs>
+  let title = "default value";
+</script>
+
+<script data-bascik-buildtime>
+  document.getElementById("title").innerHTML = title;
+</script>
+
+<!-- This is implied <script data-bascik-runtime> -->
+<script>
+  title = "override";
+  document.getElementById("title").innerHTML = title;
+</script>
+
+<!-- This is getting away from the purity. But it's not too bady. Still can use src attr.
+  And it's totally optional. If buildtime or runtime should be the default, still wondering.
+ -->
+
+<!-- this is all fine and good but if you want to use js, probably just inject vue or svelte -->

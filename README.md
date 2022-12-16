@@ -17,3 +17,16 @@ Debatable if work in chunks, so we don't have the problem of look ahead.
 Debtable if we should sync writes so we don't get out of order.
 We could write something that looks for the things to replace after the file has been copied to dist, then calculate the number of lines that will need added.
 It would be cool to do this async, but then you have to solve the problem of keeping track of how many lines each async task is adding to a file, but that might not be too hard.
+
+I think best plan of action is to use pipleine with transformer.
+The transformer looks for
+
+I think we will have to accept you can not apply attrs directly to a custom component. Only attrs you want to have passed down.
+
+## Scoped css styles
+
+https://github.com/PM5544/scoped-polyfill/blob/master/readme.md
+
+## Scoped script tag (half baked)
+
+https://gist.github.com/dy/2124c2dfcbdd071f38e866b85436c6c5
