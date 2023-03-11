@@ -44,6 +44,7 @@ const { innerContent: body } = getTag(html, "body");
 // 3. Make sure any native HTML before and after first custom component on index.html is included.
 // All those tasks are complete.
 // 1. Now to handle more than one one custom component can be parsed per level.
+// Done.
 
 let transpiledHtml = recursivelyTranspile(body, componentList);
 
