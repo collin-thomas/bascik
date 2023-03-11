@@ -42,6 +42,8 @@ const { innerContent: body } = getTag(html, "body");
 // 1. Ok add the markup to the body and then handle having plaintext or native html tags inside of the grandchild.
 // 2. Also need to actually put the slot code inside the slot and not just the end of the file.
 // 3. Make sure any native HTML before and after first custom component on index.html is included.
+// All those tasks are complete.
+// 1. Now to handle more than one one custom component can be parsed per level.
 
 let transpiledHtml = recursivelyTranspile(body, componentList);
 
