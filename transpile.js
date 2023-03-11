@@ -1,12 +1,10 @@
 import { readFile, writeFile } from "node:fs/promises";
 import {
+  listComponents,
   minifyHtml,
-  unminifyHtml,
   getTag,
   recursivelyTranspile,
-  getFirstComponent,
 } from "./lib/functions.js";
-import { listComponents } from "./lib/files.js";
 
 // Starting over
 // Starting with the example of 3 tags, each a child of each other. Parent, child, grandchild.
@@ -22,14 +20,11 @@ import { listComponents } from "./lib/files.js";
 const componentList = await listComponents();
 
 // Read the file as a string
-const html = (await readFile("./pages/index.html")).toString();
-
 // Remove comments and new lines
-const minified = minifyHtml(html);
+const html = minifyHtml((await readFile("./pages/index.html")).toString());
 
 // Gets all the text between the <body></body> tags
-const { innerContent: body } = getTag(minified, "body");
-//const body = "<tag-a><tag-b><tag-c> I want space </tag-c></tag-b></tag-a>";
+const { innerContent: body } = getTag(html, "body");
 
 // START - Process markup
 
@@ -44,14 +39,14 @@ const { innerContent: body } = getTag(minified, "body");
 // now get the contents of each component and only use the recursion if the component implements the <component-slot>
 // Now we need to replace the final tag with the markup inside.
 // Not just the last but all of them, because you can have markup, and slots.
-// Ok add the markup to the body and then handle having plaintext or native html tags inside of the grandchild.
+// 1. Ok add the markup to the body and then handle having plaintext or native html tags inside of the grandchild.
+// 2. Also need to actually put the slot code inside the slot and not just the end of the file.
+// 3. Make sure any native HTML before and after first custom component on index.html is included.
 
-const transpiledHtml = recursivelyTranspile(body, componentList);
-
-// END - Process markup
+let transpiledHtml = recursivelyTranspile(body, componentList);
 
 // Puts our processed markup back between the <body></body> tags
-const distHtml = minified.replace(
+const distHtml = html.replace(
   /<body>([\s\S]*?)<\/body>/i,
   `<body>${transpiledHtml}</body>`
 );

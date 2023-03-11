@@ -11,6 +11,14 @@
 1. Terminal 1: `node --watch ./transpile.js`
 2. Terminal 2: `npx watch-http-server dist/`
 
+## Debug
+
+All you have to do is run it with the `--inspect` flag and the debugger will run automatically.
+
+`node --inspect --watch ./transpile.js`
+
+## Notes
+
 readline, transform with pipe, and transform with pipeline all seem
 to be the same performance wise.
 
