@@ -4,6 +4,7 @@ import {
   unminifyHtml,
   getTag,
   recursivelyTranspile,
+  getFirstComponent,
 } from "./lib/functions.js";
 import { listComponents } from "./lib/files.js";
 
@@ -41,23 +42,19 @@ const { innerContent: body } = getTag(minified, "body");
 // Lets first make this recursive
 // Ok we made it recursive,
 // now get the contents of each component and only use the recursion if the component implements the <component-slot>
+// Now we need to replace the final tag with the markup inside.
+// Not just the last but all of them, because you can have markup, and slots.
+// Ok add the markup to the body and then handle having plaintext or native html tags inside of the grandchild.
 
-//console.log(componentList["my-header"].content);
-console.log(recursivelyTranspile(body, componentList));
+const transpiledHtml = recursivelyTranspile(body, componentList);
 
 // END - Process markup
 
 // Puts our processed markup back between the <body></body> tags
-let processedMarkup = "<p>processed markup</p>";
 const distHtml = minified.replace(
   /<body>([\s\S]*?)<\/body>/i,
-  `<body>${body}</body>`
+  `<body>${transpiledHtml}</body>`
 );
 
-// The unminifyHtml in imperfect and I'm only using it to debug.
-const unminifiedHtml = unminifyHtml(distHtml);
-//console.log(unminifiedHtml);
-
 // Write the transpiled html
-await writeFile("./dist/index.html", unminifiedHtml);
-//await writeFile("./dist/index.html", distHtml);
+await writeFile("./dist/index.html", distHtml);
