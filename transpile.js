@@ -1,8 +1,8 @@
 import { readFile, writeFile } from "node:fs/promises";
 import {
+  minifyHtml,
   unminifyHtml,
   getTag,
-  getFirstComponent,
   recursivelyTranspile,
 } from "./lib/functions.js";
 import { listComponents } from "./lib/files.js";
@@ -24,10 +24,7 @@ const componentList = await listComponents();
 const html = (await readFile("./pages/index.html")).toString();
 
 // Remove comments and new lines
-const minified = html
-  .replace(/\n/g, "")
-  .replace(/>\s+</g, "><")
-  .replace(/<!--[\s\S]*?-->/g, "");
+const minified = minifyHtml(html);
 
 // Gets all the text between the <body></body> tags
 const { innerContent: body } = getTag(minified, "body");
@@ -42,9 +39,11 @@ const { innerContent: body } = getTag(minified, "body");
 // we are blinding processing nesting, have to think about this more
 // We should be getting the content for each component too
 // Lets first make this recursive
+// Ok we made it recursive,
+// now get the contents of each component and only use the recursion if the component implements the <component-slot>
 
+//console.log(componentList["my-header"].content);
 console.log(recursivelyTranspile(body, componentList));
-console.log(getFirstComponent(body, componentList));
 
 // END - Process markup
 
