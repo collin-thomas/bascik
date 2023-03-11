@@ -1,5 +1,5 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { unminifyHtml, getTag } from "./lib/functions.js";
+import { unminifyHtml, getTag, getFirstComponent } from "./lib/functions.js";
 import { listComponents } from "./lib/files.js";
 
 // Starting over
@@ -34,13 +34,9 @@ const { innerContent: body } = getTag(minified, "body");
 // But what about the next non-nested component? Shouldn't we instead be looking for all non-nested components?
 // Maybe we don't have to over complicate it. We will replace the text and move on to the next one.
 
-const firstComponentName = body.match(
-  new RegExp(`<\/?(${Object.keys(componentList).join("|")})`)
-)[1];
-
-const { innerContent: firstComponentContent } = getTag(
+const { innerContent: firstComponentContent } = getFirstComponent(
   body,
-  firstComponentName
+  componentList
 );
 
 console.log(firstComponentContent);
