@@ -1,5 +1,10 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { unminifyHtml, getTag, getFirstComponent } from "./lib/functions.js";
+import {
+  unminifyHtml,
+  getTag,
+  getFirstComponent,
+  recursivelyTranspile,
+} from "./lib/functions.js";
 import { listComponents } from "./lib/files.js";
 
 // Starting over
@@ -33,7 +38,12 @@ const { innerContent: body } = getTag(minified, "body");
 // Sure this finds the first component and we won't select nested ones because those will get removed during recurssion
 // But what about the next non-nested component? Shouldn't we instead be looking for all non-nested components?
 // Maybe we don't have to over complicate it. We will replace the text and move on to the next one.
+// We will need to check to see if the component implements the <component-slot>
+// we are blinding processing nesting, have to think about this more
+// We should be getting the content for each component too
+// Lets first make this recursive
 
+console.log(recursivelyTranspile(body, componentList));
 console.log(getFirstComponent(body, componentList));
 
 // END - Process markup
