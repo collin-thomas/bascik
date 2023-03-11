@@ -1,5 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { unminifyHtml, getTag } from "./lib/functions.js";
+import { listComponents } from "./lib/files.js";
+
 // Starting over
 // Starting with the example of 3 tags, each a child of each other. Parent, child, grandchild.
 // We will want to start reading each line after the <body> tag
@@ -7,6 +9,11 @@ import { unminifyHtml, getTag } from "./lib/functions.js";
 // I suppose we should format first. But that's slow.
 // Regardless, starting after <body> we should look for the first custom tag.
 // Remove comments and unnecessary whitespace characters
+// We need a way to generate a list of the custom components
+// After we do that, we should also have a way to get custom components from NPM packages.
+
+// Get custom component list
+const componentList = await listComponents();
 
 // Read the file as a string
 const html = (await readFile("./pages/index.html")).toString();
@@ -18,12 +25,25 @@ const minified = html
   .replace(/<!--[\s\S]*?-->/g, "");
 
 // Gets all the text between the <body></body> tags
-//const body = minified.match(/<body>([\s\S]*?)<\/body>/i)[1];
-const { content: body } = getTag(minified, "body");
+const { innerContent: body } = getTag(minified, "body");
+//const body = "<tag-a><tag-b><tag-c> I want space </tag-c></tag-b></tag-a>";
 
 // START - Process markup
 
-console.log(getTag(minified, "tag-a"));
+// Sure this finds the first component and we won't select nested ones because those will get removed during recurssion
+// But what about the next non-nested component? Shouldn't we instead be looking for all non-nested components?
+// Maybe we don't have to over complicate it. We will replace the text and move on to the next one.
+
+const firstComponentName = body.match(
+  new RegExp(`<\/?(${Object.keys(componentList).join("|")})`)
+)[1];
+
+const { innerContent: firstComponentContent } = getTag(
+  body,
+  firstComponentName
+);
+
+console.log(firstComponentContent);
 
 // END - Process markup
 
