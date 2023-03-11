@@ -1,5 +1,16 @@
 # bascik
 
+## Goals
+
+- Create reasuble custom HTML tags aka components
+- Ship zero Javascript by default
+- Work within HTML spec
+
+## Development
+
+1. Terminal 1: `node --watch ./transpile.js`
+2. Terminal 2: `npx watch-http-server dist/`
+
 readline, transform with pipe, and transform with pipeline all seem
 to be the same performance wise.
 
