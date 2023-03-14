@@ -8,25 +8,29 @@
 
 ## Development
 
-1. Terminal 1: `node --watch ./transpile.js`
-2. Terminal 2: `npx watch-http-server dist/`
+Requires Node.js 18+
+
+1. Terminal 1: `npm run dev`
+2. Terminal 2: `npm run watch`
 
 ## Debug
 
-All you have to do is run it with the `--inspect` flag and the debugger will run automatically.
-
-`node --inspect --watch ./transpile.js`
+1. Terminal 1: `npm run debug`
+2. Terminal 2: `npm run watch`
 
 ## Todo
 
 - [x] Recursively transpile custom components
 - [ ] Watch HTML files for change to rerun transpile
-- [ ] Support transpiling multiple pages
+- [ ] Support transpiling multiple pages & directories of files
 - [ ] Add scoped styles
+- [ ] Add support for directories in /components
+- [ ] Add optional server to serve static files. Remove .html see notes.
 - [ ] SSG & SSR
 - [ ] Script tags that only run at build
 - [ ] Add config js file to opt-in to features
 - [ ] Add scoped JS script tags
+- [ ] Add units tests
 
 ## Example
 
@@ -135,3 +139,8 @@ Scoped css styles
 Scoped script tag (half baked)
 
 <https://gist.github.com/dy/2124c2dfcbdd071f38e866b85436c6c5>
+
+Any way to serve static html files from express without the extension?
+<https://stackoverflow.com/questions/16895047/any-way-to-serve-static-html-files-from-express-without-the-extension>
+
+I don't want to couple this to express or any server. nginx or just S3 buckets should be enough. This should just be an option.

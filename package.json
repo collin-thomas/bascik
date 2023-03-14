@@ -1,16 +1,17 @@
 {
   "name": "bascik",
   "version": "1.0.0",
-  "description": "",
+  "description": "A Web Framework",
   "main": "transpile.js",
   "type": "module",
   "scripts": {
-    "dev": "node --watch transpile.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node --watch ./transpile.js",
+    "watch": "npx watch-http-server dist/",
+    "debug": "node --inspect --watch transpile.js"
   },
-  "keywords": [],
-  "author": "",
-  "dependencies": {
-    "linkedom": "^0.14.21"
+  "author": "collin-thomas",
+  "dependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
