@@ -36,7 +36,7 @@ yarn serve
 - [ ] Add support for directories in /pages
 - [ ] Add support for custom attributes/props, think custom image component
 - [x] Add optional server to serve static files. Remove .html.
-- [ ] Compare using express vs custom HTTP2 server. Mainly around serving files other than HTML.
+- [ ] Serve non html files such as images with the HTTP2 server. <https://stackoverflow.com/a/40899767/1469690>
 - [ ] When using integrated HTTP server, automatically reload web page on transpile.
 - [ ] SSG & SSR
 - [ ] Add Dockerfile
@@ -44,6 +44,7 @@ yarn serve
 - [ ] Add config js file to opt-in to features
 - [ ] Add scoped JS script tags
 - [ ] Add units tests
+- [ ] Test adding vue-petite to a page <https://github.com/vuejs/petite-vue#usage>
 
 ## Example
 
