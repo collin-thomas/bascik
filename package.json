@@ -10,7 +10,9 @@
     "debug": "node --inspect --watch transpile.js"
   },
   "author": "collin-thomas",
-  "dependencies": {},
+  "dependencies": {
+    "chokidar": "^3.5.3"
+  },
   "engines": {
     "node": ">=18.0.0"
   }

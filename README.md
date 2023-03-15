@@ -25,8 +25,10 @@ Requires Node.js 18+
 - [ ] Support transpiling multiple pages & directories of files
 - [ ] Add scoped styles
 - [ ] Add support for directories in /components
+- [ ] Add support for custom attributes/props, think custom image component
 - [ ] Add optional server to serve static files. Remove .html see notes.
 - [ ] SSG & SSR
+- [ ] Add Dockerfile
 - [ ] Script tags that only run at build
 - [ ] Add config js file to opt-in to features
 - [ ] Add scoped JS script tags
