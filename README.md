@@ -10,23 +10,34 @@
 
 Requires Node.js 18+
 
-1. Terminal 1: `npm run dev`
-2. Terminal 2: `npm run watch`
+1. Terminal 1: `yarn dev`
+2. Terminal 2: `yarn watch`
+
+### Using builtin HTTP/2 Server
+
+Currently does not trigger web page reload.
+
+```sh
+yarn serve
+```
 
 ## Debug
 
-1. Terminal 1: `npm run debug`
-2. Terminal 2: `npm run watch`
+1. Terminal 1: `yarn debug`
+2. Terminal 2: `yarn watch`
 
 ## Todo
 
 - [x] Recursively transpile custom components
-- [ ] Watch HTML files for change to rerun transpile
-- [ ] Support transpiling multiple pages & directories of files
+- [x] Watch HTML files for change to rerun transpile
+- [x] Support transpiling multiple pages & directories of files
 - [ ] Add scoped styles
 - [ ] Add support for directories in /components
+- [ ] Add support for directories in /pages
 - [ ] Add support for custom attributes/props, think custom image component
-- [ ] Add optional server to serve static files. Remove .html see notes.
+- [x] Add optional server to serve static files. Remove .html.
+- [ ] Compare using express vs custom HTTP2 server. Mainly around serving files other than HTML.
+- [ ] When using integrated HTTP server, automatically reload web page on transpile.
 - [ ] SSG & SSR
 - [ ] Add Dockerfile
 - [ ] Script tags that only run at build
@@ -131,6 +142,38 @@ Rendered
   </body>
 </html>
 ```
+
+## Usage
+
+### Slots
+
+Definition `tag-a.html`:
+
+```html
+<p>tag-a</p>
+<slot-component></slot-component>
+<p>more text</p>
+```
+
+Usage:
+
+```html
+<tag-a>
+  <p>Hello World</p>
+</tag-a>
+```
+
+Rendered:
+
+```html
+<p>tag-a</p>
+<p>Hello World</p>
+<p>more text</p>
+```
+
+## Developer Docs
+
+The file and npm script `create-key` are written they way they are to be OS and shell agnostic. It does require `openssl` to be part of the user's PATH.
 
 ## Notes
 
