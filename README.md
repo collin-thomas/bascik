@@ -33,7 +33,7 @@ yarn serve
 - [x] Support transpiling multiple pages & directories of files
 - [ ] Add scoped styles
 - [ ] Add support for directories in /components
-- [ ] Add support for directories in /pages
+- [x] Add support for directories in /pages
 - [ ] Add support for custom attributes/props, think custom image component
 - [x] Add optional server to serve static files. Remove .html.
 - [ ] Serve non html files such as images with the HTTP2 server. <https://stackoverflow.com/a/40899767/1469690>

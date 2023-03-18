@@ -1,15 +1,42 @@
 import chokidar from "chokidar";
-import { pageProcessing } from "./lib/functions.js";
+import {
+  pageProcessing,
+  deleteDistFile,
+  deleteDistDir,
+} from "./lib/functions.js";
 import { serveHttp2 } from "./lib/http2.js";
 
+const caught = (fn) => {
+  try {
+    fn();
+  } catch (error) {
+    console.warn(error);
+  }
+};
+
 const watchFiles = () => {
+  // Page Files
   chokidar
-    // "all" is add, addDir, change, unlink, unlinkDir. (unlink means delete)
-    .watch(["./components/**/*.html", "./pages/**/*.html"])
-    .on("all", async (event, path) => {
-      console.log(event === "add" ? "watching:" : `${event}:`, path);
-      pageProcessing(path);
-    });
+    .watch(["./pages/**/*.html"])
+    .on("add", (path) => pageProcessing(path))
+    .on("change", (path) => pageProcessing(path))
+    .on("unlink", (path) => deleteDistFile(path));
+
+  // Page Dirs
+  chokidar.watch(["./pages/**"]).on("unlinkDir", (path) => deleteDistDir(path));
+
+  // Component Files
+  chokidar
+    .watch(["./components/**/*.html"])
+    .on("add", (path) => pageProcessing(path))
+    .on("change", (path) => pageProcessing(path))
+    .on("unlink", (path) => deleteDistFile(path));
+
+  // Component Dirs
+  chokidar
+    .watch(["./components/**"])
+    .on("addDir", (path) => console.log(`addDir: ${path}`))
+    .on("unlinkDir", (path) => console.log(`unlinkDir: ${path}`));
 };
 
 watchFiles();
