@@ -9,6 +9,7 @@
 ## Key Features
 
 - Components do not require importing or registering
+- Slots
 
 ## Development
 
@@ -38,6 +39,8 @@ yarn serve
 - [x] Watch HTML files for change to rerun transpile
 - [x] Support transpiling multiple pages & directories of files
 - [ ] Add scoped styles
+- [x] Default slots
+- [ ] Named slots
 - [x] Validate no errors when /pages or /components dir does not exist
 - [x] Add support for directories in /components
 - [x] Add support for directories in /pages
