@@ -4,16 +4,9 @@ import {
   deleteDistFile,
   deleteDistDir,
   processAllPages,
+  createDir,
 } from "./lib/functions.js";
 import { serveHttp2 } from "./lib/http2.js";
-
-const caught = (fn) => {
-  try {
-    fn();
-  } catch (error) {
-    console.warn(error);
-  }
-};
 
 const watchFiles = () => {
   // Page Files
@@ -25,6 +18,14 @@ const watchFiles = () => {
 
   // Page Dirs
   chokidar.watch(["./pages/**"]).on("unlinkDir", (path) => deleteDistDir(path));
+  // Kinda unnecessary but in case pages gets deleted it is handled gracefully.
+  // Known bug, if you rename a folder full of files to "./pages",
+  // it will not trigger pageProcessing. Same for "./compenets".
+  chokidar.watch(["./pages"]).on("unlinkDir", async (path) => {
+    await deleteDistDir(path);
+    // Recreate dist dir after it gets deleted
+    await createDir("./dist");
+  });
 
   // Component Files.
   // You don't need to watch for Components Dirs because we are not writing components
