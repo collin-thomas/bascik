@@ -46,7 +46,8 @@ yarn serve
 - [x] Add support for directories in /pages
 - [ ] Add support for custom attributes/props, think custom image component
 - [x] Add optional server to serve static files. Remove .html.
-- [x] Rudimentary 404 handeling for custom HTTP2 server
+- [x] 404 handeling for custom HTTP2 server
+- [ ] 500 handeling for custom HTTP2 server
 - [ ] Serve non html files such as images with the HTTP2 server. <https://stackoverflow.com/a/40899767/1469690>
 - [ ] When using integrated HTTP server, automatically reload web page on transpile.
 - [ ] SSG & SSR
