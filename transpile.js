@@ -3,6 +3,7 @@ import {
   pageProcessing,
   deleteDistFile,
   deleteDistDir,
+  processAllPages,
 } from "./lib/functions.js";
 import { serveHttp2 } from "./lib/http2.js";
 
@@ -25,18 +26,22 @@ const watchFiles = () => {
   // Page Dirs
   chokidar.watch(["./pages/**"]).on("unlinkDir", (path) => deleteDistDir(path));
 
-  // Component Files
-  chokidar
-    .watch(["./components/**/*.html"])
-    .on("add", (path) => pageProcessing(path))
-    .on("change", (path) => pageProcessing(path))
-    .on("unlink", (path) => deleteDistFile(path));
+  // Component Files.
+  // You don't need to watch for Components Dirs because we are not writing components
 
-  // Component Dirs
+  // I think with effort and then do a performance comparison,
+  // updating files based on component trees is possible and maybe more efficent.
+  // But for now, rerender all the pages,
+  // because we won't know what pages need updated until we recursively loop through all pages.
+  // The difference is here, now we need a list of all the pages.
+
+  // ignoreInitial so we don't run "add" on boot
+  // and process all the pages times the number of compeonts
   chokidar
-    .watch(["./components/**"])
-    .on("addDir", (path) => console.log(`addDir: ${path}`))
-    .on("unlinkDir", (path) => console.log(`unlinkDir: ${path}`));
+    .watch(["./components/**/*.html"], { ignoreInitial: true })
+    .on("add", async () => processAllPages())
+    .on("change", async () => processAllPages())
+    .on("unlink", async () => processAllPages());
 };
 
 watchFiles();
