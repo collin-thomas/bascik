@@ -32,7 +32,8 @@ yarn serve
 - [x] Watch HTML files for change to rerun transpile
 - [x] Support transpiling multiple pages & directories of files
 - [ ] Add scoped styles
-- [ ] Add support for directories in /components
+- [ ] Validate no errors when /pages or /components dir does not exist
+- [x] Add support for directories in /components
 - [x] Add support for directories in /pages
 - [ ] Add support for custom attributes/props, think custom image component
 - [x] Add optional server to serve static files. Remove .html.
