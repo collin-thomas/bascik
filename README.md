@@ -56,7 +56,7 @@ yarn serve
 - [ ] SSG & SSR
 - [ ] Add Dockerfile
 - [ ] Script tags that only run at build
-- [ ] Add config js file to opt-in to features
+- [x] Add config js file to opt-in to features
 - [ ] Plugin type system to run the opt-in features
 - [ ] Add scoped JS script tags
 - [ ] Add units tests
