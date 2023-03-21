@@ -41,6 +41,7 @@ yarn serve
 - [x] Add scoped styles via classes
 - [ ] Add scoped styles via IDs
 - [ ] Add scoped styles for elements
+- [ ] Opt-in or "prod build" feature to obfustacte & minify class names
 - [ ] Filter unused styles
 - [ ] Minify CSS
 - [x] Default slots
