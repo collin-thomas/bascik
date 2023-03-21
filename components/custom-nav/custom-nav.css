@@ -1,0 +1,22 @@
+.navigation ul {
+  list-style-type: none;
+  margin: unset;
+  padding: unset;
+}
+.navigation ul li {
+  display: inline-block;
+}
+.navigation ul li a {
+  padding: 8px;
+}
+
+.header {
+  padding-top: 16px;
+}
+
+.home.logo {
+  background-color: #fff;
+  color: #18191b;
+  padding: 4px;
+  user-select: none;
+}

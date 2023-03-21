@@ -38,8 +38,11 @@ yarn serve
 - [x] Recursively transpile custom components
 - [x] Watch HTML files for change to rerun transpile
 - [x] Support transpiling multiple pages & directories of files
-- [ ] Add scoped styles via classes
+- [x] Add scoped styles via classes
+- [ ] Add scoped styles via IDs
 - [ ] Add scoped styles for elements
+- [ ] Filter unused styles
+- [ ] Minify CSS
 - [x] Default slots
 - [ ] Named slots
 - [x] Validate no errors when /pages or /components dir does not exist
@@ -54,6 +57,7 @@ yarn serve
 - [ ] Add Dockerfile
 - [ ] Script tags that only run at build
 - [ ] Add config js file to opt-in to features
+- [ ] Plugin type system to run the opt-in features
 - [ ] Add scoped JS script tags
 - [ ] Add units tests
 - [ ] Test adding vue-petite to a page <https://github.com/vuejs/petite-vue#usage>
@@ -207,7 +211,7 @@ Classes are automatically named spaced for the element.
 
 Take for example the following components and styles.
 
-`components/my-nav.html`
+`components/custom-nav.html`
 
 ```html
 <nav class="navigation">
@@ -218,21 +222,19 @@ Take for example the following components and styles.
 </nav>
 ```
 
-`components/my-nav.css`
+`components/custom-nav/custom-nav.css`
 
 ```css
-.navigation {
-  nav ul {
-    list-style-type: none;
-    margin: unset;
-    padding: unset;
-  }
-  nav ul li {
-    display: inline-block;
-  }
-  nav ul li a {
-    padding: 8px;
-  }
+.navigation ul {
+  list-style-type: none;
+  margin: unset;
+  padding: unset;
+}
+.navigation ul li {
+  display: inline-block;
+}
+.navigation ul li a {
+  padding: 8px;
 }
 ```
 
@@ -241,7 +243,7 @@ Take for example the following components and styles.
 ```html
 <html>
   <body>
-    <my-nav></my-nav>
+    <custom-nav></custom-nav>
   </body>
 </html>
 ```
@@ -251,22 +253,20 @@ Results in the following rendered html.
 ```html
 <html>
   <style>
-    .bascik__my-nav__navigation {
-      nav ul {
-        list-style-type: none;
-        margin: unset;
-        padding: unset;
-      }
-      nav ul li {
-        display: inline-block;
-      }
-      nav ul li a {
-        padding: 8px;
-      }
+    .bascik__custom-nav__navigation ul {
+      list-style-type: none;
+      margin: unset;
+      padding: unset;
+    }
+    .bascik__custom-nav__navigation ul li {
+      display: inline-block;
+    }
+    .bascik__custom-nav__navigation ul li a {
+      padding: 8px;
     }
   </style>
   <body>
-    <nav class="bascik__my-nav__navigation">
+    <nav class="bascik__custom-nav__navigation">
       <ul>
         <li><a href="/">Home</a></li>
         <li><a href="/about">About</a></li>

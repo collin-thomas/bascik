@@ -27,7 +27,7 @@ const watchFiles = () => {
     await createDir("./dist");
   });
 
-  // Component Files.
+  // Component Files (HTML & CSS)
   // You don't need to watch for Components Dirs because we are not writing components
 
   // I think with effort and then do a performance comparison,
@@ -39,7 +39,9 @@ const watchFiles = () => {
   // ignoreInitial so we don't run "add" on boot
   // and process all the pages times the number of compeonts
   chokidar
-    .watch(["./components/**/*.html"], { ignoreInitial: true })
+    .watch(["./components/**/*.html", "./components/**/*.css"], {
+      ignoreInitial: true,
+    })
     .on("add", async () => processAllPages())
     .on("change", async () => processAllPages())
     .on("unlink", async () => processAllPages());
