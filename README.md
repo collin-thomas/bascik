@@ -38,7 +38,8 @@ yarn serve
 - [x] Recursively transpile custom components
 - [x] Watch HTML files for change to rerun transpile
 - [x] Support transpiling multiple pages & directories of files
-- [ ] Add scoped styles
+- [ ] Add scoped styles via classes
+- [ ] Add scoped styles for elements
 - [x] Default slots
 - [ ] Named slots
 - [x] Validate no errors when /pages or /components dir does not exist
@@ -47,7 +48,6 @@ yarn serve
 - [ ] Add support for custom attributes/props, think custom image component
 - [x] Add optional server to serve static files. Remove .html.
 - [x] 404 handeling for custom HTTP2 server
-- [ ] 500 handeling for custom HTTP2 server
 - [ ] Serve non html files such as images with the HTTP2 server. <https://stackoverflow.com/a/40899767/1469690>
 - [ ] When using integrated HTTP server, automatically reload web page on transpile.
 - [ ] SSG & SSR
@@ -57,6 +57,7 @@ yarn serve
 - [ ] Add scoped JS script tags
 - [ ] Add units tests
 - [ ] Test adding vue-petite to a page <https://github.com/vuejs/petite-vue#usage>
+- [ ] The use of npm packages
 
 ## Example
 
@@ -188,6 +189,107 @@ Rendered:
 
 The file and npm script `create-key` are written they way they are to be OS and shell agnostic. It does require `openssl` to be part of the user's PATH.
 
+## Scoped Styles
+
+Works with files of the same name with `.css` extension.
+
+The `<style>` tag is not valid defined outside of the `<head>` so scoped styles cannot be defined within one.
+
+Scoped styles for elements can be toggled via bascik configuration file.
+
+Scoped Styles are injected into each page where their component is used.
+
+### How Scoped Styles work
+
+### How Scoped Styles for Classes work
+
+Classes are automatically named spaced for the element.
+
+Take for example the following components and styles.
+
+`components/my-nav.html`
+
+```html
+<nav class="navigation">
+  <ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="/about">About</a></li>
+  </ul>
+</nav>
+```
+
+`components/my-nav.css`
+
+```css
+.navigation {
+  nav ul {
+    list-style-type: none;
+    margin: unset;
+    padding: unset;
+  }
+  nav ul li {
+    display: inline-block;
+  }
+  nav ul li a {
+    padding: 8px;
+  }
+}
+```
+
+`pages/index.html`
+
+```html
+<html>
+  <body>
+    <my-nav></my-nav>
+  </body>
+</html>
+```
+
+Results in the following rendered html.
+
+```html
+<html>
+  <style>
+    .bascik__my-nav__navigation {
+      nav ul {
+        list-style-type: none;
+        margin: unset;
+        padding: unset;
+      }
+      nav ul li {
+        display: inline-block;
+      }
+      nav ul li a {
+        padding: 8px;
+      }
+    }
+  </style>
+  <body>
+    <nav class="bascik__my-nav__navigation">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/about">About</a></li>
+      </ul>
+    </nav>
+  </body>
+</html>
+```
+
+### How Scoped Styles for Elements work
+
+Auto inject class per instance of element.
+
+For example, all `<p>` tags would have the class `bascik-p` added.
+
+Then the css would be as you would expect.
+
+```css
+p {
+  // styling for p
+}
+```
+
 ## Notes
 
 Scoped css styles
@@ -202,3 +304,11 @@ Any way to serve static html files from express without the extension?
 <https://stackoverflow.com/questions/16895047/any-way-to-serve-static-html-files-from-express-without-the-extension>
 
 I don't want to couple this to express or any server. nginx or just S3 buckets should be enough. This should just be an option.
+
+Inlining CSS for performance
+
+<https://blog.logrocket.com/improve-site-performance-inlining-css/>
+
+Load optimized npm packages with no install and no build tools.
+
+<https://www.skypack.dev/>
