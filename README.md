@@ -39,9 +39,9 @@ yarn serve
 - [x] Watch HTML files for change to rerun transpile
 - [x] Support transpiling multiple pages & directories of files
 - [x] Add scoped styles via classes
-- [ ] Add scoped styles via IDs
+- [ ] Add scoped styles via IDs. This may be more complicated because of all the conditionals. <https://www.w3schools.com/cssref/trysel.php>
 - [ ] Add scoped styles for elements
-- [ ] Opt-in or "prod build" feature to obfustacte & minify class names
+- [ ] Opt-in or "prod build" feature to obfuscate & minify class names
 - [ ] Filter unused styles
 - [ ] Minify CSS
 - [x] Default slots
@@ -51,7 +51,7 @@ yarn serve
 - [x] Add support for directories in /pages
 - [ ] Add support for custom attributes/props, think custom image component
 - [x] Add optional server to serve static files. Remove .html.
-- [x] 404 handeling for custom HTTP2 server
+- [x] 404 handling for custom HTTP2 server
 - [ ] Serve non html files such as images with the HTTP2 server. <https://stackoverflow.com/a/40899767/1469690>
 - [ ] When using integrated HTTP server, automatically reload web page on transpile.
 - [ ] SSG & SSR
