@@ -39,13 +39,18 @@ yarn serve
 - [x] Watch HTML files for change to rerun transpile
 - [x] Support transpiling multiple pages & directories of files
 - [x] Add scoped styles via classes
-- [ ] Add scoped styles via IDs. This may be more complicated because of all the conditionals. <https://www.w3schools.com/cssref/trysel.php>
-- [ ] Add scoped styles for elements
+- [x] Add scoped styles for elements
+- [x] Add scoped style support for `@media`
+- [ ] Add scoped style support for `@keyframes`
+- [ ] Strip scoped id styling from components
+- [ ] Update scoped style enabled logic to individually toggle classes and elements
+- [x] Add support for pseudo-elements
 - [ ] Opt-in or "prod build" feature to obfuscate & minify class names
 - [ ] Filter unused styles
 - [ ] Minify CSS
 - [x] Default slots
 - [ ] Named slots
+- [ ] Config option for verbose logging. Toggles `{cause}` in `console.warn|error`.
 - [x] Validate no errors when /pages or /components dir does not exist
 - [x] Add support for directories in /components
 - [x] Add support for directories in /pages
@@ -63,6 +68,10 @@ yarn serve
 - [ ] Add units tests
 - [ ] Test adding vue-petite to a page <https://github.com/vuejs/petite-vue#usage>
 - [ ] The use of npm packages
+
+### Abonadoned todos
+
+- Add scoped styles via IDs. This may be more complicated because of all the conditionals. <https://www.w3schools.com/cssref/trysel.php>
 
 ## Example
 
@@ -281,14 +290,51 @@ Results in the following rendered html.
 
 Auto inject class per instance of element.
 
+The intention is not to inject any extra elements into the transpiled html.
+
 For example, all `<p>` tags would have the class `bascik-p` added.
 
 Then the css would be as you would expect.
 
+Defining an element's style.
+
 ```css
 p {
-  // styling for p
+  text-decoration: #d3ff8d wavy underline;
 }
+```
+
+Writing a component using native HTML elements.
+
+```html
+<p>hello</p>
+<p>world</p>
+```
+
+`pages/index.html`
+
+```html
+<html>
+  <body>
+    <custom-comp></custom-comp>
+  </body>
+</html>
+```
+
+Results in the following html being rendered.
+
+```html
+<html>
+  <style>
+    .bascik__custom-comp__el__p {
+      text-decoration: #d3ff8d wavy underline;
+    }
+  </style>
+  <body>
+    <p class="bascik__custom-comp__el__p">hello</p>
+    <p class="bascik__custom-comp__el__p">world</p>
+  </body>
+</html>
 ```
 
 ## Notes
@@ -313,3 +359,27 @@ Inlining CSS for performance
 Load optimized npm packages with no install and no build tools.
 
 <https://www.skypack.dev/>
+
+### Pipeline
+
+To create a JavaScript pipeline that passes a string to each function further modifying it without reassigning a variable each time, you can use the Array.prototype.reduce() method in combination with arrow functions.
+
+Here is an example of how you can implement such a pipeline:
+
+```js
+const str = "Hello, World!";
+
+const modifyStr = (...functions) =>
+  functions.reduce((result, func) => func(result), str);
+
+const upperCase = (str) => str.toUpperCase();
+const addExclamation = (str) => `${str}!`;
+const reverse = (str) => str.split("").reverse().join("");
+
+const finalStr = modifyStr(upperCase, addExclamation, reverse);
+console.log(finalStr); // Output: "!DLROW ,OLLEH"
+```
+
+In this example, the modifyStr() function takes a string and an array of functions as arguments. The reduce() method is used to apply each function to the string, with the result of each function being passed as input to the next function. The final result is returned as the output of the modifyStr() function.
+
+To use this pipeline, you can define any number of functions that take a string as input and return a modified string, and then pass these functions as arguments to the modifyStr() function. The pipeline will then apply each function in turn to the input string, without requiring the use of intermediate variables.

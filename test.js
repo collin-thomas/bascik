@@ -72,3 +72,19 @@ const prefixClassesInHtml = (html, componentName) => {
 };
 
 console.log(prefixClassesInHtml(html, "nav"));
+
+let css = `
+p {
+  text-decoration: #d3ff8d wavy underline;
+}
+h1 {
+  text-decoration: #d3ff8d wavy underline;
+}
+ul {
+  text-decoration: #d3ff8d wavy underline;
+}
+`;
+
+css.replace(/^[a-z1-6]+(?=[\s{])/gim, (match) => {
+  console.log(match);
+});

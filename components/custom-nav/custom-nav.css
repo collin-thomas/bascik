@@ -3,9 +3,16 @@
   margin: unset;
   padding: unset;
 }
+
 .navigation ul li {
   display: inline-block;
 }
+
+.navigation ul li:first-child {
+  font-family: monospace;
+  font-size: larger;
+}
+
 .navigation ul li a {
   padding: 8px;
 }
@@ -19,4 +26,10 @@
   color: #18191b;
   padding: 4px;
   user-select: none;
+}
+
+@media only screen and (max-width: 600px) {
+  .home.logo {
+    background-color: #d3ff8d;
+  }
 }
