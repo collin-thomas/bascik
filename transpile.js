@@ -8,24 +8,30 @@ import {
 } from "./lib/functions.js";
 import { serveHttp2 } from "./lib/http2.js";
 
+const serve = parseInt(process.env.BASCIK_SERVE) === 1;
+
 const watchFiles = () => {
   // Page Files
   chokidar
-    .watch(["./pages/**/*.html"])
+    .watch(["./pages/**/*.html"], { persistent: serve })
     .on("add", (path) => pageProcessing(path))
     .on("change", (path) => pageProcessing(path))
     .on("unlink", (path) => deleteDistFile(path));
 
   // Page Dirs
-  chokidar.watch(["./pages/**"]).on("unlinkDir", (path) => deleteDistDir(path));
+  chokidar
+    .watch(["./pages/**"], { persistent: serve })
+    .on("unlinkDir", (path) => deleteDistDir(path));
   // Kinda unnecessary but in case pages gets deleted it is handled gracefully.
   // Known bug, if you rename a folder full of files to "./pages",
   // it will not trigger pageProcessing. Same for "./compenets".
-  chokidar.watch(["./pages"]).on("unlinkDir", async (path) => {
-    await deleteDistDir(path);
-    // Recreate dist dir after it gets deleted
-    await createDir("./dist");
-  });
+  chokidar
+    .watch(["./pages"], { persistent: serve })
+    .on("unlinkDir", async (path) => {
+      await deleteDistDir(path);
+      // Recreate dist dir after it gets deleted
+      await createDir("./dist");
+    });
 
   // Component Files (HTML & CSS)
   // You don't need to watch for Components Dirs because we are not writing components
@@ -41,6 +47,7 @@ const watchFiles = () => {
   chokidar
     .watch(["./components/**/*.html", "./components/**/*.css"], {
       ignoreInitial: true,
+      persistent: serve,
     })
     .on("add", async () => processAllPages())
     .on("change", async () => processAllPages())
@@ -49,6 +56,6 @@ const watchFiles = () => {
 
 watchFiles();
 
-if (process.env.BASCIK_SERVE === "1") {
+if (serve) {
   serveHttp2();
 }

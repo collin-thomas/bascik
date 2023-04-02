@@ -44,11 +44,9 @@ yarn serve
 - [x] Add scoped style support for `@keyframes`
 - [x] Strip scoped id styling from components
 - [x] Remove comments from scoped styles
-- [ ] Update scoped style enabled logic to individually toggle classes and elements
 - [x] Add support for pseudo-elements
-- [ ] Opt-in or "prod build" feature to obfuscate & minify class names
-- [ ] Filter unused styles
-- [ ] Minify CSS
+- [x] Opt-in or "prod build" feature to obfuscate & minify class names
+- [x] Minify CSS
 - [x] Default slots
 - [ ] Named slots
 - [ ] Config option for verbose logging. Toggles `{cause}` in `console.warn|error`.
@@ -69,6 +67,7 @@ yarn serve
 - [ ] Add units tests
 - [ ] Test adding vue-petite to a page <https://github.com/vuejs/petite-vue#usage>
 - [ ] The use of npm packages
+- [ ] Filter unused styles
 
 ### Abonadoned todos
 

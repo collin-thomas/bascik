@@ -1,7 +1,8 @@
 export const config = {
-  scopedStyles: {
-    classes: true,
-    elements: true,
-    keyframes: true,
-  },
+  scopedStylesEnabled: true,
+  obfuscateClassNames: false,
+};
+
+export const prodOverride = {
+  obfuscateClassNames: true,
 };
