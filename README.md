@@ -49,21 +49,21 @@ yarn serve
 - [x] Minify CSS
 - [x] Default slots
 - [ ] Named slots
+- [ ] Add scoped JS script tags
+- [ ] Script tags that only run at build
+- [ ] Add support for custom attributes/props, think custom image component
 - [ ] Config option for verbose logging. Toggles `{cause}` in `console.warn|error`.
+- [ ] Serve non html files such as images with the HTTP2 server. <https://stackoverflow.com/a/40899767/1469690>
+- [ ] When using integrated HTTP server, automatically reload web page on transpile.
 - [x] Validate no errors when /pages or /components dir does not exist
 - [x] Add support for directories in /components
 - [x] Add support for directories in /pages
-- [ ] Add support for custom attributes/props, think custom image component
 - [x] Add optional server to serve static files. Remove .html.
 - [x] 404 handling for custom HTTP2 server
-- [ ] Serve non html files such as images with the HTTP2 server. <https://stackoverflow.com/a/40899767/1469690>
-- [ ] When using integrated HTTP server, automatically reload web page on transpile.
 - [ ] SSG & SSR
 - [ ] Add Dockerfile
-- [ ] Script tags that only run at build
 - [x] Add config js file to opt-in to features
 - [ ] Plugin type system to run the opt-in features
-- [ ] Add scoped JS script tags
 - [ ] Add units tests
 - [ ] Test adding vue-petite to a page <https://github.com/vuejs/petite-vue#usage>
 - [ ] The use of npm packages

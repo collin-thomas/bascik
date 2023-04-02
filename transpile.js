@@ -1,11 +1,7 @@
 import chokidar from "chokidar";
-import {
-  pageProcessing,
-  deleteDistFile,
-  deleteDistDir,
-  processAllPages,
-  createDir,
-} from "./lib/functions.js";
+import { pageProcessing, processAllPages } from "./lib/processing.js";
+import { deleteDistFile, deleteDistDir, createDir } from "./lib/file-system.js";
+
 import { serveHttp2 } from "./lib/http2.js";
 
 const serve = parseInt(process.env.BASCIK_SERVE) === 1;
