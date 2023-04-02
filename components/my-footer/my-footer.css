@@ -2,7 +2,7 @@
   border: 8px solid #d3ff8d;
   border-radius: 25px;
 }
-/* Will be ignored */
+/* ID selectors will be removed */
 [id] {
   color: #d3ff8d;
 }

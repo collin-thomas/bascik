@@ -42,7 +42,8 @@ yarn serve
 - [x] Add scoped styles for elements
 - [x] Add scoped style support for `@media`
 - [x] Add scoped style support for `@keyframes`
-- [ ] Strip scoped id styling from components
+- [x] Strip scoped id styling from components
+- [x] Remove comments from scoped styles
 - [ ] Update scoped style enabled logic to individually toggle classes and elements
 - [x] Add support for pseudo-elements
 - [ ] Opt-in or "prod build" feature to obfuscate & minify class names
