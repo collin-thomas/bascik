@@ -9,7 +9,8 @@
 ## Key Features
 
 - Components do not require importing or registering
-- Slots
+- Slots aka Component Children
+- Scoped Styles
 
 ## Development
 
