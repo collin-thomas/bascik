@@ -26,10 +26,20 @@
   color: #18191b;
   padding: 4px;
   user-select: none;
+  animation: rotateLogo 2s infinite alternate;
 }
 
 @media only screen and (max-width: 600px) {
   .home.logo {
     background-color: #d3ff8d;
+  }
+}
+
+@keyframes rotateLogo {
+  from {
+    transform: perspective(500px) rotateY(-40deg);
+  }
+  to {
+    transform: perspective(500px) rotateY(40deg);
   }
 }

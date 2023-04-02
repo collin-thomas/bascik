@@ -1,3 +1,6 @@
 p {
   text-decoration: #d3ff8d wavy underline;
+  display: block;
+  /* This should not work if scoped keyframes are on */
+  animation: rotateLogo 2s infinite alternate;
 }

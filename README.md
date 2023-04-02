@@ -41,7 +41,7 @@ yarn serve
 - [x] Add scoped styles via classes
 - [x] Add scoped styles for elements
 - [x] Add scoped style support for `@media`
-- [ ] Add scoped style support for `@keyframes`
+- [x] Add scoped style support for `@keyframes`
 - [ ] Strip scoped id styling from components
 - [ ] Update scoped style enabled logic to individually toggle classes and elements
 - [x] Add support for pseudo-elements
@@ -72,104 +72,6 @@ yarn serve
 ### Abonadoned todos
 
 - Add scoped styles via IDs. This may be more complicated because of all the conditionals. <https://www.w3schools.com/cssref/trysel.php>
-
-## Example
-
-Source
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <style>
-      body {
-        background-color: #18191b;
-        color: #fff;
-        font-size: larger;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Heading 1</h1>
-    <tag-a data-bascik-test="hello">
-      <tag-b>
-        <p>hello</p>
-        <tag-c></tag-c>
-        <tag-c></tag-c>
-        <tag-d></tag-d>
-        <tag-d></tag-d>
-        <p>goodbye</p>
-      </tag-b>
-    </tag-a>
-    <tag-a>
-      <tag-b>
-        <p>hello</p>
-        <tag-c></tag-c>
-        <tag-d></tag-d>
-        <p>goodbye</p>
-      </tag-b>
-    </tag-a>
-    <footer>
-      <hr />
-      footer
-    </footer>
-  </body>
-</html>
-```
-
-Rendered
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <style>
-      body {
-        background-color: #18191b;
-        color: #fff;
-        font-size: larger;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Heading 1</h1>
-    <div>
-      <p>tag-a</p>
-      <div>
-        <p>tag-b</p>
-        <p>hello</p>
-        <div><p>tag-c</p></div>
-        <div><p>tag-c</p></div>
-        <div><p>tag-d</p></div>
-        <div><p>tag-d</p></div>
-        <p>goodbye</p>
-      </div>
-    </div>
-    <div>
-      <p>tag-a</p>
-      <div>
-        <p>tag-b</p>
-        <p>hello</p>
-        <div><p>tag-c</p></div>
-        <div><p>tag-d</p></div>
-        <p>goodbye</p>
-      </div>
-    </div>
-    <footer>
-      <hr />
-      footer
-    </footer>
-  </body>
-</html>
-```
 
 ## Usage
 
@@ -212,6 +114,10 @@ The `<style>` tag is not valid defined outside of the `<head>` so scoped styles 
 Scoped styles for elements can be toggled via bascik configuration file.
 
 Scoped Styles are injected into each page where their component is used.
+
+### @media and @keyframes
+
+With scoped styles enabled, `@media` and `@keyframes` are also scoped.
 
 ### How Scoped Styles work
 
@@ -333,6 +239,104 @@ Results in the following html being rendered.
   <body>
     <p class="bascik__custom-comp__el__p">hello</p>
     <p class="bascik__custom-comp__el__p">world</p>
+  </body>
+</html>
+```
+
+## Example
+
+Source
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      body {
+        background-color: #18191b;
+        color: #fff;
+        font-size: larger;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Heading 1</h1>
+    <tag-a data-bascik-test="hello">
+      <tag-b>
+        <p>hello</p>
+        <tag-c></tag-c>
+        <tag-c></tag-c>
+        <tag-d></tag-d>
+        <tag-d></tag-d>
+        <p>goodbye</p>
+      </tag-b>
+    </tag-a>
+    <tag-a>
+      <tag-b>
+        <p>hello</p>
+        <tag-c></tag-c>
+        <tag-d></tag-d>
+        <p>goodbye</p>
+      </tag-b>
+    </tag-a>
+    <footer>
+      <hr />
+      footer
+    </footer>
+  </body>
+</html>
+```
+
+Rendered
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      body {
+        background-color: #18191b;
+        color: #fff;
+        font-size: larger;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Heading 1</h1>
+    <div>
+      <p>tag-a</p>
+      <div>
+        <p>tag-b</p>
+        <p>hello</p>
+        <div><p>tag-c</p></div>
+        <div><p>tag-c</p></div>
+        <div><p>tag-d</p></div>
+        <div><p>tag-d</p></div>
+        <p>goodbye</p>
+      </div>
+    </div>
+    <div>
+      <p>tag-a</p>
+      <div>
+        <p>tag-b</p>
+        <p>hello</p>
+        <div><p>tag-c</p></div>
+        <div><p>tag-d</p></div>
+        <p>goodbye</p>
+      </div>
+    </div>
+    <footer>
+      <hr />
+      footer
+    </footer>
   </body>
 </html>
 ```
