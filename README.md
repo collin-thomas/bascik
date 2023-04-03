@@ -49,7 +49,9 @@ yarn serve
 - [x] Opt-in or "prod build" feature to obfuscate & minify class names
 - [x] Minify CSS
 - [x] Default slots
-- [ ] Named slots
+- [ ] Consider using an attribute to define slots `<div data-basic-slot></div>`
+- [ ] Named slots <https://vuejs.org/guide/components/slots.html#named-slots>
+- [ ] Slots fallback content <https://vuejs.org/guide/components/slots.html#fallback-content>
 - [ ] Add scoped JS script tags
 - [ ] Script tags that only run at build
 - [ ] Add support for custom attributes/props, think custom image component

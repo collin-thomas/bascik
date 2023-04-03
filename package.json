@@ -12,7 +12,8 @@
     "serve-prod": "yarn create-key && BASCIK_SERVE=1 BASCIK_PROD=1 yarn dev",
     "build": "BASCIK_PROD=1 node ./transpile.js",
     "create-key-clobber": "./create-key",
-    "create-key": "(node -e \"if (!require('fs').existsSync('./localhost-cert.pem') || !require('fs').existsSync('./localhost-privkey.pem')) { console.log('key pair exists'); process.exit(1); } \") || yarn create-key-clobber"
+    "create-key": "(node -e \"if (!require('fs').existsSync('./localhost-cert.pem') || !require('fs').existsSync('./localhost-privkey.pem')) { console.log('key pair exists'); process.exit(1); } \") || yarn create-key-clobber",
+    "test": "vitest"
   },
   "author": "collin-thomas",
   "dependencies": {
@@ -20,5 +21,8 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^0.29.8"
   }
 }
