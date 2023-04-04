@@ -248,6 +248,32 @@ Results in the following html being rendered.
 </html>
 ```
 
+## Scoped JavaScript
+
+It will look at a component and find all ids and give them a hash
+Then it will look if any script tags have the attribute `data-bascik-scoped`
+If so, it will then find and replace the id with the hash.
+
+This is all fine and good for ids, but if you use something like `document.getElementsByTagName('p')`,
+then it becomes a problem. The script will be done at runtime and select all the `<p>` tags,
+even if there were not any `<p>` tags in the componet itself.
+
+To effectively scope the JS, it would have to be evaluted at runtime.
+But in most cased that probably defeats the purpose of the script.
+
+That's why I continue to believe injecting petite-vue into the page will be the best option.
+
+```html
+<button id="my-btn" type="button">Click</button>
+
+<script data-bascik-scoped>
+  document.getElementById("my-btn").addEventListener("click", () => {
+    alert("hello");
+  });
+  console.log(document.getElementsByTagName("p"));
+</script>
+```
+
 ## Example
 
 Source
