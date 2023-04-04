@@ -71,6 +71,7 @@ yarn serve
 - [ ] Test adding vue-petite to a page <https://github.com/vuejs/petite-vue#usage>
 - [ ] The use of npm packages
 - [ ] Filter unused styles
+- [ ] Add test coverage badge <https://github.com/vitest-dev/vitest/pull/2578#issuecomment-1368082900>
 
 ### Abonadoned todos
 
