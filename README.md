@@ -52,8 +52,10 @@ yarn serve
 - [ ] Consider using an attribute to define slots `<div data-basic-slot></div>`
 - [ ] Named slots <https://vuejs.org/guide/components/slots.html#named-slots>
 - [ ] Slots fallback content <https://vuejs.org/guide/components/slots.html#fallback-content>
+- [ ] Test adding vue-petite to a page <https://github.com/vuejs/petite-vue#usage>
 - [ ] Add scoped JS script tags
 - [ ] Script tags that only run at build
+- [ ] Script tags that only run when a page is requested
 - [ ] Add support for custom attributes/props, think custom image component
 - [ ] Config option for verbose logging. Toggles `{cause}` in `console.warn|error`.
 - [ ] Serve non html files such as images with the HTTP2 server. <https://stackoverflow.com/a/40899767/1469690>
@@ -63,13 +65,12 @@ yarn serve
 - [x] Add support for directories in /pages
 - [x] Add optional server to serve static files. Remove .html.
 - [x] 404 handling for custom HTTP2 server
-- [ ] SSG & SSR
+- [ ] Convert to npm package and existing files as example projects
 - [ ] Add Dockerfile
 - [x] Add config js file to opt-in to features
 - [ ] Plugin type system to run the opt-in features
 - [x] Add units tests
-- [ ] Test adding vue-petite to a page <https://github.com/vuejs/petite-vue#usage>
-- [ ] The use of npm packages
+- [ ] Consider being able to use npm packages
 - [ ] Filter unused styles
 - [ ] Add test coverage badge <https://github.com/vitest-dev/vitest/pull/2578#issuecomment-1368082900>
 
