@@ -1,0 +1,17 @@
+<script>
+  function Counter(props) {
+    return {
+      $template: "#counter-template",
+      count: props.initialCount,
+      inc() {
+        this.count++;
+      },
+    };
+  }
+</script>
+
+<template id="counter-template">
+  My count is {{ count }}
+  <button @click="inc">++</button>
+</template>
+<div v-cloak v-scope="Counter({ initialCount: 1 })"></div>

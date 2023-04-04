@@ -19,11 +19,17 @@
       a:hover {
         color: #d3ff8d;
       }
+      [v-cloak] {
+        visibility: hidden;
+      }
     </style>
   </head>
   <body>
     <custom-nav></custom-nav>
     <h1 id="h1">Index</h1>
+    <v-comp></v-comp>
+    <div v-scope="Counter({ initialCount: 5 })"></div>
+
     <v-counter></v-counter>
     <v-counter2></v-counter2>
     <v-counter></v-counter>
