@@ -67,7 +67,7 @@ yarn serve
 - [ ] Add Dockerfile
 - [x] Add config js file to opt-in to features
 - [ ] Plugin type system to run the opt-in features
-- [ ] Add units tests
+- [x] Add units tests
 - [ ] Test adding vue-petite to a page <https://github.com/vuejs/petite-vue#usage>
 - [ ] The use of npm packages
 - [ ] Filter unused styles
