@@ -2,7 +2,7 @@
 
 ## Goals
 
-- Create reasuble custom HTML tags aka components
+- Create reusable custom HTML tags aka components
 - Ship zero Javascript by default
 - Work within HTML spec
 
@@ -49,6 +49,8 @@ yarn serve
 - [x] Opt-in or "prod build" feature to obfuscate & minify class names
 - [x] Minify CSS
 - [x] Default slots
+- [ ] Namespace and or randomize all HTML ids. Probably obfuscate like class names too. This way we can use ids in components and be able to use the same component twice on a page. First for all id="", then update where it is referenced. I can see how that gets complicated because what if the id is "a" then all a's get replaced? What is happening now with `<my-btn>` and `<my-btn2>` is there are multiple click event listeners registered to the first item in the DOM that claims the `id` attribute that the click event listeners are tied to.
+- [ ] We may want to move all script tags to the bottom of the page. I'm not sure what impact it has if any. If it's purely a style guide type thing then we can ignore it or make it low priority.
 - [ ] Consider using an attribute to define slots `<div data-basic-slot></div>`
 - [ ] Named slots <https://vuejs.org/guide/components/slots.html#named-slots>
 - [ ] Slots fallback content <https://vuejs.org/guide/components/slots.html#fallback-content>
@@ -56,7 +58,7 @@ yarn serve
 - [ ] Add scoped JS script tags
 - [ ] Script tags that only run at build
 - [ ] Script tags that only run when a page is requested
-- [ ] Add support for custom attributes/props, think custom image component
+- [ ] Add support for custom attributes/props, think custom image component. Testing with `<my-prop-test>` and `<my-prop>`. Need to write the code to make it work.
 - [ ] Config option for verbose logging. Toggles `{cause}` in `console.warn|error`.
 - [ ] Serve non html files such as images with the HTTP2 server. <https://stackoverflow.com/a/40899767/1469690>
 - [ ] When using integrated HTTP server, automatically reload web page on transpile.
@@ -74,7 +76,7 @@ yarn serve
 - [ ] Filter unused styles
 - [ ] Add test coverage badge <https://github.com/vitest-dev/vitest/pull/2578#issuecomment-1368082900>
 
-### Abonadoned todos
+### Abandoned todos
 
 - Add scoped styles via IDs. This may be more complicated because of all the conditionals. <https://www.w3schools.com/cssref/trysel.php>
 
@@ -250,15 +252,49 @@ Results in the following html being rendered.
 
 ## Scoped JavaScript
 
+I have to make the choice of should I make all JavaScript scoped or only `data-bascik-scoped` scoped.
+
+What makes it scoped? The scope would be the `name` and `id` attributes. I suppose `class` attributes as well.
+
+If I choose to only scope that is within `data-bascik-scoped`, I first have to look at the JavaScript selectors.
+
+Only the `id` or `name` attributes that are being selected by the scoped JavaScript would get updated.
+
+However the problem with that is what if non-scoped JavaScript is also selecting it.
+
+At that point it makes sense that JavaScript is scoped my default.
+
+What if I want global JavaScript?
+
+When would you want global JavaScript?
+
+I could see wanting to share state between components via a global store.
+
+But that doesn't involve `id` or `name` attributes. That's just pure JavaScript.
+
+The JavaScript itself isn't scoped, it's just the `id` and `name` are randomized.
+
+I think this thought exercise results in me saying that specifying `data-bascik-scoped` is unnecessary.
+
+---
+
+If we are scoping via `id` and `name`, we will have to be aware that will break CSS selectors such as `input[name="my-name"]`.
+
+The scoping of `id` and `name` for Scoped JavaScript will have to work in harmony with Scoped CSS.
+
+I should rethink the code and just scope and randomize all `id`, `name`, `class` attribute values in the HTML, CSS, and JavaScript. That would take care of everything.
+
+---
+
 It will look at a component and find all ids and give them a hash
 Then it will look if any script tags have the attribute `data-bascik-scoped`
 If so, it will then find and replace the id with the hash.
 
 This is all fine and good for ids, but if you use something like `document.getElementsByTagName('p')`,
 then it becomes a problem. The script will be done at runtime and select all the `<p>` tags,
-even if there were not any `<p>` tags in the componet itself.
+even if there were not any `<p>` tags in the component itself.
 
-To effectively scope the JS, it would have to be evaluted at runtime.
+To effectively scope the JS, it would have to be evaluated at runtime.
 But in most cased that probably defeats the purpose of the script.
 
 That's why I continue to believe injecting petite-vue into the page will be the best option.

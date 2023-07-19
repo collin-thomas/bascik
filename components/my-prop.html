@@ -1,0 +1,11 @@
+<p data-bascik-prop-hi></p>
+
+<script type="application/json" id="json-data">
+  { "foo": "bar" }
+</script>
+
+<script>
+  const jsonStr = document.getElementById("json-data").textContent;
+  const jsonData = JSON.parse(jsonStr);
+  console.log({ jsonData });
+</script>

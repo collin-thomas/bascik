@@ -1,0 +1,14 @@
+<code style="display: none" id="t"> true </code>
+<code style="display: none" id="f"> false </code>
+<code id="chance"></code>
+
+<script>
+  const tenPercentChance = () => Math.floor(Math.random() * 10) === 0;
+  const show = (el) => (el.style.display = "unset");
+  const t = document.getElementById("t");
+  const f = document.getElementById("f");
+  const c = document.getElementById("chance");
+  const chance = tenPercentChance();
+  chance ? show(t) : show(f);
+  c.innerHTML = chance.toString();
+</script>
