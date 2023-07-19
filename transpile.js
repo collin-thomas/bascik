@@ -20,7 +20,7 @@ const watchFiles = () => {
     .on("unlinkDir", (path) => deleteDistDir(path));
   // Kinda unnecessary but in case pages gets deleted it is handled gracefully.
   // Known bug, if you rename a folder full of files to "./pages",
-  // it will not trigger pageProcessing. Same for "./compenets".
+  // it will not trigger pageProcessing. Same for "./components".
   chokidar
     .watch(["./pages"], { persistent: serve })
     .on("unlinkDir", async (path) => {
@@ -33,13 +33,13 @@ const watchFiles = () => {
   // You don't need to watch for Components Dirs because we are not writing components
 
   // I think with effort and then do a performance comparison,
-  // updating files based on component trees is possible and maybe more efficent.
+  // updating files based on component trees is possible and maybe more efficient.
   // But for now, rerender all the pages,
   // because we won't know what pages need updated until we recursively loop through all pages.
   // The difference is here, now we need a list of all the pages.
 
   // ignoreInitial so we don't run "add" on boot
-  // and process all the pages times the number of compeonts
+  // and process all the pages times the number of components
   chokidar
     .watch(["./components/**/*.html", "./components/**/*.css"], {
       ignoreInitial: true,
