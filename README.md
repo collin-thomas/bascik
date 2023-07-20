@@ -64,6 +64,8 @@ yarn serve
 - [x] Default slots
 - [x] Scope JavaScript `id` attribute values in HTML and `<script>` tags for getElementById and querySelector
 - [ ] Scope JavaScript `name` attribute values in HTML and `<script>` tags for TBD
+- [ ] Scoped CSS will break JavaScript selecting by class name, `.querySelectorAll('.my-class')` therefore we need to refactor so that does not break.
+- [ ] BascikConfig option for obfuscating `id` and `name` attribute values
 - [ ] Consider requiring scoped JavaScript `<script>` tags to require `data-bascik-scoped`. Once thought to be redundant, it may be required to enable `<script>` tags that run at build or run server-side. See next two todo items.
 - [ ] Script tags that only run at build
 - [ ] Script tags that only run when a page is requested
