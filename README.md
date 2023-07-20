@@ -1,4 +1,16 @@
-# bascik
+# Bascik: A Web Framework
+
+Bascik is basic not BASIC.
+
+Bascik removes the need for a JavaScript Framework or Web Components to use components.
+
+You write components as HTML files.
+
+You can add CSS and JavaScript to your components.
+
+To create an app, create each HTML page and use your components.
+
+Bascik transpiles each page and it's components into a single `.html` file per page.
 
 ## Goals
 
@@ -11,6 +23,7 @@
 - Components do not require importing or registering
 - Slots aka Component Children
 - Scoped Styles
+- Scoped JavaScript
 
 ## Development
 
@@ -54,7 +67,7 @@ yarn serve
 - [ ] Consider using an attribute to define slots `<div data-basic-slot></div>`
 - [ ] Named slots <https://vuejs.org/guide/components/slots.html#named-slots>
 - [ ] Slots fallback content <https://vuejs.org/guide/components/slots.html#fallback-content>
-- [ ] Test adding vue-petite to a page <https://github.com/vuejs/petite-vue#usage>
+- [x] Test adding vue-petite to a page <https://github.com/vuejs/petite-vue#usage>
 - [ ] Add scoped JS script tags
 - [ ] Script tags that only run at build
 - [ ] Script tags that only run when a page is requested
@@ -278,11 +291,15 @@ I think this thought exercise results in me saying that specifying `data-bascik-
 
 ---
 
-If we are scoping via `id` and `name`, we will have to be aware that will break CSS selectors such as `input[name="my-name"]`.
+If we are scoping via `id` and `name`, we will have to be aware that will break CSS selectors such as `input[name="my-name"]`. Or does it? If I can have it work conjunction.
 
 The scoping of `id` and `name` for Scoped JavaScript will have to work in harmony with Scoped CSS.
 
 I should rethink the code and just scope and randomize all `id`, `name`, `class` attribute values in the HTML, CSS, and JavaScript. That would take care of everything.
+
+---
+
+Each instance of component will need unique `ids` and `names` generated.
 
 ---
 
@@ -407,6 +424,25 @@ Rendered
   </body>
 </html>
 ```
+
+## Under the Hood
+
+- `transpile.js` - Finds pages to render based on page or component changes. Runs `processAllPages()`
+- `transpile.js` - `pageProcessing()` calls `listComponents()` and a lot happens there. Right now the Scoped Styles get processed here.
+  The way Scoped Styles are is implemented is kinda dumb though.
+  If you specify a component multiple times the styles get added multiple times.
+  Really those should be deduplicated.
+  However that duplication might work to our advantage.
+  Because each instance should be treated separately.
+  [ ] We can attach a sufficiently random string to the end of each class.
+  This will be compatible with our `bascik.config.js` option of `obfuscateClassNames`.
+  It's important to remember `obfuscateClassNames` only obfuscates, it does not randomize.
+  [ ] Now that each class is scoped and randomized, we need to do the same for all `id` and `name` attribute values.
+  Just remember you won't be able to do the randomization the same place the scoping is done because the randomization has to be done on a per page basis, whereas the scoping is done at a global list of all components level before any page processing begins.
+  This means that the obfuscation would be "broken" by resulting in the obfuscated version of the string appended by the randomized string. So maybe we accept that or rethink it.
+- `processing.js` - `processAllPages()` calls `recursivelyTranspile()`
+- `recursivelyTranspile()` calls `getFirstComponent()` which uses `getTag()`
+- `recursivelyTranspile()` checks if it got a component, if not returns the HTML. If it did get a component back, it first calls `replaceTag()` with the tag specified as `slot-component` to replace the default slot (`<slot-component></slot-component>`), if there is one for the component. Then it calls `replaceTag()` again. This time to
 
 ## Notes
 

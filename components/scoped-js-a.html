@@ -1,0 +1,13 @@
+<div id="js-a">
+  <p id="js-b">scoped-js-a</p>
+  <slot-component></slot-component>
+</div>
+
+<script>
+  document.getElementById("js-a").style.color = "#d3ff8d";
+  document.getElementById("js-b").style.color = "#8d9cff";
+  document.getElementById("js-b").textContent = `${
+    document.getElementById("js-b").textContent
+  } appended`;
+  document.querySelector("[id='js-b']").style.fontSize = "32px";
+</script>
