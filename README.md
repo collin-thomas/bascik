@@ -62,15 +62,16 @@ yarn serve
 - [x] Opt-in or "prod build" feature to obfuscate & minify class names
 - [x] Minify CSS
 - [x] Default slots
-- [ ] Namespace and or randomize all HTML ids. Probably obfuscate like class names too. This way we can use ids in components and be able to use the same component twice on a page. First for all id="", then update where it is referenced. I can see how that gets complicated because what if the id is "a" then all a's get replaced? What is happening now with `<my-btn>` and `<my-btn2>` is there are multiple click event listeners registered to the first item in the DOM that claims the `id` attribute that the click event listeners are tied to.
-- [ ] We may want to move all script tags to the bottom of the page. I'm not sure what impact it has if any. If it's purely a style guide type thing then we can ignore it or make it low priority.
-- [ ] Consider using an attribute to define slots `<div data-basic-slot></div>`
-- [ ] Named slots <https://vuejs.org/guide/components/slots.html#named-slots>
-- [ ] Slots fallback content <https://vuejs.org/guide/components/slots.html#fallback-content>
-- [x] Test adding vue-petite to a page <https://github.com/vuejs/petite-vue#usage>
-- [ ] Add scoped JS script tags
+- [x] Scope JavaScript `id` attribute values in HTML and `<script>` tags for getElementById and querySelector
+- [ ] Scope JavaScript `name` attribute values in HTML and `<script>` tags for TBD
+- [ ] Consider requiring scoped JavaScript `<script>` tags to require `data-bascik-scoped`. Once thought to be redundant, it may be required to enable `<script>` tags that run at build or run server-side. See next two todo items.
 - [ ] Script tags that only run at build
 - [ ] Script tags that only run when a page is requested
+- [ ] We may want to move all script tags to the bottom of the page. I'm not sure what impact it has if any. If it's purely a style guide type thing then we can ignore it or make it low priority.
+- [ ] Slots fallback content <https://vuejs.org/guide/components/slots.html#fallback-content>
+- [ ] Consider using an attribute to define slots `<div data-basic-slot></div>`
+- [ ] Named slots <https://vuejs.org/guide/components/slots.html#named-slots>
+- [x] Test adding vue-petite to a page <https://github.com/vuejs/petite-vue#usage>
 - [ ] Add support for custom attributes/props, think custom image component. Testing with `<my-prop-test>` and `<my-prop>`. Need to write the code to make it work.
 - [ ] Config option for verbose logging. Toggles `{cause}` in `console.warn|error`.
 - [ ] Serve non html files such as images with the HTTP2 server. <https://stackoverflow.com/a/40899767/1469690>
@@ -81,7 +82,7 @@ yarn serve
 - [x] Add optional server to serve static files. Remove .html.
 - [x] 404 handling for custom HTTP2 server
 - [ ] Convert to npm package and existing files as example projects
-- [ ] Add Dockerfile
+- [ ] Dockerize
 - [x] Add config js file to opt-in to features
 - [ ] Plugin type system to run the opt-in features
 - [x] Add units tests
