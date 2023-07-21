@@ -12,6 +12,8 @@ To create an app, create each HTML page and use your components.
 
 Bascik transpiles each page and it's components into a single `.html` file per page.
 
+The only JavaScript that is on the page is the JavaScript you add.
+
 ## Goals
 
 - Create reusable custom HTML tags aka components
@@ -62,8 +64,8 @@ yarn serve
 - [x] Opt-in or "prod build" feature to obfuscate & minify class names
 - [x] Minify CSS
 - [x] Default slots
-- [x] Scope JavaScript `id` attribute values in HTML and `<script>` tags for getElementById and querySelector
-- [ ] Scope JavaScript `name` attribute values in HTML and `<script>` tags for TBD
+- [x] Scope JavaScript `id` attribute values in HTML and `<script>` tags
+      want this feature. Names are most useful in forms, and names being randomized could be bothersome.
 - [ ] Scoped CSS will break JavaScript selecting by class name, `.querySelectorAll('.my-class')` therefore we need to refactor so that does not break.
 - [ ] BascikConfig option for obfuscating `id` and `name` attribute values
 - [ ] Consider requiring scoped JavaScript `<script>` tags to require `data-bascik-scoped`. Once thought to be redundant, it may be required to enable `<script>` tags that run at build or run server-side. See next two todo items.
@@ -303,6 +305,12 @@ I should rethink the code and just scope and randomize all `id`, `name`, `class`
 ---
 
 Each instance of component will need unique `ids` and `names` generated.
+
+- [x] Scope JavaScript `name` attribute values in HTML and `<script>` tags
+
+Turns out though we don't actually want to scope name attributes.
+
+Maybe we could come up with an option to do it on a per component basis. But in all the use cases for name attributes, you are not commonly selecting them via JavaScript and in most cases the names cannot be randomized because they are either values that have specific meaning (meta and param tags) or they are being used by a server on from a form input.
 
 ---
 
