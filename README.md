@@ -64,8 +64,7 @@ yarn serve
 - [x] Opt-in or "prod build" feature to obfuscate & minify class names
 - [x] Minify CSS
 - [x] Default slots
-- [x] Scope JavaScript `id` attribute values in HTML and `<script>` tags
-      want this feature. Names are most useful in forms, and names being randomized could be bothersome.
+- [x] Scope JavaScript `id` attribute values in HTML and `<script>`
 - [ ] Scoped CSS will break JavaScript selecting by class name, `.querySelectorAll('.my-class')` therefore we need to refactor so that does not break.
 - [ ] BascikConfig option for obfuscating `id` and `name` attribute values
 - [ ] Consider requiring scoped JavaScript `<script>` tags to require `data-bascik-scoped`. Once thought to be redundant, it may be required to enable `<script>` tags that run at build or run server-side. See next two todo items.
