@@ -65,8 +65,9 @@ yarn serve
 - [x] Minify CSS
 - [x] Default slots
 - [x] Scope JavaScript `id` attribute values in HTML and `<script>`
+- [ ] Scope all functions and variable defined at root of `<script>` tags using namespace.
 - [ ] Scoped CSS will break JavaScript selecting by class name, `.querySelectorAll('.my-class')` therefore we need to refactor so that does not break.
-- [ ] BascikConfig option for obfuscating `id` and `name` attribute values
+      We can keep the scoping of css where it is, but the obfuscation will have to happen post JavaScript scoping. To keep the scoping of css where it is, means we would have to replicate the syntax which is pretty simple though, for example `my-class` for tag `scoped-js-a` becomes `bascik__scoped-js-a__my-class`. So we update JavaScript selectors to use that which is easy and we have the class name and component name available to us, and if it isn't already we can make the class scoping syntax a function so we don't duplicate logic. Then we just business as usual append the randomized string for that component instance.
 - [ ] Consider requiring scoped JavaScript `<script>` tags to require `data-bascik-scoped`. Once thought to be redundant, it may be required to enable `<script>` tags that run at build or run server-side. See next two todo items.
 - [ ] Script tags that only run at build
 - [ ] Script tags that only run when a page is requested

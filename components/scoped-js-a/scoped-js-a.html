@@ -1,11 +1,11 @@
 <div id="js-a">
   <p id="js-b">scoped-js-a</p>
   <slot-component></slot-component>
-  <form>
-    <label for="fname">First name:</label>
-    <input type="text" id="fname" name="fname" /><br /><br />
-    <label for="lname">Last name:</label>
-    <input type="text" id="lname" name="lname" /><br /><br />
+  <form class="form">
+    <label class="my-class" for="fname">First name:</label>
+    <input class="input" type="text" id="fname" name="fname" /><br /><br />
+    <label class="my-class" for="lname">Last name:</label>
+    <input class="input" type="text" id="lname" name="lname" /><br /><br />
     <input type="submit" value="Submit" />
   </form>
 </div>
@@ -17,4 +17,8 @@
     document.getElementById("js-b").textContent
   } appended`;
   document.querySelector("[id='js-b']").style.fontSize = "32px";
+</script>
+
+<script>
+  console.log(document.querySelectorAll(".my-class"));
 </script>

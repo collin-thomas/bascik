@@ -1,6 +1,6 @@
 export const config = {
   scopedStylesEnabled: true,
-  obfuscateClassNames: true,
+  obfuscateClassNames: false,
   scopedJavaScript: true,
 };
 

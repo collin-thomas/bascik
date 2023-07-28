@@ -1,7 +1,37 @@
 <div id="js-a">
   <p id="js-b">scoped-js-b</p>
+  <button onclick="myFn(this, 'arg1')">Test</button>
   <slot-component></slot-component>
 </div>
+
+<script>
+  /**
+   * The HTML onclick attribute is awesome, but it presents a problem, myFn needs scoped.
+   * We can do that with namespacing.
+   * We use a random str that always start with a letter, b for bascik.
+   * The random str is per instance of the component.
+   *
+   * const myFn = () => {}
+   * becomes
+   * const b1q2w3e4r = {}
+   * b1q2w3e4r.myFn = () => {}
+   * */
+
+  /**
+   * Something else I forgot about is variables.
+   * Variables need scoped as well.
+   * If variables are declared at the root of a <script> tag
+   * then they will get namespaced as well.
+   *
+   * const x = 1
+   * becomes
+   * const b1q2w3e4r = {}
+   * b1q2w3e4r.x = 1
+   * */
+  const myFn = (el, arg1) => {
+    console.log({ el, arg1, innerText: el.innerText });
+  };
+</script>
 
 <script>
   document.getElementById("js-a").style.color = "#d3ff8d";
