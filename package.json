@@ -5,9 +5,9 @@
   "main": "transpile.js",
   "type": "module",
   "scripts": {
-    "dev": "node --watch ./transpile.js",
+    "dev": "node --watch-path=./transpile.js --watch-path=./lib --watch-path=./components --watch-path=./pages ./transpile.js",
     "watch": "npx watch-http-server -a localhost -p 3000 dist/",
-    "debug": "node --inspect --watch transpile.js",
+    "debug": "node --inspect --watch --watch-path=./transpile.js --watch-path=./lib --watch-path=./components --watch-path=./pages transpile.js",
     "serve": "yarn create-key && BASCIK_SERVE=1 yarn dev",
     "serve-prod": "yarn create-key && BASCIK_SERVE=1 BASCIK_PROD=1 yarn dev",
     "build": "BASCIK_PROD=1 node ./transpile.js",
