@@ -66,6 +66,7 @@ yarn serve
 - [x] Treat each instance of a component's name attr uniquely
 - [ ] Script tags that only run at build
 - [ ] Script tags that only run when a page is requested
+- [ ] If you defined a CSS file(s) for pages to reference copy it to dist dir
 - [ ] Add support for custom attributes/props, think custom image component. Testing with `<my-prop-test>` and `<my-prop>`. Need to write the code to make it work.
 - [ ] Config option for verbose logging. Toggles `{cause}` in `console.warn|error`.
 - [ ] Serve non html files such as images with the HTTP2 server. <https://stackoverflow.com/a/40899767/1469690>
