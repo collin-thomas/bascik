@@ -1,6 +1,16 @@
-<button id="my-btn2" type="button">Click</button>
-<script data-bascik-scoped>
+<button id="my-btn" type="button">Click</button>
+
+<script data-test-id="one">
   document.getElementById("my-btn").addEventListener("click", () => {
-    alert("hello");
+    alert("my-btn (1) js");
+  });
+  document.getElementById("my-btn").addEventListener("click", () => {
+    alert("my-btn (1) js take 2");
+  });
+</script>
+
+<script data-test-id="two">
+  document.getElementById("my-btn").addEventListener("click", () => {
+    alert("my-btn (1) js second script");
   });
 </script>

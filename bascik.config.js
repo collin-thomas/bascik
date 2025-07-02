@@ -1,8 +1,8 @@
 export const config = {
   scopedStylesEnabled: true,
-  obfuscateClassNames: false,
+  obfuscateAttributeNames: false,
 };
 
 export const prodOverride = {
-  obfuscateClassNames: true,
+  obfuscateAttributeNames: true,
 };

@@ -49,13 +49,14 @@ yarn serve
 - [x] Opt-in or "prod build" feature to obfuscate & minify class names
 - [x] Minify CSS
 - [x] Default slots
-- [ ] Namespace and or randomize all HTML ids. Probably obfuscate like class names too. This way we can use ids in components and be able to use the same component twice on a page. First for all id="", then update where it is referenced. I can see how that gets complicated because what if the id is "a" then all a's get replaced? What is happening now with `<my-btn>` and `<my-btn2>` is there are multiple click event listeners registered to the first item in the DOM that claims the `id` attribute that the click event listeners are tied to.
+- [ ] Support Void Elements (self-closing tags) ex. `<my-nav />`
+- [x] Namespace and or randomize all HTML ids. Probably obfuscate like class names too. This way we can use ids in components and be able to use the same component twice on a page. First for all id="", then update where it is referenced. I can see how that gets complicated because what if the id is "a" then all a's get replaced? What is happening now with `<my-btn>` and `<my-btn2>` is there are multiple click event listeners registered to the first item in the DOM that claims the `id` attribute that the click event listeners are tied to.
 - [ ] We may want to move all script tags to the bottom of the page. I'm not sure what impact it has if any. If it's purely a style guide type thing then we can ignore it or make it low priority.
 - [ ] Consider using an attribute to define slots `<div data-basic-slot></div>`
 - [ ] Named slots <https://vuejs.org/guide/components/slots.html#named-slots>
 - [ ] Slots fallback content <https://vuejs.org/guide/components/slots.html#fallback-content>
-- [ ] Test adding vue-petite to a page <https://github.com/vuejs/petite-vue#usage>
-- [ ] Add scoped JS script tags
+- [x] Test adding vue-petite to a page <https://github.com/vuejs/petite-vue#usage>
+- [x] Add scoped JS script tags
 - [ ] Script tags that only run at build
 - [ ] Script tags that only run when a page is requested
 - [ ] Add support for custom attributes/props, think custom image component. Testing with `<my-prop-test>` and `<my-prop>`. Need to write the code to make it work.

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bascik</title>
+    <style>
+      body {
+        background-color: #18191b;
+        color: #fff;
+        font-size: larger;
+      }
+      a:link,
+      a:visited,
+      a:active {
+        color: #ffffff;
+      }
+      a:hover {
+        color: #d3ff8d;
+      }
+      [v-cloak] {
+        visibility: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <custom-nav></custom-nav>
+    <h1 id="h1">Index</h1>
+    <my-cond></my-cond>
+    <my-prop-test></my-prop-test>
+    <v-counter></v-counter>
+    <v-counter2></v-counter2>
+    <v-counter></v-counter>
+    <v-counter2></v-counter2>
+    <button id="my-btn" type="button">Click Imposter</button>
+    <my-btn></my-btn>
+    <my-btn2></my-btn2>
+    <my-btn2></my-btn2>
+    <styled-element-test></styled-element-test>
+    <unstyled-element-test></unstyled-element-test>
+    <tag-a data-bascik-test="hello">
+      <tag-b>
+        <p>hello</p>
+        <tag-c></tag-c>
+        <tag-c></tag-c>
+        <tag-d></tag-d>
+        <tag-d></tag-d>
+        <p>goodbye</p>
+      </tag-b>
+    </tag-a>
+    <tag-a>
+      <tag-b>
+        <p>hello</p>
+        <tag-c></tag-c>
+        <tag-d></tag-d>
+        <p>goodbye</p>
+      </tag-b>
+    </tag-a>
+    <my-footer></my-footer>
+    <script src="https://unpkg.com/petite-vue" defer init></script>
+  </body>
+</html>
