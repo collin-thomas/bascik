@@ -2,10 +2,16 @@
   Test Comp Div Tag
 </div>
 <p name="my-name">Test Comp P Tag</p>
+<button id="btn">Change Color</button>
 
 <script>
   document.getElementsByName('my-name').forEach(el => {
     el.style.textDecoration = 'underline';
   });
   document.getElementById('my-div-id').style.color = '#d3ff8d';
+  document.getElementById("btn").addEventListener("click", () => {
+    document.getElementsByName('my-name').forEach(el => {
+      el.style.color = '#ff7a09';
+    });
+  });
 </script>
