@@ -2,7 +2,9 @@
   border: 8px solid #d3ff8d;
   border-radius: 25px;
 }
-/* ID selectors will be removed */
+/* these types of selectors will be removed. */
+/*  there isn't any good way to scope these for components without wrapping them in divs */
+/* if you want to use these, put them in page level stylesheets */
 [id] {
   color: #d3ff8d;
 }

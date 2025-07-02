@@ -59,6 +59,8 @@ yarn serve
 - [x] Add scoped JS script tags
 - [x] Preserve new lines in script tags so lack of semicolons doesn't break the code
 - [x] Scope javascript variables
+- [x] Use config to toggle minify css
+- [ ] Support square bracket css selectors ex. `[id] {color: #d3ff8d;}`
 - [ ] Support css attribute selectors
 - [ ] Handle all the querySelector and querySelectorAll variations <https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector> <https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelectorAll>
 - [x] Treat each instance of a component's name attr uniquely
