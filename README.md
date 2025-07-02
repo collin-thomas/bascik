@@ -58,7 +58,9 @@ yarn serve
 - [x] Test adding vue-petite to a page <https://github.com/vuejs/petite-vue#usage>
 - [x] Add scoped JS script tags
 - [x] Preserve new lines in script tags so lack of semicolons doesn't break the code
-- [ ] Ensure scoped JS doesn't break CSS selectors
+- [x] Scope javascript variables
+- [ ] Support css attribute selectors
+- [ ] Handle all the querySelector and querySelectorAll variations <https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector> <https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelectorAll>
 - [x] Treat each instance of a component's name attr uniquely
 - [ ] Script tags that only run at build
 - [ ] Script tags that only run when a page is requested

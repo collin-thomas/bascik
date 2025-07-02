@@ -1,0 +1,14 @@
+p[name="my-name"] {
+  font-size: x-large;
+  padding-left: 16px;
+}
+
+.btn {
+  margin: 16px;
+}
+
+.btn:hover {
+  background-color: #333 !important;
+  color: #fff;
+  cursor: pointer;
+}
