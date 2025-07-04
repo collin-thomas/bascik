@@ -60,6 +60,7 @@ yarn serve
 - [x] Preserve new lines in script tags so lack of semicolons doesn't break the code
 - [x] Scope javascript variables
 - [x] Use config to toggle minify css
+- [ ] In dev mode, write to the file system async, and serve the html string directly from memory via the http2 server
 - [ ] Support square bracket css selectors ex. `[id] {color: #d3ff8d;}`
 - [ ] Support css attribute selectors
 - [ ] Handle all the querySelector and querySelectorAll variations <https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector> <https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelectorAll>
