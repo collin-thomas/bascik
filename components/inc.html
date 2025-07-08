@@ -1,0 +1,18 @@
+<p>The count is <span id="count"></span>.</p>
+<button id="inc">Increment</button>
+
+<script>
+  // Init
+  let count = 0
+  const countEl = document.getElementById('count')
+  countEl.textContent = count.toString()
+  // Interactive
+  document.getElementById('inc').addEventListener('click', () => {
+    count = count + 1
+    countEl.textContent = count.toString()
+  });
+  setInterval(() => {
+    count = count + 1
+    countEl.textContent = count.toString()
+  }, 1000);
+</script>
