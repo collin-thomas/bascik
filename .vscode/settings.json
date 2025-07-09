@@ -5,8 +5,10 @@
   },
   "editor.insertSpaces": true,
   "editor.tabSize": 2,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "search.exclude": {
     "**/dist/**": true
-}
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  }
 }

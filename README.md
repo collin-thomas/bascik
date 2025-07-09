@@ -12,27 +12,25 @@
 - Slots aka Component Children
 - Scoped Styles
 
-## Development
+## Install Deps
 
-Install deps `yarn`
-
-Requires Node.js 18+
-
-1. Terminal 1: `yarn dev`
-2. Terminal 2: `yarn watch`
-
-### Using builtin HTTP/2 Server
-
-Currently does not trigger web page reload.
+Requires Node.js v22
 
 ```sh
-yarn serve
+yarn
+```
+
+## Development
+
+```sh
+yarn dev
 ```
 
 ## Debug
 
-1. Terminal 1: `yarn debug`
-2. Terminal 2: `yarn watch`
+```sh
+yarn debug
+```
 
 ## Todo
 
@@ -52,7 +50,7 @@ yarn serve
 - [ ] Support Void Elements (self-closing tags) ex. `<my-nav />`
 - [x] Namespace and or randomize all HTML ids. Probably obfuscate like class names too. This way we can use ids in components and be able to use the same component twice on a page. First for all id="", then update where it is referenced. I can see how that gets complicated because what if the id is "a" then all a's get replaced? What is happening now with `<my-btn>` and `<my-btn2>` is there are multiple click event listeners registered to the first item in the DOM that claims the `id` attribute that the click event listeners are tied to.
 - [ ] We may want to move all script tags to the bottom of the page. I'm not sure what impact it has if any. If it's purely a style guide type thing then we can ignore it or make it low priority.
-- [ ] Consider using an attribute to define slots `<div data-basic-slot></div>`
+- [ ] Consider using an attribute to define slots `<div data-bascik-slot></div>`, I think instead of reserved component name called `<slot-component>`. This would give us a more extendable convention if we supported named slots `<div data-bascik-slot-foobar></div>`.
 - [ ] Named slots <https://vuejs.org/guide/components/slots.html#named-slots>
 - [ ] Slots fallback content <https://vuejs.org/guide/components/slots.html#fallback-content>
 - [x] Test adding vue-petite to a page <https://github.com/vuejs/petite-vue#usage>
@@ -60,11 +58,13 @@ yarn serve
 - [x] Preserve new lines in script tags so lack of semicolons doesn't break the code
 - [x] Scope javascript variables
 - [x] Use config to toggle minify css
-- [ ] In dev mode, write to the file system async, and serve the html string directly from memory via the http2 server
+- [x] In dev mode, write to the file system async, and serve the html string directly from memory via the http2 server
 - [ ] Support square bracket css selectors ex. `[id] {color: #d3ff8d;}`
 - [ ] Support css attribute selectors
 - [ ] Handle all the querySelector and querySelectorAll variations <https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector> <https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelectorAll>
 - [x] Treat each instance of a component's name attr uniquely
+- [ ] Reusable elements within the `<head></head>` such as `<meta>` tags
+- [ ] Add compile time terminal output for both `processPage()` and all `processAllPages`
 - [ ] Script tags that only run at build
 - [ ] Script tags that only run when a page is requested
 - [ ] If you defined a CSS file(s) for pages to reference copy it to dist dir
