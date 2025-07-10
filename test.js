@@ -88,3 +88,8 @@ ul {
 css.replace(/^[a-z1-6]+(?=[\s{])/gim, (match) => {
   console.log(match);
 });
+
+
+const origComps = new Set(['tag1', 'tag2', 'tag3', 'tag4'])
+const newComps = new Set(['tag1', 'tag2'])
+console.log(origComps.difference(newComps))
