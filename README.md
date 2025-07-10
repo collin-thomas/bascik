@@ -71,8 +71,8 @@ yarn debug
 - [ ] Add support for custom attributes/props, think custom image component. Testing with `<my-prop-test>` and `<my-prop>`. Need to write the code to make it work.
 - [ ] Config option for verbose logging. Toggles `{cause}` in `console.warn|error`.
 - [ ] Serve non html files such as images with the HTTP2 server. <https://stackoverflow.com/a/40899767/1469690>
-- [ ] When using integrated HTTP server, automatically reload web page on transpile.
-- [ ] Live reload if the page that's currently open is transpiled
+- [x] When using integrated HTTP server, automatically reload web page on transpile.
+- [x] Live reload if the page that's currently open is transpiled
 - [x] Keep track of which components are on a page to selectively transpile pages
 - [x] Write `yarn build` so it skips in memory storage and http2 server, and only writes the files to dist.
 - [x] Validate no errors when /pages or /components dir does not exist
@@ -82,6 +82,8 @@ yarn debug
 - [x] 404 handling for custom HTTP2 server
 - [ ] Convert to npm package and existing files as example projects
 - [ ] Add Dockerfile
+- [ ] Show example using Tailwind
+- [ ] Utilize plugin system for recompiling pages, for example with use of Tailwind
 - [x] Add config js file to opt-in to features
 - [ ] Plugin type system to run the opt-in features
 - [x] Add units tests
