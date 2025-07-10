@@ -1,5 +1,9 @@
+import { BascikConfig } from "./lib/config.js";
 import { watchFiles } from "./lib/watch.js";
-import { serveHttp2 } from "./lib/http2.js";
 
 watchFiles();
-serveHttp2();
+
+if (!BascikConfig.isBuild) {
+  const { serveHttp2 } = await import("./lib/http2.js");
+  serveHttp2();
+}

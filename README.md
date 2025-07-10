@@ -72,6 +72,9 @@ yarn debug
 - [ ] Config option for verbose logging. Toggles `{cause}` in `console.warn|error`.
 - [ ] Serve non html files such as images with the HTTP2 server. <https://stackoverflow.com/a/40899767/1469690>
 - [ ] When using integrated HTTP server, automatically reload web page on transpile.
+- [ ] Live reload if the page that's currently open is transpiled
+- [ ] Keep track of which components are on a page to selectively transpile pages
+- [x] Write `yarn build` so it skips in memory storage and http2 server, and only writes the files to dist.
 - [x] Validate no errors when /pages or /components dir does not exist
 - [x] Add support for directories in /components
 - [x] Add support for directories in /pages
