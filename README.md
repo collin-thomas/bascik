@@ -64,6 +64,7 @@ yarn debug
 - [ ] Handle all the querySelector and querySelectorAll variations <https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector> <https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelectorAll>
 - [x] Treat each instance of a component's name attr uniquely
 - [ ] Reusable elements within the `<head></head>` such as `<meta>` tags
+- [ ] Opt in dep for minifier dep of JavaScript & CSS
 - [ ] Add compile time terminal output for both `processPage()` and all `processAllPages`
 - [ ] Script tags that only run at build
 - [ ] Script tags that only run when a page is requested
