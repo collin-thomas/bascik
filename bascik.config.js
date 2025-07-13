@@ -10,4 +10,4 @@ export const bascikConfig = {
   cacheHttp: false,
 };
 
-export const productionOverrideConfig = {};
+export const buildOverrideConfig = {};
