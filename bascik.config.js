@@ -1,11 +1,13 @@
-export const config = {
+export const bascikConfig = {
+  scopeScriptBlocks: true,
+  scopeAttribute: {
+    class: true,
+    id: true,
+    name: true,
+  },
   minifyStyles: false,
   obfuscateAttributeNames: false,
   cacheHttp: false,
 };
 
-export const prodOverride = {
-  minifyStyles: true,
-  obfuscateAttributeNames: true,
-  cacheHttp: true,
-};
+export const productionOverrideConfig = {};
