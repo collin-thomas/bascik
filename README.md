@@ -87,6 +87,7 @@ yarn debug
 - [x] Copy non-html files from pages dir to dist
 - [x] Serve non html files such as images with the HTTP2 server.
 - [x] Compare hashes before overwriting files in dist to prevent needless disk io
+- [ ] Send live-reload event when non-html file is added/changed. We may not want to do this because it would require inspecting where that image is used, otherwise, we would live-reload on a change of any non-html file.
 - [ ] Update path RegExp's forward slashes to include backslashes so they work on Windows `[\\/]`
 - [ ] Utilize plugin system for recompiling pages, for example with use of Tailwind
 - [x] Add config js file to opt-in to features
