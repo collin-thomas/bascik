@@ -86,7 +86,8 @@ yarn debug
 - [ ] Show example using Tailwind
 - [x] Copy non-html files from pages dir to dist
 - [x] Serve non html files such as images with the HTTP2 server.
-- [ ] Compare hashes before overwriting files in dist to prevent needless disk io
+- [x] Compare hashes before overwriting files in dist to prevent needless disk io
+- [ ] Update path RegExp's forward slashes to include backslashes so they work on Windows `[\\/]`
 - [ ] Utilize plugin system for recompiling pages, for example with use of Tailwind
 - [x] Add config js file to opt-in to features
 - [ ] Plugin type system to run the opt-in features
