@@ -69,7 +69,12 @@ yarn debug
 - [ ] Add compile time terminal output for both `processPage()` and all `processAllPages`
 - [ ] Script tags that only run at build
 - [ ] Script tags that only run when a page is requested
-- [ ] If you defined a CSS file(s) for pages to reference copy it to dist dir
+- [ ] Example of external CSS files for pages
+- [ ] Consider only copy non-html files during build, reference src location in dev
+- [ ] Use package.json directory `file:` reference to develop this repo as an npm pkg < https://docs.npmjs.com/cli/v7/configuring-npm/package-json#local-paths>
+- [ ] Remove sync/blocking code and rely on streams
+- [ ] Add example of prefetch page links
+- [ ] Add optional mkcert to have local CA no cert warning
 - [ ] Add support for custom attributes/props, think custom image component. Testing with `<my-prop-test>` and `<my-prop>`. Need to write the code to make it work.
 - [ ] Config option for verbose logging. Toggles `{cause}` in `console.warn|error`.
 - [x] When using integrated HTTP server, automatically reload web page on transpile.
