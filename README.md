@@ -59,7 +59,7 @@ yarn debug
 - [x] Scope javascript variables
 - [x] Use config to toggle minify css
 - [x] In dev mode, write to the file system async, and serve the html string directly from memory via the http2 server
-- [ ] Make sure JS and CSS renaming is behind BascikConfig feature flags. That way if you use tailwind, it doesn't mess with it.
+- [x] Make sure JS and CSS renaming is behind BascikConfig feature flags. That way if you use tailwind, it doesn't mess with it.
 - [ ] Support square bracket css selectors ex. `[id] {color: #d3ff8d;}`
 - [ ] Support css attribute selectors
 - [ ] Handle all the querySelector and querySelectorAll variations <https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector> <https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelectorAll>
@@ -72,7 +72,6 @@ yarn debug
 - [ ] If you defined a CSS file(s) for pages to reference copy it to dist dir
 - [ ] Add support for custom attributes/props, think custom image component. Testing with `<my-prop-test>` and `<my-prop>`. Need to write the code to make it work.
 - [ ] Config option for verbose logging. Toggles `{cause}` in `console.warn|error`.
-- [ ] Serve non html files such as images with the HTTP2 server. <https://stackoverflow.com/a/40899767/1469690>
 - [x] When using integrated HTTP server, automatically reload web page on transpile.
 - [x] Live reload if the page that's currently open is transpiled
 - [x] Keep track of which components are on a page to selectively transpile pages
@@ -85,6 +84,9 @@ yarn debug
 - [ ] Convert to npm package and existing files as example projects
 - [ ] Add Dockerfile
 - [ ] Show example using Tailwind
+- [x] Copy non-html files from pages dir to dist
+- [x] Serve non html files such as images with the HTTP2 server.
+- [ ] Compare hashes before overwriting files in dist to prevent needless disk io
 - [ ] Utilize plugin system for recompiling pages, for example with use of Tailwind
 - [x] Add config js file to opt-in to features
 - [ ] Plugin type system to run the opt-in features
