@@ -1,0 +1,11 @@
+body {
+  background-color: #fff;
+  color: #000;
+  font-size: larger;
+}
+
+a:link,
+a:visited,
+a:active {
+  color: #000;
+}

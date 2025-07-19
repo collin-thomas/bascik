@@ -6,7 +6,8 @@
   "editor.insertSpaces": true,
   "editor.tabSize": 2,
   "search.exclude": {
-    "**/dist/**": true
+    "**/dist/**": true,
+    "**/node_modules/**": true
   },
   "[javascript]": {
     "editor.defaultFormatter": "vscode.typescript-language-features"

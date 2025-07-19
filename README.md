@@ -73,7 +73,6 @@ yarn debug
 - [ ] Consider only copy non-html files during build, reference src location in dev
 - [ ] Use package.json directory `file:` reference to develop this repo as an npm pkg < https://docs.npmjs.com/cli/v7/configuring-npm/package-json#local-paths>
 - [ ] Remove sync/blocking code and rely on streams
-- [ ] Add example of prefetch page links
 - [ ] Add optional mkcert to have local CA no cert warning
 - [ ] Add support for custom attributes/props, think custom image component. Testing with `<my-prop-test>` and `<my-prop>`. Need to write the code to make it work.
 - [ ] Config option for verbose logging. Toggles `{cause}` in `console.warn|error`.
@@ -92,7 +91,8 @@ yarn debug
 - [x] Copy non-html files from pages dir to dist
 - [x] Serve non html files such as images with the HTTP2 server.
 - [x] Compare hashes before overwriting files in dist to prevent needless disk io
-- [ ] Send live-reload event when non-html file is added/changed. We may not want to do this because it would require inspecting where that image is used, otherwise, we would live-reload on a change of any non-html file.
+- [ ] Send live-reload event when non-html file is added/changed. We may not want to do this because it would require inspecting where that image is used, otherwise, we would live-reload on a change of any non-html file. This might be necessary because of things like external stylesheets. We could watch for those.
+- [ ] Print style sheets expose for an interesting reason for why I maybe should support external stylesheets for components, but wait i do, so you just use  `@media print {}` which works fine. I wonder if you can only supply print.css when requesting to print or delay it, that's why you'd want separate files. I suppose since we put all the styles in the head anyways, we could put it in in a file and split out the @media or parse for `components/<name>.print.css` files
 - [ ] Update path RegExp's forward slashes to include backslashes so they work on Windows `[\\/]`
 - [ ] Utilize plugin system for recompiling pages, for example with use of Tailwind
 - [x] Add config js file to opt-in to features

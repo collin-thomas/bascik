@@ -1,0 +1,16 @@
+body {
+  background-color: #18191b;
+  color: #fff;
+  font-size: larger;
+}
+a:link,
+a:visited,
+a:active {
+  color: #ffffff;
+}
+a:hover {
+  color: #d3ff8d;
+}
+[v-cloak] {
+  visibility: hidden;
+}

@@ -43,3 +43,10 @@
     transform: perspective(500px) rotateY(40deg);
   }
 }
+
+@media print {
+  .home.logo {
+    background-color: #fff;
+    color: #000;
+  }
+}
