@@ -1,6 +1,6 @@
 {
   "name": "@bascik/bascik",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A Web Framework",
   "main": "transpile.js",
   "type": "module",

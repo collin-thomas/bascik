@@ -2,5 +2,9 @@
   "name": "demo-app",
   "version": "1.0.0",
   "type": "module",
+  "scripts": {
+    "pkg-dev": "node --inspect --watch-path=./bascik.config.js --watch-path=./node_modules/@bascik/bascik/src ./node_modules/@bascik/bascik/src/transpile.js",
+    "dev": "bascik"
+  },
   "dependencies": {}
 }
