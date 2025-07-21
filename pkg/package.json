@@ -1,5 +1,5 @@
 {
-  "name": "bascik",
+  "name": "@bascik/bascik",
   "version": "1.0.0",
   "description": "A Web Framework",
   "main": "transpile.js",
@@ -13,6 +13,10 @@
     "test": "vitest",
     "test:ci": "vitest run --coverage.enabled --coverage.reporter='text-summary'",
     "test:coverage": "vitest run --coverage.enabled"
+  },
+  "bin": {
+    "bascik": "./src/transpile.js",
+    "bascik-create-key": "./src/create-key.js"
   },
   "author": "collin-thomas",
   "dependencies": {

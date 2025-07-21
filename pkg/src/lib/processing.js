@@ -1,5 +1,11 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { listPages, getDirectoryPath, getDistPagePath, deleteDistFile } from "./file-system.js";
+import { 
+  listPages, 
+  getDirectoryPath, 
+  getDistPagePath, 
+  deleteDistFile, 
+  getRelativePath 
+} from "./file-system.js";
 import {
   listComponents,
   replaceTag,
@@ -68,12 +74,14 @@ export const recursivelyTranspile = (
 };
 
 export const selectivelyProcessPages = async (path) => {
-  const { componentName } = path.match(/^components\/(?<componentName>(\w|-)+)/).groups
+  const relativePath = getRelativePath(path, 'components')
+  const { componentName } = relativePath.match(/^components\/(?<componentName>(\w|-)+)/).groups
   const pagesToTranspile = mem.pagesThisComponentIsUsedOn(componentName)
   //console.debug('Component Changed:', componentName, { pagesToTranspile })
   const componentList = await listComponents()
-  pagesToTranspile.map((path) => {
-    return pageProcessing(path, componentList);
+  pagesToTranspile.map((absolutePagePath) => {
+    // We need the absolute page path for pageProcessing
+    return pageProcessing(absolutePagePath, componentList);
   })
 };
 
@@ -88,8 +96,11 @@ export const processAllPages = async () => {
 };
 
 export const pageProcessing = async (pagePath, componentList) => {
-  const dir = pagePath.split("/")[0];
-  if (dir !== "pages") return;
+  
+  const relativePagePath  = getRelativePath(pagePath, 'pages')
+
+  //const dir = pagePath.split("/")[0];
+  //if (dir !== "pages") return;
 
   // Get updated custom component list
   // We could be smarter about this by updating the list
@@ -141,7 +152,12 @@ export const pageProcessing = async (pagePath, componentList) => {
 
   // Memory
   if (!BascikConfig.isBuild) {
-    mem.storePage(pagePath, distHtml, usedComponents.map(({ name }) => name));
+    mem.storePage({
+      relativePagePath, 
+      absolutePagePath: pagePath, 
+      pageContent: distHtml, 
+      usedComponentsNames: usedComponents.map(({ name }) => name)
+    })
   }
 
   // File system is done async. 
@@ -149,16 +165,15 @@ export const pageProcessing = async (pagePath, componentList) => {
   (async () => {
     // Create directory
     // Doesn't hurt to run it if it exists, and it creates dist if it doesn't exist
-    const directoryPath = getDirectoryPath(pagePath);
+    const directoryPath = getDirectoryPath(relativePagePath);
     try {
       await mkdir(`dist/${directoryPath}`, { recursive: true });
     } catch (error) {
       console.error('Make directory error', error)
     }
 
-
     // Write the transpiled html
-    const distPagePath = getDistPagePath(pagePath);
+    const distPagePath = getDistPagePath(relativePagePath);
     try {
       await writeFile(distPagePath, distHtml);
     } catch (error) {
@@ -169,20 +184,21 @@ export const pageProcessing = async (pagePath, componentList) => {
     }
   })();
 
+  console.log(`transpiled: ${relativePagePath}`);
 
-  console.log(`transpiled: ${pagePath}`);
-
-  eventEmitter.emit('transpiled', { pagePath })
+  eventEmitter.emit('transpiled', { relativePagePath })
 
   // The return is only for debugging
-  return pagePath;
+  return relativePagePath;
 };
 
-export const removePage = (pagePath) => {
+export const removePage = (absolutePagePath) => {
+  const relativePagePath = getRelativePath(absolutePagePath, 'pages')
+
   // Memory
   if (!BascikConfig.isBuild) {
-    mem.removePage(pagePath)
+    mem.removePage(absolutePagePath)
   }
   // File system is async, do not await
-  deleteDistFile(pagePath)
+  deleteDistFile(relativePagePath)
 }

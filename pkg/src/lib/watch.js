@@ -7,7 +7,7 @@ import { MIME_MAP } from "./mime.js";
 export const watchFiles = () => {
   // Copy non-page files
   chokidar
-    .watch(["./pages"], {
+    .watch([BascikConfig.directory.pages], {
       ignored: (path, stats) => {
         const hasFileExt = Array.from(MIME_MAP.keys()).some(ext => (new RegExp(`${ext}$`)).test(path))
         return stats?.isFile() && !hasFileExt
@@ -23,7 +23,7 @@ export const watchFiles = () => {
 
   // Transpile pages as they change
   chokidar
-    .watch(["./pages"], {
+    .watch([BascikConfig.directory.pages], {
       // only watch html files
       ignored: (path, stats) => stats?.isFile() && !path.endsWith('.html'),
       persistent: !BascikConfig.isBuild,
@@ -35,7 +35,7 @@ export const watchFiles = () => {
 
   // Transpile pages if components change
   chokidar
-    .watch(["./components"], {
+    .watch([BascikConfig.directory.components], {
       ignored: (path, stats) => {
         return stats?.isFile() && !(path.endsWith('.html') || path.endsWith('.css'))
       },

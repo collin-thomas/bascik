@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { getComponentCss } from "./styles.js";
 import { deepReadDirFlat } from "./file-system.js";
+import { BascikConfig } from "./config.js";
 
 /**
  *
@@ -8,7 +9,7 @@ import { deepReadDirFlat } from "./file-system.js";
  */
 export const listComponents = async () => {
   const componentFileNames = await deepReadDirFlat(
-    "./components",
+    BascikConfig.directory.components,
     /\.(html|css)$/
   );
   const componentHtmlFileNames = componentFileNames.filter((fileName) => fileName.match(/\.(html)$/));
@@ -21,7 +22,7 @@ export const listComponents = async () => {
         const componentName = fileName.replace(/^.*[\\/]/, "").split(".")[0];
         // this is where we process the component
         const [fileContent, cssFileContent] = await Promise.all([
-          readFile(`./${fileName}`),
+          readFile(fileName),
           getComponentCss(fileName, componentCssFileNames)
         ])
         const component = {

@@ -136,7 +136,7 @@ export const getComponentCss = async (
   );
   if (!cssFileName) return;
   try {
-    return removeCommentsFromCss((await readFile(`./${cssFileName}`)).toString());
+    return removeCommentsFromCss((await readFile(cssFileName)).toString());
   } catch (error) {
     console.warn(`warning: Failed to read css for ${htmlFileName}`, error);
   }

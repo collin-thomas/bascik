@@ -5,6 +5,10 @@ export const bascikConfig = {
     id: true,
     name: true,
   },
+  directory: {
+    pages: 'src/pages',
+    components: 'src/components'
+  },
   minifyStyles: false,
   obfuscateAttributeNames: false,
   cacheHttp: false,

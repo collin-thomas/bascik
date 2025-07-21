@@ -8,8 +8,8 @@ class MemoryStore {
     this.#components = new Map()
   }
 
-  storePage(pagePath, pageContent, usedComponentsNames = []) {
-    const httpPath = getHttpPath(pagePath)
+  storePage({relativePagePath, absolutePagePath, pageContent, usedComponentsNames = []}) {
+    const httpPath = getHttpPath(relativePagePath)
 
     //this.#files.set(httpPath, pageContent)
     const buffer = Buffer.from(pageContent, 'utf8');
@@ -22,6 +22,8 @@ class MemoryStore {
 
     // More efficient to send Buffers to http2 stream.end()
     this.#files.set(httpPath, {
+      relativePagePath, 
+      absolutePagePath,
       content: buffer,
       compressedContent: br,
       usedComponentsSet,
@@ -34,14 +36,14 @@ class MemoryStore {
       if (!this.#components.has(componentName)) {
         this.#components.set(componentName, new Set())
       }
-      this.#components.get(componentName).add(pagePath)
+      this.#components.get(componentName).add(absolutePagePath)
     })
 
     // If a page no longer has component, remove that page from the component's set.
     //  ex: pageA has tag1 and tag2. then tag2 is removed from pageA.
     // tag2 should remove pageA from it's set.
     originalUsedComponentSet.difference(usedComponentsSet).forEach(unusedComponent => {
-      this.#components.get(unusedComponent).delete(pagePath)
+      this.#components.get(unusedComponent).delete(absolutePagePath)
     })
 
     //console.log('stored page in memory:', httpPath)
@@ -51,13 +53,14 @@ class MemoryStore {
     return this.#files.get(httpPath) || this.#files.get('/404')
   }
 
-  removePage(pagePath) {
-    const httpPath = getHttpPath(pagePath)
+  removePage(absolutePagePath) {
+    const relativePagePath = getRelativePath(absolutePagePath, 'pages')
+    const httpPath = getHttpPath(relativePagePath)
 
     // Remove page from components sets
     const { usedComponentsSet } = this.#files.get(httpPath)
     usedComponentsSet.forEach(componentName => {
-      this.#components.get(componentName).delete(pagePath)
+      this.#components.get(componentName).delete(absolutePagePath)
     })
 
     // Remove page from memory

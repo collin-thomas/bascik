@@ -13,8 +13,11 @@ export const serveHttp2 = async () => {
   const port = 8443;
   const origin = `https://${hostname}:${port}`
 
-  const key = await readFile("localhost-privkey.pem");
-  const cert = await readFile("localhost-cert.pem");
+  const keyPath = resolve(process.cwd(), 'localhost-privkey.pem');
+  const certPath = resolve(process.cwd(), 'localhost-cert.pem');
+
+  const key = await readFile(keyPath);
+  const cert = await readFile(certPath);
 
   const server = http2.createSecureServer({ key, cert, });
 
@@ -115,9 +118,9 @@ export const serveHttp2 = async () => {
 
         stream.write(`data: connected\n\n`);
 
-        const eventHandler = ({ pagePath }) => {
+        const eventHandler = ({ relativePagePath }) => {
           const refererUrl = new URL(headers.referer)
-          const httpPath = getHttpPath(pagePath)
+          const httpPath = getHttpPath(relativePagePath)
           if (refererUrl.pathname !== httpPath) return
           //console.debug('SSE:', referer)
           const data = `data: reload\n\n`;

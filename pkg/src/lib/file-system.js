@@ -2,6 +2,19 @@ import { readdir, rm, mkdir, copyFile } from "node:fs/promises";
 import { join, dirname, resolve } from "node:path";
 import { createHash } from 'node:crypto';
 import { createReadStream } from "node:fs";
+import { BascikConfig } from "./config.js";
+
+/**
+ * 
+ * @param {String} path absolute path
+ * @param {String} parentDir pages or components
+ * @returns 
+ */
+export const getRelativePath = (path, parentDir) => {
+  // Add pages to the path so we don't break all the existing code 
+  // that expects pages to be in a directory called pages
+  return `${parentDir}${path.split(BascikConfig.directory[parentDir])[1]}`
+}
 
 // Function from LLM
 async function calculateFileHash(filePath) {
@@ -28,8 +41,9 @@ async function calculateFileHash(filePath) {
  * Only copies if the contents differ.
  */
 export async function copyReplicatePath(src, destRoot) {
-  const relativePath = src.replace(/^pages[\\/]/, '');
-  const destPath = resolve(destRoot, relativePath);
+  const relativePath = getRelativePath(src, 'pages')
+  const relativePathWithoutPagesDir = relativePath.replace(/^pages[\\/]/, '');
+  const destPath = resolve(destRoot, relativePathWithoutPagesDir);
   const destDir = dirname(destPath);
 
   // Make dir path for file
