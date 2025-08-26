@@ -15,8 +15,7 @@
     "test:coverage": "vitest run --coverage.enabled"
   },
   "bin": {
-    "bascik": "./src/transpile.js",
-    "bascik-create-key": "./src/create-key.js"
+    "bascik": "./src/transpile.js"
   },
   "author": "collin-thomas",
   "dependencies": {
