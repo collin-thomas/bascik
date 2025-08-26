@@ -32,6 +32,24 @@ yarn dev
 yarn debug
 ```
 
+## Testing
+
+This method is good for testing and developing because it allows changes in the source package to be reflected.
+
+```sh
+cd demo-app
+yarn link @bascik/bascik
+```
+
+Or we can simulate installing the actual package. This is good for testing before publishing.
+
+```sh
+cd pkg
+npm pack
+cd ../demo-app
+yarn add bascik-bascik-0.1.0.tgz
+```
+
 ## Todo
 
 - [x] Recursively transpile custom components
