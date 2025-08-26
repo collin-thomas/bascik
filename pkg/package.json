@@ -4,6 +4,7 @@
   "description": "A Web Framework",
   "main": "transpile.js",
   "type": "module",
+  "license": "AGPL-3.0-only",
   "scripts": {
     "dev": "yarn create-key && node ${INSPECT} --watch-path=./transpile.js --watch-path=./lib --watch-path=./bascik.config.js ./transpile.js",
     "debug": "INSPECT=--inspect yarn dev",
@@ -15,7 +16,7 @@
     "test:coverage": "vitest run --coverage.enabled"
   },
   "bin": {
-    "bascik": "./src/transpile.js"
+    "bascik": "src/transpile.js"
   },
   "author": "collin-thomas",
   "dependencies": {
