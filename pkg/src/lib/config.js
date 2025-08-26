@@ -1,6 +1,8 @@
 import { resolve } from 'path'
 import { bascikConfig, buildOverrideConfig } from "./userConfig.js";
-const isBuild = parseInt(process.env.BASCIK_BUILD) === 1;
+
+const args = process.argv.slice(2);
+const isBuild = args.includes("--build") || parseInt(process.env.BASCIK_BUILD) === 1
 
 export const defaultConfig = {
   scopeScriptBlocks: true,

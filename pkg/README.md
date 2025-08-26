@@ -48,6 +48,7 @@ yarn debug
 - [x] Minify CSS
 - [x] Default slots
 - [ ] Support Void Elements (self-closing tags) ex. `<my-nav />`
+- [ ] Write tests for each feature. Rather than an individual function's functionality.
 - [x] Namespace and or randomize all HTML ids. Probably obfuscate like class names too. This way we can use ids in components and be able to use the same component twice on a page. First for all id="", then update where it is referenced. I can see how that gets complicated because what if the id is "a" then all a's get replaced? What is happening now with `<my-btn>` and `<my-btn2>` is there are multiple click event listeners registered to the first item in the DOM that claims the `id` attribute that the click event listeners are tied to.
 - [ ] We may want to move all script tags to the bottom of the page. I'm not sure what impact it has if any. If it's purely a style guide type thing then we can ignore it or make it low priority.
 - [ ] Consider using an attribute to define slots `<div data-bascik-slot></div>`, I think instead of reserved component name called `<slot-component>`. This would give us a more extendable convention if we supported named slots `<div data-bascik-slot-foobar></div>`.
