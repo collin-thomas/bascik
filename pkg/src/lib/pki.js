@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import { existsSync } from 'fs';
 import { execSync } from 'child_process';
 import { resolve } from 'path';
