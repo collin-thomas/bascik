@@ -5,9 +5,9 @@ import { obfuscateAttributeName } from "./names.js";
 
 /**
  *
- * @param {String} css Custom componetns CSS
+ * @param {String} css Custom components CSS
  * @param {String} componentName Name of custom HTML component
- * @returns {String} CSS string with prefeixed class names
+ * @returns {String} CSS string with prefixed class names
  */
 export const prefixClassesInCss = (css, componentName) => {
   return css.replace(/(?<=\.)[a-z0-9-_]+/gim, (className) =>
@@ -117,7 +117,7 @@ export const prefixKeyframes = (css, componentName) => {
 };
 
 export const removeIdSelectors = (css) => {
-  // Match any selector inbetween square brackets,
+  // Match any selector in between square brackets,
   // and all the code that comes after it between the curly brackets
   return css.replace(/\[.*?\].*?{[\s\S]*?}/gim, "");
 };

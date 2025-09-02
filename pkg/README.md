@@ -1,197 +1,99 @@
-# bascik
+# Bascik
 
-## Goals
+Bascik is a Web Framework, it closely resembles a Static Site Generator (SSG).
 
-- Create reusable custom HTML tags aka components
-- Ship zero Javascript by default
-- Work within HTML spec
+Write HTML, CSS, and JavaScript as components without any new skills.
 
-## Key Features
+Bascik allows you to split your HTML, CSS, and JavaScript into separate files to use as components, without any special syntax or configuration.
 
-- Components do not require importing or registering
-- Slots aka Component Children
-- Scoped Styles
+You don't write in a templating language, you don't write JavaScript as components, you simply define write HTML, and use CSS and JavaScript as needed, just as you would in a single HTML file.
 
-## Install Deps
+Let's say you want to build a website, you realize the navigation and footer needs shared on all pages. Instead of reaching for a JavaScript framework, templating language, etc, Bascik allows you to do what would come naturally, add the code for the navigation and footer to separate files and reference them as HTML elements.
 
-Requires Node.js v22
+Bascik will acts as a fancy find and replace machine and add your components code in place of the HTML tag name.
 
-```sh
-cd pkg
-yarn
+The cool trick is Bascik scopes component's CSS and JavaScript to avoid name conflicts across components or repeated use of components on a single page.
+
+Bascik proudly does not add any JavaScript to your pages, nor does it is attempt to alter your HTML by wrapping it other elements.
+
+## Getting Started
+
+Install with your package manager of choice:
+
+`yarn add @bascik/bascik`
+
+`pnpm add @bascik/bascik`
+
+`npm install @bascik/bascik`
+
+## Project Setup
+
+Add the Bascik npm scripts to your `package.json`.
+
+```json
+{
+  "scripts": {
+    "dev": "bascik",
+    "build": "bascik --build"
+  }
+}
 ```
 
-## Development
+The `dev` command will transpile your project and start the development server.
 
-### Development - NPM Link
+The `build` command will transpile your project and create a dist directory that can be deployed to a static website hosting solution.
 
-This method is good for testing and developing because it allows changes in the source package to be reflected. This allows for easy use of the node debugger.
+## Folder Structure
 
-```sh
-cd demo-app
-yarn link @bascik/bascik
-yarn pkg-dev
-```
+The two default directory bascik will look for are:
 
-### Development - Test Build
+- `src/pages`
+- `src/components`
 
-Or we can simulate installing the actual package. This is good for testing before publishing. You might have to call `yarn cache clean` if reinstalling.
+These directories can be overridden using the `bascik.config.js` file.
 
-```sh
-cd pkg
-npm pack
-cd ../demo-app
-yarn add bascik-bascik-0.1.0.tgz
-yarn dev
-```
+## Writing Components
 
-## Bascik Config
+Components get their name from the file or folder in which they are defined.
 
-The example bascik config file is in `demo-app/bascik.config.js`.
+For example, if you want to define a footer component, you would create the `src/components/footer.html` file and populate it with your HTML and JavaScript.
 
-This file can be used to override defaults defined in `pkg/src/lib/config.js`.
+If you want to style your component, use a folder name with the same name as the component, and add the HTML and CSS files with the same name as the component with that directory.
 
-## Todo
+For the footer example, create the directory `src/components/footer` and add the `footer.html` and `footer.css` within the directory.
 
-- [x] Recursively transpile custom components
-- [x] Watch HTML files for change to rerun transpile
-- [x] Support transpiling multiple pages & directories of files
-- [x] Add scoped styles via classes
-- [x] Add scoped styles for elements
-- [x] Add scoped style support for `@media`
-- [x] Add scoped style support for `@keyframes`
-- [x] Strip scoped id styling from components
-- [x] Remove comments from scoped styles
-- [x] Add support for pseudo-elements
-- [x] Opt-in or "prod build" feature to obfuscate & minify class names
-- [x] Minify CSS
-- [x] Default slots
-- [ ] Support Void Elements (self-closing tags) ex. `<my-nav />`
-- [ ] Write tests for each feature. Rather than an individual function's functionality.
-- [x] Namespace and or randomize all HTML ids. Probably obfuscate like class names too. This way we can use ids in components and be able to use the same component twice on a page. First for all id="", then update where it is referenced. I can see how that gets complicated because what if the id is "a" then all a's get replaced? What is happening now with `<my-btn>` and `<my-btn2>` is there are multiple click event listeners registered to the first item in the DOM that claims the `id` attribute that the click event listeners are tied to.
-- [ ] We may want to move all script tags to the bottom of the page. I'm not sure what impact it has if any. If it's purely a style guide type thing then we can ignore it or make it low priority.
-- [ ] Consider using an attribute to define slots `<div data-bascik-slot></div>`, I think instead of reserved component name called `<slot-component>`. This would give us a more extendable convention if we supported named slots `<div data-bascik-slot-foobar></div>`.
-- [ ] Named slots <https://vuejs.org/guide/components/slots.html#named-slots>
-- [ ] Slots fallback content <https://vuejs.org/guide/components/slots.html#fallback-content>
-- [x] Test adding vue-petite to a page <https://github.com/vuejs/petite-vue#usage>
-- [x] Add scoped JS script tags
-- [x] Preserve new lines in script tags so lack of semicolons doesn't break the code
-- [x] Scope javascript variables
-- [x] Use config to toggle minify css
-- [x] In dev mode, write to the file system async, and serve the html string directly from memory via the http2 server
-- [x] Make sure JS and CSS renaming is behind BascikConfig feature flags. That way if you use tailwind, it doesn't mess with it.
-- [ ] Support square bracket css selectors ex. `[id] {color: #d3ff8d;}`
-- [ ] Support css attribute selectors
-- [ ] Handle all the querySelector and querySelectorAll variations <https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector> <https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelectorAll>
-- [x] Treat each instance of a component's name attr uniquely
-- [ ] Reusable elements within the `<head></head>` such as `<meta>` tags
-- [ ] Opt in dep for minifier dep of JavaScript & CSS
-- [ ] Add compile time terminal output for both `processPage()` and all `processAllPages`
-- [ ] Script tags that only run at build
-- [ ] Script tags that only run when a page is requested
-- [ ] Example of external CSS files for pages
-- [ ] Consider only copy non-html files during build, reference src location in dev
-- [x] Use package.json directory `file:` reference to develop this repo as an npm pkg < https://docs.npmjs.com/cli/v7/configuring-npm/package-json#local-paths>
-- [ ] Remove sync/blocking code and rely on streams
-- [ ] Add optional mkcert to have local CA no cert warning
-- [ ] Add support for custom attributes/props, think custom image component. Testing with `<my-prop-test>` and `<my-prop>`. Need to write the code to make it work.
-- [ ] Config option for verbose logging. Toggles `{cause}` in `console.warn|error`.
-- [x] When using integrated HTTP server, automatically reload web page on transpile.
-- [x] Live reload if the page that's currently open is transpiled
-- [x] Keep track of which components are on a page to selectively transpile pages
-- [x] Write `yarn build` so it skips in memory storage and http2 server, and only writes the files to dist.
-- [x] Validate no errors when /pages or /components dir does not exist
-- [x] Add support for directories in /components
-- [x] Add support for directories in /pages
-- [x] Add optional server to serve static files. Remove .html.
-- [x] 404 handling for custom HTTP2 server
-- [x] Convert to npm package and existing files as example projects
-- [ ] Add Dockerfile
-- [ ] Show example using Tailwind
-- [x] Copy non-html files from pages dir to dist
-- [x] Serve non html files such as images with the HTTP2 server.
-- [x] Compare hashes before overwriting files in dist to prevent needless disk io
-- [ ] Send live-reload event when non-html file is added/changed. We may not want to do this because it would require inspecting where that image is used, otherwise, we would live-reload on a change of any non-html file. This might be necessary because of things like external stylesheets. We could watch for those.
-- [ ] Print style sheets expose for an interesting reason for why I maybe should support external stylesheets for components, but wait i do, so you just use  `@media print {}` which works fine. I wonder if you can only supply print.css when requesting to print or delay it, that's why you'd want separate files. I suppose since we put all the styles in the head anyways, we could put it in in a file and split out the @media or parse for `components/<name>.print.css` files
-- [ ] Update path RegExp's forward slashes to include backslashes so they work on Windows `[\\/]`
-- [ ] Utilize plugin system for recompiling pages, for example with use of Tailwind
-- [x] Add config js file to opt-in to features
-- [ ] Plugin type system to run the opt-in features
-- [x] Add units tests
-- [ ] Consider being able to use npm packages
-- [ ] Filter unused styles
-- [ ] Add test coverage badge <https://github.com/vitest-dev/vitest/pull/2578#issuecomment-1368082900>
+## Example Page and Component
 
-### Abandoned todos
+### Example Component HTML
 
-- Add scoped styles via IDs. This may be more complicated because of all the conditionals. <https://www.w3schools.com/cssref/trysel.php>
+File Path: `src/components/site-nav/site-nav.html`
 
-## Usage
-
-### Slots
-
-Definition `tag-a.html`:
+File Content:
 
 ```html
-<p>tag-a</p>
-<slot-component></slot-component>
-<p>more text</p>
-```
-
-Usage:
-
-```html
-<tag-a>
-  <p>Hello World</p>
-</tag-a>
-```
-
-Rendered:
-
-```html
-<p>tag-a</p>
-<p>Hello World</p>
-<p>more text</p>
-```
-
-## HTTPS
-
-The `lib/pki.js` file is written to be OS and shell agnostic. It does require `openssl` to be part of the user's PATH.
-
-## Scoped Styles
-
-Works with files of the same name with `.css` extension.
-
-The `<style>` tag is not valid defined outside of the `<head>` so scoped styles cannot be defined within one.
-
-Scoped styles for elements can be toggled via bascik configuration file.
-
-Scoped Styles are injected into each page where their component is used.
-
-### @media and @keyframes
-
-With scoped styles enabled, `@media` and `@keyframes` are also scoped.
-
-### How Scoped Styles work
-
-### How Scoped Styles for Classes work
-
-Classes are automatically named spaced for the element.
-
-Take for example the following components and styles.
-
-`components/custom-nav.html`
-
-```html
-<nav class="navigation">
+<nav class="navigation header">
   <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="/about">About</a></li>
+    <li><a href="/">index</a></li>
+    <li><a href="/about">about</a></li>
+    <li><a href="/contact">contact</a></li>
   </ul>
 </nav>
+
+<script>
+  const links = navLinks.querySelectorAll('a');
+  links.forEach(link => {
+    link.addEventListener('mouseover', () => {
+      console.log(`Hover: ${link.textContent}`);
+    });
+  });
+</script>
 ```
 
-`components/custom-nav/custom-nav.css`
+### Example Component CSS
+
+File Path: `src/components/site-nav/site-nav.css`
+
+File Content:
 
 ```css
 .navigation ul {
@@ -199,166 +101,25 @@ Take for example the following components and styles.
   margin: unset;
   padding: unset;
 }
+
 .navigation ul li {
   display: inline-block;
 }
+
 .navigation ul li a {
   padding: 8px;
 }
-```
 
-`pages/index.html`
-
-```html
-<html>
-  <body>
-    <custom-nav></custom-nav>
-  </body>
-</html>
-```
-
-Results in the following rendered html.
-
-```html
-<html>
-  <style>
-    .bascik__custom-nav__navigation ul {
-      list-style-type: none;
-      margin: unset;
-      padding: unset;
-    }
-    .bascik__custom-nav__navigation ul li {
-      display: inline-block;
-    }
-    .bascik__custom-nav__navigation ul li a {
-      padding: 8px;
-    }
-  </style>
-  <body>
-    <nav class="bascik__custom-nav__navigation">
-      <ul>
-        <li><a href="/">Home</a></li>
-        <li><a href="/about">About</a></li>
-      </ul>
-    </nav>
-  </body>
-</html>
-```
-
-### How Scoped Styles for Elements work
-
-Auto inject class per instance of element.
-
-The intention is not to inject any extra elements into the transpiled html.
-
-For example, all `<p>` tags would have the class `bascik-p` added.
-
-Then the css would be as you would expect.
-
-Defining an element's style.
-
-```css
-p {
-  text-decoration: #d3ff8d wavy underline;
+.header {
+  padding-top: 16px;
 }
 ```
 
-Writing a component using native HTML elements.
+### Example Page
 
-```html
-<p>hello</p>
-<p>world</p>
-```
+File Path: `src/pages/index.html`
 
-`pages/index.html`
-
-```html
-<html>
-  <body>
-    <custom-comp></custom-comp>
-  </body>
-</html>
-```
-
-Results in the following html being rendered.
-
-```html
-<html>
-  <style>
-    .bascik__custom-comp__el__p {
-      text-decoration: #d3ff8d wavy underline;
-    }
-  </style>
-  <body>
-    <p class="bascik__custom-comp__el__p">hello</p>
-    <p class="bascik__custom-comp__el__p">world</p>
-  </body>
-</html>
-```
-
-## Scoped JavaScript
-
-I have to make the choice of should I make all JavaScript scoped or only `data-bascik-scoped` scoped.
-
-What makes it scoped? The scope would be the `name` and `id` attributes. I suppose `class` attributes as well.
-
-If I choose to only scope that is within `data-bascik-scoped`, I first have to look at the JavaScript selectors.
-
-Only the `id` or `name` attributes that are being selected by the scoped JavaScript would get updated.
-
-However the problem with that is what if non-scoped JavaScript is also selecting it.
-
-At that point it makes sense that JavaScript is scoped my default.
-
-What if I want global JavaScript?
-
-When would you want global JavaScript?
-
-I could see wanting to share state between components via a global store.
-
-But that doesn't involve `id` or `name` attributes. That's just pure JavaScript.
-
-The JavaScript itself isn't scoped, it's just the `id` and `name` are randomized.
-
-I think this thought exercise results in me saying that specifying `data-bascik-scoped` is unnecessary.
-
----
-
-If we are scoping via `id` and `name`, we will have to be aware that will break CSS selectors such as `input[name="my-name"]`.
-
-The scoping of `id` and `name` for Scoped JavaScript will have to work in harmony with Scoped CSS.
-
-I should rethink the code and just scope and randomize all `id`, `name`, `class` attribute values in the HTML, CSS, and JavaScript. That would take care of everything.
-
----
-
-It will look at a component and find all ids and give them a hash
-Then it will look if any script tags have the attribute `data-bascik-scoped`
-If so, it will then find and replace the id with the hash.
-
-This is all fine and good for ids, but if you use something like `document.getElementsByTagName('p')`,
-then it becomes a problem. The script will be done at runtime and select all the `<p>` tags,
-even if there were not any `<p>` tags in the component itself.
-
-To effectively scope the JS, it would have to be evaluated at runtime.
-But in most cased that probably defeats the purpose of the script.
-
-That's why I continue to believe injecting petite-vue into the page will be the best option.
-
-```html
-<button id="my-btn" type="button">Click</button>
-
-<script data-bascik-scoped>
-  document.getElementById("my-btn").addEventListener("click", () => {
-    alert("hello");
-  });
-  console.log(document.getElementsByTagName("p"));
-</script>
-```
-
-## Example
-
-Source
+File Content:
 
 ```html
 <!DOCTYPE html>
@@ -367,136 +128,92 @@ Source
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <style>
-      body {
-        background-color: #18191b;
-        color: #fff;
-        font-size: larger;
-      }
-    </style>
+    <title>Home</title>
+    <!-- There isn't anything preventing you from adding stylesheets or a <style> tag -->
+    <!-- <link rel="stylesheet" href="/css/styles.css" /> -->
+    <!-- <link rel="stylesheet" href="/css/print.css" media="print" /> -->
   </head>
   <body>
-    <h1>Heading 1</h1>
-    <tag-a data-bascik-test="hello">
-      <tag-b>
-        <p>hello</p>
-        <tag-c></tag-c>
-        <tag-c></tag-c>
-        <tag-d></tag-d>
-        <tag-d></tag-d>
-        <p>goodbye</p>
-      </tag-b>
-    </tag-a>
-    <tag-a>
-      <tag-b>
-        <p>hello</p>
-        <tag-c></tag-c>
-        <tag-d></tag-d>
-        <p>goodbye</p>
-      </tag-b>
-    </tag-a>
-    <footer>
-      <hr />
-      footer
-    </footer>
+    <site-nav></site-nav>
+    <h1>Hello World</h1>
   </body>
 </html>
 ```
 
-Rendered
+## JavaScript
+
+You can add JavaScript to any page or component HTML file in a `<script>` tag as you normally would.
+
+## Nested Elements aka Slots
+
+There is a custom reserved tag within Bascik called `<slot-component>` which can be used to signal to the Bascik transpiler that HTML tags, including other Bascik components, can be nested elements.
+
+Create a component file called `components/tag-a.html` with the following HTML:
 
 ```html
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <style>
-      body {
-        background-color: #18191b;
-        color: #fff;
-        font-size: larger;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Heading 1</h1>
-    <div>
-      <p>tag-a</p>
-      <div>
-        <p>tag-b</p>
-        <p>hello</p>
-        <div><p>tag-c</p></div>
-        <div><p>tag-c</p></div>
-        <div><p>tag-d</p></div>
-        <div><p>tag-d</p></div>
-        <p>goodbye</p>
-      </div>
-    </div>
-    <div>
-      <p>tag-a</p>
-      <div>
-        <p>tag-b</p>
-        <p>hello</p>
-        <div><p>tag-c</p></div>
-        <div><p>tag-d</p></div>
-        <p>goodbye</p>
-      </div>
-    </div>
-    <footer>
-      <hr />
-      footer
-    </footer>
-  </body>
-</html>
+<p>tag-a</p>
+<slot-component></slot-component>
+<p>foo bar</p>
 ```
 
-## Notes
+Then in a the `pages/index.html` file add the following HTML:
 
-Scoped css styles
+```html
+<tag-a>
+  <p>Hello World</p>
+</tag-a>
+```
 
-<https://github.com/PM5544/scoped-polyfill/blob/master/readme.md>
+The Bascik transpiler will output the following HTML:
 
-Scoped script tag (half baked)
+```html
+<p>tag-a</p>
+<p>Hello World</p>
+<p>foo bar</p>
+```
 
-<https://gist.github.com/dy/2124c2dfcbdd071f38e866b85436c6c5>
+## Bascik Config
 
-Any way to serve static html files from express without the extension?
-<https://stackoverflow.com/questions/16895047/any-way-to-serve-static-html-files-from-express-without-the-extension>
+This file is optional. You can add the `bascik.config.js` to the root of your project to override default configurations of Bascik. You can also set configuration overrides specifically for the build.
 
-I don't want to couple this to express or any server. nginx or just S3 buckets should be enough. This should just be an option.
-
-Inlining CSS for performance
-
-<https://blog.logrocket.com/improve-site-performance-inlining-css/>
-
-Load optimized npm packages with no install and no build tools.
-
-<https://www.skypack.dev/>
-
-### Pipeline
-
-To create a JavaScript pipeline that passes a string to each function further modifying it without reassigning a variable each time, you can use the Array.prototype.reduce() method in combination with arrow functions.
-
-Here is an example of how you can implement such a pipeline:
+The following is an example where all the default configurations are set.
 
 ```js
-const str = "Hello, World!";
+export const bascikConfig = {
+  scopeScriptBlocks: true,
+  scopeAttribute: {
+    class: true,
+    id: true,
+    name: true,
+  },
+  directory: {
+    pages: 'src/pages',
+    components: 'src/components'
+  },
+  minifyStyles: false,
+  obfuscateAttributeNames: false,
+  cacheHttp: false,
+};
 
-const modifyStr = (...functions) =>
-  functions.reduce((result, func) => func(result), str);
-
-const upperCase = (str) => str.toUpperCase();
-const addExclamation = (str) => `${str}!`;
-const reverse = (str) => str.split("").reverse().join("");
-
-const finalStr = modifyStr(upperCase, addExclamation, reverse);
-console.log(finalStr); // Output: "!DLROW ,OLLEH"
+export const buildOverrideConfig = {};
 ```
 
-In this example, the modifyStr() function takes a string and an array of functions as arguments. The reduce() method is used to apply each function to the string, with the result of each function being passed as input to the next function. The final result is returned as the output of the modifyStr() function.
+## Development Server
 
-To use this pipeline, you can define any number of functions that take a string as input and return a modified string, and then pass these functions as arguments to the modifyStr() function. The pipeline will then apply each function in turn to the input string, without requiring the use of intermediate variables.
+The dev server that runs when calling the `bascik` command is a Node.js HTTP/2 server. It will generate a self-signed certificate.
+
+Note:
+
+If your bothered by clicking to ignore the cert warning, you can launch Chrome with the `--ignore-certificate-errors` flag to ignore the cert warning. Alternatively, you can configure your system to trust the certificate.
+
+The development server servers your pages from memory, not from disk, for a super fast development experience. The page data is also compressed for further performance improvements.
+
+### Live Reload
+
+The development server has smart live reloading.
+
+If you modify a the source of a page that is currently open in the browser, that page will be reloaded in the browser.
+
+If you modify and component that it utilized on a page the is currently open in the browser, that page will be reloaded.
+
+This provides a great developer experience where your changes are reflected instantly.

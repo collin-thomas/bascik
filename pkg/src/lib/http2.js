@@ -13,8 +13,8 @@ export const serveHttp2 = async () => {
   const port = 8443;
   const origin = `https://${hostname}:${port}`
 
-  const keyPath = resolve(process.cwd(), 'localhost-privkey.pem');
-  const certPath = resolve(process.cwd(), 'localhost-cert.pem');
+  const keyPath = resolve(process.cwd(), 'bascik-privkey.pem');
+  const certPath = resolve(process.cwd(), 'bascik-cert.pem');
 
   const key = await readFile(keyPath);
   const cert = await readFile(certPath);
