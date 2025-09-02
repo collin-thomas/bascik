@@ -98,7 +98,7 @@ describe("deleteDistFile", () => {
   it("test", async () => {
     const pagePath = '"./test.js"';
     await deleteDistFile(pagePath);
-    expect(console.log).toHaveBeenCalledWith(`deleted: ${pagePath}`);
+    expect(console.log).toHaveBeenCalledWith(`deleted file: ${pagePath}`);
   });
 });
 
@@ -106,7 +106,7 @@ describe("deleteDistDir", () => {
   it("test", async () => {
     const dirPath = '"./dir"';
     await deleteDistDir(dirPath);
-    expect(console.log).toHaveBeenCalledWith(`deleted: ${dirPath}`);
+    expect(console.log).toHaveBeenCalledWith(`deleted dir: ${dirPath}`);
   });
 });
 
