@@ -6,7 +6,7 @@ Write HTML, CSS, and JavaScript as components without any new skills.
 
 Bascik allows you to split your HTML, CSS, and JavaScript into separate files to use as components, without any special syntax or configuration.
 
-You don't write in a templating language, you don't write JavaScript as components, you simply define write HTML, and use CSS and JavaScript as needed, just as you would in a single HTML file.
+You don't write in a templating language, you don't write JavaScript as components, you simply write HTML, and use CSS and JavaScript as needed, just as you would in a single HTML file.
 
 Let's say you want to build a website, you realize the navigation and footer needs shared on all pages. Instead of reaching for a JavaScript framework, templating language, etc, Bascik allows you to do what would come naturally, add the code for the navigation and footer to separate files and reference them as HTML elements.
 
@@ -204,9 +204,9 @@ The dev server that runs when calling the `bascik` command is a Node.js HTTP/2 s
 
 Note:
 
-If your bothered by clicking to ignore the cert warning, you can launch Chrome with the `--ignore-certificate-errors` flag to ignore the cert warning. Alternatively, you can configure your system to trust the certificate.
+If you're bothered by clicking to ignore the cert warning, you can launch Chrome with the `--ignore-certificate-errors` flag to ignore the cert warning. Alternatively, you can configure your system to trust the certificate.
 
-The development server servers your pages from memory, not from disk, for a super fast development experience. The page data is also compressed for further performance improvements.
+The development server serves your pages from memory, not from disk, for a super fast development experience. The page data is also compressed for further performance improvements.
 
 ### Live Reload
 
