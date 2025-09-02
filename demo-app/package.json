@@ -8,5 +8,7 @@
     "dev": "bascik",
     "build": "bascik --build"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@bascik/bascik": "../pkg/bascik-bascik-0.1.0.tgz"
+  }
 }

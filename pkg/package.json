@@ -6,11 +6,6 @@
   "type": "module",
   "license": "AGPL-3.0-only",
   "scripts": {
-    "dev": "yarn create-key && node ${INSPECT} --watch-path=./transpile.js --watch-path=./lib --watch-path=./bascik.config.js ./transpile.js",
-    "debug": "INSPECT=--inspect yarn dev",
-    "build": "BASCIK_BUILD=1 node ./transpile.js",
-    "create-key-clobber": "./create-key",
-    "create-key": "(node -e \"if (!require('fs').existsSync('./localhost-cert.pem') || !require('fs').existsSync('./localhost-privkey.pem')) { console.log('key pair exists'); process.exit(1); } \") || yarn create-key-clobber",
     "test": "vitest",
     "test:ci": "vitest run --coverage.enabled --coverage.reporter='text-summary'",
     "test:coverage": "vitest run --coverage.enabled"

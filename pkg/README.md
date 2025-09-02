@@ -17,38 +17,39 @@
 Requires Node.js v22
 
 ```sh
+cd pkg
 yarn
 ```
 
 ## Development
 
-```sh
-yarn dev
-```
+### Development - NPM Link
 
-## Debug
-
-```sh
-yarn debug
-```
-
-## Testing
-
-This method is good for testing and developing because it allows changes in the source package to be reflected.
+This method is good for testing and developing because it allows changes in the source package to be reflected. This allows for easy use of the node debugger.
 
 ```sh
 cd demo-app
 yarn link @bascik/bascik
+yarn pkg-dev
 ```
 
-Or we can simulate installing the actual package. This is good for testing before publishing.
+### Development - Test Build
+
+Or we can simulate installing the actual package. This is good for testing before publishing. You might have to call `yarn cache clean` if reinstalling.
 
 ```sh
 cd pkg
 npm pack
 cd ../demo-app
 yarn add bascik-bascik-0.1.0.tgz
+yarn dev
 ```
+
+## Bascik Config
+
+The example bascik config file is in `demo-app/bascik.config.js`.
+
+This file can be used to override defaults defined in `pkg/src/lib/config.js`.
 
 ## Todo
 
@@ -90,7 +91,7 @@ yarn add bascik-bascik-0.1.0.tgz
 - [ ] Script tags that only run when a page is requested
 - [ ] Example of external CSS files for pages
 - [ ] Consider only copy non-html files during build, reference src location in dev
-- [ ] Use package.json directory `file:` reference to develop this repo as an npm pkg < https://docs.npmjs.com/cli/v7/configuring-npm/package-json#local-paths>
+- [x] Use package.json directory `file:` reference to develop this repo as an npm pkg < https://docs.npmjs.com/cli/v7/configuring-npm/package-json#local-paths>
 - [ ] Remove sync/blocking code and rely on streams
 - [ ] Add optional mkcert to have local CA no cert warning
 - [ ] Add support for custom attributes/props, think custom image component. Testing with `<my-prop-test>` and `<my-prop>`. Need to write the code to make it work.
@@ -104,7 +105,7 @@ yarn add bascik-bascik-0.1.0.tgz
 - [x] Add support for directories in /pages
 - [x] Add optional server to serve static files. Remove .html.
 - [x] 404 handling for custom HTTP2 server
-- [ ] Convert to npm package and existing files as example projects
+- [x] Convert to npm package and existing files as example projects
 - [ ] Add Dockerfile
 - [ ] Show example using Tailwind
 - [x] Copy non-html files from pages dir to dist
@@ -153,9 +154,9 @@ Rendered:
 <p>more text</p>
 ```
 
-## Developer Docs
+## HTTPS
 
-The file and npm script `create-key` are written they way they are to be OS and shell agnostic. It does require `openssl` to be part of the user's PATH.
+The `lib/pki.js` file is written to be OS and shell agnostic. It does require `openssl` to be part of the user's PATH.
 
 ## Scoped Styles
 

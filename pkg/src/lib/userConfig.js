@@ -7,7 +7,7 @@ const configPath = resolve(process.cwd(), 'bascik.config.js');
 const userConfig = {};
 if (existsSync(configPath)) {
   try {
-    const {bascikConfig, buildOverrideConfig} = (require(configPath)) ?? {};
+    const { bascikConfig, buildOverrideConfig } = (require(configPath)) ?? {};
     userConfig.bascikConfig = bascikConfig
     userConfig.buildOverrideConfig = buildOverrideConfig
   } catch (err) {
@@ -18,5 +18,5 @@ if (existsSync(configPath)) {
   console.warn('[bascik] No bascik.config.js found. Using defaults.');
 }
 
-export const {bascikConfig, buildOverrideConfig} = userConfig
+export const { bascikConfig, buildOverrideConfig } = userConfig
 
