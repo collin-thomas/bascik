@@ -1,20 +1,20 @@
 # Bascik
 
-Bascik is a Web Framework, it closely resembles a Static Site Generator (SSG).
+Bascik is a Web Framework. It most closely resembles a Static Site Generator (SSG).
 
-Write HTML, CSS, and JavaScript as components without any new skills.
+Bascik is not a JavaScript Framework. You don't write JavaScript as components. Bascik does not require special syntax or a templating language.
 
-Bascik allows you to split your HTML, CSS, and JavaScript into separate files to use as components, without any special syntax or configuration.
+With Bascik, you simply write HTML in component and page files. You can use CSS and JavaScript as needed.
 
-You don't write in a templating language, you don't write JavaScript as components, you simply write HTML, and use CSS and JavaScript as needed, just as you would in a single HTML file.
+Unlike other Frameworks, Bascik does not require configuration files or to learn new HTML attributes.
 
-Let's say you want to build a website, you realize the navigation and footer needs shared on all pages. Instead of reaching for a JavaScript framework, templating language, etc, Bascik allows you to do what would come naturally, add the code for the navigation and footer to separate files and reference them as HTML elements.
-
-Bascik will acts as a fancy find and replace machine and add your components code in place of the HTML tag name.
+Bascik acts as a fancy find and replace machine by replacing your components code in place of the HTML tag name.
 
 The cool trick is Bascik scopes component's CSS and JavaScript to avoid name conflicts across components or repeated use of components on a single page.
 
-Bascik proudly does not add any JavaScript to your pages, nor does it is attempt to alter your HTML by wrapping it other elements.
+Bascik proudly does not add any JavaScript to your pages, nor does it attempt to alter your code, or wrap HTML in other elements.
+
+Bascik is best summarized in the following scenario: Let's say you want to build a website, you realize the navigation and footer need to be on all the pages. Instead of reaching for a JavaScript framework, templating language, etc, Bascik allows you to do what would come naturally, add the code for the navigation and footer to separate files and reference them as HTML elements. This keeps your pages lightweight, you don't have to learn anything, and you're in full control.
 
 ## Getting Started
 
@@ -45,12 +45,16 @@ The `build` command will transpile your project and create a dist directory that
 
 ## Folder Structure
 
-The two default directory bascik will look for are:
+These are the two default directories Bascik will look for:
 
 - `src/pages`
 - `src/components`
 
 These directories can be overridden using the `bascik.config.js` file.
+
+The `pages` directory can contain CSS files, other directories such as an img directory, it's a normal directory.
+
+The `components` directory is where you add you component files and directories.
 
 ## Writing Components
 
@@ -58,11 +62,13 @@ Components get their name from the file or folder in which they are defined.
 
 For example, if you want to define a footer component, you would create the `src/components/footer.html` file and populate it with your HTML and JavaScript.
 
-If you want to style your component, use a folder name with the same name as the component, and add the HTML and CSS files with the same name as the component with that directory.
+If you want to style your component, use a folder name with the same name as the component, and add the HTML and CSS files with the same name as the component in the component directory.
 
 For the footer example, create the directory `src/components/footer` and add the `footer.html` and `footer.css` within the directory.
 
-## Example Page and Component
+## Example Component and Page
+
+Here is a simple example to get you started.
 
 ### Example Component HTML
 
@@ -156,20 +162,28 @@ Create a component file called `components/tag-a.html` with the following HTML:
 <p>foo bar</p>
 ```
 
-Then in a the `pages/index.html` file add the following HTML:
+Then in the `pages/index.html` file add the following HTML:
 
 ```html
-<tag-a>
-  <p>Hello World</p>
-</tag-a>
+<html>
+<body>
+  <tag-a>
+    <p>Hello World</p>
+  </tag-a>
+</body>
+</html>
 ```
 
-The Bascik transpiler will output the following HTML:
+The Bascik transpiler will output the following HTML for the index page:
 
 ```html
-<p>tag-a</p>
-<p>Hello World</p>
-<p>foo bar</p>
+<html>
+<body>
+  <p>tag-a</p>
+  <p>Hello World</p>
+  <p>foo bar</p>
+</body>
+</html>
 ```
 
 ## Bascik Config
