@@ -8,13 +8,15 @@ With Bascik, you simply write HTML in component and page files. You can use CSS 
 
 Unlike other Frameworks, Bascik does not require configuration files or to learn new HTML attributes.
 
-Bascik acts as a fancy find and replace machine by replacing your components code in place of the HTML tag name.
+Bascik acts as a fancy find and replace machine by replacing references to your HTML components with the associated source code.
 
-The cool trick is Bascik scopes component's CSS and JavaScript to avoid name conflicts across components or repeated use of components on a single page.
+The cool trick is Bascik scopes component's CSS and JavaScript to avoid name conflicts across components or repeated use of components on the same page.
 
 Bascik proudly does not add any JavaScript to your pages, nor does it attempt to alter your code, or wrap HTML in other elements.
 
-Bascik is best summarized in the following scenario: Let's say you want to build a website, you realize the navigation and footer need to be on all the pages. Instead of reaching for a JavaScript framework, templating language, etc, Bascik allows you to do what would come naturally, add the code for the navigation and footer to separate files and reference them as HTML elements. This keeps your pages lightweight, you don't have to learn anything, and you're in full control.
+Bascik is best summarized in the following scenario: Let's say you want to build a website, you realize the navigation and footer needs to be on all the pages. Instead of reaching for a JavaScript framework, templating language, etc, Bascik allows you to do what would come naturally, add the code for the navigation and footer to separate files and reference them as HTML elements. This keeps your pages lightweight and you don't have to learn anything.
+
+One last thing, frameworks require to you learn their system and their way of doing things. This requires the framework to have robust documentation and an ecosystem of tutorials and blogs. Bascik adheres to the idea that all the documentation you should need is on [MDN](https://developer.mozilla.org/).
 
 ## Getting Started
 
@@ -52,7 +54,7 @@ These are the two default directories Bascik will look for:
 
 These directories can be overridden using the `bascik.config.js` file.
 
-The `pages` directory can contain CSS files, other directories such as an img directory, it's a normal directory.
+The `pages` directory is where each route is defined by creating `.html` files with the name of each route, same as you would in a traditional static site. The pages directory can contain CSS files, other directories such as an img directory, it's a normal directory.
 
 The `components` directory is where you add you component files and directories.
 
@@ -60,11 +62,11 @@ The `components` directory is where you add you component files and directories.
 
 Components get their name from the file or folder in which they are defined.
 
-For example, if you want to define a footer component, you would create the `src/components/footer.html` file and populate it with your HTML and JavaScript.
+For example, if you want to define a footer component, you would create the `components/footer.html` file and populate it with your HTML and JavaScript.
 
 If you want to style your component, use a folder name with the same name as the component, and add the HTML and CSS files with the same name as the component in the component directory.
 
-For the footer example, create the directory `src/components/footer` and add the `footer.html` and `footer.css` within the directory.
+For the footer example, create the directory `components/footer` and add the `footer.html` and `footer.css` within the directory.
 
 ## Example Component and Page
 
@@ -154,6 +156,8 @@ You can add JavaScript to any page or component HTML file in a `<script>` tag as
 
 There is a custom reserved tag within Bascik called `<slot-component>` which can be used to signal to the Bascik transpiler that HTML tags, including other Bascik components, can be nested elements.
 
+Yes, you could argue having a special HTML tag breaks one of the principals of Bascik, but I'll argue that it's necessary and somewhat aligns because it's an element, which is what is what you create in Bascik. It would be less aligned if it was a custom HTML attribute on an tag.
+
 Create a component file called `components/tag-a.html` with the following HTML:
 
 ```html
@@ -204,8 +208,8 @@ export const bascikConfig = {
     pages: 'src/pages',
     components: 'src/components'
   },
-  minifyStyles: false,
-  obfuscateAttributeNames: false,
+  minifyStyles: true,
+  obfuscateAttributeNames: true,
   cacheHttp: false,
 };
 
@@ -214,7 +218,7 @@ export const buildOverrideConfig = {};
 
 ## Development Server
 
-The dev server that runs when calling the `bascik` command is a Node.js HTTP/2 server. It will generate a self-signed certificate.
+The development server that runs when calling the `bascik` command is a Node.js HTTP/2 server. It will generate a self-signed certificate.
 
 Note:
 
@@ -222,12 +226,16 @@ If you're bothered by clicking to ignore the cert warning, you can launch Chrome
 
 The development server serves your pages from memory, not from disk, for a super fast development experience. The page data is also compressed for further performance improvements.
 
+Pages are served without their `.html` file extension, and `index.html` always becomes `/`, including in sub directories. The server also includes the ability to handle routes that do not exist, all you have to do is created a `pages/404.html`.
+
+The development server can be used as a production server.
+
 ### Live Reload
 
 The development server has smart live reloading.
 
-If you modify a the source of a page that is currently open in the browser, that page will be reloaded in the browser.
+If you modify the source of a page that is currently open in the browser, that page will be reloaded in the browser.
 
-If you modify and component that it utilized on a page the is currently open in the browser, that page will be reloaded.
+If you modify a component that it utilized on a page the is currently open in the browser, that page will be reloaded.
 
 This provides a great developer experience where your changes are reflected instantly.
