@@ -41,11 +41,30 @@ yarn pkg-dev
 Test the actual published artifact before releasing:
 
 ```sh
-cd pkg && npm pack
+cd pkg
+yarn
+yarn build
+npm pack
 cd ../demo-app
 yarn cache clean
-yarn add ../pkg/bascik-bascik-X.Y.Z.tgz
+rm yarn.lock
+yarn
 yarn dev
+```
+
+### Install docs and demo-app dependencies
+
+Requires **Node.js ≥ 24.17.0**.
+
+```sh
+cd pkg
+yarn install
+yarn build
+npm pack
+cd ../docs
+yarn install
+cd ../demo-app
+yarn install
 ```
 
 ---
