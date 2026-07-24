@@ -36,13 +36,15 @@ yarn link @bascik/bascik
 yarn pkg-dev
 ```
 
-### Simulating a Packed Install
+### Local Development Setup
 
-Test the actual published artifact before releasing:
+Because this repo does not store the packaged tarball, run the local package build and pack step when you want to run `demo-app` or `docs` from source.
+
+This is mainly for repo-local development and when `pkg/` changes; normal package consumers install `@bascik/bascik` from npm instead.
 
 ```sh
 cd pkg
-yarn
+yarn install
 yarn build
 npm pack
 cd ../demo-app
@@ -55,6 +57,8 @@ yarn dev
 ### Install docs and demo-app dependencies
 
 Requires **Node.js ≥ 24.17.0**.
+
+If you are running the repo locally, build and pack the package once before installing the sites.
 
 ```sh
 cd pkg
