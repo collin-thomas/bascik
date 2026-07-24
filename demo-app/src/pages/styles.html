@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scoped Styles — Bascik Demo</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+
+<body>
+
+  <demo-nav></demo-nav>
+
+  <div class="page container">
+    <div class="section-label">Feature Demo</div>
+    <h1>Scoped Styles</h1>
+    <p class="section-desc">Bascik automatically namespaces your component CSS — class names, element selectors,
+      <code>@media</code>, and <code>@keyframes</code> are all scoped to each component instance.</p>
+
+    <!-- Class scoping -->
+    <section class="section">
+      <h2 class="section-title">Class Scoping</h2>
+      <p class="section-desc">CSS class names in a component's <code>.css</code> file are prefixed with a unique
+        instance ID so they can never conflict with other components or global styles.</p>
+      <div class="grid-2">
+        <div>
+          <p class="demo-label">custom-nav.css (source)</p>
+          <code-block data-bascik-prop-lang="css" data-bascik-prop-file="custom-nav.css">.navigation ul {
+            list-style-type: none;
+            }
+            .navigation ul li a {
+            padding: 8px;
+            }</code-block>
+          <br>
+          <p class="demo-label">Compiled output</p>
+          <code-block data-bascik-prop-lang="css">.bascik__custom-nav__a1b2c3__navigation ul {
+            list-style-type: none;
+            }
+            .bascik__custom-nav__a1b2c3__navigation ul li a {
+            padding: 8px;
+            }</code-block>
+        </div>
+        <div>
+          <p class="demo-label">Live — custom-nav component</p>
+          <div class="demo-box">
+            <custom-nav></custom-nav>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Element scoping -->
+    <section class="section">
+      <h2 class="section-title">Element Selector Scoping</h2>
+      <p class="section-desc">Bare element selectors like <code>p {}</code> are converted to class selectors and
+        injected onto matching elements so they only apply within the component.</p>
+      <div class="grid-2">
+        <div>
+          <p class="demo-label">styled-element-test.css (source)</p>
+          <code-block data-bascik-prop-lang="css">p {
+            text-decoration: #d3ff8d wavy underline;
+            display: block;
+            }</code-block>
+          <br>
+          <p class="demo-label">Compiled — class injected on every &lt;p&gt;</p>
+          <code-block data-bascik-prop-lang="css">.bascik__styled-element-test__x1__el__p {
+            text-decoration: #d3ff8d wavy underline;
+            }</code-block>
+        </div>
+        <div>
+          <p class="demo-label">Live — only &lt;p&gt; tags inside the component are affected</p>
+          <div class="demo-box">
+            <styled-element-test></styled-element-test>
+            <p>This &lt;p&gt; is outside the component — no wavy underline.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- @media + @keyframes -->
+    <section class="section">
+      <h2 class="section-title">@media &amp; @keyframes Scoping</h2>
+      <p class="section-desc">Media queries and keyframe animation names are also scoped so components don't conflict
+        with each other's animations.</p>
+      <div class="grid-2">
+        <div>
+          <p class="demo-label">custom-nav.css (source)</p>
+          <code-block data-bascik-prop-lang="css">@keyframes rotateLogo {
+            from { transform: rotateY(-40deg); }
+            to { transform: rotateY(40deg); }
+            }
+            .home.logo {
+            animation: rotateLogo 2s infinite alternate;
+            }
+            @media (max-width: 600px) {
+            .home.logo { background: #d3ff8d; }
+            }</code-block>
+        </div>
+        <div>
+          <p class="demo-label">Live — animated logo from custom-nav</p>
+          <div class="demo-box">
+            <custom-nav></custom-nav>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <demo-footer></demo-footer>
+</body>
+
+</html>

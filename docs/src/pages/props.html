@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Props — Bascik Docs</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+      <docs-sidebar></docs-sidebar>
+
+      <main class="docs-content">
+        <p class="section-label">Feature</p>
+        <h1>Props</h1>
+        <p class="page-intro">Props let you pass text values into a component template at usage time using
+          <code>data-bascik-prop-*</code> attributes. Think of them as named text slots.
+        </p>
+
+        <h2>Defining Props in a Template</h2>
+        <p>Add a <code>data-bascik-prop-{name}</code> attribute (no value) to any element in the component template. The
+          element's inner content will be replaced with the prop value at build time.</p>
+
+        <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/components/alert-box.html">&lt;div
+          class="alert"&gt;
+          &lt;strong data-bascik-prop-title&gt;&lt;/strong&gt;
+          &lt;p data-bascik-prop-message&gt;&lt;/p&gt;
+          &lt;/div&gt;</code-block>
+
+        <h2>Passing Props at Usage</h2>
+        <p>Set <code>data-bascik-prop-{name}="value"</code> on the component tag. The value is injected into the
+          matching template element.</p>
+
+        <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/pages/index.html">&lt;alert-box
+          data-bascik-prop-title="Success"
+          data-bascik-prop-message="Your changes have been saved."&gt;
+          &lt;/alert-box&gt;</code-block>
+
+        <p>Output:</p>
+        <code-block data-bascik-prop-lang="html">&lt;div class="alert"&gt;
+          &lt;strong&gt;Success&lt;/strong&gt;
+          &lt;p&gt;Your changes have been saved.&lt;/p&gt;
+          &lt;/div&gt;</code-block>
+
+        <h2>Props with Existing Attributes</h2>
+        <p>Other attributes on the target element are preserved. The prop marker attribute itself is removed from the
+          output.</p>
+
+        <code-block data-bascik-prop-lang="html">&lt;!-- template --&gt;
+          &lt;p class="lead" data-bascik-prop-body&gt;&lt;/p&gt;
+
+          &lt;!-- compiled --&gt;
+          &lt;p class="bascik__comp__x1__lead"&gt;Your prop value here.&lt;/p&gt;</code-block>
+
+        <h2>Naming Conventions</h2>
+        <p>Prop names use the portion of the attribute after <code>data-bascik-prop-</code>. You can use any lowercase
+          alphanumeric name with hyphens:</p>
+
+        <code-block data-bascik-prop-lang="html">data-bascik-prop-title
+          data-bascik-prop-href
+          data-bascik-prop-alt-text
+          data-bascik-prop-icon-url</code-block>
+
+        <div class="callout">
+          <p><strong>Use slots for HTML content.</strong> Props inject plain text values. If you need to inject rich
+            HTML (tags, nested elements), use <a href="/slots">slots</a> instead.</p>
+        </div>
+
+        <h2>Example: Feature Card</h2>
+        <p>A good real-world use of props is a card component with a configurable label, title, and description:</p>
+
+        <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/components/feature-card.html">&lt;div
+          class="card"&gt;
+          &lt;span class="card-label" data-bascik-prop-label&gt;&lt;/span&gt;
+          &lt;h3 data-bascik-prop-title&gt;&lt;/h3&gt;
+          &lt;p data-bascik-prop-desc&gt;&lt;/p&gt;
+          &lt;/div&gt;</code-block>
+
+        <code-block data-bascik-prop-lang="html">&lt;feature-card
+          data-bascik-prop-label="New"
+          data-bascik-prop-title="Live Reload"
+          data-bascik-prop-desc="Automatic browser reload on every change."&gt;
+          &lt;/feature-card&gt;</code-block>
+
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+</body>
+
+</html>

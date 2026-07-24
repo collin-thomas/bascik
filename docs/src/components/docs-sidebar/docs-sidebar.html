@@ -1,0 +1,41 @@
+<aside class="docs-sidebar" data-docs-sidebar>
+  <p class="sidebar-heading">Philosophy</p>
+  <ul class="sidebar-nav">
+    <li><a href="/why-bascik">Why Bascik</a></li>
+  </ul>
+  <p class="sidebar-heading">Start Here</p>
+  <ul class="sidebar-nav">
+    <li><a href="/getting-started">Getting Started</a></li>
+    <li><a href="/configuration">Configuration</a></li>
+  </ul>
+  <p class="sidebar-heading">Features</p>
+  <ul class="sidebar-nav">
+    <li><a href="/slots">Slots</a></li>
+    <li><a href="/props">Props</a></li>
+    <li><a href="/attribute-inheritance">Attribute Inheritance</a></li>
+    <li><a href="/scoped-styles">Scoped Styles</a></li>
+    <li><a href="/scoped-javascript">Scoped JavaScript</a></li>
+    <li><a href="/build-scripts">Build Scripts</a></li>
+    <li><a href="/libraries">JavaScript Libraries</a></li>
+  </ul>
+  <p class="sidebar-heading">Reference</p>
+  <ul class="sidebar-nav">
+    <li><a href="/compatibility">Scoping Compatibility</a></li>
+  </ul>
+  <p class="sidebar-heading">Migration</p>
+  <ul class="sidebar-nav">
+    <li><a href="/migrate">Overview</a></li>
+    <li><a href="/migrate/from-react">From React</a></li>
+    <li><a href="/migrate/from-next">From Next.js</a></li>
+    <li><a href="/migrate/from-eleventy">From Eleventy</a></li>
+    <li><a href="/migrate/from-astro">From Astro</a></li>
+  </ul>
+</aside>
+<script>
+  var path = window.location.pathname;
+  document.querySelectorAll('[data-docs-sidebar] a').forEach(function (a) {
+    if (a.getAttribute('href') === path) {
+      a.setAttribute('aria-current', 'page');
+    }
+  });
+</script>

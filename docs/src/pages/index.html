@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bascik Docs</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <style>
+    .hero {
+      padding: 80px 0 64px;
+      background: radial-gradient(ellipse 70% 50% at 50% -5%, rgba(211, 255, 141, 0.07), transparent);
+    }
+
+    .hero-title {
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      margin: 16px 0 20px;
+    }
+
+    .hero-desc {
+      font-size: 1.1rem;
+      max-width: 520px;
+      margin-bottom: 36px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <span class="badge">v0.1.0</span>
+      <h1 class="hero-title"><span class="text-accent">HTML components</span> without a JavaScript framework.</h1>
+      <p class="hero-desc">Bascik is a static site generator. Write reusable HTML components, get scoped CSS and scoped
+        JS for free.</p>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <a href="/getting-started" class="btn btn-primary">Get Started →</a>
+        <a href="https://github.com/collin-thomas/bascik" class="btn btn-ghost" target="_blank"
+          rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature overview -->
+  <div class="container" style="padding-bottom:80px">
+    <div style="margin-bottom:32px">
+      <p class="section-label">Features</p>
+      <h2 style="margin-bottom:8px">Everything in one place</h2>
+      <p style="max-width:520px">Each feature is a building block. Use all of them or just the ones you need.</p>
+    </div>
+    <div class="grid-3">
+      <a href="/slots" class="card" style="text-decoration:none">
+        <p class="section-label">Slots</p>
+        <h3 style="margin-bottom:6px">Default &amp; Named</h3>
+        <p style="margin:0;font-size:0.88rem">Pass inner content into components. Named slots target specific zones.
+          Fallback content supported.</p>
+      </a>
+      <a href="/props" class="card" style="text-decoration:none">
+        <p class="section-label">Props</p>
+        <h3 style="margin-bottom:6px">Component Props</h3>
+        <p style="margin:0;font-size:0.88rem">Inject text values into templates via <code>data-bascik-prop-*</code>
+          attributes at usage time.</p>
+      </a>
+      <a href="/scoped-styles" class="card" style="text-decoration:none">
+        <p class="section-label">CSS</p>
+        <h3 style="margin-bottom:6px">Scoped Styles</h3>
+        <p style="margin:0;font-size:0.88rem">Class names, element selectors, <code>@media</code>, and
+          <code>@keyframes</code> are all automatically scoped.
+        </p>
+      </a>
+      <a href="/scoped-javascript" class="card" style="text-decoration:none">
+        <p class="section-label">JS</p>
+        <h3 style="margin-bottom:6px">Scoped JavaScript</h3>
+        <p style="margin:0;font-size:0.88rem">DOM selectors in component scripts are rewritten to match scoped IDs and
+          class names.</p>
+      </a>
+      <a href="/configuration" class="card" style="text-decoration:none">
+        <p class="section-label">Config</p>
+        <h3 style="margin-bottom:6px">Configuration</h3>
+        <p style="margin:0;font-size:0.88rem">Override defaults via <code>bascik.config.js</code>. Toggle scoping,
+          obfuscation, minification, and more.</p>
+      </a>
+      <a href="/getting-started" class="card" style="text-decoration:none">
+        <p class="section-label">Start</p>
+        <h3 style="margin-bottom:6px">Getting Started</h3>
+        <p style="margin:0;font-size:0.88rem">Install, create your first component, and run the dev server in under five
+          minutes.</p>
+      </a>
+      <a href="/why-bascik" class="card" style="text-decoration:none">
+        <p class="section-label">Philosophy</p>
+        <h3 style="margin-bottom:6px">Why Bascik</h3>
+        <p style="margin:0;font-size:0.88rem">The guiding principle: use what already exists. No runtime, no framework,
+          no invented syntax. And why that makes Bascik the right tool for AI too.</p>
+      </a>
+      <a href="/compatibility" class="card" style="text-decoration:none">
+        <p class="section-label">Reference</p>
+        <h3 style="margin-bottom:6px">Scoping Compatibility</h3>
+        <p style="margin:0;font-size:0.88rem">A complete audit of which CSS selectors and JavaScript DOM patterns are
+          scoped, partially supported, or intentionally unsupported.</p>
+      </a>
+      <a href="/migrate" class="card" style="text-decoration:none">
+        <p class="section-label">Migration</p>
+        <h3 style="margin-bottom:6px">Migration Guides</h3>
+        <p style="margin:0;font-size:0.88rem">Moving from React, Next.js, Eleventy, or Astro. Concept mapping and
+          worked examples — designed for humans and AI alike.</p>
+      </a>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+</body>
+
+</html>

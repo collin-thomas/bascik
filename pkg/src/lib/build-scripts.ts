@@ -1,0 +1,97 @@
+/**
+ * @module build-scripts
+ *
+ * Build-time Script Execution
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * `<script data-bascik-build>` blocks are executed at transpile time as
+ * Node.js ESM modules.  Whatever the script writes to stdout is injected into
+ * the page in place of the script tag.
+ *
+ * This lets you pull in external data — markdown files, JSON, API responses —
+ * at build time and inline the generated HTML directly into the page.
+ *
+ * @example
+ * ```html
+ * <!-- src/components/blog-post.html -->
+ * <script data-bascik-build>
+ * import { readFile } from 'node:fs/promises';
+ * import { marked }   from 'marked';
+ * const md = await readFile('./content/posts/intro.md', 'utf8');
+ * console.log(marked(md));
+ * </script>
+ * ```
+ *
+ * Rules
+ * ──────────────────────────────────────────────────────────────────────────────
+ * - The script is written to a temporary `.mjs` file and executed with the
+ *   same Node.js binary that is running Bascik.
+ * - Top-level `import` statements and top-level `await` are supported.
+ * - The script's working directory is the project root (`process.cwd()`).
+ * - Use `console.log()` or `process.stdout.write()` to output the HTML to
+ *   inject.  Anything written to stderr is forwarded to Bascik's own stderr.
+ * - The script tag (including its attributes and closing tag) is completely
+ *   replaced by the stdout output.  If the script produces no output, the tag
+ *   is replaced with an empty string.
+ * - On execution error, Bascik logs a warning and removes the script tag from
+ *   the output rather than aborting the build.
+ * - Scripts run during both `bascik` (dev) and `bascik --build` (production).
+ */
+
+import { execFile } from "node:child_process";
+import { writeFile, unlink } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+
+// Manual promise wrapper so tests can mock execFile with a plain vi.fn()
+// without needing to simulate Node's promisify.custom symbol.
+const runModule = (path: string): Promise<{ stdout: string; stderr: string }> =>
+  new Promise((resolve, reject) => {
+    execFile(
+      process.execPath,
+      [path],
+      { cwd: process.cwd() },
+      (err, stdout, stderr) => {
+        if (err) reject(Object.assign(err, { stdout, stderr }));
+        else resolve({ stdout, stderr });
+      },
+    );
+  });
+
+// Match <script data-bascik-build …> … </script> (captures inner content)
+const BUILD_SCRIPT_RE =
+  /<script\b[^>]*\sdata-bascik-build\b[^>]*>([\s\S]*?)<\/script>/gi;
+
+/**
+ * Find every `<script data-bascik-build>` block in `html`, execute each as a
+ * Node.js ESM module, and replace the tag with the script's stdout output.
+ */
+export const executeBuildScripts = async (html: string): Promise<string> => {
+  const matches = [...html.matchAll(BUILD_SCRIPT_RE)];
+  if (matches.length === 0) return html;
+
+  let result = html;
+
+  for (const match of matches) {
+    const [fullTag, scriptContent] = match;
+    const tmpPath = join(
+      tmpdir(),
+      `bascik-build-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
+    );
+
+    try {
+      await writeFile(tmpPath, scriptContent.trim(), "utf8");
+      const { stdout, stderr } = await runModule(tmpPath);
+      if (stderr) process.stderr.write(stderr);
+      result = result.replace(fullTag, stdout);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(`[bascik] build script error:\n${msg}`);
+      result = result.replace(fullTag, "");
+    } finally {
+      await unlink(tmpPath).catch(() => {});
+    }
+  }
+
+  return result;
+};

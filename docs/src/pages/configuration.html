@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configuration — Bascik Docs</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+      <docs-sidebar></docs-sidebar>
+
+      <main class="docs-content">
+        <p class="section-label">Reference</p>
+        <h1>Configuration</h1>
+        <p class="page-intro">Create a <code>bascik.config.js</code> file in your project root to override any default
+          settings.</p>
+
+        <h2>Full Example</h2>
+        <code-block data-bascik-prop-lang="js" data-bascik-prop-file="bascik.config.js">export const bascikConfig = {
+          // Source directories
+          directory: {
+          pages: 'src/pages',
+          components: 'src/components',
+          },
+
+          // Feature flags
+          scopeScriptBlocks: true,
+          scopeAttribute: {
+          class: true,
+          id: true,
+          name: true,
+          },
+
+          // CSS
+          minifyStyles: true, // remove whitespace from compiled CSS
+          obfuscateAttributeNames: true, // hash class / id names in production
+
+          // Server
+          cacheHttp: false,
+
+          // Logging
+          verboseLogging: false, // include { cause } in console.warn/error
+          };
+
+          // Overrides applied only during `bascik --build`
+          export const buildOverrideConfig = {
+          obfuscateAttributeNames: true,
+          minifyStyles: true,
+          };</code-block>
+
+        <h2>Options Reference</h2>
+
+        <h3>directory</h3>
+        <p>Paths to your pages and components directories. Relative to the project root.</p>
+        <code-block data-bascik-prop-lang="js">directory: {
+          pages: 'src/pages', // default
+          components: 'src/components', // default
+          }</code-block>
+
+        <h3>scopeScriptBlocks</h3>
+        <p>Wrap component <code>&lt;script&gt;</code> tags in an IIFE and rewrite scoped attribute references. Set to
+          <code>false</code> if you want raw unmodified script output.
+        </p>
+        <code-block data-bascik-prop-lang="js">scopeScriptBlocks: true // default</code-block>
+
+        <h3>scopeAttribute</h3>
+        <p>Control which HTML attribute types are scoped independently. Useful if you're using Tailwind (set
+          <code>class: false</code>) or don't need name scoping.
+        </p>
+        <code-block data-bascik-prop-lang="js">scopeAttribute: {
+          class: true, // default
+          id: true, // default
+          name: true, // default
+          }</code-block>
+
+        <h3>minifyStyles</h3>
+        <p>Collapse whitespace and newlines in the injected <code>&lt;style&gt;</code> block. Defaults to
+          <code>true</code>.
+        </p>
+
+        <h3>obfuscateAttributeNames</h3>
+        <p>Hash the generated class and id names to short hex strings instead of the verbose
+          <code>bascik__component__id__name</code> format. Recommended for production.
+        </p>
+        <code-block data-bascik-prop-lang="js">obfuscateAttributeNames: true // production default
+          // bascik__my-nav__ab12cd34__navigation
+          // becomes: bab12cd34</code-block>
+
+        <h3>cacheHttp</h3>
+        <p>Enable HTTP cache headers on the dev server responses. Keep <code>false</code> during development.</p>
+
+        <h3>verboseLogging</h3>
+        <p>Include the <code>{ cause }</code> detail object in <code>console.warn</code> and <code>console.error</code>
+          calls. Useful for debugging component processing errors.</p>
+        <code-block data-bascik-prop-lang="js">verboseLogging: false // default</code-block>
+
+        <h2>buildOverrideConfig</h2>
+        <p>Exporting a second <code>buildOverrideConfig</code> object lets you set options that only apply during
+          <code>bascik --build</code>, overriding the values in <code>bascikConfig</code>. A common pattern is to enable
+          obfuscation and minification only in production:
+        </p>
+        <code-block data-bascik-prop-lang="js">export const buildOverrideConfig = {
+          obfuscateAttributeNames: true,
+          minifyStyles: true,
+          };</code-block>
+
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+</body>
+
+</html>

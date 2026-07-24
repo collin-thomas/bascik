@@ -1,16 +1,143 @@
+/* ── Bascik Design System ── */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+  --bg:           #18191b;
+  --surface:      #1e2022;
+  --elevated:     #242628;
+  --border:       rgba(255,255,255,0.07);
+  --border-hover: rgba(211,255,141,0.35);
+  --accent:       #d3ff8d;
+  --accent-dim:   rgba(211,255,141,0.12);
+  --text:         #f0f1f2;
+  --text-muted:   #7c8290;
+  --mono:         'SF Mono','Fira Code',Menlo,monospace;
+  --r:            10px;
+  --r-sm:         6px;
+  --r-lg:         16px;
+  --shadow:       0 4px 32px rgba(0,0,0,0.5);
+}
+
+html { scroll-behavior: smooth; }
+
 body {
-  background-color: #18191b;
-  color: #fff;
-  font-size: larger;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  margin: 0;
 }
-a:link,
-a:visited,
-a:active {
-  color: #ffffff;
+
+/* ── Layout ── */
+.container  { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
+.page       { padding: 56px 0; }
+.section    { padding: 48px 0; }
+.section + .section { border-top: 1px solid var(--border); }
+
+/* ── Typography ── */
+h1,h2,h3,h4 { margin-top: 0; line-height: 1.2; font-weight: 700; color: var(--text); }
+h1 { font-size: clamp(2rem,5vw,3.2rem); }
+h2 { font-size: 1.75rem; }
+h3 { font-size: 1.15rem; }
+h4 { font-size: 1rem; }
+p  { margin-top: 0; color: var(--text-muted); }
+
+a { color: var(--accent); text-decoration: none; transition: opacity .15s; }
+a:hover { opacity: 0.8; }
+
+code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 2px 7px;
+  color: var(--accent);
 }
-a:hover {
-  color: #d3ff8d;
+
+pre {
+  background: #0d0e0f;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 20px 24px;
+  overflow-x: auto;
+  line-height: 1.6;
+  margin: 0;
 }
-[v-cloak] {
-  visibility: hidden;
+pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size: 0.82rem; }
+
+/* ── Cards ── */
+.card {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px;
+  transition: border-color .2s, box-shadow .2s;
 }
+.card:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 0 0 1px var(--accent-dim);
+}
+
+/* ── Grid helpers ── */
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 20px; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 22px; border: none; border-radius: var(--r-sm);
+  font-size: 0.9rem; font-weight: 600; cursor: pointer; text-decoration: none;
+  transition: filter .15s, box-shadow .15s;
+}
+.btn-primary { background: var(--accent); color: #18191b; }
+.btn-primary:hover { filter: brightness(0.88); box-shadow: 0 0 16px var(--accent-dim); }
+.btn-ghost {
+  background: transparent; color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Badge ── */
+.badge {
+  display: inline-block;
+  padding: 3px 11px; border-radius: 999px;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  background: var(--accent-dim); color: var(--accent);
+  border: 1px solid rgba(211,255,141,0.22);
+}
+
+/* ── Demo box ── */
+.demo-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px;
+}
+.demo-label {
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--text-muted); margin-bottom: 12px;
+}
+
+/* ── Section header ── */
+.section-label {
+  font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--accent); margin-bottom: 8px;
+}
+.section-title { margin-bottom: 8px; }
+.section-desc  { color: var(--text-muted); margin-bottom: 32px; max-width: 580px; }
+
+/* ── Utility ── */
+.text-accent  { color: var(--accent); }
+.text-muted   { color: var(--text-muted); }
+.mt-0 { margin-top: 0; }
+.mb-0 { margin-bottom: 0; }
+.gap-16 { gap: 16px; }
+.flex { display: flex; }
+.flex-center { display: flex; align-items: center; }
+.flex-wrap { flex-wrap: wrap; }
+
+/* ── [v-cloak] for petite-vue ── */
+[v-cloak] { visibility: hidden; }

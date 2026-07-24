@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attribute Inheritance — Bascik Docs</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+      <docs-sidebar></docs-sidebar>
+
+      <main class="docs-content">
+        <p class="section-label">Feature</p>
+        <h1>Attribute Inheritance</h1>
+        <p class="page-intro">Any attribute on a component usage tag that is not a Bascik-specific attribute
+          (<code>data-bascik-*</code>) is automatically merged onto the component's root element. This is analogous to
+          Vue's "fallthrough attributes".</p>
+
+        <h2>How It Works</h2>
+        <p>When Bascik transpiles a component, it reads the usage tag, extracts any inheritable attributes, and merges
+          them onto the first element of the compiled output.</p>
+
+        <code-block data-bascik-prop-lang="html" data-bascik-prop-file="usage">&lt;site-nav
+          class="sticky"
+          aria-label="main navigation"
+          data-testid="main-nav"&gt;
+          &lt;/site-nav&gt;</code-block>
+
+        <code-block data-bascik-prop-lang="html" data-bascik-prop-file="site-nav.html">&lt;nav class="nav"&gt;
+          &lt;a href="/"&gt;Home&lt;/a&gt;
+          &lt;/nav&gt;</code-block>
+
+        <code-block data-bascik-prop-lang="html" data-bascik-prop-file="compiled output">&lt;nav
+          class="bascik__site-nav__x1__nav sticky"
+          aria-label="main navigation"
+          data-testid="main-nav"&gt;
+          &lt;a href="/"&gt;Home&lt;/a&gt;
+          &lt;/nav&gt;</code-block>
+
+        <h2>Class Merging</h2>
+        <p>When the root element already has a (scoped) <code>class</code> attribute, the inherited class is
+          <strong>appended</strong> rather than replacing it.
+        </p>
+
+        <code-block data-bascik-prop-lang="html">&lt;!-- root element has scoped class --&gt;
+          &lt;nav class="bascik__site-nav__x1__nav"&gt;...&lt;/nav&gt;
+
+          &lt;!-- after merging class="sticky" --&gt;
+          &lt;nav class="bascik__site-nav__x1__nav sticky"&gt;...&lt;/nav&gt;</code-block>
+
+        <h2>What Gets Inherited</h2>
+        <p>All attributes on the usage tag are inherited <strong>except</strong>:</p>
+        <ul>
+          <li>Any <code>data-bascik-*</code> attribute — these are consumed by Bascik for slots, props, etc.</li>
+          <li><code>id</code> — not inherited to avoid conflicting with the component template's own scoped IDs.</li>
+        </ul>
+        <p>Common use cases for inheritance:</p>
+        <ul>
+          <li><strong>Layout classes</strong> — <code>class="sticky"</code>, <code>class="hidden"</code></li>
+          <li><strong>Accessibility</strong> — <code>aria-label</code>, <code>role</code>, <code>aria-hidden</code></li>
+          <li><strong>Testing hooks</strong> — <code>data-testid</code>, <code>data-cy</code></li>
+          <li><strong>Custom data</strong> — any <code>data-*</code> attribute (except <code>data-bascik-*</code>)</li>
+        </ul>
+
+        <h2>Interaction with Scoped Classes</h2>
+        <p>Inherited class names are <em>not</em> scoped — they are treated as global classes. This is intentional: you
+          are passing a page-level concern onto the component's root element.</p>
+
+        <code-block data-bascik-prop-lang="html">&lt;my-card class="featured"&gt;
+          &lt;p&gt;Featured content&lt;/p&gt;
+          &lt;/my-card&gt;</code-block>
+
+        <p>The <code>featured</code> class is a global class that you define in your page-level stylesheet, separate
+          from the component's scoped CSS.</p>
+
+        <div class="callout">
+          <p><strong>Self-closing syntax works too:</strong> Attribute inheritance works with both paired and
+            self-closing usage syntax.</p>
+          <code-block data-bascik-prop-lang="html">&lt;my-icon class="large" aria-hidden="true" /&gt;</code-block>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+</body>
+
+</html>

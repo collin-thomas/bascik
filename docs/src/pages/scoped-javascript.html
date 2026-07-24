@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scoped JavaScript — Bascik Docs</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+      <docs-sidebar></docs-sidebar>
+
+      <main class="docs-content">
+        <p class="section-label">Feature</p>
+        <h1>Scoped JavaScript</h1>
+        <p class="page-intro">Bascik rewrites DOM selector calls inside component <code>&lt;script&gt;</code> tags to
+          match the scoped IDs and class names. Each component instance gets unique identifiers, so multiple instances
+          on the same page work independently.</p>
+
+        <h2>IIFE Isolation</h2>
+        <p>Every component script is wrapped in an immediately-invoked function expression (IIFE) to prevent variable
+          leaks between components:</p>
+
+        <code-block data-bascik-prop-lang="html" data-bascik-prop-file="source">&lt;script&gt;
+          const count = 0;
+          console.log(count);
+          &lt;/script&gt;</code-block>
+
+        <code-block data-bascik-prop-lang="html" data-bascik-prop-file="compiled">&lt;script&gt;
+          (function() {
+          const count = 0;
+          console.log(count);
+          })();
+          &lt;/script&gt;</code-block>
+
+        <h2>ID Scoping</h2>
+        <p>The <code>id</code> attribute value in the HTML and all references to it in scripts are rewritten with the
+          same unique prefix:</p>
+
+        <code-block data-bascik-prop-lang="html" data-bascik-prop-file="source">&lt;button
+          id="my-btn"&gt;Click&lt;/button&gt;
+          &lt;script&gt;
+          document.getElementById("my-btn")
+          .addEventListener("click", () =&gt; alert("hi"));
+          &lt;/script&gt;</code-block>
+
+        <code-block data-bascik-prop-lang="html" data-bascik-prop-file="compiled">&lt;button
+          id="bascik__my-btn__a1b2__my-btn"&gt;Click&lt;/button&gt;
+          &lt;script&gt;
+          (function() {
+          document.getElementById("bascik__my-btn__a1b2__my-btn")
+          .addEventListener("click", () =&gt; alert("hi"));
+          })();
+          &lt;/script&gt;</code-block>
+
+        <h2>Supported Selectors</h2>
+        <p>All of the following DOM methods are updated when they reference a scoped attribute:</p>
+
+        <code-block data-bascik-prop-lang="js">// id attribute
+          document.getElementById("my-id")
+          document.querySelector("#my-id")
+          document.querySelectorAll("#my-id")
+
+          // class attribute
+          document.getElementsByClassName("my-class")
+          document.querySelector(".my-class")
+          document.querySelectorAll(".my-class")
+
+          // name attribute
+          document.getElementsByName("my-name")</code-block>
+
+        <h2 id="build-scripts">Build-time Scripts</h2>
+        <p><code>&lt;script data-bascik-build&gt;</code> blocks are executed at transpile time as Node.js ESM modules.
+          Whatever the script writes to stdout is injected into the page in place of the tag. Top-level
+          <code>import</code> and top-level <code>await</code> are supported. Scripts run with the project root as their
+          working directory.
+        </p>
+        <p>Use this to pull in external data sources — markdown files, JSON, API responses, generated content — and
+          inline the result directly into your HTML at build time.</p>
+
+        <code-block data-bascik-prop-lang="html">&lt;script data-bascik-build&gt;
+          import { readFile } from 'node:fs/promises';
+          import { marked } from 'marked';
+          const md = await readFile('./content/posts/intro.md', 'utf8');
+          console.log(marked(md));
+          &lt;/script&gt;</code-block>
+
+        <p>The entire script tag (including opening and closing tags) is replaced by the stdout output. If the script
+          produces no output, the tag is replaced with an empty string. On error, a warning is logged and the tag is
+          removed.</p>
+
+        <div class="callout">
+          <p><strong>Component tags work too:</strong> Build scripts run before component resolution, so their output
+            can contain Bascik component tags that will be transpiled in the next step.</p>
+        </div>
+
+        <h2>Non-JavaScript Script Types</h2>
+        <p>Script tags with a <code>type</code> other than <code>text/javascript</code> (e.g.
+          <code>type="application/json"</code>) are left completely untouched — they are not wrapped in an IIFE and
+          their attributes are not scoped.
+        </p>
+
+        <code-block data-bascik-prop-lang="html">&lt;!-- This passes through unchanged --&gt;
+          &lt;script type="application/json" id="config-data"&gt;
+          { "theme": "dark" }
+          &lt;/script&gt;</code-block>
+
+        <div class="callout">
+          <p><strong>Tip:</strong> Disable JS scoping entirely with <code>scopeScriptBlocks: false</code> in <a
+              href="/configuration">bascik.config.js</a>.</p>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+</body>
+
+</html>

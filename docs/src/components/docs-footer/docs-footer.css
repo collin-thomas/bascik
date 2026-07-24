@@ -1,0 +1,38 @@
+.dfooter {
+  border-top: 1px solid var(--border);
+  margin-top: 80px;
+  padding: 28px 0;
+}
+
+.dfooter-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dfooter-brand {
+  font-family: monospace;
+  font-weight: 800;
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+
+.dfooter-sep { color: var(--border); }
+
+.dfooter-tagline {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  flex: 1;
+}
+
+.dfooter-links { display: flex; gap: 20px; }
+
+.dfooter-links a {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  text-decoration: none;
+  transition: color .15s;
+}
+
+.dfooter-links a:hover { color: var(--accent); opacity: 1; }

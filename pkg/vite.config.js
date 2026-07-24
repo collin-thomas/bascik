@@ -2,7 +2,16 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   test: {
-    /* for example, use global to avoid globals imports (describe, test, expect): */
-    // globals: true,
+    include: ["src/**/*.test.ts"],
+    benchmark: {
+      include: ["bench/**/*.bench.ts"],
+    },
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json-summary", "lcov"],
+      reportsDirectory: "./coverage",
+      include: ["src/**/*.js"],
+      exclude: ["src/**/*.test.ts"],
+    },
   },
 });

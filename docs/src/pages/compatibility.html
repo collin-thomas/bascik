@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scoping Compatibility — Bascik Docs</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <style>
+    .compat-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin: 16px 0 32px;
+    }
+
+    .compat-table th {
+      text-align: left;
+      padding: 8px 12px;
+      border-bottom: 2px solid var(--border);
+      color: var(--fg-muted);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .compat-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .compat-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .badge-ok {
+      color: #4ade80;
+      font-size: 1rem;
+    }
+
+    .badge-partial {
+      color: #facc15;
+      font-size: 1rem;
+    }
+
+    .badge-no {
+      color: #f87171;
+      font-size: 1rem;
+    }
+
+    .badge-intentional {
+      color: #94a3b8;
+      font-size: 1rem;
+    }
+
+    .compat-note {
+      color: var(--fg-muted);
+      font-size: 0.82rem;
+      margin-top: 4px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+      font-size: 0.88rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+
+      <docs-sidebar></docs-sidebar>
+
+      <main class="docs-content">
+        <p class="section-label">Reference</p>
+        <h1>Scoping Compatibility</h1>
+        <p class="page-intro">A complete audit of which CSS and JavaScript patterns Bascik's build-time scoping engine
+          handles. Use this as a reference when writing component styles and scripts.</p>
+
+        <div class="legend">
+          <span class="legend-item"><span class="badge-ok">✅</span> Supported and tested</span>
+          <span class="legend-item"><span class="badge-partial">⚠️</span> Partial support (see notes)</span>
+          <span class="legend-item"><span class="badge-no">❌</span> Not supported</span>
+          <span class="legend-item"><span class="badge-intentional">🚫</span> Intentionally unsupported</span>
+        </div>
+
+        <!-- ─── CSS ─────────────────────────────────────────────────────── -->
+
+        <h2>CSS Scoping</h2>
+        <p>CSS scoping applies to <code>.css</code> files paired with a component. Place the file in the same directory
+          as the component HTML and give it the same base name.</p>
+
+        <h3>Selectors</h3>
+        <table class="compat-table">
+          <thead>
+            <tr>
+              <th>Pattern</th>
+              <th>Example</th>
+              <th></th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Class selector</td>
+              <td><code>.foo {}</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Scoped with a unique instance prefix.</td>
+            </tr>
+            <tr>
+              <td>Descendant with class</td>
+              <td><code>.foo .bar {}</code></td>
+              <td class="badge-ok">✅</td>
+              <td>All class names in the selector are scoped.</td>
+            </tr>
+            <tr>
+              <td>Multi-class</td>
+              <td><code>.foo.bar {}</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Both class names scoped.</td>
+            </tr>
+            <tr>
+              <td>Standalone element selector</td>
+              <td><code>p {}</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Converted to a generated class; injected onto matching elements inside the component HTML.</td>
+            </tr>
+            <tr>
+              <td>Element pseudo-class</td>
+              <td><code>p:hover {}</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Element converted to class; pseudo-class preserved: <code>.bascik__...__el__p:hover {}</code>.</td>
+            </tr>
+            <tr>
+              <td>Element pseudo-element</td>
+              <td><code>p::before {}</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Element converted to class; pseudo-element preserved: <code>.bascik__...__el__p::before {}</code>.
+              </td>
+            </tr>
+            <tr>
+              <td><code>@keyframes</code></td>
+              <td><code>@keyframes spin {}</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Name is scoped; all <code>animation:</code> references in the file are updated to match.</td>
+            </tr>
+            <tr>
+              <td><code>@media</code> query</td>
+              <td><code>@media (max-width: 600px) {}</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Media condition is untouched; class names inside are scoped normally.</td>
+            </tr>
+            <tr>
+              <td><code>@supports</code></td>
+              <td><code>@supports (display: grid) { .foo {} }</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Class names inside <code>@supports</code> blocks are scoped normally.</td>
+            </tr>
+            <tr>
+              <td><code>@layer</code></td>
+              <td><code>@layer base { .foo {} }</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Layer name scoped in all forms: declaration blocks, single-name and comma-list ordering statements
+                (<code>@layer reset, base, utilities;</code>).</td>
+            </tr>
+            <tr>
+              <td><code>@container</code></td>
+              <td><code>@container sidebar (min-width: …) {}</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Container names declared via <code>container-name:</code> or the <code>container:</code> shorthand
+                are scoped. <code>@container name (…)</code> queries are updated to match. Unnamed
+                <code>@container (…)</code> queries are left untouched.
+              </td>
+            </tr>
+            <tr>
+              <td>CSS custom properties</td>
+              <td><code>--brand: #d3ff8d</code> / <code>var(--brand)</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Declarations and all <code>var()</code> references in the same file are scoped together. External
+                custom properties consumed via <code>var()</code> but not declared in the file are left untouched.</td>
+            </tr>
+            <tr>
+              <td>Inline <code>&lt;style&gt;</code> in component HTML</td>
+              <td><code>&lt;style&gt;.foo {}&lt;/style&gt;</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Full CSS scoping pipeline applied — class names, element selectors, <code>@keyframes</code>,
+                <code>@layer</code>, <code>@container</code>, and custom properties are all scoped.
+              </td>
+            </tr>
+            <tr>
+              <td>CSS <code>#id</code> selector</td>
+              <td><code>#btn {}</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Converted to a component-scoped class selector
+                (<code>.bascik__comp__id__btn {}</code>) using a context-aware lookahead that
+                correctly distinguishes selector position from hex colour values in property
+                declarations. The generated class is injected onto the HTML element. Specificity
+                drops from (0,1,0,0) to (0,0,1,0).</td>
+            </tr>
+            <tr>
+              <td><code>[id]</code> / <code>[id="…"]</code> attribute selector</td>
+              <td><code>[id] {}</code></td>
+              <td class="badge-intentional">🚫</td>
+              <td>Stripped at compile time. Attribute-selector forms cannot be scoped without DOM
+                wrapping.</td>
+            </tr>
+            <tr>
+              <td>Attribute selector</td>
+              <td><code>[data-foo="bar"] {}</code></td>
+              <td class="badge-partial">⚠️</td>
+              <td>Passed through untouched — not scoped. Will apply globally to any element with that attribute. Use a
+                class-based selector alongside it if component-only targeting is needed.</td>
+            </tr>
+            <tr>
+              <td>Compound / descendant element selectors</td>
+              <td><code>div p {}</code>, <code>p + p {}</code></td>
+              <td class="badge-no">❌</td>
+              <td>Element-to-class conversion only handles standalone element selectors at column 0.
+                Descendant, sibling, and combined element selectors are not converted and will apply globally.
+                Use a class on the element instead.</td>
+            </tr>
+            <tr>
+              <td>Comma-separated element selector list</td>
+              <td><code>h1, h2 {}</code></td>
+              <td class="badge-ok">✅</td>
+              <td>All elements in a comma list are converted — both multi-line (each on its own line) and
+                same-line (<code>h1, h2 {}</code>). A <code>)</code> stop in the lookahead prevents false
+                positives inside <code>:is()</code>, <code>:where()</code>, <code>:has()</code>.</td>
+            </tr>
+            <tr>
+              <td><code>:is()</code> / <code>:where()</code> / <code>:has()</code> with element names</td>
+              <td><code>:is(p, h2) {}</code></td>
+              <td class="badge-no">❌</td>
+              <td>Element names inside these functions are not converted. Class selectors inside them work fine:
+                <code>:is(.foo, .bar) {}</code>.
+              </td>
+            </tr>
+            <tr>
+              <td>CSS nesting — class selectors</td>
+              <td><code>& .child {}</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Class selectors inside nesting are scoped normally.</td>
+            </tr>
+            <tr>
+              <td>CSS nesting — element selectors</td>
+              <td><code>& p {}</code>, <code>& > h2 {}</code></td>
+              <td class="badge-partial">⚠️</td>
+              <td>Element selectors directly after <code>&amp; </code> (with optional single combinator
+                <code>&gt;</code>, <code>+</code>, <code>~</code>) are converted. Complex patterns
+                (<code>&amp; .parent p {}</code>, <code>&amp;p {}</code>) are not.
+              </td>
+            </tr>
+            <tr>
+              <td><code>@scope</code> (native CSS)</td>
+              <td><code>@scope (.foo) { p {} }</code></td>
+              <td class="badge-no">❌</td>
+              <td>Not yet processed. Passed through untouched.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Other CSS Features</h3>
+        <table class="compat-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th></th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>CSS deduplication</td>
+              <td class="badge-ok">✅</td>
+              <td>When a component is used multiple times on a page, its CSS is injected only once.</td>
+            </tr>
+            <tr>
+              <td><code>obfuscateAttributeNames</code></td>
+              <td class="badge-ok">✅</td>
+              <td>In production builds, verbose names like <code>bascik__site-nav__a1b2c3__logo</code> are hashed to
+                short strings (e.g. <code>ba1b2c3d</code>), reducing output size.</td>
+            </tr>
+            <tr>
+              <td><code>minifyStyles</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Whitespace in the compiled <code>&lt;style&gt;</code> block is collapsed.</td>
+            </tr>
+            <tr>
+              <td>CSS comments</td>
+              <td class="badge-ok">✅</td>
+              <td>Stripped before processing.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- ─── JS ──────────────────────────────────────────────────────── -->
+
+        <h2>JavaScript Scoping</h2>
+        <p>Bascik rewrites DOM selector references inside component <code>&lt;script&gt;</code> tags to match scoped
+          attribute values. All rewrites happen at build time — nothing is added to the runtime.</p>
+
+        <h3>Script Tag Handling</h3>
+        <table class="compat-table">
+          <thead>
+            <tr>
+              <th>Pattern</th>
+              <th></th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>&lt;script&gt;</code> (no type)</td>
+              <td class="badge-ok">✅</td>
+              <td>Wrapped in an IIFE to prevent variable leakage between component instances.</td>
+            </tr>
+            <tr>
+              <td><code>&lt;script type="text/javascript"&gt;</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Wrapped in an IIFE.</td>
+            </tr>
+            <tr>
+              <td><code>&lt;script type="module"&gt;</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Not wrapped in an IIFE (modules are already isolated by spec). DOM selector references still
+                rewritten.</td>
+            </tr>
+            <tr>
+              <td>Non-JS script types (e.g. <code>application/json</code>)</td>
+              <td class="badge-ok">✅</td>
+              <td>Left completely untouched.</td>
+            </tr>
+            <tr>
+              <td><code>&lt;script data-bascik-build&gt;</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Executed at <strong>transpile time</strong> as a Node.js ESM module. The script's stdout is injected
+                in place of the tag. Runs in both dev and build modes. Top-level <code>import</code> and
+                <code>await</code> are supported. Use <code>console.log()</code> or
+                <code>process.stdout.write()</code> to output the HTML to inject. See
+                <a href="/scoped-javascript#build-scripts">Build-time Scripts</a>.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>DOM Selector Rewriting</h3>
+        <table class="compat-table">
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Example</th>
+              <th></th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>getElementById</code></td>
+              <td><code>getElementById("my-id")</code></td>
+              <td class="badge-ok">✅</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><code>querySelector</code> with <code>#id</code></td>
+              <td><code>querySelector("#my-id")</code></td>
+              <td class="badge-ok">✅</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><code>querySelectorAll</code> with <code>#id</code></td>
+              <td><code>querySelectorAll("#my-id")</code></td>
+              <td class="badge-ok">✅</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><code>getElementsByClassName</code></td>
+              <td><code>getElementsByClassName("my-cls")</code></td>
+              <td class="badge-ok">✅</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><code>querySelector</code> with <code>.class</code></td>
+              <td><code>querySelector(".my-cls")</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Single-token class selector only.</td>
+            </tr>
+            <tr>
+              <td><code>querySelectorAll</code> with <code>.class</code></td>
+              <td><code>querySelectorAll(".my-cls")</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Single-token class selector only.</td>
+            </tr>
+            <tr>
+              <td><code>getElementsByName</code></td>
+              <td><code>getElementsByName("my-name")</code></td>
+              <td class="badge-ok">✅</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><code>element.closest</code> with <code>#id</code></td>
+              <td><code>el.closest("#my-id")</code></td>
+              <td class="badge-ok">✅</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><code>element.closest</code> with <code>.class</code></td>
+              <td><code>el.closest(".my-cls")</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Single-token class selector only.</td>
+            </tr>
+            <tr>
+              <td><code>element.matches</code> with <code>#id</code></td>
+              <td><code>el.matches("#my-id")</code></td>
+              <td class="badge-ok">✅</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><code>element.matches</code> with <code>.class</code></td>
+              <td><code>el.matches(".my-cls")</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Single-token class selector only. Works for event delegation:
+                <code>e.target.matches(".my-cls")</code>.
+              </td>
+            </tr>
+            <tr>
+              <td><code>classList.add</code></td>
+              <td><code>el.classList.add("my-cls")</code></td>
+              <td class="badge-ok">✅</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><code>classList.remove</code></td>
+              <td><code>el.classList.remove("my-cls")</code></td>
+              <td class="badge-ok">✅</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><code>classList.toggle</code></td>
+              <td><code>el.classList.toggle("my-cls")</code></td>
+              <td class="badge-ok">✅</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><code>classList.contains</code></td>
+              <td><code>el.classList.contains("my-cls")</code></td>
+              <td class="badge-ok">✅</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Compound <code>querySelector</code> / <code>querySelectorAll</code></td>
+              <td><code>querySelector(".foo .bar")</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Space-separated and combinator-separated (<code>&gt;</code>, <code>+</code>, <code>~</code>) tokens
+                are each rewritten. Adjacent-class <code>.foo.bar</code> only rewrites the leading token.</td>
+            </tr>
+            <tr>
+              <td><code>element.className</code> setter</td>
+              <td><code>el.className = "my-cls"</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Single-class and space-separated multi-class assignments (<code>= "…"</code> and <code>+= "…"</code>)
+                are rewritten. Reading <code>el.className</code> is unchanged.</td>
+            </tr>
+            <tr>
+              <td><code>setAttribute("class", …)</code></td>
+              <td><code>el.setAttribute("class", "my-cls")</code></td>
+              <td class="badge-ok">✅</td>
+              <td>String literal values are rewritten.</td>
+            </tr>
+            <tr>
+              <td><code>setAttribute("id", …)</code></td>
+              <td><code>el.setAttribute("id", "my-id")</code></td>
+              <td class="badge-ok">✅</td>
+              <td>String literal values are rewritten.</td>
+            </tr>
+            <tr>
+              <td><code>element.id</code> setter</td>
+              <td><code>el.id = "my-id"</code></td>
+              <td class="badge-no">❌</td>
+              <td>Not rewritten — <code>.id =</code> also matches <code>el.dataset.id =</code> and cannot be
+                distinguished safely. Use <code>getElementById</code> to retrieve the element instead.</td>
+            </tr>
+            <tr>
+              <td><code>querySelector</code> attribute selector</td>
+              <td><code>querySelector("[id='my-id']")</code></td>
+              <td class="badge-no">❌</td>
+              <td>Not rewritten. Use <code>getElementById</code> instead.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Workaround Patterns</h3>
+        <p>The remaining unsupported patterns involve assignments where a regex cannot distinguish a DOM property from
+          an identically-named object property. The recommended pattern is to retrieve elements by a single scoped
+          selector first, then operate on the reference:</p>
+
+        <code-block data-bascik-prop-lang="html">&lt;div id="panel"&gt;&lt;/div&gt;
+          &lt;script&gt;
+          const panel = document.getElementById("panel"); // ← rewritten by Bascik
+          panel.style.display = "none"; // ← operate on the reference
+          panel.dataset.state = "closed"; // ← use data attributes for state
+          &lt;/script&gt;</code-block>
+
+        <p>For event delegation, use a <code>data-</code> attribute on the target element rather than relying on a
+          scoped class name in a <code>matches()</code> call:</p>
+
+        <code-block data-bascik-prop-lang="html">&lt;ul id="list"&gt;
+          &lt;li data-action="delete"&gt;Delete&lt;/li&gt;
+          &lt;/ul&gt;
+          &lt;script&gt;
+          document.getElementById("list").addEventListener("click", (e) =&gt; {
+          if (e.target.dataset.action === "delete") { ... }
+          });
+          &lt;/script&gt;</code-block>
+
+        <!-- ─── Scoping Model ─────────────────────────────────────────── -->
+
+        <h2>How Scoping Works</h2>
+        <p>Class attributes are scoped to the <strong>component type</strong> — all instances of the same component
+          share the same scoped class names, which allows CSS to be deduplicated to a single
+          <code>&lt;style&gt;</code> block per component type. ID and name attributes are scoped
+          per <strong>instance</strong> so multiple instances on a page have distinct DOM identifiers:
+        </p>
+
+        <code-block data-bascik-prop-lang="text">class → bascik__&lt;componentName&gt;__&lt;originalName&gt;
+          id → bascik__&lt;componentName&gt;__&lt;instanceId&gt;__&lt;originalName&gt;
+          name → bascik__&lt;componentName&gt;__&lt;instanceId&gt;__&lt;originalName&gt;</code-block>
+
+        <p>With <code>obfuscateAttributeNames: true</code> (the default in production builds), these verbose names are
+          hashed to short hex strings. The HTML, CSS, and JavaScript are all updated with the same scoped names so they
+          stay in sync.</p>
+        <p>This is a <strong>build-time transformation</strong> — no JavaScript is loaded at runtime to manage scoping.
+          The output is plain HTML.</p>
+
+        <div class="callout">
+          <p>See the <a href="/scoped-styles">Scoped Styles</a> and <a href="/scoped-javascript">Scoped JavaScript</a>
+            pages for full worked examples of each supported pattern.</p>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+</body>
+
+</html>

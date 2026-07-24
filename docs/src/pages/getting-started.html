@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Getting Started — Bascik Docs</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+
+      <!-- Sidebar -->
+      <docs-sidebar></docs-sidebar>
+
+      <!-- Content -->
+      <main class="docs-content">
+        <p class="section-label">Guide</p>
+        <h1>Getting Started</h1>
+        <p class="page-intro">Bascik requires Node.js v24+. Get up and running in under five minutes.</p>
+
+        <h2>Installation</h2>
+        <p>Install Bascik with your preferred package manager:</p>
+        <code-block data-bascik-prop-lang="sh">yarn add @bascik/bascik
+          # or
+          npm install @bascik/bascik
+          # or
+          pnpm add @bascik/bascik</code-block>
+
+        <h2>Project Setup</h2>
+        <p>Add the Bascik scripts to your <code>package.json</code>:</p>
+        <code-block data-bascik-prop-lang="json" data-bascik-prop-file="package.json">{
+          "scripts": {
+          "dev": "bascik",
+          "build": "bascik --build"
+          }
+          }</code-block>
+
+        <h2>Folder Structure</h2>
+        <p>Bascik looks for two directories by default. Both can be overridden in <a
+            href="/configuration">bascik.config.js</a>.</p>
+        <code-block data-bascik-prop-lang="text">src/
+          components/ ← component .html and .css files
+          pages/ ← one .html file per route</code-block>
+
+        <h2>Your First Component</h2>
+
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Create the component file</h3>
+            <p>The file name becomes the tag name.</p>
+            <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/components/site-nav.html">&lt;nav
+              class="nav"&gt;
+              &lt;a href="/"&gt;Home&lt;/a&gt;
+              &lt;a href="/about"&gt;About&lt;/a&gt;
+              &lt;/nav&gt;</code-block>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Reference it in a page</h3>
+            <p>No imports or registration. Just use the tag.</p>
+            <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/pages/index.html">&lt;!DOCTYPE html&gt;
+              &lt;html&gt;
+              &lt;head&gt;&lt;title&gt;Home&lt;/title&gt;&lt;/head&gt;
+              &lt;body&gt;
+              &lt;site-nav&gt;&lt;/site-nav&gt;
+              &lt;h1&gt;Hello world&lt;/h1&gt;
+              &lt;/body&gt;
+              &lt;/html&gt;</code-block>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Start the dev server</h3>
+            <code-block data-bascik-prop-lang="sh">yarn dev</code-block>
+            <p>The server runs on <code>https://localhost:8443</code> and live-reloads on every change.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Build for production</h3>
+            <code-block data-bascik-prop-lang="sh">yarn build</code-block>
+            <p>Output is written to the <code>dist/</code> directory. Deploy it anywhere that serves static files.</p>
+          </div>
+        </div>
+
+        <div class="callout">
+          <p><strong>Next:</strong> Add scoped CSS to your component by creating
+            <code>src/components/site-nav/site-nav.css</code> alongside your HTML file. See <a
+              href="/scoped-styles">Scoped Styles →</a>
+          </p>
+        </div>
+
+        <h2>Scoped Styles (Quick Intro)</h2>
+        <p>Pair a <code>.css</code> file with your component HTML by using the same name in the same directory:</p>
+        <code-block data-bascik-prop-lang="text">src/components/
+          site-nav/
+          site-nav.html ← component markup
+          site-nav.css ← scoped styles</code-block>
+
+        <p>Class names in the CSS are automatically prefixed per component instance at build time.</p>
+
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+</body>
+
+</html>

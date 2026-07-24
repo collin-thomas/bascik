@@ -1,0 +1,45 @@
+.cblock {
+  background: #0d0e0f;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin: 0;
+}
+
+.cblock-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--border);
+}
+
+.cblock-label {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.cblock-filename {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.cblock pre {
+  border: none;
+  border-radius: 0;
+  padding: 20px 24px;
+  margin: 0;
+  background: transparent;
+}
+
+.cblock pre code {
+  font-size: 0.82rem;
+  color: #cdd6f4;
+  line-height: 1.7;
+}

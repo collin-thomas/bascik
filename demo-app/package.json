@@ -4,11 +4,11 @@
   "type": "module",
   "license": "AGPL-3.0-only",
   "scripts": {
-    "pkg-dev": "node --inspect --watch-path=./bascik.config.js --watch-path=./node_modules/@bascik/bascik/src ./node_modules/@bascik/bascik/src/transpile.js",
+    "pkg-dev": "node --inspect --watch-path=./bascik.config.js --watch-path=../../pkg/src ../../pkg/src/transpile.ts",
     "dev": "bascik",
     "build": "bascik --build"
   },
   "dependencies": {
-    "@bascik/bascik": "../pkg/bascik-bascik-0.1.0.tgz"
+    "@bascik/bascik": "file:../pkg/bascik-bascik-0.2.0.tgz"
   }
 }

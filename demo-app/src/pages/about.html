@@ -1,45 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>About</title>
-    <style>
-      body {
-        background-color: #18191b;
-        color: #fff;
-        font-size: larger;
-      }
-      a:link,
-      a:visited,
-      a:active {
-        color: #ffffff;
-      }
-      a:hover {
-        color: #d3ff8d;
-      }
-    </style>
-  </head>
-  <body>
-    <custom-nav></custom-nav>
-    <h1>About</h1>
-    <tag-a data-bascik-test="hello">
-      <tag-b>
-        <p>collin</p>
-        <tag-c></tag-c>
-        <tag-c></tag-c>
-        <p>tena</p>
-      </tag-b>
-    </tag-a>
-    <tag-a>
-      <tag-b>
-        <p>collin</p>
-        <tag-c></tag-c>
-        <tag-d></tag-d>
-        <p>tena</p>
-      </tag-b>
-    </tag-a>
-    <my-footer></my-footer>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — Bascik Demo</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+
+<body>
+
+  <demo-nav></demo-nav>
+
+  <div class="page container">
+    <div class="section-label">About</div>
+    <h1>Why Bascik?</h1>
+    <p class="section-desc" style="font-size:1.1rem;max-width:640px">
+      Most web frameworks require you to learn their system, their templating language,
+      their way of doing things. Bascik takes the opposite approach: write plain HTML,
+      reference components by tag name, and let the build step handle the rest.
+    </p>
+
+    <section class="section">
+      <div class="grid-2">
+        <div class="card">
+          <p class="section-label">Goal</p>
+          <h3>Zero JavaScript by default</h3>
+          <p>Bascik adds no client-side JavaScript to your pages. Every script that appears
+            in the output was written by you.</p>
+        </div>
+        <div class="card">
+          <p class="section-label">Approach</p>
+          <h3>HTML-first</h3>
+          <p>Components are plain <code>.html</code> files. CSS is plain <code>.css</code>.
+            Bascik is a fancy find-and-replace, not a runtime.</p>
+        </div>
+        <div class="card">
+          <p class="section-label">Learning curve</p>
+          <h3>MDN is the docs</h3>
+          <p>You already know the language. Bascik adheres to web standards so every
+            reference you need is already on MDN.</p>
+        </div>
+        <div class="card">
+          <p class="section-label">Output</p>
+          <h3>Static HTML</h3>
+          <p>The build output is a <code>dist/</code> directory of plain HTML, CSS, and assets.
+            Deploy to any static host — S3, Netlify, Cloudflare Pages, etc.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <demo-footer></demo-footer>
+</body>
+
 </html>

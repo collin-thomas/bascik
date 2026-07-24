@@ -1,0 +1,15 @@
+{
+  "name": "bascik-docs",
+  "version": "1.0.0",
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "scripts": {
+    "dev": "bascik",
+    "build": "bascik --build",
+    "pkg-dev": "node --inspect --watch-path=./bascik.config.js --watch-path=../../pkg/src ../../pkg/src/transpile.ts",
+    "generate:llms": "node ../scripts/generate-llms-txt.mjs"
+  },
+  "dependencies": {
+    "@bascik/bascik": "file:../pkg/bascik-bascik-0.2.0.tgz"
+  }
+}

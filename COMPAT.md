@@ -1,0 +1,205 @@
+# Bascik Scoping Compatibility
+
+This document tracks which CSS and JavaScript patterns Bascik's build-time scoping engine handles. It is the source of truth for the [Scoping Compatibility](https://bascik.dev/compatibility) docs page.
+
+**Legend**
+
+- ✅ Supported and tested
+- ⚠️ Partially supported (see notes)
+- ❌ Not supported
+- 🚫 Intentionally unsupported (see notes)
+
+---
+
+## CSS Scoping
+
+CSS scoping applies to `.css` files paired with a component's HTML file. Place the `.css` file in the same directory as the component and give it the same base name.
+
+### Selectors
+
+| Pattern                                            | Example                                 | Status | Notes                                                                                                                                                                                                                                                                                     |
+| -------------------------------------------------- | --------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Class selector                                     | `.foo {}`                               | ✅     | Scoped with unique instance prefix                                                                                                                                                                                                                                                        |
+| Descendant with class                              | `.foo .bar {}`                          | ✅     | All class names in selector scoped                                                                                                                                                                                                                                                        |
+| Multi-class                                        | `.foo.bar {}`                           | ✅     | Both class names scoped                                                                                                                                                                                                                                                                   |
+| Standalone element selector                        | `p {}`                                  | ✅     | Converted to generated class; injected on matching elements in component HTML                                                                                                                                                                                                             |
+| Element pseudo-class                               | `p:hover {}`                            | ✅     | Element converted to class; pseudo-class preserved: `.bascik__...__el__p:hover {}`                                                                                                                                                                                                        |
+| Element pseudo-element                             | `p::before {}`                          | ✅     | Element converted to class; pseudo-element preserved: `.bascik__...__el__p::before {}`                                                                                                                                                                                                    |
+| `@keyframes` name                                  | `@keyframes spin {}`                    | ✅     | Name scoped; `animation:` references updated to match                                                                                                                                                                                                                                     |
+| `@media` query                                     | `@media (max-width: 600px) {}`          | ✅     | Media condition untouched; class names inside scoped normally                                                                                                                                                                                                                             |
+| `@supports`                                        | `@supports (display: grid) { .foo {} }` | ✅     | Class names inside `@supports` blocks are scoped normally.                                                                                                                                                                                                                                |
+| `@layer`                                           | `@layer base { .foo {} }`               | ✅     | Layer name scoped in all forms: declaration blocks, single-name and comma-list ordering statements.                                                                                                                                                                                       |
+| `@container`                                       | `@container sidebar (min-width: …) {}`  | ✅     | Container names declared via `container-name:` or the `container:` shorthand are scoped; `@container name (…)` queries updated to match. Unnamed queries untouched.                                                                                                                       |
+| CSS custom properties                              | `--brand: #d3ff8d` / `var(--brand)`     | ✅     | Declarations and all `var()` references in the same file scoped together                                                                                                                                                                                                                  |
+| Inline `<style>` in component HTML                 | `<style>.foo {}</style>`                | ✅     | Full CSS scoping pipeline applied to inline `<style>` blocks — class names, element selectors, `@keyframes`, `@layer`, `@container`, and custom properties are all scoped.                                                                                                                |
+| CSS `#id` selector                                 | `#btn {}`                               | ✅     | Converted to a component-scoped class selector (`.bascik__comp__id__btn {}`) using a context-aware lookahead that correctly distinguishes selector position from hex colour values. The generated class is injected onto the HTML element. Specificity drops from (0,1,0,0) to (0,0,1,0). |
+| `[id]` / `[id="…"]` attribute selector             | `[id] {}`                               | 🚫     | Stripped at compile time. Attribute-selector forms cannot be scoped without DOM wrapping.                                                                                                                                                                                                 |
+| Attribute selector                                 | `[data-foo="bar"] {}`                   | ⚠️     | Passed through untouched — not scoped. Will apply globally. Avoid in component CSS or use a class-based selector alongside it.                                                                                                                                                            |
+| Compound / descendant element selectors            | `div p {}`, `p + p {}`                  | ❌     | Element-to-class conversion only handles standalone element selectors at column 0. Descendant, sibling, and combined element selectors are not converted and apply globally. See Design Decisions.                                                                                        |
+| Comma-separated element selector list              | `h1, h2 {}`                             | ✅     | All elements in a comma list are converted — both multi-line (each at column 0) and same-line (`h1, h2 {}`). A `)` stop in the lookahead prevents false positives inside `:is()`, `:where()`, `:has()`.                                                                                   |
+| `:is()` / `:where()` / `:has()` with element names | `:is(p, h2) {}`                         | ❌     | Element names inside these functions are not converted. Class equivalents work fine: `:is(.foo, .bar) {}`. See Design Decisions.                                                                                                                                                          |
+| CSS nesting — class selectors                      | `& .child {}`                           | ✅     | Class selectors inside nesting are scoped normally.                                                                                                                                                                                                                                       |
+| CSS nesting — element selectors                    | `& p {}`, `& > h2 {}`                   | ⚠️     | Element selectors directly after `& ` (with optional single combinator `>`, `+`, `~`) are converted. Complex patterns (`& .parent p {}`, `&p {}`) are not converted.                                                                                                                      |
+| `@scope` (native)                                  | `@scope (.foo) { p {} }`                | ❌     | Not yet processed. Passed through untouched.                                                                                                                                                                                                                                              |
+
+### Other CSS Features
+
+| Feature                   | Status | Notes                                                                                                                    |
+| ------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------ |
+| CSS deduplication         | ✅     | When a component is used multiple times on a page, its CSS is injected only once.                                        |
+| `obfuscateAttributeNames` | ✅     | In production builds, verbose names like `bascik__site-nav__a1b2c3__logo` are hashed to short strings (e.g. `ba1b2c3d`). |
+| `minifyStyles`            | ✅     | Whitespace in the compiled `<style>` block is collapsed.                                                                 |
+| Comments                  | ✅     | Stripped before processing.                                                                                              |
+
+---
+
+## JavaScript Scoping
+
+Bascik rewrites DOM selector references inside component `<script>` tags to match scoped attribute values. All rewrites happen at build time — no runtime is added.
+
+### IIFE Isolation
+
+| Pattern                                                  | Status | Notes                                                                                                                                                                                                                                                       |
+| -------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<script>` (no type)                                     | ✅     | Wrapped in an IIFE to prevent variable leakage between components.                                                                                                                                                                                          |
+| `<script type="text/javascript">`                        | ✅     | Wrapped in an IIFE.                                                                                                                                                                                                                                         |
+| `<script type="module">`                                 | ✅     | Not wrapped in an IIFE (modules are already isolated by spec). DOM selector references still rewritten.                                                                                                                                                     |
+| `<script type="application/json">` (and any non-JS type) | ✅     | Left completely untouched.                                                                                                                                                                                                                                  |
+| `<script data-bascik-build>`                             | ✅     | Executed at **transpile time** as a Node.js ESM module. The script's stdout is injected in place of the tag. Runs in both dev and build modes. Use `console.log()` / `process.stdout.write()` to output HTML. Top-level `import` and `await` are supported. |
+
+### DOM Selector Rewriting
+
+| Method                                        | Example                              | Attribute Scoped | Status | Notes                                                                                                                                                                           |
+| --------------------------------------------- | ------------------------------------ | ---------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `document.getElementById`                     | `getElementById("my-id")`            | `id`             | ✅     |                                                                                                                                                                                 |
+| `document.querySelector` with `#id`           | `querySelector("#my-id")`            | `id`             | ✅     |                                                                                                                                                                                 |
+| `document.querySelectorAll` with `#id`        | `querySelectorAll("#my-id")`         | `id`             | ✅     |                                                                                                                                                                                 |
+| `document.getElementsByClassName`             | `getElementsByClassName("my-cls")`   | `class`          | ✅     |                                                                                                                                                                                 |
+| `document.querySelector` with `.class`        | `querySelector(".my-cls")`           | `class`          | ✅     | Single-token class selector only.                                                                                                                                               |
+| `document.querySelectorAll` with `.class`     | `querySelectorAll(".my-cls")`        | `class`          | ✅     | Single-token class selector only.                                                                                                                                               |
+| `document.getElementsByName`                  | `getElementsByName("my-name")`       | `name`           | ✅     |                                                                                                                                                                                 |
+| `element.closest` with `#id`                  | `el.closest("#my-id")`               | `id`             | ✅     |                                                                                                                                                                                 |
+| `element.closest` with `.class`               | `el.closest(".my-cls")`              | `class`          | ✅     | Single-token class selector only.                                                                                                                                               |
+| `element.matches` with `#id`                  | `el.matches("#my-id")`               | `id`             | ✅     |                                                                                                                                                                                 |
+| `element.matches` with `.class`               | `el.matches(".my-cls")`              | `class`          | ✅     | Single-token class selector only. Works for event delegation: `e.target.matches(".my-cls")`.                                                                                    |
+| `element.classList.add`                       | `el.classList.add("my-cls")`         | `class`          | ✅     |                                                                                                                                                                                 |
+| `element.classList.remove`                    | `el.classList.remove("my-cls")`      | `class`          | ✅     |                                                                                                                                                                                 |
+| `element.classList.toggle`                    | `el.classList.toggle("my-cls")`      | `class`          | ✅     |                                                                                                                                                                                 |
+| `element.classList.contains`                  | `el.classList.contains("my-cls")`    | `class`          | ✅     |                                                                                                                                                                                 |
+| Compound `querySelector` / `querySelectorAll` | `querySelector(".foo .bar")`         | `class` / `id`   | ✅     | Space-separated and combinator-separated (`>`, `+`, `~`) tokens are each rewritten. Adjacent-class compound `.foo.bar` only rewrites the leading token.                         |
+| `element.className` setter                    | `el.className = "my-cls"`            | `class`          | ✅     | Single-class and space-separated multi-class assignments (`= "…"` and `+= "…"`) are rewritten. Reading `el.className` is unchanged.                                             |
+| `element.setAttribute("class", …)`            | `el.setAttribute("class", "my-cls")` | `class`          | ✅     | String literal values are rewritten.                                                                                                                                            |
+| `element.setAttribute("id", …)`               | `el.setAttribute("id", "my-id")`     | `id`             | ✅     | String literal values are rewritten.                                                                                                                                            |
+| `element.id` setter                           | `el.id = "my-id"`                    | `id`             | ❌     | Not rewritten — `.id =` also matches `el.dataset.id =` and other object properties named `id`. Use `getElementById` to retrieve elements and operate on the returned reference. |
+| `querySelector` attribute selector            | `querySelector("[id='my-id']")`      | `id`             | ❌     | Use `getElementById` instead.                                                                                                                                                   |
+
+### Notes on Gaps
+
+The unsupported JS patterns above all involve **dynamic attribute manipulation** where static analysis cannot safely identify which component's attribute is being referenced from a string literal.
+
+The recommended pattern is to query scoped elements by a single `id` or single-class selector first, store the reference, then use the reference for all further DOM operations:
+
+```html
+<!-- source — works correctly -->
+<div id="panel" class="card"></div>
+<script>
+  const panel = document.getElementById("panel"); // ← rewritten by Bascik
+  panel.style.display = "none"; // ← operate on the reference
+  panel.dataset.state = "closed"; // ← data attributes for state
+</script>
+```
+
+---
+
+## Design Decisions & Known Non-Starters
+
+Things that looked implementable but were deliberately left out, and why. Record these so we don't revisit the same dead ends.
+
+### CSS `#id {}` selector — first attempt rejected, now implemented
+
+**First attempt (failed):** Used a simple lookahead `/#([a-zA-Z][a-zA-Z0-9-_]*)(?=[\s{:,])/g`. This incorrectly matched hex colour values in property position:
+
+```css
+background: linear-gradient(#abc, #def)   /* ← comma triggered the match */
+background: #abc url('./img.png')         /* ← space triggered the match */
+color: #abc\n                             /* ← newline triggered the match */
+```
+
+**Second attempt (current implementation, ✅):** Changed to a context-aware lookahead:
+
+```
+/#([a-zA-Z][a-zA-Z0-9-_]*)(?=[^{};]*\{)/g
+```
+
+The key insight: in **selector position** the next `{` always appears before any `;` or `}`. In **value position** (property declarations, gradient functions, etc.) a `;` or `}` always appears before the next `{`. This reliably distinguishes the two contexts:
+
+```css
+#btn { }                          → matches  (selector: { before ;/})
+.parent #btn { }                  → matches  (compound selector)
+@media (...) { #btn { } }         → matches  (nested selector)
+color: #abc;                      → skipped  (value: ; before {)
+linear-gradient(#abc, #def)        → skipped  (value: } closes rule before next {)
+color: #abc\n}                    → skipped  (} terminates before {)
+```
+
+**Remaining known edge case:** A bare property declaration at the CSS file's top level (which is itself invalid CSS) could theoretically yield a false positive. This cannot occur in valid component CSS.
+
+**Implementation:** `convertCssIdSelectorsToClasses` in `styles.ts`. The hash `#id {}` is converted to `.bascik__comp__id__id {}` and the generated class is injected onto the HTML element. Specificity drops from (0,1,0,0) to (0,0,1,0), which is acceptable and consistent with how element selectors are handled.
+
+### CSS comma-separated element selectors — now implemented
+
+Same context-aware lookahead technique used for `#id` conversion. Adding `)` to the lookahead stop set (`[^{};)]*\{`) prevents false positives inside `:is()`, `:where()`, `:has()` pseudo-functions, because the closing `)` terminates the lookahead before `{` is reached:
+
+```
+div:is(p, h2) { }    →  h2 is after , but ) stops lookahead before { → skipped ✓
+h1, h2 { }           →  h2 is after , ; then { before ;/}/} → MATCHES ✓
+transition: color 0.2s, opacity 0.3s;  →  ; before { → skipped ✓
+```
+
+**Pass 2 regex:** `/(?<=,[ \t]*)[a-z1-6]+(?=[^{};)]*\{)/g`
+
+### CSS compound / descendant element selectors — still not implemented
+
+**The remaining hard case:** `div p {}`, `p + p {}` — `p` after `div` or a combinator in a DESCENDANT selector context.
+
+These still require a CSS parser. Unlike the `#id` and comma cases, there is no unique anchor character (like `#` or a comma-lookahead-stop) that cleanly identifies descendant element selector context without also matching property values.
+
+**The correct workaround:** Add a class to the target element and use `.my-class p {}` → split into individual rules or use `.my-class {}` class-based targeting.
+
+### CSS nesting element selectors — partially implemented
+
+**Approach:** The `&` character is exclusively a CSS nesting selector and never appears in property value position. This makes `& ` (ampersand + whitespace) a safe anchor:
+
+```
+/(?<=&\s+(?:[>+~]\s+)?)[a-z1-6]+(?=[^{};)]*\{)/g
+```
+
+Handles: `& p {}`, `& > h2 {}`, `& + li {}`, `& ~ span {}`.
+
+**Not handled:** `& .parent p {}` (element after class in nesting), `&p {}` (element directly appended to `&`). These require the combinator/whitespace anchor to precede the element.
+
+### CSS `element.id` property setter — not implemented
+
+**What was considered:** Rewriting `el.id = "my-id"` to use the scoped ID name.
+
+**Why it was not implemented:** The pattern `\.id\s*=\s*["']` matches any property chain ending in `.id`, including `el.dataset.id = "foo"` (which sets a `data-id` attribute, not the DOM `id`). There is no reliable way to distinguish these cases with a regex.
+
+**The correct workaround:** Use `getElementById("my-id")` to retrieve the element reference first, then work with the reference. Bascik rewrites `getElementById` correctly. Avoid assigning `el.id` from a scoped ID value in component scripts.
+
+---
+
+## What "Scoped" Means
+
+Class attributes are scoped to the **component type** (name only). All instances of the same component on a page share the same scoped class names, which allows CSS to be deduplicated to a single `<style>` block.
+
+ID and name attributes are scoped per **component instance** (name + unique instance ID) so that multiple instances on the same page have distinct DOM identifiers.
+
+```
+class  →  bascik__<componentName>__<originalName>
+id     →  bascik__<componentName>__<instanceId>__<originalName>
+name   →  bascik__<componentName>__<instanceId>__<originalName>
+```
+
+With `obfuscateAttributeNames: true` (the default in production builds), these verbose names are hashed to short hex strings (e.g. `ba1b2c3d`). The HTML, CSS, and JavaScript are all updated with the same scoped names so they stay in sync.
+
+This is a **build-time transformation** — no JavaScript is loaded at runtime to manage scoping. The output is plain HTML.

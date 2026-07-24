@@ -1,36 +1,44 @@
 # Bascik
 
-Bascik is a Web Framework. It most closely resembles a Static Site Generator (SSG).
+[![CI](https://github.com/collin-thomas/bascik/actions/workflows/ci.yml/badge.svg)](https://github.com/collin-thomas/bascik/actions/workflows/ci.yml)
+[![npm version](https://badge.fury.io/js/%40bascik%2Fbascik.svg)](https://www.npmjs.com/package/@bascik/bascik)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-Bascik is not a JavaScript Framework. You don't write JavaScript as components. Bascik does not require special syntax or a templating language.
+Bascik is a static site generator (SSG) that lets you write reusable HTML components. It is **not** a JavaScript framework — you write plain HTML, CSS, and JavaScript.
 
-With Bascik, you simply write HTML in component and page files. You can use CSS and JavaScript as needed.
+Bascik acts as a build-time find-and-replace: it resolves custom HTML tags to their component source, scopes CSS and JavaScript per component instance, and writes a `dist/` directory of plain HTML files. **Zero JavaScript is added to your pages.** Every script in the output was written by you.
 
-Unlike other Frameworks, Bascik does not require configuration files or to learn new HTML attributes.
+---
 
-Bascik acts as a fancy find and replace machine by replacing references to your HTML components with the associated source code.
+## Table of Contents
 
-The cool trick is Bascik scopes component's CSS and JavaScript to avoid name conflicts across components or repeated use of components on the same page.
+- [Getting Started](#getting-started)
+- [Project Setup](#project-setup)
+- [Folder Structure](#folder-structure)
+- [Full Documentation](#full-documentation)
+- [Configuration](#configuration)
+- [Publishing](#publishing)
+- [Development](#development)
+- [Internals: Transpilation Pipeline](#internals-transpilation-pipeline)
+- [Contributing](#contributing)
 
-Bascik proudly does not add any JavaScript to your pages, nor does it attempt to alter your code, or wrap HTML in other elements.
-
-Bascik is best summarized in the following scenario: Let's say you want to build a website, you realize the navigation and footer needs to be on all the pages. Instead of reaching for a JavaScript framework, templating language, etc, Bascik allows you to do what would come naturally, add the code for the navigation and footer to separate files and reference them as HTML elements. This keeps your pages lightweight and you don't have to learn anything.
-
-One last thing, frameworks require to you learn their system and their way of doing things. This requires the framework to have robust documentation and an ecosystem of tutorials and blogs. Bascik adheres to the idea that all the documentation you should need is on [MDN](https://developer.mozilla.org/).
+---
 
 ## Getting Started
 
-Install with your package manager of choice:
+Requires **Node.js ≥ 24**.
 
-`yarn add @bascik/bascik`
+```sh
+yarn add @bascik/bascik
+# or
+npm install @bascik/bascik
+# or
+pnpm add @bascik/bascik
+```
 
-`pnpm add @bascik/bascik`
-
-`npm install @bascik/bascik`
+---
 
 ## Project Setup
-
-Add the Bascik npm scripts to your `package.json`.
 
 ```json
 {
@@ -41,201 +49,289 @@ Add the Bascik npm scripts to your `package.json`.
 }
 ```
 
-The `dev` command will transpile your project and start the development server.
+`dev` — transpiles your project, starts the HTTP/2 dev server, and watches for changes.  
+`build` — transpiles to `dist/` only.
 
-The `build` command will transpile your project and create a dist directory that can be deployed to a static website hosting solution.
+---
 
 ## Folder Structure
 
-These are the two default directories Bascik will look for:
-
-- `src/pages`
-- `src/components`
-
-These directories can be overridden using the `bascik.config.js` file.
-
-The `pages` directory is where each route is defined by creating `.html` files with the name of each route, same as you would in a traditional static site. The pages directory can contain CSS files, other directories such as an img directory, it's a normal directory.
-
-The `components` directory is where you add you component files and directories.
-
-## Writing Components
-
-Components get their name from the file or folder in which they are defined.
-
-For example, if you want to define a footer component, you would create the `components/footer.html` file and populate it with your HTML and JavaScript.
-
-If you want to style your component, use a folder name with the same name as the component, and add the HTML and CSS files with the same name as the component in the component directory.
-
-For the footer example, create the directory `components/footer` and add the `footer.html` and `footer.css` within the directory.
-
-## Example Component and Page
-
-Here is a simple example to get you started.
-
-### Example Component HTML
-
-File Path: `src/components/site-nav/site-nav.html`
-
-File Content:
-
-```html
-<nav class="navigation header">
-  <ul>
-    <li><a href="/">index</a></li>
-    <li><a href="/about">about</a></li>
-    <li><a href="/contact">contact</a></li>
-  </ul>
-</nav>
-
-<script>
-  const links = navLinks.querySelectorAll('a');
-  links.forEach(link => {
-    link.addEventListener('mouseover', () => {
-      console.log(`Hover: ${link.textContent}`);
-    });
-  });
-</script>
+```
+src/
+  pages/       ← one .html file per route (plus CSS, images, etc.)
+  components/  ← component .html (+ optional .css) files
 ```
 
-### Example Component CSS
+Both directories can be overridden in `bascik.config.js`.
 
-File Path: `src/components/site-nav/site-nav.css`
+---
 
-File Content:
+## Full Documentation
 
-```css
-.navigation ul {
-  list-style-type: none;
-  margin: unset;
-  padding: unset;
-}
+Full feature documentation lives at **[bascik.dev](https://bascik.dev)**.
 
-.navigation ul li {
-  display: inline-block;
-}
+| Topic                   | URL                                                                          |
+| ----------------------- | ---------------------------------------------------------------------------- |
+| Getting started         | [bascik.dev/getting-started](https://bascik.dev/getting-started)             |
+| Slots                   | [bascik.dev/slots](https://bascik.dev/slots)                                 |
+| Props                   | [bascik.dev/props](https://bascik.dev/props)                                 |
+| Attribute inheritance   | [bascik.dev/attribute-inheritance](https://bascik.dev/attribute-inheritance) |
+| Scoped styles           | [bascik.dev/scoped-styles](https://bascik.dev/scoped-styles)                 |
+| Scoped JavaScript       | [bascik.dev/scoped-javascript](https://bascik.dev/scoped-javascript)         |
+| Configuration reference | [bascik.dev/configuration](https://bascik.dev/configuration)                 |
+| CSS/JS compatibility    | [bascik.dev/compatibility](https://bascik.dev/compatibility)                 |
 
-.navigation ul li a {
-  padding: 8px;
-}
+---
 
-.header {
-  padding-top: 16px;
-}
-```
+## Configuration
 
-### Example Page
-
-File Path: `src/pages/index.html`
-
-File Content:
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Home</title>
-    <!-- There isn't anything preventing you from adding stylesheets or a <style> tag -->
-    <!-- <link rel="stylesheet" href="/css/styles.css" /> -->
-    <!-- <link rel="stylesheet" href="/css/print.css" media="print" /> -->
-  </head>
-  <body>
-    <site-nav></site-nav>
-    <h1>Hello World</h1>
-  </body>
-</html>
-```
-
-## JavaScript
-
-You can add JavaScript to any page or component HTML file in a `<script>` tag as you normally would.
-
-## Nested Elements aka Slots
-
-There is a custom reserved tag within Bascik called `<slot-component>` which can be used to signal to the Bascik transpiler that HTML tags, including other Bascik components, can be nested elements.
-
-Yes, you could argue having a special HTML tag breaks one of the principals of Bascik, but I'll argue that it's necessary and somewhat aligns because it's an element, which is what is what you create in Bascik. It would be less aligned if it was a custom HTML attribute on an tag.
-
-Create a component file called `components/tag-a.html` with the following HTML:
-
-```html
-<p>tag-a</p>
-<slot-component></slot-component>
-<p>foo bar</p>
-```
-
-Then in the `pages/index.html` file add the following HTML:
-
-```html
-<html>
-<body>
-  <tag-a>
-    <p>Hello World</p>
-  </tag-a>
-</body>
-</html>
-```
-
-The Bascik transpiler will output the following HTML for the index page:
-
-```html
-<html>
-<body>
-  <p>tag-a</p>
-  <p>Hello World</p>
-  <p>foo bar</p>
-</body>
-</html>
-```
-
-## Bascik Config
-
-This file is optional. You can add the `bascik.config.js` to the root of your project to override default configurations of Bascik. You can also set configuration overrides specifically for the build.
-
-The following is an example where all the default configurations are set.
+Create an optional `bascik.config.js` in the project root:
 
 ```js
 export const bascikConfig = {
-  scopeScriptBlocks: true,
-  scopeAttribute: {
-    class: true,
-    id: true,
-    name: true,
-  },
   directory: {
-    pages: 'src/pages',
-    components: 'src/components'
+    pages: "src/pages", // default
+    components: "src/components", // default
   },
-  minifyStyles: true,
-  obfuscateAttributeNames: true,
-  cacheHttp: false,
+
+  scopeScriptBlocks: true, // wrap scripts in IIFEs, rewrite selectors
+  scopeAttribute: {
+    class: true, // scope class attribute values
+    id: true, // scope id attribute values
+    name: true, // scope name attribute values
+  },
+
+  minifyStyles: true, // collapse whitespace in compiled <style> block
+  obfuscateAttributeNames: true, // hash class/id names to short hex strings
+  cacheHttp: false, // HTTP cache headers on dev server responses
+  verboseLogging: false, // include {cause} in console.warn/error
 };
 
-export const buildOverrideConfig = {};
+// Options applied only during `bascik --build`, merged over bascikConfig
+export const buildOverrideConfig = {
+  obfuscateAttributeNames: true,
+  minifyStyles: true,
+};
 ```
 
-## Development Server
+`obfuscateAttributeNames` is the most impactful production setting: it turns `bascik__site-nav__a1b2c3__navigation` into a short hash like `ba1b2c3d`.
 
-The development server that runs when calling the `bascik` command is a Node.js HTTP/2 server. It will generate a self-signed certificate.
+---
 
-Note:
+## Publishing
 
-If you're bothered by clicking to ignore the cert warning, you can launch Chrome with the `--ignore-certificate-errors` flag to ignore the cert warning. Alternatively, you can configure your system to trust the certificate.
+Steps to cut a new release:
 
-The development server serves your pages from memory, not from disk, for a super fast development experience. The page data is also compressed for further performance improvements.
+1. **Update version** in `pkg/package.json` following [Semantic Versioning](https://semver.org/).
+2. **Update `CHANGELOG.md`** — add a section under `[Unreleased]`, move it to the new version with today's date.
+3. **Run tests** — `yarn test:ci` from `pkg/`.
+4. **Pack and smoke-test** locally:
+   ```sh
+   cd pkg && npm pack
+   cd ../demo-app
+   yarn cache clean
+   yarn add ../pkg/bascik-bascik-X.Y.Z.tgz
+   yarn build
+   ```
+5. **Commit, tag, and push**:
+   ```sh
+   git add .
+   git commit -m "chore: release vX.Y.Z"
+   git tag vX.Y.Z
+   git push origin main --tags
+   ```
+6. The [Release workflow](.github/workflows/release.yml) picks up the tag, runs tests, and publishes to npm automatically.  
+   Ensure the `NPM_TOKEN` secret is set in the repository settings (Settings → Secrets → Actions).
 
-Pages are served without their `.html` file extension, and `index.html` always becomes `/`, including in sub directories. The server also includes the ability to handle routes that do not exist, all you have to do is created a `pages/404.html`.
+### Manual publish (if needed)
 
-The development server can be used as a production server.
+```sh
+cd pkg
+npm publish --access public
+```
 
-### Live Reload
+---
 
-The development server has smart live reloading.
+## Development
 
-If you modify the source of a page that is currently open in the browser, that page will be reloaded in the browser.
+### Install dependencies
 
-If you modify a component that it utilized on a page the is currently open in the browser, that page will be reloaded.
+Requires Node.js ≥ 24.
 
-This provides a great developer experience where your changes are reflected instantly.
+```sh
+cd pkg
+yarn install
+```
+
+### Tests
+
+```sh
+yarn test          # watch mode
+yarn test --run    # single run
+yarn test:ci       # single run + coverage summary (used in CI)
+yarn test:coverage # full coverage report → coverage/
+```
+
+### Type checking (JSDoc + checkJs)
+
+The source is plain JavaScript with JSDoc type annotations. TypeScript's compiler checks them without a build step:
+
+```sh
+yarn typecheck
+```
+
+This runs `tsc --noEmit` using `tsconfig.json` (`checkJs: true`, `strict: true`). Fix any reported errors before opening a PR.
+
+### Benchmarks
+
+Repeatable micro-benchmarks for the transpile pipeline (powered by vitest bench):
+
+```sh
+yarn bench
+```
+
+**Baseline numbers (Node.js 24, Apple M-series):**
+
+| Scenario                               | ops/sec | mean latency |
+| -------------------------------------- | ------- | ------------ |
+| `minifyHtml` — small HTML              | ~600K   | ~1.6µs       |
+| `minifyHtml` — large HTML (50×)        | ~19K    | ~52µs        |
+| `getTag` — paired                      | ~2.5M   | ~0.4µs       |
+| `getTag` — self-closing                | ~1.8M   | ~0.56µs      |
+| `prefixClassesInCss` — realistic CSS   | ~220K   | ~4.5µs       |
+| `scopeCssCustomProperties` — 10 props  | ~106K   | ~9.5µs       |
+| `recursivelyTranspile` — 10 components | ~13.7K  | ~73µs        |
+| `recursivelyTranspile` — 50 components | ~1.45K  | ~691µs       |
+| `deduplicateCss` — 20 entries          | ~1.4M   | ~0.7µs       |
+
+Run `yarn bench` after any change to the hot paths to catch regressions.
+
+---
+
+## Internals: Transpilation Pipeline
+
+This section is for contributors who want to understand how Bascik processes source HTML into its final output. All code lives in `pkg/src/lib/`.
+
+### Overview
+
+Bascik runs in two nested phases:
+
+```
+Page Phase  (pageProcessing)
+└── Component Phase  (recursivelyTranspile)  ← recursive, once per tag
+    └── Scoping Pipeline  (buildScopingPipeline → applyTransforms)
+```
+
+---
+
+### Page Phase
+
+Triggered by `pageProcessing(pagePath)` — once per `.html` file.
+
+```
+1. Read source file → strip comments, collapse whitespace  (minifyHtml)
+2. Extract <body> inner content
+3. Extract <head> inner content
+4. Run Component Phase on <body>  →  { transpiledBody, usedComponents }
+5. Run Component Phase on <head>  →  { transpiledHead, headComponents }
+6. Collect CSS from all used components, deduplicate, inject <style>  (deduplicateCss)
+7. Inject live-reload SSE <script>  (dev mode only)
+8. Reassemble: replace <body> and <head> contents in the original HTML
+9. Store in memory for the dev server  (dev mode)
+10. Write to dist/  (both modes)
+```
+
+---
+
+### Component Phase
+
+`recursivelyTranspile(html, componentList)` recurses until no custom tags remain:
+
+```
+Base case: no custom tag found → return { html, usedComponents }
+
+For each custom tag found:
+
+  ┌─ 1. SCOPING PIPELINE ─────────────────────────────────────────┐
+  │   buildScopingPipeline(instanceId) returns ComponentTransform[]  │
+  │   Each step: BascikComponent → BascikComponent                │
+  │                                                               │
+  │   a. prefixElementAttribute('id',    instanceId)              │
+  │   b. prefixElementAttribute('name',  instanceId)              │
+  │   c. prefixElementAttribute('class', instanceId)  ← also CSS  │
+  │   d. namespaceScriptTags                          ← IIFE wrap  │
+  │                                                               │
+  │   Each step is skipped if disabled in bascik.config.js.       │
+  └───────────────────────────────────────────────────────────────┘
+
+  ┌─ 2. TEMPLATE RESOLUTION ──────────────────────────────────────┐
+  │   a. injectProps         — fill data-bascik-prop-* markers    │
+  │   b. replaceNamedSlots   — fill data-bascik-slot="name" zones  │
+  │   c. default slot        — fill <slot-component> or           │
+  │                            data-bascik-slot (no value)        │
+  │                            with inner content or fallback      │
+  │   d. mergeAttributesOntoRoot — pass-through attrs to root     │
+  └───────────────────────────────────────────────────────────────┘
+
+  ┌─ 3. SUBSTITUTION ─────────────────────────────────────────────┐
+  │   Replace the original usage tag with the resolved HTML.      │
+  │   Recurse on the updated HTML string.                         │
+  └───────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Scoping Pipeline Detail
+
+`prefixElementAttribute(component, 'class'|'id'|'name', instanceId)` handles both HTML and CSS:
+
+```
+For every attribute value found in the template HTML:
+
+  HTML:  id="my-btn"      →  id="bascik__comp__a1b2c3__my-btn"
+  JS:    getElementById("my-btn")  →  getElementById("bascik__comp__a1b2c3__my-btn")
+         querySelector("#my-btn")  →  querySelector("#bascik__comp__a1b2c3__my-btn")
+
+For class attribute, also scopes the companion .css file:
+  .nav { }              →  .bascik__comp__a1b2c3__nav { }
+  p { }                 →  .bascik__comp__a1b2c3__el__p { }  (+ class injected on <p>)
+  @keyframes spin       →  @keyframes bascik__comp__a1b2c3__keyframe__spin
+  --brand: #d3ff8d      →  --bascik__comp__a1b2c3__brand: #d3ff8d
+  var(--brand)          →  var(--bascik__comp__a1b2c3__brand)
+  [id] { }              →  (stripped — cannot be scoped without DOM wrapping)
+```
+
+When `obfuscateAttributeNames: true` (the production default), all generated names are hashed to short hex strings: `bascik__comp__a1b2c3__nav` → `bab12cd3`.
+
+---
+
+### Adding a New Pipeline Step
+
+All scoping steps share the `ComponentTransform` signature — `(c: BascikComponent) => BascikComponent`. To add a new transform:
+
+1. Write the transform function in the relevant `lib/` module.
+2. Add it to `buildScopingPipeline()` in `processing.ts`, guarded by a config flag if it should be opt-in.
+3. Export it and add tests.
+
+```ts
+// Example: adding a hypothetical new scoping step
+const buildScopingPipeline = (instanceId: string): ComponentTransform[] =>
+  ([
+    BascikConfig.scopeAttribute.id    && (...),
+    BascikConfig.scopeAttribute.name  && (...),
+    BascikConfig.scopeAttribute.class && (...),
+    BascikConfig.scopeScriptBlocks    && namespaceScriptTags,
+    BascikConfig.myNewFeature         && myNewTransform,  // ← add here
+  ] as (ComponentTransform | false)[]).filter(Boolean);
+```
+
+---
+
+## Contributing
+
+1. Fork the repo and create a branch from `main`.
+2. Write tests for new functionality (TDD preferred).
+3. Run `yarn test --run` and `yarn typecheck` — both must pass.
+4. Run `yarn bench` if touching the transpile pipeline — include numbers in the PR description.
+5. Update `CHANGELOG.md` under `[Unreleased]`.
+6. Open a PR against `main`.
