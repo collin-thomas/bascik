@@ -1,13 +1,38 @@
 ## Scoped JavaScript
 
-DOM selectors in component scripts are rewritten to match scoped names:
+Bascik rewrites DOM selector calls inside component `<script>` tags to match the scoped IDs and class names. Each component instance gets unique identifiers, so multiple instances on the same page work independently.
+
+### IIFE Isolation
+
+Every component script is wrapped in an immediately-invoked function expression (IIFE) to prevent variable leaks between components:
+
+```html
+<!-- source -->
+<script>
+  const count = 0;
+  console.log(count);
+</script>
+```
+
+```html
+<!-- compiled -->
+<script>
+  (function() {
+    const count = 0;
+    console.log(count);
+  })();
+</script>
+```
+
+### ID Scoping
+
+The `id` attribute value in the HTML and all references to it in scripts are rewritten with the same unique prefix:
 
 ```html
 <!-- source -->
 <button id="my-btn">Click</button>
 <script>
-  document
-    .getElementById("my-btn")
+  document.getElementById("my-btn")
     .addEventListener("click", () => alert("hi"));
 </script>
 ```
@@ -16,27 +41,33 @@ DOM selectors in component scripts are rewritten to match scoped names:
 <!-- compiled -->
 <button id="bascik__my-btn__a1b2__my-btn">Click</button>
 <script>
-  (function () {
-    document
-      .getElementById("bascik__my-btn__a1b2__my-btn")
+  (function() {
+    document.getElementById("bascik__my-btn__a1b2__my-btn")
       .addEventListener("click", () => alert("hi"));
   })();
 </script>
 ```
 
-### Supported DOM Methods (auto-rewritten)
+### Supported Selectors
 
-- `document.getElementById("id")`
-- `document.querySelector("#id")` / `document.querySelectorAll("#id")`
-- `document.querySelector(".cls")` / `document.querySelectorAll(".cls")` — single OR compound selectors
-- `document.querySelector(".foo .bar")` / `querySelector("#id .child")` — compound selectors supported
-- `document.getElementsByClassName("cls")`
-- `document.getElementsByName("name")`
-- `element.closest("#id")` / `element.closest(".cls")` — compound-aware
-- `element.matches("#id")` / `element.matches(".cls")` — works for event delegation too
-- `element.classList.add/remove/toggle/contains("cls")`
-- `element.setAttribute("class", "cls")` / `setAttribute("id", "id-value")` — string literal values
-- `element.className = "cls"` or `"cls1 cls2"` or `+= " cls"` — setter forms
+All of the following DOM methods are updated when they reference a scoped attribute:
+
+```js
+// id attribute
+document.getElementById("my-id")
+document.querySelector("#my-id")
+document.querySelectorAll("#my-id")
+
+// class attribute
+document.getElementsByClassName("my-class")
+document.querySelector(".my-class")
+document.querySelectorAll(".my-class")
+
+// name attribute
+document.getElementsByName("my-name")
+```
+
+Additional rewritten forms include `element.closest()`, `element.matches()`, `element.classList.add/remove/toggle/contains()`, `element.setAttribute("class", ...)` and `element.setAttribute("id", ...)` with string literal values, and `element.className` setter forms.
 
 ### Scoping Model
 
@@ -53,11 +84,12 @@ name   →  bascik__<componentName>__<instanceId>__<originalName>
 If you have a class or ID name that is **only toggled or added dynamically at runtime** by JavaScript (for example, with `.classList.toggle("is-open")` or `.classList.add("is-active")`) but **does not exist on any HTML tag inside the template at compile time**, Bascik's HTML compiler will not discover or register it.
 
 This causes a compile mismatch:
-* The **CSS parser** *will* obfuscate the class name inside your stylesheet.
-* The **JS parser** *will not* obfuscate the class name inside your scripts because it was never registered in the HTML pass.
-* At runtime, your script will toggle `"is-open"`, but the CSS will be listening for the obfuscated `.bf5a887ac3134` class, causing interactive elements like menus or modals to fail silently.
+- The **CSS parser** *will* obfuscate the class name inside your stylesheet.
+- The **JS parser** *will not* obfuscate the class name inside your scripts because it was never registered in the HTML pass.
+- At runtime, your script will toggle `"is-open"`, but the CSS will be listening for the obfuscated `.bf5a887ac3134` class, causing interactive elements like menus or modals to fail silently.
 
 #### The Solution: Scoping Helpers
+
 Always declare any dynamic classes or IDs inside a hidden scoping helper element inside your HTML template. This forces Bascik's HTML parser to register the names during compilation:
 
 ```html
@@ -65,8 +97,34 @@ Always declare any dynamic classes or IDs inside a hidden scoping helper element
 <div class="is-open is-active" style="display: none;"></div>
 ```
 
-### Not Rewritten
+### Build-time Scripts
 
-- `element.className`, `element.setAttribute("class", ...)`, `element.id`, `element.setAttribute("id", ...)`
-- Compound selectors: `querySelector(".foo .bar")`, `querySelector("#id .child")`
-- `querySelector("[id='myId']")`
+`<script data-bascik-build>` blocks are executed at transpile time as Node.js ESM modules. Whatever the script writes to stdout is injected into the page in place of the tag. Top-level `import` and top-level `await` are supported. Scripts run with the project root as their working directory.
+
+Use this to pull in external data sources — markdown files, JSON, API responses, generated content — and inline the result directly into your HTML at build time.
+
+```html
+<script data-bascik-build>
+  import { readFile } from 'node:fs/promises';
+  import { marked } from 'marked';
+  const md = await readFile('./content/posts/intro.md', 'utf8');
+  console.log(marked(md));
+</script>
+```
+
+The entire script tag (including opening and closing tags) is replaced by the stdout output. If the script produces no output, the tag is replaced with an empty string. On error, a warning is logged and the tag is removed.
+
+> **Component tags work too:** Build scripts run before component resolution, so their output can contain Bascik component tags that will be transpiled in the next step.
+
+### Non-JavaScript Script Types
+
+Script tags with a `type` other than `text/javascript` (e.g. `type="application/json"`) are left completely untouched — they are not wrapped in an IIFE and their attributes are not scoped.
+
+```html
+<!-- This passes through unchanged -->
+<script type="application/json" id="config-data">
+  { "theme": "dark" }
+</script>
+```
+
+> **Tip:** Disable JS scoping entirely with `scopeScriptBlocks: false` in [bascik.config.js](/configuration).

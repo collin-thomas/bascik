@@ -33,25 +33,16 @@
           selectors, <code>@media</code> queries, and <code>@keyframes</code> are all scoped so components can never
           conflict with one another.</p>
 
-        <h2>CSS File Pairing</h2>
-        <p>Create a <code>.css</code> file with the same name in the same directory as the component HTML:</p>
-
-        <code-block data-bascik-prop-lang="text">src/components/
-          site-nav/
-          site-nav.html
-          site-nav.css ← scoped to site-nav</code-block>
-
-        <h2>Class Scoping</h2>
-        <p>Every class name in the <code>.css</code> file is prefixed with a unique instance ID. The corresponding HTML
-          attributes are updated to match.</p>
-
-        <code-block data-bascik-prop-lang="css" data-bascik-prop-file="site-nav.css (source)">.navigation ul {
-          list-style-type: none; }
-          .navigation ul li a { padding: 8px; }</code-block>
-
-        <code-block data-bascik-prop-lang="css"
-          data-bascik-prop-file="compiled output">.bascik__site-nav__a1b2c3__navigation ul { list-style-type: none; }
-          .bascik__site-nav__a1b2c3__navigation ul li a { padding: 8px; }</code-block>
+        <!-- Content rendered from docs/content/03-scoped-css.md at build time.
+             To update page content, edit the MD file — not this file. -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMd } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMd('./content/03-scoped-css.md', { skipFirstHeading: true }));
+        </script>
 
         <h2>Live Style Demo</h2>
         <p>This component uses custom classes and styles that are completely isolated from the rest of the
@@ -64,120 +55,30 @@
             </feature-card>
           </div>
           <div data-bascik-slot="code">
-            <code-block data-bascik-prop-lang="css">
-              .fcard {
-              background: var(--elevated);
-              border: 1px solid var(--border);
-              padding: 24px;
-              transition: transform .2s;
-              }
-              .fcard:hover {
-              transform: translateY(-2px);
-              border-color: var(--accent);
-              }</code-block>
+            <code-block data-bascik-prop-lang="css">.fcard {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  padding: 24px;
+  transition: transform .2s;
+}
+.fcard:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}</code-block>
           </div>
           <div data-bascik-slot="output">
-            <code-block data-bascik-prop-lang="css">
-              .bascik__feature-card__x123__fcard {
-              background: var(--elevated);
-              border: 1px solid var(--border);
-              padding: 24px;
-              transition: transform .2s;
-              }
-              .bascik__feature-card__x123__fcard:hover {
-              transform: translateY(-2px);
-              border-color: var(--accent);
-              }</code-block>
+            <code-block data-bascik-prop-lang="css">.bascik__feature-card__x123__fcard {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  padding: 24px;
+  transition: transform .2s;
+}
+.bascik__feature-card__x123__fcard:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}</code-block>
           </div>
         </component-demo>
-
-        <h2>Element Selector Scoping</h2>
-
-        <p>Bare element selectors like <code>p {}</code> or <code>h2 {}</code> are converted to generated class
-          selectors and injected onto matching elements inside the component.</p>
-
-        <code-block data-bascik-prop-lang="css" data-bascik-prop-file="my-comp.css (source)">p { color: #d3ff8d; }
-          h2 { font-size: 2rem; }</code-block>
-
-        <code-block data-bascik-prop-lang="css" data-bascik-prop-file="compiled output">.bascik__my-comp__x1__el__p {
-          color: #d3ff8d; }
-          .bascik__my-comp__x1__el__h2 { font-size: 2rem; }</code-block>
-
-        <p>And in the HTML, every <code>&lt;p&gt;</code> and <code>&lt;h2&gt;</code> inside the component gets the
-          generated class injected:</p>
-        <code-block data-bascik-prop-lang="html">&lt;p class="bascik__my-comp__x1__el__p"&gt;...&lt;/p&gt;</code-block>
-
-        <div class="callout">
-          <p><strong>Isolation guarantee:</strong> Element styles only affect elements inside the component. A
-            <code>p {}</code> rule in <code>my-comp.css</code> will never affect <code>&lt;p&gt;</code> tags on the page
-            or in other components.
-          </p>
-        </div>
-
-        <h2>@media Support</h2>
-        <p>Media queries work normally. Class names inside them are scoped like any other rule:</p>
-
-        <code-block data-bascik-prop-lang="css">@media (max-width: 600px) {
-          .logo { font-size: 0.9rem; }
-          }</code-block>
-
-        <code-block data-bascik-prop-lang="css">@media (max-width: 600px) {
-          .bascik__comp__x1__logo { font-size: 0.9rem; }
-          }</code-block>
-
-        <h2>@keyframes Scoping</h2>
-        <p>Keyframe names are also prefixed so animations from different components never collide:</p>
-
-        <code-block data-bascik-prop-lang="css">@keyframes spin { to { transform: rotate(360deg); } }
-          .icon { animation: spin 1s linear infinite; }</code-block>
-
-        <code-block data-bascik-prop-lang="css">@keyframes bascik__comp__x1__keyframe__spin { to { transform:
-          rotate(360deg); } }
-          .bascik__comp__x1__icon {
-          animation: bascik__comp__x1__keyframe__spin 1s linear infinite;
-          }</code-block>
-
-        <h2>Toggling Scoping</h2>
-        <p>All scoping can be controlled in <a href="/configuration"><code>bascik.config.js</code></a>:</p>
-
-        <code-block data-bascik-prop-lang="js">export const bascikConfig = {
-          scopeAttribute: {
-          class: true, // scope class names
-          id: true, // scope id attributes
-          name: true, // scope name attributes
-          },
-          };</code-block>
-
-        <h2>CSS Custom Properties</h2>
-        <p><code>--var-name</code> declarations in a component's CSS are automatically scoped. All
-          <code>var(--var-name)</code> references within the same file are updated to match — so custom properties stay
-          isolated to their component.
-        </p>
-
-        <code-block data-bascik-prop-lang="css" data-bascik-prop-file="source">:root {
-          --brand: #d3ff8d;
-          --size: 1rem;
-          }
-          .title {
-          color: var(--brand);
-          font-size: var(--size);
-          }</code-block>
-
-        <code-block data-bascik-prop-lang="css" data-bascik-prop-file="compiled">:root {
-          --bascik__my-comp__x1__brand: #d3ff8d;
-          --bascik__my-comp__x1__size: 1rem;
-          }
-          .bascik__my-comp__x1__title {
-          color: var(--bascik__my-comp__x1__brand);
-          font-size: var(--bascik__my-comp__x1__size);
-          }</code-block>
-
-        <div class="callout">
-          <p><strong>Only locally-declared properties are scoped.</strong> If a component uses
-            <code>var(--global-var)</code> but doesn't declare <code>--global-var</code> in its own CSS, that reference
-            is left untouched so it still resolves from a global stylesheet.
-          </p>
-        </div>
 
         <script data-bascik-build>
           import { join } from 'node:path';

@@ -517,23 +517,23 @@
           selector first, then operate on the reference:</p>
 
         <code-block data-bascik-prop-lang="html">&lt;div id="panel"&gt;&lt;/div&gt;
-          &lt;script&gt;
-          const panel = document.getElementById("panel"); // ← rewritten by Bascik
-          panel.style.display = "none"; // ← operate on the reference
-          panel.dataset.state = "closed"; // ← use data attributes for state
-          &lt;/script&gt;</code-block>
+&lt;script&gt;
+  const panel = document.getElementById("panel"); // ← rewritten by Bascik
+  panel.style.display = "none"; // ← operate on the reference
+  panel.dataset.state = "closed"; // ← use data attributes for state
+&lt;/script&gt;</code-block>
 
         <p>For event delegation, use a <code>data-</code> attribute on the target element rather than relying on a
           scoped class name in a <code>matches()</code> call:</p>
 
         <code-block data-bascik-prop-lang="html">&lt;ul id="list"&gt;
-          &lt;li data-action="delete"&gt;Delete&lt;/li&gt;
-          &lt;/ul&gt;
-          &lt;script&gt;
-          document.getElementById("list").addEventListener("click", (e) =&gt; {
-          if (e.target.dataset.action === "delete") { ... }
-          });
-          &lt;/script&gt;</code-block>
+  &lt;li data-action="delete"&gt;Delete&lt;/li&gt;
+&lt;/ul&gt;
+&lt;script&gt;
+  document.getElementById("list").addEventListener("click", (e) =&gt; {
+    if (e.target.dataset.action === "delete") { ... }
+  });
+&lt;/script&gt;</code-block>
 
         <!-- ─── Scoping Model ─────────────────────────────────────────── -->
 
@@ -545,8 +545,8 @@
         </p>
 
         <code-block data-bascik-prop-lang="text">class → bascik__&lt;componentName&gt;__&lt;originalName&gt;
-          id → bascik__&lt;componentName&gt;__&lt;instanceId&gt;__&lt;originalName&gt;
-          name → bascik__&lt;componentName&gt;__&lt;instanceId&gt;__&lt;originalName&gt;</code-block>
+id    → bascik__&lt;componentName&gt;__&lt;instanceId&gt;__&lt;originalName&gt;
+name  → bascik__&lt;componentName&gt;__&lt;instanceId&gt;__&lt;originalName&gt;</code-block>
 
         <p>With <code>obfuscateAttributeNames: true</code> (the default in production builds), these verbose names are
           hashed to short hex strings. The HTML, CSS, and JavaScript are all updated with the same scoped names so they
