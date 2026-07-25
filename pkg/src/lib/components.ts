@@ -472,14 +472,14 @@ export const extractDefaultSlotContent = (
 ): string => {
   if (!innerContent) return "";
   const named = parseNamedSlots(innerContent);
-  if (named.length === 0) return innerContent;
+  if (named.length === 0) return innerContent.trim();
   // Remove each named-slot wrapper from right-to-left to preserve indices
   let result = innerContent;
   for (let i = named.length - 1; i >= 0; i--) {
     const { startIndex, endIndex } = named[i];
     result = result.slice(0, startIndex) + result.slice(endIndex);
   }
-  return result;
+  return result.trim();
 };
 
 /**

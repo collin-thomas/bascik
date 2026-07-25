@@ -564,6 +564,18 @@ describe("extractDefaultSlotContent", () => {
       '<div data-bascik-slot="side"><div style="inner"><span>s</span></div></div>';
     expect(extractDefaultSlotContent(inner)).toBe("<p>default</p>");
   });
+
+  it("trims surrounding whitespace from slot content", () => {
+    expect(extractDefaultSlotContent("\n  code here\n")).toBe("code here");
+  });
+
+  it("trims whitespace left after named slot wrappers are removed", () => {
+    const inner =
+      "\n  <p>main</p>\n  " +
+      '<div data-bascik-slot="a"><span>a</span></div>' +
+      "\n";
+    expect(extractDefaultSlotContent(inner)).toBe("<p>main</p>");
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
