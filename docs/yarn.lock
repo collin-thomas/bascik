@@ -4,7 +4,7 @@
 
 "@bascik/bascik@file:../pkg/bascik-bascik-0.2.0.tgz":
   version "0.2.0"
-  resolved "file:../pkg/bascik-bascik-0.2.0.tgz#f7eecacc7747d171952a047d5a976eafa3c2d8a5"
+  resolved "file:../pkg/bascik-bascik-0.2.0.tgz#f345b1fae799cac56622f217417d56fa5f8481e5"
   dependencies:
     chokidar "^5.0.0"
 
@@ -14,6 +14,11 @@ chokidar@^5.0.0:
   integrity sha512-TQMmc3w+5AxjpL8iIiwebF73dRDF4fBIieAqGn9RGCWaEVwQ6Fb2cGe31Yns0RRIzii5goJ1Y7xbMwo1TxMplw==
   dependencies:
     readdirp "^5.0.0"
+
+marked@^18.0.7:
+  version "18.0.7"
+  resolved "https://registry.yarnpkg.com/marked/-/marked-18.0.7.tgz#6d8d4dd777730263e7e25bedad56a26bb2809232"
+  integrity sha512-iDVQ5ldaiKXn6b2JroX5kgRfmwgqolW7NpaEzTl1k/2Zh1njIEN9yniyLV/mOvWwtsE8OGgkjsCYvijuPk1dtA==
 
 readdirp@^5.0.0:
   version "5.0.0"

@@ -88,9 +88,37 @@
           data-bascik-prop-desc="Automatic browser reload on every change."&gt;
           &lt;/feature-card&gt;</code-block>
 
+        <h2>Interactive Props Demo</h2>
+        <p>Experiment with passing values to the <code>feature-card</code> component via data attributes.</p>
+
+        <component-demo data-bascik-prop-file="src/pages/index.html">
+          <div data-bascik-slot="example">
+            <feature-card data-bascik-prop-label="Interactive" data-bascik-prop-title="Component Props"
+              data-bascik-prop-desc="These values are injected into the component template at build time.">
+            </feature-card>
+          </div>
+          <div data-bascik-slot="code">
+            <code-block data-bascik-prop-lang="html">
+              &lt;feature-card
+              data-bascik-prop-label="Interactive"
+              data-bascik-prop-title="Component Props"
+              data-bascik-prop-desc="..."&gt;
+              &lt;/feature-card&gt;</code-block>
+          </div>
+          <div data-bascik-slot="output">
+            <code-block data-bascik-prop-lang="html">
+              &lt;div class="fcard_abcd"&gt;
+              &lt;p class="fcard-label_abcd"&gt;Interactive&lt;/p&gt;
+              &lt;h3 class="fcard-title_abcd"&gt;Component Props&lt;/h3&gt;
+              &lt;p class="fcard-desc_abcd"&gt;...&lt;/p&gt;
+              &lt;/div&gt;</code-block>
+          </div>
+        </component-demo>
+
       </main>
     </div>
   </div>
+
 
   <docs-footer></docs-footer>
 </body>

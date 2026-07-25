@@ -51,6 +51,12 @@ describe("prefixElementAttribute – class (existing patterns)", () => {
     );
   });
 
+  it("handles empty fileContent gracefully", () => {
+    const c = { name: "my-comp", fileContent: undefined as unknown as string };
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toBeUndefined();
+  });
+
   it("scopes querySelector('.class')", () => {
     const c = makeComponent(
       '<div class="card"></div><script>document.querySelector(".card")</script>',
@@ -98,10 +104,10 @@ describe("prefixElementAttribute – id querySelector/querySelectorAll (new)", (
   it("scopes multiple querySelector and getElementById for the same id", () => {
     const c = makeComponent(
       '<button id="btn"></button>' +
-        "<script>" +
-        'document.getElementById("btn");' +
-        'document.querySelector("#btn");' +
-        "</script>",
+      "<script>" +
+      'document.getElementById("btn");' +
+      'document.querySelector("#btn");' +
+      "</script>",
     );
     const result = prefixElementAttribute(c, "id", "test1234");
     const scopedId = scope("btn");
@@ -316,7 +322,7 @@ describe("prefixElementAttribute – compound querySelector (class)", () => {
   it("scopes both tokens in querySelector('.foo .bar')", () => {
     const c = makeComponent(
       '<div class="foo"><span class="bar"></span></div>' +
-        '<script>document.querySelector(".foo .bar")</script>',
+      '<script>document.querySelector(".foo .bar")</script>',
     );
     const result = prefixElementAttribute(c, "class", "test1234");
     expect(result.fileContent).toContain(
@@ -327,7 +333,7 @@ describe("prefixElementAttribute – compound querySelector (class)", () => {
   it("scopes both tokens in querySelectorAll('.foo > .bar')", () => {
     const c = makeComponent(
       '<div class="foo"><span class="bar"></span></div>' +
-        '<script>document.querySelectorAll(".foo > .bar")</script>',
+      '<script>document.querySelectorAll(".foo > .bar")</script>',
     );
     const result = prefixElementAttribute(c, "class", "test1234");
     expect(result.fileContent).toContain(
@@ -338,7 +344,7 @@ describe("prefixElementAttribute – compound querySelector (class)", () => {
   it("scopes the class token in querySelector('#id .cls')", () => {
     const c = makeComponent(
       '<div id="panel" class="card"></div>' +
-        '<script>document.querySelector("#panel .card")</script>',
+      '<script>document.querySelector("#panel .card")</script>',
     );
     // class pass rewrites .card token in the compound selector
     const result = prefixElementAttribute(c, "class", "test1234");
@@ -350,7 +356,7 @@ describe("prefixElementAttribute – compound querySelector (id)", () => {
   it("scopes #id token in querySelector('#id .child')", () => {
     const c = makeComponent(
       '<div id="panel"><span class="icon"></span></div>' +
-        '<script>document.querySelector("#panel .icon")</script>',
+      '<script>document.querySelector("#panel .icon")</script>',
     );
     // id pass rewrites #panel token in the compound selector
     const result = prefixElementAttribute(c, "id", "test1234");
@@ -366,7 +372,7 @@ describe("prefixElementAttribute – setAttribute", () => {
   it("scopes setAttribute('class', 'value')", () => {
     const c = makeComponent(
       '<div class="card"></div>' +
-        '<script>el.setAttribute("class", "card")</script>',
+      '<script>el.setAttribute("class", "card")</script>',
     );
     const result = prefixElementAttribute(c, "class", "test1234");
     expect(result.fileContent).toContain(
@@ -377,7 +383,7 @@ describe("prefixElementAttribute – setAttribute", () => {
   it("scopes setAttribute('id', 'value')", () => {
     const c = makeComponent(
       '<div id="panel"></div>' +
-        '<script>el.setAttribute("id", "panel")</script>',
+      '<script>el.setAttribute("id", "panel")</script>',
     );
     const result = prefixElementAttribute(c, "id", "test1234");
     expect(result.fileContent).toContain(
@@ -402,7 +408,7 @@ describe("prefixElementAttribute – element.className setter", () => {
   it("scopes both tokens in a space-separated assignment", () => {
     const c = makeComponent(
       '<div class="card active"></div>' +
-        '<script>el.className = "card active"</script>',
+      '<script>el.className = "card active"</script>',
     );
     const result = prefixElementAttribute(c, "class", "test1234");
     expect(result.fileContent).toContain(
@@ -425,7 +431,7 @@ describe("prefixElementAttribute – element.className setter", () => {
     // iteration for a different class should not touch it.
     const c = makeComponent(
       '<div class="card btn"></div>' +
-        '<script>el.className = "card btn"</script>',
+      '<script>el.className = "card btn"</script>',
     );
     const result = prefixElementAttribute(c, "class", "test1234");
     const content = result.fileContent;

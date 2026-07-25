@@ -48,6 +48,14 @@
           components/ ← component .html and .css files
           pages/ ← one .html file per route</code-block>
 
+        <h2>Custom 404 Page</h2>
+        <p>If you create a <code>404.html</code> file in your pages directory (e.g. <code>src/pages/404.html</code>),
+          Bascik's built-in development server will automatically serve it as a fallback for any non-existent routes
+          with a <code>404</code> status code.</p>
+        <p>When you build your site for production (<code>bascik --build</code>), this file is compiled to
+          <code>dist/404.html</code>, which is the standard location recognized by most static hosting providers (such
+          as GitHub Pages, Netlify, Vercel, and Cloudflare Pages) to serve custom 404 pages.</p>
+
         <h2>Your First Component</h2>
 
         <div class="step">

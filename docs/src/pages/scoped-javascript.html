@@ -59,7 +59,52 @@
           })();
           &lt;/script&gt;</code-block>
 
+        <h2>Live Scoping Example</h2>
+        <p>Multiple instances of the same component operate independently. Click the buttons below — they only affect
+          the elements inside their own component instance.</p>
+
+        <div class="grid-2" style="margin-top:24px">
+          <component-demo data-bascik-prop-file="src/components/test-comp.html">
+            <div data-bascik-slot="example">
+              <test-comp></test-comp>
+            </div>
+            <div data-bascik-slot="code">
+              <code-block data-bascik-prop-lang="html">&lt;test-comp&gt;&lt;/test-comp&gt;</code-block>
+            </div>
+            <div data-bascik-slot="output">
+              <code-block data-bascik-prop-lang="html">&lt;div id="bascik__my-div-id__1234__my-div-id"
+                ...&gt;...&lt;/div&gt;
+                &lt;button id="bascik__btn__1234__btn" ...&gt;...&lt;/button&gt;
+                &lt;script&gt;
+                (function() {
+                document.getElementById("bascik__btn__1234__btn")...
+                })();
+                &lt;/script&gt;</code-block>
+            </div>
+          </component-demo>
+
+          <component-demo data-bascik-prop-file="src/components/test-comp.html">
+            <div data-bascik-slot="example">
+              <test-comp></test-comp>
+            </div>
+            <div data-bascik-slot="code">
+              <code-block data-bascik-prop-lang="html">&lt;test-comp&gt;&lt;/test-comp&gt;</code-block>
+            </div>
+            <div data-bascik-slot="output">
+              <code-block data-bascik-prop-lang="html">&lt;div id="bascik__my-div-id__5678__my-div-id"
+                ...&gt;...&lt;/div&gt;
+                &lt;button id="bascik__btn__5678__btn" ...&gt;...&lt;/button&gt;
+                &lt;script&gt;
+                (function() {
+                document.getElementById("bascik__btn__5678__btn")...
+                })();
+                &lt;/script&gt;</code-block>
+            </div>
+          </component-demo>
+        </div>
+
         <h2>Supported Selectors</h2>
+
         <p>All of the following DOM methods are updated when they reference a scoped attribute:</p>
 
         <code-block data-bascik-prop-lang="js">// id attribute

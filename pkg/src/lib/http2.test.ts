@@ -189,6 +189,24 @@ describe("serveHttp2 – stream handler", () => {
     expect(stream.end).toHaveBeenCalledWith(mockPage.content);
   });
 
+  it("responds 404 with 404 page content when mem.getPage returns a 404 page", async () => {
+    const mockPage = {
+      relativePagePath: "pages/404.html",
+      absolutePagePath: "/abs/pages/404.html",
+      content: Buffer.from("<html>404 Not Found</html>"),
+      compressedContent: Buffer.from("compressed"),
+      usedComponentsSet: new Set<string>(),
+    };
+    mockMem.getPage.mockReturnValue(mockPage);
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/some-missing-page", "GET"));
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({ ":status": 404 }),
+    );
+    expect(stream.end).toHaveBeenCalledWith(mockPage.content);
+  });
+
   it("sends brotli-compressed content when client accepts br encoding", async () => {
     const mockPage = {
       relativePagePath: "pages/index.html",

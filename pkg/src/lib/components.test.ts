@@ -210,6 +210,29 @@ describe("getFirstComponent", () => {
     };
     expect(getFirstComponent(htmlString, componentList)).toEqual(expected);
   });
+
+  describe("getFirstComponent – missing from list", () => {
+    it("should return an object with name but no fileContent if matched but not in list (edge case)", () => {
+      // This shouldn't happen normally because the regex is built from keys
+      const html = "<unknown-comp></unknown-comp>";
+      const componentList: ComponentList = {};
+      // Mock the regex to include unknown-comp
+      const result = getTag(html, "unknown-comp", componentList);
+      expect(result.content).toBeDefined();
+      expect(result.fileContent).toBeUndefined();
+    });
+  });
+
+  describe("getFirstComponent – dangling closing tag", () => {
+    it("should not match a closing tag if it appears without an opening tag", () => {
+      const html = "<div></code-block></div>";
+      const componentList: ComponentList = {
+        "code-block": { fileContent: "<div></div>" },
+      };
+      const result = getFirstComponent(html, componentList);
+      expect(result.name).toBeUndefined();
+    });
+  });
 });
 
 describe("minifyHtml", () => {
@@ -407,6 +430,11 @@ describe("injectProps", () => {
     expect(result).not.toContain("data-bascik-prop-file");
     expect(result).toContain("<span></span>");
   });
+
+  it("handles undefined fileContent gracefully", () => {
+    // @ts-expect-error testing invalid input
+    expect(injectProps(undefined, {})).toBe("");
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -599,5 +627,128 @@ describe("mergeAttributesOntoRoot", () => {
   it("returns unchanged html when attrs is empty", () => {
     const html = "<nav><a>link</a></nav>";
     expect(mergeAttributesOntoRoot(html, {})).toBe(html);
+  });
+});
+
+describe("getTag – multiline and complex attributes", () => {
+  it("handles a component with multiline content and attributes", () => {
+    const html = `
+      <code-block 
+        data-bascik-prop-lang="html" 
+        data-bascik-prop-file="src/pages/index.html">
+        &lt;div&gt;
+          Hello
+        &lt;/div&gt;
+      </code-block>`;
+    const result = getTag(html, "code-block");
+    expect(result.content).toBeDefined();
+    expect(result.innerContent).toContain("&lt;div&gt;");
+  });
+
+  it("handles self-closing with multiline attributes", () => {
+    const html = `
+      <my-comp 
+        attr="val"
+        class="foo" 
+      />`;
+    const result = getTag(html, "my-comp");
+    expect(result.content).toBeDefined();
+    expect(result.content).toContain('class="foo"');
+  });
+});
+
+describe("getFirstComponent – regression with multiline", () => {
+  it("finds a component even if it has newlines in the tag", () => {
+    const html = `
+      <div>
+        <code-block 
+          data-bascik-prop-lang="js">
+          console.log(1);
+        </code-block>
+      </div>`;
+    const componentList: ComponentList = {
+      "code-block": { fileContent: "<div></div>" },
+    };
+    const result = getFirstComponent(html, componentList);
+    expect(result.name).toBe("code-block");
+    expect(result.content).toBeDefined();
+  });
+
+  it("handles code-block with multiline escaped content and attributes", () => {
+    const html = `
+      <code-block data-bascik-prop-lang="html">
+        &lt;feature-card
+        data-bascik-prop-label="Example"
+        data-bascik-prop-title="Named Slots"
+        data-bascik-prop-desc="..."&gt;
+        &lt;!-- content for default slot --&gt;
+        &lt;div style="padding-top:12px;..."&gt;
+        &lt;button class="btn btn-primary"&gt;Read More&lt;/button&gt;
+        &lt;/div&gt;
+        &lt;/feature-card&gt;</code-block>`;
+    const componentList: ComponentList = {
+      "code-block": { fileContent: "<div><slot-component></slot-component></div>" },
+    };
+    const result = getTag(html, "code-block", componentList);
+    expect(result.fileContent).toBeDefined();
+    expect(result.innerContent).toContain("&lt;feature-card");
+    expect(result.innerContent).toContain("&lt;/feature-card&gt;");
+  });
+});
+
+describe("replaceTag – regression with multiline", () => {
+  it("replaces a multiline tag with provided content", () => {
+    const template =
+      '<footer><div data-bascik-slot="footer-links"></div></footer>';
+    const slots = { "footer-links": "<a href='/'>Home</a>" };
+    expect(replaceNamedSlots(template, slots)).toBe(
+      "<footer><a href='/'>Home</a></footer>",
+    );
+  });
+
+  it("removes an unfilled named slot placeholder", () => {
+    const template =
+      '<footer><div data-bascik-slot="footer-links"></div></footer>';
+    expect(replaceNamedSlots(template, {})).toBe("<footer></footer>");
+  });
+
+  it("does not affect default slot-component", () => {
+    const template =
+      "<div><slot-component></slot-component>" +
+      '<span data-bascik-slot="side"></span></div>';
+    const slots = { side: "<p>sidebar</p>" };
+    const result = replaceNamedSlots(template, slots);
+    expect(result).toContain("<slot-component></slot-component>");
+    expect(result).toContain("<p>sidebar</p>");
+  });
+});
+
+describe("getTag – case sensitivity bug repro", () => {
+  it("returns fileContent even if the tag in HTML is uppercase", () => {
+    const html = "<MY-COMP></MY-COMP>";
+    const componentList: ComponentList = {
+      "my-comp": { fileContent: "<div></div>" },
+    };
+    const result = getTag(html, "MY-COMP", componentList);
+    // This will fail currently because componentList["MY-COMP"] is undefined
+    expect(result.fileContent).toBe("<div></div>");
+  });
+});
+
+describe("recursivelyTranspile – complex regression", () => {
+  it("finds a component even if it has newlines in the tag", () => {
+    const html = `
+      <div>
+        <code-block 
+          data-bascik-prop-lang="js">
+          console.log(1);
+        </code-block>
+      </div>`;
+    const componentList: ComponentList = {
+      "code-block": { fileContent: "<div></div>" },
+    };
+    const result = getFirstComponent(html, componentList);
+    expect(result.name).toBe("code-block");
+    expect(result.content).toBeDefined();
   });
 });

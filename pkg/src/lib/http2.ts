@@ -162,9 +162,14 @@ export const serveHttp2 = async () => {
 
         console.log(`serving: ${reqUrl}`);
 
+        const is404Page =
+          page.relativePagePath === "/404" ||
+          page.relativePagePath.endsWith("404.html") ||
+          getHttpPath(page.relativePagePath) === "/404";
+
         const responseHeaders: Record<string, string | number> = {
           "Content-Type": "text/html; charset=utf-8",
-          ":status": 200,
+          ":status": is404Page ? 404 : 200,
         };
 
         if (BascikConfig.cacheHttp === false) {

@@ -43,7 +43,46 @@
           data-bascik-prop-file="compiled output">.bascik__site-nav__a1b2c3__navigation ul { list-style-type: none; }
           .bascik__site-nav__a1b2c3__navigation ul li a { padding: 8px; }</code-block>
 
+        <h2>Live Style Demo</h2>
+        <p>This component uses custom classes and styles that are completely isolated from the rest of the
+          documentation.</p>
+
+        <component-demo data-bascik-prop-file="src/components/feature-card/feature-card.css">
+          <div data-bascik-slot="example">
+            <feature-card data-bascik-prop-label="Scoped" data-bascik-prop-title="Isolated Styles"
+              data-bascik-prop-desc="Hover over me to see transitions and shadows that won't leak out.">
+            </feature-card>
+          </div>
+          <div data-bascik-slot="code">
+            <code-block data-bascik-prop-lang="css">
+              .fcard {
+              background: var(--elevated);
+              border: 1px solid var(--border);
+              padding: 24px;
+              transition: transform .2s;
+              }
+              .fcard:hover {
+              transform: translateY(-2px);
+              border-color: var(--accent);
+              }</code-block>
+          </div>
+          <div data-bascik-slot="output">
+            <code-block data-bascik-prop-lang="css">
+              .bascik__feature-card__x123__fcard {
+              background: var(--elevated);
+              border: 1px solid var(--border);
+              padding: 24px;
+              transition: transform .2s;
+              }
+              .bascik__feature-card__x123__fcard:hover {
+              transform: translateY(-2px);
+              border-color: var(--accent);
+              }</code-block>
+          </div>
+        </component-demo>
+
         <h2>Element Selector Scoping</h2>
+
         <p>Bare element selectors like <code>p {}</code> or <code>h2 {}</code> are converted to generated class
           selectors and injected onto matching elements inside the component.</p>
 

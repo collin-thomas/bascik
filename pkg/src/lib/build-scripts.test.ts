@@ -8,8 +8,9 @@ vi.mock("node:child_process", () => ({
 }));
 
 vi.mock("node:fs/promises", () => ({
-  writeFile: vi.fn(async () => {}),
-  unlink: vi.fn(async () => {}),
+  writeFile: vi.fn(async () => { }),
+  unlink: vi.fn(async () => { }),
+  mkdir: vi.fn(async () => { }),
 }));
 
 import { execFile } from "node:child_process";

@@ -141,7 +141,7 @@ export const listComponents = async (): Promise<ComponentList> => {
         if (NATIVE_HTML_ELEMENTS.has(componentName)) {
           console.warn(
             `warning: Component "${componentName}" has the same name as a native HTML element. ` +
-              `This may cause unexpected behaviour — consider a hyphenated name like "my-${componentName}".`,
+            `This may cause unexpected behaviour — consider a hyphenated name like "my-${componentName}".`,
           );
         }
         const [fileContent, cssFileContent] = await Promise.all([
@@ -225,14 +225,14 @@ export const getFirstComponent = (
     (a, b) => b.length - a.length,
   );
   const matchComponentName = new RegExp(
-    `<\/?\\b(${componentNames.join("|")})\\b.*?>`,
+    `<\\b(${componentNames.join("|")})\\b[\\s\\S]*?>`,
     "i",
   );
   const match = htmlString.match(matchComponentName);
   if (!match) {
     return {};
   }
-  const firstComponentName = match[1];
+  const firstComponentName = match[1].toLowerCase();
   return {
     name: firstComponentName,
     index: match.index,
@@ -246,7 +246,11 @@ export const getTag = (
   componentList?: ComponentList,
 ): { content?: string; innerContent?: string } => {
   // Try paired tags: <tagName ...>content</tagName>
-  const pairedPattern = new RegExp(`<${tagName}.*?>(.*?)<\/${tagName}>`, "i");
+  // Using [\s\S] instead of . to match newlines
+  const pairedPattern = new RegExp(
+    `<${tagName}[\\s\\S]*?>([\\s\\S]*?)<\\/${tagName}>`,
+    "i",
+  );
   const pairedMatch = htmlString.match(pairedPattern);
   if (pairedMatch) {
     const returnObj = {
@@ -254,11 +258,14 @@ export const getTag = (
       innerContent: pairedMatch[1],
     };
     if (!componentList) return returnObj;
-    return { ...returnObj, ...componentList[tagName] };
+    return { ...returnObj, ...componentList[tagName.toLowerCase()] };
   }
 
   // Try self-closing: <tagName ... /> or <tagName/>
-  const selfClosingPattern = new RegExp(`<${tagName}(\\s[^>]*)?\\/?>`, "i");
+  const selfClosingPattern = new RegExp(
+    `<${tagName}([\\s\\S]*?)\\/?>`,
+    "i",
+  );
   const selfClosingMatch = htmlString.match(selfClosingPattern);
   if (selfClosingMatch) {
     const returnObj = {
@@ -266,7 +273,7 @@ export const getTag = (
       innerContent: "",
     };
     if (!componentList) return returnObj;
-    return { ...returnObj, ...componentList[tagName] };
+    return { ...returnObj, ...componentList[tagName.toLowerCase()] };
   }
 
   return {};
@@ -333,9 +340,10 @@ export const extractProps = (
  *      → `<p>Hi</p>`
  */
 export const injectProps = (
-  fileContent: string,
+  fileContent: string | undefined,
   props: Record<string, string>,
 ): string => {
+  if (!fileContent) return "";
   let result = fileContent;
   Object.entries(props).forEach(([propName, propValue]) => {
     const attrName = `data-bascik-prop-${propName}`;

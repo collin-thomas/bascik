@@ -54,6 +54,7 @@
  */
 
 import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import {
   listPages,
   getDirectoryPath,
@@ -87,6 +88,38 @@ import type {
   ComponentList,
   TranspileResult,
 } from "./types.js";
+
+export const getFilePosition = (
+  filePath: string,
+  searchString: string,
+  tagName?: string,
+): { line: number; character: number } | null => {
+  try {
+    const content = readFileSync(filePath, "utf8");
+    let index = content.indexOf(searchString);
+    if (index === -1 && tagName) {
+      const regex = new RegExp(`<${tagName}\\b`, "i");
+      const match = content.match(regex);
+      if (match && match.index !== undefined) {
+        index = match.index;
+      }
+    }
+    if (index === -1 && searchString.length > 30) {
+      index = content.indexOf(searchString.slice(0, 30));
+    }
+    if (index !== -1) {
+      const prefix = content.slice(0, index);
+      const lines = prefix.split(/\r?\n/);
+      return {
+        line: lines.length,
+        character: lines[lines.length - 1].length + 1,
+      };
+    }
+  } catch {
+    // Ignore read errors
+  }
+  return null;
+};
 
 const liveReloadScript = `
 <script>
@@ -132,12 +165,12 @@ const buildScopingPipeline = (instanceId: string): ComponentTransform[] =>
   (
     [
       BascikConfig.scopeAttribute.id &&
-        ((c: BascikComponent) => prefixElementAttribute(c, "id", instanceId)),
+      ((c: BascikComponent) => prefixElementAttribute(c, "id", instanceId)),
       BascikConfig.scopeAttribute.name &&
-        ((c: BascikComponent) => prefixElementAttribute(c, "name", instanceId)),
+      ((c: BascikComponent) => prefixElementAttribute(c, "name", instanceId)),
       BascikConfig.scopeAttribute.class &&
-        ((c: BascikComponent) =>
-          prefixElementAttribute(c, "class", instanceId)),
+      ((c: BascikComponent) =>
+        prefixElementAttribute(c, "class", instanceId)),
       BascikConfig.scopeScriptBlocks && namespaceScriptTags,
     ] as (ComponentTransform | false)[]
   ).filter((t): t is ComponentTransform => Boolean(t));
@@ -146,76 +179,159 @@ const buildScopingPipeline = (instanceId: string): ComponentTransform[] =>
 // Core transpile pipeline
 // ─────────────────────────────────────────────────────────────────────────────
 
+export const getDisplayPath = (path: string): string => {
+  if (BascikConfig.directory?.components && path.includes(BascikConfig.directory.components)) {
+    return getRelativePath(path, "components");
+  }
+  if (BascikConfig.directory?.pages && path.includes(BascikConfig.directory.pages)) {
+    return getRelativePath(path, "pages");
+  }
+  return path;
+};
+
+export const findActiveSourceFile = (
+  html: string,
+  index: number,
+  fallback: string,
+): string => {
+  const substring = html.slice(0, index);
+  const regex = /<!--bascik-source-file:(.*?)-->|<!--bascik-source-file-end:(.*?)-->/g;
+  const stack: string[] = [];
+  let match;
+  while ((match = regex.exec(substring)) !== null) {
+    if (match[1] !== undefined) {
+      stack.push(match[1]);
+    } else if (match[2] !== undefined) {
+      const idx = stack.lastIndexOf(match[2]);
+      if (idx !== -1) {
+        stack.splice(idx, 1);
+      } else {
+        stack.pop();
+      }
+    }
+  }
+  return stack[stack.length - 1] || fallback;
+};
+
 export const recursivelyTranspile = (
   transpiledHtmlBody: string,
   componentList: ComponentList,
   usedComponents: BascikComponent[] = [],
+  filePath?: string,
 ): TranspileResult => {
+  if (filePath && !transpiledHtmlBody.includes("<!--bascik-source-file:")) {
+    transpiledHtmlBody = `<!--bascik-source-file:${filePath}-->${transpiledHtmlBody}<!--bascik-source-file-end:${filePath}-->`;
+  }
+
   const partial = getFirstComponent(transpiledHtmlBody, componentList);
   if (!partial.name) {
-    return { transpiledHtmlBody, usedComponents };
+    const cleanedHtml = transpiledHtmlBody
+      .replace(/<!--bascik-source-file:[\s\S]*?-->/g, "")
+      .replace(/<!--bascik-source-file-end:[\s\S]*?-->/g, "");
+    return { transpiledHtmlBody: cleanedHtml, usedComponents };
   }
   // Cast: getFirstComponent merges component list data so all required fields are present
   let component = partial as BascikComponent;
 
-  // One stable ID shared across all attribute-scoping passes for this instance.
-  // Run the scoping pipeline — each step is `BascikComponent → BascikComponent`.
-  const instanceId = getUniqueId(8);
-  try {
-    component = applyTransforms(component, buildScopingPipeline(instanceId));
-  } catch (error) {
-    console.error("Component scoping failed", { component, error });
+  if (!component.fileContent) {
+    const cleanedHtml = transpiledHtmlBody
+      .replace(component.content || "", "")
+      .replace(/<!--bascik-source-file:[\s\S]*?-->/g, "")
+      .replace(/<!--bascik-source-file-end:[\s\S]*?-->/g, "");
+    return {
+      transpiledHtmlBody: cleanedHtml,
+      usedComponents
+    };
   }
 
-  // Inject props — always call so unused data-bascik-prop-* markers are stripped.
-  const props = extractProps(component.content);
-  component.fileContent = injectProps(component.fileContent, props);
+  let currentStage = "";
+  try {
+    // One stable ID shared across all attribute-scoping passes for this instance.
+    // Run the scoping pipeline — each step is `BascikComponent → BascikComponent`.
+    const instanceId = getUniqueId(8);
+    currentStage = "attribute scoping";
+    component = applyTransforms(component, buildScopingPipeline(instanceId));
 
-  // Resolve named slots from the usage inner HTML.
-  const namedSlots = extractNamedSlotContent(component.innerContent);
-  component.fileContent = replaceNamedSlots(component.fileContent, namedSlots);
+    currentStage = "prop injection";
+    // Inject props — always call so unused data-bascik-prop-* markers are stripped.
+    const props = extractProps(component.content);
+    component.fileContent = injectProps(component.fileContent, props);
 
-  // Resolve the default slot:
-  //   1. innerContent with named-slot wrappers stripped
-  //   2. fall back to the <slot-component>'s own inner content in the template
-  const { innerContent: slotComponentFallback = "" } = getTag(
-    component.fileContent,
-    "slot-component",
-  );
-  const defaultSlotContent =
-    extractDefaultSlotContent(component.innerContent) || slotComponentFallback;
+    currentStage = "slot resolution";
+    // Resolve named slots from the usage inner HTML.
+    const namedSlots = extractNamedSlotContent(component.innerContent);
+    component.fileContent = replaceNamedSlots(component.fileContent, namedSlots);
 
-  // Replace <slot-component> (backward-compatible default slot)
-  let transpiledTag = replaceTag(
-    component.fileContent,
-    "slot-component",
-    defaultSlotContent,
-  );
+    // Resolve the default slot:
+    //   1. innerContent with named-slot wrappers stripped
+    //   2. fall back to the <slot-component>'s own inner content in the template
+    const { innerContent: slotComponentFallback = "" } = getTag(
+      component.fileContent,
+      "slot-component",
+    );
+    const defaultSlotContent =
+      extractDefaultSlotContent(component.innerContent) || slotComponentFallback;
 
-  // Replace <element data-bascik-slot> (preferred default slot convention).
-  // Named slots were already handled above by replaceNamedSlots.
-  transpiledTag = transpiledTag.replace(
-    /<(\w+(?:-\w+)*)\s+data-bascik-slot(?!\s*=)((?:\s[^>]*)?)>([\s\S]*?)<\/\1>/gi,
-    (_match, _tag, _extraAttrs, innerFallback) =>
-      defaultSlotContent || innerFallback,
-  );
+    // Replace <slot-component> (backward-compatible default slot)
+    let transpiledTag = replaceTag(
+      component.fileContent,
+      "slot-component",
+      defaultSlotContent,
+    );
 
-  // Merge non-bascik attributes from the usage tag onto the component root element.
-  const inheritableAttrs = extractInheritableAttributes(component.content);
-  transpiledTag = mergeAttributesOntoRoot(transpiledTag, inheritableAttrs);
+    // Replace <element data-bascik-slot> (preferred default slot convention).
+    // Named slots were already handled above by replaceNamedSlots.
+    transpiledTag = transpiledTag.replace(
+      /<(\w+(?:-\w+)*)\s+data-bascik-slot(?!\s*=)((?:\s[^>]*)?)>([\s\S]*?)<\/\1>/gi,
+      (_match, _tag, _extraAttrs, innerFallback) =>
+        defaultSlotContent || innerFallback,
+    );
 
-  transpiledHtmlBody = replaceTag(
-    transpiledHtmlBody,
-    component.name,
-    transpiledTag,
-  );
-  usedComponents.push(component);
+    currentStage = "attribute inheritance";
+    // Merge non-bascik attributes from the usage tag onto the component root element.
+    const inheritableAttrs = extractInheritableAttributes(component.content);
+    transpiledTag = mergeAttributesOntoRoot(transpiledTag, inheritableAttrs);
+
+    currentStage = "substitution";
+    if (component.fileName) {
+      transpiledTag = `<!--bascik-source-file:${component.fileName}-->${transpiledTag}<!--bascik-source-file-end:${component.fileName}-->`;
+    }
+    transpiledHtmlBody = replaceTag(
+      transpiledHtmlBody,
+      component.name,
+      transpiledTag,
+    );
+    usedComponents.push(component);
+  } catch (error) {
+    const activeSourceFile = findActiveSourceFile(
+      transpiledHtmlBody,
+      component.index || 0,
+      filePath || "",
+    );
+    let errorMsg = `[bascik] Transpilation failed for component <${component.name}> during ${currentStage}`;
+    if (activeSourceFile) {
+      const pos = getFilePosition(activeSourceFile, component.content || "", component.name);
+      if (pos) {
+        errorMsg += ` in "${getDisplayPath(activeSourceFile)}" at (line ${pos.line}, column ${pos.character})`;
+      } else {
+        errorMsg += ` in "${getDisplayPath(activeSourceFile)}"`;
+      }
+    }
+    if (component.fileName) {
+      errorMsg += `\n  Defined in component template: "${getDisplayPath(component.fileName)}"`;
+    }
+    console.error(`${errorMsg}\n  Error: ${error instanceof Error ? error.stack || error.message : String(error)}`);
+    transpiledHtmlBody = transpiledHtmlBody.replace(component.content || "", "");
+  }
+
   return recursivelyTranspile(
     transpiledHtmlBody,
     componentList,
     usedComponents,
+    filePath,
   );
 };
+
 
 export const selectivelyProcessPages = async (path: string): Promise<void> => {
   const relativePath = getRelativePath(path, "components");
@@ -263,7 +379,7 @@ export const pageProcessing = async (
   // Execute <script data-bascik-build> blocks before minification so that the
   // generated HTML can contain component tags, which will be resolved below.
   const rawHtml = (await readFile(pagePath)).toString();
-  const htmlWithBuildOutput = await executeBuildScripts(rawHtml);
+  const htmlWithBuildOutput = await executeBuildScripts(rawHtml, pagePath);
   const html = minifyHtml(htmlWithBuildOutput);
 
   if (!html) return;
@@ -281,6 +397,8 @@ export const pageProcessing = async (
   let { transpiledHtmlBody, usedComponents } = recursivelyTranspile(
     body,
     componentList,
+    [],
+    pagePath,
   );
 
   // Also transpile the <head> so components can be used there (e.g. shared <meta> tags)
@@ -288,7 +406,8 @@ export const pageProcessing = async (
   let {
     transpiledHtmlBody: transpiledHeadContent,
     usedComponents: headUsedComponents,
-  } = recursivelyTranspile(headRaw ?? "", componentList);
+  } = recursivelyTranspile(headRaw ?? "", componentList, [], pagePath);
+
 
   // Deduplicate CSS — each component's styles included only once even if used many times
   let transpiledHead = `${transpiledHeadContent}

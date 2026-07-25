@@ -9,6 +9,10 @@ vi.mock("./config.js", () => ({
     obfuscateAttributeNames: false,
     isBuild: false,
     minifyStyles: false,
+    directory: {
+      pages: "src/pages",
+      components: "src/components",
+    },
   },
 }));
 
@@ -17,6 +21,41 @@ vi.mock("./names.js", () => ({
   obfuscateAttributeName: vi.fn((name) => name),
   getAttributeNameHash: vi.fn((name) => name),
 }));
+
+vi.mock("./components.js", async (importOriginal) => {
+  const actual = await importOriginal() as any;
+  return {
+    ...actual,
+    injectProps: (fileContent: any, props: any) => {
+      if (fileContent && fileContent.includes("fail-during-prop-injection")) {
+        throw new Error("Simulated prop injection failure");
+      }
+      return actual.injectProps(fileContent, props);
+    },
+    replaceNamedSlots: (fileContent: any, slots: any) => {
+      if (fileContent && fileContent.includes("fail-during-slot-resolution")) {
+        throw new Error("Simulated slot resolution failure");
+      }
+      return actual.replaceNamedSlots(fileContent, slots);
+    },
+  };
+});
+
+vi.mock("node:fs", async (importOriginal) => {
+  const actual = await importOriginal() as any;
+  return {
+    ...actual,
+    readFileSync: (path: string, options?: any) => {
+      if (path === "src/pages/test.html") {
+        return "<my-comp></my-comp>\n  <my-prop fail-during-prop-injection></my-prop>";
+      }
+      if (path === "src/components/parent-comp.html") {
+        return "<div>\n  <child-comp></child-comp>\n</div>";
+      }
+      return actual.readFileSync(path, options);
+    }
+  };
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // A: Slot fallback content
@@ -271,5 +310,83 @@ describe("recursivelyTranspile – attribute inheritance", () => {
       componentList,
     );
     expect(transpiledHtmlBody).not.toContain("data-bascik-prop-title");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Detailed Transpilation Errors & Diagnostics
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("recursivelyTranspile – detailed transpilation errors", () => {
+  it("captures specific line/column and stage when a component fails on a page", () => {
+    const componentList = {
+      "my-prop": {
+        fileName: "src/components/my-prop.html",
+        fileContent: "<div fail-during-prop-injection>Hello</div>",
+      },
+    };
+
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+
+    recursivelyTranspile(
+      "<my-prop fail-during-prop-injection></my-prop>",
+      componentList,
+      [],
+      "src/pages/test.html",
+    );
+
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    const errorLog = consoleErrorSpy.mock.calls[0][0];
+
+    // Assert the error details:
+    // 1. Stage (prop injection)
+    expect(errorLog).toContain("during prop injection");
+    // 2. Exact file path of the page
+    expect(errorLog).toContain('in "pages/test.html"');
+    // 3. Line and column/character numbers (line 2, column 3 because \n  <my-prop)
+    expect(errorLog).toContain("line 2");
+    expect(errorLog).toContain("column 3");
+    // 4. Exact template file defining the component
+    expect(errorLog).toContain('Defined in component template: "components/my-prop.html"');
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("identifies activeSourceFile and correct line/column for nested component failures", () => {
+    const componentList = {
+      "parent-comp": {
+        fileName: "src/components/parent-comp.html",
+        fileContent: "<div>\n  <child-comp></child-comp>\n</div>",
+      },
+      "child-comp": {
+        fileName: "src/components/child-comp.html",
+        fileContent: "<span fail-during-slot-resolution>child</span>",
+      },
+    };
+
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+
+    recursivelyTranspile(
+      "<parent-comp></parent-comp>",
+      componentList,
+      [],
+      "src/pages/test.html",
+    );
+
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    const errorLog = consoleErrorSpy.mock.calls[0][0];
+
+    // Assert details for the nested component failure:
+    // 1. Stage (slot resolution)
+    expect(errorLog).toContain("during slot resolution");
+    // 2. Active source file (should be parent-comp.html instead of test.html)
+    expect(errorLog).toContain('in "components/parent-comp.html"');
+    // 3. Line and column inside the parent template (line 2, column 3 because \n  <child-comp)
+    expect(errorLog).toContain("line 2");
+    expect(errorLog).toContain("column 3");
+    // 4. Component template definition
+    expect(errorLog).toContain('Defined in component template: "components/child-comp.html"');
+
+    consoleErrorSpy.mockRestore();
   });
 });

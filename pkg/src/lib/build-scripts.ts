@@ -39,9 +39,10 @@
  */
 
 import { execFile } from "node:child_process";
-import { writeFile, unlink } from "node:fs/promises";
+import { writeFile, unlink, mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { tmpdir } from "node:os";
+import { getRelativePath } from "./file-system.js";
+
 
 // Manual promise wrapper so tests can mock execFile with a plain vi.fn()
 // without needing to simulate Node's promisify.custom symbol.
@@ -66,17 +67,22 @@ const BUILD_SCRIPT_RE =
  * Find every `<script data-bascik-build>` block in `html`, execute each as a
  * Node.js ESM module, and replace the tag with the script's stdout output.
  */
-export const executeBuildScripts = async (html: string): Promise<string> => {
+export const executeBuildScripts = async (html: string, filePath?: string): Promise<string> => {
   const matches = [...html.matchAll(BUILD_SCRIPT_RE)];
   if (matches.length === 0) return html;
 
   let result = html;
 
+  // Ensure a local temp directory exists in the project root so that
+  // Node's module resolution can find local node_modules.
+  const tempDir = join(process.cwd(), ".bascik", "tmp");
+  await mkdir(tempDir, { recursive: true });
+
   for (const match of matches) {
     const [fullTag, scriptContent] = match;
     const tmpPath = join(
-      tmpdir(),
-      `bascik-build-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
+      tempDir,
+      `build-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
     );
 
     try {
@@ -86,10 +92,21 @@ export const executeBuildScripts = async (html: string): Promise<string> => {
       result = result.replace(fullTag, stdout);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.warn(`[bascik] build script error:\n${msg}`);
+      let errorMsg = `[bascik] build script error`;
+      if (filePath) {
+        const index = html.indexOf(fullTag);
+        if (index !== -1) {
+          const prefix = html.slice(0, index);
+          const lines = prefix.split(/\r?\n/);
+          errorMsg += ` in "${getRelativePath(filePath, "pages")}" at (line ${lines.length}, column ${lines[lines.length - 1].length + 1})`;
+        } else {
+          errorMsg += ` in "${getRelativePath(filePath, "pages")}"`;
+        }
+      }
+      console.warn(`${errorMsg}:\n${msg}`);
       result = result.replace(fullTag, "");
     } finally {
-      await unlink(tmpPath).catch(() => {});
+      await unlink(tmpPath).catch(() => { });
     }
   }
 

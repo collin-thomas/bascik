@@ -77,6 +77,45 @@
         <p>Use <code>data-bascik-slot="name"</code> in the component template to define named slot zones. At the usage
           site, wrap content for each zone with the same attribute.</p>
 
+        <component-demo data-bascik-prop-file="src/pages/index.html">
+          <div data-bascik-slot="example">
+            <feature-card data-bascik-prop-label="Example" data-bascik-prop-title="Named Slots"
+              data-bascik-prop-desc="This is a demo of named slots in action.">
+              <div
+                style="padding-top:12px;border-top:1px solid var(--border);margin-top:12px;display:flex;justify-content:flex-end">
+                <button class="btn btn-primary" style="font-size:0.75rem;padding:6px 12px">Read More</button>
+              </div>
+            </feature-card>
+          </div>
+          <div data-bascik-slot="code">
+            <code-block data-bascik-prop-lang="html">
+              &lt;feature-card
+              data-bascik-prop-label="Example"
+              data-bascik-prop-title="Named Slots"
+              data-bascik-prop-desc="..."&gt;
+              &lt;!-- content for default slot --&gt;
+              &lt;div style="padding-top:12px;..."&gt;
+              &lt;button class="btn btn-primary"&gt;Read More&lt;/button&gt;
+              &lt;/div&gt;
+              &lt;/feature-card&gt;</code-block>
+          </div>
+          <div data-bascik-slot="output">
+            <code-block data-bascik-prop-lang="html">
+              &lt;div class="fcard_abcd"&gt;
+              &lt;p class="fcard-label_abcd"&gt;Example&lt;/p&gt;
+              &lt;h3 class="fcard-title_abcd"&gt;Named Slots&lt;/h3&gt;
+              &lt;p class="fcard-desc_abcd"&gt;...&lt;/p&gt;
+              &lt;div class="fcard-slot_abcd"&gt;
+              &lt;div style="..."&gt;
+              &lt;button class="..."&gt;Read More&lt;/button&gt;
+              &lt;/div&gt;
+              &lt;/div&gt;
+              &lt;/div&gt;</code-block>
+          </div>
+        </component-demo>
+
+        <p>In the component template:</p>
+
         <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/components/page-layout.html">&lt;div
           class="layout"&gt;
           &lt;header&gt;

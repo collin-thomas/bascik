@@ -88,6 +88,7 @@ export const prefixElementAttribute = (
   attribute: "id" | "name" | "class",
   componentInstanceId: string | null = null,
 ): BascikComponent => {
+  if (!component.fileContent) return component;
   // All class/name/id attrs will get this ID.
   // Accept an externally provided ID so that a single component instance can
   // share one ID across all attribute types (id, name, class).
@@ -103,10 +104,10 @@ export const prefixElementAttribute = (
     attributeName: string;
     obfuscatedAttributeName: string;
   }> = [];
-  // The space is before ${attribute} is important,
-  // this prevents matching on `data-id` and `id` instead of just `id`
-  const regexp = new RegExp(`(?<= ${attribute}=").+?(?=")`, "gm");
+  // Use [\s\n\r\t] or \s to handle newlines before the attribute name
+  const regexp = new RegExp(`(?<=\\s${attribute}=")[\\s\\S]+?(?=")`, "gm");
   const scopedAttrsHtml = component.fileContent.replace(regexp, (match) => {
+    if (!match) return "";
     return match
       .replace(/  +/g, " ")
       .split(" ")
