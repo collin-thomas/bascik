@@ -574,4 +574,35 @@ describe("prefixElementAttribute – skipElementContents", () => {
     // Inner content is preserved verbatim (not scoped)
     expect(result.fileContent).toContain('<div class="inner">content</div>');
   });
+
+  it("leaves no sentinel placeholders in output when both code and pre are skipped", () => {
+    // Regression: nested sentinel restoration (pre > code) was single-pass, leaving
+    // \x00BSKIP0\x00 unresolved in the output when <pre> swallowed the already-sentinel-
+    // ised <code> inner content.
+    const inner = '<span class="slot-marker"></span>';
+    const c = makeComponent(
+      `<div class="wrapper"><pre><code class="cblock-body">${inner}</code></pre></div>`,
+    );
+    const result = prefixElementAttribute(c, "class", "test1234", true, ["code", "pre"]);
+    // No sentinel may survive in the output
+    expect(result.fileContent).not.toContain("\x00");
+    expect(result.fileContent).not.toContain("BSKIP");
+    // The slot marker inside <code> must be fully restored
+    expect(result.fileContent).toContain(inner);
+    // Note: class="cblock-body" is NOT scoped here because it sits inside <pre>'s
+    // preserved zone — a known trade-off when "pre" is in the skip list.
+    // This is why the default is ["code"] only, not ["code", "pre"].
+    expect(result.fileContent).toContain('class="cblock-body"');
+  });
+
+  it("restores slot markers inside pre>code so slot injection can proceed", () => {
+    // Mirrors the real code-block component template: slot marker inside <code> inside <pre>
+    const c = makeComponent(
+      '<pre><code class="cblock-body"><span data-bascik-slot></span></code></pre>',
+    );
+    const result = prefixElementAttribute(c, "class", "test1234", true, ["code", "pre"]);
+    // Slot marker must survive intact for the slot-injection step
+    expect(result.fileContent).toContain('<span data-bascik-slot></span>');
+    expect(result.fileContent).not.toContain("BSKIP");
+  });
 });

@@ -108,11 +108,17 @@ const preserveElementContents = (
   }
   return {
     html: result,
-    restore: (h: string) =>
-      h.replace(
-        /\x00BSKIP(\d+)\x00/g,
-        (_, i) => preserved[parseInt(i, 10)],
-      ),
+    restore: (h: string) => {
+      // Restore from highest index to lowest so that outer sentinels (which were
+      // created after inner ones and whose preserved content may itself contain
+      // inner sentinels) are expanded first, revealing the inner sentinels for
+      // the subsequent iterations to resolve.
+      let out = h;
+      for (let i = preserved.length - 1; i >= 0; i--) {
+        out = out.split(`\x00BSKIP${i}\x00`).join(preserved[i]);
+      }
+      return out;
+    },
   };
 };
 

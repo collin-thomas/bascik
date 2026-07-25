@@ -21,7 +21,7 @@ export const bascikConfig = {
     name: true,
   },
   deduplicateCss: true,
-  skipTranspilingElementContents: ['code', 'pre'], // don't scope inside these elements
+  skipTranspilingElementContents: ['code'], // don't scope inside these elements
 
   // CSS
   minifyStyles: true,            // remove whitespace from compiled CSS
@@ -90,10 +90,10 @@ deduplicateCss: true // default
 
 An array of HTML element names whose inner content is left untouched by the scoping pipeline. Attribute values, element-selector class injection, and JS selector rewriting are all skipped for any HTML found *inside* these elements. The elements' own opening-tag attributes (e.g. `class="cblock-body"` on `<code>` itself) are still scoped normally.
 
-Defaults to `["code", "pre"]` — the typical elements used to display literal code examples.
+Defaults to `["code"]` — the typical element used to display literal code examples. Add `"pre"` only if your templates contain raw text inside `<pre>` blocks that aren't wrapped in `<code>` and whose content has attribute patterns you don't want scoped. Note: when `"pre"` is in the list, attributes on elements *inside* `<pre>` (such as `class="cblock-body"` on a `<code>` child) are also excluded from scoping.
 
 ```js
-skipTranspilingElementContents: ['code', 'pre'] // default
+skipTranspilingElementContents: ['code'] // default
 ```
 
 Set to an empty array to disable the protection entirely, or extend the list for other elements whose contents should be preserved as-is.

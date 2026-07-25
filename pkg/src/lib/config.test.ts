@@ -45,8 +45,8 @@ describe("defaultConfig", () => {
     expect(defaultConfig.deduplicateCss).toBe(true);
   });
 
-  it("has skipTranspilingElementContents: [\"code\", \"pre\"]", () => {
-    expect(defaultConfig.skipTranspilingElementContents).toEqual(["code", "pre"]);
+  it("has skipTranspilingElementContents: [\"code\"]", () => {
+    expect(defaultConfig.skipTranspilingElementContents).toEqual(["code"]);
   });
 });
 
