@@ -1,7 +1,27 @@
-<div class="cblock">
+<div class="cblock" id="cblock-root">
   <div class="cblock-header">
     <span class="cblock-lang" data-bascik-prop-lang>html</span>
     <span class="cblock-file" data-bascik-prop-file></span>
   </div>
   <pre><code class="cblock-body"><span data-bascik-slot></span></code></pre>
 </div>
+<script>
+  const cblockEl = document.getElementById('cblock-root');
+  const codeEl = cblockEl.querySelector('pre code');
+  const lines = codeEl.textContent.split('\n');
+  // Trim leading and trailing blank lines
+  while (lines.length && !lines[0].trim()) lines.shift();
+  while (lines.length && !lines[lines.length - 1].trim()) lines.pop();
+  // Strip common leading whitespace
+  const nonEmpty = lines.filter(l => l.trim().length > 0);
+  if (nonEmpty.length > 0) {
+    const minIndent = nonEmpty.reduce(
+      (min, l) => Math.min(min, l.match(/^(\s*)/)[1].length),
+      Infinity
+    );
+    if (minIndent > 0) {
+      for (let i = 0; i < lines.length; i++) lines[i] = lines[i].slice(minIndent);
+    }
+  }
+  codeEl.textContent = lines.join('\n');
+</script>

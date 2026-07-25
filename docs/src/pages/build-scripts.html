@@ -65,7 +65,8 @@
             </script>
           </div>
           <div data-bascik-slot="code">
-            <code-block data-bascik-prop-lang="html">&lt;script data-bascik-build&gt;
+            <code-block data-bascik-prop-lang="html">
+              &lt;script data-bascik-build&gt;
               import { readFile } from 'node:fs/promises';
               import { marked } from 'marked';
               const md = await readFile('./content/01-overview.md', 'utf8');
@@ -77,16 +78,19 @@
               data-bascik-prop-desc="${marked.parseInline(firstPara)}"&gt;
               &lt;/feature-card&gt;
               `);
-              &lt;/script&gt;</code-block>
+              &lt;/script&gt;
+            </code-block>
           </div>
           <div data-bascik-slot="output">
-            <code-block data-bascik-prop-lang="html">&lt;!-- The script is replaced by its output --&gt;
+            <code-block data-bascik-prop-lang="html">
+              &lt;!-- The script is replaced by its output --&gt;
               &lt;div class="bascik__feature-card__fcard"&gt;
               &lt;p class="bascik__feature-card__fcard-label"&gt;Build Time&lt;/p&gt;
               &lt;h3 class="bascik__feature-card__fcard-title"&gt;Generated from Markdown&lt;/h3&gt;
               &lt;p class="bascik__feature-card__fcard-desc"&gt;Bascik is a minimalist static site
               generator...&lt;/p&gt;
-              &lt;/div&gt;</code-block>
+              &lt;/div&gt;
+            </code-block>
           </div>
         </component-demo>
 
