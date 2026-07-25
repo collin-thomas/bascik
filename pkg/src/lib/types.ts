@@ -28,6 +28,14 @@ export interface BascikConfigOptions {
     id: boolean;
     name: boolean;
   };
+  /**
+   * When true (default), all instances of a component share the same scoped
+   * class names so the compiled CSS is emitted only once per component type.
+   * When false, each instance gets unique per-instance class names (the same
+   * as `id` scoping) so JS class-selector queries naturally target only the
+   * current instance, at the cost of one `<style>` block per instance.
+   */
+  deduplicateCss: boolean;
   directory: {
     pages: string;
     components: string;

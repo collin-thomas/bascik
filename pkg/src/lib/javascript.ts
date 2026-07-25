@@ -87,6 +87,7 @@ export const prefixElementAttribute = (
   component: BascikComponent,
   attribute: "id" | "name" | "class",
   componentInstanceId: string | null = null,
+  deduplicateCss: boolean = true,
 ): BascikComponent => {
   if (!component.fileContent) return component;
   // All class/name/id attrs will get this ID.
@@ -94,12 +95,16 @@ export const prefixElementAttribute = (
   // share one ID across all attribute types (id, name, class).
   const instanceId = componentInstanceId ?? getUniqueId(8);
   const componentInstanceName = `${component.name}__${instanceId}`;
-  // Class attributes are scoped to the component NAME only (no instanceId).
-  // All instances on the same page therefore share identical scoped class names,
-  // which allows deduplicateCss to emit one <style> block per component type.
-  // IDs and names keep the instanceId so multiple instances have unique DOM nodes.
+  // When deduplicateCss is true (default): class attributes are scoped to the
+  // component NAME only (no instanceId) so all instances share identical class
+  // names, allowing CSS to be emitted once per component type.
+  // When deduplicateCss is false: class attributes use the per-instance key
+  // (same as id/name) so each instance gets unique class names — JS class-
+  // selector queries like querySelector('.myClass') naturally target only the
+  // current instance's elements, at the cost of per-instance CSS blocks.
+  // IDs and names always keep the instanceId so multiple instances have unique DOM nodes.
   const scopeKey =
-    attribute === "class" ? component.name : componentInstanceName;
+    attribute === "class" && deduplicateCss ? component.name : componentInstanceName;
   const attributesToReplace: Array<{
     attributeName: string;
     obfuscatedAttributeName: string;

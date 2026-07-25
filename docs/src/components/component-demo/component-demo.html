@@ -1,4 +1,4 @@
-<div class="demo-box">
+<div class="demo-box" id="demo-root">
   <div class="demo-nav">
     <div class="demo-tabs">
       <button class="demo-tab active" data-tab="preview">Preview</button>
@@ -176,7 +176,7 @@
 </style>
 
 <script>
-  const demoBox = document.querySelector('.demo-box');
+  const demoBox = document.getElementById('demo-root');
   const tabs = demoBox.querySelectorAll('.demo-tab');
   const panes = demoBox.querySelectorAll('.demo-pane');
 

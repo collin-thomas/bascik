@@ -1,6 +1,44 @@
 ## Scoped JavaScript
 
-Bascik rewrites DOM selector calls inside component `<script>` tags to match the scoped IDs and class names. Each component instance gets unique identifiers, so multiple instances on the same page work independently.
+Bascik rewrites DOM selector calls inside component `<script>` tags to match the scoped IDs and class names generated at build time. If you use a component twice on the same page, each instance gets its own unique identifiers — the scripts inside each instance automatically reference only that instance's elements, with no extra code required.
+
+### Scoping Model
+
+`id` and `name` attributes are scoped **per-instance** — each use of a component generates a different `instanceId`, so element IDs are guaranteed unique across the entire page. `class` attributes are scoped to the component **name** only, so all instances share the same class names and CSS deduplication can emit a single `<style>` block no matter how many times the component is used.
+
+```text
+class  →  bascik__<componentName>__<originalName>
+id     →  bascik__<componentName>__<instanceId>__<originalName>
+name   →  bascik__<componentName>__<instanceId>__<originalName>
+```
+
+### Multiple Instances
+
+Using a component more than once on the same page works automatically. Each use generates a different `instanceId`, so element IDs never collide and the scripts inside each instance stay independent:
+
+```html
+<!-- Two uses of <like-btn> on the same page -->
+<like-btn></like-btn>
+<like-btn></like-btn>
+```
+
+```html
+<!-- Compiled — first instance -->
+<button id="bascik__like-btn__a1b2__btn">Like</button>
+<script>(function() {
+  document.getElementById("bascik__like-btn__a1b2__btn")
+    .addEventListener("click", …);
+})();</script>
+
+<!-- Compiled — second instance -->
+<button id="bascik__like-btn__c3d4__btn">Like</button>
+<script>(function() {
+  document.getElementById("bascik__like-btn__c3d4__btn")
+    .addEventListener("click", …);
+})();</script>
+```
+
+Both buttons are fully independent. The first instance's click handler only fires for the first button, and vice versa.
 
 ### IIFE Isolation
 
@@ -68,16 +106,6 @@ document.getElementsByName("my-name")
 ```
 
 Additional rewritten forms include `element.closest()`, `element.matches()`, `element.classList.add/remove/toggle/contains()`, `element.setAttribute("class", ...)` and `element.setAttribute("id", ...)` with string literal values, and `element.className` setter forms.
-
-### Scoping Model
-
-Class attributes use **component-name-only** scope — all instances on the same page share the same scoped class names, which allows CSS deduplication. ID and name attributes include an instance ID for DOM uniqueness.
-
-```
-class  →  bascik__<componentName>__<originalName>
-id     →  bascik__<componentName>__<instanceId>__<originalName>
-name   →  bascik__<componentName>__<instanceId>__<originalName>
-```
 
 ### Dynamic Runtime Class Scoping (CRITICAL)
 

@@ -40,6 +40,10 @@ describe("defaultConfig", () => {
   it("has verboseLogging: false", () => {
     expect(defaultConfig.verboseLogging).toBe(false);
   });
+
+  it("has deduplicateCss: true", () => {
+    expect(defaultConfig.deduplicateCss).toBe(true);
+  });
 });
 
 describe("BascikConfig", () => {
@@ -55,6 +59,7 @@ describe("BascikConfig", () => {
     expect(BascikConfig).toHaveProperty("obfuscateAttributeNames");
     expect(BascikConfig).toHaveProperty("cacheHttp");
     expect(BascikConfig).toHaveProperty("verboseLogging");
+    expect(BascikConfig).toHaveProperty("deduplicateCss");
     expect(BascikConfig).toHaveProperty("isBuild");
   });
 

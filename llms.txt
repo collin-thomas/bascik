@@ -122,7 +122,27 @@ Keyframe names are also prefixed so animations from different components never c
   animation: bascik__comp__x1__keyframe__spin 1s linear infinite;
 }
 ```
+### CSS ID Selectors
 
+CSS `#id` selectors are converted to scoped class selectors, and the generated class is injected onto the matching element in the HTML. This means `#btn {}` in a component is fully isolated — the same ID name in another component or on the page produces a completely different selector.
+
+```css
+/* my-comp.css — source */
+#submit-btn { background: #d3ff8d; }
+```
+
+```css
+/* compiled output */
+.bascik__my-comp__id__submit-btn { background: #d3ff8d; }
+```
+
+```html
+<!-- The matching element gets the generated class injected -->
+<button id="bascik__my-comp__a1b2__submit-btn"
+        class="bascik__my-comp__id__submit-btn">Submit</button>
+```
+
+> **Specificity note:** Converting `#id` to a class drops specificity from `(0,1,0,0)` to `(0,0,1,0)`. `[id]` and `[id="…"]` attribute-selector forms are stripped at compile time — use a class selector instead.
 ### CSS Custom Properties
 
 `--var-name` declarations in a component's CSS are automatically scoped. All `var(--var-name)` references within the same file are updated to match — so custom properties stay isolated to their component.
@@ -167,9 +187,80 @@ export const bascikConfig = {
 };
 ```
 
+### Class Selectors in Component Scripts
+
+Because all instances of the same component share the same scoped class names (for CSS deduplication), `document.querySelector('.myClass')` inside a component script will always return the **first** matching element on the page — not necessarily the element belonging to the current instance. If you have multiple instances of the same component, each instance's script will target the same (first) element.
+
+**The correct pattern** is to use an `id` attribute as your root anchor. `id` attributes are scoped per-instance, so `getElementById` always finds exactly the right element:
+
+```html
+<!-- my-comp.html -->
+<div id="root" class="wrapper">
+  <button id="btn">Click</button>
+</div>
+
+<script>
+  const root = document.getElementById('root');  // ✓ unique per instance
+  const btn  = root.querySelector('button');      // ✓ scoped to this instance
+</script>
+```
+
+Avoid this anti-pattern:
+
+```html
+<div class="wrapper">
+  <button class="btn">Click</button>
+</div>
+
+<script>
+  // ✗ finds the FIRST .wrapper on the page — wrong for instance 2+
+  const root = document.querySelector('.wrapper');
+</script>
+```
+
+Alternatively, set `deduplicateCss: false` in `bascik.config.js` to switch to per-instance class scoping. This makes class selectors behave like id selectors at the cost of emitting one `<style>` block per component instance.
+
 ## Scoped JavaScript
 
-Bascik rewrites DOM selector calls inside component `<script>` tags to match the scoped IDs and class names. Each component instance gets unique identifiers, so multiple instances on the same page work independently.
+Bascik rewrites DOM selector calls inside component `<script>` tags to match the scoped IDs and class names generated at build time. If you use a component twice on the same page, each instance gets its own unique identifiers — the scripts inside each instance automatically reference only that instance's elements, with no extra code required.
+
+### Scoping Model
+
+`id` and `name` attributes are scoped **per-instance** — each use of a component generates a different `instanceId`, so element IDs are guaranteed unique across the entire page. `class` attributes are scoped to the component **name** only, so all instances share the same class names and CSS deduplication can emit a single `<style>` block no matter how many times the component is used.
+
+```text
+class  →  bascik__<componentName>__<originalName>
+id     →  bascik__<componentName>__<instanceId>__<originalName>
+name   →  bascik__<componentName>__<instanceId>__<originalName>
+```
+
+### Multiple Instances
+
+Using a component more than once on the same page works automatically. Each use generates a different `instanceId`, so element IDs never collide and the scripts inside each instance stay independent:
+
+```html
+<!-- Two uses of <like-btn> on the same page -->
+<like-btn></like-btn>
+<like-btn></like-btn>
+```
+
+```html
+<!-- Compiled — first instance -->
+<button id="bascik__like-btn__a1b2__btn">Like</button>
+<script>(function() {
+  document.getElementById("bascik__like-btn__a1b2__btn")
+    .addEventListener("click", …);
+})();</script>
+
+<!-- Compiled — second instance -->
+<button id="bascik__like-btn__c3d4__btn">Like</button>
+<script>(function() {
+  document.getElementById("bascik__like-btn__c3d4__btn")
+    .addEventListener("click", …);
+})();</script>
+```
+
+Both buttons are fully independent. The first instance's click handler only fires for the first button, and vice versa.
 
 ### IIFE Isolation
 
@@ -237,16 +328,6 @@ document.getElementsByName("my-name")
 ```
 
 Additional rewritten forms include `element.closest()`, `element.matches()`, `element.classList.add/remove/toggle/contains()`, `element.setAttribute("class", ...)` and `element.setAttribute("id", ...)` with string literal values, and `element.className` setter forms.
-
-### Scoping Model
-
-Class attributes use **component-name-only** scope — all instances on the same page share the same scoped class names, which allows CSS deduplication. ID and name attributes include an instance ID for DOM uniqueness.
-
-```
-class  →  bascik__<componentName>__<originalName>
-id     →  bascik__<componentName>__<instanceId>__<originalName>
-name   →  bascik__<componentName>__<instanceId>__<originalName>
-```
 
 ### Dynamic Runtime Class Scoping (CRITICAL)
 
@@ -723,6 +804,7 @@ export const bascikConfig = {
     id: true,
     name: true,
   },
+  deduplicateCss: true,
 
   // CSS
   minifyStyles: true,            // remove whitespace from compiled CSS
@@ -774,6 +856,18 @@ scopeAttribute: {
   name: true,  // default
 }
 ```
+
+#### `deduplicateCss`
+
+When `true` (default), all instances of the same component share the same scoped class names so the compiled `<style>` block is emitted only once per component type, regardless of how many times the component appears on the page.
+
+When `false`, every instance gets its own unique per-instance class names (the same scheme used for `id` scoping). This means a `querySelector('.myClass')` inside a component script will naturally target only elements inside that specific instance — but each instance emits its own `<style>` block.
+
+```js
+deduplicateCss: true // default
+```
+
+> **Choosing `false`:** Use per-instance class scoping when a component's JavaScript needs to use class selectors to locate its own root element and you have multiple instances of that component on the same page. For most components, using an `id` attribute to anchor the script (which is always per-instance) is a simpler alternative.
 
 #### `minifyStyles`
 

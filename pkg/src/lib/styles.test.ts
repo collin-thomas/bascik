@@ -262,6 +262,26 @@ describe("deduplicateCss", () => {
   });
 });
 
+describe("deduplicateCss – dedup: false (per-instance mode)", () => {
+  it("emits CSS for every instance including duplicates", () => {
+    const usedComponents = [
+      { name: "my-btn", cssFileContent: ".bascik__my-btn__abc__btn{color:red}" },
+      { name: "my-btn", cssFileContent: ".bascik__my-btn__def__btn{color:red}" },
+    ];
+    const css = deduplicateCss(usedComponents, false);
+    expect(css).toContain(".bascik__my-btn__abc__btn");
+    expect(css).toContain(".bascik__my-btn__def__btn");
+  });
+
+  it("skips components with no CSS even in per-instance mode", () => {
+    const usedComponents = [
+      { name: "my-btn", cssFileContent: undefined },
+      { name: "my-nav", cssFileContent: ".nav{}" },
+    ];
+    expect(deduplicateCss(usedComponents, false)).toBe(".nav{}");
+  });
+});
+
 // ─── convertCssElementSelectorsToClasses — pseudo-class / pseudo-element ─────
 
 describe("convertCssElementSelectorsToClasses – pseudo-classes and pseudo-elements", () => {

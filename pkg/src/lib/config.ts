@@ -13,6 +13,7 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild"> = {
     id: true,
     name: true,
   },
+  deduplicateCss: true,
   directory: {
     pages: "src/pages",
     components: "src/components",

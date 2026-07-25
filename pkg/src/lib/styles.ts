@@ -412,7 +412,15 @@ export const scopeInlineStyleTags = (
  */
 export const deduplicateCss = (
   usedComponents: Pick<BascikComponent, "name" | "cssFileContent">[],
+  dedup: boolean = true,
 ): string => {
+  if (!dedup) {
+    // Per-instance class scoping: every instance emits its own CSS block.
+    return usedComponents
+      .map(({ cssFileContent }) => cssFileContent)
+      .filter((css): css is string => Boolean(css))
+      .join(" ");
+  }
   const seen = new Set<string>();
   return usedComponents
     .filter(({ name }) => {

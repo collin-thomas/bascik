@@ -57,7 +57,7 @@ src/components/
     site-nav.css
 ```
 
-All class names, element selectors, and `@keyframes` in the `.css` file are automatically scoped to that component instance.
+All class names, element selectors, `#id` selectors, and `@keyframes` in the `.css` file are automatically scoped to that component instance. CSS `#id` selectors are converted to generated class selectors and the class is injected on the matching HTML element.
 
 ```css
 /* site-nav.css — source */
@@ -143,13 +143,16 @@ DOM selectors in component scripts are rewritten to match scoped names:
 * `element.className = "cls"` or `"cls1 cls2"` or `+= " cls"` — setter forms
 
 ### Scoping Model
-Class attributes use **component-name-only** scope — all instances on the same page share the same scoped class names, which allows CSS deduplication. ID and name attributes include an instance ID to guarantee DOM uniqueness across multiple instances.
+`id` and `name` attributes are scoped **per-instance** — each use of a component generates a different `instanceId`, guaranteeing unique DOM IDs even when the same component appears multiple times on a page. `class` attributes are scoped to the component name only (no instanceId), so all instances share the same class names and CSS deduplication emits a single `<style>` block.
 
 ```
 class  →  bascik__<componentName>__<originalName>
 id     →  bascik__<componentName>__<instanceId>__<originalName>
 name   →  bascik__<componentName>__<instanceId>__<originalName>
 ```
+
+### Multiple Instances
+Using a component more than once works automatically — each use gets a different `instanceId`, so IDs never collide and each instance's scripts reference only its own elements.
 
 ---
 

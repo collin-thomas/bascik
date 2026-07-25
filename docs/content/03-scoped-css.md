@@ -84,7 +84,27 @@ Keyframe names are also prefixed so animations from different components never c
   animation: bascik__comp__x1__keyframe__spin 1s linear infinite;
 }
 ```
+### CSS ID Selectors
 
+CSS `#id` selectors are converted to scoped class selectors, and the generated class is injected onto the matching element in the HTML. This means `#btn {}` in a component is fully isolated — the same ID name in another component or on the page produces a completely different selector.
+
+```css
+/* my-comp.css — source */
+#submit-btn { background: #d3ff8d; }
+```
+
+```css
+/* compiled output */
+.bascik__my-comp__id__submit-btn { background: #d3ff8d; }
+```
+
+```html
+<!-- The matching element gets the generated class injected -->
+<button id="bascik__my-comp__a1b2__submit-btn"
+        class="bascik__my-comp__id__submit-btn">Submit</button>
+```
+
+> **Specificity note:** Converting `#id` to a class drops specificity from `(0,1,0,0)` to `(0,0,1,0)`. `[id]` and `[id="…"]` attribute-selector forms are stripped at compile time — use a class selector instead.
 ### CSS Custom Properties
 
 `--var-name` declarations in a component's CSS are automatically scoped. All `var(--var-name)` references within the same file are updated to match — so custom properties stay isolated to their component.
@@ -128,3 +148,36 @@ export const bascikConfig = {
   },
 };
 ```
+
+### Class Selectors in Component Scripts
+
+Because all instances of the same component share the same scoped class names (for CSS deduplication), `document.querySelector('.myClass')` inside a component script will always return the **first** matching element on the page — not necessarily the element belonging to the current instance. If you have multiple instances of the same component, each instance's script will target the same (first) element.
+
+**The correct pattern** is to use an `id` attribute as your root anchor. `id` attributes are scoped per-instance, so `getElementById` always finds exactly the right element:
+
+```html
+<!-- my-comp.html -->
+<div id="root" class="wrapper">
+  <button id="btn">Click</button>
+</div>
+
+<script>
+  const root = document.getElementById('root');  // ✓ unique per instance
+  const btn  = root.querySelector('button');      // ✓ scoped to this instance
+</script>
+```
+
+Avoid this anti-pattern:
+
+```html
+<div class="wrapper">
+  <button class="btn">Click</button>
+</div>
+
+<script>
+  // ✗ finds the FIRST .wrapper on the page — wrong for instance 2+
+  const root = document.querySelector('.wrapper');
+</script>
+```
+
+Alternatively, set `deduplicateCss: false` in `bascik.config.js` to switch to per-instance class scoping. This makes class selectors behave like id selectors at the cost of emitting one `<style>` block per component instance.

@@ -5,6 +5,7 @@ vi.mock("./config.js", () => ({
   BascikConfig: {
     obfuscateAttributeNames: false,
     scopeAttribute: { class: true, id: true, name: true },
+    deduplicateCss: true,
   },
 }));
 
@@ -26,6 +27,10 @@ const scope = (attr: string, id = "test1234"): string =>
 // Classes use component name only (no instanceId) so CSS can be deduplicated.
 const scopeClass = (attr: string): string => `bascik__my-comp__${attr}`;
 
+// With deduplicateCss:false classes use instanceId just like id/name attributes.
+const scopeClassPerInstance = (attr: string, id = "test1234"): string =>
+  `bascik__my-comp__${id}__${attr}`;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Existing getElementById / getElementsByClassName coverage (regression)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -37,6 +42,36 @@ describe("prefixElementAttribute – id (existing patterns)", () => {
     );
     const result = prefixElementAttribute(c, "id", "test1234");
     expect(result.fileContent).toContain(`getElementById("${scope("btn")}")`);
+  });
+});
+
+describe("prefixElementAttribute – class with deduplicateCss: false", () => {
+  it("uses per-instance scoped class names in HTML", () => {
+    const c = makeComponent('<div class="card"></div>');
+    const result = prefixElementAttribute(c, "class", "test1234", false);
+    expect(result.fileContent).toContain(scopeClassPerInstance("card"));
+    expect(result.fileContent).not.toContain(scopeClass("card"));
+  });
+
+  it("rewrites querySelector with per-instance class", () => {
+    const c = makeComponent(
+      '<div class="card"></div><script>document.querySelector(".card")</script>',
+    );
+    const result = prefixElementAttribute(c, "class", "test1234", false);
+    expect(result.fileContent).toContain(
+      `querySelector(".${scopeClassPerInstance("card")}")`,
+    );
+    expect(result.fileContent).not.toContain(
+      `querySelector(".${scopeClass("card")}")`,
+    );
+  });
+
+  it("rewrites CSS class selectors with per-instance key", () => {
+    const c = makeComponent('<div class="card"></div>', ".card { color: red; }");
+    const result = prefixElementAttribute(c, "class", "test1234", false);
+    expect(result.cssFileContent).toContain(
+      `.${scopeClassPerInstance("card")}`,
+    );
   });
 });
 

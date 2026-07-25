@@ -170,7 +170,7 @@ const buildScopingPipeline = (instanceId: string): ComponentTransform[] =>
       ((c: BascikComponent) => prefixElementAttribute(c, "name", instanceId)),
       BascikConfig.scopeAttribute.class &&
       ((c: BascikComponent) =>
-        prefixElementAttribute(c, "class", instanceId)),
+        prefixElementAttribute(c, "class", instanceId, BascikConfig.deduplicateCss)),
       BascikConfig.scopeScriptBlocks && namespaceScriptTags,
     ] as (ComponentTransform | false)[]
   ).filter((t): t is ComponentTransform => Boolean(t));
@@ -419,7 +419,7 @@ export const pageProcessing = async (
   // Deduplicate CSS — each component's styles included only once even if used many times
   let transpiledHead = `${transpiledHeadContent}
     <style>
-    ${deduplicateCss([...usedComponents, ...headUsedComponents])}
+    ${deduplicateCss([...usedComponents, ...headUsedComponents], BascikConfig.deduplicateCss)}
     </style>`;
   // Compress styles
   // Remove new lines and multiple spaces become single spaces
