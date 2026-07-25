@@ -14,7 +14,7 @@ Bascik's command-line interface is designed to provide clean, minimal, and infor
 When you start the dev server, Bascik automatically generates local SSL/TLS certificates for its built-in HTTP/2 server, transpiles all pages inside your pages directory, and begins watching for changes:
 
 ```terminal
-Generated self-signed certificate for the development server
+SSL: generated trusted certs via mkcert (run `mkcert -install` once if you haven't)
 Server running at https://localhost:8443
 
 transpiled: pages/getting-started.html
@@ -23,6 +23,22 @@ transpiled: pages/about.html
 
 ✓ 3 pages transpiled in 45ms
 ```
+
+If [mkcert](https://github.com/FiloSottile/mkcert) is not installed, Bascik falls back to a self-signed certificate (browsers will show a security warning until you accept the exception):
+
+```terminal
+SSL: self-signed cert generated (install mkcert for no browser warning)
+Server running at https://localhost:8443
+```
+
+If port 8443 is already in use, Bascik automatically tries the next available port:
+
+```terminal
+Port 8443 is in use, trying 8444…
+Server running at https://localhost:8444
+```
+
+Certs are generated once and reused on subsequent starts. Delete `bascik-privkey.pem` and `bascik-cert.pem` to regenerate them (e.g. to upgrade from a self-signed cert to a mkcert-trusted one after installing mkcert).
 
 #### 2. Watching for File Changes (Watch Mode)
 While the dev server is active, Bascik watches your file system and incrementally updates your build as files are added, updated, or removed:

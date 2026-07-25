@@ -1,4 +1,8 @@
-import { readFile } from "node:fs/promises";
+import { readFile, access } from "node:fs/promises";
+import { execFile as execFileCb } from "node:child_process";
+import { promisify } from "node:util";
+
+const execFile = promisify(execFileCb);
 import { extname, resolve } from "node:path";
 import http2 from "node:http2";
 import type { ServerHttp2Stream, IncomingHttpHeaders } from "node:http2";
@@ -11,11 +15,47 @@ import { createReadStream } from "node:fs";
 
 export const serveHttp2 = async () => {
   const hostname = "localhost";
-  const port = 8443;
-  const origin = `https://${hostname}:${port}`;
+  const startPort = 8443;
+  let origin = "";
 
   const keyPath = resolve(process.cwd(), "bascik-privkey.pem");
   const certPath = resolve(process.cwd(), "bascik-cert.pem");
+
+  // Auto-generate certs if they don't exist yet.
+  // mkcert produces a CA-trusted cert (no browser warning).
+  // openssl is the self-signed fallback (browser will warn).
+  const certsPresent = await Promise.all([access(keyPath), access(certPath)])
+    .then(() => true)
+    .catch(() => false);
+
+  if (!certsPresent) {
+    try {
+      await execFile("mkcert", [
+        "-key-file", keyPath,
+        "-cert-file", certPath,
+        "localhost", "127.0.0.1", "::1",
+      ]);
+      console.log("SSL: generated trusted certs via mkcert (run `mkcert -install` once if you haven't)");
+    } catch {
+      try {
+        await execFile("openssl", [
+          "req", "-x509", "-newkey", "rsa:2048",
+          "-keyout", keyPath,
+          "-out", certPath,
+          "-days", "365",
+          "-nodes",
+          "-subj", "/CN=localhost",
+        ]);
+        console.log("SSL: self-signed cert generated (install mkcert for no browser warning)");
+      } catch {
+        throw new Error(
+          "Could not generate SSL certificates.\n" +
+          "Install mkcert (recommended) or openssl, then restart the dev server.\n" +
+          "  brew install mkcert && mkcert -install",
+        );
+      }
+    }
+  }
 
   const key = await readFile(keyPath);
   const cert = await readFile(certPath);
@@ -33,8 +73,6 @@ export const serveHttp2 = async () => {
   | Runtime bugs per page |                          | x                          |
   ``` 
   */
-  server.on("error", (error) => console.error(error));
-
   const onError = (error: unknown, stream: ServerHttp2Stream): void => {
     try {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
@@ -197,7 +235,29 @@ export const serveHttp2 = async () => {
     },
   );
 
-  server.listen(port, hostname, () => {
-    console.log(`Server running at ${origin}`);
+  // Find the first available port, incrementing if the preferred one is in use.
+  await new Promise<void>((resolve, reject) => {
+    const tryPort = (p: number) => {
+      const errorHandler = (err: NodeJS.ErrnoException) => {
+        if (err.code === "EADDRINUSE") {
+          console.warn(`Port ${p} is in use, trying ${p + 1}…`);
+          tryPort(p + 1);
+        } else {
+          reject(err);
+        }
+      };
+      server.once("error", errorHandler);
+      server.listen(p, hostname, () => {
+        server.removeListener("error", errorHandler);
+        origin = `https://${hostname}:${p}`;
+        console.log(`Server running at ${origin}`);
+        resolve();
+      });
+    };
+    tryPort(startPort);
   });
+
+  // General runtime error handler (registered after bind so it doesn't
+  // intercept EADDRINUSE events during the port-finding loop above).
+  server.on("error", (error) => console.error(error));
 };

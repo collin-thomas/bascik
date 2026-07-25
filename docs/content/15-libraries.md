@@ -72,11 +72,46 @@ Each instance of this component has its own isolated state. Place it on a page a
 }
 ```
 
+<!-- demo:source-js -->
+```js
+// Load petite-vue once via CDN in the page <head>:
+// <script src="https://unpkg.com/petite-vue" defer init></script>
+//
+// No per-component JavaScript is needed — petite-vue
+// auto-mounts every element with a v-scope attribute.
+```
+
 <!-- demo:code -->
 ```html
 <!-- Two independent instances on the same page -->
 <my-counter></my-counter>
 <my-counter></my-counter>
+```
+
+<!-- demo:output-html -->
+```html
+<div class="bascik__my-counter__counter" v-scope="{ count: 0 }">
+  <button class="bascik__my-counter__btn" @click="count--">−</button>
+  <span class="bascik__my-counter__count-value">{{ count }}</span>
+  <button class="bascik__my-counter__btn bascik__my-counter__btn-primary" @click="count++">+</button>
+</div>
+```
+
+<!-- demo:output-css -->
+```css
+.bascik__my-counter__counter {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 1.25rem;
+}
+
+.bascik__my-counter__count-value {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  min-width: 2ch;
+  text-align: center;
+}
 ```
 
 #### Live Filter
@@ -138,6 +173,67 @@ export const store = reactive({ cart: [] });
 </div>
 <script src="https://unpkg.com/alpinejs" defer></script>
 ```
+
+### Tailwind CSS
+
+[Tailwind CSS](https://tailwindcss.com) is a utility-first CSS framework. Because Tailwind's utility classes are global by design, you need to tell Bascik not to scope class attributes — otherwise Bascik renames `class="flex gap-4"` to `class="bascik__my-comp__flex bascik__my-comp__gap-4"`, which Tailwind's CSS will never match.
+
+Set `scopeAttribute.class` to `false` in `bascik.config.js`:
+
+```js
+// bascik.config.js
+export const bascikConfig = {
+  scopeAttribute: {
+    class: false, // let Tailwind utility classes pass through unchanged
+    id: true,
+    name: true,
+  },
+};
+```
+
+Then include Tailwind via CDN in your head component or page `<head>`. The CDN script runs in the browser and generates CSS for whichever utility class names it finds in the DOM:
+
+```html
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+```
+
+With class scoping turned off, Tailwind utility classes work normally inside any component:
+
+<!-- demo:tailwind-html -->
+```html
+<!-- src/components/feature-card.html -->
+<div class="rounded-xl border border-gray-200 p-6 shadow-sm">
+  <h3 class="mb-2 text-lg font-semibold" data-bascik-prop-title></h3>
+  <p class="text-sm text-gray-600" data-bascik-prop-body></p>
+</div>
+```
+
+<!-- demo:tailwind-output-html -->
+```html
+<!-- Output: class names pass through unchanged (class scoping is off) -->
+<div class="rounded-xl border border-gray-200 p-6 shadow-sm">
+  <h3 class="mb-2 text-lg font-semibold"></h3>
+  <p class="text-sm text-gray-600"></p>
+</div>
+```
+
+<!-- demo:tailwind-source-js -->
+```js
+// Load Tailwind CSS via CDN in the page <head>:
+// <script src="https://cdn.tailwindcss.com"></script>
+//
+// The CDN script scans the DOM for utility class names
+// and generates the matching CSS on the fly.
+// For production, use the Tailwind CLI instead.
+```
+
+For production, replace the CDN tag with a [Tailwind CLI](https://tailwindcss.com/docs/installation) build step that scans your source files and emits a single CSS file — the CDN is only recommended for development.
+
+> **Trade-off.** With `class: false`, Bascik no longer isolates component class names — you give up class-level CSS isolation in exchange for Tailwind compatibility. IDs and names are still scoped independently. For most Tailwind projects this is the right choice since Tailwind's utilities are intentionally global.
 
 ### Any Library Works
 

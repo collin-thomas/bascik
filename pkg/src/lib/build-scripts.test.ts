@@ -141,4 +141,21 @@ describe("executeBuildScripts", () => {
     expect(result).toContain("<p>first</p>");
     expect(result).toContain("<p>second</p>");
   });
+
+  it("substitutes script output in place within a container element", async () => {
+    resolveWith("<li>item-1</li><li>item-2</li>");
+    const html = "<ul><script data-bascik-build>makeList()</script></ul>";
+    const result = await executeBuildScripts(html);
+    // Output should be inside <ul>, not after </ul>
+    expect(result).toBe("<ul><li>item-1</li><li>item-2</li></ul>");
+    expect(result).not.toMatch(/<\/ul>.*<li>/s);
+  });
+
+  it("substitutes script output in place within a deeply nested container", async () => {
+    resolveWith("<p>Generated</p>");
+    const html =
+      '<aside class="sidebar"><nav><script data-bascik-build>gen()</script></nav></aside>';
+    const result = await executeBuildScripts(html);
+    expect(result).toBe('<aside class="sidebar"><nav><p>Generated</p></nav></aside>');
+  });
 });

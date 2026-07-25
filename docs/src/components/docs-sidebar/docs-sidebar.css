@@ -1,5 +1,43 @@
-/* sidebar styles live in docs/src/pages/css/styles.css */
+/* All sidebar styles are here so bascik scopes them to match the component HTML. */
 
+.docs-sidebar {
+  border-right: 1px solid var(--border);
+  padding: 32px 20px;
+  position: sticky;
+  top: 57px;
+  height: calc(100vh - 57px);
+  overflow-y: auto;
+}
+
+.sidebar-heading {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  margin-top: 20px;
+}
+
+.sidebar-heading:first-child { margin-top: 0; }
+
+.sidebar-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar-nav li {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar-nav li a {
+  display: block;
+  padding: 5px 10px;
+  border-radius: var(--r-sm);
+  font-size: 0.875rem;
   color: var(--text-muted);
   text-decoration: none;
   transition: color .15s, background .15s;
@@ -11,7 +49,6 @@
   opacity: 1;
 }
 
-.sidebar-nav li a.active,
 .sidebar-nav li a[aria-current="page"] {
   color: var(--accent) !important;
   background: var(--accent-dim);

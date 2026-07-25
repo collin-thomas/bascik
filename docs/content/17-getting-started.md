@@ -25,6 +25,17 @@ Add the Bascik scripts to your `package.json`:
 }
 ```
 
+Run `yarn dev` (or `npm run dev`) to start the development server. Bascik serves your site over HTTP/2 at **https://localhost:8443** by default (the port auto-increments if 8443 is busy).
+
+SSL certificates are generated automatically on first run. Install [mkcert](https://github.com/FiloSottile/mkcert) for a trusted cert with no browser warning:
+
+```sh
+brew install mkcert
+mkcert -install   # installs the local CA — only needed once
+```
+
+Without mkcert, Bascik falls back to `openssl` (pre-installed on macOS and Linux). Your browser will show a certificate warning — click through to proceed. Windows users without openssl can install it via `winget install ShiningLight.OpenSSL`.
+
 ### Folder Structure
 
 Bascik looks for two directories by default. Both can be overridden in [bascik.config.js](/configuration).

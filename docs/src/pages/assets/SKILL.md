@@ -425,7 +425,7 @@ Bascik's CLI is designed to provide clean, minimal, and informative terminal out
 When you start the dev server, Bascik automatically generates local SSL/TLS certificates for its built-in HTTP/2 server, transpiles all pages inside your pages directory, and begins watching for changes:
 
 ```terminal
-Generated self-signed certificate for the development server
+SSL: generated trusted certs via mkcert (run `mkcert -install` once if you haven't)
 Server running at https://localhost:8443
 
 transpiled: pages/getting-started.html
@@ -434,6 +434,22 @@ transpiled: pages/about.html
 
 ✓ 3 pages transpiled in 45ms
 ```
+
+If [mkcert](https://github.com/FiloSottile/mkcert) is not installed, Bascik falls back to a self-signed certificate (browsers will show a security warning until you accept the exception):
+
+```terminal
+SSL: self-signed cert generated (install mkcert for no browser warning)
+Server running at https://localhost:8443
+```
+
+If port 8443 is already in use, Bascik automatically tries the next available port:
+
+```terminal
+Port 8443 is in use, trying 8444…
+Server running at https://localhost:8444
+```
+
+Certs are generated once and reused on subsequent starts. Delete `bascik-privkey.pem` and `bascik-cert.pem` to regenerate them (e.g. to upgrade from a self-signed cert to a mkcert-trusted one after installing mkcert).
 
 #### 2. Watching for File Changes (Watch Mode)
 While the dev server is active, Bascik watches your file system and incrementally updates your build as files are added, updated, or removed:
@@ -585,6 +601,36 @@ Alpine.js uses `x-data` for state and `@click` / `x-show` for events and visibil
 </div>
 <script src="https://unpkg.com/alpinejs" defer></script>
 ```
+
+### Tailwind CSS
+Tailwind utility classes are global by design. Bascik's class scoping would rename `class="flex gap-4"` to `class="bascik__comp__flex bascik__comp__gap-4"`, breaking Tailwind's CSS.
+
+**Required config** — disable class scoping in `bascik.config.js`:
+```js
+export const bascikConfig = {
+  scopeAttribute: {
+    class: false, // let Tailwind utility classes pass through unchanged
+    id: true,
+    name: true,
+  },
+};
+```
+
+Include Tailwind via CDN (development) or Tailwind CLI (production):
+```html
+<script src="https://cdn.tailwindcss.com"></script>
+```
+
+With `class: false`, utility classes work normally inside any component:
+```html
+<!-- src/components/feature-card.html -->
+<div class="rounded-xl border border-gray-200 p-6 shadow-sm">
+  <h3 class="mb-2 text-lg font-semibold" data-bascik-prop-title></h3>
+  <p class="text-sm text-gray-600" data-bascik-prop-body></p>
+</div>
+```
+
+Trade-off: with `class: false`, Bascik no longer isolates component class names. IDs and names remain scoped independently.
 
 ### HTMX, Stimulus, and Others
 * **HTMX** — Uses `hx-get`, `hx-post` attributes for server-driven partial updates.

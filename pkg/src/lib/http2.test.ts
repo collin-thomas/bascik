@@ -1,11 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ─── Hoisted mock factories ───────────────────────────────────────────────────
 
 const { mockServer, mockCreateSecureServer } = vi.hoisted(() => {
   const mockServer = {
     on: vi.fn().mockReturnThis(),
-    listen: vi.fn(),
+    once: vi.fn().mockReturnThis(),
+    removeListener: vi.fn().mockReturnThis(),
+    listen: vi.fn().mockImplementation(
+      (_port: number, _hostname: string, cb?: () => void) => { cb?.(); },
+    ),
   };
   const mockCreateSecureServer = vi.fn(() => mockServer);
   return { mockServer, mockCreateSecureServer };
@@ -19,6 +23,11 @@ vi.mock("node:http2", () => ({
 
 vi.mock("node:fs/promises", () => ({
   readFile: vi.fn().mockResolvedValue(Buffer.from("mock-cert")),
+  access: vi.fn().mockResolvedValue(undefined), // certs exist by default
+}));
+
+vi.mock("node:child_process", () => ({
+  execFile: vi.fn((_cmd: string, _args: string[], cb: (err: Error | null, result: { stdout: string; stderr: string }) => void) => cb(null, { stdout: "", stderr: "" })),
 }));
 
 vi.mock("node:fs", () => ({
@@ -260,5 +269,106 @@ describe("serveHttp2 – stream handler", () => {
     );
     openCall?.[1]?.();
     expect(fakeFileStream.pipe).toHaveBeenCalledWith(stream);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Port auto-increment
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("serveHttp2 – port auto-increment", () => {
+  afterEach(() => {
+    // Restore default listen behaviour so subsequent tests are unaffected.
+    mockServer.listen.mockImplementation(
+      (_port: number, _hostname: string, cb?: () => void) => { cb?.(); },
+    );
+  });
+
+  it("retries the next port when the preferred port is in use", async () => {
+    let callCount = 0;
+    mockServer.listen.mockImplementation(
+      (_port: number, _hostname: string, cb?: () => void) => {
+        callCount++;
+        if (callCount === 1) {
+          // Fire the EADDRINUSE error through the once-registered handler.
+          const [, errorHandler] = mockServer.once.mock.calls.at(-1) as [
+            string,
+            (err: NodeJS.ErrnoException) => void,
+          ];
+          const err = Object.assign(new Error("EADDRINUSE"), { code: "EADDRINUSE" });
+          errorHandler(err);
+        } else {
+          cb?.();
+        }
+      },
+    );
+
+    await serveHttp2();
+
+    expect(mockServer.listen).toHaveBeenCalledTimes(2);
+    expect(mockServer.listen).toHaveBeenNthCalledWith(1, 8443, "localhost", expect.any(Function));
+    expect(mockServer.listen).toHaveBeenNthCalledWith(2, 8444, "localhost", expect.any(Function));
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cert auto-generation
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("serveHttp2 – cert generation", () => {
+  let mockAccess: ReturnType<typeof vi.fn>;
+  let mockExecFile: ReturnType<typeof vi.fn>;
+
+  beforeEach(async () => {
+    const { access } = await import("node:fs/promises");
+    const { execFile } = await import("node:child_process");
+    mockAccess = access as ReturnType<typeof vi.fn>;
+    mockExecFile = execFile as unknown as ReturnType<typeof vi.fn>;
+    // Default for each cert test: certs already exist, execFile succeeds.
+    mockAccess.mockResolvedValue(undefined);
+    mockExecFile.mockImplementation(
+      (_cmd: string, _args: string[], cb: (err: Error | null) => void) =>
+        cb(null),
+    );
+  });
+
+  it("skips cert generation when cert files already exist", async () => {
+    await serveHttp2();
+    expect(mockExecFile).not.toHaveBeenCalled();
+  });
+
+  it("runs mkcert when cert files are missing", async () => {
+    mockAccess.mockRejectedValue(new Error("ENOENT"));
+
+    await serveHttp2();
+
+    expect(mockExecFile).toHaveBeenCalledWith(
+      "mkcert",
+      expect.arrayContaining(["-key-file", "-cert-file", "localhost"]),
+      expect.any(Function),
+    );
+  });
+
+  it("falls back to openssl when mkcert is not available", async () => {
+    mockAccess.mockRejectedValue(new Error("ENOENT"));
+    mockExecFile
+      .mockImplementationOnce(
+        (_cmd: string, _args: string[], cb: (err: Error | null) => void) =>
+          cb(new Error("mkcert not found")),
+      )
+      .mockImplementationOnce(
+        (_cmd: string, _args: string[], cb: (err: Error | null) => void) =>
+          cb(null),
+      );
+
+    await serveHttp2();
+
+    expect(mockExecFile).toHaveBeenCalledTimes(2);
+    expect(mockExecFile).toHaveBeenNthCalledWith(
+      2,
+      "openssl",
+      expect.arrayContaining(["req", "-x509"]),
+      expect.any(Function),
+    );
   });
 });

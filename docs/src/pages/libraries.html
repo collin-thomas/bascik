@@ -7,6 +7,7 @@
   <title>JavaScript Libraries — Bascik Docs</title>
   <link rel="stylesheet" href="/css/styles.css" />
   <script src="https://unpkg.com/petite-vue" defer init></script>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body>
@@ -75,17 +76,82 @@
             </code-block>
           </div>
           <div data-bascik-slot="source-js">
-            <code-block data-bascik-prop-lang="js">// Petite-vue is loaded via CDN in the page &lt;head&gt;:
-              // &lt;script src="https://unpkg.com/petite-vue" defer init&gt;&lt;/script&gt;
-              // No per-component JavaScript needed.</code-block>
+            <code-block data-bascik-prop-lang="js">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/15-libraries.md', 'source-js'));
+              </script>
+            </code-block>
           </div>
-          <div data-bascik-slot="code">
+          <div data-bascik-slot="output-html">
             <code-block data-bascik-prop-lang="html">
               <script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/15-libraries.md', 'code'));
+                console.log(await extractDemoBlock('./content/15-libraries.md', 'output-html'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-css">
+            <code-block data-bascik-prop-lang="css">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/15-libraries.md', 'output-css'));
+              </script>
+            </code-block>
+          </div>
+        </component-demo>
+
+        <h2>Live Tailwind Demo</h2>
+        <p>These cards are plain HTML placed directly in the page — not inside a component — so Bascik leaves the class
+          names untouched and Tailwind styles them as normal.</p>
+
+        <component-demo>
+          <div data-bascik-slot="example">
+            <div style="display:flex;gap:1rem;flex-wrap:wrap">
+              <div class="rounded-xl border border-gray-200 p-6 shadow-sm" style="width:220px">
+                <h3 class="mb-2 text-lg font-semibold" style="color:var(--accent)">Zero Runtime</h3>
+                <p class="text-sm" style="color:var(--text)">Bascik outputs plain HTML with no client-side overhead.</p>
+              </div>
+              <div class="rounded-xl border border-gray-200 p-6 shadow-sm" style="width:220px">
+                <h3 class="mb-2 text-lg font-semibold" style="color:var(--accent)">Scoped CSS</h3>
+                <p class="text-sm" style="color:var(--text)">Component styles never leak — isolation is guaranteed at
+                  build time.</p>
+              </div>
+            </div>
+          </div>
+          <div data-bascik-slot="source-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/15-libraries.md', 'tailwind-html'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="source-js">
+            <code-block data-bascik-prop-lang="js">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/15-libraries.md', 'tailwind-source-js'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/15-libraries.md', 'tailwind-output-html'));
               </script>
             </code-block>
           </div>

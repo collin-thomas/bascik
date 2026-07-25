@@ -26,22 +26,14 @@
 }
 
 .dfooter-logo {
-  font-family: 'Courier New', Courier, monospace;
-  font-weight: 800;
-  font-size: 0.9rem;
-  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
-  letter-spacing: 0.05em;
-  background: var(--accent-dim);
-  border: 1px solid rgba(211, 255, 141, 0.2);
-  padding: 4px 12px;
-  border-radius: 6px;
-  display: inline-block;
-  transition: background .15s;
+  transition: filter .15s;
 }
 
 .dfooter-logo:hover {
-  background: rgba(211, 255, 141, 0.2);
+  filter: brightness(1.12);
   opacity: 1;
 }
 

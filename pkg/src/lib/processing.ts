@@ -370,6 +370,7 @@ export const pageProcessing = async (
   if (!componentList) {
     componentList = await listComponents();
   }
+
   // Execute <script data-bascik-build> blocks first so that the generated HTML
   // can contain component tags, which will be resolved below.
   const rawHtml = (await readFile(pagePath)).toString();

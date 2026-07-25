@@ -393,6 +393,32 @@ Using a component more than once on the same page works automatically. Each use 
 
 Both buttons are fully independent. The first instance's click handler only fires for the first button, and vice versa.
 
+### Class Selectors and Multiple Instances (Pitfall)
+
+Because class names are scoped to the component **name** (not the instance), `querySelector('.my-class')` and `querySelectorAll('.my-class')` will always return the **first** matching element in the document — even after Bascik rewrites the class name. When the same component appears more than once on a page, every instance's script will target the first instance's elements.
+
+**Never use class-based DOM lookups to find elements you need to control per-instance.** Use `id` attributes instead — IDs are scoped per-instance and `getElementById` always resolves to the correct element:
+
+```html
+<!-- ❌ Broken for multiple instances — querySelector returns first instance's button -->
+<button class="my-btn">Click</button>
+<script>
+  document.querySelector('.my-btn').addEventListener('click', () => { … });
+</script>
+```
+
+```html
+<!-- ✅ Correct — id is per-instance, getElementById targets the right element -->
+<button id="my-btn" class="my-btn">Click</button>
+<script>
+  document.getElementById('my-btn').addEventListener('click', () => { … });
+</script>
+```
+
+The `class` attribute can coexist on the element for styling — just add an `id` for the JS lookup.
+
+> **Rule of thumb.** In component scripts, always use `getElementById` (or `getElementsByName`) to locate specific elements. Reserve `querySelector`/`querySelectorAll` for cases where you intentionally want to sweep across all instances (e.g. event delegation from a parent outside the component).
+
 ### IIFE Isolation
 
 Every component script is wrapped in an immediately-invoked function expression (IIFE) to prevent variable leaks between components:
@@ -1289,7 +1315,7 @@ Bascik's command-line interface is designed to provide clean, minimal, and infor
 When you start the dev server, Bascik automatically generates local SSL/TLS certificates for its built-in HTTP/2 server, transpiles all pages inside your pages directory, and begins watching for changes:
 
 ```terminal
-Generated self-signed certificate for the development server
+SSL: generated trusted certs via mkcert (run `mkcert -install` once if you haven't)
 Server running at https://localhost:8443
 
 transpiled: pages/getting-started.html
@@ -1298,6 +1324,22 @@ transpiled: pages/about.html
 
 ✓ 3 pages transpiled in 45ms
 ```
+
+If [mkcert](https://github.com/FiloSottile/mkcert) is not installed, Bascik falls back to a self-signed certificate (browsers will show a security warning until you accept the exception):
+
+```terminal
+SSL: self-signed cert generated (install mkcert for no browser warning)
+Server running at https://localhost:8443
+```
+
+If port 8443 is already in use, Bascik automatically tries the next available port:
+
+```terminal
+Port 8443 is in use, trying 8444…
+Server running at https://localhost:8444
+```
+
+Certs are generated once and reused on subsequent starts. Delete `bascik-privkey.pem` and `bascik-cert.pem` to regenerate them (e.g. to upgrade from a self-signed cert to a mkcert-trusted one after installing mkcert).
 
 #### 2. Watching for File Changes (Watch Mode)
 While the dev server is active, Bascik watches your file system and incrementally updates your build as files are added, updated, or removed:
@@ -1520,11 +1562,46 @@ Each instance of this component has its own isolated state. Place it on a page a
 }
 ```
 
+<!-- demo:source-js -->
+```js
+// Load petite-vue once via CDN in the page <head>:
+// <script src="https://unpkg.com/petite-vue" defer init></script>
+//
+// No per-component JavaScript is needed — petite-vue
+// auto-mounts every element with a v-scope attribute.
+```
+
 <!-- demo:code -->
 ```html
 <!-- Two independent instances on the same page -->
 <my-counter></my-counter>
 <my-counter></my-counter>
+```
+
+<!-- demo:output-html -->
+```html
+<div class="bascik__my-counter__counter" v-scope="{ count: 0 }">
+  <button class="bascik__my-counter__btn" @click="count--">−</button>
+  <span class="bascik__my-counter__count-value">{{ count }}</span>
+  <button class="bascik__my-counter__btn bascik__my-counter__btn-primary" @click="count++">+</button>
+</div>
+```
+
+<!-- demo:output-css -->
+```css
+.bascik__my-counter__counter {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 1.25rem;
+}
+
+.bascik__my-counter__count-value {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  min-width: 2ch;
+  text-align: center;
+}
 ```
 
 #### Live Filter
@@ -1586,6 +1663,67 @@ export const store = reactive({ cart: [] });
 </div>
 <script src="https://unpkg.com/alpinejs" defer></script>
 ```
+
+### Tailwind CSS
+
+[Tailwind CSS](https://tailwindcss.com) is a utility-first CSS framework. Because Tailwind's utility classes are global by design, you need to tell Bascik not to scope class attributes — otherwise Bascik renames `class="flex gap-4"` to `class="bascik__my-comp__flex bascik__my-comp__gap-4"`, which Tailwind's CSS will never match.
+
+Set `scopeAttribute.class` to `false` in `bascik.config.js`:
+
+```js
+// bascik.config.js
+export const bascikConfig = {
+  scopeAttribute: {
+    class: false, // let Tailwind utility classes pass through unchanged
+    id: true,
+    name: true,
+  },
+};
+```
+
+Then include Tailwind via CDN in your head component or page `<head>`. The CDN script runs in the browser and generates CSS for whichever utility class names it finds in the DOM:
+
+```html
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+```
+
+With class scoping turned off, Tailwind utility classes work normally inside any component:
+
+<!-- demo:tailwind-html -->
+```html
+<!-- src/components/feature-card.html -->
+<div class="rounded-xl border border-gray-200 p-6 shadow-sm">
+  <h3 class="mb-2 text-lg font-semibold" data-bascik-prop-title></h3>
+  <p class="text-sm text-gray-600" data-bascik-prop-body></p>
+</div>
+```
+
+<!-- demo:tailwind-output-html -->
+```html
+<!-- Output: class names pass through unchanged (class scoping is off) -->
+<div class="rounded-xl border border-gray-200 p-6 shadow-sm">
+  <h3 class="mb-2 text-lg font-semibold"></h3>
+  <p class="text-sm text-gray-600"></p>
+</div>
+```
+
+<!-- demo:tailwind-source-js -->
+```js
+// Load Tailwind CSS via CDN in the page <head>:
+// <script src="https://cdn.tailwindcss.com"></script>
+//
+// The CDN script scans the DOM for utility class names
+// and generates the matching CSS on the fly.
+// For production, use the Tailwind CLI instead.
+```
+
+For production, replace the CDN tag with a [Tailwind CLI](https://tailwindcss.com/docs/installation) build step that scans your source files and emits a single CSS file — the CDN is only recommended for development.
+
+> **Trade-off.** With `class: false`, Bascik no longer isolates component class names — you give up class-level CSS isolation in exchange for Tailwind compatibility. IDs and names are still scoped independently. For most Tailwind projects this is the right choice since Tailwind's utilities are intentionally global.
 
 ### Any Library Works
 
@@ -2223,6 +2361,17 @@ Add the Bascik scripts to your `package.json`:
   }
 }
 ```
+
+Run `yarn dev` (or `npm run dev`) to start the development server. Bascik serves your site over HTTP/2 at **https://localhost:8443** by default (the port auto-increments if 8443 is busy).
+
+SSL certificates are generated automatically on first run. Install [mkcert](https://github.com/FiloSottile/mkcert) for a trusted cert with no browser warning:
+
+```sh
+brew install mkcert
+mkcert -install   # installs the local CA — only needed once
+```
+
+Without mkcert, Bascik falls back to `openssl` (pre-installed on macOS and Linux). Your browser will show a certificate warning — click through to proceed. Windows users without openssl can install it via `winget install ShiningLight.OpenSSL`.
 
 ### Folder Structure
 

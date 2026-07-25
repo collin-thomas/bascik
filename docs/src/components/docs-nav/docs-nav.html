@@ -1,10 +1,9 @@
-<input type="checkbox" id="dnav-toggle" class="dnav-checkbox">
 <nav class="dnav">
-  <div class="dnav-inner container">
+  <div class="dnav-inner">
     <a href="/" class="dnav-logo" aria-label="Bascik home"><docs-logo></docs-logo></a>
-    <label for="dnav-toggle" class="dnav-toggle" tabindex="0" aria-label="Toggle navigation">
+    <button type="button" class="dnav-toggle" aria-label="Toggle navigation" aria-expanded="false">
       <span class="dnav-toggle-icon"></span>
-    </label>
+    </button>
     <div class="dnav-links-wrapper">
       <ul class="dnav-links">
         <li><a href="/why-bascik">Why Bascik</a></li>
@@ -29,7 +28,7 @@
         </script>
         <hr class="mobile-sep" />
         <ul class="mobile-sec-nav">
-          <li><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener">GitHub &nearr;</a></li>
+          <li><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener">GitHub &#x2197;</a></li>
         </ul>
       </div>
     </div>
@@ -37,6 +36,16 @@
 </nav>
 <script>
   (function () {
+    var toggle = document.querySelector('.dnav-toggle');
+    var wrapper = document.querySelector('.dnav-links-wrapper');
+    if (toggle && wrapper) {
+      toggle.addEventListener('click', function () {
+        var isOpen = toggle.getAttribute('aria-expanded') !== 'true';
+        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      });
+    }
+
     var path = window.location.pathname;
     document.querySelectorAll('.dnav a').forEach(function (a) {
       var href = a.getAttribute('href');

@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { getComponentCss } from "./styles.js";
 import { deepReadDirFlat } from "./file-system.js";
 import { BascikConfig } from "./config.js";
+import { executeBuildScripts } from "./build-scripts.js";
 import type { BascikComponent, ComponentList } from "./types.js";
 
 // Warn if a component name shadows a native HTML element
@@ -148,10 +149,14 @@ export const listComponents = async (): Promise<ComponentList> => {
           readFile(fileName),
           getComponentCss(fileName, componentCssFileNames),
         ]);
+        // Run build scripts before minification so that generated content
+        // stays in its original position (minifyHtml moves <script> tags).
+        const rawContent = fileContent.toString();
+        const resolvedContent = await executeBuildScripts(rawContent, fileName);
         const component: BascikComponent = {
           name: componentName,
           fileName,
-          fileContent: minifyHtml(fileContent.toString()),
+          fileContent: minifyHtml(resolvedContent),
         };
         if (cssFileContent) {
           component.cssFileContent = cssFileContent;
