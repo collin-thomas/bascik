@@ -100,3 +100,49 @@ Add new pages to `docs/src/components/docs-sidebar/docs-sidebar.html`. Group und
 ## Fix Bugs in the Package, Not the Docs
 
 This repo is the **bascik package itself** (`pkg/`). When a rendering or build issue (e.g. minification stripping newlines, whitespace collapsing, HTML output mangled) would otherwise require a workaround in the docs content or build scripts, **fix it in `pkg/src/` instead**. Do not paper over bascik bugs with hacks in the docs layer.
+
+## Keeping Docs in Sync with the Package
+
+The docs site (`docs/`) consumes a **packed tarball** of the package:
+```
+docs/node_modules/@bascik/bascik/  ← installed from ../pkg/bascik-bascik-0.2.0.tgz
+```
+
+Whenever `pkg/src/` is changed, you must propagate the change to the docs before verifying any docs output. **Always follow these steps in order:**
+
+### 1. Rebuild the package
+```sh
+cd pkg && node_modules/.bin/tsc -p tsconfig.build.json
+```
+
+### 2. Copy the rebuilt lib files into docs node_modules
+```sh
+cp pkg/dist/lib/javascript.js docs/node_modules/@bascik/bascik/dist/lib/javascript.js
+cp pkg/dist/lib/styles.js    docs/node_modules/@bascik/bascik/dist/lib/styles.js
+cp pkg/dist/lib/components.js docs/node_modules/@bascik/bascik/dist/lib/components.js
+cp pkg/dist/lib/processing.js docs/node_modules/@bascik/bascik/dist/lib/processing.js
+```
+
+Copy any other lib file you changed in the same way. When in doubt, copy all of `pkg/dist/lib/` at once:
+```sh
+cp pkg/dist/lib/*.js docs/node_modules/@bascik/bascik/dist/lib/
+```
+
+### 3. Verify the installed file actually changed
+
+Grep for a representative string from your change to confirm the update landed:
+```sh
+# Example: verify a regex fix in javascript.js
+grep "your-changed-pattern" docs/node_modules/@bascik/bascik/dist/lib/javascript.js
+```
+
+If the grep returns nothing, the copy failed or you checked the wrong file.
+
+### 4. Rebuild and check the docs
+```sh
+yarn --cwd docs bascik --build
+```
+
+Then inspect the relevant `docs/dist/` output to confirm the pkg change has the intended effect.
+
+**Never assume `docs/dist/` reflects the current `pkg/src/` without completing all four steps above.** A stale installed pkg is a common source of confusing bugs where the source fix appears correct but the docs output is still broken.

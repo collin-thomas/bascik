@@ -24,6 +24,154 @@ Read a Markdown file and output the HTML:
 
 The output replaces the script tag in the compiled HTML — no client-side JavaScript runs.
 
+### Styling Rendered Markdown
+
+A Markdown parser returns ordinary HTML such as `<h2>`, `<p>`, `<ul>`, `<blockquote>`, and `<pre>`. There is no separate Markdown styling system: once Bascik injects that HTML, the browser applies CSS through the normal cascade.
+
+#### Option 1: A Page or Global Stylesheet
+
+Wrap the generated content with a stable class and link a regular stylesheet from the page:
+
+```html
+<head>
+  <link rel="stylesheet" href="/css/content.css" />
+</head>
+<body>
+  <main class="markdown-body">
+    <script data-bascik-build>
+      import { readFile } from 'node:fs/promises';
+      import { marked } from 'marked';
+
+      const md = await readFile('./content/article.md', 'utf8');
+      console.log(marked(md));
+    </script>
+  </main>
+</body>
+```
+
+Then style the HTML elements the parser emits:
+
+```css
+/* src/pages/css/content.css */
+.markdown-body {
+  max-width: 68ch;
+  margin-inline: auto;
+  color: #25282d;
+  font: 1.05rem/1.75 Georgia, serif;
+}
+
+.markdown-body h2 {
+  margin-block: 2.5rem 0.75rem;
+  font: 700 1.75rem/1.2 system-ui, sans-serif;
+}
+
+.markdown-body a {
+  color: #086f83;
+  text-decoration-thickness: 0.12em;
+  text-underline-offset: 0.16em;
+}
+
+.markdown-body blockquote {
+  margin-inline: 0;
+  padding: 1rem 1.25rem;
+  border-left: 4px solid #d7b329;
+  background: #fff9df;
+}
+
+.markdown-body pre {
+  overflow-x: auto;
+  padding: 1rem;
+  color: #f7f7f2;
+  background: #202329;
+}
+```
+
+This is the simplest choice when several pages share one editorial design. The generated elements are plain HTML, so responsive styles, custom properties, print styles, and media queries all work normally.
+
+#### Option 2: A Scoped Bascik Component
+
+For a portable content style, create a component whose default slot receives the generated HTML:
+
+```html
+<!-- src/components/markdown-content/markdown-content.html -->
+<article class="markdown-content">
+  <div data-bascik-slot></div>
+</article>
+```
+
+Pair it with component CSS. Start selectors with the wrapper class so the rules apply to HTML inserted through the slot:
+
+```css
+/* src/components/markdown-content/markdown-content.css */
+.markdown-content {
+  max-width: 68ch;
+  margin-inline: auto;
+  color: #25282d;
+  font: 1.05rem/1.75 Georgia, serif;
+}
+
+.markdown-content h2 {
+  margin-block: 2.5rem 0.75rem;
+  color: #142c35;
+  font: 700 1.75rem/1.2 system-ui, sans-serif;
+}
+
+.markdown-content blockquote {
+  margin-inline: 0;
+  padding: 1rem 1.25rem;
+  border-left: 4px solid #d7b329;
+  background: #fff9df;
+}
+
+.markdown-content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+```
+
+Have the build script emit the component tag around the parsed Markdown:
+
+```html
+<script data-bascik-build>
+  import { readFile } from 'node:fs/promises';
+  import { marked } from 'marked';
+
+  const md = await readFile('./content/article.md', 'utf8');
+  console.log(`<markdown-content>${marked(md)}</markdown-content>`);
+</script>
+```
+
+Bascik runs the script first, sees the emitted `<markdown-content>` tag, resolves it, fills its slot, and includes its scoped CSS. Only that component's wrapper receives the generated scoped class; selectors such as `.markdown-content h2` then style the ordinary heading descendants inside it.
+
+> **Use a wrapper selector for slot content.** A bare `h2 {}` rule in component CSS is transformed by Bascik and attached to headings present in the component template. Markdown headings arrive through the slot later, so write `.markdown-content h2 {}` for generated content.
+
+#### What Reaches the Browser
+
+Given this Markdown:
+
+```md
+## A practical heading
+
+Markdown stays comfortable for authors, while the published page stays **plain HTML**.
+
+> Content can have a distinct editorial treatment without adding a client runtime.
+```
+
+The parser produces normal elements inside the resolved component:
+
+```html
+<article class="bascik__markdown-content__markdown-content">
+  <h2>A practical heading</h2>
+  <p>Markdown stays comfortable for authors, while the published page stays <strong>plain HTML</strong>.</p>
+  <blockquote>
+    <p>Content can have a distinct editorial treatment without adding a client runtime.</p>
+  </blockquote>
+</article>
+```
+
+The generated class name may be shortened in production when attribute obfuscation is enabled. You continue writing `.markdown-content` in the source; Bascik keeps the HTML and CSS names synchronized.
+
 ### Front Matter with gray-matter
 
 Most content workflows attach metadata (title, date, author, tags) to Markdown files using YAML front matter. [gray-matter](https://github.com/jonschlinkert/gray-matter) parses it out cleanly.

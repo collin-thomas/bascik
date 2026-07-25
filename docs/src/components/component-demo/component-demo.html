@@ -15,9 +15,37 @@
       </div>
     </div>
     <div class="demo-pane" data-pane="code">
+      <div class="demo-language-tabs" role="tablist" aria-label="Source language">
+        <button class="demo-language-tab active" data-language="html" type="button">HTML</button>
+        <button class="demo-language-tab" data-language="css" type="button">CSS</button>
+        <button class="demo-language-tab" data-language="js" type="button">JS</button>
+      </div>
+      <div class="demo-language-pane active" data-language-pane="html">
+        <div data-bascik-slot="source-html"></div>
+      </div>
+      <div class="demo-language-pane" data-language-pane="css">
+        <div data-bascik-slot="source-css"></div>
+      </div>
+      <div class="demo-language-pane" data-language-pane="js">
+        <div data-bascik-slot="source-js"></div>
+      </div>
       <div data-bascik-slot="code"></div>
     </div>
     <div class="demo-pane" data-pane="output">
+      <div class="demo-language-tabs" role="tablist" aria-label="Output language">
+        <button class="demo-language-tab active" data-language="html" type="button">HTML</button>
+        <button class="demo-language-tab" data-language="css" type="button">CSS</button>
+        <button class="demo-language-tab" data-language="js" type="button">JS</button>
+      </div>
+      <div class="demo-language-pane active" data-language-pane="html">
+        <div data-bascik-slot="output-html"></div>
+      </div>
+      <div class="demo-language-pane" data-language-pane="css">
+        <div data-bascik-slot="output-css"></div>
+      </div>
+      <div class="demo-language-pane" data-language-pane="js">
+        <div data-bascik-slot="output-js"></div>
+      </div>
       <div data-bascik-slot="output"></div>
     </div>
   </div>
@@ -84,6 +112,44 @@
     display: block;
   }
 
+  .demo-language-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 8px 12px;
+    background: var(--bg-muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .demo-language-tab {
+    min-width: 48px;
+    padding: 6px 10px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .demo-language-tab:hover {
+    color: var(--text);
+  }
+
+  .demo-language-tab.active {
+    color: var(--text);
+    background: var(--bg);
+    border-color: var(--border);
+  }
+
+  .demo-language-pane {
+    display: none;
+  }
+
+  .demo-language-pane.active {
+    display: block;
+  }
+
   .demo-preview-content {
     padding: 32px;
     background-image:
@@ -123,6 +189,21 @@
 
       tab.classList.add('active');
       demoBox.querySelector(`[data-pane="${target}"]`).classList.add('active');
+    });
+  });
+
+  demoBox.querySelectorAll('[data-pane="code"], [data-pane="output"]').forEach(pane => {
+    const languageTabs = pane.querySelectorAll('.demo-language-tab');
+    const languagePanes = pane.querySelectorAll('.demo-language-pane');
+
+    languageTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        languageTabs.forEach(item => item.classList.remove('active'));
+        languagePanes.forEach(item => item.classList.remove('active'));
+
+        tab.classList.add('active');
+        pane.querySelector(`[data-language-pane="${tab.dataset.language}"]`).classList.add('active');
+      });
     });
   });
 </script>

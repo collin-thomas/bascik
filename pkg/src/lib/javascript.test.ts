@@ -317,6 +317,25 @@ describe("prefixElementAttribute – CSS #id selector scoping", () => {
     expect(result.cssFileContent).toContain("rgba(255,255,255,0.2)");
   });
 
+  it("does NOT mangle sub-1 decimal font-size values (e.g. 0.7rem, 0.82rem)", () => {
+    // Regression: the old regex [a-z0-9-_]+ had no leading-letter guard, so
+    // after a decimal '.' it matched digit-starting tokens like '7rem', '82rem',
+    // '025', '06em' and hashed them as CSS class names.
+    const c = makeComponent(
+      '<div class="cblock-lang"></div>',
+      ".cblock-lang { font-size: 0.7rem; letter-spacing: .06em; background: rgba(255,255,255,0.025); line-height: 1.7; } .cblock-body { font-size: 0.82rem; }",
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.cssFileContent).toContain("font-size: 0.7rem");
+    expect(result.cssFileContent).toContain("letter-spacing: .06em");
+    expect(result.cssFileContent).toContain("rgba(255,255,255,0.025)");
+    expect(result.cssFileContent).toContain("line-height: 1.7");
+    expect(result.cssFileContent).toContain("font-size: 0.82rem");
+    // Verify class names are still scoped
+    expect(result.cssFileContent).toContain("bascik__my-comp__cblock-lang");
+    expect(result.cssFileContent).toContain("bascik__my-comp__cblock-body");
+  });
+
   it("converts #id in an inline <style> tag and injects class", () => {
     const c = makeComponent(
       '<style>#panel { display: none; }</style><div id="panel"></div>',

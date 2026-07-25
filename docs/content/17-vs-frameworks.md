@@ -1,6 +1,6 @@
 ## Bascik vs Frameworks
 
-Bascik is not a framework. It is a build tool that resolves HTML components at compile time and then gets out of the way. No runtime ships to the browser. No custom attribute DSL to learn. No request lifecycle to manage. The output is plain HTML.
+Bascik is not a framework. It is a build tool that resolves HTML components at compile time and then gets out of the way. No runtime ships to the browser. There is no framework-owned component library or request lifecycle to learn. The output is plain HTML.
 
 That distinction matters when choosing a tool, so this page compares Bascik against lightweight frameworks that are often considered in the same conversation.
 
@@ -10,11 +10,16 @@ Bascik solves one problem: component reuse at build time. Write a navigation bar
 
 Everything else — interactivity, server communication, reactive state — is your decision. You can ship zero JavaScript, or you can add as much as the project needs. Bascik does not have an opinion.
 
+The custom component tags in a Bascik project are the ones **you create**. If you create `site-nav.html`, you can write `<site-nav>`. Bascik does not add a catalog of framework components with their own behavior or API.
+
+Bascik does use a small set of build instructions such as `data-bascik-slot`, `data-bascik-prop-*`, and `data-bascik-build`. They follow HTML's standard `data-*` extension mechanism, so browsers parse them as valid custom data attributes. Bascik consumes them during the build; they are not runtime directives that require browser JavaScript to interpret.
+
 ### HTMX
 
 [HTMX](https://htmx.org) is a popular library that extends HTML with server-driven partial updates. You add attributes like `hx-get`, `hx-post`, `hx-target`, and `hx-swap` to elements, and HTMX intercepts the resulting events, fires requests to your server, and swaps portions of the page with the response.
 
 **What HTMX adds to a page:**
+
 - ~14 KB of JavaScript (minified and gzipped) loaded on every page
 - A new attribute vocabulary to learn and maintain (`hx-get`, `hx-post`, `hx-target`, `hx-swap`, `hx-trigger`, `hx-push-url`, `hx-select`, `hx-boost`, and more)
 - A server requirement — HTMX works best when the backend returns HTML fragments
@@ -48,13 +53,15 @@ Like HTMX, Alpine is compatible with Bascik. Bascik resolves components at build
 
 ### The Key Difference
 
-| | Runtime shipped | Attribute DSL | Requires server | Build-time only |
-|---|---|---|---|---|
-| **Bascik** | None | None | No | Yes |
-| **HTMX** | ~14 KB | Yes | Yes | No |
-| **Alpine.js** | ~16 KB | Yes | No | No |
-| **petite-vue** | ~5 KB | Yes | No | No |
-| **Vue / React** | 40–100+ KB | Yes | No | No |
+| Tool | Runtime shipped | Components or API to learn | Attribute / source syntax | Requires server |
+| --- | ---: | --- | --- | --- |
+| **Bascik** | None | Only the components you create, plus slots and props | Standards-valid `data-bascik-*` attributes, consumed at build time | No |
+| **HTMX** | ~14 KB | Request, target, swap, trigger, and history concepts | `hx-*` custom attributes interpreted at runtime | Usually |
+| **Alpine.js** | ~16 KB | Alpine state and directive model | `x-*` and `@*` directives interpreted at runtime | No |
+| **petite-vue** | ~5 KB | Vue reactivity and directive model | `v-*` and `@*` directives interpreted at runtime | No |
+| **Vue / React** | 40–100+ KB | Framework component model, lifecycle, and state APIs | Vue directives/templates or React JSX | No |
+
+The browser can parse Bascik's source without needing to understand a new runtime language: custom tags are valid custom-element-shaped HTML names, and build instructions use the web platform's `data-*` convention. Bascik resolves both before deployment. By contrast, runtime directives such as `hx-get`, `x-data`, and `v-scope` only gain behavior after their library's JavaScript loads.
 
 Bascik does not compete with any of these tools for what they are good at. It fills the gap they leave open: component organization without a runtime. You can use Bascik as the build layer and any of the above as the interactivity layer — they compose cleanly.
 

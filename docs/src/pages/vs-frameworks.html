@@ -6,6 +6,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bascik vs Frameworks — Bascik Docs</title>
   <link rel="stylesheet" href="/css/styles.css" />
+  <style>
+    @media (max-width: 700px) {
+      .docs-content {
+        overflow: hidden;
+      }
+
+      .docs-content table {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        scrollbar-width: thin;
+      }
+
+      .docs-content th,
+      .docs-content td {
+        min-width: 148px;
+        white-space: normal;
+      }
+
+      .docs-content th:first-child,
+      .docs-content td:first-child {
+        min-width: 100px;
+      }
+    }
+  </style>
 </head>
 
 <body>

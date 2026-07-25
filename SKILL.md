@@ -19,6 +19,11 @@ This file contains the **complete, centralized documentation and development ski
 * It does not add any JavaScript to pages. Every script in the output was written by you.
 * It does not require Web Components, Shadow DOM, or any browser-specific API.
 
+### Source Vocabulary and Browser Compatibility
+* The custom component tags in a Bascik project are the components the developer creates; Bascik does not provide a framework-owned component catalog.
+* Build instructions such as `data-bascik-slot`, `data-bascik-prop-*`, and `data-bascik-build` use HTML's standards-valid `data-*` extension mechanism.
+* Bascik consumes those instructions at build time. They are not runtime directives that require a client library to interpret them.
+
 ---
 
 ## 2. Component Format
@@ -283,6 +288,31 @@ Components work inside `<head>` to organize metadata:
 * Use `console.log()` or `process.stdout.write()` to output HTML.
 * Build scripts run before component resolution, so their output can contain component tags.
 * On error, the script tag is replaced with an empty string and a warning is logged.
+
+### Rendering and Styling Markdown
+
+Install a Markdown parser such as `marked`, read the source in a build script, and write the resulting HTML to stdout:
+
+```html
+<script data-bascik-build>
+  import { readFile } from 'node:fs/promises';
+  import { marked } from 'marked';
+
+  const md = await readFile('./content/article.md', 'utf8');
+  console.log(marked(md));
+</script>
+```
+
+The parser emits ordinary HTML, so it can be styled by a global stylesheet or wrapped in a Bascik component. For reusable scoped styles, have the script emit `<markdown-content>${marked(md)}</markdown-content>` and give that component a default slot.
+
+Use wrapper descendant selectors for generated slot content:
+
+```css
+.markdown-content h2 { margin-block: 2.5rem 0.75rem; }
+.markdown-content blockquote { border-left: 4px solid currentColor; }
+```
+
+Do not rely on a bare `h2 {}` component rule for Markdown passed through a slot. Bare element rules are transformed before slot content is inserted; a scoped wrapper selector continues to match the generated descendants.
 
 ---
 

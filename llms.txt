@@ -1731,7 +1731,7 @@ When you build your site for production (`bascik --build`), this file is compile
 
 ## Bascik vs Frameworks
 
-Bascik is not a framework. It is a build tool that resolves HTML components at compile time and then gets out of the way. No runtime ships to the browser. No custom attribute DSL to learn. No request lifecycle to manage. The output is plain HTML.
+Bascik is not a framework. It is a build tool that resolves HTML components at compile time and then gets out of the way. No runtime ships to the browser. There is no framework-owned component library or request lifecycle to learn. The output is plain HTML.
 
 That distinction matters when choosing a tool, so this page compares Bascik against lightweight frameworks that are often considered in the same conversation.
 
@@ -1741,11 +1741,16 @@ Bascik solves one problem: component reuse at build time. Write a navigation bar
 
 Everything else — interactivity, server communication, reactive state — is your decision. You can ship zero JavaScript, or you can add as much as the project needs. Bascik does not have an opinion.
 
+The custom component tags in a Bascik project are the ones **you create**. If you create `site-nav.html`, you can write `<site-nav>`. Bascik does not add a catalog of framework components with their own behavior or API.
+
+Bascik does use a small set of build instructions such as `data-bascik-slot`, `data-bascik-prop-*`, and `data-bascik-build`. They follow HTML's standard `data-*` extension mechanism, so browsers parse them as valid custom data attributes. Bascik consumes them during the build; they are not runtime directives that require browser JavaScript to interpret.
+
 ### HTMX
 
 [HTMX](https://htmx.org) is a popular library that extends HTML with server-driven partial updates. You add attributes like `hx-get`, `hx-post`, `hx-target`, and `hx-swap` to elements, and HTMX intercepts the resulting events, fires requests to your server, and swaps portions of the page with the response.
 
 **What HTMX adds to a page:**
+
 - ~14 KB of JavaScript (minified and gzipped) loaded on every page
 - A new attribute vocabulary to learn and maintain (`hx-get`, `hx-post`, `hx-target`, `hx-swap`, `hx-trigger`, `hx-push-url`, `hx-select`, `hx-boost`, and more)
 - A server requirement — HTMX works best when the backend returns HTML fragments
@@ -1779,13 +1784,15 @@ Like HTMX, Alpine is compatible with Bascik. Bascik resolves components at build
 
 ### The Key Difference
 
-| | Runtime shipped | Attribute DSL | Requires server | Build-time only |
-|---|---|---|---|---|
-| **Bascik** | None | None | No | Yes |
-| **HTMX** | ~14 KB | Yes | Yes | No |
-| **Alpine.js** | ~16 KB | Yes | No | No |
-| **petite-vue** | ~5 KB | Yes | No | No |
-| **Vue / React** | 40–100+ KB | Yes | No | No |
+| Tool | Runtime shipped | Components or API to learn | Attribute / source syntax | Requires server |
+| --- | ---: | --- | --- | --- |
+| **Bascik** | None | Only the components you create, plus slots and props | Standards-valid `data-bascik-*` attributes, consumed at build time | No |
+| **HTMX** | ~14 KB | Request, target, swap, trigger, and history concepts | `hx-*` custom attributes interpreted at runtime | Usually |
+| **Alpine.js** | ~16 KB | Alpine state and directive model | `x-*` and `@*` directives interpreted at runtime | No |
+| **petite-vue** | ~5 KB | Vue reactivity and directive model | `v-*` and `@*` directives interpreted at runtime | No |
+| **Vue / React** | 40–100+ KB | Framework component model, lifecycle, and state APIs | Vue directives/templates or React JSX | No |
+
+The browser can parse Bascik's source without needing to understand a new runtime language: custom tags are valid custom-element-shaped HTML names, and build instructions use the web platform's `data-*` convention. Bascik resolves both before deployment. By contrast, runtime directives such as `hx-get`, `x-data`, and `v-scope` only gain behavior after their library's JavaScript loads.
 
 Bascik does not compete with any of these tools for what they are good at. It fills the gap they leave open: component organization without a runtime. You can use Bascik as the build layer and any of the above as the interactivity layer — they compose cleanly.
 
@@ -1899,6 +1906,154 @@ Read a Markdown file and output the HTML:
 ```
 
 The output replaces the script tag in the compiled HTML — no client-side JavaScript runs.
+
+### Styling Rendered Markdown
+
+A Markdown parser returns ordinary HTML such as `<h2>`, `<p>`, `<ul>`, `<blockquote>`, and `<pre>`. There is no separate Markdown styling system: once Bascik injects that HTML, the browser applies CSS through the normal cascade.
+
+#### Option 1: A Page or Global Stylesheet
+
+Wrap the generated content with a stable class and link a regular stylesheet from the page:
+
+```html
+<head>
+  <link rel="stylesheet" href="/css/content.css" />
+</head>
+<body>
+  <main class="markdown-body">
+    <script data-bascik-build>
+      import { readFile } from 'node:fs/promises';
+      import { marked } from 'marked';
+
+      const md = await readFile('./content/article.md', 'utf8');
+      console.log(marked(md));
+    </script>
+  </main>
+</body>
+```
+
+Then style the HTML elements the parser emits:
+
+```css
+/* src/pages/css/content.css */
+.markdown-body {
+  max-width: 68ch;
+  margin-inline: auto;
+  color: #25282d;
+  font: 1.05rem/1.75 Georgia, serif;
+}
+
+.markdown-body h2 {
+  margin-block: 2.5rem 0.75rem;
+  font: 700 1.75rem/1.2 system-ui, sans-serif;
+}
+
+.markdown-body a {
+  color: #086f83;
+  text-decoration-thickness: 0.12em;
+  text-underline-offset: 0.16em;
+}
+
+.markdown-body blockquote {
+  margin-inline: 0;
+  padding: 1rem 1.25rem;
+  border-left: 4px solid #d7b329;
+  background: #fff9df;
+}
+
+.markdown-body pre {
+  overflow-x: auto;
+  padding: 1rem;
+  color: #f7f7f2;
+  background: #202329;
+}
+```
+
+This is the simplest choice when several pages share one editorial design. The generated elements are plain HTML, so responsive styles, custom properties, print styles, and media queries all work normally.
+
+#### Option 2: A Scoped Bascik Component
+
+For a portable content style, create a component whose default slot receives the generated HTML:
+
+```html
+<!-- src/components/markdown-content/markdown-content.html -->
+<article class="markdown-content">
+  <div data-bascik-slot></div>
+</article>
+```
+
+Pair it with component CSS. Start selectors with the wrapper class so the rules apply to HTML inserted through the slot:
+
+```css
+/* src/components/markdown-content/markdown-content.css */
+.markdown-content {
+  max-width: 68ch;
+  margin-inline: auto;
+  color: #25282d;
+  font: 1.05rem/1.75 Georgia, serif;
+}
+
+.markdown-content h2 {
+  margin-block: 2.5rem 0.75rem;
+  color: #142c35;
+  font: 700 1.75rem/1.2 system-ui, sans-serif;
+}
+
+.markdown-content blockquote {
+  margin-inline: 0;
+  padding: 1rem 1.25rem;
+  border-left: 4px solid #d7b329;
+  background: #fff9df;
+}
+
+.markdown-content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+```
+
+Have the build script emit the component tag around the parsed Markdown:
+
+```html
+<script data-bascik-build>
+  import { readFile } from 'node:fs/promises';
+  import { marked } from 'marked';
+
+  const md = await readFile('./content/article.md', 'utf8');
+  console.log(`<markdown-content>${marked(md)}</markdown-content>`);
+</script>
+```
+
+Bascik runs the script first, sees the emitted `<markdown-content>` tag, resolves it, fills its slot, and includes its scoped CSS. Only that component's wrapper receives the generated scoped class; selectors such as `.markdown-content h2` then style the ordinary heading descendants inside it.
+
+> **Use a wrapper selector for slot content.** A bare `h2 {}` rule in component CSS is transformed by Bascik and attached to headings present in the component template. Markdown headings arrive through the slot later, so write `.markdown-content h2 {}` for generated content.
+
+#### What Reaches the Browser
+
+Given this Markdown:
+
+```md
+## A practical heading
+
+Markdown stays comfortable for authors, while the published page stays **plain HTML**.
+
+> Content can have a distinct editorial treatment without adding a client runtime.
+```
+
+The parser produces normal elements inside the resolved component:
+
+```html
+<article class="bascik__markdown-content__markdown-content">
+  <h2>A practical heading</h2>
+  <p>Markdown stays comfortable for authors, while the published page stays <strong>plain HTML</strong>.</p>
+  <blockquote>
+    <p>Content can have a distinct editorial treatment without adding a client runtime.</p>
+  </blockquote>
+</article>
+```
+
+The generated class name may be shortened in production when attribute obfuscation is enabled. You continue writing `.markdown-content` in the source; Bascik keeps the HTML and CSS names synchronized.
 
 ### Front Matter with gray-matter
 

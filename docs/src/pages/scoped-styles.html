@@ -48,35 +48,57 @@
         <p>This component uses custom classes and styles that are completely isolated from the rest of the
           documentation.</p>
 
-        <component-demo data-bascik-prop-file="src/components/feature-card/feature-card.css">
+        <component-demo data-bascik-prop-file="src/components/feature-card/">
           <div data-bascik-slot="example">
             <feature-card data-bascik-prop-label="Scoped" data-bascik-prop-title="Isolated Styles"
               data-bascik-prop-desc="Hover over me to see transitions and shadows that won't leak out.">
             </feature-card>
           </div>
-          <div data-bascik-slot="code">
-            <code-block data-bascik-prop-lang="css">.fcard {
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  padding: 24px;
-  transition: transform .2s;
-}
-.fcard:hover {
-  transform: translateY(-2px);
-  border-color: var(--accent);
-}</code-block>
+          <div data-bascik-slot="source-html">
+            <code-block data-bascik-prop-lang="html">&lt;div class="fcard"&gt;
+              &lt;p class="fcard-label" data-bascik-prop-label&gt;&lt;/p&gt;
+              &lt;h3 class="fcard-title" data-bascik-prop-title&gt;&lt;/h3&gt;
+              &lt;p class="fcard-desc" data-bascik-prop-desc&gt;&lt;/p&gt;
+              &lt;/div&gt;</code-block>
           </div>
-          <div data-bascik-slot="output">
+          <div data-bascik-slot="source-css">
+            <code-block data-bascik-prop-lang="css">.fcard {
+              background: var(--elevated);
+              border: 1px solid var(--border);
+              padding: 24px;
+              transition: transform .2s;
+              }
+              .fcard:hover {
+              transform: translateY(-2px);
+              border-color: var(--accent);
+              }</code-block>
+          </div>
+          <div data-bascik-slot="source-js">
+            <code-block data-bascik-prop-lang="js">// This component does not need JavaScript.</code-block>
+          </div>
+          <div data-bascik-slot="output-html">
+            <code-block data-bascik-prop-lang="html">&lt;div class="bascik__feature-card__x123__fcard"&gt;
+              &lt;p class="bascik__feature-card__x123__fcard-label"&gt;Scoped&lt;/p&gt;
+              &lt;h3 class="bascik__feature-card__x123__fcard-title"&gt;Isolated Styles&lt;/h3&gt;
+              &lt;p class="bascik__feature-card__x123__fcard-desc"&gt;
+              Hover over me to see isolated transitions and shadows.
+              &lt;/p&gt;
+              &lt;/div&gt;</code-block>
+          </div>
+          <div data-bascik-slot="output-css">
             <code-block data-bascik-prop-lang="css">.bascik__feature-card__x123__fcard {
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  padding: 24px;
-  transition: transform .2s;
-}
-.bascik__feature-card__x123__fcard:hover {
-  transform: translateY(-2px);
-  border-color: var(--accent);
-}</code-block>
+              background: var(--elevated);
+              border: 1px solid var(--border);
+              padding: 24px;
+              transition: transform .2s;
+              }
+              .bascik__feature-card__x123__fcard:hover {
+              transform: translateY(-2px);
+              border-color: var(--accent);
+              }</code-block>
+          </div>
+          <div data-bascik-slot="output-js">
+            <code-block data-bascik-prop-lang="js">// No JavaScript is emitted for this component.</code-block>
           </div>
         </component-demo>
 

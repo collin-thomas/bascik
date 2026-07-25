@@ -530,6 +530,23 @@ describe("scopeInlineStyleTags", () => {
     expect(result).toContain("-0.02em");
   });
 
+  it("does NOT mangle sub-1 decimal values (0.7rem, .06em, 0.025, 0.82rem)", () => {
+    // Regression: the old regex [a-z0-9-_]+ had no leading-letter guard, so
+    // after a decimal '.' it matched digit-starting tokens like '7rem', '06em',
+    // '025', '82rem' and scoped them as if they were CSS class names.
+    const html =
+      "<style>.cblock-lang { font-size: 0.7rem; letter-spacing: .06em; background: rgba(255,255,255,0.025); } .cblock-body { font-size: 0.82rem; line-height: 1.7; }</style>";
+    const { html: result } = scopeInlineStyleTags(html, "my-comp");
+    expect(result).toContain("font-size: 0.7rem");
+    expect(result).toContain("letter-spacing: .06em");
+    expect(result).toContain("rgba(255,255,255,0.025)");
+    expect(result).toContain("font-size: 0.82rem");
+    expect(result).toContain("line-height: 1.7");
+    // Class names must still be scoped
+    expect(result).toContain(".bascik__my-comp__cblock-lang");
+    expect(result).toContain(".bascik__my-comp__cblock-body");
+  });
+
   it("still scopes class names when decimal values are present", () => {
     const html =
       "<style>.nav { opacity: 0.5; } .nav:hover { opacity: 1; }</style>";
