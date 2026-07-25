@@ -54,7 +54,8 @@
           with a <code>404</code> status code.</p>
         <p>When you build your site for production (<code>bascik --build</code>), this file is compiled to
           <code>dist/404.html</code>, which is the standard location recognized by most static hosting providers (such
-          as GitHub Pages, Netlify, Vercel, and Cloudflare Pages) to serve custom 404 pages.</p>
+          as GitHub Pages, Netlify, Vercel, and Cloudflare Pages) to serve custom 404 pages.
+        </p>
 
         <h2>Your First Component</h2>
 
@@ -111,6 +112,77 @@
               href="/scoped-styles">Scoped Styles →</a>
           </p>
         </div>
+
+        <h2>CLI &amp; Development Workflow</h2>
+        <p>Bascik's command-line interface is designed to provide clean, minimal, and informative terminal output. Here
+          is a guide on what you will see in your terminal during development.</p>
+
+        <h3>Starting the Dev Server</h3>
+        <p>When you start the dev server via <code>yarn dev</code> (or <code>bascik</code>), Bascik automatically
+          generates local SSL/TLS certificates for its built-in HTTP/2 server, transpiles all pages inside your pages
+          directory, and begins watching for changes:</p>
+        <code-block data-bascik-prop-lang="terminal">Generated self-signed certificate for the development server
+          Server running at https://localhost:8443
+
+          transpiled: pages/getting-started.html
+          transpiled: pages/index.html
+          transpiled: pages/about.html
+
+          ✓ 3 pages transpiled in 45ms</code-block>
+
+        <h3>Watching for File Changes</h3>
+        <p>While the dev server is active, Bascik watches your file system and incrementally updates your build as files
+          are added, updated, or removed.</p>
+
+        <ul>
+          <li>
+            <strong>Modifying/Adding Pages:</strong> Editing or adding an HTML page in your pages directory (e.g.
+            <code>src/pages/about.html</code>) triggers incremental transpilation of just that page:
+            <code-block data-bascik-prop-lang="terminal">transpiled: pages/about.html</code-block>
+          </li>
+          <li>
+            <strong>Modifying Components:</strong> Editing a component (e.g.
+            <code>src/components/site-nav/site-nav.html</code>) triggers selective transpilation. Bascik tracks
+            dependency mappings and only rebuilds pages that actually reference that component:
+            <code-block data-bascik-prop-lang="terminal">transpiled: pages/index.html
+              transpiled: pages/about.html</code-block>
+          </li>
+          <li>
+            <strong>Static Assets:</strong> Replicating any non-HTML static assets (like custom CSS, JS files, or
+            images) from pages directly into the output directory:
+            <code-block data-bascik-prop-lang="terminal">copied:
+              /Users/collin/github/bascik/docs/src/pages/css/custom.css</code-block>
+          </li>
+          <li>
+            <strong>Deleting Pages:</strong> Removing a page from your pages directory automatically cleans up its
+            compiled output counterpart to prevent dead files:
+            <code-block data-bascik-prop-lang="terminal">deleted file:
+              /Users/collin/github/bascik/docs/src/pages/old-page.html</code-block>
+          </li>
+        </ul>
+
+        <h3>Transpilation &amp; Build Errors</h3>
+        <p>If you introduce a syntax mistake or a runtime error inside a custom build script, Bascik prevents the server
+          from crashing, gracefully logs a descriptive error with the file and exact line/column location, and continues
+          running.</p>
+
+        <ul>
+          <li>
+            <strong>Component Transpilation Failure:</strong> If a component markup or CSS scoping parser fails during
+            transpilation:
+            <code-block data-bascik-prop-lang="terminal">[bascik] Transpilation failed for component &lt;site-nav&gt;
+              during css-scoping in "pages/about.html" at (line 22, column 8)
+              Defined in component template: "components/site-nav/site-nav.html"
+              Error: ParseError: CSS Selector is invalid or could not be parsed.</code-block>
+          </li>
+          <li>
+            <strong>Build Script Failure:</strong> If a build-time JavaScript execution block (using
+            <code>&lt;script data-bascik-build&gt;</code>) encounters an error:
+            <code-block data-bascik-prop-lang="terminal">[bascik] build script error in "pages/index.html" at (line 12,
+              column 5):
+              ReferenceError: marked is not defined</code-block>
+          </li>
+        </ul>
 
         <h2>Scoped Styles (Quick Intro)</h2>
         <p>Pair a <code>.css</code> file with your component HTML by using the same name in the same directory:</p>
