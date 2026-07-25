@@ -154,3 +154,67 @@ Script tags with a `type` other than `text/javascript` (e.g. `type="application/
 ```
 
 > **Tip:** Disable JS scoping entirely with `scopeScriptBlocks: false` in [bascik.config.js](/configuration).
+
+### Live Demo
+
+Two instances of `test-comp` run independently on the same page. Clicking the button in one instance only affects elements inside that instance.
+
+**Source HTML** (`test-comp.html` — core elements, scripts omitted for brevity):
+
+<!-- demo:source-html -->
+```html
+<div id="my-div-id" name="my-name">Test Comp Div Tag</div>
+<p name="my-name">Test Comp P Tag</p>
+<button id="btn" class="btn">Change Color</button>
+```
+
+**Source CSS:**
+
+<!-- demo:source-css -->
+```css
+.btn { margin: 16px; }
+.btn:hover { background-color: #333; color: #fff; }
+```
+
+**Source JS** (one of the scripts in `test-comp.html`):
+
+<!-- demo:source-js -->
+```js
+document.getElementById("btn").addEventListener("click", () => {
+  document.getElementsByName('my-name').forEach(el => {
+    el.style.color = '#ff7a09';
+  });
+});
+```
+
+**Compiled output HTML** (IDs and name attributes scoped per instance):
+
+<!-- demo:output-html -->
+```html
+<div id="bascik__test-comp__a1b2c3__my-div-id"
+     name="bascik__test-comp__a1b2c3__my-name">Test Comp Div Tag</div>
+<p name="bascik__test-comp__a1b2c3__my-name">Test Comp P Tag</p>
+<button id="bascik__test-comp__a1b2c3__btn"
+        class="bascik__test-comp__btn">Change Color</button>
+```
+
+**Compiled output CSS** (class selectors scoped, shared across all instances):
+
+<!-- demo:output-css -->
+```css
+.bascik__test-comp__btn { margin: 16px; }
+.bascik__test-comp__btn:hover { background-color: #333; color: #fff; }
+```
+
+**Compiled output JS** (selector strings rewritten to match scoped names, wrapped in IIFE):
+
+<!-- demo:output-js -->
+```js
+(function() {
+  document.getElementById("bascik__test-comp__a1b2c3__btn")
+    .addEventListener("click", () => {
+      document.getElementsByName('bascik__test-comp__a1b2c3__my-name')
+        .forEach(el => { el.style.color = '#ff7a09'; });
+    });
+})();
+```

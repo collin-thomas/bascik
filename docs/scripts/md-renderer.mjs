@@ -33,6 +33,43 @@ import { marked } from 'marked';
  *   the output. Useful when the page HTML shell already contains a <h1> that matches
  *   the section heading at the top of the MD file (needed for llms.txt consistency).
  */
+/**
+ * Extracts and HTML-escapes a specific named code block from a Markdown file.
+ *
+ * Code blocks are identified by an HTML comment marker placed immediately
+ * before the fenced code block in the MD source:
+ *
+ *   <!-- demo:source-html -->
+ *   ```html
+ *   <div class="fcard">…</div>
+ *   ```
+ *
+ * Use inside a `data-bascik-build` script in a slot to keep code examples
+ * in MD (so they feed llms.txt / SKILL.md) rather than writing raw
+ * &lt;/&gt; entities directly in the HTML page.
+ *
+ * @param {string} filePath - Path relative to process.cwd().
+ * @param {string} markerId - The marker identifier, e.g. 'source-html'.
+ * @returns {Promise<string>} HTML-escaped code ready for a <code-block> slot.
+ */
+export async function extractDemoBlock(filePath, markerId) {
+  const md = await readFile(filePath, 'utf8');
+  const markerRe = new RegExp(`<!--\\s*demo:${markerId}\\s*-->`, 'i');
+  const markerMatch = markerRe.exec(md);
+  if (!markerMatch) return `<!-- demo:${markerId} not found in ${filePath} -->`;
+
+  const rest = md.slice(markerMatch.index + markerMatch[0].length);
+  // Match the next fenced code block (``` ... ```)
+  const codeRe = /^```\w*\n([\s\S]*?)\n^```/m;
+  const codeMatch = codeRe.exec(rest);
+  if (!codeMatch) return `<!-- no code block after demo:${markerId} -->`;
+
+  return codeMatch[1]
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 export async function renderMd(filePath, { skipFirstHeading = false } = {}) {
   const md = await readFile(filePath, 'utf8');
   let html = marked(md);

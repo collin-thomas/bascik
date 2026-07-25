@@ -78,3 +78,31 @@ A good real-world use of props is a card component with a configurable label, ti
   data-bascik-prop-desc="Automatic browser reload on every change.">
 </feature-card>
 ```
+
+### Live Demo
+
+The interactive props demo passes values directly to the `feature-card` component via `data-bascik-prop-*` attributes.
+
+**Usage (the code you write):**
+
+<!-- demo:code -->
+```html
+<feature-card
+  data-bascik-prop-label="Interactive"
+  data-bascik-prop-title="Component Props"
+  data-bascik-prop-desc="These values are injected into the component template at build time.">
+</feature-card>
+```
+
+**Compiled output** (prop placeholders replaced, component HTML inlined):
+
+<!-- demo:output -->
+```html
+<div class="bascik__feature-card__fcard">
+  <p class="bascik__feature-card__fcard-label">Interactive</p>
+  <h3 class="bascik__feature-card__fcard-title">Component Props</h3>
+  <p class="bascik__feature-card__fcard-desc">
+    These values are injected into the component template at build time.
+  </p>
+</div>
+```

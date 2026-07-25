@@ -56,29 +56,22 @@
           </div>
           <div data-bascik-slot="code">
             <code-block data-bascik-prop-lang="html">
-              &lt;feature-card
-              data-bascik-prop-label="Example"
-              data-bascik-prop-title="Named Slots"
-              data-bascik-prop-desc="..."&gt;
-              &lt;!-- content for default slot --&gt;
-              &lt;div style="padding-top:12px;..."&gt;
-              &lt;button class="btn btn-primary"&gt;Read More&lt;/button&gt;
-              &lt;/div&gt;
-              &lt;/feature-card&gt;
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/05-slots.md', 'code'));
+              </script>
             </code-block>
           </div>
           <div data-bascik-slot="output">
             <code-block data-bascik-prop-lang="html">
-              &lt;div class="bascik__feature-card__fcard"&gt;
-              &lt;p class="bascik__feature-card__fcard-label"&gt;Example&lt;/p&gt;
-              &lt;h3 class="bascik__feature-card__fcard-title"&gt;Named Slots&lt;/h3&gt;
-              &lt;p class="bascik__feature-card__fcard-desc"&gt;...&lt;/p&gt;
-              &lt;div class="bascik__feature-card__fcard-slot"&gt;
-              &lt;div style="..."&gt;
-              &lt;button class="..."&gt;Read More&lt;/button&gt;
-              &lt;/div&gt;
-              &lt;/div&gt;
-              &lt;/div&gt;
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/05-slots.md', 'output'));
+              </script>
             </code-block>
           </div>
         </component-demo>

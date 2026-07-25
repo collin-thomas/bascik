@@ -55,20 +55,22 @@
           </div>
           <div data-bascik-slot="code">
             <code-block data-bascik-prop-lang="html">
-              &lt;feature-card
-              data-bascik-prop-label="Interactive"
-              data-bascik-prop-title="Component Props"
-              data-bascik-prop-desc="..."&gt;
-              &lt;/feature-card&gt;
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/06-props.md', 'code'));
+              </script>
             </code-block>
           </div>
           <div data-bascik-slot="output">
             <code-block data-bascik-prop-lang="html">
-              &lt;div class="bascik__feature-card__fcard"&gt;
-              &lt;p class="bascik__feature-card__fcard-label"&gt;Interactive&lt;/p&gt;
-              &lt;h3 class="bascik__feature-card__fcard-title"&gt;Component Props&lt;/h3&gt;
-              &lt;p class="bascik__feature-card__fcard-desc"&gt;...&lt;/p&gt;
-              &lt;/div&gt;
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/06-props.md', 'output'));
+              </script>
             </code-block>
           </div>
         </component-demo>

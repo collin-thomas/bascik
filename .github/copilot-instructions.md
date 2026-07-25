@@ -97,6 +97,46 @@ Then manually update the relevant section in `SKILL.md` at the repo root to refl
 
 Add new pages to `docs/src/components/docs-sidebar/docs-sidebar.html`. Group under the appropriate `<p class="sidebar-heading">` section.
 
+## Code in HTML Slots (component-demo pattern)
+
+Interactive demos use `<component-demo>` with named slots. **Code examples inside those slots must come from MD files** — not written inline as `&lt;`/`&gt;` entities in the HTML page.
+
+### Why MD-first
+
+MD files feed `llms.txt` and `SKILL.md`. If code examples only exist in HTML slots, LLMs never see them. Write example code in the relevant `docs/content/NN-topic.md` file first; the HTML slot reads from there.
+
+### How to add a demo code block to an MD file
+
+Place an HTML comment marker immediately before the fenced code block:
+
+```markdown
+<!-- demo:source-html -->
+` ` `html
+<div class="fcard">
+  <p class="fcard-label" data-bascik-prop-label></p>
+</div>
+` ` `
+```
+
+Marker IDs are arbitrary strings (e.g. `source-html`, `output-css`, `code`, `output`).
+
+### How to use it in an HTML slot
+
+Use `extractDemoBlock` from `scripts/md-renderer.mjs` inside a `data-bascik-build` script. Note: the `<script data-bascik-build>` must be placed **immediately after** the `<code-block>` opening tag with no newline between them, so the injected content has no leading blank line.
+
+```html
+<div data-bascik-slot="source-html">
+  <code-block data-bascik-prop-lang="html"><script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { extractDemoBlock } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+    );
+    console.log(await extractDemoBlock('./content/03-scoped-css.md', 'source-html'));
+  </script></code-block>
+</div>
+```
+
 ## Fix Bugs in the Package, Not the Docs
 
 This repo is the **bascik package itself** (`pkg/`). When a rendering or build issue (e.g. minification stripping newlines, whitespace collapsing, HTML output mangled) would otherwise require a workaround in the docs content or build scripts, **fix it in `pkg/src/` instead**. Do not paper over bascik bugs with hacks in the docs layer.

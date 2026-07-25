@@ -179,3 +179,136 @@ Avoid this anti-pattern:
 ```
 
 Alternatively, set `deduplicateCss: false` in `bascik.config.js` to switch to per-instance class scoping. This makes class selectors behave like id selectors at the cost of emitting one `<style>` block per component instance.
+
+### Live Demo
+
+The `feature-card` component used throughout these docs illustrates scoped styles end-to-end. Source files and compiled output are shown below.
+
+**Source HTML** (`feature-card.html`):
+
+<!-- demo:source-html -->
+```html
+<div class="fcard">
+  <p class="fcard-label" data-bascik-prop-label></p>
+  <h3 class="fcard-title" data-bascik-prop-title></h3>
+  <p class="fcard-desc" data-bascik-prop-desc></p>
+  <div class="fcard-slot">
+    <div data-bascik-slot></div>
+  </div>
+</div>
+```
+
+**Source CSS** (`feature-card.css`):
+
+<!-- demo:source-css -->
+```css
+.fcard {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+
+.fcard:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 0 0 1px var(--accent-dim), 0 8px 32px rgba(0,0,0,0.3);
+  transform: translateY(-2px);
+}
+
+.fcard-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.fcard-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.fcard-desc {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 0;
+}
+
+.fcard-slot {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.fcard-slot:empty {
+  display: none;
+}
+```
+
+**Compiled output HTML** (class names scoped, props injected, slot wrappers removed):
+
+<!-- demo:output-html -->
+```html
+<div class="bascik__feature-card__fcard">
+  <p class="bascik__feature-card__fcard-label">Scoped</p>
+  <h3 class="bascik__feature-card__fcard-title">Isolated Styles</h3>
+  <p class="bascik__feature-card__fcard-desc">
+    Hover over me to see transitions and shadows that won't leak out.
+  </p>
+</div>
+```
+
+**Compiled output CSS** (all class selectors prefixed with the component scope):
+
+<!-- demo:output-css -->
+```css
+.bascik__feature-card__fcard {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+
+.bascik__feature-card__fcard:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 0 0 1px var(--accent-dim), 0 8px 32px rgba(0,0,0,0.3);
+  transform: translateY(-2px);
+}
+
+.bascik__feature-card__fcard-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.bascik__feature-card__fcard-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.bascik__feature-card__fcard-desc {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 0;
+}
+
+.bascik__feature-card__fcard-slot {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.bascik__feature-card__fcard-slot:empty {
+  display: none;
+}
+```

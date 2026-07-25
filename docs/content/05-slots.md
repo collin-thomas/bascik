@@ -90,3 +90,38 @@ At the usage site:
 ```
 
 > **How it works:** Named slot wrappers in the usage inner HTML are extracted by name and injected into the matching `data-bascik-slot="name"` placeholder in the template. Everything left over goes into the default slot.
+
+### Live Demo
+
+The interactive slot demo passes a button into the `feature-card` component's default slot.
+
+**Usage (the code you write):**
+
+<!-- demo:code -->
+```html
+<feature-card
+  data-bascik-prop-label="Example"
+  data-bascik-prop-title="Named Slots"
+  data-bascik-prop-desc="...">
+  <!-- content for default slot -->
+  <div style="padding-top:12px;...">
+    <button class="btn btn-primary">Read More</button>
+  </div>
+</feature-card>
+```
+
+**Compiled output** (slot content injected into the `fcard-slot` div):
+
+<!-- demo:output -->
+```html
+<div class="bascik__feature-card__fcard">
+  <p class="bascik__feature-card__fcard-label">Example</p>
+  <h3 class="bascik__feature-card__fcard-title">Named Slots</h3>
+  <p class="bascik__feature-card__fcard-desc">...</p>
+  <div class="bascik__feature-card__fcard-slot">
+    <div style="...">
+      <button class="...">Read More</button>
+    </div>
+  </div>
+</div>
+```

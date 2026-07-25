@@ -55,52 +55,62 @@
             </div>
             <div data-bascik-slot="source-html">
               <code-block data-bascik-prop-lang="html">
-                &lt;div id="my-div-id" name="my-name"&gt;Test Comp Div Tag&lt;/div&gt;
-                &lt;p name="my-name"&gt;Test Comp P Tag&lt;/p&gt;
-                &lt;button id="btn" class="btn"&gt;Change Color&lt;/button&gt;
+                <script data-bascik-build>
+                  import { join } from 'node:path';
+                  import { pathToFileURL } from 'node:url';
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  console.log(await extractDemoBlock('./content/04-scoped-js.md', 'source-html'));
+                </script>
               </code-block>
             </div>
             <div data-bascik-slot="source-css">
               <code-block data-bascik-prop-lang="css">
-                .btn { margin: 16px; }
-                .btn:hover { background-color: #333; color: #fff; }
+                <script data-bascik-build>
+                  import { join } from 'node:path';
+                  import { pathToFileURL } from 'node:url';
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  console.log(await extractDemoBlock('./content/04-scoped-js.md', 'source-css'));
+                </script>
               </code-block>
             </div>
             <div data-bascik-slot="source-js">
               <code-block data-bascik-prop-lang="js">
-                document.getElementById("btn").addEventListener("click", () => {
-                document.getElementsByName('my-name').forEach(el => {
-                el.style.color = '#ff7a09';
-                });
-                });
+                <script data-bascik-build>
+                  import { join } from 'node:path';
+                  import { pathToFileURL } from 'node:url';
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  console.log(await extractDemoBlock('./content/04-scoped-js.md', 'source-js'));
+                </script>
               </code-block>
             </div>
             <div data-bascik-slot="output-html">
               <code-block data-bascik-prop-lang="html">
-                &lt;div id="bascik__test-comp__1234__my-div-id"
-                name="bascik__test-comp__1234__my-name"&gt;
-                Test Comp Div Tag
-                &lt;/div&gt;
-                &lt;p name="bascik__test-comp__1234__my-name"&gt;Test Comp P Tag&lt;/p&gt;
-                &lt;button id="bascik__test-comp__1234__btn"
-                class="bascik__test-comp__btn"&gt;Change Color&lt;/button&gt;
+                <script data-bascik-build>
+                  import { join } from 'node:path';
+                  import { pathToFileURL } from 'node:url';
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  console.log(await extractDemoBlock('./content/04-scoped-js.md', 'output-html'));
+                </script>
               </code-block>
             </div>
             <div data-bascik-slot="output-css">
               <code-block data-bascik-prop-lang="css">
-                .bascik__test-comp__btn { margin: 16px; }
-                .bascik__test-comp__btn:hover { background-color: #333; color: #fff; }
+                <script data-bascik-build>
+                  import { join } from 'node:path';
+                  import { pathToFileURL } from 'node:url';
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  console.log(await extractDemoBlock('./content/04-scoped-js.md', 'output-css'));
+                </script>
               </code-block>
             </div>
             <div data-bascik-slot="output-js">
               <code-block data-bascik-prop-lang="js">
-                (function() {
-                document.getElementById("bascik__test-comp__1234__btn")
-                .addEventListener("click", () => {
-                document.getElementsByName('bascik__test-comp__1234__my-name')
-                .forEach(el => { el.style.color = '#ff7a09'; });
-                });
-                })();
+                <script data-bascik-build>
+                  import { join } from 'node:path';
+                  import { pathToFileURL } from 'node:url';
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  console.log(await extractDemoBlock('./content/04-scoped-js.md', 'output-js'));
+                </script>
               </code-block>
             </div>
           </component-demo>
@@ -111,52 +121,62 @@
             </div>
             <div data-bascik-slot="source-html">
               <code-block data-bascik-prop-lang="html">
-                &lt;div id="my-div-id" name="my-name"&gt;Test Comp Div Tag&lt;/div&gt;
-                &lt;p name="my-name"&gt;Test Comp P Tag&lt;/p&gt;
-                &lt;button id="btn" class="btn"&gt;Change Color&lt;/button&gt;
+                <script data-bascik-build>
+                  import { join } from 'node:path';
+                  import { pathToFileURL } from 'node:url';
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  console.log(await extractDemoBlock('./content/04-scoped-js.md', 'source-html'));
+                </script>
               </code-block>
             </div>
             <div data-bascik-slot="source-css">
               <code-block data-bascik-prop-lang="css">
-                .btn { margin: 16px; }
-                .btn:hover { background-color: #333; color: #fff; }
+                <script data-bascik-build>
+                  import { join } from 'node:path';
+                  import { pathToFileURL } from 'node:url';
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  console.log(await extractDemoBlock('./content/04-scoped-js.md', 'source-css'));
+                </script>
               </code-block>
             </div>
             <div data-bascik-slot="source-js">
               <code-block data-bascik-prop-lang="js">
-                document.getElementById("btn").addEventListener("click", () => {
-                document.getElementsByName('my-name').forEach(el => {
-                el.style.color = '#ff7a09';
-                });
-                });
+                <script data-bascik-build>
+                  import { join } from 'node:path';
+                  import { pathToFileURL } from 'node:url';
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  console.log(await extractDemoBlock('./content/04-scoped-js.md', 'source-js'));
+                </script>
               </code-block>
             </div>
             <div data-bascik-slot="output-html">
               <code-block data-bascik-prop-lang="html">
-                &lt;div id="bascik__test-comp__5678__my-div-id"
-                name="bascik__test-comp__5678__my-name"&gt;
-                Test Comp Div Tag
-                &lt;/div&gt;
-                &lt;p name="bascik__test-comp__5678__my-name"&gt;Test Comp P Tag&lt;/p&gt;
-                &lt;button id="bascik__test-comp__5678__btn"
-                class="bascik__test-comp__btn"&gt;Change Color&lt;/button&gt;
+                <script data-bascik-build>
+                  import { join } from 'node:path';
+                  import { pathToFileURL } from 'node:url';
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  console.log(await extractDemoBlock('./content/04-scoped-js.md', 'output-html'));
+                </script>
               </code-block>
             </div>
             <div data-bascik-slot="output-css">
               <code-block data-bascik-prop-lang="css">
-                .bascik__test-comp__btn { margin: 16px; }
-                .bascik__test-comp__btn:hover { background-color: #333; color: #fff; }
+                <script data-bascik-build>
+                  import { join } from 'node:path';
+                  import { pathToFileURL } from 'node:url';
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  console.log(await extractDemoBlock('./content/04-scoped-js.md', 'output-css'));
+                </script>
               </code-block>
             </div>
             <div data-bascik-slot="output-js">
               <code-block data-bascik-prop-lang="js">
-                (function() {
-                document.getElementById("bascik__test-comp__5678__btn")
-                .addEventListener("click", () => {
-                document.getElementsByName('bascik__test-comp__5678__my-name')
-                .forEach(el => { el.style.color = '#ff7a09'; });
-                });
-                })();
+                <script data-bascik-build>
+                  import { join } from 'node:path';
+                  import { pathToFileURL } from 'node:url';
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  console.log(await extractDemoBlock('./content/04-scoped-js.md', 'output-js'));
+                </script>
               </code-block>
             </div>
           </component-demo>

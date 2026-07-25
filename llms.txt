@@ -218,6 +218,139 @@ Avoid this anti-pattern:
 
 Alternatively, set `deduplicateCss: false` in `bascik.config.js` to switch to per-instance class scoping. This makes class selectors behave like id selectors at the cost of emitting one `<style>` block per component instance.
 
+### Live Demo
+
+The `feature-card` component used throughout these docs illustrates scoped styles end-to-end. Source files and compiled output are shown below.
+
+**Source HTML** (`feature-card.html`):
+
+<!-- demo:source-html -->
+```html
+<div class="fcard">
+  <p class="fcard-label" data-bascik-prop-label></p>
+  <h3 class="fcard-title" data-bascik-prop-title></h3>
+  <p class="fcard-desc" data-bascik-prop-desc></p>
+  <div class="fcard-slot">
+    <div data-bascik-slot></div>
+  </div>
+</div>
+```
+
+**Source CSS** (`feature-card.css`):
+
+<!-- demo:source-css -->
+```css
+.fcard {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+
+.fcard:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 0 0 1px var(--accent-dim), 0 8px 32px rgba(0,0,0,0.3);
+  transform: translateY(-2px);
+}
+
+.fcard-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.fcard-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.fcard-desc {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 0;
+}
+
+.fcard-slot {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.fcard-slot:empty {
+  display: none;
+}
+```
+
+**Compiled output HTML** (class names scoped, props injected, slot wrappers removed):
+
+<!-- demo:output-html -->
+```html
+<div class="bascik__feature-card__fcard">
+  <p class="bascik__feature-card__fcard-label">Scoped</p>
+  <h3 class="bascik__feature-card__fcard-title">Isolated Styles</h3>
+  <p class="bascik__feature-card__fcard-desc">
+    Hover over me to see transitions and shadows that won't leak out.
+  </p>
+</div>
+```
+
+**Compiled output CSS** (all class selectors prefixed with the component scope):
+
+<!-- demo:output-css -->
+```css
+.bascik__feature-card__fcard {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+
+.bascik__feature-card__fcard:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 0 0 1px var(--accent-dim), 0 8px 32px rgba(0,0,0,0.3);
+  transform: translateY(-2px);
+}
+
+.bascik__feature-card__fcard-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.bascik__feature-card__fcard-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.bascik__feature-card__fcard-desc {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 0;
+}
+
+.bascik__feature-card__fcard-slot {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.bascik__feature-card__fcard-slot:empty {
+  display: none;
+}
+```
+
 ## Scoped JavaScript
 
 ### Scoping Model
@@ -375,6 +508,70 @@ Script tags with a `type` other than `text/javascript` (e.g. `type="application/
 
 > **Tip:** Disable JS scoping entirely with `scopeScriptBlocks: false` in [bascik.config.js](/configuration).
 
+### Live Demo
+
+Two instances of `test-comp` run independently on the same page. Clicking the button in one instance only affects elements inside that instance.
+
+**Source HTML** (`test-comp.html` — core elements, scripts omitted for brevity):
+
+<!-- demo:source-html -->
+```html
+<div id="my-div-id" name="my-name">Test Comp Div Tag</div>
+<p name="my-name">Test Comp P Tag</p>
+<button id="btn" class="btn">Change Color</button>
+```
+
+**Source CSS:**
+
+<!-- demo:source-css -->
+```css
+.btn { margin: 16px; }
+.btn:hover { background-color: #333; color: #fff; }
+```
+
+**Source JS** (one of the scripts in `test-comp.html`):
+
+<!-- demo:source-js -->
+```js
+document.getElementById("btn").addEventListener("click", () => {
+  document.getElementsByName('my-name').forEach(el => {
+    el.style.color = '#ff7a09';
+  });
+});
+```
+
+**Compiled output HTML** (IDs and name attributes scoped per instance):
+
+<!-- demo:output-html -->
+```html
+<div id="bascik__test-comp__a1b2c3__my-div-id"
+     name="bascik__test-comp__a1b2c3__my-name">Test Comp Div Tag</div>
+<p name="bascik__test-comp__a1b2c3__my-name">Test Comp P Tag</p>
+<button id="bascik__test-comp__a1b2c3__btn"
+        class="bascik__test-comp__btn">Change Color</button>
+```
+
+**Compiled output CSS** (class selectors scoped, shared across all instances):
+
+<!-- demo:output-css -->
+```css
+.bascik__test-comp__btn { margin: 16px; }
+.bascik__test-comp__btn:hover { background-color: #333; color: #fff; }
+```
+
+**Compiled output JS** (selector strings rewritten to match scoped names, wrapped in IIFE):
+
+<!-- demo:output-js -->
+```js
+(function() {
+  document.getElementById("bascik__test-comp__a1b2c3__btn")
+    .addEventListener("click", () => {
+      document.getElementsByName('bascik__test-comp__a1b2c3__my-name')
+        .forEach(el => { el.style.color = '#ff7a09'; });
+    });
+})();
+```
+
 ## Slots
 
 ### Default Slot
@@ -468,6 +665,41 @@ At the usage site:
 
 > **How it works:** Named slot wrappers in the usage inner HTML are extracted by name and injected into the matching `data-bascik-slot="name"` placeholder in the template. Everything left over goes into the default slot.
 
+### Live Demo
+
+The interactive slot demo passes a button into the `feature-card` component's default slot.
+
+**Usage (the code you write):**
+
+<!-- demo:code -->
+```html
+<feature-card
+  data-bascik-prop-label="Example"
+  data-bascik-prop-title="Named Slots"
+  data-bascik-prop-desc="...">
+  <!-- content for default slot -->
+  <div style="padding-top:12px;...">
+    <button class="btn btn-primary">Read More</button>
+  </div>
+</feature-card>
+```
+
+**Compiled output** (slot content injected into the `fcard-slot` div):
+
+<!-- demo:output -->
+```html
+<div class="bascik__feature-card__fcard">
+  <p class="bascik__feature-card__fcard-label">Example</p>
+  <h3 class="bascik__feature-card__fcard-title">Named Slots</h3>
+  <p class="bascik__feature-card__fcard-desc">...</p>
+  <div class="bascik__feature-card__fcard-slot">
+    <div style="...">
+      <button class="...">Read More</button>
+    </div>
+  </div>
+</div>
+```
+
 ## Props
 
 ### Defining Props in a Template
@@ -547,6 +779,34 @@ A good real-world use of props is a card component with a configurable label, ti
   data-bascik-prop-title="Live Reload"
   data-bascik-prop-desc="Automatic browser reload on every change.">
 </feature-card>
+```
+
+### Live Demo
+
+The interactive props demo passes values directly to the `feature-card` component via `data-bascik-prop-*` attributes.
+
+**Usage (the code you write):**
+
+<!-- demo:code -->
+```html
+<feature-card
+  data-bascik-prop-label="Interactive"
+  data-bascik-prop-title="Component Props"
+  data-bascik-prop-desc="These values are injected into the component template at build time.">
+</feature-card>
+```
+
+**Compiled output** (prop placeholders replaced, component HTML inlined):
+
+<!-- demo:output -->
+```html
+<div class="bascik__feature-card__fcard">
+  <p class="bascik__feature-card__fcard-label">Interactive</p>
+  <h3 class="bascik__feature-card__fcard-title">Component Props</h3>
+  <p class="bascik__feature-card__fcard-desc">
+    These values are injected into the component template at build time.
+  </p>
+</div>
 ```
 
 ## Attribute Inheritance

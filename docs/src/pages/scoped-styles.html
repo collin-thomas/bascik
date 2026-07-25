@@ -56,25 +56,22 @@
           </div>
           <div data-bascik-slot="source-html">
             <code-block data-bascik-prop-lang="html">
-              &lt;div class="fcard"&gt;
-              &lt;p class="fcard-label" data-bascik-prop-label&gt;&lt;/p&gt;
-              &lt;h3 class="fcard-title" data-bascik-prop-title&gt;&lt;/h3&gt;
-              &lt;p class="fcard-desc" data-bascik-prop-desc&gt;&lt;/p&gt;
-              &lt;/div&gt;
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/03-scoped-css.md', 'source-html'));
+              </script>
             </code-block>
           </div>
           <div data-bascik-slot="source-css">
             <code-block data-bascik-prop-lang="css">
-              .fcard {
-              background: var(--elevated);
-              border: 1px solid var(--border);
-              padding: 24px;
-              transition: transform .2s;
-              }
-              .fcard:hover {
-              transform: translateY(-2px);
-              border-color: var(--accent);
-              }
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/03-scoped-css.md', 'source-css'));
+              </script>
             </code-block>
           </div>
           <div data-bascik-slot="source-js">
@@ -82,27 +79,22 @@
           </div>
           <div data-bascik-slot="output-html">
             <code-block data-bascik-prop-lang="html">
-              &lt;div class="bascik__feature-card__fcard"&gt;
-              &lt;p class="bascik__feature-card__fcard-label"&gt;Scoped&lt;/p&gt;
-              &lt;h3 class="bascik__feature-card__fcard-title"&gt;Isolated Styles&lt;/h3&gt;
-              &lt;p class="bascik__feature-card__fcard-desc"&gt;
-              Hover over me to see isolated transitions and shadows.
-              &lt;/p&gt;
-              &lt;/div&gt;
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/03-scoped-css.md', 'output-html'));
+              </script>
             </code-block>
           </div>
           <div data-bascik-slot="output-css">
             <code-block data-bascik-prop-lang="css">
-              .bascik__feature-card__fcard {
-              background: var(--elevated);
-              border: 1px solid var(--border);
-              padding: 24px;
-              transition: transform .2s;
-              }
-              .bascik__feature-card__fcard:hover {
-              transform: translateY(-2px);
-              border-color: var(--accent);
-              }
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/03-scoped-css.md', 'output-css'));
+              </script>
             </code-block>
           </div>
           <div data-bascik-slot="output-js">
