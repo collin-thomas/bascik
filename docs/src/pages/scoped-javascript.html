@@ -120,6 +120,27 @@
           // name attribute
           document.getElementsByName("my-name")</code-block>
 
+        <h2>Dynamic Runtime Class Scoping (CRITICAL)</h2>
+        <p>If you have class or ID names that are <strong>only toggled or added dynamically at runtime</strong> by
+          JavaScript (for example, with <code>.classList.toggle("is-open")</code> or
+          <code>.classList.add("is-active")</code>) but <strong>do not exist on any HTML tag inside the template at
+            compile time</strong>, Bascik's HTML compiler will not discover or register them.</p>
+        <p>This causes a mismatch between compiled assets:</p>
+        <ul>
+          <li>The <strong>CSS parser</strong> *will* obfuscate the class name inside your stylesheet.</li>
+          <li>The <strong>JS parser</strong> *will not* obfuscate the class name inside your scripts because it was
+            never registered in the HTML pass.</li>
+          <li>At runtime, your script will toggle <code>"is-open"</code>, but the CSS will be listening for the
+            obfuscated <code>.bf5a887ac3134</code> class, causing interactive elements like menus or modals to fail
+            silently.</li>
+        </ul>
+
+        <h3>The Solution: Scoping Helpers</h3>
+        <p>Always declare any dynamic classes or IDs inside a hidden scoping helper element inside your HTML template.
+          This forces Bascik's HTML parser to register the names during compilation:</p>
+        <code-block data-bascik-prop-lang="html">&lt;!-- Scoping helper for dynamic runtime classes --&gt;
+          &lt;div class="is-open is-active" style="display: none;"&gt;&lt;/div&gt;</code-block>
+
         <h2 id="build-scripts">Build-time Scripts</h2>
         <p><code>&lt;script data-bascik-build&gt;</code> blocks are executed at transpile time as Node.js ESM modules.
           Whatever the script writes to stdout is injected into the page in place of the tag. Top-level

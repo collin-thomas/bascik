@@ -1,24 +1,29 @@
-# Bascik
+# Bascik Developer & Usage Copilot Skill (`SKILL.md`)
+
+This file contains the **complete, centralized documentation and development skill guide** for Bascik. It is designed to provide Copilot and external developers with everything needed to build, compile, maintain, and write components for the Bascik project.
+
+---
+
+## 1. What Bascik Is & Does
 
 > Bascik is a build-time static site generator that turns reusable HTML component files into plain HTML pages. It adds zero JavaScript to the output. You write HTML, CSS, and JavaScript; Bascik scopes and assembles them.
 
-## What Bascik Does
+* **Resolves custom HTML tags** (e.g. `<my-nav></my-nav>`) to their component source HTML at build time.
+* **Scopes CSS class names, element selectors, `@keyframes`, and CSS custom properties** per component so they never collide.
+* **Rewrites DOM selector calls** (`getElementById`, `querySelector`, etc.) in component scripts to match scoped attribute names.
+* **Wraps component scripts in IIFEs** so variables do not leak between components.
+* **Outputs a `dist/` directory of plain `.html` files** — no framework runtime, no client-side JS added by Bascik itself.
 
-- Resolves custom HTML tags (`<my-nav></my-nav>`) to their component source HTML at build time.
-- Scopes CSS class names, element selectors, `@keyframes`, and CSS custom properties per component so they never collide.
-- Rewrites DOM selector calls (`getElementById`, `querySelector`, etc.) in component scripts to match scoped attribute names.
-- Wraps component scripts in IIFEs so variables do not leak between components.
-- Outputs a `dist/` directory of plain `.html` files — no framework runtime, no client-side JS added by Bascik itself.
+### What Bascik Does NOT Do
+* It is not a JavaScript framework. There is no virtual DOM, no reactive state, no client-side routing.
+* It does not add any JavaScript to pages. Every script in the output was written by you.
+* It does not require Web Components, Shadow DOM, or any browser-specific API.
 
-## What Bascik Does Not Do
+---
 
-- It is not a JavaScript framework. There is no virtual DOM, no reactive state, no client-side routing.
-- It does not add any JavaScript to pages. Every script in the output was written by you.
-- It does not require Web Components, Shadow DOM, or any browser-specific API.
+## 2. Component Format
 
-## Component Format
-
-A component is one `.html` file in `src/components/`. Its tag name is derived from the file name.
+A component is one `.html` file inside `src/components/`. Its tag name is derived from the file name.
 
 ```html
 <!-- src/components/site-nav.html -->
@@ -29,14 +34,14 @@ A component is one `.html` file in `src/components/`. Its tag name is derived fr
 ```
 
 Use it in any page or other component:
-
 ```html
 <site-nav></site-nav>
 ```
+*Self-closing tags are also supported:* `<site-nav />` or `<site-nav class="top" />`
 
-Self-closing syntax works too: `<site-nav />`
+---
 
-## Scoped CSS
+## 3. Scoped CSS
 
 Pair a `.css` file alongside the HTML in a same-named directory:
 
@@ -58,12 +63,8 @@ p {
   margin: 0;
 }
 @keyframes fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 ```
 
@@ -74,6 +75,7 @@ p {
 @keyframes bascik__site-nav__a1b2c3__keyframe__fade { ... }
 ```
 
+### Scoped CSS Custom Properties
 CSS custom properties declared in the file are also scoped:
 
 ```css
@@ -94,7 +96,9 @@ CSS custom properties declared in the file are also scoped:
 }
 ```
 
-## Scoped JavaScript
+---
+
+## 4. Scoped JavaScript
 
 DOM selectors in component scripts are rewritten to match scoped names:
 
@@ -121,22 +125,20 @@ DOM selectors in component scripts are rewritten to match scoped names:
 ```
 
 ### Supported DOM Methods (auto-rewritten)
-
-- `document.getElementById("id")`
-- `document.querySelector("#id")` / `document.querySelectorAll("#id")`
-- `document.querySelector(".cls")` / `document.querySelectorAll(".cls")` — single OR compound selectors
-- `document.querySelector(".foo .bar")` / `querySelector("#id .child")` — compound selectors supported
-- `document.getElementsByClassName("cls")`
-- `document.getElementsByName("name")`
-- `element.closest("#id")` / `element.closest(".cls")` — compound-aware
-- `element.matches("#id")` / `element.matches(".cls")` — works for event delegation too
-- `element.classList.add/remove/toggle/contains("cls")`
-- `element.setAttribute("class", "cls")` / `setAttribute("id", "id-value")` — string literal values
-- `element.className = "cls"` or `"cls1 cls2"` or `+= " cls"` — setter forms
+* `document.getElementById("id")`
+* `document.querySelector("#id")` / `document.querySelectorAll("#id")`
+* `document.querySelector(".cls")` / `document.querySelectorAll(".cls")` — single OR compound selectors
+* `document.querySelector(".foo .bar")` / `querySelector("#id .child")` — compound selectors supported
+* `document.getElementsByClassName("cls")`
+* `document.getElementsByName("name")`
+* `element.closest("#id")` / `element.closest(".cls")` — compound-aware
+* `element.matches("#id")` / `element.matches(".cls")` — works for event delegation too
+* `element.classList.add/remove/toggle/contains("cls")`
+* `element.setAttribute("class", "cls")` / `setAttribute("id", "id-value")` — string literal values
+* `element.className = "cls"` or `"cls1 cls2"` or `+= " cls"` — setter forms
 
 ### Scoping Model
-
-Class attributes use **component-name-only** scope — all instances on the same page share the same scoped class names, which allows CSS deduplication. ID and name attributes include an instance ID for DOM uniqueness.
+Class attributes use **component-name-only** scope — all instances on the same page share the same scoped class names, which allows CSS deduplication. ID and name attributes include an instance ID to guarantee DOM uniqueness across multiple instances.
 
 ```
 class  →  bascik__<componentName>__<originalName>
@@ -144,69 +146,60 @@ id     →  bascik__<componentName>__<instanceId>__<originalName>
 name   →  bascik__<componentName>__<instanceId>__<originalName>
 ```
 
-### Dynamic Runtime Class Scoping (CRITICAL)
+---
 
+## 5. Dynamic Runtime Class Scoping (CRITICAL BUG & PATTERN)
+
+### The Problem
 If you have a class or ID name that is **only toggled or added dynamically at runtime** by JavaScript (for example, with `.classList.toggle("is-open")` or `.classList.add("is-active")`) but **does not exist on any HTML tag inside the template at compile time**, Bascik's HTML compiler will not discover or register it.
 
-This causes a compile mismatch:
+This causes a compilation mismatch:
 * The **CSS parser** *will* obfuscate the class name inside your stylesheet.
 * The **JS parser** *will not* obfuscate the class name inside your scripts because it was never registered in the HTML pass.
 * At runtime, your script will toggle `"is-open"`, but the CSS will be listening for the obfuscated `.bf5a887ac3134` class, causing interactive elements like menus or modals to fail silently.
 
-#### The Solution: Scoping Helpers
-Always declare any dynamic classes or IDs inside a hidden scoping helper element inside your HTML template. This forces Bascik's HTML parser to register the names during compilation:
+### The Solution: Scoping Helpers
+Always declare any dynamic classes or IDs inside a hidden scoping helper element inside your HTML template. This forces Bascik's HTML parser to register and synchronize the names during compilation:
 
 ```html
 <!-- Scoping helper for dynamic runtime classes -->
 <div class="is-open is-active" style="display: none;"></div>
 ```
 
-### Not Rewritten
+---
 
-- `element.className`, `element.setAttribute("class", ...)`, `element.id`, `element.setAttribute("id", ...)`
-- Compound selectors: `querySelector(".foo .bar")`, `querySelector("#id .child")`
-- `querySelector("[id='myId']")`
+## 6. Slots & Props
 
-## Slots
+### Slots (Default & Named)
 
-### Default Slot
-
+#### Default Slot
 ```html
 <!-- my-card.html -->
 <div class="card">
   <slot-component>Fallback text</slot-component>
 </div>
-```
 
-```html
+<!-- usage -->
 <my-card><p>Card content</p></my-card>
 ```
+*Note: The `data-bascik-slot` attribute (no value) on any element also marks the default slot, and the element is replaced (not wrapped):* `<section><div data-bascik-slot></div></section>`
 
-The `data-bascik-slot` attribute (no value) on any element also marks the default slot, and the element is replaced (not wrapped):
-
-```html
-<section><div data-bascik-slot></div></section>
-```
-
-### Named Slots
-
+#### Named Slots
 ```html
 <!-- layout.html -->
 <div>
   <header><div data-bascik-slot="header"></div></header>
   <main><div data-bascik-slot></div></main>
 </div>
-```
 
-```html
+<!-- usage -->
 <layout>
   <p>Main content</p>
   <div data-bascik-slot="header"><h1>Title</h1></div>
 </layout>
 ```
 
-## Props
-
+### Props
 Inject text values into a component at usage time.
 
 ```html
@@ -215,48 +208,48 @@ Inject text values into a component at usage time.
   <strong data-bascik-prop-title></strong>
   <p data-bascik-prop-message></p>
 </div>
-```
 
-```html
+<!-- usage -->
 <alert-box
   data-bascik-prop-title="Success"
   data-bascik-prop-message="Your changes were saved."
 ></alert-box>
 ```
+*Props accept text values only. For rich HTML content, use slots.*
 
-## Attribute Inheritance
+---
 
+## 7. Attribute Inheritance & Tags
+
+### Attribute Inheritance
 Non-`data-bascik-*` attributes on a usage tag are merged onto the component's root element. `id` is excluded.
-
 ```html
 <site-nav class="sticky" aria-label="main navigation"></site-nav>
 <!-- class "sticky" and aria-label are merged onto <nav> in site-nav.html -->
 ```
 
-## Self-Closing Tags
-
+### Self-Closing Tags
 ```html
 <my-nav /> <my-nav class="top" />
 ```
 
-## Head Components
-
-Components work inside `<head>`:
-
+### Head Components
+Components work inside `<head>` to organize metadata:
 ```html
 <!-- src/components/site-meta.html -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="description" content="My site" />
-```
 
-```html
+<!-- usage -->
 <head>
   <title>Home</title>
   <site-meta></site-meta>
 </head>
 ```
 
-## Build-time Scripts
+---
+
+## 8. Build-time Scripts
 
 `<script data-bascik-build>` blocks are executed at transpile time as Node.js ESM modules. The script's stdout is injected in place of the tag. Runs in both dev and build modes.
 
@@ -269,13 +262,15 @@ Components work inside `<head>`:
 </script>
 ```
 
-- Top-level `import` and top-level `await` are supported.
-- CWD is the project root. Relative paths resolve from there.
-- Use `console.log()` or `process.stdout.write()` to output HTML.
-- Build scripts run before component resolution, so their output can contain component tags.
-- On error, the script tag is replaced with an empty string and a warning is logged.
+* Top-level `import` and top-level `await` are supported.
+* CWD is the project root. Relative paths resolve from there.
+* Use `console.log()` or `process.stdout.write()` to output HTML.
+* Build scripts run before component resolution, so their output can contain component tags.
+* On error, the script tag is replaced with an empty string and a warning is logged.
 
-## Configuration (`bascik.config.js`)
+---
+
+## 9. Configuration (`bascik.config.js`)
 
 ```js
 export const bascikConfig = {
@@ -302,7 +297,9 @@ export const buildOverrideConfig = {
 };
 ```
 
-## Folder Structure
+---
+
+## 10. Folder Structure, 404, and 500 pages
 
 ```
 src/
@@ -310,13 +307,13 @@ src/
   components/  ← component .html (+ optional .css) files
 ```
 
-### Custom 404 Page
+### Custom 404 & 500 Pages
+* **404 Page (`src/pages/404.html`):** If you create a `404.html` file in your pages directory, Bascik's built-in development server will automatically serve it as a fallback for any non-existent routes with a `404` status code. When you build for production (`bascik --build`), this is compiled to `dist/404.html` which is recognized by standard static hosts (GitHub Pages, Vercel, Netlify).
+* **500 Page Support:** If the server encounters runtime compilation errors, it responds with a proper `500` error block to prevent server crashes.
 
-If you create a `404.html` file in your pages directory (e.g. `src/pages/404.html`), Bascik's built-in development server will automatically serve it as a fallback for any non-existent routes with a `404` status code.
+---
 
-When you build your site for production (`bascik --build`), this file is compiled to `dist/404.html`, which is the standard location recognized by most static hosting providers (such as GitHub Pages, Netlify, Vercel, and Cloudflare Pages) to serve custom 404 pages.
-
-## CLI
+## 11. CLI & Development Workflow
 
 ```sh
 bascik          # dev: transpile, start HTTP/2 server at https://localhost:8443, watch
@@ -324,8 +321,7 @@ bascik --build  # production: transpile to dist/ only
 ```
 
 ### Development Workflow & Server Output
-
-Bascik's command-line interface is designed to provide clean, minimal, and informative terminal output. Here is what you will see in your terminal during development.
+Bascik's CLI is designed to provide clean, minimal, and informative terminal output.
 
 #### 1. Starting the Dev Server
 When you start the dev server, Bascik automatically generates local SSL/TLS certificates for its built-in HTTP/2 server, transpiles all pages inside your pages directory, and begins watching for changes:
@@ -377,23 +373,13 @@ If you introduce a syntax mistake or a runtime error inside a custom build scrip
   ReferenceError: marked is not defined
   ```
 
-## Key Constraints for AI Code Generation
+---
 
-1. Component tag names must be hyphenated (e.g. `my-nav`, `site-header`). Single-word tags are not valid custom element names.
-2. CSS scoping only applies to paired `.css` files and inline `<style>` tags inside component HTML.
-3. CSS `#id {}` hash selectors are converted to component-scoped class selectors; the class is automatically injected onto the matching element. The `[id]` attribute-selector form is stripped.
-4. Use `id` and `class` selectors in JS that exactly match the attributes in the component HTML — Bascik rewrites them at build time.
-5. For compound DOM queries, query by a single scoped `id` first, then traverse from the returned element.
-6. Use `data-` attributes for runtime state that changes via JavaScript (e.g. `data-state="open"`). Scoped class names are assigned at build time and cannot be reliably looked up by JS string manipulation.
-7. Props accept text only. For rich HTML content, use slots.
-8. `<script type="module">` scripts are not wrapped in an IIFE but their selectors are still rewritten.
-
-## JavaScript Libraries
+## 12. JavaScript Libraries & Progressive Enhancement
 
 Bascik adds zero JavaScript to output pages by default, but places no restrictions on including external libraries.
 
 ### How to Include
-
 Add a CDN `<script src>` tag to the page `<head>` or a shared head component. Bascik passes external script tags through completely unchanged.
 
 ```html
@@ -402,10 +388,7 @@ Add a CDN `<script src>` tag to the page `<head>` or a shared head component. Ba
 </head>
 ```
 
-Or co-locate the CDN tag inside a component file so it only loads on pages that use the component.
-
 ### petite-vue
-
 petite-vue (~5 KB) is a Vue-compatible progressive enhancement library. Declare `v-scope` on any element to give it isolated reactive state:
 
 ```html
@@ -417,13 +400,11 @@ petite-vue (~5 KB) is a Vue-compatible progressive enhancement library. Declare 
 ```
 
 Load it once in the page `<head>` with `defer init` to auto-mount all `v-scope` elements:
-
 ```html
 <script src="https://unpkg.com/petite-vue" defer init></script>
 ```
 
 ### Alpine.js
-
 Alpine.js uses `x-data` for state and `@click` / `x-show` for events and visibility:
 
 ```html
@@ -434,16 +415,23 @@ Alpine.js uses `x-data` for state and `@click` / `x-show` for events and visibil
 <script src="https://unpkg.com/alpinejs" defer></script>
 ```
 
-### Scoping Compatibility
+### HTMX, Stimulus, and Others
+* **HTMX** — Uses `hx-get`, `hx-post` attributes for server-driven partial updates.
+* **Stimulus** — Uses `data-controller` for attaching behavior to DOM structures.
+* **Chart.js, D3, Leaflet** — Mounts to elements via `getElementById`; Bascik rewrites the ID and matching selectors at build-time so they stay in sync.
 
-Bascik only scopes `class`, `id`, and `name` attributes at build time. Library-specific attributes (`v-scope`, `x-data`, `@click`, `hx-get`, `data-controller`) are never touched.
+---
 
-**Important:** Class or ID values set dynamically at runtime by a library (e.g. `:class="activeClass"`) are runtime strings and do not correspond to Bascik-scoped names. Use `data-*` attributes for runtime-toggled state and target them with `[data-state="active"]` CSS selectors.
+## 13. Key Constraints & Rules for AI Code Generation (MUST FOLLOW)
 
-### Any Library Works
+When generating code, pages, or components for a Bascik project, the following conventions are strictly enforced:
 
-- **HTMX** — `hx-get`, `hx-post` attributes for server-driven partial updates
-- **Stimulus** — `data-controller` for attaching behavior to DOM structure
-- **Chart.js, D3, Leaflet** — mount to an element via `getElementById`; Bascik rewrites the ID and matching selector at build time so they stay in sync
+1. **Hyphenated Custom Tags:** Component tag names must be hyphenated (e.g. `my-nav`, `site-header`). Single-word tags are not valid custom element names.
+2. **Scoping Rules:** CSS scoping only applies to paired `.css` files and inline `<style>` tags inside component HTML.
+3. **Selector Rewrites:** CSS `#id {}` hash selectors are converted to component-scoped class selectors; the class is automatically injected onto the matching element. The `[id]` attribute-selector form is stripped.
+4. **Script Selectors:** Use `id` and `class` selectors in JS that exactly match the attributes in the component HTML — Bascik rewrites them at build time.
+5. **DOM Traversal:** For compound DOM queries, query by a single scoped `id` first, then traverse from the returned element.
+6. **Dynamic Toggles:** Use `data-` attributes for runtime state that changes via JavaScript (e.g. `data-state="open"`). Scoped class names are assigned at build time and cannot be reliably looked up by JS string manipulation *unless* you utilize a scoping helper (Section 5).
+7. **Text Props:** Props accept text only. For rich HTML content, use slots.
+8. **Script Modules:** `<script type="module">` scripts are not wrapped in an IIFE, but their selectors are still rewritten.
 
-CDN `<script src>` tags are never modified by Bascik.

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Command Line Interface (CLI) — Bascik Docs</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+      <docs-sidebar></docs-sidebar>
+
+      <main class="docs-content">
+        <p class="section-label">Reference</p>
+        <h1>Command Line Interface (CLI)</h1>
+        <p class="page-intro">Bascik features a simple, fast, and highly informative CLI for both development and
+          production building.</p>
+
+        <h2>Commands</h2>
+        <p>Bascik is controlled via two primary commands. In most projects, these are mapped to scripts in your
+          <code>package.json</code>:</p>
+
+        <h3>bascik (Dev Mode)</h3>
+        <p>Starts the incremental transpiler, generates local SSL/TLS development certificates, launches the built-in
+          HTTP/2 secure server at <code>https://localhost:8443</code>, and watches for files changes.</p>
+        <code-block data-bascik-prop-lang="sh">bascik
+          # or
+          yarn dev</code-block>
+
+        <h3>bascik --build (Production Build)</h3>
+        <p>Runs a one-time build. Transpiles and optimizes all pages and assets directly to the configured output
+          directory (defaults to <code>dist/</code>), applying any overrides configured in
+          <code>buildOverrideConfig</code>. Ideal for CI/CD pipelines and static hosting deployments.</p>
+        <code-block data-bascik-prop-lang="sh">bascik --build
+          # or
+          yarn build</code-block>
+
+        <h2>Development Workflow &amp; Output</h2>
+        <p>The Bascik CLI keeps you informed of everything happening under the hood without cluttering your terminal.
+        </p>
+
+        <h3>Starting the Server</h3>
+        <p>On initial startup, Bascik compiles all of your pages, setups the secure socket context, and starts
+          listening:</p>
+        <code-block data-bascik-prop-lang="terminal">Generated self-signed certificate for the development server
+          Server running at https://localhost:8443
+
+          transpiled: pages/getting-started.html
+          transpiled: pages/index.html
+          transpiled: pages/about.html
+
+          ✓ 3 pages transpiled in 45ms</code-block>
+
+        <h3>File Watcher Events</h3>
+        <p>When you edit or add resources inside your source directories, Bascik selectively transpiles only the
+          affected files to make updates instantaneous:</p>
+        <ul>
+          <li><strong>Modifying Pages:</strong> Editing <code>src/pages/about.html</code> triggers incremental
+            transpilation of just that page:
+            <code-block data-bascik-prop-lang="terminal">transpiled: pages/about.html</code-block>
+          </li>
+          <li><strong>Modifying Components:</strong> Modifying <code>src/components/site-nav.html</code> triggers
+            selective transpilation. Bascik knows which pages use this component and only rebuilds those pages:
+            <code-block data-bascik-prop-lang="terminal">transpiled: pages/index.html
+              transpiled: pages/about.html</code-block>
+          </li>
+          <li><strong>Asset Syncing:</strong> Adding or updating static assets (like a custom CSS or image file) copies
+            them immediately:
+            <code-block data-bascik-prop-lang="terminal">copied:
+              /Users/collin/github/bascik/docs/src/pages/css/custom.css</code-block>
+          </li>
+          <li><strong>Deleting Pages:</strong> Deleting a page removes its compiled counterpart from the
+            <code>dist/</code> directory automatically:
+            <code-block data-bascik-prop-lang="terminal">deleted file:
+              /Users/collin/github/bascik/docs/src/pages/old-page.html</code-block>
+          </li>
+        </ul>
+
+        <h2>Error Log Reporting</h2>
+        <p>If there's ever a problem during compilation or build-time script execution, Bascik logs clear context
+          highlighting exactly where and why the error happened, keeping your dev server running:</p>
+
+        <h3>Component Transpilation Error</h3>
+        <code-block data-bascik-prop-lang="terminal">[bascik] Transpilation failed for component &lt;site-nav&gt; during
+          css-scoping in "pages/about.html" at (line 22, column 8)
+          Defined in component template: "components/site-nav/site-nav.html"
+          Error: ParseError: CSS Selector is invalid or could not be parsed.</code-block>
+
+        <h3>Build Script Error</h3>
+        <code-block data-bascik-prop-lang="terminal">[bascik] build script error in "pages/index.html" at (line 12,
+          column 5):
+          ReferenceError: marked is not defined</code-block>
+
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+</body>
+
+</html>

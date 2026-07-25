@@ -1,18 +1,94 @@
-<nav class="dnav">
+<nav class="dnav" data-docs-nav>
   <div class="dnav-inner container">
     <a href="/" class="dnav-logo">Bascik</a>
-    <ul class="dnav-links">
-      <li><a href="/why-bascik">Why</a></li>
-      <li><a href="/getting-started">Getting Started</a></li>
-      <li><a href="/slots">Slots</a></li>
-      <li><a href="/props">Props</a></li>
-      <li><a href="/scoped-styles">Scoped Styles</a></li>
-      <li><a href="/scoped-javascript">Scoped JS</a></li>
-      <li><a href="/build-scripts">Build Scripts</a></li>
-      <li><a href="/libraries">Libraries</a></li>
-      <li><a href="/configuration">Config</a></li>
-      <li><a href="/compatibility">Compat</a></li>
-      <li><a href="/migrate">Migrate</a></li>
-    </ul>
+    <button class="dnav-toggle" aria-label="Toggle navigation">
+      <span class="dnav-toggle-icon"></span>
+    </button>
+    <div class="dnav-links-wrapper">
+      <ul class="dnav-links">
+        <li><a href="/why-bascik">Why Bascik</a></li>
+        <li><a href="/getting-started">Docs</a></li>
+        <li><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
+
+      <!-- Collapsible Mobile Sidebar Integration -->
+      <div class="mobile-only-sections">
+        <hr class="mobile-sep" />
+        <p class="mobile-sec-heading">Philosophy</p>
+        <ul class="mobile-sec-nav">
+          <li><a href="/why-bascik">Why Bascik</a></li>
+        </ul>
+        <p class="mobile-sec-heading">Start Here</p>
+        <ul class="mobile-sec-nav">
+          <li><a href="/getting-started">Getting Started</a></li>
+          <li><a href="/cli">CLI / Command Line</a></li>
+          <li><a href="/configuration">Configuration</a></li>
+        </ul>
+        <p class="mobile-sec-heading">Features</p>
+        <ul class="mobile-sec-nav">
+          <li><a href="/slots">Slots</a></li>
+          <li><a href="/props">Props</a></li>
+          <li><a href="/attribute-inheritance">Attribute Inheritance</a></li>
+          <li><a href="/scoped-styles">Scoped Styles</a></li>
+          <li><a href="/scoped-javascript">Scoped JavaScript</a></li>
+          <li><a href="/build-scripts">Build Scripts</a></li>
+          <li><a href="/libraries">JavaScript Libraries</a></li>
+        </ul>
+        <p class="mobile-sec-heading">Reference</p>
+        <ul class="mobile-sec-nav">
+          <li><a href="/compatibility">Scoping Compatibility</a></li>
+        </ul>
+        <p class="mobile-sec-heading">Migration</p>
+        <ul class="mobile-sec-nav">
+          <li><a href="/migrate">Overview</a></li>
+          <li><a href="/migrate/from-react">From React</a></li>
+          <li><a href="/migrate/from-next">From Next.js</a></li>
+          <li><a href="/migrate/from-eleventy">From Eleventy</a></li>
+          <li><a href="/migrate/from-astro">From Astro</a></li>
+        </ul>
+      </div>
+    </div>
   </div>
+  <!-- Scoping helper for dynamic runtime classes -->
+  <div class="is-open is-active" style="display: none;"></div>
 </nav>
+
+<script>
+  var path = window.location.pathname;
+  // Handle root vs /why-bascik and subpages
+  document.querySelectorAll('[data-docs-nav] a').forEach(function (a) {
+    var href = a.getAttribute('href');
+    if (!href) return;
+
+    if (href.startsWith('http')) return; // ignore external github link
+
+    if (href === '/getting-started') {
+      // Highlight "Docs" for any docs guide pages
+      var isDocsSubpage = path !== '/' && path !== '/why-bascik';
+      if (isDocsSubpage) {
+        a.setAttribute('aria-current', 'page');
+      }
+    } else if (href === path) {
+      a.setAttribute('aria-current', 'page');
+    }
+  });
+
+  // Mobile navigation drawer toggle logic
+  var toggleBtn = document.querySelector('.dnav-toggle');
+  var linksWrapper = document.querySelector('.dnav-links-wrapper');
+  if (toggleBtn && linksWrapper) {
+    toggleBtn.addEventListener('click', function () {
+      var isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+      toggleBtn.setAttribute('aria-expanded', !isExpanded);
+      linksWrapper.classList.toggle('is-open');
+      toggleBtn.classList.toggle('is-active');
+
+      // Prevent body scrolling behind the active menu overlay
+      if (linksWrapper.classList.contains('is-open')) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    });
+  }
+</script>

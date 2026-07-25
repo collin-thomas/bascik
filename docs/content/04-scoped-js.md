@@ -48,6 +48,23 @@ id     →  bascik__<componentName>__<instanceId>__<originalName>
 name   →  bascik__<componentName>__<instanceId>__<originalName>
 ```
 
+### Dynamic Runtime Class Scoping (CRITICAL)
+
+If you have a class or ID name that is **only toggled or added dynamically at runtime** by JavaScript (for example, with `.classList.toggle("is-open")` or `.classList.add("is-active")`) but **does not exist on any HTML tag inside the template at compile time**, Bascik's HTML compiler will not discover or register it.
+
+This causes a compile mismatch:
+* The **CSS parser** *will* obfuscate the class name inside your stylesheet.
+* The **JS parser** *will not* obfuscate the class name inside your scripts because it was never registered in the HTML pass.
+* At runtime, your script will toggle `"is-open"`, but the CSS will be listening for the obfuscated `.bf5a887ac3134` class, causing interactive elements like menus or modals to fail silently.
+
+#### The Solution: Scoping Helpers
+Always declare any dynamic classes or IDs inside a hidden scoping helper element inside your HTML template. This forces Bascik's HTML parser to register the names during compilation:
+
+```html
+<!-- Scoping helper for dynamic runtime classes -->
+<div class="is-open is-active" style="display: none;"></div>
+```
+
 ### Not Rewritten
 
 - `element.className`, `element.setAttribute("class", ...)`, `element.id`, `element.setAttribute("id", ...)`

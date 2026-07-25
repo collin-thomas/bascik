@@ -32,14 +32,6 @@ body {
 /* ── Layout ── */
 .container  { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
 .docs-layout { display: grid; grid-template-columns: 220px 1fr; gap: 0; min-height: 80vh; }
-.docs-sidebar {
-  border-right: 1px solid var(--border);
-  padding: 32px 20px;
-  position: sticky;
-  top: 57px;
-  height: calc(100vh - 57px);
-  overflow-y: auto;
-}
 .docs-content { padding: 48px 40px 80px; max-width: 780px; }
 
 /* ── Typography ── */
@@ -72,23 +64,6 @@ pre {
   margin: 0;
 }
 pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size: 0.82rem; }
-
-/* ── Sidebar nav ── */
-.sidebar-heading {
-  font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .1em; color: var(--text-muted);
-  margin-bottom: 8px; margin-top: 20px;
-}
-.sidebar-heading:first-child { margin-top: 0; }
-.sidebar-nav { list-style: none; margin: 0; padding: 0; }
-.sidebar-nav li a {
-  display: block; padding: 5px 10px; border-radius: var(--r-sm);
-  font-size: 0.875rem; color: var(--text-muted);
-  text-decoration: none; transition: color .15s, background .15s;
-}
-.sidebar-nav li a:hover { color: var(--text); background: var(--elevated); opacity: 1; }
-.sidebar-nav li a.active,
-.sidebar-nav li a[aria-current="page"] { color: var(--accent); background: var(--accent-dim); }
 
 /* ── Cards ── */
 .card {
@@ -153,7 +128,6 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .docs-layout { grid-template-columns: 1fr; }
-  .docs-sidebar { display: none; }
+  .docs-layout { display: block; }
   .docs-content { padding: 32px 0; }
 }
