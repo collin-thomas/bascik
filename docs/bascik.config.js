@@ -3,6 +3,8 @@ export const bascikConfig = {
     pages: 'src/pages',
     components: 'src/components',
   },
+  siteUrl: 'https://bascik.dev',
+  triggerTranspile: ['scripts/'],
   minifyStyles: false,
   obfuscateAttributeNames: false,
   scopeScriptBlocks: true,

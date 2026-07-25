@@ -455,6 +455,31 @@ Exits with code `1` on errors — suitable for CI:
 bascik --check && bascik --build
 ```
 
+**What `bascik --check` does not cover:** it validates component references only — not CSS or JavaScript syntax. A CSS syntax error can cause bascik's scoping transforms to produce garbled output without any warning. Use external tools alongside `--check`:
+
+| Tool | What it catches |
+|---|---|
+| VS Code built-in CSS | CSS syntax errors (squiggly lines, no install needed) |
+| [Stylelint](https://stylelint.io) | CSS syntax, invalid properties, conventions |
+| [HTMLHint](https://htmlhint.com) | HTML structure errors in `.html` files |
+| [ESLint](https://eslint.org) | JS syntax and logic errors in `<script>` blocks |
+
+Recommended CI pipeline with CSS validation:
+```sh
+npx stylelint "src/**/*.css" && bascik --check && bascik --build
+```
+
+#### Editor Configuration
+
+Editors validate all `<script>` blocks in an HTML file as sharing one scope, causing false "variable already declared" errors. Bascik wraps each block in an IIFE at build time, so the errors are false positives.
+
+**VS Code fix** — add `.vscode/settings.json`:
+```json
+{ "html.validate.scripts": false }
+```
+
+Commit this file so all contributors get the correct behaviour automatically. Alternatively, add `// @ts-nocheck` as the first line inside any individual script block that triggers the warning.
+
 #### 5. Inspecting `dist/` Output
 
 Both the dev server and `bascik --build` write compiled HTML to `dist/` on disk — this is the ground truth of what Bascik produced. The `dist/` structure mirrors `src/pages/` with the leading directory stripped:

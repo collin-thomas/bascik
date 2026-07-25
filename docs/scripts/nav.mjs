@@ -24,10 +24,12 @@ export const NAV = [
     { href: '/scoped-styles', label: 'Scoped Styles' },
     { href: '/scoped-javascript', label: 'Scoped JavaScript' },
     { href: '/build-scripts', label: 'Build Scripts' },
+    { href: '/sitemap', label: 'Sitemap & robots.txt' },
     { href: '/libraries', label: 'JavaScript Libraries' },
   ]},
   { section: 'Reference', pages: [
     { href: '/compatibility', label: 'Scoping Compatibility' },
+    { href: '/copilot-skill', label: 'AI Skill' },
   ]},
   { section: 'Recipes', pages: [
     { href: '/using-markdown', label: 'Using Markdown' },

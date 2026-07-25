@@ -28,6 +28,16 @@ function active(currentPath, href) {
   return currentPath === href ? ' aria-current="page"' : '';
 }
 
+/** Renders a list of <li> nav links, optionally stamping aria-current. */
+function renderLinks(pages, currentPath = '') {
+  return pages
+    .map(p => `<li><a href="${p.href}"${active(currentPath, p.href)}>${p.label}</a></li>`)
+    .join('');
+}
+
+/** Shared parallelogram badge logo — used in both nav and footer */
+const LOGO_SVG = `<svg class="bascik-logo" viewBox="0 0 114 28" height="26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><polygon points="7,0 114,0 107,28 0,28" fill="#d3ff8d"/><rect x="18" y="8" width="2" height="12" rx="1" fill="#0e0f10"><animate attributeName="opacity" values="0.9;0.9;0;0" keyTimes="0;0.49;0.5;1" dur="1.1s" repeatCount="indefinite"/></rect><text x="25" y="20" font-family="'Courier New',Courier,monospace" font-size="17" font-weight="800" fill="#0e0f10" letter-spacing="2">BASCIK</text></svg>`;
+
 /**
  * Renders the sticky desktop sidebar `<aside>` with all section headings and
  * page links. Stamps aria-current="page" on the link matching currentPath.
@@ -38,13 +48,11 @@ export function renderSidebar(currentPath) {
   let html = '<aside class="docs-sidebar">';
   for (const section of NAV) {
     html += `<p class="sidebar-heading">${section.section}</p>`;
-    html += '<ul class="sidebar-nav">';
-    for (const page of section.pages) {
-      html += `<li><a href="${page.href}"${active(currentPath, page.href)}>${page.label}</a></li>`;
-    }
-    html += '</ul>';
+    html += `<ul class="sidebar-nav">${renderLinks(section.pages, currentPath)}</ul>`;
   }
   html += '</aside>';
+  // Scroll the active sidebar link into view on load (handles long nav lists)
+  html += `<script>(function(){var a=document.querySelector('.docs-sidebar [aria-current="page"]');if(a)a.scrollIntoView({block:'nearest'});})();</script>`;
   return html;
 }
 
@@ -91,32 +99,70 @@ export function renderNav(currentPath = '') {
   const isWhyBascik = currentPath === '/why-bascik';
   const isDocsPage = currentPath !== '' && currentPath !== '/' && currentPath !== '/why-bascik';
 
-  const mobileSections = NAV.map(section => {
-    const links = section.pages
-      .map(page => `<li><a href="${page.href}"${active(currentPath, page.href)}>${page.label}</a></li>`)
-      .join('');
-    return `<p class="mobile-sec-heading">${section.section}</p><ul class="mobile-sec-nav">${links}</ul>`;
-  }).join('');
+  const mobileSections = NAV.map(section =>
+    `<p class="mobile-sec-heading">${section.section}</p><ul class="mobile-sec-nav">${renderLinks(section.pages, currentPath)}</ul>`
+  ).join('');
 
-  return `<nav class="dnav" data-docs-nav>
+  return `<input type="checkbox" id="dnav-toggle" class="dnav-checkbox">
+<nav class="dnav" data-docs-nav>
   <div class="dnav-inner container">
-    <a href="/" class="dnav-logo">Bascik</a>
-    <details class="dnav-details">
-      <summary class="dnav-toggle" aria-label="Toggle navigation">
-        <span class="dnav-toggle-icon"></span>
-      </summary>
-      <div class="dnav-links-wrapper">
-        <ul class="dnav-links">
-          <li><a href="/why-bascik"${isWhyBascik ? ' aria-current="page"' : ''}>Why Bascik</a></li>
-          <li><a href="/getting-started"${isDocsPage ? ' aria-current="page"' : ''}>Docs</a></li>
-          <li><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener">GitHub</a></li>
+    <a href="/" class="dnav-logo" aria-label="Bascik home">${LOGO_SVG}</a>
+    <label for="dnav-toggle" class="dnav-toggle" tabindex="0" aria-label="Toggle navigation">
+      <span class="dnav-toggle-icon"></span>
+    </label>
+    <div class="dnav-links-wrapper">
+      <ul class="dnav-links">
+        <li><a href="/why-bascik"${isWhyBascik ? ' aria-current="page"' : ''}>Why Bascik</a></li>
+        <li><a href="/getting-started"${isDocsPage ? ' aria-current="page"' : ''}>Docs</a></li>
+        <li><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
+      <div class="mobile-only-sections">
+        <hr class="mobile-sep" />
+        ${mobileSections}
+        <hr class="mobile-sep" />
+        <ul class="mobile-sec-nav">
+          <li><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener">GitHub &nearr;</a></li>
         </ul>
-        <div class="mobile-only-sections">
-          <hr class="mobile-sep" />
-          ${mobileSections}
-        </div>
       </div>
-    </details>
+    </div>
   </div>
 </nav>`;
+}
+
+/**
+ * Renders the complete site footer with sitemap derived from NAV.
+ * Uses global CSS classes (defined in styles.css) — not component-scoped.
+ */
+export function renderFooter() {
+  const year = new Date().getFullYear();
+  const sections = NAV.filter(s => s.section !== 'Developers');
+  let sitemap = '<div class="dfooter-sitemap">';
+  for (const section of sections) {
+    sitemap += `<div class="dfooter-col"><p class="dfooter-col-heading">${section.section}</p><ul class="dfooter-col-links">`;
+    for (const page of section.pages) {
+      sitemap += `<li><a href="${page.href}">${page.label}</a></li>`;
+    }
+    sitemap += '</ul></div>';
+  }
+  sitemap += '</div>';
+
+  return `<footer class="dfooter">
+  <div class="dfooter-container">
+    <div class="dfooter-upper">
+      <div class="dfooter-brand">
+        <a href="/" class="dfooter-logo" aria-label="Bascik home">${LOGO_SVG}</a>
+        <p class="dfooter-desc">A static site generator<br>for HTML components.</p>
+      </div>
+      ${sitemap}
+    </div>
+    <div class="dfooter-bottom">
+      <span class="dfooter-copy">&copy; ${year} <a href="https://rinsesoft.com" target="_blank" rel="noopener noreferrer">Rinsesoft</a>. Open source under AGPL-3.0.</span>
+      <div class="dfooter-links">
+        <a href="https://rinsesoft.com" target="_blank" rel="noopener noreferrer">rinsesoft.com</a>
+        <a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/collin-thomas/bascik/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">License</a>
+      </div>
+    </div>
+  </div>
+</footer>`;
 }

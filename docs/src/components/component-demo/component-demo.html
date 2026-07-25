@@ -208,6 +208,25 @@
     if (!hasLanguageContent) {
       const tabBar = pane.querySelector('[role="tablist"]');
       if (tabBar) tabBar.style.display = 'none';
+    } else {
+      // Hide individual language tabs/panes that have no content.
+      languageTabs.forEach(tab => {
+        const langPane = pane.querySelector(`[data-language-pane="${tab.dataset.language}"]`);
+        if (langPane && langPane.children.length === 0) {
+          tab.hidden = true;
+          tab.classList.remove('active');
+          langPane.classList.remove('active');
+        }
+      });
+      // If the default active tab was hidden, activate the first visible one.
+      const activeTab = Array.from(languageTabs).find(t => t.classList.contains('active') && !t.hidden);
+      if (!activeTab) {
+        const firstVisible = Array.from(languageTabs).find(t => !t.hidden);
+        if (firstVisible) {
+          firstVisible.classList.add('active');
+          pane.querySelector(`[data-language-pane="${firstVisible.dataset.language}"]`).classList.add('active');
+        }
+      }
     }
 
     languageTabs.forEach(tab => {

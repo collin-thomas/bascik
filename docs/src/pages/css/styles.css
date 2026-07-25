@@ -168,23 +168,21 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
 }
 
 .dnav-logo {
-  font-weight: 800;
-  font-size: 1.1rem;
-  font-family: monospace;
-  color: var(--accent);
-  letter-spacing: -0.02em;
-  background: var(--accent-dim);
-  padding: 4px 12px;
-  border-radius: var(--r-sm);
-  border: 1px solid rgba(211,255,141,0.2);
   text-decoration: none;
   flex-shrink: 0;
-  transition: background .15s;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  transition: filter .15s;
 }
 
 .dnav-logo:hover {
-  background: rgba(211,255,141,0.2);
+  filter: brightness(1.12);
   opacity: 1;
+}
+
+.bascik-logo {
+  display: block;
 }
 
 .dnav-links {
@@ -230,9 +228,7 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
   z-index: 110;
   border-radius: var(--r-sm);
   transition: background .15s;
-  list-style: none; /* remove <summary> default marker */
 }
-.dnav-toggle::-webkit-details-marker { display: none; }
 
 .dnav-toggle:hover {
   background: var(--elevated);
@@ -262,27 +258,19 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
 .dnav-toggle-icon::before { top: -6px; }
 .dnav-toggle-icon::after  { top: 6px; }
 
-.dnav-toggle.is-active .dnav-toggle-icon { background: transparent; }
-.dnav-toggle.is-active .dnav-toggle-icon::before { top: 0; transform: rotate(45deg); background: var(--text); }
-.dnav-toggle.is-active .dnav-toggle-icon::after  { top: 0; transform: rotate(-45deg); background: var(--text); }
+/* Hide the checkbox — visible only to CSS via :checked */
+.dnav-checkbox { display: none; }
 
-/* Desktop: always show nav links inside <details>, hide the toggle */
+/* Desktop: links wrapper always visible */
 @media (min-width: 769px) {
-  .dnav-details {
+  .dnav-links-wrapper {
     display: flex;
     align-items: center;
   }
-  .dnav-details > .dnav-toggle {
-    display: none;
-  }
-  /* Override UA stylesheet's display:none on non-open <details> children */
-  .dnav-details > .dnav-links-wrapper {
-    display: flex;
-  }
 }
 
-/* Body scroll lock when mobile nav is open — no JS needed */
-body:has(.dnav-details[open]) {
+/* Body scroll lock when mobile nav is open */
+body:has(.dnav-checkbox:checked) {
   overflow: hidden;
 }
 
@@ -291,48 +279,50 @@ body:has(.dnav-details[open]) {
 @media (max-width: 768px) {
   .dnav-toggle { display: block; }
 
+  /* Hide compact top-level links on mobile — all pages appear in the full overlay */
+  .dnav-links { display: none; }
+
+  /* Full-screen overlay when checkbox is checked */
+  .dnav-checkbox:checked ~ .dnav {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    overflow: hidden;
+    background: var(--bg);
+    backdrop-filter: none;
+  }
+
+  /* Scrollable content area: fills screen below the ~57px header bar */
   .dnav-links-wrapper {
     display: none;
     flex-direction: column;
-    width: 100%;
-    padding: 16px 0 24px;
-    border-top: 1px solid var(--border);
-    margin-top: 12px;
-    max-height: calc(100vh - 75px);
+    position: absolute;
+    top: 57px;
+    left: 0;
+    right: 0;
+    bottom: 0;
     overflow-y: auto;
+    padding: 20px 0 40px;
+    border-top: 1px solid var(--border);
   }
 
-  .dnav-details[open] > .dnav-links-wrapper { display: flex; }
+  .dnav-checkbox:checked ~ .dnav .dnav-links-wrapper { display: flex; }
 
-  /* Hamburger → X animation driven by [open], no JS */
-  .dnav-details[open] .dnav-toggle-icon { background: transparent; }
-  .dnav-details[open] .dnav-toggle-icon::before { top: 0; transform: rotate(45deg); background: var(--text); }
-  .dnav-details[open] .dnav-toggle-icon::after  { top: 0; transform: rotate(-45deg); background: var(--text); }
-
-  .dnav-links {
-    flex-direction: column;
-    width: 100%;
-    gap: 8px;
-    margin-bottom: 24px;
-  }
-
-  .dnav-links li { width: 100%; }
-
-  .dnav-links li a {
-    width: 100%;
-    padding: 10px 14px;
-  }
+  /* Hamburger → X animation driven by :checked, no JS */
+  .dnav-checkbox:checked ~ .dnav .dnav-toggle-icon { background: transparent; }
+  .dnav-checkbox:checked ~ .dnav .dnav-toggle-icon::before { top: 0; transform: rotate(45deg); background: var(--text); }
+  .dnav-checkbox:checked ~ .dnav .dnav-toggle-icon::after  { top: 0; transform: rotate(-45deg); background: var(--text); }
 
   .mobile-only-sections {
     display: block;
     width: 100%;
-    padding: 0 14px;
+    padding: 0 20px;
   }
 
   .mobile-sep {
     border: none;
     border-top: 1px solid var(--border);
-    margin: 16px 0 24px;
+    margin: 16px 0 20px;
   }
 
   .mobile-sec-heading {
@@ -567,4 +557,122 @@ body:has(.dnav-details[open]) {
   /* Misc */
   img { max-width: 100% !important; }
   @page { margin: 1.5cm 2cm; }
+}
+
+/* ── Footer ── */
+.dfooter {
+  border-top: 1px solid var(--border);
+  padding: 56px 0 0;
+  margin-top: 80px;
+}
+
+.dfooter-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+.dfooter-upper {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 48px;
+  padding-bottom: 48px;
+}
+
+.dfooter-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.dfooter-logo {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  transition: filter .15s;
+}
+
+.dfooter-logo:hover { filter: brightness(1.12); opacity: 1; }
+
+.dfooter-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.dfooter-made-by {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.dfooter-made-by a { color: var(--accent); text-decoration: none; }
+.dfooter-made-by a:hover { opacity: 0.8; }
+
+.dfooter-sitemap {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 28px 16px;
+}
+
+.dfooter-col { align-self: start; }
+
+.dfooter-col-heading {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--accent);
+  margin: 0 0 10px;
+}
+
+.dfooter-col-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dfooter-col-links a {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color .15s;
+}
+
+.dfooter-col-links a:hover { color: var(--text); opacity: 1; }
+
+.dfooter-bottom {
+  border-top: 1px solid var(--border);
+  padding: 16px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.dfooter-copy { font-size: 0.78rem; color: var(--text-muted); }
+.dfooter-copy a { color: var(--text-muted); text-decoration: none; transition: color .15s; }
+.dfooter-copy a:hover { color: var(--accent); opacity: 1; }
+
+.dfooter-links { display: flex; gap: 20px; }
+
+.dfooter-links a {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color .15s;
+}
+
+.dfooter-links a:hover { color: var(--accent); opacity: 1; }
+
+@media (max-width: 820px) {
+  .dfooter-upper { grid-template-columns: 1fr; gap: 32px; }
 }

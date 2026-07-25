@@ -41,6 +41,7 @@
 import { execFile } from "node:child_process";
 import { writeFile, unlink, mkdir } from "node:fs/promises";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { getRelativePath } from "./file-system.js";
 
 
@@ -73,9 +74,9 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
 
   let result = html;
 
-  // Ensure a local temp directory exists in the project root so that
-  // Node's module resolution can find local node_modules.
-  const tempDir = join(process.cwd(), ".bascik", "tmp");
+  // Ensure a temp directory exists for writing ephemeral build scripts.
+  // Using os.tmpdir() keeps generated files out of the project tree.
+  const tempDir = join(tmpdir(), "bascik-build-scripts");
   await mkdir(tempDir, { recursive: true });
 
   for (const match of matches) {

@@ -1115,6 +1115,16 @@ export const bascikConfig = {
 
   // Logging
   verboseLogging: false, // include { cause } in console.warn/error
+
+  // Sitemap
+  siteUrl: 'https://example.com',
+  generate: {
+    sitemap: true,  // write dist/sitemap.xml
+    robots: true,   // write dist/robots.txt
+  },
+
+  // Dev-mode extra watch paths
+  triggerTranspile: [], // re-transpile all pages when these change
 };
 
 // Overrides applied only during `bascik --build`
@@ -1206,6 +1216,37 @@ Include the `{ cause }` detail object in `console.warn` and `console.error` call
 ```js
 verboseLogging: false // default
 ```
+
+#### `siteUrl`
+
+The canonical base URL of your deployed site (e.g. `'https://example.com'`). Required for sitemap generation. Trailing slashes are trimmed automatically.
+
+```js
+siteUrl: 'https://example.com'
+```
+
+#### `generate`
+
+Control which files are written to `dist/` during `bascik --build`. Both default to `true`. Requires `siteUrl` to be set.
+
+```js
+generate: {
+  sitemap: true, // write dist/sitemap.xml
+  robots: true,  // write dist/robots.txt
+}
+```
+
+See [Sitemap & robots.txt](/sitemap) for a full walkthrough.
+
+#### `triggerTranspile`
+
+An array of directories or files that, when changed in dev mode, trigger a full re-transpile of all pages. Useful for utility scripts, data files, or image directories that pages depend on at build time.
+
+```js
+triggerTranspile: ['scripts/', 'data/'] // empty by default
+```
+
+Has no effect during `bascik --build`.
 
 ### `buildOverrideConfig`
 
@@ -1325,6 +1366,52 @@ Bascik will scan every `.html` file in your pages and components directories and
 ```sh
 # In a CI script:
 bascik --check && bascik --build
+```
+
+> **What `bascik --check` does not cover.** The check validates component references — unknown and unused tags. It does not parse CSS or JavaScript for syntax errors. If a CSS file contains a syntax error (for example, a value accidentally split across two lines), Bascik's scoping transforms may still run on the malformed input and produce unexpected output. Complement `bascik --check` with the tools below to catch these cases before they reach your build.
+
+#### Recommended Complementary Analysis Tools
+
+These tools run independently of Bascik and are not required, but they close the gap that `bascik --check` does not cover:
+
+| Tool | What it catches | How to use |
+|---|---|---|
+| **VS Code built-in CSS** | CSS syntax errors (squiggly lines in `.css` files in the editor) | Enabled by default — no install needed |
+| **[Stylelint](https://stylelint.io)** | CSS syntax errors, invalid properties, rule ordering, custom conventions | `npm install -D stylelint && npx stylelint "**/*.css"` |
+| **[HTMLHint](https://htmlhint.com)** | HTML structure errors in page and component `.html` files | `npm install -D htmlhint && npx htmlhint "src/**/*.html"` |
+| **[ESLint](https://eslint.org)** | JavaScript syntax and logic errors in component `<script>` blocks | `npm install -D eslint && npx eslint "src/**/*.js"` |
+
+Adding a Stylelint step to CI is the most effective single addition for catching CSS issues that affect Bascik's scoping output:
+
+```sh
+# CI pipeline with CSS and component validation:
+npx stylelint "src/**/*.css" && bascik --check && bascik --build
+```
+
+#### Editor Configuration
+
+Editors validate `<script>` blocks in an HTML file as if they all share one scope. This causes false "variable already declared" errors when the same variable name appears in two different script blocks — even though Bascik wraps each block in an IIFE at build time, keeping their scopes completely isolated.
+
+**VS Code** ships with a built-in HTML script validator that triggers this. Disable it for your project by adding a `.vscode/settings.json` file:
+
+```json
+{
+  "html.validate.scripts": false
+}
+```
+
+This suppresses the false positives without affecting `.js` file validation or any other language feature. The actual runtime isolation comes from Bascik's IIFE wrapping at build time, not from editor validation.
+
+> **Committing `.vscode/settings.json`.** Checking this file into your repository means every contributor gets the correct editor behaviour without any manual setup step.
+
+If you prefer a per-block fix rather than a project-wide setting, add `// @ts-nocheck` as the first line inside any script block that triggers the warning:
+
+```html
+<script>
+  // @ts-nocheck
+  const count = 0;
+  document.getElementById('count-btn').addEventListener('click', () => { … });
+</script>
 ```
 
 #### 5. Inspecting the `dist/` Directory
@@ -2647,6 +2734,136 @@ If your content comes from a headless CMS that returns Markdown via an API, fetc
 
 The Markdown is converted to HTML and baked into the static output. No CMS API calls happen in the browser — users see plain HTML.
 
+## Sitemap & robots.txt
+
+Bascik can automatically generate a `sitemap.xml` and `robots.txt` for your site at build time. Both files are written to `dist/` alongside your compiled HTML pages.
+
+Sitemap generation is on by default. To enable it, set `siteUrl` in your config:
+
+```js
+// bascik.config.js
+export const bascikConfig = {
+  siteUrl: 'https://example.com',
+};
+```
+
+That's all — `generate.sitemap` and `generate.robots` both default to `true`, so no other change is needed.
+
+### What gets generated
+
+**`dist/sitemap.xml`** — an XML sitemap listing every `.html` page in your `src/pages` directory as an absolute URL:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://example.com/</loc>
+  </url>
+  <url>
+    <loc>https://example.com/about</loc>
+  </url>
+  <url>
+    <loc>https://example.com/blog/post</loc>
+  </url>
+</urlset>
+```
+
+**`dist/robots.txt`** — allows all crawlers and points them at the sitemap:
+
+```text
+User-agent: *
+Allow: /
+
+Sitemap: https://example.com/sitemap.xml
+```
+
+### URL path rules
+
+Each page is converted from its file path to a URL path following these rules:
+
+| Source file | URL |
+|---|---|
+| `src/pages/index.html` | `/` |
+| `src/pages/about.html` | `/about` |
+| `src/pages/blog/index.html` | `/blog` |
+| `src/pages/blog/post.html` | `/blog/post` |
+
+### Opting out
+
+Control sitemap and robots.txt generation independently via the `generate` option:
+
+```js
+export const bascikConfig = {
+  siteUrl: 'https://example.com',
+  generate: {
+    sitemap: true,  // default
+    robots: true,   // default
+  },
+};
+```
+
+Set either to `false` to skip that file:
+
+```js
+export const bascikConfig = {
+  siteUrl: 'https://example.com',
+  generate: { sitemap: true, robots: false }, // skip robots.txt
+};
+```
+
+If `generate.sitemap` or `generate.robots` is `true` but `siteUrl` is not set, Bascik logs a warning and skips generation — it cannot produce absolute URLs without a base URL.
+
+### Build-only
+
+Sitemap and robots.txt are only generated during `bascik --build`. The dev server does not write these files.
+
+## AI Skill
+
+The Bascik skill file (`SKILL.md`) teaches any AI assistant — GitHub Copilot, Cursor, Claude, or others that support instruction files — the full details of how Bascik works: its component model, scoping system, config options, CLI, and conventions.
+
+Add it once, and your AI assistant can accurately answer questions about Bascik, generate correct components, and help debug scoping issues without needing to look anything up.
+
+### Download
+
+The skill file is served from this site:
+
+```text
+https://bascik.dev/assets/SKILL.md
+```
+
+### Adding it to GitHub Copilot (VS Code)
+
+Save the file somewhere in your project (e.g. `.github/bascik-skill.md`) then reference it in your `.github/copilot-instructions.md`:
+
+```markdown
+<!-- .github/copilot-instructions.md -->
+See @.github/bascik-skill.md for the complete Bascik reference.
+```
+
+Or attach it directly in a Copilot Chat conversation using the **Attach Context** button and selecting the file.
+
+### Adding it to Cursor
+
+Place the file at `.cursor/rules/bascik.md` in your project root. Cursor picks it up automatically as a project rule.
+
+### Adding it to Claude (claude.md)
+
+Paste the contents into your `claude.md` file, or reference the file path in your project instructions.
+
+### What's inside
+
+The skill covers:
+
+- Component authoring, slots, and props
+- Scoped CSS and scoped JavaScript rules and constraints
+- Build scripts (`data-bascik-build`)
+- Configuration options (`bascik.config.js`)
+- CLI commands and workflow
+- The scoping compatibility table
+- Folder structure and naming conventions
+
+> **Keeping it current.** `SKILL.md` is regenerated from the same Markdown source files that power this docs site. When the docs update, so does the skill file.
+
 <p class="section-label">Developers</p>
 
 # Architecture
@@ -2663,6 +2880,12 @@ The Markdown is converted to HTML and baked into the static output. No CMS API c
 
 ```ts
 // transpile.ts (entry point)
+if (process.argv.includes("--check")) {
+  const { checkProject } = await import("./lib/check.js");
+  const ok = await checkProject();
+  process.exit(ok ? 0 : 1);
+}
+
 watchFiles();
 
 if (!BascikConfig.isBuild) {
@@ -2672,7 +2895,7 @@ if (!BascikConfig.isBuild) {
 }
 ```
 
-The dynamic `import()` for `http2.js` is intentional — it avoids loading the server module during `--build` runs.
+The dynamic `import()` calls for `check.js` and `http2.js` are intentional — they avoid loading those modules when not needed (`--check` exits immediately after analysis; `--build` never starts the server).
 
 ## Library Modules
 
@@ -2688,6 +2911,7 @@ All logic lives in `pkg/src/lib/`. Each file has a single, well-defined responsi
 | `styles.ts` | All CSS transformations: element selector conversion, class prefixing, `@keyframes` / `@layer` / container scoping, custom property prefixing, CSS deduplication. |
 | `names.ts` | Generates unique instance IDs (`getUniqueId`) and hashes long scoped names to short hex strings (`obfuscateAttributeName` via SHAKE-256) when obfuscation is enabled. |
 | `build-scripts.ts` | Executes `<script data-bascik-build>` blocks as Node.js ESM modules at transpile time and replaces the tag with the script's stdout output. |
+| `check.ts` | Static analysis for `bascik --check`. Scans all pages and components for unresolved custom tags (errors) and unused component files (warnings). Exits with code 1 when errors are found so it can gate CI pipelines. |
 | `watch.ts` | Sets up chokidar watchers for pages, components, and static assets. Triggers full or selective re-transpilation on file events. |
 | `http2.ts` | The development HTTP/2 server on `https://localhost:8443`. Serves transpiled pages from the memory store, static assets from disk, and the live-reload SSE endpoint. |
 | `mem.ts` | In-memory page store. Stores brotli-compressed page buffers keyed by HTTP path, and maintains a reverse index mapping each component name to the set of pages that use it. |
@@ -2705,6 +2929,8 @@ The data flow at a high level:
 ```text
 transpile.ts
   ├── config.ts ← userConfig.ts ← bascik.config.js
+  ├── (--check only)
+  │     └── check.ts ← components.ts, file-system.ts
   ├── watch.ts
   │     └── processing.ts
   │           ├── components.ts ← file-system.ts

@@ -61,13 +61,6 @@
               </script>
             </code-block>
           </div>
-          <div data-bascik-slot="source-css">
-            <code-block data-bascik-prop-lang="css">// feature-card has no page-level CSS — its styles are scoped
-              internally.</code-block>
-          </div>
-          <div data-bascik-slot="source-js">
-            <code-block data-bascik-prop-lang="js">// feature-card has no JavaScript.</code-block>
-          </div>
           <div data-bascik-slot="output-html">
             <code-block data-bascik-prop-lang="html">
               <script data-bascik-build>
@@ -77,13 +70,6 @@
                 console.log(await extractDemoBlock('./content/07-attribute-inheritance.md', 'output-html'));
               </script>
             </code-block>
-          </div>
-          <div data-bascik-slot="output-css">
-            <code-block data-bascik-prop-lang="css">// Scoped feature-card styles are emitted separately — only the
-              inherited class and aria-label are shown here.</code-block>
-          </div>
-          <div data-bascik-slot="output-js">
-            <code-block data-bascik-prop-lang="js">// No JavaScript is emitted for this component.</code-block>
           </div>
         </component-demo>
 
@@ -98,7 +84,12 @@
     </div>
   </div>
 
-  <docs-footer></docs-footer>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { renderFooter } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+    console.log(renderFooter());
+  </script>
 </body>
 
 </html>

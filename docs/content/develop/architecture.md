@@ -14,6 +14,12 @@
 
 ```ts
 // transpile.ts (entry point)
+if (process.argv.includes("--check")) {
+  const { checkProject } = await import("./lib/check.js");
+  const ok = await checkProject();
+  process.exit(ok ? 0 : 1);
+}
+
 watchFiles();
 
 if (!BascikConfig.isBuild) {
@@ -23,7 +29,7 @@ if (!BascikConfig.isBuild) {
 }
 ```
 
-The dynamic `import()` for `http2.js` is intentional — it avoids loading the server module during `--build` runs.
+The dynamic `import()` calls for `check.js` and `http2.js` are intentional — they avoid loading those modules when not needed (`--check` exits immediately after analysis; `--build` never starts the server).
 
 ## Library Modules
 
@@ -39,6 +45,7 @@ All logic lives in `pkg/src/lib/`. Each file has a single, well-defined responsi
 | `styles.ts` | All CSS transformations: element selector conversion, class prefixing, `@keyframes` / `@layer` / container scoping, custom property prefixing, CSS deduplication. |
 | `names.ts` | Generates unique instance IDs (`getUniqueId`) and hashes long scoped names to short hex strings (`obfuscateAttributeName` via SHAKE-256) when obfuscation is enabled. |
 | `build-scripts.ts` | Executes `<script data-bascik-build>` blocks as Node.js ESM modules at transpile time and replaces the tag with the script's stdout output. |
+| `check.ts` | Static analysis for `bascik --check`. Scans all pages and components for unresolved custom tags (errors) and unused component files (warnings). Exits with code 1 when errors are found so it can gate CI pipelines. |
 | `watch.ts` | Sets up chokidar watchers for pages, components, and static assets. Triggers full or selective re-transpilation on file events. |
 | `http2.ts` | The development HTTP/2 server on `https://localhost:8443`. Serves transpiled pages from the memory store, static assets from disk, and the live-reload SSE endpoint. |
 | `mem.ts` | In-memory page store. Stores brotli-compressed page buffers keyed by HTTP path, and maintains a reverse index mapping each component name to the set of pages that use it. |
@@ -56,6 +63,8 @@ The data flow at a high level:
 ```text
 transpile.ts
   ├── config.ts ← userConfig.ts ← bascik.config.js
+  ├── (--check only)
+  │     └── check.ts ← components.ts, file-system.ts
   ├── watch.ts
   │     └── processing.ts
   │           ├── components.ts ← file-system.ts

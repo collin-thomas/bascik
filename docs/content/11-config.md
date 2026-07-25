@@ -32,6 +32,16 @@ export const bascikConfig = {
 
   // Logging
   verboseLogging: false, // include { cause } in console.warn/error
+
+  // Sitemap
+  siteUrl: 'https://example.com',
+  generate: {
+    sitemap: true,  // write dist/sitemap.xml
+    robots: true,   // write dist/robots.txt
+  },
+
+  // Dev-mode extra watch paths
+  triggerTranspile: [], // re-transpile all pages when these change
 };
 
 // Overrides applied only during `bascik --build`
@@ -123,6 +133,37 @@ Include the `{ cause }` detail object in `console.warn` and `console.error` call
 ```js
 verboseLogging: false // default
 ```
+
+#### `siteUrl`
+
+The canonical base URL of your deployed site (e.g. `'https://example.com'`). Required for sitemap generation. Trailing slashes are trimmed automatically.
+
+```js
+siteUrl: 'https://example.com'
+```
+
+#### `generate`
+
+Control which files are written to `dist/` during `bascik --build`. Both default to `true`. Requires `siteUrl` to be set.
+
+```js
+generate: {
+  sitemap: true, // write dist/sitemap.xml
+  robots: true,  // write dist/robots.txt
+}
+```
+
+See [Sitemap & robots.txt](/sitemap) for a full walkthrough.
+
+#### `triggerTranspile`
+
+An array of directories or files that, when changed in dev mode, trigger a full re-transpile of all pages. Useful for utility scripts, data files, or image directories that pages depend on at build time.
+
+```js
+triggerTranspile: ['scripts/', 'data/'] // empty by default
+```
+
+Has no effect during `bascik --build`.
 
 ### `buildOverrideConfig`
 

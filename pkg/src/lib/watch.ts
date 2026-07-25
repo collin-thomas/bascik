@@ -6,6 +6,7 @@ import {
   removePage,
   selectivelyProcessPages,
 } from "./processing.js";
+import { generateSitemapFiles } from "./sitemap.js";
 import {
   copyReplicatePath,
   deleteDistDir,
@@ -39,6 +40,7 @@ export const watchFiles = () => {
     .on("unlinkDir", (path) => deleteDistDir(path));
 
   // Transpile pages as they change
+  const buildPagePromises: Promise<string>[] = [];
   chokidar
     .watch([BascikConfig.directory.pages], {
       // only watch html files
@@ -46,10 +48,19 @@ export const watchFiles = () => {
         !!(stats?.isFile() && !path.endsWith(".html")),
       persistent: !BascikConfig.isBuild,
     })
-    .on("add", (path) => pageProcessing(path))
+    .on("add", (path) => {
+      const p = pageProcessing(path);
+      if (BascikConfig.isBuild) buildPagePromises.push(p);
+    })
     .on("change", (path) => pageProcessing(path))
     .on("unlink", (path: string, _stats?: Stats) => removePage(path))
-    .on("unlinkDir", (path: string, _stats?: Stats) => deleteDistDir(path));
+    .on("unlinkDir", (path: string, _stats?: Stats) => deleteDistDir(path))
+    .on("ready", async () => {
+      if (BascikConfig.isBuild) {
+        await Promise.all(buildPagePromises);
+        await generateSitemapFiles();
+      }
+    });
 
   // Transpile pages if components change
   chokidar
@@ -67,4 +78,16 @@ export const watchFiles = () => {
     // For changes and deletion of components we can be selective
     .on("change", async (path) => selectivelyProcessPages(path))
     .on("unlink", async (path) => selectivelyProcessPages(path));
+
+  // Re-transpile all pages when user-specified extra paths change (dev only)
+  if (!BascikConfig.isBuild && BascikConfig.triggerTranspile?.length) {
+    chokidar
+      .watch(BascikConfig.triggerTranspile, {
+        ignoreInitial: true,
+        persistent: true,
+      })
+      .on("add", async () => processAllPages())
+      .on("change", async () => processAllPages())
+      .on("unlink", async () => processAllPages());
+  }
 };

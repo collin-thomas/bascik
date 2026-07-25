@@ -93,6 +93,52 @@ Bascik will scan every `.html` file in your pages and components directories and
 bascik --check && bascik --build
 ```
 
+> **What `bascik --check` does not cover.** The check validates component references — unknown and unused tags. It does not parse CSS or JavaScript for syntax errors. If a CSS file contains a syntax error (for example, a value accidentally split across two lines), Bascik's scoping transforms may still run on the malformed input and produce unexpected output. Complement `bascik --check` with the tools below to catch these cases before they reach your build.
+
+#### Recommended Complementary Analysis Tools
+
+These tools run independently of Bascik and are not required, but they close the gap that `bascik --check` does not cover:
+
+| Tool | What it catches | How to use |
+|---|---|---|
+| **VS Code built-in CSS** | CSS syntax errors (squiggly lines in `.css` files in the editor) | Enabled by default — no install needed |
+| **[Stylelint](https://stylelint.io)** | CSS syntax errors, invalid properties, rule ordering, custom conventions | `npm install -D stylelint && npx stylelint "**/*.css"` |
+| **[HTMLHint](https://htmlhint.com)** | HTML structure errors in page and component `.html` files | `npm install -D htmlhint && npx htmlhint "src/**/*.html"` |
+| **[ESLint](https://eslint.org)** | JavaScript syntax and logic errors in component `<script>` blocks | `npm install -D eslint && npx eslint "src/**/*.js"` |
+
+Adding a Stylelint step to CI is the most effective single addition for catching CSS issues that affect Bascik's scoping output:
+
+```sh
+# CI pipeline with CSS and component validation:
+npx stylelint "src/**/*.css" && bascik --check && bascik --build
+```
+
+#### Editor Configuration
+
+Editors validate `<script>` blocks in an HTML file as if they all share one scope. This causes false "variable already declared" errors when the same variable name appears in two different script blocks — even though Bascik wraps each block in an IIFE at build time, keeping their scopes completely isolated.
+
+**VS Code** ships with a built-in HTML script validator that triggers this. Disable it for your project by adding a `.vscode/settings.json` file:
+
+```json
+{
+  "html.validate.scripts": false
+}
+```
+
+This suppresses the false positives without affecting `.js` file validation or any other language feature. The actual runtime isolation comes from Bascik's IIFE wrapping at build time, not from editor validation.
+
+> **Committing `.vscode/settings.json`.** Checking this file into your repository means every contributor gets the correct editor behaviour without any manual setup step.
+
+If you prefer a per-block fix rather than a project-wide setting, add `// @ts-nocheck` as the first line inside any script block that triggers the warning:
+
+```html
+<script>
+  // @ts-nocheck
+  const count = 0;
+  document.getElementById('count-btn').addEventListener('click', () => { … });
+</script>
+```
+
 #### 5. Inspecting the `dist/` Directory
 
 Both the dev server and `bascik --build` write compiled HTML to `dist/` on disk. This is the most direct way to confirm that Bascik did what you expected.

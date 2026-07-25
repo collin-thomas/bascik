@@ -2,6 +2,32 @@ import { readFile } from "node:fs/promises";
 import { obfuscateAttributeName } from "./names.js";
 import type { BascikComponent } from "./types.js";
 
+// CSS unit keywords that are not valid HTML element names.  A CSS syntax
+// error (e.g. breaking `0.7rem 1em` across two lines) can place a unit
+// keyword at column 0 where the element-selector regex would otherwise
+// match it and produce a garbled scoped class name.
+const CSS_UNIT_KEYWORDS = new Set([
+  // Relative length
+  "rem", "ex", "rex", "cap", "rcap", "ch", "rch", "ic", "ric", "lh", "rlh",
+  // Viewport
+  "vw", "vh", "vmin", "vmax",
+  "svw", "svh", "svmin", "svmax",
+  "dvw", "dvh", "dvmin", "dvmax",
+  "lvw", "lvh", "lvmin", "lvmax",
+  // Container query
+  "cqw", "cqh", "cqi", "cqb", "cqmin", "cqmax",
+  // Absolute length
+  "px", "cm", "mm", "in", "pt", "pc",
+  // Angle
+  "deg", "rad", "grad", "turn",
+  // Time  (note: "s" IS an HTML element, so it is intentionally omitted)
+  "ms",
+  // Frequency
+  "hz", "khz",
+  // Resolution
+  "dpi", "dpcm", "dppx",
+]);
+
 export const convertCssElementSelectorsToClasses = (
   css: string,
   componentName: string,
@@ -13,6 +39,10 @@ export const convertCssElementSelectorsToClasses = (
   const elementsConvertedClasses: string[] = [];
 
   const toClass = (elementName: string): string => {
+    // CSS unit keywords (rem, vw, px, …) are not HTML elements.  A syntax
+    // error in the user's CSS can place them at column 0 where the regex
+    // would otherwise match.  Return unchanged so the unit is preserved as-is.
+    if (CSS_UNIT_KEYWORDS.has(elementName.toLowerCase())) return elementName;
     if (!seen.has(elementName)) {
       seen.add(elementName);
       elementsConvertedClasses.push(elementName);

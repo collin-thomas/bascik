@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Developer Guide — Bascik</title>
+  <title>Sitemap & robots.txt — Bascik Docs</title>
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 
@@ -14,44 +14,40 @@
     import { join } from 'node:path';
     import { pathToFileURL } from 'node:url';
     const { renderNav } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
-    console.log(renderNav('/develop'));
+    console.log(renderNav('/sitemap'));
   </script>
 
   <div class="container">
     <div class="docs-layout">
-
       <script data-bascik-build>
         import { join } from 'node:path';
         import { pathToFileURL } from 'node:url';
         const { renderSidebar } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
-        console.log(renderSidebar('/develop'));
+        console.log(renderSidebar('/sitemap'));
       </script>
 
       <main class="docs-content">
-        <script data-bascik-build>
-          import { readFile } from 'node:fs/promises';
-          import { marked } from 'marked';
+        <p class="section-label">Feature</p>
+        <h1>Sitemap &amp; robots.txt</h1>
+        <p class="page-intro">Bascik generates a <code>sitemap.xml</code> and <code>robots.txt</code> automatically
+          at build time. Set your site URL in the config and both files appear in <code>dist/</code> alongside your
+          compiled pages — no plugins, no extra steps.</p>
 
-          marked.use({
-            renderer: {
-              code({ text, lang }) {
-                const encoded = text.replace(/\n( *)/g, (_, s) => '&#10;' + s.replace(/ /g, '&#32;'));
-                const attr = lang ? ` data-bascik-prop-lang="${lang}"` : '';
-                return `<code-block${attr}>${encoded}</code-block>`;
-              }
-            }
-          });
-
-          const md = await readFile('./content/develop/overview.md', 'utf8');
-          console.log(marked(md));
-        </script>
+        <!-- Content rendered from docs/content/19-sitemap.md at build time.
+             To update page content, edit the MD file — not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
-          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
-          console.log(renderPagination('/develop'));
+          const { renderMd } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMd('./content/19-sitemap.md', { skipFirstHeading: true }));
         </script>
 
+        <div class="callout">
+          <p><strong>Next:</strong> See <a href="/configuration">Configuration</a> for the full list of
+            <code>bascik.config.js</code> options including <code>siteUrl</code> and <code>generateSitemap</code>.</p>
+        </div>
       </main>
     </div>
   </div>

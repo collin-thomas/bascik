@@ -87,7 +87,12 @@
   </div>
 
 
-  <docs-footer></docs-footer>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { renderFooter } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+    console.log(renderFooter());
+  </script>
 </body>
 
 </html>

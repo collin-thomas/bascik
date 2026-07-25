@@ -51,6 +51,35 @@ export interface BascikConfigOptions {
    * Defaults to ["code", "pre"].
    */
   skipTranspilingElementContents: string[];
+  /**
+   * Control which files are generated in `dist/` during `bascik --build`.
+   */
+  generate: {
+    /**
+     * Write `dist/sitemap.xml` listing every HTML page as an absolute URL.
+     * Requires `siteUrl` to be set. Defaults to `true`.
+     */
+    sitemap: boolean;
+    /**
+     * Write `dist/robots.txt` allowing all crawlers and pointing at the sitemap.
+     * Defaults to `true`.
+     */
+    robots: boolean;
+  };
+  /**
+   * The canonical base URL of the deployed site (e.g. `"https://example.com"`).
+   * Required for sitemap generation. Trailing slash is trimmed automatically.
+   */
+  siteUrl?: string;
+  /**
+   * Extra directories or files to watch in dev mode. Any change inside these
+   * paths triggers a full re-transpile of all pages, just like a component
+   * change would. Has no effect during `bascik --build`.
+   *
+   * @example
+   * triggerTranspile: ['scripts/', 'images/']
+   */
+  triggerTranspile?: string[];
   isBuild?: boolean;
 }
 

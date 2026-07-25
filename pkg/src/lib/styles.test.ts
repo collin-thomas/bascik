@@ -136,6 +136,18 @@ describe("convertCssElementSelectorsToClasses", () => {
       },
     );
   });
+
+  it("does not scope CSS unit keywords that appear at line start due to a syntax error", () => {
+    // A CSS syntax error can place a unit keyword like `rem` at column 0,
+    // e.g. accidentally breaking `0.7rem 1em` across two lines.
+    // The scoping regex must leave it untouched.
+    const brokenCss = `.mycomp {\n  margin: 0.7\nrem 1em;\n}`;
+    const { css, elementsConvertedClasses } =
+      convertCssElementSelectorsToClasses(brokenCss, "my-comp");
+    expect(css).toContain("rem 1em");
+    expect(css).not.toContain("bascik__my-comp__el__rem");
+    expect(elementsConvertedClasses).not.toContain("rem");
+  });
 });
 
 describe("addElementClassesInHtml", () => {

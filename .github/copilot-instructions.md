@@ -8,8 +8,8 @@ This file applies to all work inside `/docs/`. Read it before creating or editin
 
 The Markdown files serve three purposes simultaneously:
 1. They are the canonical source for the rendered docs page (via `data-bascik-build`)
-2. They feed `llms.txt` (via `scripts/generate-llms-txt.mjs`)
-3. They feed `SKILL.md` (the Copilot skill file at the repo root)
+2. They feed `llms.txt` (via `docs/scripts/generate-llms-txt.mjs`)
+3. They feed `SKILL.md` (the Copilot skill file at `docs/src/pages/assets/SKILL.md`, served at `/assets/SKILL.md`)
 
 **When adding or updating docs content:**
 - Write the prose and code examples in the appropriate `docs/content/NN-topic.md` file
@@ -88,10 +88,10 @@ The `skipFirstHeading: true` option strips the leading `## Section Name` heading
 
 After adding or significantly changing a content MD file, regenerate `llms.txt`:
 ```sh
-yarn --cwd docs generate:llms
+yarn --cwd docs generate:llms  # runs docs/scripts/generate-llms-txt.mjs
 ```
 
-Then manually update the relevant section in `SKILL.md` at the repo root to reflect the change.
+Then manually update the relevant section in `docs/src/pages/assets/SKILL.md` to reflect the change.
 
 ## Sidebar
 

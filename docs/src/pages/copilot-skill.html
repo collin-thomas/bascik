@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Developer Guide — Bascik</title>
+  <title>AI Skill — Bascik Docs</title>
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 
@@ -14,42 +14,34 @@
     import { join } from 'node:path';
     import { pathToFileURL } from 'node:url';
     const { renderNav } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
-    console.log(renderNav('/develop'));
+    console.log(renderNav('/copilot-skill'));
   </script>
 
   <div class="container">
     <div class="docs-layout">
-
       <script data-bascik-build>
         import { join } from 'node:path';
         import { pathToFileURL } from 'node:url';
         const { renderSidebar } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
-        console.log(renderSidebar('/develop'));
+        console.log(renderSidebar('/copilot-skill'));
       </script>
 
       <main class="docs-content">
-        <script data-bascik-build>
-          import { readFile } from 'node:fs/promises';
-          import { marked } from 'marked';
+        <p class="section-label">Reference</p>
+        <h1>AI Skill</h1>
+        <p class="page-intro">Download the Bascik skill file and attach it to GitHub Copilot, Cursor, Claude, or any AI
+          assistant that supports instruction files — so it understands Bascik's component model, scoping rules, and
+          conventions out of the box.</p>
 
-          marked.use({
-            renderer: {
-              code({ text, lang }) {
-                const encoded = text.replace(/\n( *)/g, (_, s) => '&#10;' + s.replace(/ /g, '&#32;'));
-                const attr = lang ? ` data-bascik-prop-lang="${lang}"` : '';
-                return `<code-block${attr}>${encoded}</code-block>`;
-              }
-            }
-          });
-
-          const md = await readFile('./content/develop/overview.md', 'utf8');
-          console.log(marked(md));
-        </script>
+        <!-- Content rendered from docs/content/20-copilot-skill.md at build time.
+             To update page content, edit the MD file — not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
-          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
-          console.log(renderPagination('/develop'));
+          const { renderMd } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMd('./content/20-copilot-skill.md', { skipFirstHeading: true }));
         </script>
 
       </main>

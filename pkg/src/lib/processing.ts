@@ -83,6 +83,7 @@ import { getUniqueId } from "./names.js";
 import { BascikConfig } from "./config.js";
 import { mem } from "./mem.js";
 import { eventEmitter } from "./events.js";
+import { generateSitemapFiles } from "./sitemap.js";
 import type {
   BascikComponent,
   ComponentList,
@@ -352,6 +353,11 @@ export const processAllPages = async () => {
   console.log(
     `\n✓ ${count} page${count !== 1 ? "s" : ""} transpiled in ${elapsed}ms`,
   );
+
+  if (BascikConfig.isBuild) {
+    await generateSitemapFiles();
+  }
+
   return results;
 };
 
