@@ -519,6 +519,24 @@ describe("scopeInlineStyleTags", () => {
     expect(result).not.toContain("[id]");
     expect(result).toContain(".bascik__my-comp__foo");
   });
+
+  it("does NOT mangle decimal values in CSS property values (0.9, 1.1rem, .15s)", () => {
+    const html =
+      "<style>.nav { background: rgba(0,0,0,0.9); font-size: 1.1rem; transition: all .15s; letter-spacing: -0.02em; }</style>";
+    const { html: result } = scopeInlineStyleTags(html, "my-comp");
+    expect(result).toContain("rgba(0,0,0,0.9)");
+    expect(result).toContain("1.1rem");
+    expect(result).toContain(".15s");
+    expect(result).toContain("-0.02em");
+  });
+
+  it("still scopes class names when decimal values are present", () => {
+    const html =
+      "<style>.nav { opacity: 0.5; } .nav:hover { opacity: 1; }</style>";
+    const { html: result } = scopeInlineStyleTags(html, "my-comp");
+    expect(result).toContain(".bascik__my-comp__nav");
+    expect(result).toContain("opacity: 0.5");
+  });
 });
 
 // ─── removeIdSelectors — only strips [id] attribute selectors ────────────────

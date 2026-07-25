@@ -304,6 +304,19 @@ describe("prefixElementAttribute – CSS #id selector scoping", () => {
     expect(result.cssFileContent).toContain("linear-gradient(#abc, #def)");
   });
 
+  it("does NOT mangle decimal values in CSS property values", () => {
+    const c = makeComponent(
+      '<div class="nav"></div>',
+      ".nav { background: rgba(0,0,0,0.9); font-size: 1.1rem; transition: all .15s; letter-spacing: -0.02em; border: 1px solid rgba(255,255,255,0.2); }",
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.cssFileContent).toContain("rgba(0,0,0,0.9)");
+    expect(result.cssFileContent).toContain("1.1rem");
+    expect(result.cssFileContent).toContain(".15s");
+    expect(result.cssFileContent).toContain("-0.02em");
+    expect(result.cssFileContent).toContain("rgba(255,255,255,0.2)");
+  });
+
   it("converts #id in an inline <style> tag and injects class", () => {
     const c = makeComponent(
       '<style>#panel { display: none; }</style><div id="panel"></div>',

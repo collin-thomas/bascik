@@ -263,7 +263,7 @@ export const prefixElementAttribute = (
     if (component.cssFileContent) {
       // Handle basic replacement of classnames in css file
       component.cssFileContent = component.cssFileContent.replace(
-        /(?<=\.)[a-z0-9-_]+/gim,
+        /(?<=\.)[a-z_][a-z0-9-_]*/gim,
         (className) => {
           return obfuscateAttributeName(`bascik__${scopeKey}__${className}`);
         },

@@ -375,7 +375,7 @@ export const scopeInlineStyleTags = (
     /(<style\b[^>]*>)([\s\S]*?)(<\/style>)/gi,
     (_match, open: string, styleContent: string, close: string) => {
       let css = removeCommentsFromCss(styleContent);
-      css = css.replace(/(?<=\.)[a-z0-9-_]+/gim, (className) =>
+      css = css.replace(/(?<=\.)[a-z_][a-z0-9-_]*/gim, (className) =>
         obfuscateAttributeName(`bascik__${componentName}__${className}`),
       );
       const { css: elCss, elementsConvertedClasses } =
