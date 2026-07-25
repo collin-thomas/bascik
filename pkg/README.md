@@ -267,8 +267,7 @@ For each custom tag found:
   ┌─ 2. TEMPLATE RESOLUTION ──────────────────────────────────────┐
   │   a. injectProps         — fill data-bascik-prop-* markers    │
   │   b. replaceNamedSlots   — fill data-bascik-slot="name" zones  │
-  │   c. default slot        — fill <slot-component> or           │
-  │                            data-bascik-slot (no value)        │
+  │   c. default slot        — fill data-bascik-slot (no value)  │
   │                            with inner content or fallback      │
   │   d. mergeAttributesOntoRoot — pass-through attrs to root     │
   └───────────────────────────────────────────────────────────────┘

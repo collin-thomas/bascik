@@ -10,11 +10,21 @@
 
 <body>
 
-  <docs-nav></docs-nav>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { renderNav } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+    console.log(renderNav('/slots'));
+  </script>
 
   <div class="container">
     <div class="docs-layout">
-      <docs-sidebar></docs-sidebar>
+      <script data-bascik-build>
+        import { join } from 'node:path';
+        import { pathToFileURL } from 'node:url';
+        const { renderSidebar } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+        console.log(renderSidebar('/slots'));
+      </script>
 
       <main class="docs-content">
         <p class="section-label">Feature</p>
@@ -22,61 +32,18 @@
         <p class="page-intro">Slots let you pass inner HTML content into a component at the usage site. Bascik supports
           a default slot, named slots, and slot fallback content.</p>
 
-        <h2>Default Slot</h2>
-        <p>Place <code>&lt;slot-component&gt;&lt;/slot-component&gt;</code> inside your component template to mark where
-          inner content should be inserted. The newer <code>data-bascik-slot</code> attribute syntax is also supported.
-        </p>
+        <!-- Content rendered from docs/content/05-slots.md at build time.
+             To update page content, edit the MD file — not this file. -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMd } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMd('./content/05-slots.md', { skipFirstHeading: true }));
+        </script>
 
-        <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/components/my-card.html">&lt;div
-          class="card"&gt;
-          &lt;slot-component&gt;&lt;/slot-component&gt;
-          &lt;/div&gt;</code-block>
-
-        <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/pages/index.html">&lt;my-card&gt;
-          &lt;h2&gt;Card Title&lt;/h2&gt;
-          &lt;p&gt;Card body text.&lt;/p&gt;
-          &lt;/my-card&gt;</code-block>
-
-        <p>Output:</p>
-        <code-block data-bascik-prop-lang="html">&lt;div class="card"&gt;
-          &lt;h2&gt;Card Title&lt;/h2&gt;
-          &lt;p&gt;Card body text.&lt;/p&gt;
-          &lt;/div&gt;</code-block>
-
-        <h2>data-bascik-slot (preferred)</h2>
-        <p>The <code>data-bascik-slot</code> attribute is the newer way to define the default slot. Add it to any
-          element in your template — the element itself is replaced by the slot content.</p>
-
-        <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/components/my-section.html">&lt;section&gt;
-          &lt;div data-bascik-slot&gt;&lt;/div&gt;
-          &lt;/section&gt;</code-block>
-
-        <div class="callout">
-          <p><strong>Tip:</strong> <code>&lt;slot-component&gt;</code> remains fully supported for backward
-            compatibility. Both forms behave identically.</p>
-        </div>
-
-        <h2>Slot Fallback Content</h2>
-        <p>Place default content inside the slot marker. It renders when the usage site passes no inner content.</p>
-
-        <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/components/my-card.html">&lt;div
-          class="card"&gt;
-          &lt;slot-component&gt;
-          &lt;p&gt;No content provided.&lt;/p&gt;
-          &lt;/slot-component&gt;
-          &lt;/div&gt;</code-block>
-
-        <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/pages/index.html">&lt;!-- No inner content —
-          fallback renders --&gt;
-          &lt;my-card&gt;&lt;/my-card&gt;
-
-          &lt;!-- Inner content provided — overrides fallback --&gt;
-          &lt;my-card&gt;&lt;p&gt;Custom content.&lt;/p&gt;&lt;/my-card&gt;</code-block>
-
-        <h2>Named Slots</h2>
-        <p>Use <code>data-bascik-slot="name"</code> in the component template to define named slot zones. At the usage
-          site, wrap content for each zone with the same attribute.</p>
-
+        <!-- Interactive demo: named slots in action -->
         <component-demo data-bascik-prop-file="src/pages/index.html">
           <div data-bascik-slot="example">
             <feature-card data-bascik-prop-label="Example" data-bascik-prop-title="Named Slots"
@@ -88,8 +55,7 @@
             </feature-card>
           </div>
           <div data-bascik-slot="code">
-            <code-block data-bascik-prop-lang="html">
-              &lt;feature-card
+            <code-block data-bascik-prop-lang="html">&lt;feature-card
               data-bascik-prop-label="Example"
               data-bascik-prop-title="Named Slots"
               data-bascik-prop-desc="..."&gt;
@@ -100,8 +66,7 @@
               &lt;/feature-card&gt;</code-block>
           </div>
           <div data-bascik-slot="output">
-            <code-block data-bascik-prop-lang="html">
-              &lt;div class="fcard_abcd"&gt;
+            <code-block data-bascik-prop-lang="html">&lt;div class="fcard_abcd"&gt;
               &lt;p class="fcard-label_abcd"&gt;Example&lt;/p&gt;
               &lt;h3 class="fcard-title_abcd"&gt;Named Slots&lt;/h3&gt;
               &lt;p class="fcard-desc_abcd"&gt;...&lt;/p&gt;
@@ -114,43 +79,12 @@
           </div>
         </component-demo>
 
-        <p>In the component template:</p>
-
-        <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/components/page-layout.html">&lt;div
-          class="layout"&gt;
-          &lt;header&gt;
-          &lt;div data-bascik-slot="header"&gt;&lt;/div&gt;
-          &lt;/header&gt;
-          &lt;main&gt;
-          &lt;div data-bascik-slot&gt;&lt;/div&gt;
-          &lt;/main&gt;
-          &lt;aside&gt;
-          &lt;div data-bascik-slot="sidebar"&gt;&lt;/div&gt;
-          &lt;/aside&gt;
-          &lt;/div&gt;</code-block>
-
-        <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/pages/index.html">&lt;page-layout&gt;
-          &lt;!-- default slot content --&gt;
-          &lt;p&gt;Main body content.&lt;/p&gt;
-
-          &lt;!-- named slot: header --&gt;
-          &lt;div data-bascik-slot="header"&gt;
-          &lt;h1&gt;Page Title&lt;/h1&gt;
-          &lt;/div&gt;
-
-          &lt;!-- named slot: sidebar --&gt;
-          &lt;div data-bascik-slot="sidebar"&gt;
-          &lt;nav&gt;Sidebar nav&lt;/nav&gt;
-          &lt;/div&gt;
-          &lt;/page-layout&gt;</code-block>
-
-        <div class="callout">
-          <p><strong>How it works:</strong> Named slot wrappers in the usage inner HTML are extracted by name and
-            injected into the matching <code>data-bascik-slot="name"</code> placeholder in the template. Everything left
-            over goes into the default slot.</p>
-        </div>
-
-        <docs-pagination></docs-pagination>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/slots'));
+        </script>
 
       </main>
     </div>

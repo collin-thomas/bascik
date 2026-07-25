@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Using Markdown — Bascik Docs</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+
+<body>
+
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { renderNav } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+    console.log(renderNav('/using-markdown'));
+  </script>
+
+  <div class="container">
+    <div class="docs-layout">
+      <script data-bascik-build>
+        import { join } from 'node:path';
+        import { pathToFileURL } from 'node:url';
+        const { renderSidebar } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+        console.log(renderSidebar('/using-markdown'));
+      </script>
+
+      <main class="docs-content">
+        <p class="section-label">Recipes</p>
+        <h1>Using Markdown</h1>
+        <p class="page-intro">Bascik does not ship a Markdown pipeline, but build-time scripts are Node.js — so any
+          Markdown library works. This page shows common patterns using <code>marked</code>, <code>gray-matter</code>,
+          <code>markdown-it</code>, and the <code>unified</code> / <code>remark</code> ecosystem.
+        </p>
+
+        <!-- Content rendered from docs/content/18-using-markdown.md at build time.
+             To update page content, edit the MD file — not this file.
+             The MD file also feeds into llms.txt via scripts/generate-llms-txt.mjs. -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMd } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMd('./content/18-using-markdown.md', { skipFirstHeading: true }));
+        </script>
+
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/using-markdown'));
+        </script>
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+
+</body>
+
+</html>

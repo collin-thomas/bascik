@@ -1,3 +1,8 @@
+<!-- docs-nav is no longer used directly in pages.
+     Each page renders the nav at build time via scripts/render-nav.mjs,
+     which stamps aria-current="page" on the correct link and generates the
+     mobile drawer. The mobile toggle JS remains inline in the build output.
+     See scripts/nav.mjs for the single source of truth for navigation order. -->
 <nav class="dnav" data-docs-nav>
   <div class="dnav-inner container">
     <a href="/" class="dnav-logo">Bascik</a>

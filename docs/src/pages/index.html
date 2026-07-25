@@ -27,7 +27,12 @@
 
 <body>
 
-  <docs-nav></docs-nav>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { renderNav } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+    console.log(renderNav('/'));
+  </script>
 
   <!-- Hero -->
   <section class="hero">

@@ -176,15 +176,15 @@ describe("getFirstComponent", () => {
   const componentList = {
     "tag-a": {
       fileName: "components/tag-a.html",
-      fileContent: "<div><p>tag-a</p><slot-component></slot-component></div>",
+      fileContent: "<div><p>tag-a</p><div data-bascik-slot></div></div>",
     },
     "tag-b": {
       fileName: "components/tag-b.html",
-      fileContent: "<div><p>tag-b</p><slot-component></slot-component></div>",
+      fileContent: "<div><p>tag-b</p><div data-bascik-slot></div></div>",
     },
     "tag-c": {
       fileName: "components/tag-c.html",
-      fileContent: "<div><p>tag-c</p><slot-component></slot-component></div>",
+      fileContent: "<div><p>tag-c</p><div data-bascik-slot></div></div>",
     },
   } satisfies ComponentList;
 
@@ -206,7 +206,7 @@ describe("getFirstComponent", () => {
       content: "<tag-b></tag-b>",
       innerContent: "",
       fileName: "components/tag-b.html",
-      fileContent: "<div><p>tag-b</p><slot-component></slot-component></div>",
+      fileContent: "<div><p>tag-b</p><div data-bascik-slot></div></div>",
     };
     expect(getFirstComponent(htmlString, componentList)).toEqual(expected);
   });
@@ -499,13 +499,13 @@ describe("replaceNamedSlots", () => {
     expect(replaceNamedSlots(template, {})).toBe("<footer></footer>");
   });
 
-  it("does not affect default slot-component", () => {
+  it("does not affect default data-bascik-slot", () => {
     const template =
-      "<div><slot-component></slot-component>" +
+      "<div><div data-bascik-slot></div>" +
       '<span data-bascik-slot="side"></span></div>';
     const slots = { side: "<p>sidebar</p>" };
     const result = replaceNamedSlots(template, slots);
-    expect(result).toContain("<slot-component></slot-component>");
+    expect(result).toContain("<div data-bascik-slot></div>");
     expect(result).toContain("<p>sidebar</p>");
   });
 });
@@ -702,7 +702,7 @@ describe("getFirstComponent – regression with multiline", () => {
         &lt;/div&gt;
         &lt;/feature-card&gt;</code-block>`;
     const componentList: ComponentList = {
-      "code-block": { fileContent: "<div><slot-component></slot-component></div>" },
+      "code-block": { fileContent: "<div><div data-bascik-slot></div></div>" },
     };
     const result = getTag(html, "code-block", componentList);
     expect(result.fileContent).toBeDefined();
@@ -727,13 +727,13 @@ describe("replaceTag – regression with multiline", () => {
     expect(replaceNamedSlots(template, {})).toBe("<footer></footer>");
   });
 
-  it("does not affect default slot-component", () => {
+  it("does not affect default data-bascik-slot", () => {
     const template =
-      "<div><slot-component></slot-component>" +
+      "<div><div data-bascik-slot></div>" +
       '<span data-bascik-slot="side"></span></div>';
     const slots = { side: "<p>sidebar</p>" };
     const result = replaceNamedSlots(template, slots);
-    expect(result).toContain("<slot-component></slot-component>");
+    expect(result).toContain("<div data-bascik-slot></div>");
     expect(result).toContain("<p>sidebar</p>");
   });
 });

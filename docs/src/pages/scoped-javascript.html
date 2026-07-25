@@ -10,11 +10,21 @@
 
 <body>
 
-  <docs-nav></docs-nav>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { renderNav } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+    console.log(renderNav('/scoped-javascript'));
+  </script>
 
   <div class="container">
     <div class="docs-layout">
-      <docs-sidebar></docs-sidebar>
+      <script data-bascik-build>
+        import { join } from 'node:path';
+        import { pathToFileURL } from 'node:url';
+        const { renderSidebar } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+        console.log(renderSidebar('/scoped-javascript'));
+      </script>
 
       <main class="docs-content">
         <p class="section-label">Feature</p>
@@ -124,7 +134,8 @@
         <p>If you have class or ID names that are <strong>only toggled or added dynamically at runtime</strong> by
           JavaScript (for example, with <code>.classList.toggle("is-open")</code> or
           <code>.classList.add("is-active")</code>) but <strong>do not exist on any HTML tag inside the template at
-            compile time</strong>, Bascik's HTML compiler will not discover or register them.</p>
+            compile time</strong>, Bascik's HTML compiler will not discover or register them.
+        </p>
         <p>This causes a mismatch between compiled assets:</p>
         <ul>
           <li>The <strong>CSS parser</strong> *will* obfuscate the class name inside your stylesheet.</li>
@@ -182,7 +193,12 @@
               href="/configuration">bascik.config.js</a>.</p>
         </div>
 
-        <docs-pagination></docs-pagination>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/scoped-javascript'));
+        </script>
 
       </main>
     </div>

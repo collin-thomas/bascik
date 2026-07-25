@@ -66,7 +66,7 @@ describe("recursivelyTranspile – slot fallback content", () => {
     "my-card": {
       fileName: "components/my-card.html",
       fileContent:
-        "<div><slot-component>default content</slot-component></div>",
+        "<div><div data-bascik-slot>default content</div></div>",
     },
   };
 
@@ -86,11 +86,11 @@ describe("recursivelyTranspile – slot fallback content", () => {
     expect(transpiledHtmlBody).toBe("<div><p>custom</p></div>");
   });
 
-  it("empty slot-component (no fallback) renders nothing", () => {
+  it("empty slot marker (no fallback) renders nothing", () => {
     const list = {
       "my-empty": {
         fileName: "components/my-empty.html",
-        fileContent: "<div><slot-component></slot-component></div>",
+        fileContent: "<div><div data-bascik-slot></div></div>",
       },
     };
     const { transpiledHtmlBody } = recursivelyTranspile(
@@ -177,7 +177,7 @@ describe("recursivelyTranspile – integration", () => {
       outer: {
         fileName: "components/outer.html",
         fileContent:
-          "<div class='outer'><slot-component></slot-component></div>",
+          "<div class='outer'><div data-bascik-slot></div></div>",
       },
       inner: {
         fileName: "components/inner.html",

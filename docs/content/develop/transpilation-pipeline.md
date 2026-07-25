@@ -47,7 +47,7 @@ Each step is skipped if disabled in `bascik.config.js`.
 
 1. **Props.** `injectProps` replaces every `data-bascik-prop-*` placeholder in the component template with the corresponding attribute value from the usage tag.
 2. **Named slots.** `replaceNamedSlots` fills each `data-bascik-slot="name"` zone in the template with the matching `<div data-bascik-slot="name">` content from the usage site.
-3. **Default slot.** The inner content of the usage tag is placed into the component's `<slot-component>` or the element carrying `data-bascik-slot` (no value). If the usage tag has no inner content, the template's fallback content is preserved.
+3. **Default slot.** The inner content of the usage tag is placed into the element carrying `data-bascik-slot` (no value). If the usage tag has no inner content, the template's fallback content is preserved.
 4. **Attribute inheritance.** `mergeAttributesOntoRoot` copies pass-through attributes (`aria-*`, `data-*`, `class`, etc.) from the usage tag onto the component's root element.
 
 ### Step 3 — Substitution

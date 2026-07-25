@@ -84,21 +84,46 @@
       margin-bottom: 8px;
     }
 
-    .tag-perf { background: rgba(74, 222, 128, 0.12); color: #4ade80; }
-    .tag-a11y { background: rgba(147, 197, 253, 0.12); color: #93c5fd; }
-    .tag-seo  { background: rgba(251, 191, 36, 0.12);  color: #fbbf24; }
-    .tag-bp   { background: rgba(196, 181, 253, 0.12); color: #c4b5fd; }
+    .tag-perf {
+      background: rgba(74, 222, 128, 0.12);
+      color: #4ade80;
+    }
+
+    .tag-a11y {
+      background: rgba(147, 197, 253, 0.12);
+      color: #93c5fd;
+    }
+
+    .tag-seo {
+      background: rgba(251, 191, 36, 0.12);
+      color: #fbbf24;
+    }
+
+    .tag-bp {
+      background: rgba(196, 181, 253, 0.12);
+      color: #c4b5fd;
+    }
   </style>
 </head>
 
 <body>
 
-  <docs-nav></docs-nav>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { renderNav } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+    console.log(renderNav('/performance'));
+  </script>
 
   <div class="container">
     <div class="docs-layout">
 
-      <docs-sidebar></docs-sidebar>
+      <script data-bascik-build>
+        import { join } from 'node:path';
+        import { pathToFileURL } from 'node:url';
+        const { renderSidebar } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+        console.log(renderSidebar('/performance'));
+      </script>
 
       <main class="docs-content">
         <p class="section-label">Guide</p>
@@ -171,7 +196,8 @@
           <div class="technique-card">
             <span class="tag tag-perf">Performance</span>
             <h4><code>defer</code> / <code>async</code></h4>
-            <p>Never block HTML parsing with scripts. Use <code>defer</code> for app code, <code>async</code> for analytics.</p>
+            <p>Never block HTML parsing with scripts. Use <code>defer</code> for app code, <code>async</code> for
+              analytics.</p>
           </div>
           <div class="technique-card">
             <span class="tag tag-perf">Performance</span>
@@ -186,7 +212,8 @@
           <div class="technique-card">
             <span class="tag tag-a11y">Accessibility</span>
             <h4>Semantic HTML</h4>
-            <p>Use <code>&lt;header&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>, <code>&lt;footer&gt;</code>. Landmark roles for free.</p>
+            <p>Use <code>&lt;header&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>,
+              <code>&lt;footer&gt;</code>. Landmark roles for free.</p>
           </div>
           <div class="technique-card">
             <span class="tag tag-a11y">Accessibility</span>
@@ -231,7 +258,12 @@
             first project.</p>
         </div>
 
-        <docs-pagination></docs-pagination>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/performance'));
+        </script>
 
       </main>
     </div>

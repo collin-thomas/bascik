@@ -77,7 +77,7 @@ const makeComponentList = (count: number): ComponentList => {
   for (let i = 0; i < count; i++) {
     list[`comp-${i}`] = {
       fileName: `components/comp-${i}.html`,
-      fileContent: `<div class="c${i}"><p>Component ${i}</p><slot-component></slot-component></div>`,
+      fileContent: `<div class="c${i}"><p>Component ${i}</p><div data-bascik-slot></div></div>`,
       cssFileContent: `.c${i} { color: hsl(${i * 36}deg, 60%, 60%); }`,
     };
   }

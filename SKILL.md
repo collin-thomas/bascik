@@ -173,30 +173,46 @@ Always declare any dynamic classes or IDs inside a hidden scoping helper element
 ### Slots (Default & Named)
 
 #### Default Slot
+
+Add `data-bascik-slot` (no value) to any element in the component template. The element is replaced by the slot content at the usage site. Use the element's inner content as fallback when no slot content is provided.
+
 ```html
 <!-- my-card.html -->
 <div class="card">
-  <slot-component>Fallback text</slot-component>
+  <div data-bascik-slot><p>No content provided.</p></div>
 </div>
 
 <!-- usage -->
-<my-card><p>Card content</p></my-card>
+<my-card>
+  <h2>Card Title</h2>
+  <p>Card body text.</p>
+</my-card>
+
+<!-- output -->
+<div class="card">
+  <h2>Card Title</h2>
+  <p>Card body text.</p>
+</div>
 ```
-*Note: The `data-bascik-slot` attribute (no value) on any element also marks the default slot, and the element is replaced (not wrapped):* `<section><div data-bascik-slot></div></section>`
 
 #### Named Slots
+
+Use `data-bascik-slot="name"` in the template to define named zones. At the usage site, wrap content with the same attribute.
+
 ```html
-<!-- layout.html -->
-<div>
+<!-- page-layout.html -->
+<div class="layout">
   <header><div data-bascik-slot="header"></div></header>
   <main><div data-bascik-slot></div></main>
+  <aside><div data-bascik-slot="sidebar"></div></aside>
 </div>
 
 <!-- usage -->
-<layout>
-  <p>Main content</p>
-  <div data-bascik-slot="header"><h1>Title</h1></div>
-</layout>
+<page-layout>
+  <p>Main body content.</p>
+  <div data-bascik-slot="header"><h1>Page Title</h1></div>
+  <div data-bascik-slot="sidebar"><nav>Sidebar nav</nav></div>
+</page-layout>
 ```
 
 ### Props

@@ -10,11 +10,21 @@
 
 <body>
 
-  <docs-nav></docs-nav>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { renderNav } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+    console.log(renderNav('/scoped-styles'));
+  </script>
 
   <div class="container">
     <div class="docs-layout">
-      <docs-sidebar></docs-sidebar>
+      <script data-bascik-build>
+        import { join } from 'node:path';
+        import { pathToFileURL } from 'node:url';
+        const { renderSidebar } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+        console.log(renderSidebar('/scoped-styles'));
+      </script>
 
       <main class="docs-content">
         <p class="section-label">Feature</p>
@@ -169,7 +179,12 @@
           </p>
         </div>
 
-        <docs-pagination></docs-pagination>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/scoped-styles'));
+        </script>
 
       </main>
     </div>

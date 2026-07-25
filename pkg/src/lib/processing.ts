@@ -37,7 +37,7 @@
  * │  2. TEMPLATE RESOLUTION                                                │
  * │     a. injectProps          — replace data-bascik-prop-* markers      │
  * │     b. replaceNamedSlots    — fill data-bascik-slot="name" zones      │
- * │     c. default slot         — fill <slot-component> / data-bascik-slot │
+ * │     c. default slot         — fill data-bascik-slot element              │
  * │        with inner content or template fallback                         │
  * │     d. mergeAttributesOntoRoot — pass-through attrs (aria-*, data-*)  │
  * │                                                                        │
@@ -262,26 +262,12 @@ export const recursivelyTranspile = (
     const namedSlots = extractNamedSlotContent(component.innerContent);
     component.fileContent = replaceNamedSlots(component.fileContent, namedSlots);
 
-    // Resolve the default slot:
-    //   1. innerContent with named-slot wrappers stripped
-    //   2. fall back to the <slot-component>'s own inner content in the template
-    const { innerContent: slotComponentFallback = "" } = getTag(
-      component.fileContent,
-      "slot-component",
-    );
-    const defaultSlotContent =
-      extractDefaultSlotContent(component.innerContent) || slotComponentFallback;
+    // Resolve the default slot: innerContent with named-slot wrappers stripped.
+    const defaultSlotContent = extractDefaultSlotContent(component.innerContent);
 
-    // Replace <slot-component> (backward-compatible default slot)
-    let transpiledTag = replaceTag(
-      component.fileContent,
-      "slot-component",
-      defaultSlotContent,
-    );
-
-    // Replace <element data-bascik-slot> (preferred default slot convention).
+    // Replace <element data-bascik-slot> default slot markers.
     // Named slots were already handled above by replaceNamedSlots.
-    transpiledTag = transpiledTag.replace(
+    let transpiledTag = component.fileContent.replace(
       /<(\w+(?:-\w+)*)\s+data-bascik-slot(?!\s*=)((?:\s[^>]*)?)>([\s\S]*?)<\/\1>/gi,
       (_match, _tag, _extraAttrs, innerFallback) =>
         defaultSlotContent || innerFallback,
@@ -418,8 +404,7 @@ export const pageProcessing = async (
       let m: RegExpExecArray | null;
       while ((m = re.exec(chunk)) !== null) {
         const tag = m[1].toLowerCase();
-        // slot-component is a bascik built-in resolved during slot processing
-        if (tag !== "slot-component") unresolved.add(tag);
+        unresolved.add(tag);
       }
     }
     if (unresolved.size > 0) {

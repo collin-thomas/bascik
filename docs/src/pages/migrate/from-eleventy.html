@@ -10,12 +10,22 @@
 
 <body>
 
-  <docs-nav></docs-nav>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { renderNav } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+    console.log(renderNav('/migrate/from-eleventy'));
+  </script>
 
   <div class="container">
     <div class="docs-layout">
 
-      <docs-sidebar></docs-sidebar>
+      <script data-bascik-build>
+        import { join } from 'node:path';
+        import { pathToFileURL } from 'node:url';
+        const { renderSidebar } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+        console.log(renderSidebar('/migrate/from-eleventy'));
+      </script>
 
       <main class="docs-content">
         <p class="section-label">Migration</p>
@@ -71,7 +81,7 @@
 
         <h2>{% extends %} / Template Inheritance → Slot-based Layout Components</h2>
         <p>Eleventy's <code>{% extends 'base.njk' %}</code> and <code>{% block content %}</code> pattern maps
-          to a Bascik layout component that uses <code>&lt;slot-component&gt;</code> for the page content area
+          to a Bascik layout component that uses <code>data-bascik-slot</code> for the page content area
           and named slots for additional regions like the page title.</p>
 
         <code-block data-bascik-prop-lang="njk"
@@ -105,7 +115,7 @@
         <code-block data-bascik-prop-lang="html"
           data-bascik-prop-file="src/components/site-layout/site-layout.html (Bascik — after)">&lt;site-nav&gt;&lt;/site-nav&gt;
           &lt;main class="content"&gt;
-          &lt;slot-component&gt;&lt;/slot-component&gt;
+          &lt;div data-bascik-slot&gt;&lt;/div&gt;
           &lt;/main&gt;
           &lt;site-footer&gt;&lt;/site-footer&gt;</code-block>
 
@@ -280,7 +290,12 @@
           &lt;/body&gt;
           &lt;/html&gt;</code-block>
 
-        <docs-pagination></docs-pagination>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/migrate/from-eleventy'));
+        </script>
 
       </main>
     </div>

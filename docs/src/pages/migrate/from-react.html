@@ -10,12 +10,22 @@
 
 <body>
 
-  <docs-nav></docs-nav>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { renderNav } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+    console.log(renderNav('/migrate/from-react'));
+  </script>
 
   <div class="container">
     <div class="docs-layout">
 
-      <docs-sidebar></docs-sidebar>
+      <script data-bascik-build>
+        import { join } from 'node:path';
+        import { pathToFileURL } from 'node:url';
+        const { renderSidebar } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+        console.log(renderSidebar('/migrate/from-react'));
+      </script>
 
       <main class="docs-content">
         <p class="section-label">Migration</p>
@@ -68,10 +78,9 @@
         </p>
 
         <h2>children → Default Slot</h2>
-        <p>React's <code>children</code> prop maps to Bascik's default slot. Place
-          <code>&lt;slot-component&gt;&lt;/slot-component&gt;</code> inside the component where child content should
-          appear. Text inside <code>&lt;slot-component&gt;</code> is used as fallback when the component is invoked
-          with no children.
+        <p>React's <code>children</code> prop maps to Bascik's default slot. Add <code>data-bascik-slot</code> (no
+          value) to any element inside the component where child content should appear. Fallback content goes inside
+          that element and renders when the component is invoked with no children.
         </p>
 
         <code-block data-bascik-prop-lang="jsx" data-bascik-prop-file="Card.jsx (React — before)">export function Card({
@@ -84,7 +93,7 @@
 
         <code-block data-bascik-prop-lang="html"
           data-bascik-prop-file="src/components/card/card.html (Bascik — after)">&lt;div class="card"&gt;
-          &lt;slot-component&gt;No content provided.&lt;/slot-component&gt;
+          &lt;div data-bascik-slot&gt;No content provided.&lt;/div&gt;
           &lt;/div&gt;
 
           &lt;!-- Usage --&gt;
@@ -116,7 +125,7 @@
           data-bascik-prop-file="src/components/page-layout/page-layout.html (Bascik — after)">&lt;div
           class="layout"&gt;
           &lt;header&gt;&lt;div data-bascik-slot="header"&gt;&lt;/div&gt;&lt;/header&gt;
-          &lt;main&gt;&lt;slot-component&gt;&lt;/slot-component&gt;&lt;/main&gt;
+          &lt;main&gt;&lt;div data-bascik-slot&gt;&lt;/div&gt;&lt;/main&gt;
           &lt;/div&gt;
 
           &lt;!-- Usage --&gt;
@@ -305,7 +314,7 @@
           &lt;div class="logo"&gt;&lt;div data-bascik-slot="logo"&gt;&lt;/div&gt;&lt;/div&gt;
           &lt;button class="toggle" id="toggle" aria-expanded="false"&gt;Menu&lt;/button&gt;
           &lt;ul class="links" id="links"&gt;
-          &lt;slot-component&gt;&lt;/slot-component&gt;
+          &lt;div data-bascik-slot&gt;&lt;/div&gt;
           &lt;/ul&gt;
           &lt;/nav&gt;
           &lt;script&gt;
@@ -328,7 +337,12 @@
         <p>The nav links are slotted in as static <code>&lt;li&gt;</code> elements, the logo uses a named slot, and
           the mobile toggle is vanilla JS that Bascik scopes automatically per instance.</p>
 
-        <docs-pagination></docs-pagination>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/migrate/from-react'));
+        </script>
 
       </main>
     </div>

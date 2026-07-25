@@ -16,3 +16,8 @@
 - Use `console.log()` or `process.stdout.write()` to output HTML.
 - Build scripts run before component resolution, so their output can contain component tags.
 - On error, the script tag is replaced with an empty string and a warning is logged.
+
+### The npm Ecosystem
+
+Because a Bascik project is a Node.js project, any npm package can be installed and imported in build scripts. Write your own shared utility modules in `src/lib/` and import them across pages. Access `process.env` for environment variables and API keys that should be baked into the build without shipping to the browser.
+

@@ -440,6 +440,105 @@ This is why sites like McMaster-Carr — which could justify a rich SPA for thei
 
 > **Add interactivity surgically.** McMaster's search autocomplete is a small, focused script that loads after the page is visible. Bring a Trailer's live bid counter is a lightweight WebSocket updater, not a full application framework. Use Bascik's scoped `<script>` blocks or `<script defer>` to layer in interactivity after the HTML has painted — never block the first render for it.
 
+## CSS-First Interactivity
+
+Before writing a line of JavaScript for any UI behavior, ask: **can HTML and CSS do this?**
+
+The browser ships a set of interactive primitives that require zero JavaScript. Using them makes your pages lighter, more accessible (they work even when JS fails or is blocked), and zero-parse-cost for the engine. The rule is simple: reach for JavaScript only when the platform genuinely cannot do the job.
+
+### Collapsible Sections and Toggle Menus: `<details>`
+
+`<details>` and `<summary>` give you a fully accessible toggle with no JavaScript — open/close state, keyboard activation (Enter, Space), Escape to close, and correct ARIA roles are all handled by the browser:
+
+```html
+<details>
+  <summary>How does Bascik scope CSS?</summary>
+  <p>It prefixes every class name with a component-unique hash at build time.</p>
+</details>
+```
+
+The same pattern works for mobile navigation drawers. Wrap the nav links in `<details>`, put the hamburger button inside `<summary>`, and use the `[open]` attribute in CSS to drive all state:
+
+```html
+<nav>
+  <a href="/" class="logo">MySite</a>
+  <details class="nav-details">
+    <summary class="nav-toggle" aria-label="Toggle navigation">
+      <span class="hamburger-icon"></span>
+    </summary>
+    <ul class="nav-links">
+      <li><a href="/about">About</a></li>
+      <li><a href="/blog">Blog</a></li>
+    </ul>
+  </details>
+</nav>
+```
+
+```css
+/* Remove the default <summary> triangle marker */
+.nav-toggle { list-style: none; cursor: pointer; }
+.nav-toggle::-webkit-details-marker { display: none; }
+
+/* Desktop: always show nav links regardless of open/closed state */
+@media (min-width: 769px) {
+  .nav-details { display: flex; align-items: center; }
+  .nav-details > summary { display: none; }
+  .nav-details > .nav-links { display: flex; } /* override UA hidden state */
+}
+
+/* Mobile: show links when open — pure CSS, no event listeners */
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-details[open] > .nav-links { display: flex; flex-direction: column; }
+
+  /* Animate hamburger → X using the [open] selector */
+  .nav-details[open] .hamburger-icon { background: transparent; }
+  .nav-details[open] .hamburger-icon::before { top: 0; transform: rotate(45deg); }
+  .nav-details[open] .hamburger-icon::after  { top: 0; transform: rotate(-45deg); }
+}
+
+/* Lock body scroll when the overlay is open — still no JS */
+body:has(.nav-details[open]) {
+  overflow: hidden;
+}
+```
+
+> **`body:has()`** is supported in Chrome 105+, Firefox 121+, and Safari 15.4+. It is the CSS-only solution to the previously JS-only problem of locking the page scroll behind an open overlay.
+
+### Modal Dialogs: `<dialog>`
+
+The `<dialog>` element provides a native modal with backdrop, focus trapping, and Escape-to-close — behaviors that previously required hundreds of lines of JavaScript to implement correctly:
+
+```html
+<button onclick="document.getElementById('my-modal').showModal()">Open</button>
+
+<dialog id="my-modal">
+  <p>Modal content here.</p>
+  <form method="dialog">
+    <button>Close</button>
+  </form>
+</dialog>
+```
+
+```css
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+```
+
+The `onclick` inline handlers are one-liners — not a script file. `<dialog>` handles focus management, keyboard dismissal, and `aria-modal` automatically.
+
+### The Decision Framework
+
+When building any interactive feature, work through this checklist before writing JavaScript:
+
+1. **Can a native HTML element do it?** `<details>`, `<dialog>`, `<input type="range">`, `<datalist>`, `<meter>`, `<progress>` cover a huge range of interactive patterns out of the box.
+2. **Can a CSS state selector do it?** `:checked`, `:target`, `:hover`, `:focus-within`, `:has()`, `[open]` handle most toggle and reveal behaviors.
+3. **Can an HTML attribute do it?** `loading="lazy"`, `required`, `disabled`, `hidden`, `contenteditable`.
+
+Only if all three answers are no should you reach for JavaScript. When you do, scope it, defer it, and keep it small.
+
 ## The Kitchen Sink: Complete Head Template
 
 Here is a complete `<head>` combining every technique on this page. Copy it as a starting point for any Bascik page and fill in the values specific to your site.

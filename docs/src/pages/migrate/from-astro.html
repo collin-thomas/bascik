@@ -10,12 +10,22 @@
 
 <body>
 
-  <docs-nav></docs-nav>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { renderNav } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+    console.log(renderNav('/migrate/from-astro'));
+  </script>
 
   <div class="container">
     <div class="docs-layout">
 
-      <docs-sidebar></docs-sidebar>
+      <script data-bascik-build>
+        import { join } from 'node:path';
+        import { pathToFileURL } from 'node:url';
+        const { renderSidebar } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+        console.log(renderSidebar('/migrate/from-astro'));
+      </script>
 
       <main class="docs-content">
         <p class="section-label">Migration</p>
@@ -24,7 +34,7 @@
           default. The concepts translate closely: <code>.astro</code> files become <code>.html</code> component
           files, frontmatter code blocks become <code>&lt;script data-bascik-build&gt;</code> tags,
           <code>Astro.props</code> becomes <code>data-bascik-prop-*</code> attributes, and Astro's
-          <code>&lt;slot /&gt;</code> becomes Bascik's <code>&lt;slot-component&gt;</code>.
+          <code>&lt;slot /&gt;</code> becomes Bascik's <code>data-bascik-slot</code> attribute.
         </p>
 
         <h2>.astro Files → .html Component Files</h2>
@@ -124,10 +134,9 @@
             HTML content as a prop has no equivalent — use a slot for rich HTML content instead.</p>
         </div>
 
-        <h2>&lt;slot /&gt; → &lt;slot-component&gt;</h2>
-        <p>Astro's default <code>&lt;slot /&gt;</code> maps directly to Bascik's
-          <code>&lt;slot-component&gt;&lt;/slot-component&gt;</code>. Text inside
-          <code>&lt;slot-component&gt;</code> serves as the fallback, equivalent to Astro's
+        <h2>&lt;slot /&gt; → data-bascik-slot</h2>
+        <p>Astro's default <code>&lt;slot /&gt;</code> maps to a Bascik element with the
+          <code>data-bascik-slot</code> attribute. Fallback content goes inside that element, equivalent to Astro's
           <code>&lt;slot&gt;Fallback&lt;/slot&gt;</code>.
         </p>
 
@@ -142,7 +151,7 @@
         <code-block data-bascik-prop-lang="html"
           data-bascik-prop-file="src/components/my-section/my-section.html (Bascik — after)">&lt;section
           class="section"&gt;
-          &lt;slot-component&gt;&lt;/slot-component&gt;
+          &lt;div data-bascik-slot&gt;&lt;/div&gt;
           &lt;/section&gt;
 
           &lt;!-- Usage --&gt;
@@ -172,7 +181,7 @@
           data-bascik-prop-file="src/components/page-layout/page-layout.html (Bascik — after)">&lt;div
           class="layout"&gt;
           &lt;header&gt;&lt;div data-bascik-slot="header"&gt;&lt;/div&gt;&lt;/header&gt;
-          &lt;main&gt;&lt;slot-component&gt;&lt;/slot-component&gt;&lt;/main&gt;
+          &lt;main&gt;&lt;div data-bascik-slot&gt;&lt;/div&gt;&lt;/main&gt;
           &lt;footer&gt;&lt;div data-bascik-slot="footer"&gt;&lt;/div&gt;&lt;/footer&gt;
           &lt;/div&gt;
 
@@ -336,7 +345,12 @@
         <p>The Markdown prose is rendered at build time by the build script and injected as HTML. Bascik
           component tags that follow (or are output by the build script) are then expanded in the next pass.</p>
 
-        <docs-pagination></docs-pagination>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/migrate/from-astro'));
+        </script>
 
       </main>
     </div>

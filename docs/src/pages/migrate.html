@@ -10,12 +10,22 @@
 
 <body>
 
-  <docs-nav></docs-nav>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { renderNav } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+    console.log(renderNav('/migrate'));
+  </script>
 
   <div class="container">
     <div class="docs-layout">
 
-      <docs-sidebar></docs-sidebar>
+      <script data-bascik-build>
+        import { join } from 'node:path';
+        import { pathToFileURL } from 'node:url';
+        const { renderSidebar } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+        console.log(renderSidebar('/migrate'));
+      </script>
 
       <main class="docs-content">
         <p class="section-label">Migration</p>
@@ -33,8 +43,7 @@
             <code>src/components/</code>.
           </li>
           <li><strong>Replace framework slots with Bascik slots</strong> — <code>children</code> in React,
-            <code>&lt;slot&gt;</code> in Vue/Svelte → <code>&lt;slot-component&gt;</code> or
-            <code>data-bascik-slot</code>.
+            <code>&lt;slot&gt;</code> in Vue/Svelte → <code>data-bascik-slot</code>.
           </li>
           <li><strong>Replace framework props with Bascik props</strong> — text-only values →
             <code>data-bascik-prop-*</code>; rich HTML content → named slots.
@@ -74,8 +83,7 @@
             <tr>
               <td style="padding:8px 12px;border-bottom:1px solid var(--border)"><code>children</code> prop / default
                 slot</td>
-              <td style="padding:8px 12px;border-bottom:1px solid var(--border)"><code>&lt;slot-component&gt;</code> or
-                <code>data-bascik-slot</code>
+              <td style="padding:8px 12px;border-bottom:1px solid var(--border)"><code>data-bascik-slot</code>
               </td>
             </tr>
             <tr>
@@ -142,7 +150,12 @@
               href="/migrate/from-astro">Astro</a></p>
         </div>
 
-        <docs-pagination></docs-pagination>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/migrate'));
+        </script>
 
       </main>
     </div>

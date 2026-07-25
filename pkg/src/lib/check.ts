@@ -16,9 +16,6 @@ import { listComponents } from "./components.js";
 import { BascikConfig } from "./config.js";
 import type { ComponentList } from "./types.js";
 
-/** Bascik built-in tags that are never user-defined component files. */
-const BASCIK_INTERNAL_TAGS = new Set(["slot-component"]);
-
 /**
  * Extract all hyphenated tag names from an HTML string.
  * HTML comments are stripped first to avoid false positives.
@@ -30,8 +27,7 @@ export const extractCustomTags = (html: string): Set<string> => {
   const re = /<([a-z][a-z0-9]*(?:-[a-z0-9]+)+)[\s\/>]/gi;
   let m: RegExpExecArray | null;
   while ((m = re.exec(stripped)) !== null) {
-    const tag = m[1].toLowerCase();
-    if (!BASCIK_INTERNAL_TAGS.has(tag)) tags.add(tag);
+    tags.add(m[1].toLowerCase());
   }
   return tags;
 };

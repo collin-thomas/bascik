@@ -10,11 +10,21 @@
 
 <body>
 
-  <docs-nav></docs-nav>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { renderNav } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+    console.log(renderNav('/cli'));
+  </script>
 
   <div class="container">
     <div class="docs-layout">
-      <docs-sidebar></docs-sidebar>
+      <script data-bascik-build>
+        import { join } from 'node:path';
+        import { pathToFileURL } from 'node:url';
+        const { renderSidebar } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+        console.log(renderSidebar('/cli'));
+      </script>
 
       <main class="docs-content">
         <p class="section-label">Reference</p>
@@ -24,7 +34,8 @@
 
         <h2>Commands</h2>
         <p>Bascik is controlled via two primary commands. In most projects, these are mapped to scripts in your
-          <code>package.json</code>:</p>
+          <code>package.json</code>:
+        </p>
 
         <h3>bascik (Dev Mode)</h3>
         <p>Starts the incremental transpiler, generates local SSL/TLS development certificates, launches the built-in
@@ -36,7 +47,8 @@
         <h3>bascik --build (Production Build)</h3>
         <p>Runs a one-time build. Transpiles and optimizes all pages and assets directly to the configured output
           directory (defaults to <code>dist/</code>), applying any overrides configured in
-          <code>buildOverrideConfig</code>. Ideal for CI/CD pipelines and static hosting deployments.</p>
+          <code>buildOverrideConfig</code>. Ideal for CI/CD pipelines and static hosting deployments.
+        </p>
         <code-block data-bascik-prop-lang="sh">bascik --build
           # or
           yarn build</code-block>
@@ -97,7 +109,12 @@
           column 5):
           ReferenceError: marked is not defined</code-block>
 
-        <docs-pagination></docs-pagination>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/cli'));
+        </script>
 
       </main>
     </div>

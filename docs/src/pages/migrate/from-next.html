@@ -10,12 +10,22 @@
 
 <body>
 
-  <docs-nav></docs-nav>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { renderNav } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+    console.log(renderNav('/migrate/from-next'));
+  </script>
 
   <div class="container">
     <div class="docs-layout">
 
-      <docs-sidebar></docs-sidebar>
+      <script data-bascik-build>
+        import { join } from 'node:path';
+        import { pathToFileURL } from 'node:url';
+        const { renderSidebar } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+        console.log(renderSidebar('/migrate/from-next'));
+      </script>
 
       <main class="docs-content">
         <p class="section-label">Migration</p>
@@ -88,7 +98,7 @@
         <code-block data-bascik-prop-lang="html"
           data-bascik-prop-file="src/components/site-layout/site-layout.html">&lt;site-nav&gt;&lt;/site-nav&gt;
           &lt;main class="content"&gt;
-          &lt;slot-component&gt;&lt;/slot-component&gt;
+          &lt;div data-bascik-slot&gt;&lt;/div&gt;
           &lt;/main&gt;
           &lt;site-footer&gt;&lt;/site-footer&gt;</code-block>
 
@@ -262,7 +272,12 @@
           utility scripts or content-generation scripts you want to keep, continue using TypeScript there — just
           not in Bascik component or page HTML files.</p>
 
-        <docs-pagination></docs-pagination>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/migrate/from-next'));
+        </script>
 
       </main>
     </div>

@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Testing — Bascik Developer Guide</title>
+  <title>Bascik vs Frameworks — Bascik Docs</title>
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 
@@ -14,44 +14,43 @@
     import { join } from 'node:path';
     import { pathToFileURL } from 'node:url';
     const { renderNav } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
-    console.log(renderNav('/develop/testing'));
+    console.log(renderNav('/vs-frameworks'));
   </script>
 
   <div class="container">
     <div class="docs-layout">
-
       <script data-bascik-build>
         import { join } from 'node:path';
         import { pathToFileURL } from 'node:url';
         const { renderSidebar } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
-        console.log(renderSidebar('/develop/testing'));
+        console.log(renderSidebar('/vs-frameworks'));
       </script>
 
       <main class="docs-content">
+        <p class="section-label">Philosophy</p>
+        <h1>Bascik vs Frameworks</h1>
+        <p class="page-intro">Bascik is not a framework. It is a build tool that resolves components at compile time and
+          then disappears. Understanding how that differs from popular lightweight frameworks helps you pick the right
+          tool — and shows how they can work together.</p>
+
+        <!-- Content rendered from docs/content/17-vs-frameworks.md at build time.
+             To update page content, edit the MD file — not this file.
+             The MD file also feeds into llms.txt via scripts/generate-llms-txt.mjs. -->
         <script data-bascik-build>
-          import { readFile } from 'node:fs/promises';
-          import { marked } from 'marked';
-
-          marked.use({
-            renderer: {
-              code({ text, lang }) {
-                const encoded = text.replace(/\n( *)/g, (_, s) => '&#10;' + s.replace(/ /g, '&#32;'));
-                const attr = lang ? ` data-bascik-prop-lang="${lang}"` : '';
-                return `<code-block${attr}>${encoded}</code-block>`;
-              }
-            }
-          });
-
-          const md = await readFile('./content/develop/testing.md', 'utf8');
-          console.log(marked(md));
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMd } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMd('./content/17-vs-frameworks.md', { skipFirstHeading: true }));
         </script>
+
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
           const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
-          console.log(renderPagination('/develop/testing'));
+          console.log(renderPagination('/vs-frameworks'));
         </script>
-
       </main>
     </div>
   </div>

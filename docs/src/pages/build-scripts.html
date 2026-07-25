@@ -10,11 +10,21 @@
 
 <body>
 
-  <docs-nav></docs-nav>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { renderNav } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+    console.log(renderNav('/build-scripts'));
+  </script>
 
   <div class="container">
     <div class="docs-layout">
-      <docs-sidebar></docs-sidebar>
+      <script data-bascik-build>
+        import { join } from 'node:path';
+        import { pathToFileURL } from 'node:url';
+        const { renderSidebar } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+        console.log(renderSidebar('/build-scripts'));
+      </script>
 
       <main class="docs-content">
         <p class="section-label">Feature</p>
@@ -188,6 +198,82 @@
           <li>The overhead of reading a file or network call at build time isn't justified.</li>
         </ul>
 
+        <h2>Your Node.js Project</h2>
+        <p>A Bascik project is a Node.js project. That means everything available in the npm ecosystem is available
+          in your build scripts — install a package with <code>npm install</code> (or your package manager of choice)
+          and import it directly.</p>
+
+        <p>You are not limited to what Bascik provides. Your build scripts can call databases, run shell commands,
+          talk to APIs, parse structured files, generate images, or do anything else a Node.js script can do. The
+          output is captured from stdout and injected into the page.</p>
+
+        <h3>Using npm Packages</h3>
+        <p>Install a package once and import it anywhere across your build scripts:</p>
+
+        <code-block data-bascik-prop-lang="sh">npm install gray-matter</code-block>
+
+        <code-block data-bascik-prop-lang="html">&lt;script data-bascik-build&gt;
+          import { readFile } from 'node:fs/promises';
+          import matter from 'gray-matter';
+
+          const raw = await readFile('./content/post.md', 'utf8');
+          const { data, content } = matter(raw);
+          console.log(`
+          &lt;article&gt;
+          &lt;h1&gt;${data.title}&lt;/h1&gt;
+          &lt;p class="date"&gt;${data.date}&lt;/p&gt;
+          &lt;/article&gt;
+          `);
+          &lt;/script&gt;</code-block>
+
+        <h3>Shared Utility Modules</h3>
+        <p>Build scripts are just ESM modules. You can write your own utilities and import them across multiple
+          pages or components — no special Bascik API required:</p>
+
+        <code-block data-bascik-prop-lang="js" data-bascik-prop-file="src/lib/render-cards.js">//
+          src/lib/render-cards.js
+          import { readFile } from 'node:fs/promises';
+
+          export async function renderCards(jsonPath) {
+          const items = JSON.parse(await readFile(jsonPath, 'utf8'));
+          return items.map(item =&gt; `
+          &lt;div class="card"&gt;
+          &lt;h3&gt;${item.title}&lt;/h3&gt;
+          &lt;p&gt;${item.description}&lt;/p&gt;
+          &lt;/div&gt;
+          `).join('\n');
+          }</code-block>
+
+        <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/pages/index.html">&lt;script
+          data-bascik-build&gt;
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          import { renderCards } from
+          pathToFileURL(join(process.cwd(), 'src/lib/render-cards.js')).href;
+
+          console.log(await renderCards('./content/team.json'));
+          &lt;/script&gt;</code-block>
+
+        <div class="callout">
+          <p><strong>Import paths in build scripts:</strong> Node.js requires absolute paths or full URLs when
+            importing local modules from a dynamically executed script. Use
+            <code>pathToFileURL(join(process.cwd(), 'relative/path.js')).href</code> to import your own modules
+            reliably from any build script.
+          </p>
+        </div>
+
+        <h3>Environment Variables</h3>
+        <p>Environment variables set in your shell or a <code>.env</code> file (loaded with a tool like
+          <a href="https://github.com/motdotla/dotenv" target="_blank" rel="noopener">dotenv</a>) are accessible
+          in build scripts via <code>process.env</code>. Use this to inject API keys, deployment URLs, or feature
+          flags at build time without shipping them to the browser:
+        </p>
+
+        <code-block data-bascik-prop-lang="html">&lt;script data-bascik-build&gt;
+          const apiUrl = process.env.API_URL ?? 'https://api.example.com';
+          console.log(`&lt;meta name="api-url" content="${apiUrl}" /&gt;`);
+          &lt;/script&gt;</code-block>
+
         <h2>Limitations</h2>
         <ul>
           <li><strong>No streaming output</strong> — the full stdout of the script is collected before injection. You
@@ -202,7 +288,12 @@
             like <code>window</code> and <code>document</code> are not available.</li>
         </ul>
 
-        <docs-pagination></docs-pagination>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/build-scripts'));
+        </script>
 
       </main>
     </div>
