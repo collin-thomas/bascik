@@ -53,18 +53,44 @@
             <div data-bascik-slot="example">
               <test-comp></test-comp>
             </div>
-            <div data-bascik-slot="code">
-              <code-block data-bascik-prop-lang="html">&lt;test-comp&gt;&lt;/test-comp&gt;</code-block>
+            <div data-bascik-slot="source-html">
+              <code-block data-bascik-prop-lang="html">&lt;div id="my-div-id" name="my-name"&gt;Test Comp Div
+                Tag&lt;/div&gt;
+                &lt;p name="my-name"&gt;Test Comp P Tag&lt;/p&gt;
+                &lt;button id="btn" class="btn"&gt;Change Color&lt;/button&gt;</code-block>
             </div>
-            <div data-bascik-slot="output">
-              <code-block data-bascik-prop-lang="html">&lt;div id="bascik__my-div-id__1234__my-div-id"
-  ...&gt;...&lt;/div&gt;
-&lt;button id="bascik__btn__1234__btn" ...&gt;...&lt;/button&gt;
-&lt;script&gt;
-  (function() {
-    document.getElementById("bascik__btn__1234__btn")...
-  })();
-&lt;/script&gt;</code-block>
+            <div data-bascik-slot="source-css">
+              <code-block data-bascik-prop-lang="css">.btn { margin: 16px; }
+                .btn:hover { background-color: #333; color: #fff; }</code-block>
+            </div>
+            <div data-bascik-slot="source-js">
+              <code-block data-bascik-prop-lang="js">document.getElementById("btn").addEventListener("click", () => {
+                document.getElementsByName('my-name').forEach(el => {
+                el.style.color = '#ff7a09';
+                });
+                });</code-block>
+            </div>
+            <div data-bascik-slot="output-html">
+              <code-block data-bascik-prop-lang="html">&lt;div id="bascik__test-comp__1234__my-div-id"
+                name="bascik__test-comp__1234__my-name"&gt;
+                Test Comp Div Tag
+                &lt;/div&gt;
+                &lt;p name="bascik__test-comp__1234__my-name"&gt;Test Comp P Tag&lt;/p&gt;
+                &lt;button id="bascik__test-comp__1234__btn"
+                class="bascik__test-comp__btn"&gt;Change Color&lt;/button&gt;</code-block>
+            </div>
+            <div data-bascik-slot="output-css">
+              <code-block data-bascik-prop-lang="css">.bascik__test-comp__btn { margin: 16px; }
+                .bascik__test-comp__btn:hover { background-color: #333; color: #fff; }</code-block>
+            </div>
+            <div data-bascik-slot="output-js">
+              <code-block data-bascik-prop-lang="js">(function() {
+                document.getElementById("bascik__test-comp__1234__btn")
+                .addEventListener("click", () => {
+                document.getElementsByName('bascik__test-comp__1234__my-name')
+                .forEach(el => { el.style.color = '#ff7a09'; });
+                });
+                })();</code-block>
             </div>
           </component-demo>
 
@@ -72,18 +98,44 @@
             <div data-bascik-slot="example">
               <test-comp></test-comp>
             </div>
-            <div data-bascik-slot="code">
-              <code-block data-bascik-prop-lang="html">&lt;test-comp&gt;&lt;/test-comp&gt;</code-block>
+            <div data-bascik-slot="source-html">
+              <code-block data-bascik-prop-lang="html">&lt;div id="my-div-id" name="my-name"&gt;Test Comp Div
+                Tag&lt;/div&gt;
+                &lt;p name="my-name"&gt;Test Comp P Tag&lt;/p&gt;
+                &lt;button id="btn" class="btn"&gt;Change Color&lt;/button&gt;</code-block>
             </div>
-            <div data-bascik-slot="output">
-              <code-block data-bascik-prop-lang="html">&lt;div id="bascik__my-div-id__5678__my-div-id"
-  ...&gt;...&lt;/div&gt;
-&lt;button id="bascik__btn__5678__btn" ...&gt;...&lt;/button&gt;
-&lt;script&gt;
-  (function() {
-    document.getElementById("bascik__btn__5678__btn")...
-  })();
-&lt;/script&gt;</code-block>
+            <div data-bascik-slot="source-css">
+              <code-block data-bascik-prop-lang="css">.btn { margin: 16px; }
+                .btn:hover { background-color: #333; color: #fff; }</code-block>
+            </div>
+            <div data-bascik-slot="source-js">
+              <code-block data-bascik-prop-lang="js">document.getElementById("btn").addEventListener("click", () => {
+                document.getElementsByName('my-name').forEach(el => {
+                el.style.color = '#ff7a09';
+                });
+                });</code-block>
+            </div>
+            <div data-bascik-slot="output-html">
+              <code-block data-bascik-prop-lang="html">&lt;div id="bascik__test-comp__5678__my-div-id"
+                name="bascik__test-comp__5678__my-name"&gt;
+                Test Comp Div Tag
+                &lt;/div&gt;
+                &lt;p name="bascik__test-comp__5678__my-name"&gt;Test Comp P Tag&lt;/p&gt;
+                &lt;button id="bascik__test-comp__5678__btn"
+                class="bascik__test-comp__btn"&gt;Change Color&lt;/button&gt;</code-block>
+            </div>
+            <div data-bascik-slot="output-css">
+              <code-block data-bascik-prop-lang="css">.bascik__test-comp__btn { margin: 16px; }
+                .bascik__test-comp__btn:hover { background-color: #333; color: #fff; }</code-block>
+            </div>
+            <div data-bascik-slot="output-js">
+              <code-block data-bascik-prop-lang="js">(function() {
+                document.getElementById("bascik__test-comp__5678__btn")
+                .addEventListener("click", () => {
+                document.getElementsByName('bascik__test-comp__5678__my-name')
+                .forEach(el => { el.style.color = '#ff7a09'; });
+                });
+                })();</code-block>
             </div>
           </component-demo>
         </div>

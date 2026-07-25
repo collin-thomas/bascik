@@ -196,6 +196,15 @@
     const languageTabs = pane.querySelectorAll('.demo-language-tab');
     const languagePanes = pane.querySelectorAll('.demo-language-pane');
 
+    // Hide the language tab bar when none of the language panes have content.
+    // Pages that use only the legacy 'code'/'output' slots leave these panes
+    // empty, so there is nothing to switch between.
+    const hasLanguageContent = Array.from(languagePanes).some(p => p.children.length > 0);
+    if (!hasLanguageContent) {
+      const tabBar = pane.querySelector('[role="tablist"]');
+      if (tabBar) tabBar.style.display = 'none';
+    }
+
     languageTabs.forEach(tab => {
       tab.addEventListener('click', () => {
         languageTabs.forEach(item => item.classList.remove('active'));
