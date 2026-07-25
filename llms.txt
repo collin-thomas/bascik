@@ -1094,17 +1094,17 @@ export const bascikConfig = {
     components: 'src/components',
   },
 
-  // Feature flags
+  // Scoping
   scopeScriptBlocks: true,
   scopeAttribute: {
     class: true,
     id: true,
     name: true,
   },
-  deduplicateCss: true,
   skipTranspilingElementContents: ['code'], // don't scope inside these elements
 
   // CSS
+  deduplicateCss: true,
   minifyStyles: true,            // remove whitespace from compiled CSS
   obfuscateAttributeNames: true, // hash class / id names in production
 

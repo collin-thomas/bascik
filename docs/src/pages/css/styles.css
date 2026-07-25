@@ -493,3 +493,78 @@ body:has(.dnav-details[open]) {
   font-weight: 600;
   color: var(--accent);
 }
+
+/* ── Print ── */
+@media print {
+  /* Reset colors to black-on-white */
+  :root {
+    --bg:         #fff;
+    --surface:    #fff;
+    --elevated:   #f5f5f5;
+    --border:     #ccc;
+    --accent:     #2a6000;
+    --accent-dim: #f0f7e6;
+    --text:       #111;
+    --text-muted: #444;
+  }
+
+  body {
+    background: #fff;
+    color: #111;
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+
+  /* Hide chrome */
+  docs-nav,
+  docs-sidebar,
+  docs-footer,
+  docs-pagination,
+  .dnav,
+  .docs-sidebar,
+  .docs-pagination,
+  .callout .btn { display: none !important; }
+
+  /* Flatten layout */
+  .container   { max-width: 100%; padding: 0; }
+  .docs-layout { display: block; }
+  .docs-content { padding: 0; max-width: 100%; }
+
+  /* Typography */
+  h1 { font-size: 20pt; }
+  h2 { font-size: 14pt; border-top: 1pt solid #ccc; page-break-after: avoid; }
+  h3 { font-size: 11pt; page-break-after: avoid; }
+
+  /* Links: show href inline */
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #444;
+    word-break: break-all;
+  }
+  /* Skip noisy or internal links */
+  a[href^="#"]::after,
+  a[href^="javascript:"]::after { content: none; }
+
+  /* Code */
+  pre, code-block {
+    background: #f5f5f5 !important;
+    border: 1pt solid #ccc !important;
+    color: #111 !important;
+    font-size: 8.5pt;
+    page-break-inside: avoid;
+  }
+  pre code { color: #111 !important; }
+  code { background: #f5f5f5; border: 1pt solid #ccc; color: #2a6000; }
+
+  /* Callouts */
+  .callout { background: #f0f7e6; border: 1pt solid #b2d98a; page-break-inside: avoid; }
+
+  /* Tables */
+  table { page-break-inside: auto; }
+  tr    { page-break-inside: avoid; }
+
+  /* Misc */
+  img { max-width: 100% !important; }
+  @page { margin: 1.5cm 2cm; }
+}

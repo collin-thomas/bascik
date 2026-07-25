@@ -2,7 +2,7 @@
 
 ### CSS File Pairing
 
-Create a `.css` file with the same name in the same directory as the component HTML:
+Scoped styles are defined in a `.css` file with the same name as the component, placed in the same directory:
 
 ```text
 src/components/
@@ -10,6 +10,8 @@ src/components/
     site-nav.html
     site-nav.css  ← scoped to site-nav
 ```
+
+> **`<style>` tags inside component files are not scoped.** Bascik only reads the paired `.css` file for scoping. A `<style>` tag placed inside a component `.html` file will be passed through as-is with no transformation — its rules will leak globally. Use the `.css` file pairing instead.
 
 ### Class Scoping
 

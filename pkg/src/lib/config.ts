@@ -7,22 +7,22 @@ const isBuild =
   args.includes("--build") || parseInt(process.env.BASCIK_BUILD ?? "0") === 1;
 
 export const defaultConfig: Omit<BascikConfigOptions, "isBuild"> = {
+  directory: {
+    pages: "src/pages",
+    components: "src/components",
+  },
   scopeScriptBlocks: true,
   scopeAttribute: {
     class: true,
     id: true,
     name: true,
   },
+  skipTranspilingElementContents: ["code"],
   deduplicateCss: true,
-  directory: {
-    pages: "src/pages",
-    components: "src/components",
-  },
   minifyStyles: true,
   obfuscateAttributeNames: true,
   cacheHttp: false,
   verboseLogging: false,
-  skipTranspilingElementContents: ["code"],
 };
 
 const initBascikConfig = (
