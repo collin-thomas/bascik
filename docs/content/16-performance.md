@@ -1,0 +1,309 @@
+## Lighthouse 100s
+
+> **Why Bascik wins by default.** Framework-rendered pages ship a JavaScript runtime, a hydration pass, and client-side routing logic before a single pixel of your content appears. Bascik ships none of that. The browser receives finished HTML. Every byte saved at the start compounds through every Core Web Vital metric.
+
+## Responsive Images with `srcset`
+
+Sending a 2400 px image to a 375 px phone is one of the most common performance killers on the web. The `srcset` attribute tells the browser which image file to choose based on the device's pixel density and viewport width — no JavaScript required.
+
+```html
+<!-- Density-based srcset: serve 2x for retina screens -->
+<img
+  src="hero.jpg"
+  srcset="hero.jpg 1x, hero@2x.jpg 2x"
+  alt="A scenic mountain landscape"
+  width="800"
+  height="450"
+/>
+
+<!-- Width-based srcset with sizes: let the browser pick -->
+<img
+  src="photo-800.jpg"
+  srcset="
+    photo-400.jpg  400w,
+    photo-800.jpg  800w,
+    photo-1200.jpg 1200w
+  "
+  sizes="(max-width: 600px) 100vw, 800px"
+  alt="Team photo"
+  width="800"
+  height="533"
+  loading="lazy"
+/>
+```
+
+Always include explicit `width` and `height` attributes. The browser uses them to reserve layout space before the image loads, which eliminates Cumulative Layout Shift (CLS) — a Core Web Vital that Lighthouse measures directly.
+
+## Lazy Loading
+
+The browser only needs to fetch images and iframes that are currently visible. Adding `loading="lazy"` defers off-screen resources until the user scrolls near them, reducing initial page weight and improving Largest Contentful Paint (LCP) for the above-the-fold content.
+
+```html
+<!-- Images below the fold -->
+<img src="gallery-1.jpg" alt="Gallery image 1" loading="lazy" width="600" height="400" />
+
+<!-- Third-party embeds -->
+<iframe
+  src="https://www.youtube-nocookie.com/embed/VIDEO_ID"
+  title="Product walkthrough video"
+  loading="lazy"
+  width="560"
+  height="315"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope"
+  allowfullscreen
+></iframe>
+```
+
+Do **not** apply `loading="lazy"` to your hero image or any image visible without scrolling. The browser will already prioritize it — adding lazy loading to a critical image delays it and hurts your LCP score.
+
+## Preloading Critical Assets
+
+`<link rel="preload">` tells the browser to fetch a resource as soon as possible, before it would normally discover it in the HTML or CSS. Use it for assets that are critical to the first render: your hero image, a web font, or a stylesheet loaded by a script.
+
+```html
+<head>
+  <!-- Preload the LCP hero image -->
+  <link rel="preload" as="image" href="hero.jpg" />
+
+  <!-- Preload a web font (prevents invisible text flash) -->
+  <link
+    rel="preload"
+    as="font"
+    href="/fonts/inter-var.woff2"
+    type="font/woff2"
+    crossorigin
+  />
+
+  <!-- Preload a critical stylesheet that a script would inject late -->
+  <link rel="preload" as="style" href="/css/above-fold.css" />
+</head>
+```
+
+Only preload what you actually use on the current page. Preloading resources that are never consumed triggers a Lighthouse warning and wastes bandwidth.
+
+## Prefetching the Next Page
+
+`<link rel="prefetch">` fetches a resource during idle time and caches it for a future navigation. When you know the user is very likely to go to a specific page next — like the next step of a checkout flow or the top item in your navigation — prefetch it and the navigation will feel instant.
+
+```html
+<head>
+  <!-- Prefetch the most likely next page -->
+  <link rel="prefetch" href="/getting-started" />
+
+  <!-- Prefetch an image used heavily on the next page -->
+  <link rel="prefetch" as="image" href="/getting-started/hero.jpg" />
+</head>
+```
+
+Prefetch is low-priority and only runs during idle time, so it never competes with resources the current page needs. It is safe to add for any high-confidence next-page prediction.
+
+## DNS Prefetch & Preconnect
+
+Every external domain requires a DNS lookup, a TCP handshake, and a TLS negotiation before the first byte of data arrives. For critical third-party origins — fonts, analytics, a CDN — you can start that work as early as possible by adding one or two `<link>` tags to your `<head>`.
+
+```html
+<head>
+  <!-- Step 1: resolve the DNS as early as possible -->
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+
+  <!-- Step 2: for truly critical origins, open the full connection
+       (DNS + TCP + TLS) before it is needed -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+</head>
+```
+
+Use `preconnect` sparingly — each open connection consumes browser resources. Reserve it for origins you will definitely hit within the first few seconds of the page load. Use `dns-prefetch` as the lightweight fallback for everything else.
+
+## Async and Deferred Scripts
+
+A plain `<script src="…">` tag blocks HTML parsing while the browser fetches and executes the file. Two attributes eliminate that block:
+
+- **`defer`** — fetches the script in parallel with HTML parsing and executes it after the document is fully parsed, in order. Use this for scripts that need the DOM ready.
+- **`async`** — fetches in parallel and executes as soon as the download finishes, out of order. Use this for fully independent scripts (analytics, chat widgets) that have no dependencies on other scripts or the DOM.
+
+```html
+<head>
+  <!-- Analytics: fully independent, run as soon as it arrives -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXX"></script>
+
+  <!-- App logic: needs the DOM, runs after parsing is complete -->
+  <script defer src="/js/app.js"></script>
+
+  <!-- A module script is deferred automatically -->
+  <script type="module" src="/js/counter.js"></script>
+</head>
+```
+
+Because Bascik adds no runtime scripts of its own, every `<script>` tag in your output is one you wrote. You have complete control over load order and execution timing from the first character of every page.
+
+## SEO: The Essential Head Tags
+
+Lighthouse's SEO audit checks for a short list of meta tags and structural signals. All of them are plain HTML attributes — nothing to install or configure.
+
+```html
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Unique, descriptive title for every page -->
+  <title>Getting Started — Bascik Docs</title>
+
+  <!-- Description shown in search results (150–160 chars) -->
+  <meta name="description" content="Install Bascik and build your first reusable HTML component in under five minutes." />
+
+  <!-- Canonical URL: prevents duplicate-content issues -->
+  <link rel="canonical" href="https://yourdomain.com/getting-started" />
+
+  <!-- Open Graph: controls how the page looks when shared -->
+  <meta property="og:title" content="Getting Started — Bascik Docs" />
+  <meta property="og:description" content="Install Bascik and build your first reusable HTML component." />
+  <meta property="og:image" content="https://yourdomain.com/og/getting-started.jpg" />
+  <meta property="og:url" content="https://yourdomain.com/getting-started" />
+  <meta property="og:type" content="website" />
+
+  <!-- Twitter / X card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Getting Started — Bascik Docs" />
+  <meta name="twitter:description" content="Install Bascik and build your first reusable HTML component." />
+  <meta name="twitter:image" content="https://yourdomain.com/og/getting-started.jpg" />
+</head>
+```
+
+Because every Bascik page is its own `.html` file, every page naturally gets its own `<title>` and `<meta name="description">` — the two most impactful SEO signals. There is no single-page-app router to work around.
+
+## Accessibility
+
+The Lighthouse accessibility audit checks for semantic HTML, sufficient color contrast, keyboard navigability, and ARIA usage. Because Bascik outputs real HTML, every accessibility technique the platform provides is available to you without a plugin or library.
+
+```html
+<!-- Use semantic landmark elements -->
+<header>…</header>
+<nav aria-label="Primary navigation">…</nav>
+<main>…</main>
+<footer>…</footer>
+
+<!-- Every image needs a meaningful alt (or empty alt for decorative images) -->
+<img src="chart.png" alt="Bar chart showing 40% growth in Q3" />
+<img src="divider.svg" alt="" role="presentation" />
+
+<!-- Buttons must have accessible names -->
+<button type="button" aria-label="Close dialog">
+  <svg aria-hidden="true">…</svg>
+</button>
+
+<!-- Form inputs must be labelled -->
+<label for="email">Email address</label>
+<input type="email" id="email" name="email" autocomplete="email" />
+
+<!-- Skip link: lets keyboard users bypass the navigation -->
+<a href="#main-content" class="skip-link">Skip to main content</a>
+```
+
+A **skip link** is one of the highest-value, lowest-effort accessibility improvements you can add. Style it to be visually hidden until focused, then revealed, so it does not affect the visual layout for mouse users.
+
+```css
+/* Accessible skip link pattern */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  padding: 8px 16px;
+  background: var(--accent);
+  color: #000;
+  font-weight: 600;
+  z-index: 9999;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+```
+
+## Web Fonts Without the Flash
+
+Web fonts are a common source of both performance and layout problems. Two CSS properties and one `<link rel="preload">` eliminate nearly all of them.
+
+```html
+<!-- 1. Preload the font file so it arrives early -->
+<link
+  rel="preload"
+  as="font"
+  href="/fonts/inter-var.woff2"
+  type="font/woff2"
+  crossorigin
+/>
+```
+
+```css
+/* 2. Declare the font face */
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/inter-var.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  /* 3. Show text immediately with the fallback font,
+        swap to Inter when it arrives */
+  font-display: swap;
+}
+
+/* 4. Minimize layout shift with a metric-matched fallback */
+@font-face {
+  font-family: 'Inter-fallback';
+  src: local('Arial');
+  ascent-override: 90%;
+  descent-override: 22%;
+  line-gap-override: 0%;
+  size-adjust: 107%;
+}
+
+body {
+  font-family: 'Inter', 'Inter-fallback', sans-serif;
+}
+```
+
+`font-display: swap` ensures text is visible immediately using the fallback font, then swaps to your custom font once it loads. The metric-override `@font-face` makes the fallback font's dimensions closely match your custom font, minimizing CLS during the swap.
+
+## The Kitchen Sink: Complete Head Template
+
+Here is a complete `<head>` combining every technique on this page. Copy it as a starting point for any Bascik page and fill in the values specific to your site.
+
+```html
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Page Title — Site Name</title>
+  <meta name="description" content="One or two sentences describing this specific page." />
+  <link rel="canonical" href="https://yourdomain.com/page-path" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Page Title — Site Name" />
+  <meta property="og:description" content="One or two sentences describing this specific page." />
+  <meta property="og:image" content="https://yourdomain.com/og/page-path.jpg" />
+  <meta property="og:url" content="https://yourdomain.com/page-path" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <!-- Preconnect to critical third-party origins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+
+  <!-- Preload critical assets -->
+  <link rel="preload" as="image" href="/images/hero.jpg" />
+  <link rel="preload" as="font" href="/fonts/inter-var.woff2" type="font/woff2" crossorigin />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/styles.css" />
+
+  <!-- Prefetch likely next navigation -->
+  <link rel="prefetch" href="/next-page" />
+
+  <!-- Scripts: async for independent third parties, defer for your code -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXX"></script>
+  <script defer src="/js/app.js"></script>
+</head>
+```

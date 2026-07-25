@@ -126,6 +126,21 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
 .step-body h3 { margin: 0 0 6px; }
 .step-body p  { margin: 0; }
 
+/* ── Tables ── */
+.docs-content table {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.88rem; margin: 16px 0 32px;
+}
+.docs-content th {
+  text-align: left; padding: 8px 12px;
+  border-bottom: 2px solid var(--border);
+  color: var(--text-muted); font-weight: 600; white-space: nowrap;
+}
+.docs-content td {
+  padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top;
+}
+.docs-content tr:last-child td { border-bottom: none; }
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .docs-layout { display: block; }

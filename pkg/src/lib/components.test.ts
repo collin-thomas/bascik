@@ -246,6 +246,21 @@ describe("minifyHtml", () => {
     expect(minifyHtml(htmlString)).toEqual("<div> content </div>");
   });
 
+  it("preserves content of <pre> elements verbatim", () => {
+    const htmlString =
+      "<div>\n  <pre><code>\n    line1\n    line2\n  </code></pre>\n</div>";
+    const result = minifyHtml(htmlString);
+    expect(result).toBe(
+      "<div><pre><code>\n    line1\n    line2\n  </code></pre></div>",
+    );
+  });
+
+  it("preserves content of <pre> elements with attributes", () => {
+    const htmlString = '<div><pre class="code-block">  indented\ncode\n</pre></div>';
+    const result = minifyHtml(htmlString);
+    expect(result).toBe('<div><pre class="code-block">  indented\ncode\n</pre></div>');
+  });
+
   it("removes comments, whitespace and newlines and puts script tags at the end of the HTML", () => {
     const htmlString = `
       <!DOCTYPE html>

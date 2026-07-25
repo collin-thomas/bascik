@@ -2,6 +2,7 @@
   <p class="sidebar-heading">Philosophy</p>
   <ul class="sidebar-nav">
     <li><a href="/why-bascik">Why Bascik</a></li>
+    <li><a href="/performance">Lighthouse 100s</a></li>
   </ul>
   <p class="sidebar-heading">Start Here</p>
   <ul class="sidebar-nav">
@@ -31,8 +32,58 @@
     <li><a href="/migrate/from-eleventy">From Eleventy</a></li>
     <li><a href="/migrate/from-astro">From Astro</a></li>
   </ul>
+  <p class="sidebar-heading">Developers</p>
+  <ul class="sidebar-nav">
+    <li><a href="/develop">Overview</a></li>
+    <li><a href="/develop/architecture">Architecture</a></li>
+    <li><a href="/develop/transpilation-pipeline">Transpilation Pipeline</a></li>
+    <li><a href="/develop/scoping-system">Scoping System</a></li>
+    <li><a href="/develop/dev-server">Dev Server</a></li>
+    <li><a href="/develop/testing">Testing</a></li>
+  </ul>
 </aside>
 <script>
+  // Single source of truth for docs page order.
+  // docs-pagination reads window.DOCS_NAV to build prev/next links.
+  window.DOCS_NAV = [
+    { section: 'Philosophy', pages: [
+      { href: '/why-bascik', label: 'Why Bascik' },
+      { href: '/performance', label: 'Lighthouse 100s' },
+    ]},
+    { section: 'Start Here', pages: [
+      { href: '/getting-started', label: 'Getting Started' },
+      { href: '/cli', label: 'CLI / Command Line' },
+      { href: '/configuration', label: 'Configuration' },
+    ]},
+    { section: 'Features', pages: [
+      { href: '/slots', label: 'Slots' },
+      { href: '/props', label: 'Props' },
+      { href: '/attribute-inheritance', label: 'Attribute Inheritance' },
+      { href: '/scoped-styles', label: 'Scoped Styles' },
+      { href: '/scoped-javascript', label: 'Scoped JavaScript' },
+      { href: '/build-scripts', label: 'Build Scripts' },
+      { href: '/libraries', label: 'JavaScript Libraries' },
+    ]},
+    { section: 'Reference', pages: [
+      { href: '/compatibility', label: 'Scoping Compatibility' },
+    ]},
+    { section: 'Migration', pages: [
+      { href: '/migrate', label: 'Migration Overview' },
+      { href: '/migrate/from-react', label: 'From React' },
+      { href: '/migrate/from-next', label: 'From Next.js' },
+      { href: '/migrate/from-eleventy', label: 'From Eleventy' },
+      { href: '/migrate/from-astro', label: 'From Astro' },
+    ]},
+    { section: 'Developers', pages: [
+      { href: '/develop', label: 'Developer Overview' },
+      { href: '/develop/architecture', label: 'Architecture' },
+      { href: '/develop/transpilation-pipeline', label: 'Transpilation Pipeline' },
+      { href: '/develop/scoping-system', label: 'Scoping System' },
+      { href: '/develop/dev-server', label: 'Dev Server' },
+      { href: '/develop/testing', label: 'Testing' },
+    ]},
+  ];
+
   var path = window.location.pathname;
   document.querySelectorAll('[data-docs-sidebar] a').forEach(function (a) {
     if (a.getAttribute('href') === path) {

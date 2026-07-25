@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dev Server — Bascik Developer Guide</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+
+      <docs-sidebar></docs-sidebar>
+
+      <main class="docs-content">
+        <script data-bascik-build>
+import { readFile } from 'node:fs/promises';
+import { marked } from 'marked';
+
+marked.use({
+  renderer: {
+    code({ text, lang }) {
+      const encoded = text.replace(/\n( *)/g, (_, s) => '&#10;' + s.replace(/ /g, '&#32;'));
+      const attr = lang ? ` data-bascik-prop-lang="${lang}"` : '';
+      return `<code-block${attr}>${encoded}</code-block>`;
+    }
+  }
+});
+
+const md = await readFile('./content/develop/dev-server.md', 'utf8');
+console.log(marked(md));
+        </script>
+        <docs-pagination></docs-pagination>
+
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+
+</body>
+
+</html>

@@ -376,16 +376,17 @@ export const pageProcessing = async (
   if (!componentList) {
     componentList = await listComponents();
   }
-  // Execute <script data-bascik-build> blocks before minification so that the
-  // generated HTML can contain component tags, which will be resolved below.
+  // Execute <script data-bascik-build> blocks first so that the generated HTML
+  // can contain component tags, which will be resolved below.
   const rawHtml = (await readFile(pagePath)).toString();
   const htmlWithBuildOutput = await executeBuildScripts(rawHtml, pagePath);
-  const html = minifyHtml(htmlWithBuildOutput);
 
-  if (!html) return;
+  // Do NOT minify before component resolution. Minification runs after transpilation
+  // so that whitespace-sensitive content (e.g. code inside resolved <pre> blocks
+  // from components like <code-block>) is preserved by minifyHtml's <pre> handling.
 
   // Gets all the text between the <body></body> tags
-  const { innerContent: body } = getTag(html, "body");
+  const { innerContent: body } = getTag(htmlWithBuildOutput, "body");
 
   if (!body) {
     console.warn(
@@ -402,12 +403,33 @@ export const pageProcessing = async (
   );
 
   // Also transpile the <head> so components can be used there (e.g. shared <meta> tags)
-  const { innerContent: headRaw } = getTag(html, "head");
+  const { innerContent: headRaw } = getTag(htmlWithBuildOutput, "head");
   let {
     transpiledHtmlBody: transpiledHeadContent,
     usedComponents: headUsedComponents,
   } = recursivelyTranspile(headRaw ?? "", componentList, [], pagePath);
 
+  // Warn about any hyphenated tags remaining after transpilation — these have no
+  // matching component file and will appear unresolved in the output HTML.
+  {
+    const unresolved = new Set<string>();
+    for (const chunk of [transpiledHtmlBody, transpiledHeadContent]) {
+      const re = /<([a-z][a-z0-9]*(?:-[a-z0-9]+)+)[\s\/>]/gi;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(chunk)) !== null) {
+        const tag = m[1].toLowerCase();
+        // slot-component is a bascik built-in resolved during slot processing
+        if (tag !== "slot-component") unresolved.add(tag);
+      }
+    }
+    if (unresolved.size > 0) {
+      console.warn(
+        `[bascik] Unresolved component tag${unresolved.size > 1 ? "s" : ""} in "${relativePagePath}": ` +
+        `${[...unresolved].map((t) => `<${t}>`).join(", ")} — no matching component file found. ` +
+        `Run \`bascik --check\` for a full report.`,
+      );
+    }
+  }
 
   // Deduplicate CSS — each component's styles included only once even if used many times
   let transpiledHead = `${transpiledHeadContent}
@@ -425,8 +447,12 @@ export const pageProcessing = async (
     transpiledHtmlBody = `${transpiledHtmlBody}${liveReloadScript}`;
   }
 
+  // Minify the body AFTER component resolution so that <pre> blocks from resolved
+  // components (e.g. <code-block> → <pre><code>…</code></pre>) are preserved intact.
+  transpiledHtmlBody = minifyHtml(transpiledHtmlBody);
+
   // Puts our processed markup back between the <body></body> tags
-  let distHtml = html
+  let distHtml = htmlWithBuildOutput
     .replace(/<body>([\s\S]*?)<\/body>/i, `<body>${transpiledHtmlBody}</body>`)
     .replace(/<head>([\s\S]*?)<\/head>/i, `<head>${transpiledHead}</head>`);
 

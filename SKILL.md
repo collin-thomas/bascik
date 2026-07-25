@@ -318,6 +318,7 @@ src/
 ```sh
 bascik          # dev: transpile, start HTTP/2 server at https://localhost:8443, watch
 bascik --build  # production: transpile to dist/ only
+bascik --check  # static analysis: validate pages and components without building
 ```
 
 ### Development Workflow & Server Output
@@ -372,6 +373,54 @@ If you introduce a syntax mistake or a runtime error inside a custom build scrip
   [bascik] build script error in "pages/index.html" at (line 12, column 5):
   ReferenceError: marked is not defined
   ```
+* **Unknown Component Tags:** If a page references a hyphenated tag with no matching component file, Bascik warns during transpilation:
+  ```terminal
+  [bascik] Unresolved component tag in "pages/about.html": <my-mistyped> — no matching component file found. Run `bascik --check` for a full report.
+  ```
+
+#### 4. Static Analysis (`bascik --check`)
+Run `bascik --check` from your project root to validate pages and component files without starting the dev server or writing any output:
+
+```sh
+bascik --check
+```
+
+Bascik scans every `.html` file in your pages and components directories and reports:
+* **Errors** — hyphenated tags with no matching component file (the tag renders as-is in the HTML output):
+  ```terminal
+  [bascik check] Unknown component in "pages/about.html": <my-missing> — no matching component file found
+  ```
+* **Warnings** — component files that are never referenced:
+  ```terminal
+  [bascik check] Unused component: <old-widget> — defined but never referenced
+  ```
+* **Success**:
+  ```terminal
+  [bascik check] ✓ 8 pages and 12 components checked — no errors
+  ```
+
+Exits with code `1` on errors — suitable for CI:
+```sh
+bascik --check && bascik --build
+```
+
+#### 5. Inspecting `dist/` Output
+
+Both the dev server and `bascik --build` write compiled HTML to `dist/` on disk — this is the ground truth of what Bascik produced. The `dist/` structure mirrors `src/pages/` with the leading directory stripped:
+
+```
+src/pages/about.html       →  dist/about.html
+src/pages/blog/post.html   →  dist/blog/post.html
+```
+
+What to check in compiled output:
+* **Component resolution:** every custom tag (e.g. `<site-nav>`) should be replaced with expanded HTML. A hyphenated tag still present in `dist/` means no component file matched.
+* **Scoped class names:** attributes like `class="bascik__site-nav__nav"` (or a short hash with `obfuscateAttributeNames`) confirm CSS scoping ran correctly.
+* **Injected `<style>` block:** the `<head>` should contain one combined `<style>` with CSS from all components used on that page.
+* **Build script output:** `<script data-bascik-build>` is replaced with stdout; if missing, check the terminal for a `[bascik] build script error` line.
+* **Slot and prop values:** verify fallback and injected text appear in the right place.
+
+The browser's **View Source** (or DevTools **Sources** panel) is equivalent to reading `dist/` and is often faster during development.
 
 ---
 

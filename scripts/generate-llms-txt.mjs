@@ -21,13 +21,25 @@ const repoRoot = join(__dirname, '..');
 const contentDir = join(repoRoot, 'docs', 'content');
 const outputFile = join(repoRoot, 'llms.txt');
 
-const entries = await readdir(contentDir);
-const mdFiles = entries
-  .filter(f => f.endsWith('.md'))
-  .sort();
+/** Recursively collect all .md files under a directory, sorted by path. */
+async function collectMdFiles(dir) {
+  const entries = await readdir(dir, { withFileTypes: true });
+  const files = [];
+  for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+    const fullPath = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...await collectMdFiles(fullPath));
+    } else if (entry.name.endsWith('.md')) {
+      files.push(fullPath);
+    }
+  }
+  return files;
+}
+
+const mdFiles = await collectMdFiles(contentDir);
 
 const sections = await Promise.all(
-  mdFiles.map(f => readFile(join(contentDir, f), 'utf8'))
+  mdFiles.map(f => readFile(f, 'utf8'))
 );
 
 // Join sections with a blank line between each
@@ -36,4 +48,4 @@ const output = sections.map(s => s.trimEnd()).join('\n\n') + '\n';
 await writeFile(outputFile, output, 'utf8');
 
 console.log(`Wrote ${outputFile} from ${mdFiles.length} section(s):`);
-mdFiles.forEach(f => console.log(`  ${f}`));
+mdFiles.forEach(f => console.log(`  ${f.replace(repoRoot + '/', '')}`));

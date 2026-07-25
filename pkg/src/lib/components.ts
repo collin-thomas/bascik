@@ -301,7 +301,28 @@ export const minifyHtml = (htmlString: string): string => {
     const pattern = new RegExp(`<script[^>]*>([\\s\\S]*?)<\\/script>`, "gi");
     html = html.replace(pattern, "").trim();
   }
+  // Preserve content of whitespace-sensitive elements before collapsing whitespace.
+  // Without this, code inside <pre> blocks has its newlines and indentation stripped,
+  // breaking the visual display of code examples in the browser.
+  const preserved: string[] = [];
+  html = html.replace(
+    /<(pre|textarea)([ \t][^>]*)?>[\s\S]*?<\/\1>/gi,
+    (match) => {
+      preserved.push(match);
+      return `\x00P${preserved.length - 1}\x00`;
+    },
+  );
   html = html.replace(/\n/g, "").replace(/>\s+</g, "><").replace(/\s\s+/g, " ");
+  if (preserved.length) {
+    // Collapse any whitespace that landed between a tag boundary and a placeholder
+    // after newline removal (e.g. "<div> \x00P0\x00 <" → "<div>\x00P0\x00<").
+    html = html.replace(/>\s+(\x00P\d+\x00)/g, ">$1");
+    html = html.replace(/(\x00P\d+\x00)\s+</g, "$1<");
+    html = html.replace(
+      /\x00P(\d+)\x00/g,
+      (_: string, i: string) => preserved[parseInt(i, 10)],
+    );
+  }
   if (scriptTags) {
     html += `\n${scriptTags}`;
   }
