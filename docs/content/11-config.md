@@ -21,6 +21,7 @@ export const bascikConfig = {
     name: true,
   },
   deduplicateCss: true,
+  skipTranspilingElementContents: ['code', 'pre'], // don't scope inside these elements
 
   // CSS
   minifyStyles: true,            // remove whitespace from compiled CSS
@@ -84,6 +85,18 @@ deduplicateCss: true // default
 ```
 
 > **Choosing `false`:** Use per-instance class scoping when a component's JavaScript needs to use class selectors to locate its own root element and you have multiple instances of that component on the same page. For most components, using an `id` attribute to anchor the script (which is always per-instance) is a simpler alternative.
+
+#### `skipTranspilingElementContents`
+
+An array of HTML element names whose inner content is left untouched by the scoping pipeline. Attribute values, element-selector class injection, and JS selector rewriting are all skipped for any HTML found *inside* these elements. The elements' own opening-tag attributes (e.g. `class="cblock-body"` on `<code>` itself) are still scoped normally.
+
+Defaults to `["code", "pre"]` — the typical elements used to display literal code examples.
+
+```js
+skipTranspilingElementContents: ['code', 'pre'] // default
+```
+
+Set to an empty array to disable the protection entirely, or extend the list for other elements whose contents should be preserved as-is.
 
 #### `minifyStyles`
 

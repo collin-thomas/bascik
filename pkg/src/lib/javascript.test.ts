@@ -513,3 +513,65 @@ describe("prefixElementAttribute – element.className setter", () => {
     expect(content).not.toContain(`${scopeClass("card")}${scopeClass("card")}`);
   });
 });
+
+// ─── skipElementContents ────────────────────────────────────────────────────────
+
+describe("prefixElementAttribute – skipElementContents", () => {
+  it("still scopes attributes on the skip element's own opening tag", () => {
+    // class="cblock-body" on <code> itself is a template attribute and SHOULD be scoped
+    const c = makeComponent('<code class="cblock-body">literal</code>');
+    const result = prefixElementAttribute(c, "class", "test1234", true, ["code"]);
+    expect(result.fileContent).toContain(scopeClass("cblock-body"));
+  });
+
+  it("does not rewrite class attributes on elements inside a skipped tag", () => {
+    // Inner HTML of <code> (e.g. display code) must be left untouched
+    const c = makeComponent(
+      '<div class="outer"><code class="cblock-body"><div class="inner">literal</div></code></div>',
+    );
+    const result = prefixElementAttribute(c, "class", "test1234", true, ["code"]);
+    expect(result.fileContent).toContain(scopeClass("outer"));
+    expect(result.fileContent).toContain(scopeClass("cblock-body"));
+    // <div class="inner"> is inside <code> — must not be scoped
+    expect(result.fileContent).toContain('class="inner"');
+    expect(result.fileContent).not.toContain(scopeClass("inner"));
+  });
+
+  it("does not rewrite id attributes on elements inside a skipped tag", () => {
+    const c = makeComponent(
+      '<section id="real"><pre><div id="example">code</div></pre></section>',
+    );
+    const result = prefixElementAttribute(c, "id", "test1234", true, ["pre"]);
+    expect(result.fileContent).toContain(scope("real"));
+    // id="example" is inside <pre> content — must not be scoped
+    expect(result.fileContent).toContain('id="example"');
+    expect(result.fileContent).not.toContain(scope("example"));
+  });
+
+  it("does not inject element classes onto elements inside a skipped tag", () => {
+    const c = makeComponent(
+      '<div class="outer"><code class="cblock-body"><p>paragraph in code</p></code></div>',
+      "p { color: red; }",
+    );
+    const result = prefixElementAttribute(c, "class", "test1234", true, ["code"]);
+    // The <p> inside <code> should NOT receive an element class
+    expect(result.fileContent).toContain("<p>paragraph in code</p>");
+  });
+
+  it("restores the original inner content of skipped tags intact", () => {
+    const inner = '<span class="highlight">example <strong>code</strong></span>';
+    const c = makeComponent(`<div class="wrap"><code class="cblock-body">${inner}</code></div>`);
+    const result = prefixElementAttribute(c, "class", "test1234", true, ["code"]);
+    expect(result.fileContent).toContain(inner);
+  });
+
+  it("handles nested skip tags (pre > code)", () => {
+    const inner = '<code class="language-html"><div class="inner">content</div></code>';
+    const c = makeComponent(`<pre>${inner}</pre><div class="outside"></div>`);
+    const result = prefixElementAttribute(c, "class", "test1234", true, ["pre", "code"]);
+    // Outer class is scoped
+    expect(result.fileContent).toContain(scopeClass("outside"));
+    // Inner content is preserved verbatim (not scoped)
+    expect(result.fileContent).toContain('<div class="inner">content</div>');
+  });
+});

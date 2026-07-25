@@ -333,6 +333,8 @@ export const bascikConfig = {
     id: true,
     name: true,
   },
+  deduplicateCss: true,
+  skipTranspilingElementContents: ['code', 'pre'], // don't scope inside these elements
   minifyStyles: true,
   obfuscateAttributeNames: true, // hash class/id names to short hex strings
   cacheHttp: false,

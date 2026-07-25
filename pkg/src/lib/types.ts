@@ -44,6 +44,13 @@ export interface BascikConfigOptions {
   obfuscateAttributeNames: boolean;
   cacheHttp: boolean;
   verboseLogging: boolean;
+  /**
+   * Tag names whose inner content is left untouched by the scoping pipeline.
+   * Attribute values, element-selector class injection, and JS selector
+   * rewriting are all skipped inside these elements.
+   * Defaults to ["code", "pre"].
+   */
+  skipTranspilingElementContents: string[];
   isBuild?: boolean;
 }
 

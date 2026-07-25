@@ -83,13 +83,54 @@ import {
 } from "./styles.js";
 import type { BascikComponent } from "./types.js";
 
+/**
+ * Preserve the inner content of named elements in `html`, replacing each with a
+ * placeholder sentinel.  Returns the modified html and a `restore` function
+ * that puts the original content back.  Used to shield element contents (e.g.
+ * `<code>`, `<pre>`) from the scoping pipeline so their text is never rewritten.
+ */
+const preserveElementContents = (
+  html: string,
+  tags: string[],
+): { html: string; restore: (h: string) => string } => {
+  if (!tags.length) return { html, restore: (h) => h };
+  const preserved: string[] = [];
+  let result = html;
+  for (const tag of tags) {
+    const esc = tag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    result = result.replace(
+      new RegExp(`(<${esc}(?:\\b[^>]*)?>)([\\s\\S]*?)(<\\/${esc}>)`, "gi"),
+      (_match, open, inner, close) => {
+        preserved.push(inner);
+        return `${open}\x00BSKIP${preserved.length - 1}\x00${close}`;
+      },
+    );
+  }
+  return {
+    html: result,
+    restore: (h: string) =>
+      h.replace(
+        /\x00BSKIP(\d+)\x00/g,
+        (_, i) => preserved[parseInt(i, 10)],
+      ),
+  };
+};
+
 export const prefixElementAttribute = (
   component: BascikComponent,
   attribute: "id" | "name" | "class",
   componentInstanceId: string | null = null,
   deduplicateCss: boolean = true,
+  skipElementContents: string[] = [],
 ): BascikComponent => {
   if (!component.fileContent) return component;
+
+  // Shield inner content of skip elements (e.g. <code>, <pre>) from all transforms.
+  const { html: shieldedContent, restore } = preserveElementContents(
+    component.fileContent,
+    skipElementContents,
+  );
+  component.fileContent = shieldedContent;
   // All class/name/id attrs will get this ID.
   // Accept an externally provided ID so that a single component instance can
   // share one ID across all attribute types (id, name, class).
@@ -333,6 +374,9 @@ export const prefixElementAttribute = (
       allIdsConverted,
     );
   }
+
+  // Restore any inner content that was shielded from transforms.
+  component.fileContent = restore(component.fileContent);
 
   return component;
 };

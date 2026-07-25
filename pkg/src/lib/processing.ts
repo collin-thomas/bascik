@@ -161,19 +161,21 @@ const applyTransforms = (
  * Build the ordered list of attribute/script scoping transforms for this
  * component instance, filtered by the current BascikConfig flags.
  */
-const buildScopingPipeline = (instanceId: string): ComponentTransform[] =>
-  (
+const buildScopingPipeline = (instanceId: string): ComponentTransform[] => {
+  const skip = BascikConfig.skipTranspilingElementContents;
+  return (
     [
       BascikConfig.scopeAttribute.id &&
-      ((c: BascikComponent) => prefixElementAttribute(c, "id", instanceId)),
+      ((c: BascikComponent) => prefixElementAttribute(c, "id", instanceId, true, skip)),
       BascikConfig.scopeAttribute.name &&
-      ((c: BascikComponent) => prefixElementAttribute(c, "name", instanceId)),
+      ((c: BascikComponent) => prefixElementAttribute(c, "name", instanceId, true, skip)),
       BascikConfig.scopeAttribute.class &&
       ((c: BascikComponent) =>
-        prefixElementAttribute(c, "class", instanceId, BascikConfig.deduplicateCss)),
+        prefixElementAttribute(c, "class", instanceId, BascikConfig.deduplicateCss, skip)),
       BascikConfig.scopeScriptBlocks && namespaceScriptTags,
     ] as (ComponentTransform | false)[]
   ).filter((t): t is ComponentTransform => Boolean(t));
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Core transpile pipeline

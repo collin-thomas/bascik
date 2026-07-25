@@ -44,6 +44,10 @@ describe("defaultConfig", () => {
   it("has deduplicateCss: true", () => {
     expect(defaultConfig.deduplicateCss).toBe(true);
   });
+
+  it("has skipTranspilingElementContents: [\"code\", \"pre\"]", () => {
+    expect(defaultConfig.skipTranspilingElementContents).toEqual(["code", "pre"]);
+  });
 });
 
 describe("BascikConfig", () => {

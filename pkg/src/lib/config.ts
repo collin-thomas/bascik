@@ -22,6 +22,7 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild"> = {
   obfuscateAttributeNames: true,
   cacheHttp: false,
   verboseLogging: false,
+  skipTranspilingElementContents: ["code", "pre"],
 };
 
 const initBascikConfig = (
