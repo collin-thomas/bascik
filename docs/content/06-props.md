@@ -1,7 +1,5 @@
 ## Props
 
-Props let you pass text values into a component template at usage time using `data-bascik-prop-*` attributes.
-
 ### Defining Props in a Template
 
 Add a `data-bascik-prop-{name}` attribute (no value) to any element in the component template. The element's inner content will be replaced with the prop value at build time.

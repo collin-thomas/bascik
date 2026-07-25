@@ -390,6 +390,77 @@ export const injectProps = (
 // ─── Named Slots ──────────────────────────────────────────────────────────────
 
 /**
+ * Find the index of the closing `</tagName>` that properly balances with the
+ * opening tag whose content starts at `contentStart`.  Uses a simple depth
+ * counter so nested elements of the same tag type are handled correctly.
+ *
+ * Returns the index of `</tagName>` in `html`, or -1 if not found.
+ */
+const findMatchingClose = (
+  html: string,
+  tagName: string,
+  contentStart: number,
+): number => {
+  const tn = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const openRe = new RegExp(`<${tn}[\\s>]`, "gi");
+  const closeRe = new RegExp(`<\\/${tn}>`, "gi");
+  let depth = 1;
+  let pos = contentStart;
+  while (pos < html.length) {
+    openRe.lastIndex = pos;
+    closeRe.lastIndex = pos;
+    const openMatch = openRe.exec(html);
+    const closeMatch = closeRe.exec(html);
+    if (!closeMatch) return -1;
+    if (!openMatch || closeMatch.index < openMatch.index) {
+      depth--;
+      if (depth === 0) return closeMatch.index;
+      pos = closeMatch.index + closeMatch[0].length;
+    } else {
+      depth++;
+      pos = openMatch.index + openMatch[0].length;
+    }
+  }
+  return -1;
+};
+
+/**
+ * Parse all `data-bascik-slot="name"` wrapper elements from `innerContent`,
+ * returning an array of `{ slotName, startIndex, endIndex, content }` objects
+ * where `startIndex`/`endIndex` delimit the entire wrapper element (including
+ * its opening and closing tags) in the original string.
+ *
+ * Uses a stack-based depth counter so nested same-tag elements are handled
+ * correctly — e.g. a `<div data-bascik-slot="x"><div>…</div></div>` wrapper
+ * that contains inner `<div>` elements will be correctly closed at the outer
+ * `</div>`, not the first inner one.
+ */
+const parseNamedSlots = (
+  innerContent: string,
+): Array<{ slotName: string; startIndex: number; endIndex: number; content: string }> => {
+  const results: Array<{ slotName: string; startIndex: number; endIndex: number; content: string }> = [];
+  const openTagRe = /<(\w+(?:-\w+)*)\s+data-bascik-slot="([^"]+)"[^>]*>/gi;
+  let match: RegExpExecArray | null;
+  while ((match = openTagRe.exec(innerContent)) !== null) {
+    const [fullOpen, tagName, slotName] = match;
+    const contentStart = match.index + fullOpen.length;
+    const closeIndex = findMatchingClose(innerContent, tagName, contentStart);
+    if (closeIndex === -1) continue;
+    const closeTag = `</${tagName}>`;
+    const endIndex = closeIndex + closeTag.length;
+    results.push({
+      slotName,
+      startIndex: match.index,
+      endIndex,
+      content: innerContent.slice(contentStart, closeIndex),
+    });
+    // Advance past the entire wrapper element so we don't re-process it
+    openTagRe.lastIndex = endIndex;
+  }
+  return results;
+};
+
+/**
  * Strip `data-bascik-slot="name"` wrapper elements from inner content,
  * leaving only the content intended for the default slot.
  *
@@ -400,10 +471,15 @@ export const extractDefaultSlotContent = (
   innerContent: string | undefined,
 ): string => {
   if (!innerContent) return "";
-  return innerContent.replace(
-    /<(\w+(?:-\w+)*)\s+data-bascik-slot="[^"]*"[^>]*>[\s\S]*?<\/\1>/gi,
-    "",
-  );
+  const named = parseNamedSlots(innerContent);
+  if (named.length === 0) return innerContent;
+  // Remove each named-slot wrapper from right-to-left to preserve indices
+  let result = innerContent;
+  for (let i = named.length - 1; i >= 0; i--) {
+    const { startIndex, endIndex } = named[i];
+    result = result.slice(0, startIndex) + result.slice(endIndex);
+  }
+  return result;
 };
 
 /**
@@ -416,15 +492,10 @@ export const extractDefaultSlotContent = (
 export const extractNamedSlotContent = (
   innerContent: string | undefined,
 ): Record<string, string> => {
+  if (!innerContent) return {};
   const slots: Record<string, string> = {};
-  if (!innerContent) return slots;
-  const regexp = new RegExp(
-    `<(\\w+(?:-\\w+)*)\\s+data-bascik-slot="([^"]+)"[^>]*>([\\s\\S]*?)<\\/\\1>`,
-    "gi",
-  );
-  let match;
-  while ((match = regexp.exec(innerContent)) !== null) {
-    slots[match[2]] = match[3];
+  for (const { slotName, content } of parseNamedSlots(innerContent)) {
+    slots[slotName] = content;
   }
   return slots;
 };

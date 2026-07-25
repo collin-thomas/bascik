@@ -1,0 +1,12 @@
+# Pages with hand-authored code-block content.
+# Formatters add leading whitespace inside <code-block> tags that renders verbatim.
+src/pages/scoped-javascript.html
+src/pages/scoped-styles.html
+src/pages/props.html
+src/pages/slots.html
+src/pages/build-scripts.html
+src/pages/index.html
+
+# Generated output — don't format
+dist/
+node_modules/

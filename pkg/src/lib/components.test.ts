@@ -481,6 +481,30 @@ describe("extractNamedSlotContent", () => {
   it("returns empty object for empty string", () => {
     expect(extractNamedSlotContent("")).toEqual({});
   });
+
+  it("handles nested same-tag elements inside slot wrapper", () => {
+    // The slot wrapper is a <div>. The content also contains a <div>.
+    // The regex must close at the OUTER </div>, not the first inner one.
+    const inner =
+      '<div data-bascik-slot="example">' +
+      "<p>Before</p><div style=\"nested\"><span>Inner</span></div><p>After</p>" +
+      "</div>";
+    expect(extractNamedSlotContent(inner)).toEqual({
+      example: "<p>Before</p><div style=\"nested\"><span>Inner</span></div><p>After</p>",
+    });
+  });
+
+  it("handles deeply nested same-tag elements", () => {
+    const inner =
+      '<div data-bascik-slot="x">' +
+      "<div><div><p>deep</p></div></div>" +
+      "</div>" +
+      '<div data-bascik-slot="y"><span>y</span></div>';
+    expect(extractNamedSlotContent(inner)).toEqual({
+      x: "<div><div><p>deep</p></div></div>",
+      y: "<span>y</span>",
+    });
+  });
 });
 
 describe("replaceNamedSlots", () => {
@@ -531,6 +555,14 @@ describe("extractDefaultSlotContent", () => {
       '<div data-bascik-slot="a"><span>a</span></div>' +
       '<div data-bascik-slot="b"><span>b</span></div>';
     expect(extractDefaultSlotContent(inner)).toBe("<p>main</p>");
+  });
+
+  it("strips named slot wrapper containing nested same-tag elements", () => {
+    // Slot wrapper is <div>. Content has inner <div>s — must strip whole wrapper.
+    const inner =
+      "<p>default</p>" +
+      '<div data-bascik-slot="side"><div style="inner"><span>s</span></div></div>';
+    expect(extractDefaultSlotContent(inner)).toBe("<p>default</p>");
   });
 });
 

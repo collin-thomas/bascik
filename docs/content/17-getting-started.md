@@ -1,7 +1,5 @@
 ## Getting Started
 
-Bascik requires Node.js v24+. Get up and running in under five minutes.
-
 ### Installation
 
 Install Bascik with your preferred package manager:

@@ -1,7 +1,5 @@
 ## Scoped JavaScript
 
-Bascik rewrites DOM selector calls inside component `<script>` tags to match the scoped IDs and class names generated at build time. If you use a component twice on the same page, each instance gets its own unique identifiers — the scripts inside each instance automatically reference only that instance's elements, with no extra code required.
-
 ### Scoping Model
 
 `id` and `name` attributes are scoped **per-instance** — each use of a component generates a different `instanceId`, so element IDs are guaranteed unique across the entire page. `class` attributes are scoped to the component **name** only, so all instances share the same class names and CSS deduplication can emit a single `<style>` block no matter how many times the component is used.

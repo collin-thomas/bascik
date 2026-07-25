@@ -71,6 +71,7 @@
 
   .demo-tabs {
     display: flex;
+    flex-shrink: 0;
   }
 
   .demo-tab {
@@ -98,6 +99,10 @@
     font-size: 0.75rem;
     color: var(--text-muted);
     font-family: var(--font-mono);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .demo-panes {

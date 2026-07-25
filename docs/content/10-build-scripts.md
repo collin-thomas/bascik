@@ -1,7 +1,5 @@
 ## Build-time Scripts
 
-Build-time scripts let you run Node.js code at transpile time and inject the output directly into the page — no client-side JavaScript required. Use them to pull in Markdown files, generate navigation from JSON, or fetch remote data at build time.
-
 ### data-bascik-build
 
 Tag any `<script>` block with `data-bascik-build` and Bascik will execute it as a Node.js ESM module during transpilation. The script's `stdout` output replaces the tag in the final HTML.

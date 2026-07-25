@@ -1,7 +1,5 @@
 ## Scoped CSS
 
-Bascik automatically namespaces your component CSS at build time. Class names, element selectors, `@media` queries, and `@keyframes` are all scoped so components can never conflict with one another.
-
 ### CSS File Pairing
 
 Create a `.css` file with the same name in the same directory as the component HTML:

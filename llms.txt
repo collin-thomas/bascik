@@ -38,8 +38,6 @@ Self-closing syntax works too: `<site-nav />`
 
 ## Scoped CSS
 
-Bascik automatically namespaces your component CSS at build time. Class names, element selectors, `@media` queries, and `@keyframes` are all scoped so components can never conflict with one another.
-
 ### CSS File Pairing
 
 Create a `.css` file with the same name in the same directory as the component HTML:
@@ -221,8 +219,6 @@ Avoid this anti-pattern:
 Alternatively, set `deduplicateCss: false` in `bascik.config.js` to switch to per-instance class scoping. This makes class selectors behave like id selectors at the cost of emitting one `<style>` block per component instance.
 
 ## Scoped JavaScript
-
-Bascik rewrites DOM selector calls inside component `<script>` tags to match the scoped IDs and class names generated at build time. If you use a component twice on the same page, each instance gets its own unique identifiers — the scripts inside each instance automatically reference only that instance's elements, with no extra code required.
 
 ### Scoping Model
 
@@ -474,8 +470,6 @@ At the usage site:
 
 ## Props
 
-Props let you pass text values into a component template at usage time using `data-bascik-prop-*` attributes.
-
 ### Defining Props in a Template
 
 Add a `data-bascik-prop-{name}` attribute (no value) to any element in the component template. The element's inner content will be replaced with the prop value at build time.
@@ -653,8 +647,6 @@ Components work inside `<head>`:
 ```
 
 ## Build-time Scripts
-
-Build-time scripts let you run Node.js code at transpile time and inject the output directly into the page — no client-side JavaScript required. Use them to pull in Markdown files, generate navigation from JSON, or fetch remote data at build time.
 
 ### data-bascik-build
 
@@ -1779,8 +1771,6 @@ Here is a complete `<head>` combining every technique on this page. Copy it as a
 ```
 
 ## Getting Started
-
-Bascik requires Node.js v24+. Get up and running in under five minutes.
 
 ### Installation
 
