@@ -91,6 +91,24 @@ At the usage site:
 
 > **How it works:** Named slot wrappers in the usage inner HTML are extracted by name and injected into the matching `data-bascik-slot="name"` placeholder in the template. Everything left over goes into the default slot.
 
+### Whitespace Handling
+
+Leading and trailing whitespace is trimmed from all slot content at build time. This means you can write component usage on multiple lines without worrying about stray newlines or indentation appearing in the output:
+
+```html
+<!-- these two usages produce identical output -->
+
+<my-card><p>Hello</p></my-card>
+
+<my-card>
+  <p>Hello</p>
+</my-card>
+```
+
+Whitespace *within* slot content is preserved exactly as written.
+
+> **Note for `<pre>` contexts:** Bascik skips transpilation inside `<pre>` and `<code>` elements, so slot trimming only applies to regular component resolution — not to raw preformatted content you write directly inside those elements.
+
 ### Live Demo
 
 The interactive slot demo passes a button into the `feature-card` component's default slot.
