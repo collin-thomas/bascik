@@ -1,0 +1,13 @@
+.counter {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 1.25rem;
+}
+
+.count-value {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  min-width: 2ch;
+  text-align: center;
+}

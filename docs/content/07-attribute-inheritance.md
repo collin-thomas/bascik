@@ -71,3 +71,30 @@ Inherited class names are _not_ scoped — they are treated as global classes. T
 The `featured` class is a global class that you define in your page-level stylesheet, separate from the component's scoped CSS.
 
 > **Self-closing syntax works too:** Attribute inheritance works with both paired and self-closing usage syntax: `<my-icon class="large" aria-hidden="true" />`
+
+### Live Example
+
+The following passes `class="highlight"` and `aria-label="Featured card"` on the component usage tag. Both are inherited — `class` is appended to the existing scoped class, and `aria-label` is added to the root element verbatim.
+
+<!-- demo:source-html -->
+```html
+<feature-card
+  class="highlight"
+  aria-label="Featured card"
+  data-bascik-prop-label="Example"
+  data-bascik-prop-title="Attribute Inheritance"
+  data-bascik-prop-desc="The class and aria-label above were merged onto the root element.">
+</feature-card>
+```
+
+<!-- demo:output-html -->
+```html
+<div class="bascik__feature-card__x1__fcard highlight" aria-label="Featured card">
+  <p class="bascik__feature-card__x1__fcard-label">Example</p>
+  <h3 class="bascik__feature-card__x1__fcard-title">Attribute Inheritance</h3>
+  <p class="bascik__feature-card__x1__fcard-desc">
+    The class and aria-label above were merged onto the root element.
+  </p>
+  <div class="bascik__feature-card__x1__fcard-slot"><div></div></div>
+</div>
+```

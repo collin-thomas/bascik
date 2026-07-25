@@ -883,6 +883,33 @@ The `featured` class is a global class that you define in your page-level styles
 
 > **Self-closing syntax works too:** Attribute inheritance works with both paired and self-closing usage syntax: `<my-icon class="large" aria-hidden="true" />`
 
+### Live Example
+
+The following passes `class="highlight"` and `aria-label="Featured card"` on the component usage tag. Both are inherited — `class` is appended to the existing scoped class, and `aria-label` is added to the root element verbatim.
+
+<!-- demo:source-html -->
+```html
+<feature-card
+  class="highlight"
+  aria-label="Featured card"
+  data-bascik-prop-label="Example"
+  data-bascik-prop-title="Attribute Inheritance"
+  data-bascik-prop-desc="The class and aria-label above were merged onto the root element.">
+</feature-card>
+```
+
+<!-- demo:output-html -->
+```html
+<div class="bascik__feature-card__x1__fcard highlight" aria-label="Featured card">
+  <p class="bascik__feature-card__x1__fcard-label">Example</p>
+  <h3 class="bascik__feature-card__x1__fcard-title">Attribute Inheritance</h3>
+  <p class="bascik__feature-card__x1__fcard-desc">
+    The class and aria-label above were merged onto the root element.
+  </p>
+  <div class="bascik__feature-card__x1__fcard-slot"><div></div></div>
+</div>
+```
+
 ## Self-Closing Tags
 
 ```html
@@ -1358,6 +1385,7 @@ Include it once with the `init` attribute and it mounts all `v-scope` elements o
 
 Each instance of this component has its own isolated state. Place it on a page as many times as you want — the counters are independent:
 
+<!-- demo:source-html -->
 ```html
 <!-- src/components/my-counter.html -->
 <div class="counter" v-scope="{ count: 0 }">
@@ -1367,8 +1395,27 @@ Each instance of this component has its own isolated state. Place it on a page a
 </div>
 ```
 
+<!-- demo:source-css -->
+```css
+/* src/components/my-counter.css */
+.counter {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 1.25rem;
+}
+
+.count-value {
+  font-family: monospace;
+  font-size: 1.5rem;
+  min-width: 2ch;
+  text-align: center;
+}
+```
+
+<!-- demo:code -->
 ```html
-<!-- Two independent instances -->
+<!-- Two independent instances on the same page -->
 <my-counter></my-counter>
 <my-counter></my-counter>
 ```

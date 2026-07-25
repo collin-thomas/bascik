@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JavaScript Libraries — Bascik Docs</title>
   <link rel="stylesheet" href="/css/styles.css" />
+  <script src="https://unpkg.com/petite-vue" defer init></script>
 </head>
 
 <body>
@@ -43,6 +44,62 @@
           );
           console.log(await renderMd('./content/15-libraries.md', { skipFirstHeading: true }));
         </script>
+
+        <h2>Live Counter Demo</h2>
+        <p>Two independent instances of <code>my-counter</code> running on the same page. Each has its own isolated
+          reactive state — clicking buttons in one has no effect on the other.</p>
+
+        <component-demo data-bascik-prop-file="src/components/my-counter/">
+          <div data-bascik-slot="example">
+            <div style="display:flex;gap:48px;flex-wrap:wrap;align-items:center">
+              <div>
+                <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:12px;font-family:var(--font-mono)">
+                  Instance 1</p>
+                <my-counter></my-counter>
+              </div>
+              <div>
+                <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:12px;font-family:var(--font-mono)">
+                  Instance 2</p>
+                <my-counter></my-counter>
+              </div>
+            </div>
+          </div>
+          <div data-bascik-slot="source-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/15-libraries.md', 'source-html'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="source-css">
+            <code-block data-bascik-prop-lang="css">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/15-libraries.md', 'source-css'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="source-js">
+            <code-block data-bascik-prop-lang="js">// Petite-vue is loaded via CDN in the page &lt;head&gt;:
+              // &lt;script src="https://unpkg.com/petite-vue" defer init&gt;&lt;/script&gt;
+              // No per-component JavaScript needed.</code-block>
+          </div>
+          <div data-bascik-slot="code">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/15-libraries.md', 'code'));
+              </script>
+            </code-block>
+          </div>
+        </component-demo>
 
         <script data-bascik-build>
           import { join } from 'node:path';

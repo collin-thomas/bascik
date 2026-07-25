@@ -44,6 +44,7 @@ Include it once with the `init` attribute and it mounts all `v-scope` elements o
 
 Each instance of this component has its own isolated state. Place it on a page as many times as you want — the counters are independent:
 
+<!-- demo:source-html -->
 ```html
 <!-- src/components/my-counter.html -->
 <div class="counter" v-scope="{ count: 0 }">
@@ -53,8 +54,27 @@ Each instance of this component has its own isolated state. Place it on a page a
 </div>
 ```
 
+<!-- demo:source-css -->
+```css
+/* src/components/my-counter.css */
+.counter {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 1.25rem;
+}
+
+.count-value {
+  font-family: monospace;
+  font-size: 1.5rem;
+  min-width: 2ch;
+  text-align: center;
+}
+```
+
+<!-- demo:code -->
 ```html
-<!-- Two independent instances -->
+<!-- Two independent instances on the same page -->
 <my-counter></my-counter>
 <my-counter></my-counter>
 ```
