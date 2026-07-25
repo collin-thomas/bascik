@@ -1,25 +1,33 @@
 <footer class="dfooter">
   <div class="dfooter-container">
-
     <div class="dfooter-upper">
       <div class="dfooter-brand">
-        <a href="/" class="dfooter-logo" aria-label="Bascik home">BASCIK</a>
+        <a href="/" class="dfooter-logo" aria-label="Bascik home"><docs-logo></docs-logo></a>
         <p class="dfooter-desc">A static site generator<br>for HTML components.</p>
       </div>
-
-      <script data-bascik-build>
-        import { join } from 'node:path';
-        import { pathToFileURL } from 'node:url';
-        const { renderFooterSitemap } = await import(
-          pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href
-        );
-        console.log(renderFooterSitemap());
-      </script>
+      <div class="dfooter-sitemap">
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { NAV } = await import(pathToFileURL(join(process.cwd(), 'scripts/nav.mjs')).href);
+          const sections = NAV.filter(s => s.section !== 'Developers');
+          let html = '';
+          for (const section of sections) {
+            html += `<div class="dfooter-col"><p class="dfooter-col-heading">${section.section}</p><ul class="dfooter-col-links">`;
+            for (const page of section.pages) {
+              html += `<li><a href="${page.href}">${page.label}</a></li>`;
+            }
+            html += '</ul></div>';
+          }
+          console.log(html);
+        </script>
+      </div>
     </div>
-
     <div class="dfooter-bottom">
-      <span class="dfooter-copy">&copy; 2026 <a href="https://rinsesoft.com" target="_blank"
-          rel="noopener noreferrer">Rinsesoft</a>. Open source under AGPL-3.0.</span>
+      <span class="dfooter-copy">&copy;
+        <script data-bascik-build>console.log(new Date().getFullYear())</script> <a href="https://rinsesoft.com"
+          target="_blank" rel="noopener noreferrer">Rinsesoft</a>. Open source under AGPL-3.0.
+      </span>
       <div class="dfooter-links">
         <a href="https://rinsesoft.com" target="_blank" rel="noopener noreferrer">rinsesoft.com</a>
         <a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener noreferrer">GitHub</a>
@@ -27,6 +35,5 @@
           rel="noopener noreferrer">License</a>
       </div>
     </div>
-
   </div>
 </footer>

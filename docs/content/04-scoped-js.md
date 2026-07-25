@@ -38,6 +38,32 @@ Using a component more than once on the same page works automatically. Each use 
 
 Both buttons are fully independent. The first instance's click handler only fires for the first button, and vice versa.
 
+### Class Selectors and Multiple Instances (Pitfall)
+
+Because class names are scoped to the component **name** (not the instance), `querySelector('.my-class')` and `querySelectorAll('.my-class')` will always return the **first** matching element in the document — even after Bascik rewrites the class name. When the same component appears more than once on a page, every instance's script will target the first instance's elements.
+
+**Never use class-based DOM lookups to find elements you need to control per-instance.** Use `id` attributes instead — IDs are scoped per-instance and `getElementById` always resolves to the correct element:
+
+```html
+<!-- ❌ Broken for multiple instances — querySelector returns first instance's button -->
+<button class="my-btn">Click</button>
+<script>
+  document.querySelector('.my-btn').addEventListener('click', () => { … });
+</script>
+```
+
+```html
+<!-- ✅ Correct — id is per-instance, getElementById targets the right element -->
+<button id="my-btn" class="my-btn">Click</button>
+<script>
+  document.getElementById('my-btn').addEventListener('click', () => { … });
+</script>
+```
+
+The `class` attribute can coexist on the element for styling — just add an `id` for the JS lookup.
+
+> **Rule of thumb.** In component scripts, always use `getElementById` (or `getElementsByName`) to locate specific elements. Reserve `querySelector`/`querySelectorAll` for cases where you intentionally want to sweep across all instances (e.g. event delegation from a parent outside the component).
+
 ### IIFE Isolation
 
 Every component script is wrapped in an immediately-invoked function expression (IIFE) to prevent variable leaks between components:

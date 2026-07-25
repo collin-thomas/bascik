@@ -10,22 +10,12 @@
 
 <body>
 
-  <script data-bascik-build>
-    import { join } from 'node:path';
-    import { pathToFileURL } from 'node:url';
-    const { renderNav } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
-    console.log(renderNav('/migrate/from-astro'));
-  </script>
+  <docs-nav></docs-nav>
 
   <div class="container">
     <div class="docs-layout">
 
-      <script data-bascik-build>
-        import { join } from 'node:path';
-        import { pathToFileURL } from 'node:url';
-        const { renderSidebar } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
-        console.log(renderSidebar('/migrate/from-astro'));
-      </script>
+      <docs-sidebar></docs-sidebar>
 
       <main class="docs-content">
         <p class="section-label">Migration</p>
@@ -59,12 +49,7 @@
     </div>
   </div>
 
-  <script data-bascik-build>
-    import { join } from 'node:path';
-    import { pathToFileURL } from 'node:url';
-    const { renderFooter } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
-    console.log(renderFooter());
-  </script>
+  <docs-footer></docs-footer>
 </body>
 
 </html>

@@ -71,14 +71,14 @@
   <span class="ctr-label" data-bascik-prop-label>Counter</span>
   <span class="ctr-count" id="count">0</span>
   <div class="ctr-btns">
-    <button class="ctr-dec">−</button>
-    <button class="ctr-inc">+</button>
+    <button class="ctr-dec" id="dec">−</button>
+    <button class="ctr-inc" id="inc">+</button>
   </div>
 </div>
 <script>
   const count = document.getElementById('count');
-  const dec = document.querySelector('.ctr-dec');
-  const inc = document.querySelector('.ctr-inc');
+  const dec = document.getElementById('dec');
+  const inc = document.getElementById('inc');
   let n = 0;
   dec.addEventListener('click', () => { n--; count.textContent = n; });
   inc.addEventListener('click', () => { n++; count.textContent = n; });

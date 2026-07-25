@@ -1,3 +1,26 @@
-<!-- docs-sidebar is no longer used directly in pages.
-     Each page renders the sidebar at build time via scripts/render-nav.mjs.
-     See scripts/nav.mjs for the single source of truth for navigation order. -->
+<aside class="docs-sidebar">
+     <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { NAV } = await import(pathToFileURL(join(process.cwd(), 'scripts/nav.mjs')).href);
+          let html = '';
+          for (const section of NAV) {
+               html += `<p class="sidebar-heading">${section.section}</p><ul class="sidebar-nav">`;
+               for (const page of section.pages) {
+                    html += `<li><a href="${page.href}">${page.label}</a></li>`;
+               }
+               html += '</ul>';
+          }
+          console.log(html);
+     </script>
+</aside>
+<script>
+     (function () {
+          var path = window.location.pathname;
+          var a = document.querySelector('.docs-sidebar a[href="' + path + '"]');
+          if (a) {
+               a.setAttribute('aria-current', 'page');
+               a.scrollIntoView({ block: 'nearest' });
+          }
+     })();
+</script>

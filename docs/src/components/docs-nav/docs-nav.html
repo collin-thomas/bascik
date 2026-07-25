@@ -1,108 +1,55 @@
-<!-- docs-nav is no longer used directly in pages.
-     Each page renders the nav at build time via scripts/render-nav.mjs,
-     which stamps aria-current="page" on the correct link and generates the
-     mobile drawer. The mobile toggle JS remains inline in the build output.
-     See scripts/nav.mjs for the single source of truth for navigation order. -->
-<nav class="dnav" data-docs-nav>
+<input type="checkbox" id="dnav-toggle" class="dnav-checkbox">
+<nav class="dnav">
   <div class="dnav-inner container">
-    <a href="/" class="dnav-logo">Bascik</a>
-    <button class="dnav-toggle" aria-label="Toggle navigation">
+    <a href="/" class="dnav-logo" aria-label="Bascik home"><docs-logo></docs-logo></a>
+    <label for="dnav-toggle" class="dnav-toggle" tabindex="0" aria-label="Toggle navigation">
       <span class="dnav-toggle-icon"></span>
-    </button>
+    </label>
     <div class="dnav-links-wrapper">
       <ul class="dnav-links">
         <li><a href="/why-bascik">Why Bascik</a></li>
         <li><a href="/getting-started">Docs</a></li>
         <li><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener">GitHub</a></li>
       </ul>
-
-      <!-- Collapsible Mobile Sidebar Integration -->
       <div class="mobile-only-sections">
         <hr class="mobile-sep" />
-        <p class="mobile-sec-heading">Philosophy</p>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { NAV } = await import(pathToFileURL(join(process.cwd(), 'scripts/nav.mjs')).href);
+          let html = '';
+          for (const section of NAV) {
+            html += `<p class="mobile-sec-heading">${section.section}</p><ul class="mobile-sec-nav">`;
+            for (const page of section.pages) {
+              html += `<li><a href="${page.href}">${page.label}</a></li>`;
+            }
+            html += '</ul>';
+          }
+          console.log(html);
+        </script>
+        <hr class="mobile-sep" />
         <ul class="mobile-sec-nav">
-          <li><a href="/why-bascik">Why Bascik</a></li>
-        </ul>
-        <p class="mobile-sec-heading">Start Here</p>
-        <ul class="mobile-sec-nav">
-          <li><a href="/getting-started">Getting Started</a></li>
-          <li><a href="/cli">CLI / Command Line</a></li>
-          <li><a href="/configuration">Configuration</a></li>
-        </ul>
-        <p class="mobile-sec-heading">Features</p>
-        <ul class="mobile-sec-nav">
-          <li><a href="/slots">Slots</a></li>
-          <li><a href="/props">Props</a></li>
-          <li><a href="/attribute-inheritance">Attribute Inheritance</a></li>
-          <li><a href="/scoped-styles">Scoped Styles</a></li>
-          <li><a href="/scoped-javascript">Scoped JavaScript</a></li>
-          <li><a href="/build-scripts">Build Scripts</a></li>
-          <li><a href="/libraries">JavaScript Libraries</a></li>
-        </ul>
-        <p class="mobile-sec-heading">Reference</p>
-        <ul class="mobile-sec-nav">
-          <li><a href="/compatibility">Scoping Compatibility</a></li>
-        </ul>
-        <p class="mobile-sec-heading">Migration</p>
-        <ul class="mobile-sec-nav">
-          <li><a href="/migrate">Overview</a></li>
-          <li><a href="/migrate/from-react">From React</a></li>
-          <li><a href="/migrate/from-next">From Next.js</a></li>
-          <li><a href="/migrate/from-eleventy">From Eleventy</a></li>
-          <li><a href="/migrate/from-astro">From Astro</a></li>
-        </ul>
-        <p class="mobile-sec-heading">Developers</p>
-        <ul class="mobile-sec-nav">
-          <li><a href="/develop">Overview</a></li>
-          <li><a href="/develop/architecture">Architecture</a></li>
-          <li><a href="/develop/transpilation-pipeline">Transpilation Pipeline</a></li>
-          <li><a href="/develop/scoping-system">Scoping System</a></li>
-          <li><a href="/develop/dev-server">Dev Server</a></li>
-          <li><a href="/develop/testing">Testing</a></li>
+          <li><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener">GitHub &nearr;</a></li>
         </ul>
       </div>
     </div>
   </div>
-  <!-- Scoping helper for dynamic runtime classes -->
-  <div class="is-open is-active" style="display: none;"></div>
 </nav>
-
 <script>
-  var path = window.location.pathname;
-  // Handle root vs /why-bascik and subpages
-  document.querySelectorAll('[data-docs-nav] a').forEach(function (a) {
-    var href = a.getAttribute('href');
-    if (!href) return;
-
-    if (href.startsWith('http')) return; // ignore external github link
-
-    if (href === '/getting-started') {
-      // Highlight "Docs" for any docs guide pages
-      var isDocsSubpage = path !== '/' && path !== '/why-bascik';
-      if (isDocsSubpage) {
-        a.setAttribute('aria-current', 'page');
-      }
-    } else if (href === path) {
-      a.setAttribute('aria-current', 'page');
-    }
-  });
-
-  // Mobile navigation drawer toggle logic
-  var toggleBtn = document.querySelector('.dnav-toggle');
-  var linksWrapper = document.querySelector('.dnav-links-wrapper');
-  if (toggleBtn && linksWrapper) {
-    toggleBtn.addEventListener('click', function () {
-      var isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
-      toggleBtn.setAttribute('aria-expanded', !isExpanded);
-      linksWrapper.classList.toggle('is-open');
-      toggleBtn.classList.toggle('is-active');
-
-      // Prevent body scrolling behind the active menu overlay
-      if (linksWrapper.classList.contains('is-open')) {
-        document.body.style.overflow = 'hidden';
+  (function () {
+    var path = window.location.pathname;
+    document.querySelectorAll('.dnav a').forEach(function (a) {
+      var href = a.getAttribute('href');
+      if (!href || href.startsWith('http')) return;
+      var current = false;
+      if (href === '/why-bascik') {
+        current = (path === '/why-bascik');
+      } else if (href === '/getting-started') {
+        current = (path !== '' && path !== '/' && path !== '/why-bascik');
       } else {
-        document.body.style.overflow = '';
+        current = (href === path);
       }
+      if (current) a.setAttribute('aria-current', 'page');
     });
-  }
+  })();
 </script>

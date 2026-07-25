@@ -86,12 +86,16 @@ The `skipFirstHeading: true` option strips the leading `## Section Name` heading
 
 ## Updating llms.txt and SKILL.md
 
-After adding or significantly changing a content MD file, regenerate `llms.txt`:
-```sh
-yarn --cwd docs generate:llms  # runs docs/scripts/generate-llms-txt.mjs
-```
+After adding or significantly changing a content MD file, **always do both steps together** — they are a single atomic operation:
 
-Then manually update the relevant section in `docs/src/pages/assets/SKILL.md` to reflect the change.
+1. Regenerate `llms.txt` from the content files:
+   ```sh
+   yarn --cwd docs generate:llms  # runs docs/scripts/generate-llms-txt.mjs
+   ```
+
+2. **Immediately** update the relevant section in `docs/src/pages/assets/SKILL.md` to mirror the change.
+
+These two files must stay in sync. A content change that lands in `llms.txt` but not `SKILL.md` (or vice versa) means Copilot is working from stale guidance — which is how bugs like "use `querySelector` for per-instance elements" go undetected.
 
 ## Sidebar
 

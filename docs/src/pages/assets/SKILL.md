@@ -48,6 +48,8 @@ Use it in any page or other component:
 
 ## 3. Scoped CSS
 
+> **`<style>` tags inside component HTML files are NOT scoped.** Bascik only reads the paired `.css` file for scoping. A `<style>` tag placed inside a component `.html` file is passed through as-is with no transformation — its rules will leak globally. Always use the paired `.css` file instead.
+
 Pair a `.css` file alongside the HTML in a same-named directory:
 
 ```
@@ -154,6 +156,27 @@ name   →  bascik__<componentName>__<instanceId>__<originalName>
 ### Multiple Instances
 Using a component more than once works automatically — each use gets a different `instanceId`, so IDs never collide and each instance's scripts reference only its own elements.
 
+### Class Selectors and Multiple Instances (PITFALL)
+Because class names are scoped to the component **name** (not per-instance), `querySelector('.my-class')` and `querySelectorAll('.my-class')` **always return the first matching element in the document**, even after Bascik rewrites the class name. When the same component is used more than once on a page, every instance's script will target the first instance's elements — the other instances' buttons/inputs/etc. will appear non-functional.
+
+**Rule:** In component scripts, always use `getElementById` (or `getElementsByName`) to locate specific elements — both are per-instance scoped and always resolve to the correct element. Never use `querySelector`/`querySelectorAll` with a class selector to find an element you need to control per-instance.
+
+```html
+<!-- ❌ Broken for multiple instances -->
+<button class="my-btn">Click</button>
+<script>
+  document.querySelector('.my-btn').addEventListener('click', () => { … });
+</script>
+
+<!-- ✅ Correct — id is per-instance -->
+<button id="my-btn" class="my-btn">Click</button>
+<script>
+  document.getElementById('my-btn').addEventListener('click', () => { … });
+</script>
+```
+
+**Escape hatch:** Set `deduplicateCss: false` in `bascik.config.js` to switch to per-instance class scoping. Class selectors will then behave like ID selectors — but each instance emits its own `<style>` block. For most components, using an `id` to anchor the script is simpler.
+
 ---
 
 ## 5. Dynamic Runtime Class Scoping (CRITICAL BUG & PATTERN)
@@ -222,6 +245,9 @@ Use `data-bascik-slot="name"` in the template to define named zones. At the usag
   <div data-bascik-slot="sidebar"><nav>Sidebar nav</nav></div>
 </page-layout>
 ```
+
+### Slot Whitespace
+Leading and trailing whitespace is trimmed from all slot content at build time. Whitespace *within* slot content is preserved exactly as written.
 
 ### Props
 Inject text values into a component at usage time.
@@ -317,6 +343,20 @@ Use wrapper descendant selectors for generated slot content:
 
 Do not rely on a bare `h2 {}` component rule for Markdown passed through a slot. Bare element rules are transformed before slot content is inserted; a scoped wrapper selector continues to match the generated descendants.
 
+### data-bascik-dev
+
+Tag a browser script with `data-bascik-dev` to mark it as dev-only. In development the attribute is stripped and the script runs normally in the browser. In production builds (`bascik --build`) the entire script tag is removed.
+
+```html
+<script data-bascik-dev>
+  console.log('dev only — stripped from production build');
+</script>
+```
+
+Useful for debug logging, development overlays, or any browser script that should never ship to production.
+
+> **dev vs. build:** `data-bascik-build` executes at transpile time and injects HTML into the page. `data-bascik-dev` runs in the browser, but only in dev mode.
+
 ---
 
 ## 9. Configuration (`bascik.config.js`)
@@ -339,6 +379,12 @@ export const bascikConfig = {
   obfuscateAttributeNames: true, // hash class/id names to short hex strings
   cacheHttp: false,
   verboseLogging: false,
+  siteUrl: 'https://example.com',
+  generate: {
+    sitemap: true, // write dist/sitemap.xml
+    robots: true,  // write dist/robots.txt
+  },
+  triggerTranspile: [], // re-transpile all pages when these paths change (dev only)
 };
 
 // Applied only during `bascik --build`, merged over bascikConfig

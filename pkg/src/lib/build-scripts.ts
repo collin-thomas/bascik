@@ -41,7 +41,6 @@
 import { execFile } from "node:child_process";
 import { writeFile, unlink, mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { tmpdir } from "node:os";
 import { getRelativePath } from "./file-system.js";
 
 
@@ -75,8 +74,10 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
   let result = html;
 
   // Ensure a temp directory exists for writing ephemeral build scripts.
-  // Using os.tmpdir() keeps generated files out of the project tree.
-  const tempDir = join(tmpdir(), "bascik-build-scripts");
+  // Using node_modules/.cache keeps temp files within the project tree so
+  // that Node.js ESM resolution can walk up and find the project's own
+  // node_modules when build scripts import third-party packages (e.g. marked).
+  const tempDir = join(process.cwd(), "node_modules", ".cache", "bascik");
   await mkdir(tempDir, { recursive: true });
 
   for (const match of matches) {

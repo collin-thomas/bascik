@@ -81,6 +81,15 @@ describe("executeBuildScripts", () => {
     );
   });
 
+  it("writes temp scripts inside the project tree so ESM can resolve node_modules", async () => {
+    resolveWith("");
+    await executeBuildScripts("<script data-bascik-build>x</script>");
+    const [tmpPath] = (writeFile as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(tmpPath).toMatch(process.cwd());
+    expect(tmpPath).not.toMatch(/^\/tmp\//);
+    expect(tmpPath).not.toMatch(/os\.tmpdir|bascik-build-scripts/);
+  });
+
   it("removes the temp file after execution", async () => {
     resolveWith("output");
     await executeBuildScripts("<script data-bascik-build>x</script>");

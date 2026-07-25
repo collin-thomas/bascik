@@ -30,12 +30,7 @@
 
 <body>
 
-  <script data-bascik-build>
-    import { join } from 'node:path';
-    import { pathToFileURL } from 'node:url';
-    const { renderNav } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
-    console.log(renderNav(''));
-  </script>
+  <docs-nav></docs-nav>
 
   <section class="not-found-hero">
     <div class="container">
@@ -50,12 +45,7 @@
     </div>
   </section>
 
-  <script data-bascik-build>
-    import { join } from 'node:path';
-    import { pathToFileURL } from 'node:url';
-    const { renderFooter } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
-    console.log(renderFooter());
-  </script>
+  <docs-footer></docs-footer>
 
 </body>
 

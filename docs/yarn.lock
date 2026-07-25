@@ -4,7 +4,7 @@
 
 "@bascik/bascik@file:../pkg/bascik-bascik-0.2.0.tgz":
   version "0.2.0"
-  resolved "file:../pkg/bascik-bascik-0.2.0.tgz#3af195741ee359c852ae3d213e0242280b57c040"
+  resolved "file:../pkg/bascik-bascik-0.2.0.tgz#6a790a19c62e80d3ad77aaa9b570b6d2ecacd61d"
   dependencies:
     chokidar "^5.0.0"
 
