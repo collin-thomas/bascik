@@ -438,6 +438,69 @@ describe("convertCssElementSelectorsToClasses – CSS nesting (& selector)", () 
   });
 });
 
+// ─── Pass 4: descendant element selectors after a scoped class ───────────────
+
+describe("convertCssElementSelectorsToClasses – descendant after scoped class", () => {
+  // NOTE: Pass 4 looks for the `bascik__` prefix which is written by the
+  // earlier class-scoping step in javascript.ts / scopeInlineStyleTags.
+  // These tests therefore pass pre-scoped CSS (as javascript.ts would produce).
+
+  it("converts element after scoped class (descendant)", () => {
+    const pre = ".bascik__my-comp__card p { color: red; }";
+    const { css, elementsConvertedClasses } =
+      convertCssElementSelectorsToClasses(pre, "my-comp");
+    expect(css).toContain(".bascik__my-comp__card .bascik__my-comp__el__p");
+    expect(elementsConvertedClasses).toContain("p");
+  });
+
+  it("converts element after scoped class with child combinator >", () => {
+    const pre = ".bascik__my-comp__list > li { list-style: none; }";
+    const { css } = convertCssElementSelectorsToClasses(pre, "my-comp");
+    expect(css).toContain("> .bascik__my-comp__el__li");
+  });
+
+  it("converts element after scoped class with adjacent sibling +", () => {
+    const pre = ".bascik__my-comp__title + p { margin-top: 0; }";
+    const { css } = convertCssElementSelectorsToClasses(pre, "my-comp");
+    expect(css).toContain("+ .bascik__my-comp__el__p");
+  });
+
+  it("converts element after scoped class with general sibling ~", () => {
+    const pre = ".bascik__my-comp__header ~ section { color: blue; }";
+    const { css } = convertCssElementSelectorsToClasses(pre, "my-comp");
+    expect(css).toContain("~ .bascik__my-comp__el__section");
+  });
+
+  it("does NOT convert another scoped class name after a scoped class", () => {
+    // The negative lookahead (?!__) must prevent bascik__ being treated as element
+    const pre = ".bascik__my-comp__card .bascik__my-comp__title { color: blue; }";
+    const { elementsConvertedClasses } = convertCssElementSelectorsToClasses(
+      pre,
+      "my-comp",
+    );
+    // 'bascik' starts with b (in [a-z1-6]) but is followed by 'ascik__',
+    // so the negative lookahead should prevent matching it as an element
+    expect(elementsConvertedClasses).not.toContain("bascik");
+  });
+
+  it("does NOT match in property value context", () => {
+    // A property value will never have bascik__ as a prefix in normal CSS
+    const pre = ".bascik__my-comp__box { transition: opacity 0.3s; }";
+    const { elementsConvertedClasses } = convertCssElementSelectorsToClasses(
+      pre,
+      "my-comp",
+    );
+    expect(elementsConvertedClasses).not.toContain("opacity");
+  });
+
+  it("converts multi-level: .scoped .scoped p (element after second scoped class)", () => {
+    const pre = ".bascik__my-comp__card .bascik__my-comp__body p { margin: 0; }";
+    const { css, elementsConvertedClasses } = convertCssElementSelectorsToClasses(pre, "my-comp");
+    expect(css).toContain(".bascik__my-comp__el__p");
+    expect(elementsConvertedClasses).toContain("p");
+  });
+});
+
 // ─── addElementClassesInHtml — multiline content ─────────────────────────────
 
 describe("addElementClassesInHtml – multiline content", () => {

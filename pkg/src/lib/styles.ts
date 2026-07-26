@@ -77,6 +77,23 @@ export const convertCssElementSelectorsToClasses = (
     toClass,
   );
 
+  // Pass 4: element selectors that are descendants of an already-scoped class.
+  // Handles `.foo p {}`, `.foo > h2 {}`, `.foo + li {}`, `.foo ~ span {}`.
+  //
+  // After Pass 1 (class scoping), class names become `bascik__…__foo`. The
+  // `bascik__` prefix is a uniquely safe anchor — it never appears in CSS
+  // property value position. The negative lookahead `(?!__)` prevents
+  // matching the start of another scoped class name (e.g. `bascik__comp__bar`
+  // starts with `b` which is in [a-z1-6] but is followed by `ascik__`, so
+  // `(?!__)` stops the second `_` from matching after `bascik`).
+  //
+  // Note: this pass only applies when CSS scoping has already run (Pass 1
+  // rewrites `.foo` → `.bascik__comp__foo`, making the anchor available).
+  result = result.replace(
+    /(?<=bascik__[\w-]+\s+(?:[>+~]\s+)?)[a-z1-6]+(?!__)(?=[^{};)]*\{)/g,
+    toClass,
+  );
+
   return { css: result, elementsConvertedClasses };
 };
 

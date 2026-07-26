@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **CSS `@scope` support** — class names in `@scope (.selector)` and `@scope (.selector) to (.selector)` arguments are now scoped by the global class-scoping pass. Class names and element selectors inside `@scope { }` blocks follow the same rules as other at-rules. This was already implicitly working; the compatibility documentation has been updated to reflect ✅ status.
+- **Descendant element selectors after a class** (`Pass 4`) — `.card p {}`, `.list > li {}`, `.article > h2 {}` are now fully scoped. The element name is converted to a scoped class and injected onto matching HTML elements. This applies to any element selector preceded by a scoped class name with an optional combinator (`>`, `+`, `~`, or space). Bare element–element combinators (`div p {}`) still require a class anchor on the left side.
+
 ### Fixed
 
 - `scopeCssCustomProperties`: `var(--prop, fallback)` references now correctly scope the property name even when a fallback value is present. Previously only `var(--prop)` (no fallback) was rewritten; any `var(--prop, fallback)` call was left with the unscoped name, silently causing the fallback to always be used.

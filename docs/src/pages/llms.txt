@@ -494,12 +494,12 @@ CSS scoping applies to `.css` files paired with a component's HTML file. Place t
 | CSS `#id` selector                                 | `#btn {}`                               | ✅     | Converted to a component-scoped class selector (`.bascik__comp__id__btn {}`) using a context-aware lookahead that correctly distinguishes selector position from hex colour values. The generated class is injected onto the HTML element. Specificity drops from (0,1,0,0) to (0,0,1,0). |
 | `[id]` / `[id="…"]` attribute selector             | `[id] {}`                               | 🚫     | Stripped at compile time. Attribute-selector forms cannot be scoped without DOM wrapping.                                                                                                                                                                                                 |
 | Attribute selector                                 | `[data-foo="bar"] {}`                   | ⚠️     | Passed through untouched — not scoped. Will apply globally. Avoid in component CSS or use a class-based selector alongside it.                                                                                                                                                            |
-| Compound / descendant element selectors            | `div p {}`, `p + p {}`                  | ❌     | Element-to-class conversion only handles standalone element selectors at column 0. Descendant, sibling, and combined element selectors are not converted and apply globally. See Design Decisions.                                                                                        |
+| Compound / descendant element selectors            | `div p {}`, `.card p {}`, `.list > li {}` | ⚠️     | `.class element {}` and `.class > element {}` (class followed by descendant/child element) **are now scoped** — the element name is converted to a class and injected onto matching HTML elements. Patterns with two bare element types (`div p {}`, `p + p {}`) still require a class anchor on the left side of the combinator.                                                                                  |
 | Comma-separated element selector list              | `h1, h2 {}`                             | ✅     | All elements in a comma list are converted — both multi-line (each at column 0) and same-line (`h1, h2 {}`). A `)` stop in the lookahead prevents false positives inside `:is()`, `:where()`, `:has()`.                                                                                   |
 | `:is()` / `:where()` / `:has()` with element names | `:is(p, h2) {}`                         | ❌     | Element names inside these functions are not converted. Class equivalents work fine: `:is(.foo, .bar) {}`. See Design Decisions.                                                                                                                                                          |
 | CSS nesting — class selectors                      | `& .child {}`                           | ✅     | Class selectors inside nesting are scoped normally.                                                                                                                                                                                                                                       |
 | CSS nesting — element selectors                    | `& p {}`, `& > h2 {}`                   | ⚠️     | Element selectors directly after `& ` (with optional single combinator `>`, `+`, `~`) are converted. Complex patterns (`& .parent p {}`, `&p {}`) are not converted.                                                                                                                      |
-| `@scope` (native)                                  | `@scope (.foo) { p {} }`                | ❌     | Not yet processed. Passed through untouched.                                                                                                                                                                                                                                              |
+| `@scope` (native)                                  | `@scope (.foo) { .bar {} }`             | ✅     | Class names in both the `@scope (.selector)` argument and the optional `to (.selector)` clause are scoped normally (handled by the global class-scoping pass). Class names inside the `@scope` block are also scoped. Element names in `@scope` arguments and indented element selectors inside the block follow the same rules as other at-rules (standalone column-0 elements and `.class element` descendants are converted; purely bare element selectors that are indented are not). |
 
 ### Other CSS Features
 
@@ -643,13 +643,27 @@ transition: color 0.2s, opacity 0.3s;  →  ; before { → skipped ✓
 
 **Pass 2 regex:** `/(?<=,[ \t]*)[a-z1-6]+(?=[^{};)]*\{)/g`
 
-### CSS compound / descendant element selectors — still not implemented
+### Compound / descendant element selectors — partially implemented
 
-**The remaining hard case:** `div p {}`, `p + p {}` — `p` after `div` or a combinator in a DESCENDANT selector context.
+**Previously:** `.card p {}` was ❌ — `p` after a class was not converted, so the rule applied globally.
 
-These still require a CSS parser. Unlike the `#id` and comma cases, there is no unique anchor character (like `#` or a comma-lookahead-stop) that cleanly identifies descendant element selector context without also matching property values.
+**Now:** A new Pass 4 in `convertCssElementSelectorsToClasses` handles element selectors that follow a **scoped class name** (with optional combinator):
 
-**The correct workaround:** Add a class to the target element and use `.my-class p {}` → split into individual rules or use `.my-class {}` class-based targeting.
+```css
+/* Source: */
+.card p { color: blue; }
+.list > li { padding: 0; }
+.article > h2 { font-size: 1.2rem; }
+
+/* After bascik: */
+.bascik__card .bascik__card__el__p { color: blue; }
+.bascik__list > .bascik__list__el__li { padding: 0; }
+.bascik__article > .bascik__article__el__h2 { font-size: 1.2rem; }
+```
+
+This works because the class-scoping pass runs first, writing the `bascik__` prefix — which Pass 4 uses as a safe anchor. The `bascik__` prefix never appears in CSS property value position.
+
+**Still not handled:** bare element–element combinators (`div p {}`, `p + p {}`) with no class anchor on the left side. These still need a class to anchor against.
 
 ### CSS nesting element selectors — partially implemented
 
