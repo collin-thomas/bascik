@@ -218,6 +218,13 @@ describe("scopeCssCustomProperties", () => {
     expect(result).not.toContain("var(--brand)");
   });
 
+  it("scopes a var() reference that has a fallback value", () => {
+    const css = ":root { --accent: red; } .el { color: var(--accent, gray); }";
+    const result = scopeCssCustomProperties(css, "my-comp__x1");
+    expect(result).toContain("var(--bascik__my-comp__x1__accent, gray)");
+    expect(result).not.toContain("var(--accent,");
+  });
+
   it("scopes multiple custom properties independently", () => {
     const css =
       ":root { --a: 1px; --b: red; } .el { padding: var(--a); color: var(--b); }";

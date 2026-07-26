@@ -1,0 +1,22 @@
+.card {
+  background: rgb(8, 28, 69);
+  border: 2px solid rgb(59, 130, 246);
+  padding: 16px;
+  border-radius: 6px;
+}
+.title {
+  color: rgb(59, 130, 246);
+  margin: 0 0 8px;
+}
+.body {
+  color: rgb(150, 170, 200);
+  margin-bottom: 12px;
+}
+.badge {
+  display: inline-block;
+  background: rgb(59, 130, 246);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}

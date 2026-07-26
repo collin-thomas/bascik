@@ -19,10 +19,18 @@
           var path = window.location.pathname;
           var sidebar = document.querySelector('.docs-sidebar');
           if (sidebar) {
-               var a = sidebar.querySelector('a[href="' + path + '"]');
-               if (a) {
-                    a.setAttribute('aria-current', 'page');
-                    a.scrollIntoView({ block: 'nearest' });
+               var links = Array.from(sidebar.querySelectorAll('a'));
+               var idx = links.findIndex(function (a) { return a.getAttribute('href') === path; });
+               if (idx !== -1) {
+                    links[idx].setAttribute('aria-current', 'page');
+                    links[idx].scrollIntoView({ block: 'nearest' });
+                    var next = links[idx + 1];
+                    if (next) {
+                         var link = document.createElement('link');
+                         link.rel = 'prefetch';
+                         link.href = next.getAttribute('href');
+                         document.head.appendChild(link);
+                    }
                }
           }
      })();

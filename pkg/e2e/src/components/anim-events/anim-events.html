@@ -1,0 +1,43 @@
+<div class="wrapper">
+  <!-- Box that animates when .playing is added -->
+  <div id="anim-box" class="anim-box">Animation target</div>
+
+  <!-- Status display — updated by animation events -->
+  <div id="status" class="status">waiting...</div>
+
+  <div class="btn-row">
+    <button id="play-btn">Play animation</button>
+    <button id="reset-btn">Reset</button>
+  </div>
+
+  <!-- Sentinel -->
+  <span hidden class="playing"></span>
+
+  <script>
+    const box = document.getElementById("anim-box");
+    const status = document.getElementById("status");
+
+    box.addEventListener("animationstart", () => {
+      status.textContent = "animation: started";
+    });
+
+    box.addEventListener("animationend", (e) => {
+      // e.animationName is the SCOPED keyframe name
+      status.textContent = "animation: ended";
+      box.classList.remove("playing");
+    });
+
+    document.getElementById("play-btn").addEventListener("click", () => {
+      box.classList.remove("playing");
+      // Force reflow so re-adding the class restarts the animation
+      void box.offsetWidth;
+      box.classList.add("playing");
+      status.textContent = "animation: triggered";
+    });
+
+    document.getElementById("reset-btn").addEventListener("click", () => {
+      box.classList.remove("playing");
+      status.textContent = "waiting...";
+    });
+  </script>
+</div>

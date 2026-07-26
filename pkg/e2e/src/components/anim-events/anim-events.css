@@ -1,0 +1,46 @@
+.wrapper {
+  border: 1px solid #444;
+  padding: 16px;
+}
+
+.anim-box {
+  padding: 16px;
+  background: rgb(30, 30, 30);
+  border: 2px solid #555;
+  margin-bottom: 12px;
+  text-align: center;
+  color: #aaa;
+}
+
+.status {
+  font-family: monospace;
+  font-size: 0.82rem;
+  color: #aaa;
+  padding: 6px;
+  background: #111;
+  margin-bottom: 12px;
+}
+
+.btn-row {
+  display: flex;
+  gap: 8px;
+}
+
+button {
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  background: #2a2a2a;
+  border: 1px solid #555;
+  color: #ddd;
+  cursor: pointer;
+}
+
+@keyframes flashGreen {
+  0%   { background: rgb(30, 30, 30); border-color: #555; }
+  50%  { background: rgb(22, 101, 52); border-color: rgb(74, 222, 128); }
+  100% { background: rgb(30, 30, 30); border-color: #555; }
+}
+
+.anim-box.playing {
+  animation: flashGreen 0.2s ease-in-out 1 forwards;
+}

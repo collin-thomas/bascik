@@ -632,10 +632,4 @@ export async function scaffold(
     writeFile(join(root, "src", "components", "my-counter", "my-counter.html"), MY_COUNTER_HTML, "utf8"),
     writeFile(join(root, "src", "components", "my-counter", "my-counter.css"), MY_COUNTER_CSS, "utf8"),
   ]);
-
-  console.log(`\nScaffolded ${projectName}/\n`);
-  console.log("Next steps:\n");
-  console.log(`  cd ${projectName}`);
-  console.log("  npm install");
-  console.log("  npm run dev\n");
 }

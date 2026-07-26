@@ -30,13 +30,16 @@ my-project/
       my-counter/
 ```
 
-After scaffolding:
+After scaffolding, the tool prompts you interactively:
 
 ```sh
-cd my-project
-npm install
-npm run dev
+✓ Scaffolded my-project/
+
+Install dependencies now? (Y/n)
+Start the dev server after install? (Y/n)
 ```
+
+Select Y for both and you're live at **https://localhost:8443** — no further commands needed. If you select N to either prompt, the remaining manual steps are printed at the end.
 
 ---
 

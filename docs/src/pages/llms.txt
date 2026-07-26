@@ -215,47 +215,56 @@ Because a Bascik project is a Node.js project, any npm package can be installed 
 
 ## CLI
 
+### `npm create bascik@latest` — scaffold a new project
+
 ```sh
-bascik init     # scaffold a new project in the current directory
+npm create bascik@latest
+# or: npm create bascik@latest my-project
+```
+
+Scaffolds a complete starter project in a new directory. Prompts for a project name if not passed as an argument. Creates:
+
+```text
+my-project/
+  bascik.config.js
+  package.json
+  .gitignore
+  src/
+    pages/
+      index.html
+      about.html
+      contact.html
+      404.html
+      css/
+        styles.css
+    components/
+      site-meta/
+      site-header/
+      site-footer/
+      feat-card/
+      my-counter/
+```
+
+After scaffolding, the tool prompts you interactively:
+
+```sh
+✓ Scaffolded my-project/
+
+Install dependencies now? (Y/n)
+Start the dev server after install? (Y/n)
+```
+
+Select Y for both and you're live at **https://localhost:8443** — no further commands needed. If you select N to either prompt, the remaining manual steps are printed at the end.
+
+---
+
+### `bascik` CLI reference
+
+```sh
 bascik          # dev: transpile, start HTTP/2 server at https://localhost:8443, watch
 bascik --build  # production: transpile to dist/ only
 bascik --check  # static analysis: validate pages and components without building
 ```
-
-### `bascik init`
-
-Bootstraps a new Bascik project in the current directory. Run it once after installing the package:
-
-```sh
-npm init -y
-npm install @bascik/bascik
-npx bascik init
-npm run dev
-```
-
-`bascik init` creates the following files and directories if they do not already exist:
-
-```text
-src/
-  pages/
-    index.html      ← starter HTML page
-  components/       ← empty, ready for your first component
-bascik.config.js    ← minimal project configuration
-```
-
-It also updates `package.json` to add `"type": "module"` (required for `bascik.config.js`) and the `dev` and `build` scripts:
-
-```json
-{
-  "type": "module",
-  "scripts": {
-    "dev": "bascik",
-    "build": "bascik --build"
-  }
-}
-```
-
-`bascik init` is safe to re-run — it skips any files that already exist.
 
 ### Development Workflow & Server Output
 
@@ -1767,20 +1776,24 @@ Class names in the CSS are automatically prefixed per component instance at buil
 
 ### Quick Start
 
-The fastest way to get a Bascik project running:
+The fastest way to start a new Bascik project:
 
 ```sh
-npm init -y
-npm install @bascik/bascik
-npx bascik init
-npm run dev
+npm create bascik@latest
 ```
 
-`bascik init` scaffolds `src/pages/index.html`, `src/components/`, and `bascik.config.js`, and wires up the `dev` and `build` scripts in your `package.json`.
+Enter a project name when prompted (or press Enter for `bascik-app`). The tool then asks two questions:
 
-### Installation
+- **Install dependencies now?** — select Y to run `npm install` immediately
+- **Start the dev server after install?** — select Y to launch the dev server right away
 
-Install Bascik with your preferred package manager:
+Select Y for both and you're live at **https://localhost:8443** — no further commands needed.
+
+`npm create bascik@latest` scaffolds a complete starter site: pages, components, global CSS, `bascik.config.js`, and a `.gitignore`. If you prefer to set everything up yourself, see [Manual Setup](#manual-setup) below.
+
+### Manual Setup
+
+**For an existing project**, install Bascik with your preferred package manager:
 
 ```sh
 npm install @bascik/bascik
@@ -1790,9 +1803,7 @@ yarn add @bascik/bascik
 pnpm add @bascik/bascik
 ```
 
-### Project Setup
-
-Run `bascik init` in your project directory to scaffold the starter files and scripts automatically. If you prefer to set up manually, add the following to your `package.json`:
+Run `bascik init` in your project directory to scaffold the starter files and folder structure automatically. If you prefer to wire things up yourself, add the following to your `package.json`:
 
 ```json
 {

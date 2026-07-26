@@ -8,19 +8,18 @@ The fastest way to start a new Bascik project:
 npm create bascik@latest
 ```
 
-Enter a project name when prompted (or press Enter for `bascik-app`), then:
+Enter a project name when prompted (or press Enter for `bascik-app`). The tool then asks two questions:
 
-```sh
-cd my-project
-npm install
-npm run dev
-```
+- **Install dependencies now?** — select Y to run `npm install` immediately
+- **Start the dev server after install?** — select Y to launch the dev server right away
 
-This scaffolds a complete starter site — pages, components, global CSS, `bascik.config.js`, and a `.gitignore` — and opens your dev server at **https://localhost:8443**.
+Select Y for both and you're live at **https://localhost:8443** — no further commands needed.
 
-### Adding Bascik to an Existing Project
+`npm create bascik@latest` scaffolds a complete starter site: pages, components, global CSS, `bascik.config.js`, and a `.gitignore`. If you prefer to set everything up yourself, see [Manual Setup](#manual-setup) below.
 
-Install Bascik with your preferred package manager:
+### Manual Setup
+
+**For an existing project**, install Bascik with your preferred package manager:
 
 ```sh
 npm install @bascik/bascik
@@ -30,9 +29,7 @@ yarn add @bascik/bascik
 pnpm add @bascik/bascik
 ```
 
-### Project Setup
-
-Run `bascik init` in your project directory to scaffold the starter files and scripts automatically. If you prefer to set up manually, add the following to your `package.json`:
+Run `bascik init` in your project directory to scaffold the starter files and folder structure automatically. If you prefer to wire things up yourself, add the following to your `package.json`:
 
 ```json
 {

@@ -304,10 +304,10 @@ export const scopeCssCustomProperties = (
       new RegExp(`(?<!-)--${originalName}(?=\\s*:)`, "gm"),
       `--${scopedName}`,
     );
-    // Replace var() references:  var(--original)
+    // Replace var() references:  var(--original)  and  var(--original, fallback)
     result = result.replace(
-      new RegExp(`var\\(\\s*--${originalName}\\s*\\)`, "gm"),
-      `var(--${scopedName})`,
+      new RegExp(`var\\(\\s*--${originalName}(\\s*[,)])`, "gm"),
+      `var(--${scopedName}$1`,
     );
   });
   return result;

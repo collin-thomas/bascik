@@ -412,6 +412,46 @@ src/
 
 ## 11. CLI & Development Workflow
 
+### Creating a New Project
+
+The recommended way to start a new Bascik project:
+
+```sh
+npm create bascik@latest
+# or: npm create bascik@latest my-project
+```
+
+This scaffolds a complete starter site (pages, components, global CSS, `bascik.config.js`, `.gitignore`) and then prompts interactively:
+
+```
+✓ Scaffolded my-project/
+
+Install dependencies now? (Y/n)
+Start the dev server after install? (Y/n)
+```
+
+Select Y for both and you're live at **https://localhost:8443** — no further commands needed. If you select N, the remaining steps are printed at the end.
+
+### Adding to an Existing Project
+
+```sh
+npm install @bascik/bascik
+```
+
+Then run `bascik init` to scaffold the starter files and folder structure, or add the scripts manually to `package.json`:
+
+```json
+{
+  "type": "module",
+  "scripts": {
+    "dev": "bascik",
+    "build": "bascik --build"
+  }
+}
+```
+
+### CLI Commands
+
 ```sh
 bascik          # dev: transpile, start HTTP/2 server at https://localhost:8443, watch
 bascik --build  # production: transpile to dist/ only
