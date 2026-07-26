@@ -176,4 +176,30 @@ test.describe('scope-test page', () => {
     const bName = await field(b).getAttribute('name');
     expect(aName).not.toBe(bName);
   });
+
+  // ── 6. classList.toggle (single arg — no force) ─────────────────────────
+
+  test('classList.toggle single-arg: toggles class ON when not present', async ({ page }) => {
+    const { a } = getInstances(page);
+    // toggleBox starts without 'active'.
+    await expect(toggleBox(a)).not.toHaveClass(/active/);
+    await btn(a, 'toggle-plain-btn').click();
+    await expect(toggleBox(a)).toHaveClass(/bascik__scope-test__active/);
+  });
+
+  test('classList.toggle single-arg: toggles class OFF when present', async ({ page }) => {
+    const { a } = getInstances(page);
+    // Force it on first using the boolean-true button.
+    await btn(a, 'toggle-on-btn').click();
+    await expect(toggleBox(a)).toHaveClass(/bascik__scope-test__active/);
+    // Plain toggle should flip it back off.
+    await btn(a, 'toggle-plain-btn').click();
+    await expect(toggleBox(a)).not.toHaveClass(/active/);
+  });
+
+  test('classList.toggle single-arg: does not affect instance B', async ({ page }) => {
+    const { a, b } = getInstances(page);
+    await btn(a, 'toggle-plain-btn').click();
+    await expect(toggleBox(b)).not.toHaveClass(/active/);
+  });
 });

@@ -29,6 +29,7 @@
     <div class="btn-row">
       <button id="toggle-on-btn" class="btn">toggle("active", true)</button>
       <button id="toggle-off-btn" class="btn">toggle("active", false)</button>
+      <button id="toggle-plain-btn" class="btn">toggle("active")</button>
     </div>
   </div>
 
@@ -74,6 +75,9 @@
     });
     document.getElementById("toggle-off-btn").addEventListener("click", () => {
       toggleBox.classList.toggle("active", false);
+    });
+    document.getElementById("toggle-plain-btn").addEventListener("click", () => {
+      toggleBox.classList.toggle("active");
     });
 
     // 3. classList.replace

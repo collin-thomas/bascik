@@ -1,0 +1,27 @@
+.wrapper {
+  --primary: rgb(74, 222, 128);
+  --secondary: rgb(96, 165, 250);
+  padding: 16px;
+  border: 1px solid #444;
+}
+
+/* Single var — defined */
+.box-primary {
+  color: var(--primary);
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+/* Nested var: --secondary IS defined, so it resolves to rgb(96, 165, 250) */
+.box-secondary {
+  color: var(--secondary, var(--primary, rgb(200, 200, 200)));
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+/* Double nested fallback: neither --undefined1 nor --undefined2 are defined,
+   so falls all the way to the hardcoded rgb(251, 191, 36) */
+.box-fallback {
+  color: var(--undefined1, var(--undefined2, rgb(251, 191, 36)));
+  padding: 10px;
+}
