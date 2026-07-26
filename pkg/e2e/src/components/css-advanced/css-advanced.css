@@ -1,0 +1,46 @@
+/* Custom property defined and used */
+.wrapper {
+  --accent: rgb(74, 222, 128);
+  padding: 16px;
+  border: 1px solid #444;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.accent-box {
+  background-color: var(--accent);
+  padding: 12px;
+  color: #000;
+}
+
+/* ID selector in CSS */
+#special {
+  border: 3px solid rgb(250, 204, 21);
+  padding: 12px;
+}
+
+/* Keyframe animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animated-box {
+  opacity: 0.3;
+  padding: 12px;
+  background: rgb(30, 58, 95);
+}
+
+.animated-box.playing {
+  animation: fadeIn 0.3s ease forwards;
+  opacity: 1;
+}
+
+.anim-btn {
+  cursor: pointer;
+  padding: 6px 12px;
+  background: rgb(30, 30, 30);
+  border: 1px solid #555;
+  display: inline-block;
+  margin-bottom: 8px;
+}

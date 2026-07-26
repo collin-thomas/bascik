@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `injectProps`: the "strip remaining markers" step now only removes `data-bascik-prop-*` attributes that have **no value** (prop receivers inside the current component). Attributes with a value (e.g. `data-bascik-prop-label="featured"` on a child component tag) are preserved, so nested components correctly receive props passed through self-closing tags. Previously, the strip regex would partially match and corrupt child component usage tags (e.g. `<inner-badge data-bascik-prop-label="featured" />` became `<inner-badgel="featured" />`), causing `replaceTag` to fail to substitute the tag and leading to infinite recursion (stack overflow).
+
 ## [0.1.0] - 2026-07-25
 
 ### Added

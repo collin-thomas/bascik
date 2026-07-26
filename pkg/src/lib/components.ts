@@ -388,8 +388,12 @@ export const injectProps = (
       ) => `<${tagName}${attrsBefore}${attrsAfter}>${propValue}</${tagName}>`,
     );
   });
-  // Strip any remaining data-bascik-prop-* markers whose prop was not provided
-  return result.replace(/\s+data-bascik-prop-[\w-]+/gi, "");
+  // Strip any remaining data-bascik-prop-* markers whose prop was not provided.
+  // Only strip markers that have NO value (prop receivers, e.g. `data-bascik-prop-label`
+  // followed immediately by `>` or whitespace). Markers with a value
+  // (e.g. `data-bascik-prop-label="featured"`) are child component prop declarations
+  // and must be preserved so nested components receive their props.
+  return result.replace(/\s+data-bascik-prop-[\w-]+(?=[>\s])/gi, "");
 };
 
 // ─── Named Slots ──────────────────────────────────────────────────────────────
