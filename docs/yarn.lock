@@ -8,12 +8,6 @@
   dependencies:
     chokidar "^5.0.0"
 
-"@bascik/bascik@file:../pkg/bascik-bascik-0.2.0.tgz":
-  version "0.2.0"
-  resolved "file:../pkg/bascik-bascik-0.2.0.tgz#a1ebef46e41ff799f2a482205cd4f7570028f965"
-  dependencies:
-    chokidar "^5.0.0"
-
 "@esbuild/aix-ppc64@0.28.1":
   version "0.28.1"
   resolved "https://registry.yarnpkg.com/@esbuild/aix-ppc64/-/aix-ppc64-0.28.1.tgz#7a01a8d2ec2fbb2dac78adad09b0fa781e4082be"
