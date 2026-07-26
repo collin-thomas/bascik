@@ -23,7 +23,7 @@
           assistant that supports instruction files — so it understands Bascik's component model, scoping rules, and
           conventions out of the box.</p>
 
-        <!-- Content rendered from docs/content/20-copilot-skill.md at build time.
+        <!-- Content rendered from docs/content/copilot-skill.md at build time.
              To update page content, edit the MD file — not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
@@ -31,7 +31,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/20-copilot-skill.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/copilot-skill.md', { skipFirstHeading: true }));
         </script>
 
       </main>

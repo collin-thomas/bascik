@@ -142,7 +142,7 @@
           </div>
         </div>
 
-        <!-- Content rendered from docs/content/16-performance.md at build time.
+        <!-- Content rendered from docs/content/performance.md at build time.
              To update page content, edit the MD file — not this file.
              The MD file also feeds into llms.txt via scripts/generate-llms-txt.mjs. -->
         <script data-bascik-build>
@@ -153,7 +153,7 @@
           );
           // skipFirstHeading: the MD starts with "## Lighthouse 100s" for llms.txt;
           // the <h1> above already provides the page title.
-          console.log(await renderMd('./content/16-performance.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/performance.md', { skipFirstHeading: true }));
         </script>
 
         <h2>Technique Summary</h2>

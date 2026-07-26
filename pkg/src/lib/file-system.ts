@@ -5,6 +5,7 @@ import { createReadStream } from "node:fs";
 import type { Dirent } from "node:fs";
 import { BascikConfig } from "./config.js";
 import { minifyCss } from "./styles.js";
+import { minifyJs } from "./javascript.js";
 
 /** Resolve an absolute path to a `parentDir/...` relative path, normalising separators. */
 export const getRelativePath = (path: string, parentDir: string): string => {
@@ -58,6 +59,16 @@ export async function copyReplicatePath(
     if (BascikConfig.minifyStyles && src.endsWith(".css")) {
       // Read, minify, and write CSS rather than doing a raw copy
       const minified = minifyCss((await readFile(src)).toString());
+      const destHash = createHash("md5").update(await readFile(destPath).catch(() => "")).digest("hex");
+      const minifiedHash = createHash("md5").update(minified).digest("hex");
+      if (minifiedHash === destHash) return;
+      await writeFile(destPath, minified);
+      console.log("copied (minified):", src);
+    } else if (BascikConfig.minifyScripts && src.endsWith(".js")) {
+      // Read, minify, and write JS rather than doing a raw copy
+      const cfg = BascikConfig.minifyScripts;
+      const minifyFn = cfg === true ? minifyJs : cfg;
+      const minified = await minifyFn((await readFile(src)).toString());
       const destHash = createHash("md5").update(await readFile(destPath).catch(() => "")).digest("hex");
       const minifiedHash = createHash("md5").update(minified).digest("hex");
       if (minifiedHash === destHash) return;

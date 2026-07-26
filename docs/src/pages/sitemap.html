@@ -23,7 +23,7 @@
           at build time. Set your site URL in the config and both files appear in <code>dist/</code> alongside your
           compiled pages — no plugins, no extra steps.</p>
 
-        <!-- Content rendered from docs/content/19-sitemap.md at build time.
+        <!-- Content rendered from docs/content/sitemap.md at build time.
              To update page content, edit the MD file — not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
@@ -31,7 +31,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/19-sitemap.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/sitemap.md', { skipFirstHeading: true }));
         </script>
 
         <div class="callout">

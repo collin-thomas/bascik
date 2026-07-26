@@ -22,7 +22,7 @@ The page phase prepares the source HTML document and orchestrates the component 
 6. **Collect and deduplicate CSS.** All CSS from used components is gathered. Since multiple instances of the same component share identical scoped class names, `deduplicateCss` emits a single `<style>` block regardless of how many times a component appears on the page.
 7. **Inject live-reload script.** In dev mode only, a small `<script>` that opens a Server-Sent Events connection to `/bascik-live-reload` is appended.
 8. **Reassemble HTML.** The full document is reconstructed: `<!DOCTYPE html>`, `<html>`, `<head>` (with injected `<style>`), `<body>`.
-9. **Filter build/dev script tags.** Tags with `data-bascik-build-only` are removed in dev; tags with `data-bascik-dev-only` are removed during builds.
+9. **Filter build script tags.** Tags with `data-bascik-build-only` are removed in dev.
 10. **Write output.** The finished HTML is written to `dist/`. In dev mode it is also stored in the in-memory page store so the HTTP/2 server can serve it instantly.
 11. **Emit reload event.** `eventEmitter.emit("page-changed")` triggers live-reload for any connected browser.
 

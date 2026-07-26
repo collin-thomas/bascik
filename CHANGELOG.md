@@ -7,74 +7,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.0] - 2026-07-24
+## [0.1.0] - 2026-07-25
 
 ### Added
 
 **Components**
 
+- HTML component system — define components as `.html` files, reference by tag name.
+- Recursive component transpilation.
 - Self-closing (void element) tag syntax: `<my-nav />` is equivalent to `<my-nav></my-nav>`.
 - Custom props via `data-bascik-prop-*` attributes — pass text values from the usage site into component templates.
-- Slot fallback content — `<slot-component>default</slot-component>` and `<div data-bascik-slot>default</div>` render their own inner content when no slot content is provided at the usage site.
-- Named slots via `data-bascik-slot="name"` — inject content into specific zones of a component template.
-- Named slot fallback content — unfilled named slots now fall back to the placeholder element's own inner content.
-- `data-bascik-slot` (no value) as an alternative default-slot convention, replacing the older `<slot-component>` tag (backward compatible).
+- Default slots via `<slot-component>` or `data-bascik-slot` (no value) — slot fallback content is rendered when no content is provided at the usage site.
+- Named slots via `data-bascik-slot="name"` — inject content into specific zones of a component template, with fallback to the placeholder element's own inner content.
 - Attribute inheritance — non-`data-bascik-*` attributes on a component usage tag (e.g. `class`, `aria-*`, `data-*`) are automatically merged onto the component's root element.
 - `<head>` component support — components can now be used inside `<head>` to share `<meta>` tags, `<link>` elements, etc.
 
 **Styles**
 
+- Scoped CSS — class names, element selectors, `@media`, and `@keyframes` are namespaced per component instance.
 - CSS custom properties scoping — `--var-name` declarations in a component's CSS file are automatically prefixed, and all `var(--var-name)` references are updated to match.
+- CSS nesting selector scoping — element selectors in CSS nesting context (`& p {}`, `& > h2 {}`, `& + li {}`, `& ~ span {}`) are correctly scoped.
+- CSS deduplication — each component's styles are injected into a page only once, even if the component is used multiple times.
+- Built-in CSS minifier (`minifyStyles: true`) — strips comments, collapses whitespace, and removes spaces around structural characters. Enabled by default during `bascik --build`.
 
 **JavaScript**
 
-- `querySelector("#id")` and `querySelectorAll("#id")` selector rewriting added alongside the existing `getElementById` pattern.
-- Build-only scripts `<script data-bascik-build>` — included only in production builds.
+- Scoped JavaScript — `getElementById`, `getElementsByClassName`, `getElementsByName`, `querySelector(.class)`, `querySelectorAll(.class)`, `querySelector("#id")`, and `querySelectorAll("#id")` references are rewritten to match scoped attributes.
+- Script block IIFE isolation.
 - `<script type="module">` support — module scripts are excluded from IIFE wrapping but still have their DOM selector references rewritten.
+- Build-only scripts `<script data-bascik-build>` — executed at transpile time as Node.js ESM modules; stdout is injected into the page in place of the script tag. Works in both page HTML and component files.
+- Built-in JS minifier (`minifyScripts: true`) — strips comments and collapses whitespace while preserving string literals verbatim. Accepts a custom async function (e.g. backed by esbuild or terser) for production-quality output. Enabled by default during `bascik --build`.
 
-**Developer Experience**
+**CLI**
 
-- Live reload now fires when a static asset (CSS, images, etc.) is changed — not just on HTML/component changes.
-- Compile-time summary printed after `processAllPages`: `✓ N pages transpiled in Xms`.
-- `verboseLogging` config option — toggles `{cause}` detail in `console.warn/error`.
-- Unified component instance ID — a single random ID is shared across all attribute-scoping passes (`id`, `name`, `class`) for a given component instance, replacing the previous per-pass IDs.
+- `bascik` — HTTP/2 development server with TLS (auto-generated self-signed certificate), in-memory page serving with Brotli compression, and smart live reload (reloads only the changed page; also fires on static asset changes).
+- `bascik --build` — writes static output to `dist/`, copies non-HTML assets, and prints a compile-time summary (`✓ N pages transpiled in Xms`).
+- `bascik --check` — static analysis that scans all pages and component files for unknown component tags (exits with code 1, suitable for CI) and unused component files (warnings only).
+
+**Configuration** (`bascik.config.js`)
+
+- `directory.pages` / `directory.components` — configure source directories.
+- `obfuscateAttributeNames` — short hash-based class names in production builds.
+- `verboseLogging` — toggles `{cause}` detail in `console.warn/error`.
+- `deduplicateCss` — deduplicate component styles per page.
+- `minifyStyles` — enable/disable built-in CSS minification.
+- `minifyScripts` — enable/disable built-in JS minification, or supply a custom minifier function.
+- `skipTranspilingElementContents` — tag names whose inner content is left untouched by the scoping pipeline. Defaults to `["code"]`.
+- `inlineStyles` — stylesheet paths (relative to project root) to read and inline as `<style>` tags into every page's `<head>`.
+- `triggerTranspile` — extra directories or files to watch in dev mode; changes trigger a full re-transpile.
+- `siteUrl` — base URL used when generating sitemap and robots.txt.
+- `generate.sitemap` / `generate.robots` — control whether `dist/sitemap.xml` and `dist/robots.txt` are written during `bascik --build`. Both default to `true`.
+- `cacheHttp` — HTTP cache header control.
 
 **Internals**
 
-- `listPages()` now uses `BascikConfig.directory.pages` instead of a hardcoded `"./pages"` path.
+- Full TypeScript implementation with explicit types throughout.
+- Comprehensive unit test suite — every library module has a corresponding `.test.ts` file.
+- Unified component instance ID — a single random ID is shared across all attribute-scoping passes (`id`, `name`, `class`) for a given component instance.
 - Windows path support — forward-slash-only regex patterns updated to `[\\/]`.
-- CSS deduplication — each component's styles are injected into a page only once, even if the component is used multiple times.
-- `userConfig.js` converted from sync `existsSync` + CJS `require()` to fully async `access()` + dynamic `import()`.
-- `pki.js` converted from `existsSync`/`execSync`/`rmSync` to fully async equivalents.
-- `transpile.js` no longer uses `createRequire` to load `http2.js`.
+- Fully async I/O throughout (`access()` + dynamic `import()`, async `pki` operations).
 
 ### Fixed
 
-- Unused `data-bascik-prop-*` marker attributes are now stripped from the output even when no prop value is passed.
+- `<meta name="...">` attributes are shielded from name-attribute scoping so standard metadata vocabulary (e.g. `viewport`, `description`) is not rewritten.
+- Unused `data-bascik-prop-*` marker attributes are stripped from the output even when no prop value is passed.
+- `listPages()` uses `BascikConfig.directory.pages` instead of a hardcoded path.
 
-## [0.1.0] - 2026-01-01
-
-### Added
-
-- Initial release.
-- HTML component system — define components as `.html` files, reference by tag name.
-- Recursive component transpilation.
-- Default slots via `<slot-component>`.
-- Scoped CSS — class names, element selectors, `@media`, and `@keyframes` are namespaced per component instance.
-- Scoped JavaScript — `getElementById`, `getElementsByClassName`, `getElementsByName`, `querySelector(.class)`, `querySelectorAll(.class)` references rewritten to match scoped attributes.
-- Script block IIFE isolation.
-- HTTP/2 development server with TLS (auto-generated self-signed certificate).
-- In-memory page serving with Brotli compression.
-- Smart live reload — reloads only the page that was changed.
-- `bascik --build` writes static output to `dist/`.
-- `bascik.config.js` for opt-in configuration.
-- Class-name obfuscation (`obfuscateAttributeNames`) for production builds.
-- CSS minification.
-- 404 page handling.
-- Sub-directory support for both pages and components.
-- Non-HTML asset copying (images, CSS, etc.) to `dist/`.
-- File-hash comparison to avoid needless disk I/O.
-
-[Unreleased]: https://github.com/collin-thomas/bascik/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/collin-thomas/bascik/compare/v0.1.0...v0.2.0
+[Unreleased]: https://github.com/collin-thomas/bascik/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/collin-thomas/bascik/releases/tag/v0.1.0

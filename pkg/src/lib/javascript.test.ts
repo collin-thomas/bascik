@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { prefixElementAttribute } from "./javascript.js";
+import { prefixElementAttribute, minifyJs } from "./javascript.js";
 
 vi.mock("./config.js", () => ({
   BascikConfig: {
@@ -238,6 +238,82 @@ describe("prefixElementAttribute – class classList methods", () => {
     expect(result.fileContent).toContain(
       `classList.contains("${scopeClass("open")}")`,
     );
+  });
+
+  it("scopes classList.add with multiple arguments", () => {
+    const c = makeComponent(
+      '<div class="active open"></div><script>el.classList.add("active", "open")</script>',
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain(
+      `classList.add("${scopeClass("active")}", "${scopeClass("open")}")`,
+    );
+  });
+
+  it("scopes classList.remove with multiple arguments", () => {
+    const c = makeComponent(
+      '<div class="active open"></div><script>el.classList.remove("active", "open")</script>',
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain(
+      `classList.remove("${scopeClass("active")}", "${scopeClass("open")}")`,
+    );
+  });
+
+  it("scopes classList.toggle with boolean second argument", () => {
+    const c = makeComponent(
+      '<div class="open"></div><script>el.classList.toggle("open", condition)</script>',
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain(
+      `classList.toggle("${scopeClass("open")}", condition)`,
+    );
+  });
+
+  it("scopes classList.replace — rewrites both old and new token args", () => {
+    const c = makeComponent(
+      '<div class="active open"></div><script>el.classList.replace("active", "open")</script>',
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain(
+      `classList.replace("${scopeClass("active")}", "${scopeClass("open")}")`,
+    );
+  });
+
+  it("scopes classList.replace — only scoped names are rewritten", () => {
+    const c = makeComponent(
+      '<div class="active"></div><script>el.classList.replace("active", "other")</script>',
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    // "active" is a known scoped class; "other" is not in the component HTML so not rewritten
+    expect(result.fileContent).toContain(
+      `classList.replace("${scopeClass("active")}", "other")`,
+    );
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// H2: setAttribute("name", …) — name attribute
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("prefixElementAttribute – name setAttribute", () => {
+  it("scopes setAttribute('name', value)", () => {
+    const c = makeComponent(
+      '<input name="email"><script>el.setAttribute("name", "email")</script>',
+    );
+    const result = prefixElementAttribute(c, "name", "test1234");
+    expect(result.fileContent).toContain(
+      `setAttribute("name", "${scope("email")}")`,
+    );
+  });
+
+  it("does not rewrite setAttribute for unrelated name values", () => {
+    const c = makeComponent(
+      '<input name="email"><script>el.setAttribute("name", "phone")</script>',
+    );
+    const result = prefixElementAttribute(c, "name", "test1234");
+    // "phone" is not in the component HTML so it should not be rewritten
+    expect(result.fileContent).toContain(`setAttribute("name", "phone")`);
   });
 });
 
@@ -637,5 +713,67 @@ describe("prefixElementAttribute – name attribute: meta element shielding", ()
     const result = prefixElementAttribute(c, "name", "test1234");
     expect(result.fileContent).not.toContain("\x00");
     expect(result.fileContent).not.toContain("BMETATAG");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+describe("minifyJs", () => {
+  it("removes block comments", () => {
+    expect(minifyJs("/* hello */var x = 1;")).toBe("var x = 1;");
+  });
+
+  it("removes line comments", () => {
+    expect(minifyJs("var x = 1; // comment\nvar y = 2;")).toBe(
+      "var x = 1;\nvar y = 2;",
+    );
+  });
+
+  it("collapses multiple spaces and tabs to a single space", () => {
+    expect(minifyJs("var  x  =  1;")).toBe("var x = 1;");
+  });
+
+  it("collapses multiple blank lines to one", () => {
+    expect(minifyJs("var x = 1;\n\n\nvar y = 2;")).toBe(
+      "var x = 1;\nvar y = 2;",
+    );
+  });
+
+  it("preserves double-quoted strings verbatim", () => {
+    expect(minifyJs('var s = "hello  world"; // end')).toBe(
+      'var s = "hello  world";',
+    );
+  });
+
+  it("preserves single-quoted strings verbatim", () => {
+    expect(minifyJs("var s = 'hello  world';")).toBe("var s = 'hello  world';");
+  });
+
+  it("preserves strings that look like comments", () => {
+    expect(minifyJs('var url = "https://example.com";')).toBe(
+      'var url = "https://example.com";',
+    );
+  });
+
+  it("preserves template literals verbatim", () => {
+    expect(minifyJs("var s = `hello  world`;")).toBe("var s = `hello  world`;");
+  });
+
+  it("handles escape sequences in strings", () => {
+    expect(minifyJs('var s = "he said \\"hi\\"";')).toBe(
+      'var s = "he said \\"hi\\"";',
+    );
+  });
+
+  it("adds a space after a block comment that abuts a token", () => {
+    const result = minifyJs("return/*x*/value;");
+    expect(result).toBe("return value;");
+  });
+
+  it("trims leading and trailing whitespace", () => {
+    expect(minifyJs("\n  var x = 1;  \n")).toBe("var x = 1;");
+  });
+
+  it("handles empty input", () => {
+    expect(minifyJs("")).toBe("");
   });
 });

@@ -5,6 +5,7 @@ export const bascikConfig = {
   },
   siteUrl: 'https://bascik.dev',
   triggerTranspile: ['scripts/'],
+  inlineStyles: ['src/pages/css/styles.css'],
   minifyStyles: false,
   obfuscateAttributeNames: false,
   scopeScriptBlocks: true,
@@ -19,4 +20,9 @@ export const bascikConfig = {
 export const buildOverrideConfig = {
   minifyStyles: true,
   obfuscateAttributeNames: true,
+  minifyScripts: async (js) => {
+    const { transform } = await import('esbuild');
+    const result = await transform(js, { minify: true, loader: 'js' });
+    return result.code;
+  },
 };

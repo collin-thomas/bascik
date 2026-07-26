@@ -13,8 +13,13 @@ vi.mock("node:fs/promises", () => ({
   mkdir: vi.fn(async () => { }),
 }));
 
+vi.mock("./config.js", () => ({
+  BascikConfig: { isBuild: false },
+}));
+
 import { execFile } from "node:child_process";
 import { writeFile, unlink } from "node:fs/promises";
+import { BascikConfig } from "./config.js";
 
 const mockExecFile = execFile as unknown as ReturnType<typeof vi.fn>;
 
@@ -157,5 +162,21 @@ describe("executeBuildScripts", () => {
       '<aside class="sidebar"><nav><script data-bascik-build>gen()</script></nav></aside>';
     const result = await executeBuildScripts(html);
     expect(result).toBe('<aside class="sidebar"><nav><p>Generated</p></nav></aside>');
+  });
+
+  it("passes BASCIK_BUILD=0 to child process env when not in build mode", async () => {
+    resolveWith("");
+    (BascikConfig as { isBuild: boolean }).isBuild = false;
+    await executeBuildScripts("<script data-bascik-build>x</script>");
+    const opts = mockExecFile.mock.calls[0][2] as { env?: Record<string, string> };
+    expect(opts.env?.BASCIK_BUILD).toBe("0");
+  });
+
+  it("passes BASCIK_BUILD=1 to child process env when in build mode", async () => {
+    resolveWith("");
+    (BascikConfig as { isBuild: boolean }).isBuild = true;
+    await executeBuildScripts("<script data-bascik-build>x</script>");
+    const opts = mockExecFile.mock.calls[0][2] as { env?: Record<string, string> };
+    expect(opts.env?.BASCIK_BUILD).toBe("1");
   });
 });

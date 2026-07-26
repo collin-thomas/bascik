@@ -120,34 +120,58 @@ export const buildOverrideConfig = {
 
 ## Publishing
 
-Steps to cut a new release:
+This repo has two independently versioned packages, each released by pushing a git tag.
+The [Release workflow](../.github/workflows/release.yml) builds and publishes automatically — `dist/` is **not** committed to git.
+
+### Tag scheme
+
+| Package | Tag format | Example |
+|---|---|---|
+| `@bascik/bascik` (`pkg/`) | `v<semver>` | `v0.3.0` |
+| `create-bascik` (`create/`) | `create-v<semver>` | `create-v0.2.0` |
+
+The `if:` condition on each workflow job ensures only the relevant package is published when a tag is pushed.
+
+### Release checklist — `@bascik/bascik`
 
 1. **Update version** in `pkg/package.json` following [Semantic Versioning](https://semver.org/).
-2. **Update `CHANGELOG.md`** — add a section under `[Unreleased]`, move it to the new version with today's date.
-3. **Run tests** — `yarn test:ci` from `pkg/`.
-4. **Pack and smoke-test** locally:
+2. **Update `CHANGELOG.md`** — move entries from `[Unreleased]` to the new version with today's date.
+3. **Run tests locally** — `yarn test:ci` from `pkg/`.
+4. **Commit and tag**:
    ```sh
-   cd pkg && npm pack
-   cd ../demo-app
-   yarn cache clean
-   yarn add ../pkg/bascik-bascik-X.Y.Z.tgz
-   yarn build
-   ```
-5. **Commit, tag, and push**:
-   ```sh
-   git add .
-   git commit -m "chore: release vX.Y.Z"
-   git tag vX.Y.Z
+   git add pkg/package.json CHANGELOG.md
+   git commit -m "chore: release v0.3.0"
+   git tag v0.3.0
    git push origin main --tags
    ```
-6. The [Release workflow](.github/workflows/release.yml) picks up the tag, runs tests, and publishes to npm automatically.  
-   Ensure the `NPM_TOKEN` secret is set in the repository settings (Settings → Secrets → Actions).
+5. The Release workflow picks up the `v*.*.*` tag, runs tests, builds, and publishes to npm.
+
+### Release checklist — `create-bascik`
+
+1. **Update version** in `create/package.json`.
+2. **Update `CHANGELOG.md`** if applicable.
+3. **Run tests locally** — `yarn test:ci` from `create/`.
+4. **Commit and tag**:
+   ```sh
+   git add create/package.json
+   git commit -m "chore: release create-bascik v0.2.0"
+   git tag create-v0.2.0
+   git push origin main --tags
+   ```
+5. The Release workflow picks up the `create-v*.*.*` tag, runs tests, builds, and publishes to npm.
+
+### Prerequisites
+
+Ensure the `NPM_TOKEN` secret is set in the repository settings (Settings → Secrets and variables → Actions) before pushing a release tag.
 
 ### Manual publish (if needed)
 
 ```sh
-cd pkg
-npm publish --access public
+# For @bascik/bascik
+cd pkg && yarn build && npm publish --access public
+
+# For create-bascik
+cd create && yarn build && npm publish --access public
 ```
 
 ---

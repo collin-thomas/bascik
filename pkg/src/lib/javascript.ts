@@ -35,6 +35,7 @@
  *
  *   name attribute:
  *     getElementsByName("x")     →  getElementsByName("bascik__...__x")
+ *     setAttribute("name","x")   →  setAttribute("name","bascik__...__x")
  *
  *   class attribute:
  *     getElementsByClassName("x") → getElementsByClassName("bascik__...__x")
@@ -44,9 +45,13 @@
  *     closest(".x")              →  closest(".bascik__...__x")
  *     matches(".x")              →  matches(".bascik__...__x")
  *     classList.add("x")         →  classList.add("bascik__...__x")
+ *     classList.add("x","y")     →  classList.add("bascik__...__x","bascik__...__y")
  *     classList.remove("x")      →  classList.remove("bascik__...__x")
+ *     classList.remove("x","y")  →  classList.remove("bascik__...__x","bascik__...__y")
  *     classList.toggle("x")      →  classList.toggle("bascik__...__x")
+ *     classList.toggle("x",cond) →  classList.toggle("bascik__...__x",cond)
  *     classList.contains("x")    →  classList.contains("bascik__...__x")
+ *     classList.replace("x","y") →  classList.replace("bascik__...__x","bascik__...__y")
  *     setAttribute("class","x")  →  setAttribute("class","bascik__...__x")
  *     el.className = "x"         →  el.className = "bascik__...__x"
  *     el.className = "x y"       →  el.className = "bascik__...__x bascik__...__y"
@@ -261,7 +266,14 @@ export const prefixElementAttribute = (
           } else if (attribute === "name") {
             updatedMatch = rewriteSelectorRef(
               new RegExp(
-                `(?<start>getElementsByName\\(["'])(?<middle>${attributeName})(?<end>["']\\))`,
+                `(?<start>getElementsByName\\(["'])(?<middle>${escapedAttr})(?<end>["']\\))`,
+                "gm",
+              ),
+            );
+            // element.setAttribute("name", "value")
+            updatedMatch = rewriteSelectorRef(
+              new RegExp(
+                `(?<start>setAttribute\\(["']name["'],\\s*["'])(?<middle>${escapedAttr})(?<end>["']\\))`,
                 "gm",
               ),
             );
@@ -281,12 +293,43 @@ export const prefixElementAttribute = (
             ]) {
               rewriteInSelectorString(method, ".");
             }
-            // classList methods take the class name without the leading `.`
+            // classList.add / classList.remove — multi-arg aware.
+            // Match the entire call then replace every quoted token matching
+            // the class name. Handles both `classList.add("x")` and
+            // `classList.add("x", "y", …)` forms.
+            updatedMatch = updatedMatch.replace(
+              /classList\.(?:add|remove)\([^)]*\)/gm,
+              (call) =>
+                call.replace(
+                  new RegExp(`(["'])${escapedAttr}\\1`, "g"),
+                  `$1${obfuscatedAttributeName}$1`,
+                ),
+            );
+            // classList.toggle — rewrites the class-name (first) arg only.
+            // Deliberately does NOT require `)` after the closing quote so
+            // `classList.toggle("open", condition)` is handled correctly.
             updatedMatch = rewriteSelectorRef(
               new RegExp(
-                `(?<start>classList\\.(?:add|remove|toggle|contains)\\(["'])(?<middle>${attributeName})(?<end>["']\\))`,
+                `(?<start>classList\.toggle\\(["'])(?<middle>${escapedAttr})(?<end>["'])`,
                 "gm",
               ),
+            );
+            // classList.contains — always single arg
+            updatedMatch = rewriteSelectorRef(
+              new RegExp(
+                `(?<start>classList\.contains\\(["'])(?<middle>${escapedAttr})(?<end>["']\\))`,
+                "gm",
+              ),
+            );
+            // classList.replace(oldToken, newToken) — rewrites both args if
+            // either matches a scoped class name.
+            updatedMatch = updatedMatch.replace(
+              /classList\.replace\([^)]*\)/gm,
+              (call) =>
+                call.replace(
+                  new RegExp(`(["'])${escapedAttr}\\1`, "g"),
+                  `$1${obfuscatedAttributeName}$1`,
+                ),
             );
             // element.setAttribute("class", "value")
             updatedMatch = rewriteSelectorRef(
@@ -432,4 +475,105 @@ export const namespaceScriptTags = (
     },
   );
   return component;
+};
+
+// ─── Built-in JS minifier ────────────────────────────────────────────────────
+
+/**
+ * Strip block/line comments and collapse whitespace from a JS string.
+ * String literals and template literals are copied verbatim so their content
+ * is never altered.  This is the default minifier used when
+ * `minifyScripts: true` is set in bascik.config.js.
+ *
+ * For production-quality output (dead-code elimination, identifier mangling,
+ * etc.) configure `minifyScripts` with a custom function backed by esbuild,
+ * terser, or similar instead.
+ */
+export const minifyJs = (js: string): string => {
+  // Collect segments: code regions get whitespace collapsed; literal regions
+  // (strings, template literals) are preserved exactly so their content is
+  // never altered by the post-processing regex passes.
+  type Segment = { literal: boolean; text: string };
+  const segments: Segment[] = [];
+  let codeAccum = "";
+  let i = 0;
+  const len = js.length;
+
+  const flushCode = (): void => {
+    if (codeAccum) {
+      segments.push({ literal: false, text: codeAccum });
+      codeAccum = "";
+    }
+  };
+
+  while (i < len) {
+    const ch = js[i];
+
+    // Quoted string literals — flush code, collect literal verbatim
+    if (ch === '"' || ch === "'") {
+      flushCode();
+      const quote = ch;
+      let lit = ch;
+      i++;
+      while (i < len) {
+        const c = js[i];
+        if (c === "\\" && i + 1 < len) { lit += c + js[i + 1]; i += 2; continue; }
+        lit += c;
+        i++;
+        if (c === quote) break;
+      }
+      segments.push({ literal: true, text: lit });
+      continue;
+    }
+
+    // Template literals — flush code, collect literal verbatim
+    if (ch === "`") {
+      flushCode();
+      let lit = "`";
+      i++;
+      while (i < len) {
+        const c = js[i];
+        if (c === "\\" && i + 1 < len) { lit += c + js[i + 1]; i += 2; continue; }
+        lit += c;
+        i++;
+        if (c === "`") break;
+      }
+      segments.push({ literal: true, text: lit });
+      continue;
+    }
+
+    // Potential comment
+    if (ch === "/" && i + 1 < len) {
+      if (js[i + 1] === "*") {
+        // Block comment: skip to */
+        i += 2;
+        while (i + 1 < len && !(js[i] === "*" && js[i + 1] === "/")) i++;
+        i += 2;
+        // Preserve a token boundary
+        if (codeAccum.length > 0 && !/\s$/.test(codeAccum)) codeAccum += " ";
+        continue;
+      }
+      if (js[i + 1] === "/") {
+        // Line comment: skip to end of line (the newline itself is kept)
+        i += 2;
+        while (i < len && js[i] !== "\n") i++;
+        continue;
+      }
+    }
+
+    codeAccum += ch;
+    i++;
+  }
+  flushCode();
+
+  return segments
+    .map(({ literal, text }) => {
+      if (literal) return text;
+      return text
+        .replace(/[ \t]+/g, " ")  // collapse runs of spaces/tabs
+        .replace(/ *\n */g, "\n") // trim spaces around newlines
+        .replace(/\n{2,}/g, "\n"); // collapse multiple blank lines
+    })
+    .join("")
+    .trim();
 };

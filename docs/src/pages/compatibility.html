@@ -155,7 +155,8 @@
               <td><code>@keyframes</code></td>
               <td><code>@keyframes spin {}</code></td>
               <td class="badge-ok">✅</td>
-              <td>Name is scoped; all <code>animation:</code> references in the file are updated to match.</td>
+              <td>Name is scoped; all <code>animation:</code> and <code>animation-name:</code> references in the file
+                are updated to match.</td>
             </tr>
             <tr>
               <td><code>@media</code> query</td>
@@ -303,6 +304,20 @@
               <td class="badge-ok">✅</td>
               <td>Stripped before processing.</td>
             </tr>
+            <tr>
+              <td><code>@font-face</code></td>
+              <td class="badge-partial">⚠️</td>
+              <td>Passed through untouched — not scoped. The <code>font-family</code> name is global.
+                Declare <code>@font-face</code> in a shared global stylesheet rather than a component
+                <code>.css</code> file.
+              </td>
+            </tr>
+            <tr>
+              <td><code>@import</code></td>
+              <td class="badge-no">❌</td>
+              <td>Not followed by the scoping pipeline. The imported CSS file is not processed or
+                scoped. Include CSS directly in the component file instead.</td>
+            </tr>
           </tbody>
         </table>
 
@@ -439,25 +454,33 @@
               <td><code>classList.add</code></td>
               <td><code>el.classList.add("my-cls")</code></td>
               <td class="badge-ok">✅</td>
-              <td></td>
+              <td>Single and multi-argument forms: <code>classList.add("a", "b")</code> rewrites
+                all class name arguments.</td>
             </tr>
             <tr>
               <td><code>classList.remove</code></td>
               <td><code>el.classList.remove("my-cls")</code></td>
               <td class="badge-ok">✅</td>
-              <td></td>
+              <td>Single and multi-argument forms.</td>
             </tr>
             <tr>
               <td><code>classList.toggle</code></td>
               <td><code>el.classList.toggle("my-cls")</code></td>
               <td class="badge-ok">✅</td>
-              <td></td>
+              <td>The optional boolean second argument is passed through unchanged.</td>
             </tr>
             <tr>
               <td><code>classList.contains</code></td>
               <td><code>el.classList.contains("my-cls")</code></td>
               <td class="badge-ok">✅</td>
               <td></td>
+            </tr>
+            <tr>
+              <td><code>classList.replace</code></td>
+              <td><code>el.classList.replace("old", "new")</code></td>
+              <td class="badge-ok">✅</td>
+              <td>Both the old-token and new-token arguments are rewritten if they match a
+                scoped class name.</td>
             </tr>
             <tr>
               <td>Compound <code>querySelector</code> / <code>querySelectorAll</code></td>
@@ -482,6 +505,12 @@
             <tr>
               <td><code>setAttribute("id", …)</code></td>
               <td><code>el.setAttribute("id", "my-id")</code></td>
+              <td class="badge-ok">✅</td>
+              <td>String literal values are rewritten.</td>
+            </tr>
+            <tr>
+              <td><code>setAttribute("name", …)</code></td>
+              <td><code>el.setAttribute("name", "my-name")</code></td>
               <td class="badge-ok">✅</td>
               <td>String literal values are rewritten.</td>
             </tr>

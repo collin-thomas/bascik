@@ -64,3 +64,8 @@ typings/
 
 # macos
 .DS_Store
+
+docs/dist
+pkg/dist
+pkg/e2e/dist
+create/dist

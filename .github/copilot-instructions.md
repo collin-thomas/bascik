@@ -12,8 +12,7 @@ The Markdown files serve three purposes simultaneously:
 3. They feed `SKILL.md` (the Copilot skill file at `docs/src/pages/assets/SKILL.md`, served at `/assets/SKILL.md`)
 
 **When adding or updating docs content:**
-- Write the prose and code examples in the appropriate `docs/content/NN-topic.md` file
-- Number new files sequentially (`16-`, `17-`, …)
+- Write the prose and code examples in the appropriate `docs/content/topic.md` file
 - The HTML page is a shell — edit it only for page-specific chrome (custom styles, decorative UI, score grids, etc.)
 - Never duplicate prose between the MD file and the HTML file
 
@@ -22,7 +21,7 @@ The Markdown files serve three purposes simultaneously:
 Each docs page that has a corresponding MD file uses a `<script data-bascik-build>` block inside `<main class="docs-content">`:
 
 ```html
-<!-- Content rendered from docs/content/NN-topic.md at build time.
+<!-- Content rendered from docs/content/topic.md at build time.
      To update page content, edit the MD file — not this file. -->
 <script data-bascik-build>
   import { join } from 'node:path';
@@ -30,7 +29,7 @@ Each docs page that has a corresponding MD file uses a `<script data-bascik-buil
   const { renderMd } = await import(
     pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
   );
-  console.log(await renderMd('./content/NN-topic.md', { skipFirstHeading: true }));
+  console.log(await renderMd('./content/topic.md', { skipFirstHeading: true }));
 </script>
 ```
 
@@ -107,7 +106,7 @@ Interactive demos use `<component-demo>` with named slots. **Code examples insid
 
 ### Why MD-first
 
-MD files feed `llms.txt` and `SKILL.md`. If code examples only exist in HTML slots, LLMs never see them. Write example code in the relevant `docs/content/NN-topic.md` file first; the HTML slot reads from there.
+MD files feed `llms.txt` and `SKILL.md`. If code examples only exist in HTML slots, LLMs never see them. Write example code in the relevant `docs/content/topic.md` file first; the HTML slot reads from there.
 
 ### How to add a demo code block to an MD file
 
@@ -145,11 +144,29 @@ Use `extractDemoBlock` from `scripts/md-renderer.mjs` inside a `data-bascik-buil
 
 This repo is the **bascik package itself** (`pkg/`). When a rendering or build issue (e.g. minification stripping newlines, whitespace collapsing, HTML output mangled) would otherwise require a workaround in the docs content or build scripts, **fix it in `pkg/src/` instead**. Do not paper over bascik bugs with hacks in the docs layer.
 
+## Keeping the Changelog Up to Date
+
+`CHANGELOG.md` at the repo root must stay current. **Whenever you add a feature, fix a bug, or make any user-visible change to `pkg/src/`**, add an entry to the `[Unreleased]` section before finishing the task. Don't batch it up later.
+
+This applies even when the primary task is updating docs, `llms.txt`, or `SKILL.md` — if the underlying package behavior changed, the changelog entry comes first.
+
+Entry format: one bullet per change, grouped under `### Added`, `### Fixed`, or `### Changed`. Keep bullets concise (one sentence). See existing entries for style.
+
+## Keeping the Compatibility Doc Up to Date
+
+`docs/content/compatibility.md` tracks which CSS and JavaScript patterns Bascik's scoping engine handles. **Whenever a CSS or JS scoping capability is added, changed, or fixed**, update the relevant table row (or add a new one) in that file before finishing the task.
+
+- New capability → add a row with ✅ and a concise Notes entry.
+- Fixed or improved → update the Status and/or Notes of the existing row.
+- Intentionally unsupported → add a row with 🚫 and an explanation.
+
+After editing `compatibility.md`, regenerate `llms.txt` and update `SKILL.md` as usual (they pull from the same MD files).
+
 ## Keeping Docs in Sync with the Package
 
 The docs site (`docs/`) consumes a **packed tarball** of the package:
 ```
-docs/node_modules/@bascik/bascik/  ← installed from ../pkg/bascik-bascik-0.2.0.tgz
+docs/node_modules/@bascik/bascik/  ← installed from ../pkg/bascik-bascik-0.1.0.tgz
 ```
 
 Whenever `pkg/src/` is changed, you must propagate the change to the docs before verifying any docs output. **Always follow these steps in order:**

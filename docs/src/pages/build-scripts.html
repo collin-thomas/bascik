@@ -23,7 +23,7 @@
           directly into the page — no client-side JavaScript required. Use them to pull in Markdown files, generate
           navigation from JSON, or fetch remote data at build time.</p>
 
-        <!-- Content rendered from docs/content/10-build-scripts.md at build time.
+        <!-- Content rendered from docs/content/build-scripts.md at build time.
              To update page content, edit the MD file — not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
@@ -31,7 +31,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/10-build-scripts.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/build-scripts.md', { skipFirstHeading: true }));
         </script>
 
         <h2>Live Build Script Example</h2>
@@ -43,7 +43,7 @@
             <script data-bascik-build>
               import { readFile } from 'node:fs/promises';
               import { marked } from 'marked';
-              const md = await readFile('./content/01-overview.md', 'utf8');
+              const md = await readFile('./content/overview.md', 'utf8');
               const firstPara = md.split('\n\n')[1]; // Get first paragraph
               console.log(`
                 <feature-card 
@@ -59,7 +59,7 @@
               &lt;script data-bascik-build&gt;
               import { readFile } from 'node:fs/promises';
               import { marked } from 'marked';
-              const md = await readFile('./content/01-overview.md', 'utf8');
+              const md = await readFile('./content/overview.md', 'utf8');
               const firstPara = md.split('\n\n')[1];
               console.log(`
               &lt;feature-card

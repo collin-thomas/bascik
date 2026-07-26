@@ -29,6 +29,10 @@ describe("defaultConfig", () => {
     expect(defaultConfig.minifyStyles).toBe(true);
   });
 
+  it("has minifyScripts: true", () => {
+    expect(defaultConfig.minifyScripts).toBe(true);
+  });
+
   it("has obfuscateAttributeNames: true", () => {
     expect(defaultConfig.obfuscateAttributeNames).toBe(true);
   });

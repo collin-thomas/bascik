@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
-import { recursivelyTranspile } from "./processing.js";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { recursivelyTranspile, pageProcessing } from "./processing.js";
 
 // Disable all scoping so tests produce predictable, readable HTML
 vi.mock("./config.js", () => ({
@@ -9,11 +9,34 @@ vi.mock("./config.js", () => ({
     obfuscateAttributeNames: false,
     isBuild: false,
     minifyStyles: false,
+    deduplicateCss: true,
+    inlineStyles: [],
     directory: {
       pages: "src/pages",
       components: "src/components",
     },
   },
+}));
+
+vi.mock("node:fs/promises", () => ({
+  readFile: vi.fn(),
+  writeFile: vi.fn(async () => { }),
+  mkdir: vi.fn(async () => { }),
+}));
+
+vi.mock("./build-scripts.js", () => ({
+  executeBuildScripts: vi.fn((html: string) => Promise.resolve(html)),
+}));
+
+vi.mock("./mem.js", () => ({
+  mem: {
+    storePage: vi.fn(),
+    pagesThisComponentIsUsedOn: vi.fn(() => []),
+  },
+}));
+
+vi.mock("./events.js", () => ({
+  eventEmitter: { emit: vi.fn() },
 }));
 
 vi.mock("./names.js", () => ({
@@ -56,6 +79,10 @@ vi.mock("node:fs", async (importOriginal) => {
     }
   };
 });
+
+import { readFile } from "node:fs/promises";
+import { BascikConfig } from "./config.js";
+import { mem } from "./mem.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // A: Slot fallback content
@@ -390,3 +417,83 @@ describe("recursivelyTranspile – detailed transpilation errors", () => {
     consoleErrorSpy.mockRestore();
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// inlineStyles — pageProcessing
+// ─────────────────────────────────────────────────────────────────────────────
+
+const PAGE_HTML = '<!DOCTYPE html><html lang="en"><head></head><body><p>hello</p></body></html>';
+const PAGE_PATH = 'src/pages/index.html';
+
+describe("pageProcessing – inlineStyles", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (BascikConfig as Record<string, unknown>).inlineStyles = [];
+    (BascikConfig as Record<string, unknown>).minifyStyles = false;
+  });
+
+  it("does not inject a global <style> when inlineStyles is empty", async () => {
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(PAGE_HTML);
+    await pageProcessing(PAGE_PATH, {});
+    const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    // The only <style> block should be the empty component CSS one
+    const styleMatches = [...pageContent.matchAll(/<style>/gi)];
+    expect(styleMatches).toHaveLength(1);
+  });
+
+  it("inlines a single stylesheet into the <head> before component styles", async () => {
+    (BascikConfig as Record<string, unknown>).inlineStyles = ['src/pages/css/styles.css'];
+    (readFile as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce(PAGE_HTML)          // page read
+      .mockResolvedValueOnce('body { color: red; }'); // inlineStyles file
+    await pageProcessing(PAGE_PATH, {});
+    const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(pageContent).toContain('body { color: red; }');
+    // Global <style> must appear before the component <style>
+    const globalIdx = pageContent.indexOf('body { color: red; }');
+    const compIdx = pageContent.lastIndexOf('<style>');
+    expect(globalIdx).toBeLessThan(compIdx);
+  });
+
+  it("concatenates multiple stylesheets into one <style> block", async () => {
+    (BascikConfig as Record<string, unknown>).inlineStyles = ['a.css', 'b.css'];
+    (readFile as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce(PAGE_HTML)
+      .mockResolvedValueOnce('.a { color: red; }')
+      .mockResolvedValueOnce('.b { color: blue; }');
+    await pageProcessing(PAGE_PATH, {});
+    const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(pageContent).toContain('.a { color: red; }');
+    expect(pageContent).toContain('.b { color: blue; }');
+    // Two <style> blocks: one global, one component
+    const styleCount = [...pageContent.matchAll(/<style>/gi)].length;
+    expect(styleCount).toBe(2);
+  });
+
+  it("logs a warning and continues when an inlineStyles file cannot be read", async () => {
+    (BascikConfig as Record<string, unknown>).inlineStyles = ['missing.css'];
+    (readFile as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce(PAGE_HTML)
+      .mockRejectedValueOnce(new Error('ENOENT'));
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
+    await pageProcessing(PAGE_PATH, {});
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[bascik] inlineStyles: could not read "missing.css"'),
+      expect.any(String),
+    );
+    warnSpy.mockRestore();
+  });
+
+  it("minifies inlined CSS when minifyStyles is true", async () => {
+    (BascikConfig as Record<string, unknown>).inlineStyles = ['src/pages/css/styles.css'];
+    (BascikConfig as Record<string, unknown>).minifyStyles = true;
+    (readFile as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce(PAGE_HTML)
+      .mockResolvedValueOnce('body {  color:  red;  }');
+    await pageProcessing(PAGE_PATH, {});
+    const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(pageContent).toContain('body{color:red;}');
+    expect(pageContent).not.toContain('body {  color:  red;  }');
+  });
+});
+

@@ -42,6 +42,26 @@
       flex-wrap: wrap;
     }
 
+    .hero-quickstart {
+      display: inline-block;
+      margin: 20px 0 0;
+      padding: 10px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      font-family: var(--mono);
+      font-size: 0.88rem;
+      color: var(--accent);
+    }
+
+    .hero-quickstart code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: inherit;
+      font-size: inherit;
+    }
+
     /* ── Section base ── */
     .home-section {
       padding: 72px 0;
@@ -209,6 +229,7 @@
       font-size: 0.78rem;
       font-weight: 600;
       cursor: pointer;
+      touch-action: manipulation;
       transition: color .15s, background .15s;
     }
 
@@ -357,18 +378,19 @@
     <section class="hero">
       <div class="container">
         <div class="hero-eyebrow">
-          <span class="badge">v0.2.0</span>
-          <span class="text-muted" style="font-size:0.83rem;font-weight:500">Build tool</span>
+          <span class="badge">v0.1.0</span>
         </div>
         <h1 class="hero-title">HTML components.<br><span class="text-accent">Zero runtime.</span></h1>
-        <p class="hero-desc">Write reusable components in plain HTML. Bascik scopes your CSS and JS at build time — no
-          framework, no client-side JavaScript added.</p>
+        <p class="hero-desc">You just want to reuse your nav on every page — without installing a framework to do
+          something this simple. Create a file. The filename is the tag name. CSS and JS inside it scope themselves
+          automatically. No imports, no exports.</p>
         <div class="hero-actions">
           <a href="/getting-started" class="btn btn-primary">Get Started →</a>
           <a href="/why-bascik" class="btn btn-ghost">Why Bascik</a>
           <a href="https://github.com/collin-thomas/bascik" class="btn btn-ghost" target="_blank"
             rel="noopener noreferrer">GitHub</a>
         </div>
+        <pre class="hero-quickstart"><code>npm create bascik@latest</code></pre>
       </div>
     </section>
 
@@ -377,15 +399,16 @@
       <div class="container">
         <p class="section-label">How it works</p>
         <h2 class="section-heading">Three steps. That's it.</h2>
-        <p class="section-sub">No config needed to start. Bascik transforms standard HTML files at build time —
-          components
-          in, plain HTML out.</p>
+        <p class="section-sub">No config needed to start. Name a file <code>my-nav.html</code> and use
+          <code>&lt;my-nav&gt;</code> on any page — the filename is always the tag name. No imports, no exports, no
+          registration.
+        </p>
 
         <div class="how-grid">
           <div class="how-step">
             <div class="how-step-header">
-              <p class="how-step-num">01 — Write a component</p>
-              <h3>A plain HTML file in <code>src/components/</code></h3>
+              <p class="how-step-num">01 — Create a file</p>
+              <h3>The filename is the tag name — no imports, no exports</h3>
             </div>
             <pre><code><span class="hl-comment">&lt;!-- src/components/my-card.html --&gt;</span>
 <span class="hl-tag">&lt;style&gt;</span>

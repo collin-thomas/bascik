@@ -22,7 +22,7 @@
         <p class="page-intro">Slots let you pass inner HTML content into a component at the usage site. Bascik supports
           a default slot, named slots, and slot fallback content.</p>
 
-        <!-- Content rendered from docs/content/05-slots.md at build time.
+        <!-- Content rendered from docs/content/slots.md at build time.
              To update page content, edit the MD file — not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
@@ -30,7 +30,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/05-slots.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/slots.md', { skipFirstHeading: true }));
         </script>
 
         <!-- Interactive demo: named slots in action -->
@@ -50,7 +50,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/05-slots.md', 'code'));
+                console.log(await extractDemoBlock('./content/slots.md', 'code'));
               </script>
             </code-block>
           </div>
@@ -60,7 +60,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/05-slots.md', 'output'));
+                console.log(await extractDemoBlock('./content/slots.md', 'output'));
               </script>
             </code-block>
           </div>

@@ -25,7 +25,7 @@
           free to include any JavaScript library you want. CDN-delivered libraries, bundled scripts, and lightweight
           reactivity tools all work alongside Bascik without any special configuration.</p>
 
-        <!-- Content rendered from docs/content/15-libraries.md at build time.
+        <!-- Content rendered from docs/content/libraries.md at build time.
              To update page content, edit the MD file — not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
@@ -33,7 +33,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/15-libraries.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/libraries.md', { skipFirstHeading: true }));
         </script>
 
         <h2>Live Counter Demo</h2>
@@ -61,7 +61,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/15-libraries.md', 'source-html'));
+                console.log(await extractDemoBlock('./content/libraries.md', 'source-html'));
               </script>
             </code-block>
           </div>
@@ -71,7 +71,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/15-libraries.md', 'source-css'));
+                console.log(await extractDemoBlock('./content/libraries.md', 'source-css'));
               </script>
             </code-block>
           </div>
@@ -81,7 +81,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/15-libraries.md', 'source-js'));
+                console.log(await extractDemoBlock('./content/libraries.md', 'source-js'));
               </script>
             </code-block>
           </div>
@@ -91,7 +91,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/15-libraries.md', 'output-html'));
+                console.log(await extractDemoBlock('./content/libraries.md', 'output-html'));
               </script>
             </code-block>
           </div>
@@ -101,7 +101,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/15-libraries.md', 'output-css'));
+                console.log(await extractDemoBlock('./content/libraries.md', 'output-css'));
               </script>
             </code-block>
           </div>
@@ -131,7 +131,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/15-libraries.md', 'tailwind-html'));
+                console.log(await extractDemoBlock('./content/libraries.md', 'tailwind-html'));
               </script>
             </code-block>
           </div>
@@ -141,7 +141,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/15-libraries.md', 'tailwind-source-js'));
+                console.log(await extractDemoBlock('./content/libraries.md', 'tailwind-source-js'));
               </script>
             </code-block>
           </div>
@@ -151,7 +151,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/15-libraries.md', 'tailwind-output-html'));
+                console.log(await extractDemoBlock('./content/libraries.md', 'tailwind-output-html'));
               </script>
             </code-block>
           </div>

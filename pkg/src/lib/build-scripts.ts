@@ -42,6 +42,7 @@ import { execFile } from "node:child_process";
 import { writeFile, unlink, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { getRelativePath } from "./file-system.js";
+import { BascikConfig } from "./config.js";
 
 
 // Manual promise wrapper so tests can mock execFile with a plain vi.fn()
@@ -51,7 +52,10 @@ const runModule = (path: string): Promise<{ stdout: string; stderr: string }> =>
     execFile(
       process.execPath,
       [path],
-      { cwd: process.cwd() },
+      {
+        cwd: process.cwd(),
+        env: { ...process.env, BASCIK_BUILD: BascikConfig.isBuild ? "1" : "0" },
+      },
       (err, stdout, stderr) => {
         if (err) reject(Object.assign(err, { stdout, stderr }));
         else resolve({ stdout, stderr });

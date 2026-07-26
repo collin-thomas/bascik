@@ -24,7 +24,7 @@
         <h1>Getting Started</h1>
         <p class="page-intro">Bascik requires Node.js v24+. Get up and running in under five minutes.</p>
 
-        <!-- Content rendered from docs/content/17-getting-started.md at build time.
+        <!-- Content rendered from docs/content/getting-started.md at build time.
              To update page content, edit the MD file — not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
@@ -32,7 +32,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/17-getting-started.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/getting-started.md', { skipFirstHeading: true }));
         </script>
 
         <h2>Your First Component</h2>
@@ -90,7 +90,7 @@
           </p>
         </div>
 
-        <!-- Content rendered from docs/content/18-getting-started-workflow.md at build time.
+        <!-- Content rendered from docs/content/getting-started-workflow.md at build time.
              To update page content, edit the MD file — not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
@@ -98,7 +98,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/18-getting-started-workflow.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/getting-started-workflow.md', { skipFirstHeading: true }));
         </script>
 
         <script data-bascik-build>

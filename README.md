@@ -12,6 +12,7 @@ A static site generator that lets you write reusable HTML components. No JavaScr
 | Directory   | Purpose                                                                            |
 | ----------- | ---------------------------------------------------------------------------------- |
 | `pkg/`      | The `@bascik/bascik` npm package — source, tests, benchmarks                      |
+| `create/`   | The `create-bascik` scaffolding CLI — `npm create bascik@latest`                  |
 | `docs/`     | Documentation site at [bascik.dev](https://bascik.dev) — built with Bascik itself |
 
 ---

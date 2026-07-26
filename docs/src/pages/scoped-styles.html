@@ -23,7 +23,7 @@
           selectors, <code>@media</code> queries, and <code>@keyframes</code> are all scoped so components can never
           conflict with one another.</p>
 
-        <!-- Content rendered from docs/content/03-scoped-css.md at build time.
+        <!-- Content rendered from docs/content/scoped-css.md at build time.
              To update page content, edit the MD file — not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
@@ -31,7 +31,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/03-scoped-css.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/scoped-css.md', { skipFirstHeading: true }));
         </script>
 
         <h2>Live Style Demo</h2>
@@ -50,7 +50,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/03-scoped-css.md', 'source-html'));
+                console.log(await extractDemoBlock('./content/scoped-css.md', 'source-html'));
               </script>
             </code-block>
           </div>
@@ -60,7 +60,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/03-scoped-css.md', 'source-css'));
+                console.log(await extractDemoBlock('./content/scoped-css.md', 'source-css'));
               </script>
             </code-block>
           </div>
@@ -70,7 +70,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/03-scoped-css.md', 'output-html'));
+                console.log(await extractDemoBlock('./content/scoped-css.md', 'output-html'));
               </script>
             </code-block>
           </div>
@@ -80,7 +80,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/03-scoped-css.md', 'output-css'));
+                console.log(await extractDemoBlock('./content/scoped-css.md', 'output-css'));
               </script>
             </code-block>
           </div>

@@ -41,6 +41,24 @@ export interface BascikConfigOptions {
     components: string;
   };
   minifyStyles: boolean;
+  /**
+   * Minify inline `<script>` content and `.js` static files in the output.
+   *
+   * - `false`  — no minification (default in dev)
+   * - `true`   — built-in minifier: strips comments and collapses whitespace
+   * - `(fn)`   — call the provided function for each script body; return the
+   *              minified string.  Async functions are supported, which lets
+   *              you plug in esbuild, terser, or any other tool:
+   *
+   * ```js
+   * // bascik.config.js
+   * import { transform } from 'esbuild';
+   * export const buildOverrideConfig = {
+   *   minifyScripts: async (js) => (await transform(js, { minify: true })).code,
+   * };
+   * ```
+   */
+  minifyScripts: boolean | ((code: string) => string | Promise<string>);
   obfuscateAttributeNames: boolean;
   cacheHttp: boolean;
   verboseLogging: boolean;
@@ -80,6 +98,17 @@ export interface BascikConfigOptions {
    * triggerTranspile: ['scripts/', 'images/']
    */
   triggerTranspile?: string[];
+  /**
+   * Stylesheet files to read and inline as `<style>` tags into every page's
+   * `<head>` during transpilation. Paths are relative to the project root.
+   * When `minifyStyles` is true the content is minified before injection.
+   * Global styles are injected before component styles so component rules
+   * take precedence.
+   *
+   * @example
+   * inlineStyles: ['src/pages/css/styles.css']
+   */
+  inlineStyles?: string[];
   isBuild?: boolean;
 }
 

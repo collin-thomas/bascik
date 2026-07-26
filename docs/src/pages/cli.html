@@ -22,7 +22,7 @@
         <p class="page-intro">Bascik features a simple, fast, and highly informative CLI for both development and
           production building.</p>
 
-        <!-- Content rendered from docs/content/13-cli.md at build time.
+        <!-- Content rendered from docs/content/cli.md at build time.
              To update page content, edit the MD file — not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
@@ -30,7 +30,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/13-cli.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/cli.md', { skipFirstHeading: true }));
         </script>
 
         <script data-bascik-build>

@@ -49,7 +49,7 @@
           then disappears. Understanding how that differs from popular lightweight frameworks helps you pick the right
           tool — and shows how they can work together.</p>
 
-        <!-- Content rendered from docs/content/17-vs-frameworks.md at build time.
+        <!-- Content rendered from docs/content/vs-frameworks.md at build time.
              To update page content, edit the MD file — not this file.
              The MD file also feeds into llms.txt via scripts/generate-llms-txt.mjs. -->
         <script data-bascik-build>
@@ -58,7 +58,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/17-vs-frameworks.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/vs-frameworks.md', { skipFirstHeading: true }));
         </script>
 
         <script data-bascik-build>

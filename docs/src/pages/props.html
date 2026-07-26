@@ -23,7 +23,7 @@
           <code>data-bascik-prop-*</code> attributes. Think of them as named text slots.
         </p>
 
-        <!-- Content rendered from docs/content/06-props.md at build time.
+        <!-- Content rendered from docs/content/props.md at build time.
              To update page content, edit the MD file — not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
@@ -31,7 +31,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/06-props.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/props.md', { skipFirstHeading: true }));
         </script>
 
         <h2>Interactive Props Demo</h2>
@@ -49,7 +49,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/06-props.md', 'code'));
+                console.log(await extractDemoBlock('./content/props.md', 'code'));
               </script>
             </code-block>
           </div>
@@ -59,7 +59,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/06-props.md', 'output'));
+                console.log(await extractDemoBlock('./content/props.md', 'output'));
               </script>
             </code-block>
           </div>

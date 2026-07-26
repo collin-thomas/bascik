@@ -23,7 +23,7 @@
           match the scoped IDs and class names. Each component instance gets unique identifiers, so multiple instances
           on the same page work independently.</p>
 
-        <!-- Content rendered from docs/content/04-scoped-js.md at build time.
+        <!-- Content rendered from docs/content/scoped-js.md at build time.
              To update page content, edit the MD file — not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
@@ -31,7 +31,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/04-scoped-js.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/scoped-js.md', { skipFirstHeading: true }));
         </script>
 
         <h2>Live Scoping Example</h2>
@@ -59,7 +59,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/04-scoped-js.md', 'source-html'));
+                console.log(await extractDemoBlock('./content/scoped-js.md', 'source-html'));
               </script>
             </code-block>
           </div>
@@ -69,7 +69,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/04-scoped-js.md', 'source-css'));
+                console.log(await extractDemoBlock('./content/scoped-js.md', 'source-css'));
               </script>
             </code-block>
           </div>
@@ -79,7 +79,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/04-scoped-js.md', 'source-js'));
+                console.log(await extractDemoBlock('./content/scoped-js.md', 'source-js'));
               </script>
             </code-block>
           </div>
@@ -89,7 +89,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/04-scoped-js.md', 'output-html'));
+                console.log(await extractDemoBlock('./content/scoped-js.md', 'output-html'));
               </script>
             </code-block>
           </div>
@@ -99,7 +99,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/04-scoped-js.md', 'output-css'));
+                console.log(await extractDemoBlock('./content/scoped-js.md', 'output-css'));
               </script>
             </code-block>
           </div>
@@ -109,7 +109,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/04-scoped-js.md', 'output-js'));
+                console.log(await extractDemoBlock('./content/scoped-js.md', 'output-js'));
               </script>
             </code-block>
           </div>

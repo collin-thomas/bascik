@@ -1,0 +1,100 @@
+<div class="wrapper">
+
+  <!--
+    Sentinel: declares every class name the JS may add/toggle/replace at runtime
+    so bascik includes them in the scoped class map. Without this, dynamically-
+    referenced class names that don't appear in any static class="…" attribute
+    are not scoped and therefore can't be rewritten in JS.
+
+    The hidden input with name="email" ensures setAttribute("name", "email")
+    is also scoped (bascik only scopes name values it sees in static HTML).
+  -->
+  <span hidden class="active highlighted state-b"></span>
+  <input hidden name="email">
+
+  <!-- 1. Multi-arg classList.add / remove -->
+  <div class="section">
+    <h3>Multi-arg classList.add / remove</h3>
+    <div id="box" class="box">box</div>
+    <div class="btn-row">
+      <button id="add-btn" class="btn">classList.add("active", "highlighted")</button>
+      <button id="remove-btn" class="btn">classList.remove("active", "highlighted")</button>
+    </div>
+  </div>
+
+  <!-- 2. classList.toggle with boolean second arg -->
+  <div class="section">
+    <h3>classList.toggle(cls, force)</h3>
+    <div id="toggle-box" class="box">toggle-box</div>
+    <div class="btn-row">
+      <button id="toggle-on-btn" class="btn">toggle("active", true)</button>
+      <button id="toggle-off-btn" class="btn">toggle("active", false)</button>
+    </div>
+  </div>
+
+  <!-- 3. classList.replace -->
+  <div class="section">
+    <h3>classList.replace</h3>
+    <div id="replace-box" class="box state-a">replace-box (state-a)</div>
+    <div class="btn-row">
+      <button id="a-to-b-btn" class="btn">replace("state-a", "state-b")</button>
+      <button id="b-to-a-btn" class="btn">replace("state-b", "state-a")</button>
+    </div>
+  </div>
+
+  <!-- 4. setAttribute("name") -->
+  <div class="section">
+    <h3>setAttribute("name", …)</h3>
+    <input id="field" name="username" class="field" value="test input" readonly>
+    <p id="name-display" class="status">name = "username"</p>
+    <div class="btn-row">
+      <button id="set-name-btn" class="btn">setAttribute("name", "email")</button>
+      <button id="reset-name-btn" class="btn">setAttribute("name", "username")</button>
+    </div>
+  </div>
+
+  <script>
+    const box = document.getElementById("box");
+    const toggleBox = document.getElementById("toggle-box");
+    const replaceBox = document.getElementById("replace-box");
+    const field = document.getElementById("field");
+    const nameDisplay = document.getElementById("name-display");
+
+    // 1. Multi-arg classList.add / remove
+    document.getElementById("add-btn").addEventListener("click", () => {
+      box.classList.add("active", "highlighted");
+    });
+    document.getElementById("remove-btn").addEventListener("click", () => {
+      box.classList.remove("active", "highlighted");
+    });
+
+    // 2. classList.toggle with boolean second arg
+    document.getElementById("toggle-on-btn").addEventListener("click", () => {
+      toggleBox.classList.toggle("active", true);
+    });
+    document.getElementById("toggle-off-btn").addEventListener("click", () => {
+      toggleBox.classList.toggle("active", false);
+    });
+
+    // 3. classList.replace
+    document.getElementById("a-to-b-btn").addEventListener("click", () => {
+      replaceBox.classList.replace("state-a", "state-b");
+      replaceBox.textContent = "replace-box (state-b)";
+    });
+    document.getElementById("b-to-a-btn").addEventListener("click", () => {
+      replaceBox.classList.replace("state-b", "state-a");
+      replaceBox.textContent = "replace-box (state-a)";
+    });
+
+    // 4. setAttribute("name")
+    document.getElementById("set-name-btn").addEventListener("click", () => {
+      field.setAttribute("name", "email");
+      nameDisplay.textContent = `name = "${field.name}"`;
+    });
+    document.getElementById("reset-name-btn").addEventListener("click", () => {
+      field.setAttribute("name", "username");
+      nameDisplay.textContent = `name = "${field.name}"`;
+    });
+  </script>
+
+</div>

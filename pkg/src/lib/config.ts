@@ -20,6 +20,7 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild"> = {
   skipTranspilingElementContents: ["code"],
   deduplicateCss: true,
   minifyStyles: true,
+  minifyScripts: true,
   obfuscateAttributeNames: true,
   cacheHttp: false,
   verboseLogging: false,
@@ -28,6 +29,7 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild"> = {
     robots: true,
   },
   triggerTranspile: [],
+  inlineStyles: [],
 };
 
 const initBascikConfig = (

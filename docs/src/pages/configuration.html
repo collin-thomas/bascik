@@ -22,7 +22,7 @@
         <p class="page-intro">Create a <code>bascik.config.js</code> file in your project root to override any default
           settings.</p>
 
-        <!-- Content rendered from docs/content/11-config.md at build time.
+        <!-- Content rendered from docs/content/config.md at build time.
              To update page content, edit the MD file — not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
@@ -30,7 +30,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/11-config.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/config.md', { skipFirstHeading: true }));
         </script>
 
         <script data-bascik-build>

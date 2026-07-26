@@ -76,7 +76,7 @@ import {
   extractInheritableAttributes,
   mergeAttributesOntoRoot,
 } from "./components.js";
-import { namespaceScriptTags, prefixElementAttribute } from "./javascript.js";
+import { namespaceScriptTags, prefixElementAttribute, minifyJs } from "./javascript.js";
 import { deduplicateCss, minifyCss } from "./styles.js";
 import { executeBuildScripts } from "./build-scripts.js";
 import { getUniqueId } from "./names.js";
@@ -141,6 +141,51 @@ const liveReloadScript = `
   })();
 </script>
 `;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Script minification
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Resolve the `minifyScripts` config value to a concrete async minifier
+ * function, or `null` when minification is disabled.
+ */
+const resolveScriptMinifier = (): ((code: string) => Promise<string>) | null => {
+  const cfg = BascikConfig.minifyScripts;
+  if (!cfg) return null;
+  const fn = cfg === true ? minifyJs : cfg;
+  return async (code: string) => fn(code);
+};
+
+/**
+ * Minify the content of every inline `<script>` tag in `html` (excluding
+ * external scripts and non-JS types such as application/ld+json).
+ */
+const minifyScriptTagsInHtml = async (
+  html: string,
+  minifyFn: (code: string) => string | Promise<string>,
+): Promise<string> => {
+  const regex = /(<script\b[^>]*>)([\s\S]*?)(<\/script>)/gi;
+  const ops: Array<{ index: number; len: number; open: string; code: string; close: string }> = [];
+  let m: RegExpExecArray | null;
+  while ((m = regex.exec(html)) !== null) {
+    const [full, open, code, close] = m as unknown as [string, string, string, string];
+    // Skip non-JS types (e.g. application/ld+json, text/template)
+    const typeMatch = open.match(/type\s*=\s*["']?([^"'>\s]+)["']?/i);
+    if (typeMatch && typeMatch[1].toLowerCase() !== "text/javascript") continue;
+    // Skip external scripts — no inline content to minify
+    if (/\bsrc\s*=/i.test(open)) continue;
+    ops.push({ index: m.index, len: full.length, open, code, close });
+  }
+  if (!ops.length) return html;
+  const minified = await Promise.all(ops.map(({ code }) => minifyFn(code)));
+  let result = html;
+  for (let i = ops.length - 1; i >= 0; i--) {
+    const { index, len, open, close } = ops[i];
+    result = result.slice(0, index) + `${open}${minified[i]}${close}` + result.slice(index + len);
+  }
+  return result;
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Pipeline utilities
@@ -427,7 +472,27 @@ export const pageProcessing = async (
 
   // Deduplicate CSS — each component's styles included only once even if used many times
   const componentCss = deduplicateCss([...usedComponents, ...headUsedComponents], BascikConfig.deduplicateCss);
-  let transpiledHead = `${transpiledHeadContent}
+
+  // Read and inline any global stylesheets configured via `inlineStyles`.
+  // Global styles are injected before component styles so component rules win.
+  let globalStylesHtml = "";
+  if (BascikConfig.inlineStyles && BascikConfig.inlineStyles.length > 0) {
+    const sheets = await Promise.all(
+      BascikConfig.inlineStyles.map(async (filePath) => {
+        try {
+          const css = (await readFile(filePath)).toString();
+          return BascikConfig.minifyStyles ? minifyCss(css) : css;
+        } catch (error) {
+          console.warn(`[bascik] inlineStyles: could not read "${filePath}":`, (error as Error).message);
+          return "";
+        }
+      }),
+    );
+    const combined = sheets.filter(Boolean).join(" ");
+    if (combined) globalStylesHtml = `<style>${combined}</style>`;
+  }
+
+  let transpiledHead = `${transpiledHeadContent}${globalStylesHtml}
     <style>
     ${BascikConfig.minifyStyles ? minifyCss(componentCss) : componentCss}
     </style>`;
@@ -449,6 +514,13 @@ export const pageProcessing = async (
   // Minify the body AFTER component resolution so that <pre> blocks from resolved
   // components (e.g. <code-block> → <pre><code>…</code></pre>) are preserved intact.
   transpiledHtmlBody = minifyHtml(transpiledHtmlBody);
+
+  // Minify inline <script> content when configured.
+  const jsMinifier = resolveScriptMinifier();
+  if (jsMinifier) {
+    transpiledHtmlBody = await minifyScriptTagsInHtml(transpiledHtmlBody, jsMinifier);
+    transpiledHead = await minifyScriptTagsInHtml(transpiledHead, jsMinifier);
+  }
 
   // Puts our processed markup back between the <body></body> tags
   let distHtml = htmlWithBuildOutput

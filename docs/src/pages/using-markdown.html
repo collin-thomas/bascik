@@ -147,7 +147,7 @@ stays **plain HTML**.
           </div>
         </section>
 
-        <!-- Content rendered from docs/content/18-using-markdown.md at build time.
+        <!-- Content rendered from docs/content/using-markdown.md at build time.
              To update page content, edit the MD file — not this file.
              The MD file also feeds into llms.txt via scripts/generate-llms-txt.mjs. -->
         <script data-bascik-build>
@@ -156,7 +156,7 @@ stays **plain HTML**.
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/18-using-markdown.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/using-markdown.md', { skipFirstHeading: true }));
         </script>
 
         <script data-bascik-build>

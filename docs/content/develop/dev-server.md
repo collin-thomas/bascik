@@ -94,8 +94,8 @@ The live-reload mechanism uses Server-Sent Events (SSE) rather than WebSockets t
 })();
 ```
 
-This script is only present in dev mode. The build pipeline strips it via the `data-bascik-dev-only` filter.
+This script is only present in dev mode. The build pipeline does not inject it during production builds.
 
 ## Build Mode Differences
 
-When `--build` is passed (or `BASCIK_BUILD=1` is set), the server is never started. The watch system still runs, but in non-persistent mode so chokidar exits after processing all initial file events. The live-reload script is not injected, and all `data-bascik-dev-only` script tags are removed from output.
+When `--build` is passed (or `BASCIK_BUILD=1` is set), the server is never started. The watch system still runs, but in non-persistent mode so chokidar exits after processing all initial file events. The live-reload script is not injected.

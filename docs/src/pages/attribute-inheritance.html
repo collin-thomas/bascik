@@ -23,7 +23,7 @@
           (<code>data-bascik-*</code>) is automatically merged onto the component's root element. This is analogous to
           Vue's "fallthrough attributes".</p>
 
-        <!-- Content rendered from docs/content/07-attribute-inheritance.md at build time.
+        <!-- Content rendered from docs/content/attribute-inheritance.md at build time.
              To update page content, edit the MD file — not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
@@ -31,7 +31,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/07-attribute-inheritance.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/attribute-inheritance.md', { skipFirstHeading: true }));
         </script>
 
         <component-demo data-bascik-prop-file="src/components/feature-card/">
@@ -47,7 +47,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/07-attribute-inheritance.md', 'source-html'));
+                console.log(await extractDemoBlock('./content/attribute-inheritance.md', 'source-html'));
               </script>
             </code-block>
           </div>
@@ -57,7 +57,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/07-attribute-inheritance.md', 'output-html'));
+                console.log(await extractDemoBlock('./content/attribute-inheritance.md', 'output-html'));
               </script>
             </code-block>
           </div>
