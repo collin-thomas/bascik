@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Migrating from Astro — Bascik Docs</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+
+    <style>
+    
+
+.bascik__docs-nav__dnav {
+  background: rgba(24,25,27,0.9);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+
+.bascik__docs-nav__dnav-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.bascik__docs-nav__dnav-logo {
+  text-decoration: none;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  transition: filter .15s;
+}
+
+.bascik__docs-nav__dnav-logo:hover {
+  filter: brightness(1.12);
+  opacity: 1;
+}
+
+
+@media (min-width: 769px) {
+  .bascik__docs-nav__dnav-links-wrapper {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.bascik__docs-nav__dnav-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.bascik__docs-nav__dnav-links li a {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 5px 11px;
+  border-radius: var(--r-sm);
+  text-decoration: none;
+  display: block;
+  transition: color .15s, background .15s;
+}
+
+.bascik__docs-nav__dnav-links li a:hover {
+  color: var(--text);
+  background: var(--elevated);
+  opacity: 1;
+}
+
+.bascik__docs-nav__dnav-links li a[aria-current="page"] {
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid rgba(211,255,141,0.15);
+}
+
+
+.bascik__docs-nav__dnav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  z-index: 110;
+  border-radius: var(--r-sm);
+  transition: background .15s;
+}
+
+.bascik__docs-nav__dnav-toggle:hover {
+  background: var(--elevated);
+}
+
+.bascik__docs-nav__dnav-toggle-icon {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--text-muted);
+  position: relative;
+  transition: background .15s;
+}
+
+.bascik__docs-nav__dnav-toggle-icon::before,
+.bascik__docs-nav__dnav-toggle-icon::after {
+  content: "";
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--text-muted);
+  position: absolute;
+  left: 0;
+  transition: transform .15s, top .15s;
+}
+
+.bascik__docs-nav__dnav-toggle-icon::before {
+  top: -6px;
+}
+
+.bascik__docs-nav__dnav-toggle-icon::after {
+  top: 6px;
+}
+
+
+.bascik__docs-nav__dnav-toggle[aria-expanded="true"] .bascik__docs-nav__dnav-toggle-icon { background: transparent; }
+.bascik__docs-nav__dnav-toggle[aria-expanded="true"] .bascik__docs-nav__dnav-toggle-icon::before { top: 0; transform: rotate(45deg); background: var(--text); }
+.bascik__docs-nav__dnav-toggle[aria-expanded="true"] .bascik__docs-nav__dnav-toggle-icon::after  { top: 0; transform: rotate(-45deg); background: var(--text); }
+
+.bascik__docs-nav__mobile-only-sections {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .bascik__docs-nav__dnav-inner {
+    padding: 12px 20px;
+  }
+
+  .bascik__docs-nav__dnav-toggle { display: block; }
+
+  
+  .bascik__docs-nav__dnav-links { display: none; }
+
+  
+  .bascik__docs-nav__dnav-links-wrapper {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: calc(100dvh - 57px);
+    overflow-y: auto;
+    padding: 20px 0 40px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+    z-index: 99;
+  }
+
+  .bascik__docs-nav__dnav-toggle[aria-expanded="true"] ~ .bascik__docs-nav__dnav-links-wrapper { display: flex; }
+
+  .bascik__docs-nav__mobile-only-sections {
+    display: block;
+    width: 100%;
+    padding: 0 20px;
+  }
+
+  .bascik__docs-nav__mobile-sep {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 16px 0 20px;
+  }
+
+  .bascik__docs-nav__mobile-sec-heading {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--accent);
+    margin-bottom: 12px;
+    margin-top: 24px;
+  }
+
+  .bascik__docs-nav__mobile-sec-heading:first-of-type { margin-top: 0; }
+
+  .bascik__docs-nav__mobile-sec-nav {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .bascik__docs-nav__mobile-sec-nav li { width: 100%; }
+
+  .bascik__docs-nav__mobile-sec-nav li a {
+    display: block;
+    padding: 8px 12px;
+    border-radius: var(--r-sm);
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color .15s, background .15s;
+  }
+
+  .bascik__docs-nav__mobile-sec-nav li a:hover {
+    color: var(--text);
+    background: var(--elevated);
+  }
+
+  .bascik__docs-nav__mobile-sec-nav li a[aria-current="page"] {
+    color: var(--accent) !important;
+    background: var(--accent-dim);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: rgba(211, 255, 141, 0.4);
+    text-underline-offset: 4px;
+  }
+}
+
+
+
+ .bascik__docs-logo__dlogo {
+  display: block;
+}
+ 
+
+.bascik__docs-sidebar__docs-sidebar {
+  border-right: 1px solid var(--border);
+  padding: 32px 20px;
+  position: sticky;
+  top: 57px;
+  height: calc(100vh - 57px);
+  overflow-y: auto;
+}
+
+.bascik__docs-sidebar__sidebar-heading {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  margin-top: 20px;
+}
+
+.bascik__docs-sidebar__sidebar-heading:first-child { margin-top: 0; }
+
+.bascik__docs-sidebar__sidebar-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bascik__docs-sidebar__sidebar-nav li {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bascik__docs-sidebar__sidebar-nav li a {
+  display: block;
+  padding: 5px 10px;
+  border-radius: var(--r-sm);
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color .15s, background .15s;
+}
+
+.bascik__docs-sidebar__sidebar-nav li a:hover {
+  color: var(--text);
+  background: var(--elevated);
+  opacity: 1;
+}
+
+.bascik__docs-sidebar__sidebar-nav li a[aria-current="page"] {
+  color: var(--accent) !important;
+  background: var(--accent-dim);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(211, 255, 141, 0.4);
+  text-underline-offset: 4px;
+}
+
+@media (max-width: 768px) {
+  .bascik__docs-sidebar__docs-sidebar {
+    display: none !important;
+  }
+}
+ .bascik__code-block__cblock {
+  background: #0d0e0f;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+
+.bascik__code-block__cblock-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: rgba(255,255,255,0.025);
+  border-bottom: 1px solid var(--border);
+}
+
+.bascik__code-block__cblock-lang {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--accent);
+}
+
+.bascik__code-block__cblock-file {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.bascik__code-block__cblock pre {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 18px 22px;
+  margin: 0;
+}
+
+.bascik__code-block__cblock pre code {
+  font-size: 0.82rem;
+  color: #cdd6f4;
+  line-height: 1.7;
+  background: none;
+  border: none;
+  padding: 0;
+}
+ .bascik__docs-footer__dfooter {
+  border-top: 1px solid var(--border);
+  padding: 56px 0 0;
+  margin-top: 80px;
+}
+
+
+.bascik__docs-footer__dfooter-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+.bascik__docs-footer__dfooter-upper {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 48px;
+  padding-bottom: 48px;
+}
+
+.bascik__docs-footer__dfooter-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.bascik__docs-footer__dfooter-logo {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  transition: filter .15s;
+}
+
+.bascik__docs-footer__dfooter-logo:hover {
+  filter: brightness(1.12);
+  opacity: 1;
+}
+
+.bascik__docs-footer__dfooter-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.bascik__docs-footer__dfooter-made-by {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.bascik__docs-footer__dfooter-made-by a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: opacity .15s;
+}
+
+.bascik__docs-footer__dfooter-made-by a:hover { opacity: 0.8; }
+
+
+.bascik__docs-footer__dfooter-sitemap {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 28px 16px;
+}
+
+.bascik__docs-footer__dfooter-col { align-self: start; }
+
+.bascik__docs-footer__dfooter-col-heading {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--accent);
+  margin: 0 0 10px;
+}
+
+.bascik__docs-footer__dfooter-col-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bascik__docs-footer__dfooter-col-links a {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color .15s;
+}
+
+.bascik__docs-footer__dfooter-col-links a:hover {
+  color: var(--text);
+  opacity: 1;
+}
+
+.bascik__docs-footer__dfooter-bottom {
+  border-top: 1px solid var(--border);
+  padding: 16px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.bascik__docs-footer__dfooter-copy {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.bascik__docs-footer__dfooter-copy a {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color .15s;
+}
+
+.bascik__docs-footer__dfooter-copy a:hover {
+  color: var(--accent);
+  opacity: 1;
+}
+
+.bascik__docs-footer__dfooter-links {
+  display: flex;
+  gap: 20px;
+}
+
+.bascik__docs-footer__dfooter-links a {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color .15s;
+}
+
+.bascik__docs-footer__dfooter-links a:hover {
+  color: var(--accent);
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .bascik__docs-footer__dfooter-upper {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+    </style></head>
+
+<body><nav class="bascik__docs-nav__dnav"><div class="bascik__docs-nav__dnav-inner"><a href="/" class="bascik__docs-nav__dnav-logo" aria-label="Bascik home"><svg class="bascik__docs-logo__dlogo" viewBox="0 0 114 28" height="26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><polygon points="7,0 114,0 107,28 0,28" fill="#d3ff8d" /><rect x="18" y="8" width="2" height="12" rx="1" fill="#0e0f10"><animate attributeName="opacity" values="0.9;0.9;0;0" keyTimes="0;0.49;0.5;1" dur="1.1s" repeatCount="indefinite" /></rect><text x="25" y="20" font-family="'Courier New',Courier,monospace" font-size="17" font-weight="800" fill="#0e0f10" letter-spacing="2">BASCIK</text></svg></a><button type="button" class="bascik__docs-nav__dnav-toggle" aria-label="Toggle navigation" aria-expanded="false"><span class="bascik__docs-nav__dnav-toggle-icon"></span></button><div class="bascik__docs-nav__dnav-links-wrapper"><ul class="bascik__docs-nav__dnav-links"><li><a href="/why-bascik">Why Bascik</a></li><li><a href="/getting-started">Docs</a></li><li><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener">GitHub</a></li></ul><div class="bascik__docs-nav__mobile-only-sections"><hr class="bascik__docs-nav__mobile-sep" /><p class="bascik__docs-nav__mobile-sec-heading">Philosophy</p><ul class="bascik__docs-nav__mobile-sec-nav"><li><a href="/why-bascik">Why Bascik</a></li><li><a href="/performance">Lighthouse 100s</a></li><li><a href="/vs-frameworks">Bascik vs Frameworks</a></li></ul><p class="bascik__docs-nav__mobile-sec-heading">Start Here</p><ul class="bascik__docs-nav__mobile-sec-nav"><li><a href="/getting-started">Getting Started</a></li><li><a href="/cli">CLI / Command Line</a></li><li><a href="/configuration">Configuration</a></li></ul><p class="bascik__docs-nav__mobile-sec-heading">Features</p><ul class="bascik__docs-nav__mobile-sec-nav"><li><a href="/slots">Slots</a></li><li><a href="/props">Props</a></li><li><a href="/attribute-inheritance">Attribute Inheritance</a></li><li><a href="/scoped-styles">Scoped Styles</a></li><li><a href="/scoped-javascript">Scoped JavaScript</a></li><li><a href="/build-scripts">Build Scripts</a></li><li><a href="/sitemap">Sitemap & robots.txt</a></li><li><a href="/libraries">JavaScript Libraries</a></li></ul><p class="bascik__docs-nav__mobile-sec-heading">Reference</p><ul class="bascik__docs-nav__mobile-sec-nav"><li><a href="/compatibility">Scoping Compatibility</a></li><li><a href="/copilot-skill">AI Skill</a></li></ul><p class="bascik__docs-nav__mobile-sec-heading">Recipes</p><ul class="bascik__docs-nav__mobile-sec-nav"><li><a href="/using-markdown">Using Markdown</a></li></ul><p class="bascik__docs-nav__mobile-sec-heading">Migration</p><ul class="bascik__docs-nav__mobile-sec-nav"><li><a href="/migrate">Migration Overview</a></li><li><a href="/migrate/from-react">From React</a></li><li><a href="/migrate/from-next">From Next.js</a></li><li><a href="/migrate/from-eleventy">From Eleventy</a></li><li><a href="/migrate/from-astro">From Astro</a></li></ul><p class="bascik__docs-nav__mobile-sec-heading">Developers</p><ul class="bascik__docs-nav__mobile-sec-nav"><li><a href="/develop">Developer Overview</a></li><li><a href="/develop/architecture">Architecture</a></li><li><a href="/develop/transpilation-pipeline">Transpilation Pipeline</a></li><li><a href="/develop/scoping-system">Scoping System</a></li><li><a href="/develop/dev-server">Dev Server</a></li><li><a href="/develop/testing">Testing</a></li></ul><hr class="bascik__docs-nav__mobile-sep" /><ul class="bascik__docs-nav__mobile-sec-nav"><li><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener">GitHub &#x2197;</a></li></ul></div></div></div></nav><div class="container"><div class="docs-layout"><aside class="bascik__docs-sidebar__docs-sidebar"><p class="bascik__docs-sidebar__sidebar-heading">Philosophy</p><ul class="bascik__docs-sidebar__sidebar-nav"><li><a href="/why-bascik">Why Bascik</a></li><li><a href="/performance">Lighthouse 100s</a></li><li><a href="/vs-frameworks">Bascik vs Frameworks</a></li></ul><p class="bascik__docs-sidebar__sidebar-heading">Start Here</p><ul class="bascik__docs-sidebar__sidebar-nav"><li><a href="/getting-started">Getting Started</a></li><li><a href="/cli">CLI / Command Line</a></li><li><a href="/configuration">Configuration</a></li></ul><p class="bascik__docs-sidebar__sidebar-heading">Features</p><ul class="bascik__docs-sidebar__sidebar-nav"><li><a href="/slots">Slots</a></li><li><a href="/props">Props</a></li><li><a href="/attribute-inheritance">Attribute Inheritance</a></li><li><a href="/scoped-styles">Scoped Styles</a></li><li><a href="/scoped-javascript">Scoped JavaScript</a></li><li><a href="/build-scripts">Build Scripts</a></li><li><a href="/sitemap">Sitemap & robots.txt</a></li><li><a href="/libraries">JavaScript Libraries</a></li></ul><p class="bascik__docs-sidebar__sidebar-heading">Reference</p><ul class="bascik__docs-sidebar__sidebar-nav"><li><a href="/compatibility">Scoping Compatibility</a></li><li><a href="/copilot-skill">AI Skill</a></li></ul><p class="bascik__docs-sidebar__sidebar-heading">Recipes</p><ul class="bascik__docs-sidebar__sidebar-nav"><li><a href="/using-markdown">Using Markdown</a></li></ul><p class="bascik__docs-sidebar__sidebar-heading">Migration</p><ul class="bascik__docs-sidebar__sidebar-nav"><li><a href="/migrate">Migration Overview</a></li><li><a href="/migrate/from-react">From React</a></li><li><a href="/migrate/from-next">From Next.js</a></li><li><a href="/migrate/from-eleventy">From Eleventy</a></li><li><a href="/migrate/from-astro">From Astro</a></li></ul><p class="bascik__docs-sidebar__sidebar-heading">Developers</p><ul class="bascik__docs-sidebar__sidebar-nav"><li><a href="/develop">Developer Overview</a></li><li><a href="/develop/architecture">Architecture</a></li><li><a href="/develop/transpilation-pipeline">Transpilation Pipeline</a></li><li><a href="/develop/scoping-system">Scoping System</a></li><li><a href="/develop/dev-server">Dev Server</a></li><li><a href="/develop/testing">Testing</a></li></ul></aside><main class="docs-content"><p class="section-label">Migration</p><h1>Migrating from Astro</h1><p class="page-intro">Astro and Bascik are both build-time component systems that output zero-JS HTML by default. The concepts translate closely: <code>.astro</code> files become <code>.html</code> component files, frontmatter code blocks become <code>&lt;script data-bascik-build&gt;</code> tags, <code>Astro.props</code> becomes <code>data-bascik-prop-*</code> attributes, and Astro's <code>&lt;slot /&gt;</code> becomes Bascik's <code>data-bascik-slot</code> attribute. </p><p>Astro and Bascik are both build-time component systems that output zero-JS HTML by default. The concepts translate closely: <code>.astro</code> files become <code>.html</code> component files, frontmatter code blocks become <code>&lt;script data-bascik-build&gt;</code> tags, <code>Astro.props</code> becomes <code>data-bascik-prop-*</code> attributes, and Astro&#39;s <code>&lt;slot /&gt;</code> becomes Bascik&#39;s <code>data-bascik-slot</code> attribute.</p><h2>.astro Files → .html Component Files</h2><p>Rename the file from <code>ComponentName.astro</code> to the hyphenated tag name <code>component-name.html</code>. Move it to <code>src/components/</code>. Remove the frontmatter fences (<code>---</code>) and convert the template HTML — the Bascik component file contains only the HTML markup of the component.</p><div class="bascik__code-block__cblock" id="bascik__code-block__0cfc69a8__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">text</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">Before (Astro)              After (Bascik)
+src/                        src/components/
+  components/                 site-nav/
+    SiteNav.astro               site-nav.html
+    Card.astro                  site-nav.css  ← was &lt;style&gt; in .astro
+  pages/                      card/
+    index.astro                 card.html
+    about.astro                 card.css
+                            src/pages/
+                              index.html
+                              about.html</code></pre></div><h2>Frontmatter → <code>&lt;script data-bascik-build&gt;</code></h2><p>Astro&#39;s frontmatter block (<code>---</code>) runs on the server at build time. The direct equivalent in Bascik is <code>&lt;script data-bascik-build&gt;</code>. The script runs as a Node.js ESM module at build time; its stdout is injected into the page in place of the tag. Top-level <code>import</code> and top-level <code>await</code> are supported.</p><div class="bascik__code-block__cblock" id="bascik__code-block__fd38a8c9__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">astro</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;!-- src/pages/blog.astro (Astro — before) --&gt;
+---
+import { getCollection } from &#39;astro:content&#39;;
+const posts = await getCollection(&#39;blog&#39;);
+---
+
+&lt;ul&gt;
+  {posts.map(post =&gt; (
+    &lt;li&gt;&lt;a href={`/blog/${post.slug}`}&gt;{post.data.title}&lt;/a&gt;&lt;/li&gt;
+  ))}
+&lt;/ul&gt;</code></pre></div><div class="bascik__code-block__cblock" id="bascik__code-block__5a02bc43__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">html</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;!-- src/pages/blog.html (Bascik — after) --&gt;
+&lt;ul&gt;
+  &lt;script data-bascik-build&gt;
+    import { readdir, readFile } from &#39;node:fs/promises&#39;;
+    import matter from &#39;gray-matter&#39;;
+    const files = (await readdir(&#39;./content/blog&#39;)).filter(f =&gt; f.endsWith(&#39;.md&#39;));
+    const items = await Promise.all(files.map(async f =&gt; {
+      const { data } = matter(await readFile(`./content/blog/${f}`, &#39;utf8&#39;));
+      const slug = f.replace(&#39;.md&#39;, &#39;&#39;);
+      return `&lt;li&gt;&lt;a href=&quot;/blog/${slug}&quot;&gt;${data.title}&lt;/a&gt;&lt;/li&gt;`;
+    }));
+    console.log(items.join(&#39;\n&#39;));
+  &lt;/script&gt;
+&lt;/ul&gt;</code></pre></div><div class="callout"><p><strong>No Astro content helpers:</strong> Bascik has no equivalent of <code>getCollection</code> or <code>astro:content</code>. Read Markdown files directly with Node.js <code>fs</code> and a Markdown parser such as <code>marked</code> or <code>gray-matter</code>.</p></div><h2>Astro.props → data-bascik-prop-*</h2><p>Astro&#39;s typed <code>Astro.props</code> becomes Bascik&#39;s <code>data-bascik-prop-*</code> attribute system. Add the attribute (with no value) on the receiver element inside the component, then supply the text value on the component tag at the usage site.</p><div class="bascik__code-block__cblock" id="bascik__code-block__4c49158b__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">astro</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;!-- src/components/Card.astro (Astro — before) --&gt;
+---
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
+---
+
+&lt;div class=&quot;card&quot;&gt;
+  &lt;h3&gt;{title}&lt;/h3&gt;
+  &lt;p&gt;{description}&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;!-- Usage --&gt;
+&lt;Card title=&quot;Getting Started&quot; description=&quot;Up and running in minutes.&quot; /&gt;</code></pre></div><div class="bascik__code-block__cblock" id="bascik__code-block__07c839c4__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">html</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;!-- src/components/my-card/my-card.html (Bascik — after) --&gt;
+&lt;div class=&quot;card&quot;&gt;
+  &lt;h3 data-bascik-prop-title&gt;&lt;/h3&gt;
+  &lt;p data-bascik-prop-description&gt;&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;!-- Usage --&gt;
+&lt;my-card
+  data-bascik-prop-title=&quot;Getting Started&quot;
+  data-bascik-prop-description=&quot;Up and running in minutes.&quot;
+&gt;&lt;/my-card&gt;</code></pre></div><div class="callout"><p><strong>Text only:</strong> Bascik props accept plain text strings. Passing JSX, objects, arrays, or HTML content as a prop has no equivalent — use a slot for rich HTML content instead.</p></div><h2><code>&lt;slot /&gt;</code> → data-bascik-slot</h2><p>Astro&#39;s default <code>&lt;slot /&gt;</code> maps to a Bascik element with the <code>data-bascik-slot</code> attribute. Fallback content goes inside that element, equivalent to Astro&#39;s <code>&lt;slot&gt;Fallback&lt;/slot&gt;</code>.</p><div class="bascik__code-block__cblock" id="bascik__code-block__93e03599__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">astro</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;!-- src/components/Section.astro (Astro — before) --&gt;
+&lt;section class=&quot;section&quot;&gt;
+  &lt;slot /&gt;
+&lt;/section&gt;
+
+&lt;!-- Usage --&gt;
+&lt;Section&gt;&lt;p&gt;Section content.&lt;/p&gt;&lt;/Section&gt;</code></pre></div><div class="bascik__code-block__cblock" id="bascik__code-block__8add2b01__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">html</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;!-- src/components/my-section/my-section.html (Bascik — after) --&gt;
+&lt;section class=&quot;section&quot;&gt;
+  &lt;div data-bascik-slot&gt;&lt;/div&gt;
+&lt;/section&gt;
+
+&lt;!-- Usage --&gt;
+&lt;my-section&gt;&lt;p&gt;Section content.&lt;/p&gt;&lt;/my-section&gt;</code></pre></div><h2>Named Slots → data-bascik-slot=&quot;name&quot;</h2><p>Astro&#39;s <code>&lt;slot name=&quot;header&quot; /&gt;</code> maps to a receiver element with <code>data-bascik-slot=&quot;header&quot;</code> inside the component. Pass content from the usage site by adding <code>data-bascik-slot=&quot;header&quot;</code> on the element you want to inject.</p><div class="bascik__code-block__cblock" id="bascik__code-block__ba990a90__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">astro</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;!-- src/components/PageLayout.astro (Astro — before) --&gt;
+&lt;div class=&quot;layout&quot;&gt;
+  &lt;header&gt;&lt;slot name=&quot;header&quot; /&gt;&lt;/header&gt;
+  &lt;main&gt;&lt;slot /&gt;&lt;/main&gt;
+  &lt;footer&gt;&lt;slot name=&quot;footer&quot; /&gt;&lt;/footer&gt;
+&lt;/div&gt;
+
+&lt;!-- Usage --&gt;
+&lt;PageLayout&gt;
+  &lt;h1 slot=&quot;header&quot;&gt;Page Title&lt;/h1&gt;
+  &lt;p&gt;Main content.&lt;/p&gt;
+  &lt;p slot=&quot;footer&quot;&gt;© 2025 Acme&lt;/p&gt;
+&lt;/PageLayout&gt;</code></pre></div><div class="bascik__code-block__cblock" id="bascik__code-block__27b52d15__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">html</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;!-- src/components/page-layout/page-layout.html (Bascik — after) --&gt;
+&lt;div class=&quot;layout&quot;&gt;
+  &lt;header&gt;&lt;div data-bascik-slot=&quot;header&quot;&gt;&lt;/div&gt;&lt;/header&gt;
+  &lt;main&gt;&lt;div data-bascik-slot&gt;&lt;/div&gt;&lt;/main&gt;
+  &lt;footer&gt;&lt;div data-bascik-slot=&quot;footer&quot;&gt;&lt;/div&gt;&lt;/footer&gt;
+&lt;/div&gt;
+
+&lt;!-- Usage --&gt;
+&lt;page-layout&gt;
+  &lt;p&gt;Main content.&lt;/p&gt;
+  &lt;div data-bascik-slot=&quot;header&quot;&gt;&lt;h1&gt;Page Title&lt;/h1&gt;&lt;/div&gt;
+  &lt;div data-bascik-slot=&quot;footer&quot;&gt;&lt;p&gt;© 2025 Acme&lt;/p&gt;&lt;/div&gt;
+&lt;/page-layout&gt;</code></pre></div><h2>Astro Scoped <code>&lt;style&gt;</code> → Paired .css Files</h2><p>Astro scopes <code>&lt;style&gt;</code> blocks inside <code>.astro</code> files to that component. Bascik&#39;s equivalent is a paired <code>.css</code> file in the same directory as the component HTML. Remove the <code>&lt;style&gt;</code> block from the component file and paste its contents into the <code>.css</code> file. Class names, element selectors, and <code>@keyframes</code> are scoped automatically at build time — no changes to selectors needed.</p><div class="bascik__code-block__cblock" id="bascik__code-block__19b028c4__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">astro</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;!-- SiteNav.astro (Astro — before) --&gt;
+&lt;nav class=&quot;nav&quot;&gt;
+  &lt;a href=&quot;/&quot; class=&quot;logo&quot;&gt;Acme&lt;/a&gt;
+&lt;/nav&gt;
+
+&lt;style&gt;
+  .nav { display: flex; gap: 16px; }
+  .logo { font-weight: bold; }
+&lt;/style&gt;</code></pre></div><div class="bascik__code-block__cblock" id="bascik__code-block__c4f8ae69__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">html</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;!-- src/components/site-nav/site-nav.html (Bascik — after) --&gt;
+&lt;nav class=&quot;nav&quot;&gt;
+  &lt;a href=&quot;/&quot; class=&quot;logo&quot;&gt;Acme&lt;/a&gt;
+&lt;/nav&gt;</code></pre></div><div class="bascik__code-block__cblock" id="bascik__code-block__e68afc29__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">css</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">/* src/components/site-nav/site-nav.css */
+.nav { display: flex; gap: 16px; }
+.logo { font-weight: bold; }</code></pre></div><h2>Content Collections → <code>&lt;script data-bascik-build&gt;</code></h2><p>Astro&#39;s Content Collections provide a typed, validated interface to Markdown and MDX files. In Bascik, read the same source files directly from the filesystem in a build script using Node.js <code>fs</code> and a Markdown/front-matter parser.</p><div class="bascik__code-block__cblock" id="bascik__code-block__9f379068__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">astro</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;!-- src/pages/blog/[slug].astro (Astro — before) --&gt;
+---
+import { getCollection, getEntry } from &#39;astro:content&#39;;
+
+export async function getStaticPaths() {
+  const posts = await getCollection(&#39;blog&#39;);
+  return posts.map(post =&gt; ({ params: { slug: post.slug }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+---
+&lt;h1&gt;{post.data.title}&lt;/h1&gt;
+&lt;Content /&gt;</code></pre></div><p>In Bascik, generate one page file per slug before running the build:</p><div class="bascik__code-block__cblock" id="bascik__code-block__c3a624ca__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">js</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">// scripts/generate-blog.js
+import { readdir, readFile, writeFile, mkdir } from &#39;node:fs/promises&#39;;
+import matter from &#39;gray-matter&#39;;
+import { marked } from &#39;marked&#39;;
+
+await mkdir(&#39;./src/pages/blog&#39;, { recursive: true });
+const files = (await readdir(&#39;./content/blog&#39;)).filter(f =&gt; f.endsWith(&#39;.md&#39;));
+
+for (const file of files) {
+  const raw = await readFile(`./content/blog/${file}`, &#39;utf8&#39;);
+  const { data, content } = matter(raw);
+  const slug = file.replace(&#39;.md&#39;, &#39;&#39;);
+  const body = marked(content);
+
+  await writeFile(`./src/pages/blog/${slug}.html`, `&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+  &lt;title&gt;${data.title}&lt;/title&gt;
+  &lt;link rel=&quot;stylesheet&quot; href=&quot;/css/styles.css&quot; /&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;site-nav&gt;&lt;/site-nav&gt;
+  &lt;main class=&quot;prose&quot;&gt;
+    &lt;h1&gt;${data.title}&lt;/h1&gt;
+    ${body}
+  &lt;/main&gt;
+  &lt;site-footer&gt;&lt;/site-footer&gt;
+&lt;/body&gt;
+&lt;/html&gt;`);
+}</code></pre></div><div class="bascik__code-block__cblock" id="bascik__code-block__7ea96c4f__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">json</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">{
+  &quot;scripts&quot;: {
+    &quot;generate&quot;: &quot;node scripts/generate-blog.js&quot;,
+    &quot;dev&quot;: &quot;npm run generate &amp;&amp; bascik&quot;,
+    &quot;build&quot;: &quot;npm run generate &amp;&amp; bascik --build&quot;
+  }
+}</code></pre></div><h2>import.meta.env → process.env</h2><p>Astro uses <code>import.meta.env</code> for environment variables. Inside a <code>&lt;script data-bascik-build&gt;</code> block, use standard Node.js <code>process.env</code> instead. Runtime client-side scripts use <code>window</code> or data attributes to access values that were baked in at build time — there is no equivalent of Astro&#39;s <code>import.meta.env.PUBLIC_*</code> exposure to the browser.</p><div class="bascik__code-block__cblock" id="bascik__code-block__06b34205__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">astro</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;!-- Before (Astro frontmatter) --&gt;
+---
+const apiUrl = import.meta.env.API_URL;
+---</code></pre></div><div class="bascik__code-block__cblock" id="bascik__code-block__500449c0__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">html</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;!-- After (Bascik build script) --&gt;
+&lt;script data-bascik-build&gt;
+  const apiUrl = process.env.API_URL;
+  const data = await fetch(apiUrl).then(r =&gt; r.json());
+  console.log(`&lt;p&gt;${data.message}&lt;/p&gt;`);
+&lt;/script&gt;</code></pre></div><h2>MDX → HTML Component + Build Script</h2><p>Astro supports <code>.mdx</code> files as pages with embedded component usage. Bascik has no native MDX support. Convert MDX pages by processing the Markdown content with a build script and adding any interactive sections as plain Bascik components around the generated HTML.</p><div class="bascik__code-block__cblock" id="bascik__code-block__02e0c75f__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">mdx</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;!-- src/content/blog/intro.mdx (Astro — before) --&gt;
+---
+title: Introduction
+---
+
+import CodeExample from &#39;../components/CodeExample.astro&#39;;
+
+# Introduction
+
+Welcome to our docs.
+
+&lt;CodeExample lang=&quot;js&quot; code=&quot;console.log(&#39;hello&#39;)&quot; /&gt;</code></pre></div><div class="bascik__code-block__cblock" id="bascik__code-block__4789436e__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">html</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;!-- src/pages/blog/intro.html (Bascik — after) --&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+  &lt;title&gt;Introduction&lt;/title&gt;
+  &lt;link rel=&quot;stylesheet&quot; href=&quot;/css/styles.css&quot; /&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;site-nav&gt;&lt;/site-nav&gt;
+  &lt;main class=&quot;prose&quot;&gt;
+    &lt;script data-bascik-build&gt;
+      import { readFile } from &#39;node:fs/promises&#39;;
+      import { marked } from &#39;marked&#39;;
+      const md = await readFile(&#39;./content/blog/intro.md&#39;, &#39;utf8&#39;);
+      console.log(marked(md));
+    &lt;/script&gt;
+    &lt;code-example
+      data-bascik-prop-lang=&quot;js&quot;
+      data-bascik-prop-code=&quot;console.log(&#39;hello&#39;)&quot;
+    &gt;&lt;/code-example&gt;
+  &lt;/main&gt;
+  &lt;site-footer&gt;&lt;/site-footer&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre></div><p>The Markdown prose is rendered at build time by the build script and injected as HTML. Bascik component tags that follow (or are output by the build script) are then expanded in the next pass.</p><nav class="docs-pagination" aria-label="Page navigation"><a href="/migrate/from-eleventy" data-pg="prev"><span data-pg-dir>&#8592; Previous</span><span data-pg-label>From Eleventy</span></a><a href="/develop" data-pg="next"><span data-pg-dir>Next &#8594;</span><span data-pg-label>Developer Overview</span></a></nav></main></div></div><footer class="bascik__docs-footer__dfooter"><div class="bascik__docs-footer__dfooter-container"><div class="bascik__docs-footer__dfooter-upper"><div class="bascik__docs-footer__dfooter-brand"><a href="/" class="bascik__docs-footer__dfooter-logo" aria-label="Bascik home"><svg class="bascik__docs-logo__dlogo" viewBox="0 0 114 28" height="26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><polygon points="7,0 114,0 107,28 0,28" fill="#d3ff8d" /><rect x="18" y="8" width="2" height="12" rx="1" fill="#0e0f10"><animate attributeName="opacity" values="0.9;0.9;0;0" keyTimes="0;0.49;0.5;1" dur="1.1s" repeatCount="indefinite" /></rect><text x="25" y="20" font-family="'Courier New',Courier,monospace" font-size="17" font-weight="800" fill="#0e0f10" letter-spacing="2">BASCIK</text></svg></a><p class="bascik__docs-footer__dfooter-desc">HTML components.<br>Zero runtime.</p></div><div class="bascik__docs-footer__dfooter-sitemap"><div class="bascik__docs-footer__dfooter-col"><p class="bascik__docs-footer__dfooter-col-heading">Philosophy</p><ul class="bascik__docs-footer__dfooter-col-links"><li><a href="/why-bascik">Why Bascik</a></li><li><a href="/performance">Lighthouse 100s</a></li><li><a href="/vs-frameworks">Bascik vs Frameworks</a></li></ul></div><div class="bascik__docs-footer__dfooter-col"><p class="bascik__docs-footer__dfooter-col-heading">Start Here</p><ul class="bascik__docs-footer__dfooter-col-links"><li><a href="/getting-started">Getting Started</a></li><li><a href="/cli">CLI / Command Line</a></li><li><a href="/configuration">Configuration</a></li></ul></div><div class="bascik__docs-footer__dfooter-col"><p class="bascik__docs-footer__dfooter-col-heading">Features</p><ul class="bascik__docs-footer__dfooter-col-links"><li><a href="/slots">Slots</a></li><li><a href="/props">Props</a></li><li><a href="/attribute-inheritance">Attribute Inheritance</a></li><li><a href="/scoped-styles">Scoped Styles</a></li><li><a href="/scoped-javascript">Scoped JavaScript</a></li><li><a href="/build-scripts">Build Scripts</a></li><li><a href="/sitemap">Sitemap & robots.txt</a></li><li><a href="/libraries">JavaScript Libraries</a></li></ul></div><div class="bascik__docs-footer__dfooter-col"><p class="bascik__docs-footer__dfooter-col-heading">Reference</p><ul class="bascik__docs-footer__dfooter-col-links"><li><a href="/compatibility">Scoping Compatibility</a></li><li><a href="/copilot-skill">AI Skill</a></li></ul></div><div class="bascik__docs-footer__dfooter-col"><p class="bascik__docs-footer__dfooter-col-heading">Recipes</p><ul class="bascik__docs-footer__dfooter-col-links"><li><a href="/using-markdown">Using Markdown</a></li></ul></div><div class="bascik__docs-footer__dfooter-col"><p class="bascik__docs-footer__dfooter-col-heading">Migration</p><ul class="bascik__docs-footer__dfooter-col-links"><li><a href="/migrate">Migration Overview</a></li><li><a href="/migrate/from-react">From React</a></li><li><a href="/migrate/from-next">From Next.js</a></li><li><a href="/migrate/from-eleventy">From Eleventy</a></li><li><a href="/migrate/from-astro">From Astro</a></li></ul></div></div></div><div class="bascik__docs-footer__dfooter-bottom"><span class="bascik__docs-footer__dfooter-copy">&copy; 2026 <a href="https://rinsesoft.com" target="_blank" rel="noopener noreferrer">Rinsesoft</a>. Open source under AGPL-3.0. </span><div class="bascik__docs-footer__dfooter-links"><a href="https://rinsesoft.com" target="_blank" rel="noopener noreferrer">rinsesoft.com</a><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener noreferrer">GitHub</a><a href="https://github.com/collin-thomas/bascik/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">License</a></div></div></div></footer>
+<script>
+        (function() {
+          
+  (function () {
+    var toggle = document.querySelector('.bascik__docs-nav__dnav-toggle');
+    var wrapper = document.querySelector('.bascik__docs-nav__dnav-links-wrapper');
+    if (toggle && wrapper) {
+      toggle.addEventListener('click', function () {
+        var isOpen = toggle.getAttribute('aria-expanded') !== 'true';
+        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      });
+    }
+
+    var path = window.location.pathname;
+    document.querySelectorAll('.bascik__docs-nav__dnav a').forEach(function (a) {
+      var href = a.getAttribute('href');
+      if (!href || href.startsWith('http')) return;
+      var current = false;
+      if (href === '/why-bascik') {
+        current = (path === '/why-bascik');
+      } else if (href === '/getting-started' && a.closest('.bascik__docs-nav__dnav-links')) {
+        current = (path !== '' && path !== '/' && path !== '/why-bascik');
+      } else {
+        current = (href === path);
+      }
+      if (current) a.setAttribute('aria-current', 'page');
+    });
+  })();
+
+        })();
+        </script>
+<script>
+        (function() {
+          
+     (function () {
+          var path = window.location.pathname;
+          var sidebar = document.querySelector('.bascik__docs-sidebar__docs-sidebar');
+          if (sidebar) {
+               var a = sidebar.querySelector('a[href="' + path + '"]');
+               if (a) {
+                    a.setAttribute('aria-current', 'page');
+                    a.scrollIntoView({ block: 'nearest' });
+               }
+          }
+     })();
+
+        })();
+        </script>
+<script>
+  (function() {
+  const eventSource = new EventSource("/bascik-live-reload");
+  eventSource.onmessage = function(event) {
+    if (event.data === 'reload') {
+      window.location.reload();
+    }
+  };
+  eventSource.onerror = function(event) {
+    eventSource.close();
+    console.warn('Live-Reload Connection Lost: Start development server and refresh the page to restart live-reload.')
+  }
+  window.onbeforeunload = function () {
+    eventSource.close();
+  };
+  })();
+</script></body>
+
+</html>

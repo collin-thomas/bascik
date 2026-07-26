@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scoped Styles — Bascik Docs</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+
+    <style>
+    
+
+.bascik__docs-nav__dnav {
+  background: rgba(24,25,27,0.9);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+
+.bascik__docs-nav__dnav-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.bascik__docs-nav__dnav-logo {
+  text-decoration: none;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  transition: filter .15s;
+}
+
+.bascik__docs-nav__dnav-logo:hover {
+  filter: brightness(1.12);
+  opacity: 1;
+}
+
+
+@media (min-width: 769px) {
+  .bascik__docs-nav__dnav-links-wrapper {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.bascik__docs-nav__dnav-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.bascik__docs-nav__dnav-links li a {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 5px 11px;
+  border-radius: var(--r-sm);
+  text-decoration: none;
+  display: block;
+  transition: color .15s, background .15s;
+}
+
+.bascik__docs-nav__dnav-links li a:hover {
+  color: var(--text);
+  background: var(--elevated);
+  opacity: 1;
+}
+
+.bascik__docs-nav__dnav-links li a[aria-current="page"] {
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid rgba(211,255,141,0.15);
+}
+
+
+.bascik__docs-nav__dnav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  z-index: 110;
+  border-radius: var(--r-sm);
+  transition: background .15s;
+}
+
+.bascik__docs-nav__dnav-toggle:hover {
+  background: var(--elevated);
+}
+
+.bascik__docs-nav__dnav-toggle-icon {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--text-muted);
+  position: relative;
+  transition: background .15s;
+}
+
+.bascik__docs-nav__dnav-toggle-icon::before,
+.bascik__docs-nav__dnav-toggle-icon::after {
+  content: "";
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--text-muted);
+  position: absolute;
+  left: 0;
+  transition: transform .15s, top .15s;
+}
+
+.bascik__docs-nav__dnav-toggle-icon::before {
+  top: -6px;
+}
+
+.bascik__docs-nav__dnav-toggle-icon::after {
+  top: 6px;
+}
+
+
+.bascik__docs-nav__dnav-toggle[aria-expanded="true"] .bascik__docs-nav__dnav-toggle-icon { background: transparent; }
+.bascik__docs-nav__dnav-toggle[aria-expanded="true"] .bascik__docs-nav__dnav-toggle-icon::before { top: 0; transform: rotate(45deg); background: var(--text); }
+.bascik__docs-nav__dnav-toggle[aria-expanded="true"] .bascik__docs-nav__dnav-toggle-icon::after  { top: 0; transform: rotate(-45deg); background: var(--text); }
+
+.bascik__docs-nav__mobile-only-sections {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .bascik__docs-nav__dnav-inner {
+    padding: 12px 20px;
+  }
+
+  .bascik__docs-nav__dnav-toggle { display: block; }
+
+  
+  .bascik__docs-nav__dnav-links { display: none; }
+
+  
+  .bascik__docs-nav__dnav-links-wrapper {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: calc(100dvh - 57px);
+    overflow-y: auto;
+    padding: 20px 0 40px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+    z-index: 99;
+  }
+
+  .bascik__docs-nav__dnav-toggle[aria-expanded="true"] ~ .bascik__docs-nav__dnav-links-wrapper { display: flex; }
+
+  .bascik__docs-nav__mobile-only-sections {
+    display: block;
+    width: 100%;
+    padding: 0 20px;
+  }
+
+  .bascik__docs-nav__mobile-sep {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 16px 0 20px;
+  }
+
+  .bascik__docs-nav__mobile-sec-heading {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--accent);
+    margin-bottom: 12px;
+    margin-top: 24px;
+  }
+
+  .bascik__docs-nav__mobile-sec-heading:first-of-type { margin-top: 0; }
+
+  .bascik__docs-nav__mobile-sec-nav {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .bascik__docs-nav__mobile-sec-nav li { width: 100%; }
+
+  .bascik__docs-nav__mobile-sec-nav li a {
+    display: block;
+    padding: 8px 12px;
+    border-radius: var(--r-sm);
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color .15s, background .15s;
+  }
+
+  .bascik__docs-nav__mobile-sec-nav li a:hover {
+    color: var(--text);
+    background: var(--elevated);
+  }
+
+  .bascik__docs-nav__mobile-sec-nav li a[aria-current="page"] {
+    color: var(--accent) !important;
+    background: var(--accent-dim);
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: rgba(211, 255, 141, 0.4);
+    text-underline-offset: 4px;
+  }
+}
+
+
+
+ .bascik__docs-logo__dlogo {
+  display: block;
+}
+ 
+
+.bascik__docs-sidebar__docs-sidebar {
+  border-right: 1px solid var(--border);
+  padding: 32px 20px;
+  position: sticky;
+  top: 57px;
+  height: calc(100vh - 57px);
+  overflow-y: auto;
+}
+
+.bascik__docs-sidebar__sidebar-heading {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  margin-top: 20px;
+}
+
+.bascik__docs-sidebar__sidebar-heading:first-child { margin-top: 0; }
+
+.bascik__docs-sidebar__sidebar-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bascik__docs-sidebar__sidebar-nav li {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bascik__docs-sidebar__sidebar-nav li a {
+  display: block;
+  padding: 5px 10px;
+  border-radius: var(--r-sm);
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color .15s, background .15s;
+}
+
+.bascik__docs-sidebar__sidebar-nav li a:hover {
+  color: var(--text);
+  background: var(--elevated);
+  opacity: 1;
+}
+
+.bascik__docs-sidebar__sidebar-nav li a[aria-current="page"] {
+  color: var(--accent) !important;
+  background: var(--accent-dim);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(211, 255, 141, 0.4);
+  text-underline-offset: 4px;
+}
+
+@media (max-width: 768px) {
+  .bascik__docs-sidebar__docs-sidebar {
+    display: none !important;
+  }
+}
+ .bascik__code-block__cblock {
+  background: #0d0e0f;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+
+.bascik__code-block__cblock-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: rgba(255,255,255,0.025);
+  border-bottom: 1px solid var(--border);
+}
+
+.bascik__code-block__cblock-lang {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--accent);
+}
+
+.bascik__code-block__cblock-file {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.bascik__code-block__cblock pre {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 18px 22px;
+  margin: 0;
+}
+
+.bascik__code-block__cblock pre code {
+  font-size: 0.82rem;
+  color: #cdd6f4;
+  line-height: 1.7;
+  background: none;
+  border: none;
+  padding: 0;
+}
+ .bascik__feature-card__fcard {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+
+.bascik__feature-card__fcard:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 0 0 1px var(--accent-dim), 0 8px 32px rgba(0,0,0,0.3);
+  transform: translateY(-2px);
+}
+
+.bascik__feature-card__fcard-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.bascik__feature-card__fcard-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.bascik__feature-card__fcard-desc {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 0;
+}
+
+.bascik__feature-card__fcard-slot {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.bascik__feature-card__fcard-slot:empty {
+  display: none;
+}
+ .bascik__docs-footer__dfooter {
+  border-top: 1px solid var(--border);
+  padding: 56px 0 0;
+  margin-top: 80px;
+}
+
+
+.bascik__docs-footer__dfooter-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+.bascik__docs-footer__dfooter-upper {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 48px;
+  padding-bottom: 48px;
+}
+
+.bascik__docs-footer__dfooter-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.bascik__docs-footer__dfooter-logo {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  transition: filter .15s;
+}
+
+.bascik__docs-footer__dfooter-logo:hover {
+  filter: brightness(1.12);
+  opacity: 1;
+}
+
+.bascik__docs-footer__dfooter-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.bascik__docs-footer__dfooter-made-by {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.bascik__docs-footer__dfooter-made-by a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: opacity .15s;
+}
+
+.bascik__docs-footer__dfooter-made-by a:hover { opacity: 0.8; }
+
+
+.bascik__docs-footer__dfooter-sitemap {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 28px 16px;
+}
+
+.bascik__docs-footer__dfooter-col { align-self: start; }
+
+.bascik__docs-footer__dfooter-col-heading {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--accent);
+  margin: 0 0 10px;
+}
+
+.bascik__docs-footer__dfooter-col-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bascik__docs-footer__dfooter-col-links a {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color .15s;
+}
+
+.bascik__docs-footer__dfooter-col-links a:hover {
+  color: var(--text);
+  opacity: 1;
+}
+
+.bascik__docs-footer__dfooter-bottom {
+  border-top: 1px solid var(--border);
+  padding: 16px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.bascik__docs-footer__dfooter-copy {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.bascik__docs-footer__dfooter-copy a {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color .15s;
+}
+
+.bascik__docs-footer__dfooter-copy a:hover {
+  color: var(--accent);
+  opacity: 1;
+}
+
+.bascik__docs-footer__dfooter-links {
+  display: flex;
+  gap: 20px;
+}
+
+.bascik__docs-footer__dfooter-links a {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color .15s;
+}
+
+.bascik__docs-footer__dfooter-links a:hover {
+  color: var(--accent);
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .bascik__docs-footer__dfooter-upper {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+    </style></head>
+
+<body><nav class="bascik__docs-nav__dnav"><div class="bascik__docs-nav__dnav-inner"><a href="/" class="bascik__docs-nav__dnav-logo" aria-label="Bascik home"><svg class="bascik__docs-logo__dlogo" viewBox="0 0 114 28" height="26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><polygon points="7,0 114,0 107,28 0,28" fill="#d3ff8d" /><rect x="18" y="8" width="2" height="12" rx="1" fill="#0e0f10"><animate attributeName="opacity" values="0.9;0.9;0;0" keyTimes="0;0.49;0.5;1" dur="1.1s" repeatCount="indefinite" /></rect><text x="25" y="20" font-family="'Courier New',Courier,monospace" font-size="17" font-weight="800" fill="#0e0f10" letter-spacing="2">BASCIK</text></svg></a><button type="button" class="bascik__docs-nav__dnav-toggle" aria-label="Toggle navigation" aria-expanded="false"><span class="bascik__docs-nav__dnav-toggle-icon"></span></button><div class="bascik__docs-nav__dnav-links-wrapper"><ul class="bascik__docs-nav__dnav-links"><li><a href="/why-bascik">Why Bascik</a></li><li><a href="/getting-started">Docs</a></li><li><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener">GitHub</a></li></ul><div class="bascik__docs-nav__mobile-only-sections"><hr class="bascik__docs-nav__mobile-sep" /><p class="bascik__docs-nav__mobile-sec-heading">Philosophy</p><ul class="bascik__docs-nav__mobile-sec-nav"><li><a href="/why-bascik">Why Bascik</a></li><li><a href="/performance">Lighthouse 100s</a></li><li><a href="/vs-frameworks">Bascik vs Frameworks</a></li></ul><p class="bascik__docs-nav__mobile-sec-heading">Start Here</p><ul class="bascik__docs-nav__mobile-sec-nav"><li><a href="/getting-started">Getting Started</a></li><li><a href="/cli">CLI / Command Line</a></li><li><a href="/configuration">Configuration</a></li></ul><p class="bascik__docs-nav__mobile-sec-heading">Features</p><ul class="bascik__docs-nav__mobile-sec-nav"><li><a href="/slots">Slots</a></li><li><a href="/props">Props</a></li><li><a href="/attribute-inheritance">Attribute Inheritance</a></li><li><a href="/scoped-styles">Scoped Styles</a></li><li><a href="/scoped-javascript">Scoped JavaScript</a></li><li><a href="/build-scripts">Build Scripts</a></li><li><a href="/sitemap">Sitemap & robots.txt</a></li><li><a href="/libraries">JavaScript Libraries</a></li></ul><p class="bascik__docs-nav__mobile-sec-heading">Reference</p><ul class="bascik__docs-nav__mobile-sec-nav"><li><a href="/compatibility">Scoping Compatibility</a></li><li><a href="/copilot-skill">AI Skill</a></li></ul><p class="bascik__docs-nav__mobile-sec-heading">Recipes</p><ul class="bascik__docs-nav__mobile-sec-nav"><li><a href="/using-markdown">Using Markdown</a></li></ul><p class="bascik__docs-nav__mobile-sec-heading">Migration</p><ul class="bascik__docs-nav__mobile-sec-nav"><li><a href="/migrate">Migration Overview</a></li><li><a href="/migrate/from-react">From React</a></li><li><a href="/migrate/from-next">From Next.js</a></li><li><a href="/migrate/from-eleventy">From Eleventy</a></li><li><a href="/migrate/from-astro">From Astro</a></li></ul><p class="bascik__docs-nav__mobile-sec-heading">Developers</p><ul class="bascik__docs-nav__mobile-sec-nav"><li><a href="/develop">Developer Overview</a></li><li><a href="/develop/architecture">Architecture</a></li><li><a href="/develop/transpilation-pipeline">Transpilation Pipeline</a></li><li><a href="/develop/scoping-system">Scoping System</a></li><li><a href="/develop/dev-server">Dev Server</a></li><li><a href="/develop/testing">Testing</a></li></ul><hr class="bascik__docs-nav__mobile-sep" /><ul class="bascik__docs-nav__mobile-sec-nav"><li><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener">GitHub &#x2197;</a></li></ul></div></div></div></nav><div class="container"><div class="docs-layout"><aside class="bascik__docs-sidebar__docs-sidebar"><p class="bascik__docs-sidebar__sidebar-heading">Philosophy</p><ul class="bascik__docs-sidebar__sidebar-nav"><li><a href="/why-bascik">Why Bascik</a></li><li><a href="/performance">Lighthouse 100s</a></li><li><a href="/vs-frameworks">Bascik vs Frameworks</a></li></ul><p class="bascik__docs-sidebar__sidebar-heading">Start Here</p><ul class="bascik__docs-sidebar__sidebar-nav"><li><a href="/getting-started">Getting Started</a></li><li><a href="/cli">CLI / Command Line</a></li><li><a href="/configuration">Configuration</a></li></ul><p class="bascik__docs-sidebar__sidebar-heading">Features</p><ul class="bascik__docs-sidebar__sidebar-nav"><li><a href="/slots">Slots</a></li><li><a href="/props">Props</a></li><li><a href="/attribute-inheritance">Attribute Inheritance</a></li><li><a href="/scoped-styles">Scoped Styles</a></li><li><a href="/scoped-javascript">Scoped JavaScript</a></li><li><a href="/build-scripts">Build Scripts</a></li><li><a href="/sitemap">Sitemap & robots.txt</a></li><li><a href="/libraries">JavaScript Libraries</a></li></ul><p class="bascik__docs-sidebar__sidebar-heading">Reference</p><ul class="bascik__docs-sidebar__sidebar-nav"><li><a href="/compatibility">Scoping Compatibility</a></li><li><a href="/copilot-skill">AI Skill</a></li></ul><p class="bascik__docs-sidebar__sidebar-heading">Recipes</p><ul class="bascik__docs-sidebar__sidebar-nav"><li><a href="/using-markdown">Using Markdown</a></li></ul><p class="bascik__docs-sidebar__sidebar-heading">Migration</p><ul class="bascik__docs-sidebar__sidebar-nav"><li><a href="/migrate">Migration Overview</a></li><li><a href="/migrate/from-react">From React</a></li><li><a href="/migrate/from-next">From Next.js</a></li><li><a href="/migrate/from-eleventy">From Eleventy</a></li><li><a href="/migrate/from-astro">From Astro</a></li></ul><p class="bascik__docs-sidebar__sidebar-heading">Developers</p><ul class="bascik__docs-sidebar__sidebar-nav"><li><a href="/develop">Developer Overview</a></li><li><a href="/develop/architecture">Architecture</a></li><li><a href="/develop/transpilation-pipeline">Transpilation Pipeline</a></li><li><a href="/develop/scoping-system">Scoping System</a></li><li><a href="/develop/dev-server">Dev Server</a></li><li><a href="/develop/testing">Testing</a></li></ul></aside><main class="docs-content"><p class="section-label">Feature</p><h1>Scoped Styles</h1><p class="page-intro">Bascik automatically namespaces your component CSS at build time. Class names, element selectors, <code>@media</code> queries, and <code>@keyframes</code> are all scoped so components can never conflict with one another.</p><h2>CSS File Pairing</h2><p>Scoped styles are defined in a <code>.css</code> file with the same name as the component, placed in the same directory:</p><div class="bascik__code-block__cblock" id="bascik__code-block__65a5b2b7__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">text</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">src/components/
+  site-nav/
+    site-nav.html
+    site-nav.css  ← scoped to site-nav</code></pre></div><div class="callout"><p><strong><code>&lt;style&gt;</code> tags inside component files are not scoped.</strong> Bascik only reads the paired <code>.css</code> file for scoping. A <code>&lt;style&gt;</code> tag placed inside a component <code>.html</code> file will be passed through as-is with no transformation — its rules will leak globally. Use the <code>.css</code> file pairing instead.</p></div><h2>Class Scoping</h2><p>Every class name in the <code>.css</code> file is prefixed with a unique instance ID. The corresponding HTML attributes are updated to match.</p><div class="bascik__code-block__cblock" id="bascik__code-block__393f3e8c__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">css</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">/* site-nav.css — source */
+.navigation ul { list-style-type: none; }
+.navigation ul li a { padding: 8px; }</code></pre></div><div class="bascik__code-block__cblock" id="bascik__code-block__37f3afbe__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">css</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">/* compiled output */
+.bascik__site-nav__a1b2c3__navigation ul { list-style-type: none; }
+.bascik__site-nav__a1b2c3__navigation ul li a { padding: 8px; }</code></pre></div><h2>Element Selector Scoping</h2><p>Bare element selectors like <code>p {}</code> or <code>h2 {}</code> are converted to generated class selectors and injected onto matching elements inside the component.</p><div class="bascik__code-block__cblock" id="bascik__code-block__c05c463a__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">css</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">/* my-comp.css — source */
+p { color: #d3ff8d; }
+h2 { font-size: 2rem; }</code></pre></div><div class="bascik__code-block__cblock" id="bascik__code-block__40c2bbf4__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">css</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">/* compiled output */
+.bascik__my-comp__x1__el__p { color: #d3ff8d; }
+.bascik__my-comp__x1__el__h2 { font-size: 2rem; }</code></pre></div><p>And in the HTML, every <code>&lt;p&gt;</code> and <code>&lt;h2&gt;</code> inside the component gets the generated class injected:</p><div class="bascik__code-block__cblock" id="bascik__code-block__9dfa0c7a__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">html</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;p class=&quot;bascik__my-comp__x1__el__p&quot;&gt;...&lt;/p&gt;</code></pre></div><div class="callout"><p><strong>Isolation guarantee:</strong> Element styles only affect elements inside the component. A <code>p {}</code> rule in <code>my-comp.css</code> will never affect <code>&lt;p&gt;</code> tags on the page or in other components.</p></div><h2>@media Support</h2><p>Media queries work normally. Class names inside them are scoped like any other rule:</p><div class="bascik__code-block__cblock" id="bascik__code-block__a3005cea__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">css</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">@media (max-width: 600px) {
+  .logo { font-size: 0.9rem; }
+}</code></pre></div><div class="bascik__code-block__cblock" id="bascik__code-block__0a53fd6d__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">css</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">@media (max-width: 600px) {
+  .bascik__comp__x1__logo { font-size: 0.9rem; }
+}</code></pre></div><h2>@keyframes Scoping</h2><p>Keyframe names are also prefixed so animations from different components never collide:</p><div class="bascik__code-block__cblock" id="bascik__code-block__5e60b034__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">css</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">@keyframes spin { to { transform: rotate(360deg); } }
+.icon { animation: spin 1s linear infinite; }</code></pre></div><div class="bascik__code-block__cblock" id="bascik__code-block__41d60e05__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">css</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">@keyframes bascik__comp__x1__keyframe__spin { to { transform: rotate(360deg); } }
+.bascik__comp__x1__icon {
+  animation: bascik__comp__x1__keyframe__spin 1s linear infinite;
+}</code></pre></div><h2>CSS ID Selectors</h2><p>CSS <code>#id</code> selectors are converted to scoped class selectors, and the generated class is injected onto the matching element in the HTML. This means <code>#btn {}</code> in a component is fully isolated — the same ID name in another component or on the page produces a completely different selector.</p><div class="bascik__code-block__cblock" id="bascik__code-block__b80e2d7b__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">css</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">/* my-comp.css — source */
+#submit-btn { background: #d3ff8d; }</code></pre></div><div class="bascik__code-block__cblock" id="bascik__code-block__6acebee6__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">css</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">/* compiled output */
+.bascik__my-comp__id__submit-btn { background: #d3ff8d; }</code></pre></div><div class="bascik__code-block__cblock" id="bascik__code-block__428cce89__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">html</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;!-- The matching element gets the generated class injected --&gt;
+&lt;button id=&quot;bascik__my-comp__a1b2__submit-btn&quot;
+        class=&quot;bascik__my-comp__id__submit-btn&quot;&gt;Submit&lt;/button&gt;</code></pre></div><div class="callout"><p><strong>Specificity note:</strong> Converting <code>#id</code> to a class drops specificity from <code>(0,1,0,0)</code> to <code>(0,0,1,0)</code>. <code>[id]</code> and <code>[id=&quot;…&quot;]</code> attribute-selector forms are stripped at compile time — use a class selector instead.</p></div><h2>CSS Custom Properties</h2><p><code>--var-name</code> declarations in a component&#39;s CSS are automatically scoped. All <code>var(--var-name)</code> references within the same file are updated to match — so custom properties stay isolated to their component.</p><div class="bascik__code-block__cblock" id="bascik__code-block__00d31db2__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">css</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">/* source */
+:root {
+  --brand: #d3ff8d;
+  --size: 1rem;
+}
+.title {
+  color: var(--brand);
+  font-size: var(--size);
+}</code></pre></div><div class="bascik__code-block__cblock" id="bascik__code-block__9d0d5dd6__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">css</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">/* compiled */
+:root {
+  --bascik__my-comp__x1__brand: #d3ff8d;
+  --bascik__my-comp__x1__size: 1rem;
+}
+.bascik__my-comp__x1__title {
+  color: var(--bascik__my-comp__x1__brand);
+  font-size: var(--bascik__my-comp__x1__size);
+}</code></pre></div><div class="callout"><p><strong>Only locally-declared properties are scoped.</strong> If a component uses <code>var(--global-var)</code> but doesn&#39;t declare <code>--global-var</code> in its own CSS, that reference is left untouched so it still resolves from a global stylesheet.</p></div><h2>Toggling Scoping</h2><p>All scoping can be controlled in <a href="/configuration"><code>bascik.config.js</code></a>:</p><div class="bascik__code-block__cblock" id="bascik__code-block__c3d9946b__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">js</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">export const bascikConfig = {
+  scopeAttribute: {
+    class: true, // scope class names
+    id: true,    // scope id attributes
+    name: true,  // scope name attributes
+  },
+};</code></pre></div><h2>Class Selectors in Component Scripts</h2><p>Because all instances of the same component share the same scoped class names (for CSS deduplication), <code>document.querySelector(&#39;.myClass&#39;)</code> inside a component script will always return the <strong>first</strong> matching element on the page — not necessarily the element belonging to the current instance. If you have multiple instances of the same component, each instance&#39;s script will target the same (first) element.</p><p><strong>The correct pattern</strong> is to use an <code>id</code> attribute as your root anchor. <code>id</code> attributes are scoped per-instance, so <code>getElementById</code> always finds exactly the right element:</p><div class="bascik__code-block__cblock" id="bascik__code-block__78c403ec__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">html</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;!-- my-comp.html --&gt;
+&lt;div id=&quot;root&quot; class=&quot;wrapper&quot;&gt;
+  &lt;button id=&quot;btn&quot;&gt;Click&lt;/button&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+  const root = document.getElementById(&#39;root&#39;);  // ✓ unique per instance
+  const btn  = root.querySelector(&#39;button&#39;);      // ✓ scoped to this instance
+&lt;/script&gt;</code></pre></div><p>Avoid this anti-pattern:</p><div class="bascik__code-block__cblock" id="bascik__code-block__a4979c21__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">html</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;div class=&quot;wrapper&quot;&gt;
+  &lt;button class=&quot;btn&quot;&gt;Click&lt;/button&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+  // ✗ finds the FIRST .wrapper on the page — wrong for instance 2+
+  const root = document.querySelector(&#39;.wrapper&#39;);
+&lt;/script&gt;</code></pre></div><p>Alternatively, set <code>deduplicateCss: false</code> in <code>bascik.config.js</code> to switch to per-instance class scoping. This makes class selectors behave like id selectors at the cost of emitting one <code>&lt;style&gt;</code> block per component instance.</p><h2>Live Demo</h2><p>The <code>feature-card</code> component used throughout these docs illustrates scoped styles end-to-end. Source files and compiled output are shown below.</p><p><strong>Source HTML</strong> (<code>feature-card.html</code>):</p><div class="bascik__code-block__cblock" id="bascik__code-block__6ba12a8e__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">html</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;div class=&quot;fcard&quot;&gt;
+  &lt;p class=&quot;fcard-label&quot; data-bascik-prop-label&gt;&lt;/p&gt;
+  &lt;h3 class=&quot;fcard-title&quot; data-bascik-prop-title&gt;&lt;/h3&gt;
+  &lt;p class=&quot;fcard-desc&quot; data-bascik-prop-desc&gt;&lt;/p&gt;
+  &lt;div class=&quot;fcard-slot&quot;&gt;
+    &lt;div data-bascik-slot&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre></div><p><strong>Source CSS</strong> (<code>feature-card.css</code>):</p><div class="bascik__code-block__cblock" id="bascik__code-block__09ec9d8d__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">css</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">.fcard {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+
+.fcard:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 0 0 1px var(--accent-dim), 0 8px 32px rgba(0,0,0,0.3);
+  transform: translateY(-2px);
+}
+
+.fcard-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.fcard-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.fcard-desc {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 0;
+}
+
+.fcard-slot {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.fcard-slot:empty {
+  display: none;
+}</code></pre></div><p><strong>Compiled output HTML</strong> (class names scoped, props injected, slot wrappers removed):</p><div class="bascik__code-block__cblock" id="bascik__code-block__ffb70e26__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">html</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;div class=&quot;bascik__feature-card__fcard&quot;&gt;
+  &lt;p class=&quot;bascik__feature-card__fcard-label&quot;&gt;Scoped&lt;/p&gt;
+  &lt;h3 class=&quot;bascik__feature-card__fcard-title&quot;&gt;Isolated Styles&lt;/h3&gt;
+  &lt;p class=&quot;bascik__feature-card__fcard-desc&quot;&gt;
+    Hover over me to see transitions and shadows that won&#39;t leak out.
+  &lt;/p&gt;
+&lt;/div&gt;</code></pre></div><p><strong>Compiled output CSS</strong> (all class selectors prefixed with the component scope):</p><div class="bascik__code-block__cblock" id="bascik__code-block__d8b13784__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">css</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">.bascik__feature-card__fcard {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+
+.bascik__feature-card__fcard:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 0 0 1px var(--accent-dim), 0 8px 32px rgba(0,0,0,0.3);
+  transform: translateY(-2px);
+}
+
+.bascik__feature-card__fcard-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.bascik__feature-card__fcard-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.bascik__feature-card__fcard-desc {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 0;
+}
+
+.bascik__feature-card__fcard-slot {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.bascik__feature-card__fcard-slot:empty {
+  display: none;
+}</code></pre></div><h2>Live Style Demo</h2><p>This component uses custom classes and styles that are completely isolated from the rest of the documentation.</p><div class="bascik__component-demo__demo-box" id="bascik__component-demo__b4c840b1__demo-root"><div class="bascik__component-demo__demo-nav"><div class="bascik__component-demo__demo-tabs"><button class="bascik__component-demo__demo-tab bascik__component-demo__active" data-tab="preview">Preview</button><button class="bascik__component-demo__demo-tab" data-tab="code">Source</button><button class="bascik__component-demo__demo-tab" data-tab="output">Output</button></div><div class="bascik__component-demo__demo-meta">src/components/feature-card/</div></div><div class="bascik__component-demo__demo-panes"><div class="bascik__component-demo__demo-pane bascik__component-demo__active" data-pane="preview"><div class="bascik__component-demo__demo-preview-content"><div class="bascik__feature-card__fcard"><p class="bascik__feature-card__fcard-label">Scoped</p><h3 class="bascik__feature-card__fcard-title">Isolated Styles</h3><p class="bascik__feature-card__fcard-desc">Hover over me to see transitions and shadows that won't leak out.</p><div class="bascik__feature-card__fcard-slot"></div></div></div></div><div class="bascik__component-demo__demo-pane" data-pane="code"><div class="bascik__component-demo__demo-language-tabs" role="tablist" aria-label="Source language"><button class="bascik__component-demo__demo-language-tab bascik__component-demo__active" data-language="html" type="button">HTML</button><button class="bascik__component-demo__demo-language-tab" data-language="css" type="button">CSS</button><button class="bascik__component-demo__demo-language-tab" data-language="js" type="button">JS</button></div><div class="bascik__component-demo__demo-language-pane bascik__component-demo__active" data-language-pane="html"><div class="bascik__code-block__cblock" id="bascik__code-block__d9948d65__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">html</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;div class="fcard"&gt;
+  &lt;p class="fcard-label" data-bascik-prop-label&gt;&lt;/p&gt;
+  &lt;h3 class="fcard-title" data-bascik-prop-title&gt;&lt;/h3&gt;
+  &lt;p class="fcard-desc" data-bascik-prop-desc&gt;&lt;/p&gt;
+  &lt;div class="fcard-slot"&gt;
+    &lt;div data-bascik-slot&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre></div></div><div class="bascik__component-demo__demo-language-pane" data-language-pane="css"><div class="bascik__code-block__cblock" id="bascik__code-block__42a8f32e__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">css</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">.fcard {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+
+.fcard:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 0 0 1px var(--accent-dim), 0 8px 32px rgba(0,0,0,0.3);
+  transform: translateY(-2px);
+}
+
+.fcard-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.fcard-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.fcard-desc {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 0;
+}
+
+.fcard-slot {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.fcard-slot:empty {
+  display: none;
+}</code></pre></div></div><div class="bascik__component-demo__demo-language-pane" data-language-pane="js"></div></div><div class="bascik__component-demo__demo-pane" data-pane="output"><div class="bascik__component-demo__demo-language-tabs" role="tablist" aria-label="Output language"><button class="bascik__component-demo__demo-language-tab bascik__component-demo__active" data-language="html" type="button">HTML</button><button class="bascik__component-demo__demo-language-tab" data-language="css" type="button">CSS</button><button class="bascik__component-demo__demo-language-tab" data-language="js" type="button">JS</button></div><div class="bascik__component-demo__demo-language-pane bascik__component-demo__active" data-language-pane="html"><div class="bascik__code-block__cblock" id="bascik__code-block__f84e0f06__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">html</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">&lt;div class="bascik__feature-card__fcard"&gt;
+  &lt;p class="bascik__feature-card__fcard-label"&gt;Scoped&lt;/p&gt;
+  &lt;h3 class="bascik__feature-card__fcard-title"&gt;Isolated Styles&lt;/h3&gt;
+  &lt;p class="bascik__feature-card__fcard-desc"&gt;
+    Hover over me to see transitions and shadows that won't leak out.
+  &lt;/p&gt;
+&lt;/div&gt;</code></pre></div></div><div class="bascik__component-demo__demo-language-pane" data-language-pane="css"><div class="bascik__code-block__cblock" id="bascik__code-block__9d0cd7a9__cblock-root"><div class="bascik__code-block__cblock-header"><span class="bascik__code-block__cblock-lang">css</span><span class="bascik__code-block__cblock-file"></span></div><pre><code class="bascik__code-block__cblock-body">.bascik__feature-card__fcard {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+
+.bascik__feature-card__fcard:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 0 0 1px var(--accent-dim), 0 8px 32px rgba(0,0,0,0.3);
+  transform: translateY(-2px);
+}
+
+.bascik__feature-card__fcard-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.bascik__feature-card__fcard-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.bascik__feature-card__fcard-desc {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 0;
+}
+
+.bascik__feature-card__fcard-slot {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.bascik__feature-card__fcard-slot:empty {
+  display: none;
+}</code></pre></div></div><div class="bascik__component-demo__demo-language-pane" data-language-pane="js"></div></div></div></div><style> .bascik__component-demo__demo-box { border: 1px solid var(--border); border-radius: var(--r); margin: 24px 0; overflow: hidden; background: var(--bg); } .bascik__component-demo__demo-nav { display: flex; justify-content: space-between; align-items: center; background: var(--bg-muted); border-bottom: 1px solid var(--border); padding: 0 16px; } .bascik__component-demo__demo-tabs { display: flex; flex-shrink: 0; } .bascik__component-demo__demo-tab { padding: 12px 16px; font-size: 0.85rem; font-weight: 500; color: var(--text-muted); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; } .bascik__component-demo__demo-tab:hover { color: var(--text); } .bascik__component-demo__demo-tab.bascik__component-demo__active { color: var(--accent); border-bottom-color: var(--accent); } .bascik__component-demo__demo-meta { font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .bascik__component-demo__demo-panes { position: relative; } .bascik__component-demo__demo-pane { display: none; } .bascik__component-demo__demo-pane.bascik__component-demo__active { display: block; } .bascik__component-demo__demo-language-tabs { display: flex; gap: 4px; padding: 8px 12px; background: var(--bg-muted); border-bottom: 1px solid var(--border); } .bascik__component-demo__demo-language-tab { min-width: 48px; padding: 6px 10px; color: var(--text-muted); font-family: var(--font-mono); font-size: 0.75rem; background: transparent; border: 1px solid transparent; border-radius: 4px; cursor: pointer; } .bascik__component-demo__demo-language-tab:hover { color: var(--text); } .bascik__component-demo__demo-language-tab.bascik__component-demo__active { color: var(--text); background: var(--bg); border-color: var(--border); } .bascik__component-demo__demo-language-pane { display: none; } .bascik__component-demo__demo-language-pane.bascik__component-demo__active { display: block; } .bascik__component-demo__demo-preview-content { padding: 32px; background-image: linear-gradient(45deg, var(--bg-muted) 25%, transparent 25%), linear-gradient(-45deg, var(--bg-muted) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, var(--bg-muted) 75%), linear-gradient(-45deg, transparent 75%, var(--bg-muted) 75%); background-size: 20px 20px; background-position: 0 0, 0 10px, 10px -10px, -10px 0px; display: flex; justify-content: center; align-items: center; } .bascik__component-demo__demo-pane code-block { margin: 0; } .bascik__component-demo__demo-pane .bascik__component-demo__cblock { border: none; border-radius: 0; }</style><nav class="docs-pagination" aria-label="Page navigation"><a href="/attribute-inheritance" data-pg="prev"><span data-pg-dir>&#8592; Previous</span><span data-pg-label>Attribute Inheritance</span></a><a href="/scoped-javascript" data-pg="next"><span data-pg-dir>Next &#8594;</span><span data-pg-label>Scoped JavaScript</span></a></nav></main></div></div><footer class="bascik__docs-footer__dfooter"><div class="bascik__docs-footer__dfooter-container"><div class="bascik__docs-footer__dfooter-upper"><div class="bascik__docs-footer__dfooter-brand"><a href="/" class="bascik__docs-footer__dfooter-logo" aria-label="Bascik home"><svg class="bascik__docs-logo__dlogo" viewBox="0 0 114 28" height="26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><polygon points="7,0 114,0 107,28 0,28" fill="#d3ff8d" /><rect x="18" y="8" width="2" height="12" rx="1" fill="#0e0f10"><animate attributeName="opacity" values="0.9;0.9;0;0" keyTimes="0;0.49;0.5;1" dur="1.1s" repeatCount="indefinite" /></rect><text x="25" y="20" font-family="'Courier New',Courier,monospace" font-size="17" font-weight="800" fill="#0e0f10" letter-spacing="2">BASCIK</text></svg></a><p class="bascik__docs-footer__dfooter-desc">HTML components.<br>Zero runtime.</p></div><div class="bascik__docs-footer__dfooter-sitemap"><div class="bascik__docs-footer__dfooter-col"><p class="bascik__docs-footer__dfooter-col-heading">Philosophy</p><ul class="bascik__docs-footer__dfooter-col-links"><li><a href="/why-bascik">Why Bascik</a></li><li><a href="/performance">Lighthouse 100s</a></li><li><a href="/vs-frameworks">Bascik vs Frameworks</a></li></ul></div><div class="bascik__docs-footer__dfooter-col"><p class="bascik__docs-footer__dfooter-col-heading">Start Here</p><ul class="bascik__docs-footer__dfooter-col-links"><li><a href="/getting-started">Getting Started</a></li><li><a href="/cli">CLI / Command Line</a></li><li><a href="/configuration">Configuration</a></li></ul></div><div class="bascik__docs-footer__dfooter-col"><p class="bascik__docs-footer__dfooter-col-heading">Features</p><ul class="bascik__docs-footer__dfooter-col-links"><li><a href="/slots">Slots</a></li><li><a href="/props">Props</a></li><li><a href="/attribute-inheritance">Attribute Inheritance</a></li><li><a href="/scoped-styles">Scoped Styles</a></li><li><a href="/scoped-javascript">Scoped JavaScript</a></li><li><a href="/build-scripts">Build Scripts</a></li><li><a href="/sitemap">Sitemap & robots.txt</a></li><li><a href="/libraries">JavaScript Libraries</a></li></ul></div><div class="bascik__docs-footer__dfooter-col"><p class="bascik__docs-footer__dfooter-col-heading">Reference</p><ul class="bascik__docs-footer__dfooter-col-links"><li><a href="/compatibility">Scoping Compatibility</a></li><li><a href="/copilot-skill">AI Skill</a></li></ul></div><div class="bascik__docs-footer__dfooter-col"><p class="bascik__docs-footer__dfooter-col-heading">Recipes</p><ul class="bascik__docs-footer__dfooter-col-links"><li><a href="/using-markdown">Using Markdown</a></li></ul></div><div class="bascik__docs-footer__dfooter-col"><p class="bascik__docs-footer__dfooter-col-heading">Migration</p><ul class="bascik__docs-footer__dfooter-col-links"><li><a href="/migrate">Migration Overview</a></li><li><a href="/migrate/from-react">From React</a></li><li><a href="/migrate/from-next">From Next.js</a></li><li><a href="/migrate/from-eleventy">From Eleventy</a></li><li><a href="/migrate/from-astro">From Astro</a></li></ul></div></div></div><div class="bascik__docs-footer__dfooter-bottom"><span class="bascik__docs-footer__dfooter-copy">&copy; 2026 <a href="https://rinsesoft.com" target="_blank" rel="noopener noreferrer">Rinsesoft</a>. Open source under AGPL-3.0. </span><div class="bascik__docs-footer__dfooter-links"><a href="https://rinsesoft.com" target="_blank" rel="noopener noreferrer">rinsesoft.com</a><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener noreferrer">GitHub</a><a href="https://github.com/collin-thomas/bascik/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">License</a></div></div></div></footer>
+<script>
+        (function() {
+          
+  (function () {
+    var toggle = document.querySelector('.bascik__docs-nav__dnav-toggle');
+    var wrapper = document.querySelector('.bascik__docs-nav__dnav-links-wrapper');
+    if (toggle && wrapper) {
+      toggle.addEventListener('click', function () {
+        var isOpen = toggle.getAttribute('aria-expanded') !== 'true';
+        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      });
+    }
+
+    var path = window.location.pathname;
+    document.querySelectorAll('.bascik__docs-nav__dnav a').forEach(function (a) {
+      var href = a.getAttribute('href');
+      if (!href || href.startsWith('http')) return;
+      var current = false;
+      if (href === '/why-bascik') {
+        current = (path === '/why-bascik');
+      } else if (href === '/getting-started' && a.closest('.bascik__docs-nav__dnav-links')) {
+        current = (path !== '' && path !== '/' && path !== '/why-bascik');
+      } else {
+        current = (href === path);
+      }
+      if (current) a.setAttribute('aria-current', 'page');
+    });
+  })();
+
+        })();
+        </script>
+<script>
+        (function() {
+          
+     (function () {
+          var path = window.location.pathname;
+          var sidebar = document.querySelector('.bascik__docs-sidebar__docs-sidebar');
+          if (sidebar) {
+               var a = sidebar.querySelector('a[href="' + path + '"]');
+               if (a) {
+                    a.setAttribute('aria-current', 'page');
+                    a.scrollIntoView({ block: 'nearest' });
+               }
+          }
+     })();
+
+        })();
+        </script>
+<script>
+        (function() {
+          
+  const demoBox = document.getElementById('bascik__component-demo__b4c840b1__demo-root');
+  const tabs = demoBox.querySelectorAll('.bascik__component-demo__demo-tab');
+  const panes = demoBox.querySelectorAll('.bascik__component-demo__demo-pane');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.tab;
+
+      tabs.forEach(t => t.classList.remove('bascik__component-demo__active'));
+      panes.forEach(p => p.classList.remove('bascik__component-demo__active'));
+
+      tab.classList.add('bascik__component-demo__active');
+      demoBox.querySelector(`[data-pane="${target}"]`).classList.add('bascik__component-demo__active');
+    });
+  });
+
+  demoBox.querySelectorAll('[data-pane="code"], [data-pane="output"]').forEach(pane => {
+    const languageTabs = pane.querySelectorAll('.bascik__component-demo__demo-language-tab');
+    const languagePanes = pane.querySelectorAll('.bascik__component-demo__demo-language-pane');
+
+    // Hide the language tab bar when none of the language panes have content.
+    // Pages that use only the legacy 'code'/'output' slots leave these panes
+    // empty, so there is nothing to switch between.
+    const hasLanguageContent = Array.from(languagePanes).some(p => p.children.length > 0);
+    if (!hasLanguageContent) {
+      const tabBar = pane.querySelector('[role="tablist"]');
+      if (tabBar) tabBar.style.display = 'none';
+    } else {
+      // Hide individual language tabs/panes that have no content.
+      languageTabs.forEach(tab => {
+        const langPane = pane.querySelector(`[data-language-pane="${tab.dataset.language}"]`);
+        if (langPane && langPane.children.length === 0) {
+          tab.hidden = true;
+          tab.classList.remove('bascik__component-demo__active');
+          langPane.classList.remove('bascik__component-demo__active');
+        }
+      });
+      // If the default active tab was hidden, activate the first visible one.
+      const activeTab = Array.from(languageTabs).find(t => t.classList.contains('bascik__component-demo__active') && !t.hidden);
+      if (!activeTab) {
+        const firstVisible = Array.from(languageTabs).find(t => !t.hidden);
+        if (firstVisible) {
+          firstVisible.classList.add('bascik__component-demo__active');
+          pane.querySelector(`[data-language-pane="${firstVisible.dataset.language}"]`).classList.add('bascik__component-demo__active');
+        }
+      }
+    }
+
+    languageTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        languageTabs.forEach(item => item.classList.remove('bascik__component-demo__active'));
+        languagePanes.forEach(item => item.classList.remove('bascik__component-demo__active'));
+
+        tab.classList.add('bascik__component-demo__active');
+        pane.querySelector(`[data-language-pane="${tab.dataset.language}"]`).classList.add('bascik__component-demo__active');
+      });
+    });
+  });
+
+        })();
+        </script>
+<script>
+  (function() {
+  const eventSource = new EventSource("/bascik-live-reload");
+  eventSource.onmessage = function(event) {
+    if (event.data === 'reload') {
+      window.location.reload();
+    }
+  };
+  eventSource.onerror = function(event) {
+    eventSource.close();
+    console.warn('Live-Reload Connection Lost: Start development server and refresh the page to restart live-reload.')
+  }
+  window.onbeforeunload = function () {
+    eventSource.close();
+  };
+  })();
+</script></body>
+
+</html>

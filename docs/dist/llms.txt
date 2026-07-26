@@ -1,0 +1,4884 @@
+# Bascik
+
+> Bascik is a build tool for HTML components. Write your components in plain HTML, CSS, and JavaScript — Bascik scopes and assembles them at build time, outputting plain HTML pages with zero JavaScript added. Supports static site generation (SSG) out of the box.
+
+## What Bascik Does
+
+- Resolves custom HTML tags (`<my-nav></my-nav>`) to their component source HTML at build time.
+- Scopes CSS class names, element selectors, `@keyframes`, and CSS custom properties per component so they never collide.
+- Rewrites DOM selector calls (`getElementById`, `querySelector`, etc.) in component scripts to match scoped attribute names.
+- Wraps component scripts in IIFEs so variables do not leak between components.
+- Outputs a `dist/` directory of plain `.html` files — no framework runtime, no client-side JS added by Bascik itself.
+
+## What Bascik Does Not Do
+
+- It is not a JavaScript framework. There is no virtual DOM, no reactive state, no client-side routing.
+- It does not add any JavaScript to pages. Every script in the output was written by you.
+- It does not require Web Components, Shadow DOM, or any browser-specific API.
+
+## Component Format
+
+A component is one `.html` file in `src/components/`. Its tag name is derived from the file name.
+
+```html
+<!-- src/components/site-nav.html -->
+<nav class="nav">
+  <a href="/">Home</a>
+  <a href="/about">About</a>
+</nav>
+```
+
+Use it in any page or other component:
+
+```html
+<site-nav></site-nav>
+```
+
+Self-closing syntax works too: `<site-nav />`
+
+## Scoped CSS
+
+### CSS File Pairing
+
+Scoped styles are defined in a `.css` file with the same name as the component, placed in the same directory:
+
+```text
+src/components/
+  site-nav/
+    site-nav.html
+    site-nav.css  ← scoped to site-nav
+```
+
+> **`<style>` tags inside component files are not scoped.** Bascik only reads the paired `.css` file for scoping. A `<style>` tag placed inside a component `.html` file will be passed through as-is with no transformation — its rules will leak globally. Use the `.css` file pairing instead.
+
+### Class Scoping
+
+Every class name in the `.css` file is prefixed with a unique instance ID. The corresponding HTML attributes are updated to match.
+
+```css
+/* site-nav.css — source */
+.navigation ul { list-style-type: none; }
+.navigation ul li a { padding: 8px; }
+```
+
+```css
+/* compiled output */
+.bascik__site-nav__a1b2c3__navigation ul { list-style-type: none; }
+.bascik__site-nav__a1b2c3__navigation ul li a { padding: 8px; }
+```
+
+### Element Selector Scoping
+
+Bare element selectors like `p {}` or `h2 {}` are converted to generated class selectors and injected onto matching elements inside the component.
+
+```css
+/* my-comp.css — source */
+p { color: #d3ff8d; }
+h2 { font-size: 2rem; }
+```
+
+```css
+/* compiled output */
+.bascik__my-comp__x1__el__p { color: #d3ff8d; }
+.bascik__my-comp__x1__el__h2 { font-size: 2rem; }
+```
+
+And in the HTML, every `<p>` and `<h2>` inside the component gets the generated class injected:
+
+```html
+<p class="bascik__my-comp__x1__el__p">...</p>
+```
+
+> **Isolation guarantee:** Element styles only affect elements inside the component. A `p {}` rule in `my-comp.css` will never affect `<p>` tags on the page or in other components.
+
+### @media Support
+
+Media queries work normally. Class names inside them are scoped like any other rule:
+
+```css
+@media (max-width: 600px) {
+  .logo { font-size: 0.9rem; }
+}
+```
+
+```css
+@media (max-width: 600px) {
+  .bascik__comp__x1__logo { font-size: 0.9rem; }
+}
+```
+
+### @keyframes Scoping
+
+Keyframe names are also prefixed so animations from different components never collide:
+
+```css
+@keyframes spin { to { transform: rotate(360deg); } }
+.icon { animation: spin 1s linear infinite; }
+```
+
+```css
+@keyframes bascik__comp__x1__keyframe__spin { to { transform: rotate(360deg); } }
+.bascik__comp__x1__icon {
+  animation: bascik__comp__x1__keyframe__spin 1s linear infinite;
+}
+```
+### CSS ID Selectors
+
+CSS `#id` selectors are converted to scoped class selectors, and the generated class is injected onto the matching element in the HTML. This means `#btn {}` in a component is fully isolated — the same ID name in another component or on the page produces a completely different selector.
+
+```css
+/* my-comp.css — source */
+#submit-btn { background: #d3ff8d; }
+```
+
+```css
+/* compiled output */
+.bascik__my-comp__id__submit-btn { background: #d3ff8d; }
+```
+
+```html
+<!-- The matching element gets the generated class injected -->
+<button id="bascik__my-comp__a1b2__submit-btn"
+        class="bascik__my-comp__id__submit-btn">Submit</button>
+```
+
+> **Specificity note:** Converting `#id` to a class drops specificity from `(0,1,0,0)` to `(0,0,1,0)`. `[id]` and `[id="…"]` attribute-selector forms are stripped at compile time — use a class selector instead.
+### CSS Custom Properties
+
+`--var-name` declarations in a component's CSS are automatically scoped. All `var(--var-name)` references within the same file are updated to match — so custom properties stay isolated to their component.
+
+```css
+/* source */
+:root {
+  --brand: #d3ff8d;
+  --size: 1rem;
+}
+.title {
+  color: var(--brand);
+  font-size: var(--size);
+}
+```
+
+```css
+/* compiled */
+:root {
+  --bascik__my-comp__x1__brand: #d3ff8d;
+  --bascik__my-comp__x1__size: 1rem;
+}
+.bascik__my-comp__x1__title {
+  color: var(--bascik__my-comp__x1__brand);
+  font-size: var(--bascik__my-comp__x1__size);
+}
+```
+
+> **Only locally-declared properties are scoped.** If a component uses `var(--global-var)` but doesn't declare `--global-var` in its own CSS, that reference is left untouched so it still resolves from a global stylesheet.
+
+### Toggling Scoping
+
+All scoping can be controlled in [`bascik.config.js`](/configuration):
+
+```js
+export const bascikConfig = {
+  scopeAttribute: {
+    class: true, // scope class names
+    id: true,    // scope id attributes
+    name: true,  // scope name attributes
+  },
+};
+```
+
+### Class Selectors in Component Scripts
+
+Because all instances of the same component share the same scoped class names (for CSS deduplication), `document.querySelector('.myClass')` inside a component script will always return the **first** matching element on the page — not necessarily the element belonging to the current instance. If you have multiple instances of the same component, each instance's script will target the same (first) element.
+
+**The correct pattern** is to use an `id` attribute as your root anchor. `id` attributes are scoped per-instance, so `getElementById` always finds exactly the right element:
+
+```html
+<!-- my-comp.html -->
+<div id="root" class="wrapper">
+  <button id="btn">Click</button>
+</div>
+
+<script>
+  const root = document.getElementById('root');  // ✓ unique per instance
+  const btn  = root.querySelector('button');      // ✓ scoped to this instance
+</script>
+```
+
+Avoid this anti-pattern:
+
+```html
+<div class="wrapper">
+  <button class="btn">Click</button>
+</div>
+
+<script>
+  // ✗ finds the FIRST .wrapper on the page — wrong for instance 2+
+  const root = document.querySelector('.wrapper');
+</script>
+```
+
+Alternatively, set `deduplicateCss: false` in `bascik.config.js` to switch to per-instance class scoping. This makes class selectors behave like id selectors at the cost of emitting one `<style>` block per component instance.
+
+### Live Demo
+
+The `feature-card` component used throughout these docs illustrates scoped styles end-to-end. Source files and compiled output are shown below.
+
+**Source HTML** (`feature-card.html`):
+
+<!-- demo:source-html -->
+```html
+<div class="fcard">
+  <p class="fcard-label" data-bascik-prop-label></p>
+  <h3 class="fcard-title" data-bascik-prop-title></h3>
+  <p class="fcard-desc" data-bascik-prop-desc></p>
+  <div class="fcard-slot">
+    <div data-bascik-slot></div>
+  </div>
+</div>
+```
+
+**Source CSS** (`feature-card.css`):
+
+<!-- demo:source-css -->
+```css
+.fcard {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+
+.fcard:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 0 0 1px var(--accent-dim), 0 8px 32px rgba(0,0,0,0.3);
+  transform: translateY(-2px);
+}
+
+.fcard-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.fcard-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.fcard-desc {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 0;
+}
+
+.fcard-slot {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.fcard-slot:empty {
+  display: none;
+}
+```
+
+**Compiled output HTML** (class names scoped, props injected, slot wrappers removed):
+
+<!-- demo:output-html -->
+```html
+<div class="bascik__feature-card__fcard">
+  <p class="bascik__feature-card__fcard-label">Scoped</p>
+  <h3 class="bascik__feature-card__fcard-title">Isolated Styles</h3>
+  <p class="bascik__feature-card__fcard-desc">
+    Hover over me to see transitions and shadows that won't leak out.
+  </p>
+</div>
+```
+
+**Compiled output CSS** (all class selectors prefixed with the component scope):
+
+<!-- demo:output-css -->
+```css
+.bascik__feature-card__fcard {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+
+.bascik__feature-card__fcard:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 0 0 1px var(--accent-dim), 0 8px 32px rgba(0,0,0,0.3);
+  transform: translateY(-2px);
+}
+
+.bascik__feature-card__fcard-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.bascik__feature-card__fcard-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.bascik__feature-card__fcard-desc {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 0;
+}
+
+.bascik__feature-card__fcard-slot {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.bascik__feature-card__fcard-slot:empty {
+  display: none;
+}
+```
+
+## Scoped JavaScript
+
+### Scoping Model
+
+`id` and `name` attributes are scoped **per-instance** — each use of a component generates a different `instanceId`, so element IDs are guaranteed unique across the entire page. `class` attributes are scoped to the component **name** only, so all instances share the same class names and CSS deduplication can emit a single `<style>` block no matter how many times the component is used.
+
+```text
+class  →  bascik__<componentName>__<originalName>
+id     →  bascik__<componentName>__<instanceId>__<originalName>
+name   →  bascik__<componentName>__<instanceId>__<originalName>
+```
+
+### Multiple Instances
+
+Using a component more than once on the same page works automatically. Each use generates a different `instanceId`, so element IDs never collide and the scripts inside each instance stay independent:
+
+```html
+<!-- Two uses of <like-btn> on the same page -->
+<like-btn></like-btn>
+<like-btn></like-btn>
+```
+
+```html
+<!-- Compiled — first instance -->
+<button id="bascik__like-btn__a1b2__btn">Like</button>
+<script>(function() {
+  document.getElementById("bascik__like-btn__a1b2__btn")
+    .addEventListener("click", …);
+})();</script>
+
+<!-- Compiled — second instance -->
+<button id="bascik__like-btn__c3d4__btn">Like</button>
+<script>(function() {
+  document.getElementById("bascik__like-btn__c3d4__btn")
+    .addEventListener("click", …);
+})();</script>
+```
+
+Both buttons are fully independent. The first instance's click handler only fires for the first button, and vice versa.
+
+### Class Selectors and Multiple Instances (Pitfall)
+
+Because class names are scoped to the component **name** (not the instance), `querySelector('.my-class')` and `querySelectorAll('.my-class')` will always return the **first** matching element in the document — even after Bascik rewrites the class name. When the same component appears more than once on a page, every instance's script will target the first instance's elements.
+
+**Never use class-based DOM lookups to find elements you need to control per-instance.** Use `id` attributes instead — IDs are scoped per-instance and `getElementById` always resolves to the correct element:
+
+```html
+<!-- ❌ Broken for multiple instances — querySelector returns first instance's button -->
+<button class="my-btn">Click</button>
+<script>
+  document.querySelector('.my-btn').addEventListener('click', () => { … });
+</script>
+```
+
+```html
+<!-- ✅ Correct — id is per-instance, getElementById targets the right element -->
+<button id="my-btn" class="my-btn">Click</button>
+<script>
+  document.getElementById('my-btn').addEventListener('click', () => { … });
+</script>
+```
+
+The `class` attribute can coexist on the element for styling — just add an `id` for the JS lookup.
+
+> **Rule of thumb.** In component scripts, always use `getElementById` (or `getElementsByName`) to locate specific elements. Reserve `querySelector`/`querySelectorAll` for cases where you intentionally want to sweep across all instances (e.g. event delegation from a parent outside the component).
+
+### IIFE Isolation
+
+Every component script is wrapped in an immediately-invoked function expression (IIFE) to prevent variable leaks between components:
+
+```html
+<!-- source -->
+<script>
+  const count = 0;
+  console.log(count);
+</script>
+```
+
+```html
+<!-- compiled -->
+<script>
+  (function() {
+    const count = 0;
+    console.log(count);
+  })();
+</script>
+```
+
+### ID Scoping
+
+The `id` attribute value in the HTML and all references to it in scripts are rewritten with the same unique prefix:
+
+```html
+<!-- source -->
+<button id="my-btn">Click</button>
+<script>
+  document.getElementById("my-btn")
+    .addEventListener("click", () => alert("hi"));
+</script>
+```
+
+```html
+<!-- compiled -->
+<button id="bascik__my-btn__a1b2__my-btn">Click</button>
+<script>
+  (function() {
+    document.getElementById("bascik__my-btn__a1b2__my-btn")
+      .addEventListener("click", () => alert("hi"));
+  })();
+</script>
+```
+
+### Supported Selectors
+
+All of the following DOM methods are updated when they reference a scoped attribute:
+
+```js
+// id attribute
+document.getElementById("my-id")
+document.querySelector("#my-id")
+document.querySelectorAll("#my-id")
+
+// class attribute
+document.getElementsByClassName("my-class")
+document.querySelector(".my-class")
+document.querySelectorAll(".my-class")
+
+// name attribute
+document.getElementsByName("my-name")
+```
+
+Additional rewritten forms include `element.closest()`, `element.matches()`, `element.classList.add/remove/toggle/contains()`, `element.setAttribute("class", ...)` and `element.setAttribute("id", ...)` with string literal values, and `element.className` setter forms.
+
+### Dynamic Runtime Class Scoping (CRITICAL)
+
+If you have a class or ID name that is **only toggled or added dynamically at runtime** by JavaScript (for example, with `.classList.toggle("is-open")` or `.classList.add("is-active")`) but **does not exist on any HTML tag inside the template at compile time**, Bascik's HTML compiler will not discover or register it.
+
+This causes a compile mismatch:
+- The **CSS parser** *will* obfuscate the class name inside your stylesheet.
+- The **JS parser** *will not* obfuscate the class name inside your scripts because it was never registered in the HTML pass.
+- At runtime, your script will toggle `"is-open"`, but the CSS will be listening for the obfuscated `.bf5a887ac3134` class, causing interactive elements like menus or modals to fail silently.
+
+#### The Solution: Scoping Helpers
+
+Always declare any dynamic classes or IDs inside a hidden scoping helper element inside your HTML template. This forces Bascik's HTML parser to register the names during compilation:
+
+```html
+<!-- Scoping helper for dynamic runtime classes -->
+<div class="is-open is-active" style="display: none;"></div>
+```
+
+### Build-time Scripts
+
+`<script data-bascik-build>` blocks are executed at transpile time as Node.js ESM modules. Whatever the script writes to stdout is injected into the page in place of the tag. Top-level `import` and top-level `await` are supported. Scripts run with the project root as their working directory.
+
+Use this to pull in external data sources — markdown files, JSON, API responses, generated content — and inline the result directly into your HTML at build time.
+
+```html
+<script data-bascik-build>
+  import { readFile } from 'node:fs/promises';
+  import { marked } from 'marked';
+  const md = await readFile('./content/posts/intro.md', 'utf8');
+  console.log(marked(md));
+</script>
+```
+
+The entire script tag (including opening and closing tags) is replaced by the stdout output. If the script produces no output, the tag is replaced with an empty string. On error, a warning is logged and the tag is removed.
+
+> **Component tags work too:** Build scripts run before component resolution, so their output can contain Bascik component tags that will be transpiled in the next step.
+
+### Non-JavaScript Script Types
+
+Script tags with a `type` other than `text/javascript` (e.g. `type="application/json"`) are left completely untouched — they are not wrapped in an IIFE and their attributes are not scoped.
+
+```html
+<!-- This passes through unchanged -->
+<script type="application/json" id="config-data">
+  { "theme": "dark" }
+</script>
+```
+
+> **Tip:** Disable JS scoping entirely with `scopeScriptBlocks: false` in [bascik.config.js](/configuration).
+
+### Live Demo
+
+Two instances of `test-comp` run independently on the same page. Clicking the button in one instance only affects elements inside that instance.
+
+**Source HTML** (`test-comp.html` — core elements, scripts omitted for brevity):
+
+<!-- demo:source-html -->
+```html
+<div id="my-div-id" name="my-name">Test Comp Div Tag</div>
+<p name="my-name">Test Comp P Tag</p>
+<button id="btn" class="btn">Change Color</button>
+```
+
+**Source CSS:**
+
+<!-- demo:source-css -->
+```css
+.btn { margin: 16px; }
+.btn:hover { background-color: #333; color: #fff; }
+```
+
+**Source JS** (one of the scripts in `test-comp.html`):
+
+<!-- demo:source-js -->
+```js
+document.getElementById("btn").addEventListener("click", () => {
+  document.getElementsByName('my-name').forEach(el => {
+    el.style.color = '#ff7a09';
+  });
+});
+```
+
+**Compiled output HTML** (IDs and name attributes scoped per instance):
+
+<!-- demo:output-html -->
+```html
+<div id="bascik__test-comp__a1b2c3__my-div-id"
+     name="bascik__test-comp__a1b2c3__my-name">Test Comp Div Tag</div>
+<p name="bascik__test-comp__a1b2c3__my-name">Test Comp P Tag</p>
+<button id="bascik__test-comp__a1b2c3__btn"
+        class="bascik__test-comp__btn">Change Color</button>
+```
+
+**Compiled output CSS** (class selectors scoped, shared across all instances):
+
+<!-- demo:output-css -->
+```css
+.bascik__test-comp__btn { margin: 16px; }
+.bascik__test-comp__btn:hover { background-color: #333; color: #fff; }
+```
+
+**Compiled output JS** (selector strings rewritten to match scoped names, wrapped in IIFE):
+
+<!-- demo:output-js -->
+```js
+(function() {
+  document.getElementById("bascik__test-comp__a1b2c3__btn")
+    .addEventListener("click", () => {
+      document.getElementsByName('bascik__test-comp__a1b2c3__my-name')
+        .forEach(el => { el.style.color = '#ff7a09'; });
+    });
+})();
+```
+
+## Slots
+
+### Default Slot
+
+Add `data-bascik-slot` (no value) to any element in your component template to mark where inner content should be inserted. The element itself is replaced by the slot content.
+
+```html
+<!-- my-card.html -->
+<div class="card">
+  <div data-bascik-slot></div>
+</div>
+```
+
+Usage:
+
+```html
+<my-card>
+  <h2>Card Title</h2>
+  <p>Card body text.</p>
+</my-card>
+```
+
+Output:
+
+```html
+<div class="card">
+  <h2>Card Title</h2>
+  <p>Card body text.</p>
+</div>
+```
+
+### Slot Fallback Content
+
+Place default content inside the slot marker. It renders when the usage site passes no inner content.
+
+```html
+<!-- my-card.html -->
+<div class="card">
+  <div data-bascik-slot><p>No content provided.</p></div>
+</div>
+```
+
+```html
+<!-- No inner content — fallback renders -->
+<my-card></my-card>
+
+<!-- Inner content provided — overrides fallback -->
+<my-card><p>Custom content.</p></my-card>
+```
+
+### Named Slots
+
+Use `data-bascik-slot="name"` in the component template to define named slot zones. At the usage site, wrap content for each zone with the same attribute.
+
+In the component template:
+
+```html
+<!-- page-layout.html -->
+<div class="layout">
+  <header>
+    <div data-bascik-slot="header"></div>
+  </header>
+  <main>
+    <div data-bascik-slot></div>
+  </main>
+  <aside>
+    <div data-bascik-slot="sidebar"></div>
+  </aside>
+</div>
+```
+
+At the usage site:
+
+```html
+<!-- index.html -->
+<page-layout>
+  <!-- default slot content -->
+  <p>Main body content.</p>
+
+  <!-- named slot: header -->
+  <div data-bascik-slot="header">
+    <h1>Page Title</h1>
+  </div>
+
+  <!-- named slot: sidebar -->
+  <div data-bascik-slot="sidebar">
+    <nav>Sidebar nav</nav>
+  </div>
+</page-layout>
+```
+
+> **How it works:** Named slot wrappers in the usage inner HTML are extracted by name and injected into the matching `data-bascik-slot="name"` placeholder in the template. Everything left over goes into the default slot.
+
+### Whitespace Handling
+
+Leading and trailing whitespace is trimmed from all slot content at build time. This means you can write component usage on multiple lines without worrying about stray newlines or indentation appearing in the output:
+
+```html
+<!-- these two usages produce identical output -->
+
+<my-card><p>Hello</p></my-card>
+
+<my-card>
+  <p>Hello</p>
+</my-card>
+```
+
+Whitespace *within* slot content is preserved exactly as written.
+
+> **Note for `<pre>` contexts:** Bascik skips transpilation inside `<pre>` and `<code>` elements, so slot trimming only applies to regular component resolution — not to raw preformatted content you write directly inside those elements.
+
+### Live Demo
+
+The interactive slot demo passes a button into the `feature-card` component's default slot.
+
+**Usage (the code you write):**
+
+<!-- demo:code -->
+```html
+<feature-card
+  data-bascik-prop-label="Example"
+  data-bascik-prop-title="Named Slots"
+  data-bascik-prop-desc="...">
+  <!-- content for default slot -->
+  <div style="padding-top:12px;...">
+    <button class="btn btn-primary">Read More</button>
+  </div>
+</feature-card>
+```
+
+**Compiled output** (slot content injected into the `fcard-slot` div):
+
+<!-- demo:output -->
+```html
+<div class="bascik__feature-card__fcard">
+  <p class="bascik__feature-card__fcard-label">Example</p>
+  <h3 class="bascik__feature-card__fcard-title">Named Slots</h3>
+  <p class="bascik__feature-card__fcard-desc">...</p>
+  <div class="bascik__feature-card__fcard-slot">
+    <div style="...">
+      <button class="...">Read More</button>
+    </div>
+  </div>
+</div>
+```
+
+## Props
+
+### Defining Props in a Template
+
+Add a `data-bascik-prop-{name}` attribute (no value) to any element in the component template. The element's inner content will be replaced with the prop value at build time.
+
+```html
+<!-- alert-box.html -->
+<div class="alert">
+  <strong data-bascik-prop-title></strong>
+  <p data-bascik-prop-message></p>
+</div>
+```
+
+### Passing Props at Usage
+
+Set `data-bascik-prop-{name}="value"` on the component tag. The value is injected into the matching template element.
+
+```html
+<!-- src/pages/index.html -->
+<alert-box
+  data-bascik-prop-title="Success"
+  data-bascik-prop-message="Your changes have been saved.">
+</alert-box>
+```
+
+Output:
+
+```html
+<div class="alert">
+  <strong>Success</strong>
+  <p>Your changes have been saved.</p>
+</div>
+```
+
+### Props with Existing Attributes
+
+Other attributes on the target element are preserved. The prop marker attribute itself is removed from the output.
+
+```html
+<!-- template -->
+<p class="lead" data-bascik-prop-body></p>
+
+<!-- compiled -->
+<p class="bascik__comp__x1__lead">Your prop value here.</p>
+```
+
+### Naming Conventions
+
+Prop names use the portion of the attribute after `data-bascik-prop-`. You can use any lowercase alphanumeric name with hyphens:
+
+```html
+data-bascik-prop-title
+data-bascik-prop-href
+data-bascik-prop-alt-text
+data-bascik-prop-icon-url
+```
+
+> **Use slots for HTML content.** Props inject plain text values. If you need to inject rich HTML (tags, nested elements), use [slots](/slots) instead.
+
+### Example: Feature Card
+
+A good real-world use of props is a card component with a configurable label, title, and description:
+
+```html
+<!-- src/components/feature-card.html -->
+<div class="card">
+  <span class="card-label" data-bascik-prop-label></span>
+  <h3 data-bascik-prop-title></h3>
+  <p data-bascik-prop-desc></p>
+</div>
+```
+
+```html
+<feature-card
+  data-bascik-prop-label="New"
+  data-bascik-prop-title="Live Reload"
+  data-bascik-prop-desc="Automatic browser reload on every change.">
+</feature-card>
+```
+
+### Live Demo
+
+The interactive props demo passes values directly to the `feature-card` component via `data-bascik-prop-*` attributes.
+
+**Usage (the code you write):**
+
+<!-- demo:code -->
+```html
+<feature-card
+  data-bascik-prop-label="Interactive"
+  data-bascik-prop-title="Component Props"
+  data-bascik-prop-desc="These values are injected into the component template at build time.">
+</feature-card>
+```
+
+**Compiled output** (prop placeholders replaced, component HTML inlined):
+
+<!-- demo:output -->
+```html
+<div class="bascik__feature-card__fcard">
+  <p class="bascik__feature-card__fcard-label">Interactive</p>
+  <h3 class="bascik__feature-card__fcard-title">Component Props</h3>
+  <p class="bascik__feature-card__fcard-desc">
+    These values are injected into the component template at build time.
+  </p>
+</div>
+```
+
+## Attribute Inheritance
+
+Non-`data-bascik-*` attributes on a component usage tag are automatically merged onto the component's root element. `id` is excluded.
+
+### How It Works
+
+When Bascik transpiles a component, it reads the usage tag, extracts any inheritable attributes, and merges them onto the first element of the compiled output.
+
+```html
+<!-- usage -->
+<site-nav
+  class="sticky"
+  aria-label="main navigation"
+  data-testid="main-nav">
+</site-nav>
+```
+
+```html
+<!-- site-nav.html -->
+<nav class="nav">
+  <a href="/">Home</a>
+</nav>
+```
+
+```html
+<!-- compiled output -->
+<nav
+  class="bascik__site-nav__x1__nav sticky"
+  aria-label="main navigation"
+  data-testid="main-nav">
+  <a href="/">Home</a>
+</nav>
+```
+
+### Class Merging
+
+When the root element already has a scoped `class` attribute, the inherited class is **appended** rather than replacing it.
+
+```html
+<!-- root element has scoped class -->
+<nav class="bascik__site-nav__x1__nav">...</nav>
+
+<!-- after merging class="sticky" -->
+<nav class="bascik__site-nav__x1__nav sticky">...</nav>
+```
+
+### What Gets Inherited
+
+All attributes on the usage tag are inherited **except**:
+
+- Any `data-bascik-*` attribute — these are consumed by Bascik for slots, props, etc.
+- `id` — not inherited to avoid conflicting with the component template's own scoped IDs.
+
+Common use cases for inheritance:
+
+- **Layout classes** — `class="sticky"`, `class="hidden"`
+- **Accessibility** — `aria-label`, `role`, `aria-hidden`
+- **Testing hooks** — `data-testid`, `data-cy`
+- **Custom data** — any `data-*` attribute (except `data-bascik-*`)
+
+### Interaction with Scoped Classes
+
+Inherited class names are _not_ scoped — they are treated as global classes. This is intentional: you are passing a page-level concern onto the component's root element.
+
+```html
+<my-card class="featured">
+  <p>Featured content</p>
+</my-card>
+```
+
+The `featured` class is a global class that you define in your page-level stylesheet, separate from the component's scoped CSS.
+
+> **Self-closing syntax works too:** Attribute inheritance works with both paired and self-closing usage syntax: `<my-icon class="large" aria-hidden="true" />`
+
+### Live Example
+
+The following passes `class="highlight"` and `aria-label="Featured card"` on the component usage tag. Both are inherited — `class` is appended to the existing scoped class, and `aria-label` is added to the root element verbatim.
+
+<!-- demo:source-html -->
+```html
+<feature-card
+  class="highlight"
+  aria-label="Featured card"
+  data-bascik-prop-label="Example"
+  data-bascik-prop-title="Attribute Inheritance"
+  data-bascik-prop-desc="The class and aria-label above were merged onto the root element.">
+</feature-card>
+```
+
+<!-- demo:output-html -->
+```html
+<div class="bascik__feature-card__x1__fcard highlight" aria-label="Featured card">
+  <p class="bascik__feature-card__x1__fcard-label">Example</p>
+  <h3 class="bascik__feature-card__x1__fcard-title">Attribute Inheritance</h3>
+  <p class="bascik__feature-card__x1__fcard-desc">
+    The class and aria-label above were merged onto the root element.
+  </p>
+  <div class="bascik__feature-card__x1__fcard-slot"><div></div></div>
+</div>
+```
+
+## Self-Closing Tags
+
+```html
+<my-nav /> <my-nav class="top" />
+```
+
+## Head Components
+
+Components work inside `<head>`:
+
+```html
+<!-- src/components/site-meta.html -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="My site" />
+```
+
+```html
+<head>
+  <title>Home</title>
+  <site-meta></site-meta>
+</head>
+```
+
+## Build-time Scripts
+
+### data-bascik-build
+
+Tag any `<script>` block with `data-bascik-build` and Bascik will execute it as a Node.js ESM module during transpilation. The script's `stdout` output replaces the tag in the final HTML.
+
+```html
+<script data-bascik-build>
+  console.log('<p>This text was generated at build time.</p>');
+</script>
+```
+
+Output in the compiled HTML:
+
+```html
+<p>This text was generated at build time.</p>
+```
+
+### Execution Model
+
+Each `data-bascik-build` script is written to a temporary `.mjs` file and executed using the same Node.js binary running Bascik. The rules are:
+
+- Top-level `import` and top-level `await` are supported.
+- The working directory is the **project root** — paths in `readFile` or `fetch` are relative to where you run `bascik`.
+- Write output with `console.log()` or `process.stdout.write()`.
+- Anything written to `stderr` is forwarded to Bascik's own stderr.
+- The script runs during both `bascik` (dev) and `bascik --build` (production).
+
+> **Component tags in output:** Build script output is processed before component resolution, so your generated HTML can include component tags like `<my-card>` — they will be transpiled normally.
+
+### Error Handling
+
+If a build script throws, Bascik logs a warning and replaces the script tag with an empty string. The build continues rather than aborting. Check your terminal output if content is missing from the page.
+
+### Example: Reading a Markdown File
+
+A common pattern is converting Markdown content to HTML at build time:
+
+```html
+<script data-bascik-build>
+  import { readFile } from 'node:fs/promises';
+  import { marked } from 'marked';
+
+  const md = await readFile('./content/intro.md', 'utf8');
+  console.log(marked(md));
+</script>
+```
+
+### Example: Generating a Nav from JSON
+
+Read a JSON data file and render HTML markup from it:
+
+```html
+<script data-bascik-build>
+  import { readFile } from 'node:fs/promises';
+
+  const items = JSON.parse(await readFile('./content/nav.json', 'utf8'));
+  const links = items.map(item =>
+    `<li><a href="${item.href}">${item.label}</a></li>`
+  ).join('\n');
+  console.log(`<ul>\n${links}\n</ul>`);
+</script>
+```
+
+### Example: Fetching at Build Time
+
+Node.js 24+ includes a global `fetch`. Use it to pull remote data at build time so the result is baked into the page:
+
+```html
+<script data-bascik-build>
+  const res = await fetch('https://api.example.com/posts/latest');
+  const { title, excerpt } = await res.json();
+  console.log(`<h2>${title}</h2><p>${excerpt}</p>`);
+</script>
+```
+
+### data-bascik-dev
+
+Tag a script with `data-bascik-dev` to mark it as a dev-only script. In development the attribute is stripped and the script runs normally in the browser. In production builds (`bascik --build`) the entire script tag is removed from the output.
+
+```html
+<script data-bascik-dev>
+  console.log('Component mounted — dev only');
+</script>
+```
+
+This is useful for debug logging, development overlays, or any browser script that should never ship to production.
+
+> **dev vs. build:** `data-bascik-build` scripts execute at transpile time and inject HTML. `data-bascik-dev` scripts run in the browser, but only in dev mode.
+
+### Head Components
+
+Components work inside `<head>` as well as `<body>`. This lets you extract repeated meta tags, link tags, or any other head content into a reusable component:
+
+```html
+<!-- src/components/site-meta.html -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="My site description" />
+<link rel="icon" href="/favicon.ico" />
+```
+
+```html
+<!-- src/pages/index.html -->
+<head>
+  <title>Home</title>
+  <site-meta></site-meta>
+</head>
+```
+
+Bascik resolves the component tag the same way it does in body content — the component HTML is substituted in place. CSS scoping and prop injection work normally.
+
+### When to Use Build Scripts
+
+Build scripts are the right tool when:
+
+- Content lives in a file or API outside the HTML source (Markdown, JSON, CSV, remote endpoints).
+- You need to repeat the same transformation across multiple pages without copy-pasting logic.
+- Generated markup should be part of the static HTML output rather than rendered on the client.
+
+Prefer plain hardcoded HTML when:
+
+- The content is short, stable, and doesn't come from an external source.
+- The overhead of reading a file or network call at build time isn't justified.
+
+### The npm Ecosystem
+
+Because a Bascik project is a Node.js project, any npm package can be installed and imported in build scripts. Write your own shared utility modules in `src/lib/` and import them across pages. Access `process.env` for environment variables and API keys that should be baked into the build without shipping to the browser.
+
+## Configuration (`bascik.config.js`)
+
+Create a `bascik.config.js` file in your project root to override any default settings.
+
+### Full Example
+
+```js
+// bascik.config.js
+export const bascikConfig = {
+  // Source directories
+  directory: {
+    pages: 'src/pages',
+    components: 'src/components',
+  },
+
+  // Scoping
+  scopeScriptBlocks: true,
+  scopeAttribute: {
+    class: true,
+    id: true,
+    name: true,
+  },
+  skipTranspilingElementContents: ['code'], // don't scope inside these elements
+
+  // CSS
+  deduplicateCss: true,
+  minifyStyles: true,            // remove whitespace from compiled CSS
+  obfuscateAttributeNames: true, // hash class / id names in production
+
+  // Server
+  cacheHttp: false,
+
+  // Logging
+  verboseLogging: false, // include { cause } in console.warn/error
+
+  // Sitemap
+  siteUrl: 'https://example.com',
+  generate: {
+    sitemap: true,  // write dist/sitemap.xml
+    robots: true,   // write dist/robots.txt
+  },
+
+  // Dev-mode extra watch paths
+  triggerTranspile: [], // re-transpile all pages when these change
+};
+
+// Overrides applied only during `bascik --build`
+export const buildOverrideConfig = {
+  obfuscateAttributeNames: true,
+  minifyStyles: true,
+};
+```
+
+### Options Reference
+
+#### `directory`
+
+Paths to your pages and components directories. Relative to the project root.
+
+```js
+directory: {
+  pages: 'src/pages',      // default
+  components: 'src/components', // default
+}
+```
+
+#### `scopeScriptBlocks`
+
+Wrap component `<script>` tags in an IIFE and rewrite scoped attribute references. Set to `false` if you want raw unmodified script output.
+
+```js
+scopeScriptBlocks: true // default
+```
+
+#### `scopeAttribute`
+
+Control which HTML attribute types are scoped independently. Useful if you're using Tailwind (`class: false`) or don't need name scoping.
+
+```js
+scopeAttribute: {
+  class: true, // default
+  id: true,    // default
+  name: true,  // default
+}
+```
+
+#### `deduplicateCss`
+
+When `true` (default), all instances of the same component share the same scoped class names so the compiled `<style>` block is emitted only once per component type, regardless of how many times the component appears on the page.
+
+When `false`, every instance gets its own unique per-instance class names (the same scheme used for `id` scoping). This means a `querySelector('.myClass')` inside a component script will naturally target only elements inside that specific instance — but each instance emits its own `<style>` block.
+
+```js
+deduplicateCss: true // default
+```
+
+> **Choosing `false`:** Use per-instance class scoping when a component's JavaScript needs to use class selectors to locate its own root element and you have multiple instances of that component on the same page. For most components, using an `id` attribute to anchor the script (which is always per-instance) is a simpler alternative.
+
+#### `skipTranspilingElementContents`
+
+An array of HTML element names whose inner content is left untouched by the scoping pipeline. Attribute values, element-selector class injection, and JS selector rewriting are all skipped for any HTML found *inside* these elements. The elements' own opening-tag attributes (e.g. `class="cblock-body"` on `<code>` itself) are still scoped normally.
+
+Defaults to `["code"]` — the typical element used to display literal code examples. Add `"pre"` only if your templates contain raw text inside `<pre>` blocks that aren't wrapped in `<code>` and whose content has attribute patterns you don't want scoped. Note: when `"pre"` is in the list, attributes on elements *inside* `<pre>` (such as `class="cblock-body"` on a `<code>` child) are also excluded from scoping.
+
+```js
+skipTranspilingElementContents: ['code'] // default
+```
+
+Set to an empty array to disable the protection entirely, or extend the list for other elements whose contents should be preserved as-is.
+
+#### `minifyStyles`
+
+Collapse whitespace and newlines in the injected `<style>` block. Defaults to `true`.
+
+#### `obfuscateAttributeNames`
+
+Hash the generated class and id names to short hex strings instead of the verbose `bascik__component__id__name` format. Recommended for production.
+
+```js
+obfuscateAttributeNames: true // production default
+// bascik__my-nav__ab12cd34__navigation
+// becomes: bab12cd34
+```
+
+#### `cacheHttp`
+
+Enable HTTP cache headers on the dev server responses. Keep `false` during development.
+
+#### `verboseLogging`
+
+Include the `{ cause }` detail object in `console.warn` and `console.error` calls. Useful for debugging component processing errors.
+
+```js
+verboseLogging: false // default
+```
+
+#### `siteUrl`
+
+The canonical base URL of your deployed site (e.g. `'https://example.com'`). Required for sitemap generation. Trailing slashes are trimmed automatically.
+
+```js
+siteUrl: 'https://example.com'
+```
+
+#### `generate`
+
+Control which files are written to `dist/` during `bascik --build`. Both default to `true`. Requires `siteUrl` to be set.
+
+```js
+generate: {
+  sitemap: true, // write dist/sitemap.xml
+  robots: true,  // write dist/robots.txt
+}
+```
+
+See [Sitemap & robots.txt](/sitemap) for a full walkthrough.
+
+#### `triggerTranspile`
+
+An array of directories or files that, when changed in dev mode, trigger a full re-transpile of all pages. Useful for utility scripts, data files, or image directories that pages depend on at build time.
+
+```js
+triggerTranspile: ['scripts/', 'data/'] // empty by default
+```
+
+Has no effect during `bascik --build`.
+
+### `buildOverrideConfig`
+
+Exporting a second `buildOverrideConfig` object lets you set options that only apply during `bascik --build`, overriding the values in `bascikConfig`. A common pattern is to enable obfuscation and minification only in production:
+
+```js
+export const buildOverrideConfig = {
+  obfuscateAttributeNames: true,
+  minifyStyles: true,
+};
+```
+
+## Folder Structure
+
+```
+src/
+  pages/       ← one .html file per route (plus CSS, images, etc.)
+  components/  ← component .html (+ optional .css) files
+```
+
+### Custom 404 Page
+
+If you create a `404.html` file in your pages directory (e.g. `src/pages/404.html`), Bascik's built-in development server will automatically serve it as a fallback for any non-existent routes with a `404` status code.
+
+When you build your site for production (`bascik --build`), this file is compiled to `dist/404.html`, which is the standard location recognized by most static hosting providers (such as GitHub Pages, Netlify, Vercel, and Cloudflare Pages) to serve custom 404 pages.
+
+## CLI
+
+```sh
+bascik          # dev: transpile, start HTTP/2 server at https://localhost:8443, watch
+bascik --build  # production: transpile to dist/ only
+bascik --check  # static analysis: validate pages and components without building
+```
+
+### Development Workflow & Server Output
+
+Bascik's command-line interface is designed to provide clean, minimal, and informative terminal output. Here is what you will see in your terminal during development.
+
+#### 1. Starting the Dev Server
+When you start the dev server, Bascik automatically generates local SSL/TLS certificates for its built-in HTTP/2 server, transpiles all pages inside your pages directory, and begins watching for changes:
+
+```terminal
+SSL: generated trusted certs via mkcert (run `mkcert -install` once if you haven't)
+Server running at https://localhost:8443
+
+transpiled: pages/getting-started.html
+transpiled: pages/index.html
+transpiled: pages/about.html
+
+✓ 3 pages transpiled in 45ms
+```
+
+If [mkcert](https://github.com/FiloSottile/mkcert) is not installed, Bascik falls back to a self-signed certificate (browsers will show a security warning until you accept the exception):
+
+```terminal
+SSL: self-signed cert generated (install mkcert for no browser warning)
+Server running at https://localhost:8443
+```
+
+If port 8443 is already in use, Bascik automatically tries the next available port:
+
+```terminal
+Port 8443 is in use, trying 8444…
+Server running at https://localhost:8444
+```
+
+Certs are generated once and reused on subsequent starts. Delete `bascik-privkey.pem` and `bascik-cert.pem` to regenerate them (e.g. to upgrade from a self-signed cert to a mkcert-trusted one after installing mkcert).
+
+#### 2. Watching for File Changes (Watch Mode)
+While the dev server is active, Bascik watches your file system and incrementally updates your build as files are added, updated, or removed:
+
+* **Modifying/Adding Pages:** Editing or adding an HTML page in your pages directory (e.g., `src/pages/about.html`) triggers incremental transpilation of just that page:
+  ```terminal
+  transpiled: pages/about.html
+  ```
+* **Modifying Components:** Editing a component (e.g., `src/components/site-nav/site-nav.html`) triggers selective transpilation. Bascik tracks dependency mappings and only rebuilds pages that actually reference that component:
+  ```terminal
+  transpiled: pages/index.html
+  transpiled: pages/about.html
+  ```
+* **Static Assets:** Replicating any non-HTML static assets (like custom CSS, JS files, or images) from pages directly into the output directory:
+  ```terminal
+  copied: /Users/collin/github/bascik/docs/src/pages/css/custom.css
+  ```
+* **Deleting Pages:** Removing a page from your pages directory automatically cleans up its compiled output counterpart to prevent dead files:
+  ```terminal
+  deleted file: /Users/collin/github/bascik/docs/src/pages/old-page.html
+  ```
+
+#### 3. Transpilation & Build Errors
+If you introduce a syntax mistake or a runtime error inside a custom build script, Bascik prevents the server from crashing, gracefully logs a descriptive error with the file and exact line/column location, and continues running.
+
+* **Component Transpilation Failure:** If a component markup or CSS scoping parser fails during transpilation:
+  ```terminal
+  [bascik] Transpilation failed for component <site-nav> during css-scoping in "pages/about.html" at (line 22, column 8)
+    Defined in component template: "components/site-nav/site-nav.html"
+    Error: ParseError: CSS Selector is invalid or could not be parsed.
+  ```
+* **Build Script Failure:** If a build-time JavaScript execution block (using `<script data-bascik-build>`) encounters an error:
+  ```terminal
+  [bascik] build script error in "pages/index.html" at (line 12, column 5):
+  ReferenceError: marked is not defined
+  ```
+* **Unknown Component Tags:** If a page references a hyphenated tag with no matching component file, Bascik warns during transpilation:
+  ```terminal
+  [bascik] Unresolved component tag in "pages/about.html": <my-mistyped> — no matching component file found. Run `bascik --check` for a full report.
+  ```
+
+#### 4. Static Analysis (`bascik --check`)
+Run `bascik --check` from your project root to validate all pages and component files without starting the dev server or writing any output files:
+
+```terminal
+bascik --check
+```
+
+Bascik will scan every `.html` file in your pages and components directories and report:
+
+* **Errors** — hyphenated tags that have no matching component file (causes the tag to render as-is in the output):
+  ```terminal
+  [bascik check] Unknown component in "pages/about.html": <my-missing> — no matching component file found
+  ```
+* **Warnings** — component files that exist but are never referenced in any page or other component:
+  ```terminal
+  [bascik check] Unused component: <old-widget> — defined but never referenced
+  ```
+* **Success** — exits with code `0` when no errors are found (unused warnings are still printed):
+  ```terminal
+  [bascik check] ✓ 8 pages and 12 components checked — no errors
+  ```
+
+`bascik --check` exits with code `1` when errors are found, making it suitable for use in CI pipelines:
+
+```sh
+# In a CI script:
+bascik --check && bascik --build
+```
+
+> **What `bascik --check` does not cover.** The check validates component references — unknown and unused tags. It does not parse CSS or JavaScript for syntax errors. If a CSS file contains a syntax error (for example, a value accidentally split across two lines), Bascik's scoping transforms may still run on the malformed input and produce unexpected output. Complement `bascik --check` with the tools below to catch these cases before they reach your build.
+
+#### 5. Production Build (`bascik --build`)
+
+Run `bascik --build` to write optimised, deployment-ready files to `dist/`:
+
+```sh
+bascik --build
+```
+
+The output uses root-relative asset paths (e.g. `/css/styles.css`) and **must be served by an HTTP server** — opening files directly from disk via `file://` will break styles and scripts because the browser cannot resolve root-relative URLs from a `file://` origin.
+
+To preview the production build locally before deploying:
+
+```sh
+cd dist && npx http-server
+```
+
+Then open the URL printed by `http-server` (default: `http://127.0.0.1:8080`).
+
+#### Recommended Complementary Analysis Tools
+
+These tools run independently of Bascik and are not required, but they close the gap that `bascik --check` does not cover:
+
+| Tool | What it catches | How to use |
+|---|---|---|
+| **VS Code built-in CSS** | CSS syntax errors (squiggly lines in `.css` files in the editor) | Enabled by default — no install needed |
+| **[Stylelint](https://stylelint.io)** | CSS syntax errors, invalid properties, rule ordering, custom conventions | `npm install -D stylelint && npx stylelint "**/*.css"` |
+| **[HTMLHint](https://htmlhint.com)** | HTML structure errors in page and component `.html` files | `npm install -D htmlhint && npx htmlhint "src/**/*.html"` |
+| **[ESLint](https://eslint.org)** | JavaScript syntax and logic errors in component `<script>` blocks | `npm install -D eslint && npx eslint "src/**/*.js"` |
+
+Adding a Stylelint step to CI is the most effective single addition for catching CSS issues that affect Bascik's scoping output:
+
+```sh
+# CI pipeline with CSS and component validation:
+npx stylelint "src/**/*.css" && bascik --check && bascik --build
+```
+
+#### Editor Configuration
+
+Editors validate `<script>` blocks in an HTML file as if they all share one scope. This causes false "variable already declared" errors when the same variable name appears in two different script blocks — even though Bascik wraps each block in an IIFE at build time, keeping their scopes completely isolated.
+
+**VS Code** ships with a built-in HTML script validator that triggers this. Disable it for your project by adding a `.vscode/settings.json` file:
+
+```json
+{
+  "html.validate.scripts": false
+}
+```
+
+This suppresses the false positives without affecting `.js` file validation or any other language feature. The actual runtime isolation comes from Bascik's IIFE wrapping at build time, not from editor validation.
+
+> **Committing `.vscode/settings.json`.** Checking this file into your repository means every contributor gets the correct editor behaviour without any manual setup step.
+
+If you prefer a per-block fix rather than a project-wide setting, add `// @ts-nocheck` as the first line inside any script block that triggers the warning:
+
+```html
+<script>
+  // @ts-nocheck
+  const count = 0;
+  document.getElementById('count-btn').addEventListener('click', () => { … });
+</script>
+```
+
+#### 5. Inspecting the `dist/` Directory
+
+Both the dev server and `bascik --build` write compiled HTML to `dist/` on disk. This is the most direct way to confirm that Bascik did what you expected.
+
+The `dist/` structure mirrors your `src/pages/` directory with the leading `src/pages/` stripped:
+
+```
+src/pages/about.html       →  dist/about.html
+src/pages/blog/post.html   →  dist/blog/post.html
+```
+
+Open any compiled file and check:
+
+* **Component resolution** — custom tags like `<site-nav>` should be gone, replaced with the component's full HTML. If a hyphenated tag is still present in the output, no matching component file was found.
+* **Scoped class names** — elements that came from a component will have classes like `bascik__site-nav__nav` (or a short hash when `obfuscateAttributeNames` is enabled). If classes look unscoped, check that the `.css` file is paired correctly in the same directory as the component's `.html` file.
+* **Injected CSS** — each page's `<head>` contains a single `<style>` block assembled from all components used on that page. If styles are missing or duplicated unexpectedly, open the style block and search for the component name.
+* **Build script output** — `<script data-bascik-build>` tags are replaced with their stdout. If the output is missing or wrong, check the terminal for a `[bascik] build script error` message and inspect the script directly.
+* **Slot and prop content** — verify that slot fallbacks and prop values were injected where expected.
+
+The browser's **View Source** (or DevTools **Sources** panel) shows the same content as `dist/` and is often faster for live debugging during development.
+
+## Key Constraints for AI Code Generation
+
+1. Component tag names must be hyphenated (e.g. `my-nav`, `site-header`). Single-word tags are not valid custom element names.
+2. CSS scoping only applies to paired `.css` files and inline `<style>` tags inside component HTML.
+3. CSS `#id {}` hash selectors are converted to component-scoped class selectors; the class is automatically injected onto the matching element. The `[id]` attribute-selector form is stripped.
+4. Use `id` and `class` selectors in JS that exactly match the attributes in the component HTML — Bascik rewrites them at build time.
+5. For compound DOM queries, query by a single scoped `id` first, then traverse from the returned element.
+6. Use `data-` attributes for runtime state that changes via JavaScript (e.g. `data-state="open"`). Scoped class names are assigned at build time and cannot be reliably looked up by JS string manipulation.
+7. Props accept text only. For rich HTML content, use slots.
+8. `<script type="module">` scripts are not wrapped in an IIFE but their selectors are still rewritten.
+
+## JavaScript Libraries
+
+Bascik adds zero JavaScript to your pages — but that is a default, not a rule. You are free to include any JavaScript library you want. CDN-delivered libraries, bundled scripts, and lightweight reactivity tools all work alongside Bascik without any special configuration.
+
+### How to Include a Library
+
+Add a `<script src>` tag to your page's `<head>` or to a shared head component. Bascik passes external script tags through completely unchanged — only inline `<script>` blocks with component-scoped selectors are rewritten.
+
+```html
+<!-- src/pages/index.html -->
+<head>
+  <title>My Site</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <!-- petite-vue from CDN — passed through unchanged by Bascik -->
+  <script src="https://unpkg.com/petite-vue" defer init></script>
+</head>
+```
+
+Alternatively, co-locate the script tag inside the component file so the library is only loaded on pages that actually use the component:
+
+```html
+<!-- src/components/my-counter.html -->
+<div v-scope="{ count: 0 }">
+  <button @click="count--">−</button>
+  <strong>{{ count }}</strong>
+  <button @click="count++">+</button>
+</div>
+<script src="https://unpkg.com/petite-vue" defer init></script>
+```
+
+> **Tip:** If multiple components on the same page all include the same CDN `<script src>` tag, the browser deduplicates requests via HTTP caching. For cleaner output, place the shared CDN tag in a head component instead.
+
+### petite-vue
+
+[petite-vue](https://github.com/vuejs/petite-vue) is a ~5 KB subset of Vue optimized for progressive enhancement. It auto-mounts any element with a `v-scope` attribute, giving it isolated reactive state — no build step, no bundler.
+
+Include it once with the `init` attribute and it mounts all `v-scope` elements on the page automatically:
+
+```html
+<script src="https://unpkg.com/petite-vue" defer init></script>
+```
+
+#### Reactive Counter
+
+Each instance of this component has its own isolated state. Place it on a page as many times as you want — the counters are independent:
+
+<!-- demo:source-html -->
+```html
+<!-- src/components/my-counter.html -->
+<div class="counter" v-scope="{ count: 0 }">
+  <button class="btn" @click="count--">−</button>
+  <span class="count-value">{{ count }}</span>
+  <button class="btn btn-primary" @click="count++">+</button>
+</div>
+```
+
+<!-- demo:source-css -->
+```css
+/* src/components/my-counter.css */
+.counter {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 1.25rem;
+}
+
+.count-value {
+  font-family: monospace;
+  font-size: 1.5rem;
+  min-width: 2ch;
+  text-align: center;
+}
+```
+
+<!-- demo:source-js -->
+```js
+// Load petite-vue once via CDN in the page <head>:
+// <script src="https://unpkg.com/petite-vue" defer init></script>
+//
+// No per-component JavaScript is needed — petite-vue
+// auto-mounts every element with a v-scope attribute.
+```
+
+<!-- demo:code -->
+```html
+<!-- Two independent instances on the same page -->
+<my-counter></my-counter>
+<my-counter></my-counter>
+```
+
+<!-- demo:output-html -->
+```html
+<div class="bascik__my-counter__counter" v-scope="{ count: 0 }">
+  <button class="bascik__my-counter__btn" @click="count--">−</button>
+  <span class="bascik__my-counter__count-value">{{ count }}</span>
+  <button class="bascik__my-counter__btn bascik__my-counter__btn-primary" @click="count++">+</button>
+</div>
+```
+
+<!-- demo:output-css -->
+```css
+.bascik__my-counter__counter {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 1.25rem;
+}
+
+.bascik__my-counter__count-value {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  min-width: 2ch;
+  text-align: center;
+}
+```
+
+#### Live Filter
+
+petite-vue's `v-for` and `v-model` work as expected. Filter a list in real time without writing any manual DOM manipulation:
+
+```html
+<!-- src/components/item-filter.html -->
+<div v-scope="{
+  query: '',
+  items: ['Astro', 'Eleventy', 'Next.js', 'Nuxt', 'SvelteKit']
+}">
+  <input type="search" v-model="query" placeholder="Filter frameworks…" />
+  <ul>
+    <template v-for="item in items.filter(i =>
+      i.toLowerCase().includes(query.toLowerCase())
+    )">
+      <li>{{ item }}</li>
+    </template>
+  </ul>
+</div>
+```
+
+#### Shared State Across Components
+
+For state that needs to be shared between separate components, define it in a plain JavaScript module and import it in a `data-bascik-build` script or a regular `<script type="module">`:
+
+```js
+// src/pages/store.js — imported by components that share state
+import { reactive } from 'https://unpkg.com/petite-vue?module';
+export const store = reactive({ cart: [] });
+```
+
+```html
+<!-- src/components/cart-button.html -->
+<script type="module">
+  import { createApp } from 'https://unpkg.com/petite-vue?module';
+  import { store } from '/store.js';
+  createApp({ store }).mount('#cart-root');
+</script>
+<div id="cart-root" v-scope="{ store }">
+  Cart ({{ store.cart.length }})
+</div>
+```
+
+### Alpine.js
+
+[Alpine.js](https://alpinejs.dev) is another lightweight option for adding reactive behavior. It uses `x-data` for state, `@click` / `x-on` for events, and `x-show` / `x-bind` for DOM updates — all declaratively in the HTML.
+
+```html
+<!-- src/components/disclosure.html -->
+<div x-data="{ open: false }">
+  <button @click="open = !open">
+    Toggle details
+  </button>
+  <p x-show="open">
+    Here is the hidden content.
+  </p>
+</div>
+<script src="https://unpkg.com/alpinejs" defer></script>
+```
+
+### Tailwind CSS
+
+[Tailwind CSS](https://tailwindcss.com) is a utility-first CSS framework. Because Tailwind's utility classes are global by design, you need to tell Bascik not to scope class attributes — otherwise Bascik renames `class="flex gap-4"` to `class="bascik__my-comp__flex bascik__my-comp__gap-4"`, which Tailwind's CSS will never match.
+
+Set `scopeAttribute.class` to `false` in `bascik.config.js`:
+
+```js
+// bascik.config.js
+export const bascikConfig = {
+  scopeAttribute: {
+    class: false, // let Tailwind utility classes pass through unchanged
+    id: true,
+    name: true,
+  },
+};
+```
+
+Then include Tailwind via CDN in your head component or page `<head>`. The CDN script runs in the browser and generates CSS for whichever utility class names it finds in the DOM:
+
+```html
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+```
+
+With class scoping turned off, Tailwind utility classes work normally inside any component:
+
+<!-- demo:tailwind-html -->
+```html
+<!-- src/components/feature-card.html -->
+<div class="rounded-xl border border-gray-200 p-6 shadow-sm">
+  <h3 class="mb-2 text-lg font-semibold" data-bascik-prop-title></h3>
+  <p class="text-sm text-gray-600" data-bascik-prop-body></p>
+</div>
+```
+
+<!-- demo:tailwind-output-html -->
+```html
+<!-- Output: class names pass through unchanged (class scoping is off) -->
+<div class="rounded-xl border border-gray-200 p-6 shadow-sm">
+  <h3 class="mb-2 text-lg font-semibold"></h3>
+  <p class="text-sm text-gray-600"></p>
+</div>
+```
+
+<!-- demo:tailwind-source-js -->
+```js
+// Load Tailwind CSS via CDN in the page <head>:
+// <script src="https://cdn.tailwindcss.com"></script>
+//
+// The CDN script scans the DOM for utility class names
+// and generates the matching CSS on the fly.
+// For production, use the Tailwind CLI instead.
+```
+
+For production, replace the CDN tag with a [Tailwind CLI](https://tailwindcss.com/docs/installation) build step that scans your source files and emits a single CSS file — the CDN is only recommended for development.
+
+> **Trade-off.** With `class: false`, Bascik no longer isolates component class names — you give up class-level CSS isolation in exchange for Tailwind compatibility. IDs and names are still scoped independently. For most Tailwind projects this is the right choice since Tailwind's utilities are intentionally global.
+
+### Any Library Works
+
+Bascik places no restrictions on which libraries you use. A few common patterns:
+
+- **[HTMX](https://htmx.org)** — add `hx-get`, `hx-post` attributes to elements for server-driven partial updates.
+- **[Stimulus](https://stimulus.hotwired.dev)** — attach controllers to elements via `data-controller`; pairs well with Bascik's component structure.
+- **Chart.js, D3, Leaflet** — include via CDN and initialize with a `<script>` block in the component. Bascik scopes the ID selector used to find the mount element automatically.
+
+```html
+<!-- src/components/bar-chart.html -->
+<canvas id="my-chart"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+<script>
+  // Bascik rewrites "my-chart" to the scoped id at build time
+  document.addEventListener('DOMContentLoaded', () => {
+    const ctx = document.getElementById('my-chart');
+    new Chart(ctx, { type: 'bar', data: { /* … */ } });
+  });
+</script>
+```
+
+### Scoping Compatibility
+
+**Bascik scopes `class`, `id`, and `name` attributes at build time.** Library-specific attributes — `v-scope`, `x-data`, `@click`, `hx-get`, `data-controller` — are never touched.
+
+One thing to be aware of: if a library dynamically sets a class or ID value at runtime (e.g. `:class="activeClass"` where `activeClass` is a JavaScript variable), that value is a runtime string and will *not* correspond to a Bascik-scoped class name. Use `data-*` attributes for runtime-toggled state and target them with CSS `[data-state="active"]` selectors.
+
+## Lighthouse 100s
+
+> **Why Bascik wins by default.** Framework-rendered pages ship a JavaScript runtime, a hydration pass, and client-side routing logic before a single pixel of your content appears. Bascik ships none of that. The browser receives finished HTML. Every byte saved at the start compounds through every Core Web Vital metric.
+
+## Responsive Images with `srcset`
+
+Sending a 2400 px image to a 375 px phone is one of the most common performance killers on the web. The `srcset` attribute tells the browser which image file to choose based on the device's pixel density and viewport width — no JavaScript required.
+
+```html
+<!-- Density-based srcset: serve 2x for retina screens -->
+<img
+  src="hero.jpg"
+  srcset="hero.jpg 1x, hero@2x.jpg 2x"
+  alt="A scenic mountain landscape"
+  width="800"
+  height="450"
+/>
+
+<!-- Width-based srcset with sizes: let the browser pick -->
+<img
+  src="photo-800.jpg"
+  srcset="
+    photo-400.jpg  400w,
+    photo-800.jpg  800w,
+    photo-1200.jpg 1200w
+  "
+  sizes="(max-width: 600px) 100vw, 800px"
+  alt="Team photo"
+  width="800"
+  height="533"
+  loading="lazy"
+/>
+```
+
+Always include explicit `width` and `height` attributes. The browser uses them to reserve layout space before the image loads, which eliminates Cumulative Layout Shift (CLS) — a Core Web Vital that Lighthouse measures directly.
+
+## Lazy Loading
+
+The browser only needs to fetch images and iframes that are currently visible. Adding `loading="lazy"` defers off-screen resources until the user scrolls near them, reducing initial page weight and improving Largest Contentful Paint (LCP) for the above-the-fold content.
+
+```html
+<!-- Images below the fold -->
+<img src="gallery-1.jpg" alt="Gallery image 1" loading="lazy" width="600" height="400" />
+
+<!-- Third-party embeds -->
+<iframe
+  src="https://www.youtube-nocookie.com/embed/VIDEO_ID"
+  title="Product walkthrough video"
+  loading="lazy"
+  width="560"
+  height="315"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope"
+  allowfullscreen
+></iframe>
+```
+
+Do **not** apply `loading="lazy"` to your hero image or any image visible without scrolling. The browser will already prioritize it — adding lazy loading to a critical image delays it and hurts your LCP score.
+
+## Preloading Critical Assets
+
+`<link rel="preload">` tells the browser to fetch a resource as soon as possible, before it would normally discover it in the HTML or CSS. Use it for assets that are critical to the first render: your hero image, a web font, or a stylesheet loaded by a script.
+
+```html
+<head>
+  <!-- Preload the LCP hero image -->
+  <link rel="preload" as="image" href="hero.jpg" />
+
+  <!-- Preload a web font (prevents invisible text flash) -->
+  <link
+    rel="preload"
+    as="font"
+    href="/fonts/inter-var.woff2"
+    type="font/woff2"
+    crossorigin
+  />
+
+  <!-- Preload a critical stylesheet that a script would inject late -->
+  <link rel="preload" as="style" href="/css/above-fold.css" />
+</head>
+```
+
+Only preload what you actually use on the current page. Preloading resources that are never consumed triggers a Lighthouse warning and wastes bandwidth.
+
+## Prefetching the Next Page
+
+`<link rel="prefetch">` fetches a resource during idle time and caches it for a future navigation. When you know the user is very likely to go to a specific page next — like the next step of a checkout flow or the top item in your navigation — prefetch it and the navigation will feel instant.
+
+```html
+<head>
+  <!-- Prefetch the most likely next page -->
+  <link rel="prefetch" href="/getting-started" />
+
+  <!-- Prefetch an image used heavily on the next page -->
+  <link rel="prefetch" as="image" href="/getting-started/hero.jpg" />
+</head>
+```
+
+Prefetch is low-priority and only runs during idle time, so it never competes with resources the current page needs. It is safe to add for any high-confidence next-page prediction.
+
+## DNS Prefetch & Preconnect
+
+Every external domain requires a DNS lookup, a TCP handshake, and a TLS negotiation before the first byte of data arrives. For critical third-party origins — fonts, analytics, a CDN — you can start that work as early as possible by adding one or two `<link>` tags to your `<head>`.
+
+```html
+<head>
+  <!-- Step 1: resolve the DNS as early as possible -->
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+
+  <!-- Step 2: for truly critical origins, open the full connection
+       (DNS + TCP + TLS) before it is needed -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+</head>
+```
+
+Use `preconnect` sparingly — each open connection consumes browser resources. Reserve it for origins you will definitely hit within the first few seconds of the page load. Use `dns-prefetch` as the lightweight fallback for everything else.
+
+## Async and Deferred Scripts
+
+A plain `<script src="…">` tag blocks HTML parsing while the browser fetches and executes the file. Two attributes eliminate that block:
+
+- **`defer`** — fetches the script in parallel with HTML parsing and executes it after the document is fully parsed, in order. Use this for scripts that need the DOM ready.
+- **`async`** — fetches in parallel and executes as soon as the download finishes, out of order. Use this for fully independent scripts (analytics, chat widgets) that have no dependencies on other scripts or the DOM.
+
+```html
+<head>
+  <!-- Analytics: fully independent, run as soon as it arrives -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXX"></script>
+
+  <!-- App logic: needs the DOM, runs after parsing is complete -->
+  <script defer src="/js/app.js"></script>
+
+  <!-- A module script is deferred automatically -->
+  <script type="module" src="/js/counter.js"></script>
+</head>
+```
+
+Because Bascik adds no runtime scripts of its own, every `<script>` tag in your output is one you wrote. You have complete control over load order and execution timing from the first character of every page.
+
+## SEO: The Essential Head Tags
+
+Lighthouse's SEO audit checks for a short list of meta tags and structural signals. All of them are plain HTML attributes — nothing to install or configure.
+
+```html
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Unique, descriptive title for every page -->
+  <title>Getting Started — Bascik Docs</title>
+
+  <!-- Description shown in search results (150–160 chars) -->
+  <meta name="description" content="Install Bascik and build your first reusable HTML component in under five minutes." />
+
+  <!-- Canonical URL: prevents duplicate-content issues -->
+  <link rel="canonical" href="https://yourdomain.com/getting-started" />
+
+  <!-- Open Graph: controls how the page looks when shared -->
+  <meta property="og:title" content="Getting Started — Bascik Docs" />
+  <meta property="og:description" content="Install Bascik and build your first reusable HTML component." />
+  <meta property="og:image" content="https://yourdomain.com/og/getting-started.jpg" />
+  <meta property="og:url" content="https://yourdomain.com/getting-started" />
+  <meta property="og:type" content="website" />
+
+  <!-- Twitter / X card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Getting Started — Bascik Docs" />
+  <meta name="twitter:description" content="Install Bascik and build your first reusable HTML component." />
+  <meta name="twitter:image" content="https://yourdomain.com/og/getting-started.jpg" />
+</head>
+```
+
+Because every Bascik page is its own `.html` file, every page naturally gets its own `<title>` and `<meta name="description">` — the two most impactful SEO signals. There is no single-page-app router to work around.
+
+## Accessibility
+
+The Lighthouse accessibility audit checks for semantic HTML, sufficient color contrast, keyboard navigability, and ARIA usage. Because Bascik outputs real HTML, every accessibility technique the platform provides is available to you without a plugin or library.
+
+```html
+<!-- Use semantic landmark elements -->
+<header>…</header>
+<nav aria-label="Primary navigation">…</nav>
+<main>…</main>
+<footer>…</footer>
+
+<!-- Every image needs a meaningful alt (or empty alt for decorative images) -->
+<img src="chart.png" alt="Bar chart showing 40% growth in Q3" />
+<img src="divider.svg" alt="" role="presentation" />
+
+<!-- Buttons must have accessible names -->
+<button type="button" aria-label="Close dialog">
+  <svg aria-hidden="true">…</svg>
+</button>
+
+<!-- Form inputs must be labelled -->
+<label for="email">Email address</label>
+<input type="email" id="email" name="email" autocomplete="email" />
+
+<!-- Skip link: lets keyboard users bypass the navigation -->
+<a href="#main-content" class="skip-link">Skip to main content</a>
+```
+
+A **skip link** is one of the highest-value, lowest-effort accessibility improvements you can add. Style it to be visually hidden until focused, then revealed, so it does not affect the visual layout for mouse users.
+
+```css
+/* Accessible skip link pattern */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  padding: 8px 16px;
+  background: var(--accent);
+  color: #000;
+  font-weight: 600;
+  z-index: 9999;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+```
+
+## Web Fonts Without the Flash
+
+Web fonts are a common source of both performance and layout problems. Two CSS properties and one `<link rel="preload">` eliminate nearly all of them.
+
+```html
+<!-- 1. Preload the font file so it arrives early -->
+<link
+  rel="preload"
+  as="font"
+  href="/fonts/inter-var.woff2"
+  type="font/woff2"
+  crossorigin
+/>
+```
+
+```css
+/* 2. Declare the font face */
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/inter-var.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  /* 3. Show text immediately with the fallback font,
+        swap to Inter when it arrives */
+  font-display: swap;
+}
+
+/* 4. Minimize layout shift with a metric-matched fallback */
+@font-face {
+  font-family: 'Inter-fallback';
+  src: local('Arial');
+  ascent-override: 90%;
+  descent-override: 22%;
+  line-gap-override: 0%;
+  size-adjust: 107%;
+}
+
+body {
+  font-family: 'Inter', 'Inter-fallback', sans-serif;
+}
+```
+
+`font-display: swap` ensures text is visible immediately using the fallback font, then swaps to your custom font once it loads. The metric-override `@font-face` makes the fallback font's dimensions closely match your custom font, minimizing CLS during the swap.
+
+## Real-World Benchmarks: McMaster-Carr and Bring a Trailer
+
+Two of the fastest content-heavy sites on the internet share a core philosophy: ship finished HTML and let the browser do what it was designed to do.
+
+**McMaster-Carr** (mcmaster.com) is an industrial supply catalog with over 600,000 products. Its homepage loads in under a second on a mobile connection and scores 100 across all four Lighthouse categories. The homepage is almost entirely plain HTML links and text — no JavaScript framework, no hydration step, no layout shift. The browser receives a complete document and paints it immediately.
+
+**Bring a Trailer** (bringatrailer.com) is an auction platform that serves hundreds of high-resolution car photos per page. It achieves near-perfect Lighthouse scores by resizing images at the CDN level — every thumbnail is served at exactly the pixel dimensions it occupies in the layout — and by fixing explicit aspect ratios on image containers so the layout never shifts as photos load in.
+
+These sites are on opposite ends of the content spectrum: one is text-dense and nearly image-free, the other is image-dense with live auction data updating in real time. Both score 100. The lesson: perfect Lighthouse scores are not about the volume of content — they are about how you deliver it.
+
+## Image CDN: One Source, Infinite Sizes
+
+Storing one high-resolution source image and generating correctly-sized derivatives at request time is one of the most scalable image strategies available. Bring a Trailer appends transform parameters directly to each image URL:
+
+```text
+https://cdn.example.com/photo.jpg?w=470&h=318&crop=1
+```
+
+Most modern CDNs — Cloudflare Images, Imgix, Cloudinary, Bunny.net Transform — support this pattern. You upload a full-resolution photo once and the CDN generates WebP or AVIF derivatives at whatever dimensions the layout needs, cached at the edge closest to each user. No build step. No local image processing pipeline.
+
+```html
+<!-- CDN delivers the exact pixel size the layout needs -->
+<img
+  src="https://cdn.example.com/photo.jpg?w=470&h=318&format=webp"
+  srcset="
+    https://cdn.example.com/photo.jpg?w=470&h=318&format=webp  1x,
+    https://cdn.example.com/photo.jpg?w=940&h=636&format=webp  2x
+  "
+  alt="1968 Toyota Land Cruiser"
+  width="470"
+  height="318"
+  loading="lazy"
+/>
+```
+
+If your host does not support CDN transforms, use `<picture>` to offer WebP with a JPEG fallback — all declarative HTML, no JavaScript, no build step:
+
+```html
+<picture>
+  <source
+    type="image/webp"
+    srcset="photo-470.webp 470w, photo-940.webp 940w"
+    sizes="(max-width: 600px) 100vw, 470px"
+  />
+  <img
+    src="photo-470.jpg"
+    srcset="photo-470.jpg 470w, photo-940.jpg 940w"
+    sizes="(max-width: 600px) 100vw, 470px"
+    alt="1968 Toyota Land Cruiser"
+    width="470"
+    height="318"
+    loading="lazy"
+  />
+</picture>
+```
+
+Browsers that support WebP choose the `<source>`; others fall back to the `<img>` src automatically.
+
+## `aspect-ratio` CSS: Layout Stability Before Images Load
+
+Explicit `width` and `height` attributes reserve image space before the network responds. The `aspect-ratio` CSS property extends that reservation to any container — useful when images are CSS backgrounds, when you use `object-fit` to fill flex cells, or when you need a stable skeleton layout while lazy-loading dozens of images.
+
+Bring a Trailer pins every auction thumbnail to a `470×318` ratio. The page skeleton renders at the correct height the instant the HTML arrives, so there is zero layout shift as car photos stream in:
+
+```html
+<div class="card-image">
+  <img
+    src="photo.jpg?w=470&h=318"
+    alt="1968 Toyota Land Cruiser"
+    width="470"
+    height="318"
+    loading="lazy"
+  />
+</div>
+```
+
+```css
+.card-image {
+  aspect-ratio: 470 / 318;
+  width: 100%;
+  overflow: hidden;
+  /* Skeleton shimmer while image is pending */
+  background-color: #f0f0f0;
+  background-image: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+```
+
+The shimmer disappears the moment the image loads (since `<img>` renders over the background). The result: a polished loading experience with zero JavaScript and zero layout shift.
+
+## `content-visibility: auto` for Long Catalog Pages
+
+McMaster-Carr lists hundreds of product categories on its homepage. Bring a Trailer streams dozens of auction cards. For pages with long repeating content, `content-visibility: auto` tells the browser to skip layout and paint for off-screen sections entirely — rendering each chunk on demand as the user scrolls.
+
+```css
+/* Applied to each repeating content section */
+.auction-card,
+.product-category,
+.listing-row {
+  content-visibility: auto;
+  /* Hint the browser to reserve this much vertical space per item
+     so the scrollbar height stays accurate before items render */
+  contain-intrinsic-size: auto 320px;
+}
+```
+
+On a page with 100 cards, this can reduce initial rendering time by 50–70% because the browser only paints what is visible. Set `contain-intrinsic-size` close to the real rendered height of one item — the browser will correct it after the first render cycle.
+
+> **Test scroll behavior carefully.** Hidden sections use estimated heights, which can cause minor scroll-position drift if `contain-intrinsic-size` is far from the actual height. Measure in DevTools before shipping.
+
+## Inline Critical CSS
+
+McMaster-Carr's pages paint instantly because the CSS needed for the above-the-fold layout arrives in the same HTTP response as the HTML — not in a separate stylesheet the browser must fetch and parse before it can draw anything. This technique is called **critical CSS inlining**.
+
+```html
+<head>
+  <!-- Critical CSS inlined: zero extra round trips to paint the first screen -->
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; line-height: 1.5; }
+    header { display: flex; align-items: center; padding: 16px 24px; }
+    .hero { min-height: 60vh; display: grid; place-items: center; }
+    nav a { color: inherit; text-decoration: none; }
+  </style>
+
+  <!-- Full stylesheet loaded asynchronously — does not block first paint -->
+  <link rel="preload" as="style" href="/css/styles.css"
+        onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="/css/styles.css" /></noscript>
+</head>
+```
+
+The `onload` trick converts the preloaded asset into a live stylesheet the moment it finishes downloading, without blocking the initial render. The `<noscript>` fallback loads the full stylesheet for users with JavaScript disabled.
+
+Keep inlined critical CSS to the minimum needed for above-the-fold visibility — typically 1–5 KB of minified CSS covering the header, hero section, and primary navigation.
+
+## Ship HTML First
+
+The deepest lesson from McMaster-Carr is architectural. Its homepage has no JavaScript framework, no client-side router, and no hydration step. Every category link is a plain `<a>` tag. Every product name is a text node delivered in the first TCP packet.
+
+A Bascik site or any statically built HTML page works the same way. Compare the waterfalls:
+
+| Step | Framework SPA | Static HTML (Bascik) |
+|------|:---:|:---:|
+| 1 | Fetch HTML shell | Fetch complete HTML |
+| 2 | Fetch JS bundle | Browser paints ✓ |
+| 3 | Parse & execute JS | — |
+| 4 | Fetch API data | — |
+| 5 | Render content | — |
+
+A framework SPA requires five sequential steps before the user sees content. A static HTML page requires one. Every framework adds steps; every step adds latency that compounds across all network conditions.
+
+This is why sites like McMaster-Carr — which could justify a rich SPA for their 600,000-product catalog — choose server-rendered HTML. Content is immediately useful to every user on every device, and search engines index it without executing JavaScript.
+
+> **Add interactivity surgically.** McMaster's search autocomplete is a small, focused script that loads after the page is visible. Bring a Trailer's live bid counter is a lightweight WebSocket updater, not a full application framework. Use Bascik's scoped `<script>` blocks or `<script defer>` to layer in interactivity after the HTML has painted — never block the first render for it.
+
+## CSS-First Interactivity
+
+Before writing a line of JavaScript for any UI behavior, ask: **can HTML and CSS do this?**
+
+The browser ships a set of interactive primitives that require zero JavaScript. Using them makes your pages lighter, more accessible (they work even when JS fails or is blocked), and zero-parse-cost for the engine. The rule is simple: reach for JavaScript only when the platform genuinely cannot do the job.
+
+### Collapsible Sections and Toggle Menus: `<details>`
+
+`<details>` and `<summary>` give you a fully accessible toggle with no JavaScript — open/close state, keyboard activation (Enter, Space), Escape to close, and correct ARIA roles are all handled by the browser:
+
+```html
+<details>
+  <summary>How does Bascik scope CSS?</summary>
+  <p>It prefixes every class name with a component-unique hash at build time.</p>
+</details>
+```
+
+The same pattern works for mobile navigation drawers. Wrap the nav links in `<details>`, put the hamburger button inside `<summary>`, and use the `[open]` attribute in CSS to drive all state:
+
+```html
+<nav>
+  <a href="/" class="logo">MySite</a>
+  <details class="nav-details">
+    <summary class="nav-toggle" aria-label="Toggle navigation">
+      <span class="hamburger-icon"></span>
+    </summary>
+    <ul class="nav-links">
+      <li><a href="/about">About</a></li>
+      <li><a href="/blog">Blog</a></li>
+    </ul>
+  </details>
+</nav>
+```
+
+```css
+/* Remove the default <summary> triangle marker */
+.nav-toggle { list-style: none; cursor: pointer; }
+.nav-toggle::-webkit-details-marker { display: none; }
+
+/* Desktop: always show nav links regardless of open/closed state */
+@media (min-width: 769px) {
+  .nav-details { display: flex; align-items: center; }
+  .nav-details > summary { display: none; }
+  .nav-details > .nav-links { display: flex; } /* override UA hidden state */
+}
+
+/* Mobile: show links when open — pure CSS, no event listeners */
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-details[open] > .nav-links { display: flex; flex-direction: column; }
+
+  /* Animate hamburger → X using the [open] selector */
+  .nav-details[open] .hamburger-icon { background: transparent; }
+  .nav-details[open] .hamburger-icon::before { top: 0; transform: rotate(45deg); }
+  .nav-details[open] .hamburger-icon::after  { top: 0; transform: rotate(-45deg); }
+}
+
+/* Lock body scroll when the overlay is open — still no JS */
+body:has(.nav-details[open]) {
+  overflow: hidden;
+}
+```
+
+> **`body:has()`** is supported in Chrome 105+, Firefox 121+, and Safari 15.4+. It is the CSS-only solution to the previously JS-only problem of locking the page scroll behind an open overlay.
+
+### Modal Dialogs: `<dialog>`
+
+The `<dialog>` element provides a native modal with backdrop, focus trapping, and Escape-to-close — behaviors that previously required hundreds of lines of JavaScript to implement correctly:
+
+```html
+<button onclick="document.getElementById('my-modal').showModal()">Open</button>
+
+<dialog id="my-modal">
+  <p>Modal content here.</p>
+  <form method="dialog">
+    <button>Close</button>
+  </form>
+</dialog>
+```
+
+```css
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+```
+
+The `onclick` inline handlers are one-liners — not a script file. `<dialog>` handles focus management, keyboard dismissal, and `aria-modal` automatically.
+
+### The Decision Framework
+
+When building any interactive feature, work through this checklist before writing JavaScript:
+
+1. **Can a native HTML element do it?** `<details>`, `<dialog>`, `<input type="range">`, `<datalist>`, `<meter>`, `<progress>` cover a huge range of interactive patterns out of the box.
+2. **Can a CSS state selector do it?** `:checked`, `:target`, `:hover`, `:focus-within`, `:has()`, `[open]` handle most toggle and reveal behaviors.
+3. **Can an HTML attribute do it?** `loading="lazy"`, `required`, `disabled`, `hidden`, `contenteditable`.
+
+Only if all three answers are no should you reach for JavaScript. When you do, scope it, defer it, and keep it small.
+
+## The Kitchen Sink: Complete Head Template
+
+Here is a complete `<head>` combining every technique on this page. Copy it as a starting point for any Bascik page and fill in the values specific to your site.
+
+```html
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Page Title — Site Name</title>
+  <meta name="description" content="One or two sentences describing this specific page." />
+  <link rel="canonical" href="https://yourdomain.com/page-path" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Page Title — Site Name" />
+  <meta property="og:description" content="One or two sentences describing this specific page." />
+  <meta property="og:image" content="https://yourdomain.com/og/page-path.jpg" />
+  <meta property="og:url" content="https://yourdomain.com/page-path" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <!-- Preconnect to critical third-party origins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+
+  <!-- Preload critical assets -->
+  <link rel="preload" as="image" href="/images/hero.jpg" />
+  <link rel="preload" as="font" href="/fonts/inter-var.woff2" type="font/woff2" crossorigin />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/styles.css" />
+
+  <!-- Prefetch likely next navigation -->
+  <link rel="prefetch" href="/next-page" />
+
+  <!-- Scripts: async for independent third parties, defer for your code -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXX"></script>
+  <script defer src="/js/app.js"></script>
+</head>
+```
+
+## Getting Started
+
+### Installation
+
+Install Bascik with your preferred package manager:
+
+```sh
+yarn add @bascik/bascik
+# or
+npm install @bascik/bascik
+# or
+pnpm add @bascik/bascik
+```
+
+### Project Setup
+
+Add the Bascik scripts to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "bascik",
+    "build": "bascik --build"
+  }
+}
+```
+
+Run `yarn dev` (or `npm run dev`) to start the development server. Bascik serves your site over HTTP/2 at **https://localhost:8443** by default (the port auto-increments if 8443 is busy).
+
+SSL certificates are generated automatically on first run. Install [mkcert](https://github.com/FiloSottile/mkcert) for a trusted cert with no browser warning:
+
+```sh
+# macOS — install mkcert and register the local CA with the system trust store
+brew install mkcert
+mkcert -install   # only needed once per machine
+```
+
+> **Firefox users.** Firefox maintains its own certificate store and ignores the macOS system trust store. Install `nss` (which provides `certutil`) **before** running `mkcert -install` so mkcert can register with Firefox automatically:
+> ```sh
+> brew install nss && mkcert -install
+> ```
+> If you already ran `mkcert -install` without `nss`, install `nss` and re-run `mkcert -install`.
+
+After running `mkcert -install`, restart the dev server. Bascik will pick up mkcert automatically and generate a CA-trusted cert with no browser warning.
+
+> **Already saw the browser warning?** If Bascik started before mkcert was installed, it will have generated cert files using `openssl` (the self-signed fallback). Bascik skips cert generation when the files already exist, so installing mkcert afterward has no effect until you delete the old files:
+> ```sh
+> rm bascik-cert.pem bascik-privkey.pem
+> yarn dev   # bascik will now use mkcert
+> ```
+
+Without mkcert, Bascik falls back to `openssl` (pre-installed on macOS and Linux). Your browser will show a certificate warning — click through to proceed. Windows users without openssl can install it via `winget install ShiningLight.OpenSSL`.
+
+### Folder Structure
+
+Bascik looks for two directories by default. Both can be overridden in [bascik.config.js](/configuration).
+
+```text
+src/
+  components/  ← component .html and .css files
+  pages/       ← one .html file per route
+```
+
+### Custom 404 Page
+
+If you create a `404.html` file in your pages directory (e.g. `src/pages/404.html`), Bascik's built-in development server will automatically serve it as a fallback for any non-existent routes with a `404` status code.
+
+When you build your site for production (`bascik --build`), this file is compiled to `dist/404.html`, which is the standard location recognized by most static hosting providers (such as GitHub Pages, Netlify, Vercel, and Cloudflare Pages) to serve custom 404 pages.
+
+## Bascik vs Frameworks
+
+Bascik is not a framework. It is a build tool that resolves HTML components at compile time and then gets out of the way. No runtime ships to the browser. There is no framework-owned component library or request lifecycle to learn. The output is plain HTML.
+
+That distinction matters when choosing a tool, so this page compares Bascik against lightweight frameworks that are often considered in the same conversation.
+
+### What Bascik Does
+
+Bascik solves one problem: component reuse at build time. Write a navigation bar once, use it on every page, and get clean HTML out. That is the entire scope.
+
+Everything else — interactivity, server communication, reactive state — is your decision. You can ship zero JavaScript, or you can add as much as the project needs. Bascik does not have an opinion.
+
+The custom component tags in a Bascik project are the ones **you create**. If you create `site-nav.html`, you can write `<site-nav>`. Bascik does not add a catalog of framework components with their own behavior or API.
+
+Bascik does use a small set of build instructions such as `data-bascik-slot`, `data-bascik-prop-*`, and `data-bascik-build`. They follow HTML's standard `data-*` extension mechanism, so browsers parse them as valid custom data attributes. Bascik consumes them during the build; they are not runtime directives that require browser JavaScript to interpret.
+
+### HTMX
+
+[HTMX](https://htmx.org) is a popular library that extends HTML with server-driven partial updates. You add attributes like `hx-get`, `hx-post`, `hx-target`, and `hx-swap` to elements, and HTMX intercepts the resulting events, fires requests to your server, and swaps portions of the page with the response.
+
+**What HTMX adds to a page:**
+
+- ~14 KB of JavaScript (minified and gzipped) loaded on every page
+- A new attribute vocabulary to learn and maintain (`hx-get`, `hx-post`, `hx-target`, `hx-swap`, `hx-trigger`, `hx-push-url`, `hx-select`, `hx-boost`, and more)
+- A server requirement — HTMX works best when the backend returns HTML fragments
+
+HTMX is well-suited to applications that need dynamic server-driven updates without a full JavaScript client. It is not suited to pages that are mostly static, where the overhead of loading and running a JavaScript library is not justified.
+
+Bascik produces plain HTML. HTMX ships a JavaScript runtime. These are different tools aimed at different problems. For pages that genuinely need server-driven interactivity, you can use HTMX alongside Bascik — Bascik handles component organization at build time, and HTMX handles server communication at runtime.
+
+```html
+<!-- Bascik component that includes HTMX attributes — fully compatible -->
+<button hx-get="/api/items" hx-target="#list" hx-swap="innerHTML">
+  Load items
+</button>
+```
+
+### Vue and React
+
+Full-featured frameworks like Vue and React solve a different problem: client-side applications with complex reactive state, component trees, and client-side routing. They ship a significant JavaScript runtime (~40–100+ KB), require a bundler, and introduce a complete component model with lifecycle hooks, reactivity systems, and state management conventions.
+
+For documents — marketing sites, docs portals, blogs, portfolios — most of that machinery is unused. The framework runtime loads and runs on every page visit in exchange for features the page does not use.
+
+Bascik's component model lives entirely at build time. There is no runtime equivalent. A `<site-nav>` tag in source becomes a `<nav>` element in output — no JavaScript involved.
+
+For sites that need selective reactivity on specific components, petite-vue (~5 KB) is a better fit than full Vue. See the [JavaScript Libraries](/libraries) page for examples.
+
+### Alpine.js
+
+[Alpine.js](https://alpinejs.dev) (~16 KB) occupies similar territory to HTMX: a declarative attribute-based system for adding behavior to HTML. Alpine uses `x-data` for state, `x-bind` / `@click` / `x-show` for DOM interactions.
+
+Like HTMX, Alpine is compatible with Bascik. Bascik resolves components at build time; Alpine runs in the browser on whatever HTML Bascik produced.
+
+### The Key Difference
+
+| Tool | Runtime shipped | Components or API to learn | Attribute / source syntax | Requires server |
+| --- | ---: | --- | --- | --- |
+| **Bascik** | None | Only the components you create, plus slots and props | Standards-valid `data-bascik-*` attributes, consumed at build time | No |
+| **HTMX** | ~14 KB | Request, target, swap, trigger, and history concepts | `hx-*` custom attributes interpreted at runtime | Usually |
+| **Alpine.js** | ~16 KB | Alpine state and directive model | `x-*` and `@*` directives interpreted at runtime | No |
+| **petite-vue** | ~5 KB | Vue reactivity and directive model | `v-*` and `@*` directives interpreted at runtime | No |
+| **Vue / React** | 40–100+ KB | Framework component model, lifecycle, and state APIs | Vue directives/templates or React JSX | No |
+
+The browser can parse Bascik's source without needing to understand a new runtime language: custom tags are valid custom-element-shaped HTML names, and build instructions use the web platform's `data-*` convention. Bascik resolves both before deployment. By contrast, runtime directives such as `hx-get`, `x-data`, and `v-scope` only gain behavior after their library's JavaScript loads.
+
+Bascik does not compete with any of these tools for what they are good at. It fills the gap they leave open: component organization without a runtime. You can use Bascik as the build layer and any of the above as the interactivity layer — they compose cleanly.
+
+> **Combining tools.** A common pattern is Bascik for layout components (nav, footer, hero sections) and HTMX or Alpine for specific interactive elements. Each tool does what it is best at, and neither one intrudes on the other's domain.
+
+## Getting Started: CLI & Workflow
+
+### CLI & Development Workflow
+
+Bascik's command-line interface is designed to provide clean, minimal, and informative terminal output. Here is a guide on what you will see in your terminal during development.
+
+#### Starting the Dev Server
+
+When you start the dev server via `yarn dev` (or `bascik`), Bascik automatically generates local SSL/TLS certificates for its built-in HTTP/2 server, transpiles all pages inside your pages directory, and begins watching for changes:
+
+```terminal
+Generated self-signed certificate for the development server
+Server running at https://localhost:8443
+
+transpiled: pages/getting-started.html
+transpiled: pages/index.html
+transpiled: pages/about.html
+
+✓ 3 pages transpiled in 45ms
+```
+
+#### Watching for File Changes
+
+While the dev server is active, Bascik watches your file system and incrementally updates your build as files are added, updated, or removed.
+
+- **Modifying/Adding Pages:** Editing or adding an HTML page in your pages directory triggers incremental transpilation of just that page:
+
+```terminal
+transpiled: pages/about.html
+```
+
+- **Modifying Components:** Editing a component triggers selective transpilation. Bascik tracks dependency mappings and only rebuilds pages that actually reference that component:
+
+```terminal
+transpiled: pages/index.html
+transpiled: pages/about.html
+```
+
+- **Static Assets:** Replicating any non-HTML static assets (like custom CSS, JS files, or images) from pages directly into the output directory:
+
+```terminal
+copied: /Users/collin/github/bascik/docs/src/pages/css/custom.css
+```
+
+- **Deleting Pages:** Removing a page from your pages directory automatically cleans up its compiled output counterpart to prevent dead files:
+
+```terminal
+deleted file: /Users/collin/github/bascik/docs/src/pages/old-page.html
+```
+
+#### Transpilation & Build Errors
+
+If you introduce a syntax mistake or a runtime error inside a custom build script, Bascik prevents the server from crashing, gracefully logs a descriptive error with the file and exact line/column location, and continues running.
+
+- **Component Transpilation Failure:**
+
+```terminal
+[bascik] Transpilation failed for component <site-nav>
+during css-scoping in "pages/about.html" at (line 22, column 8)
+Defined in component template: "components/site-nav/site-nav.html"
+Error: ParseError: CSS Selector is invalid or could not be parsed.
+```
+
+- **Build Script Failure:**
+
+```terminal
+[bascik] build script error in "pages/index.html" at (line 12, column 5):
+ReferenceError: marked is not defined
+```
+
+### Scoped Styles Quick Intro
+
+Pair a `.css` file with your component HTML by using the same name in the same directory:
+
+```text
+src/components/
+  site-nav/
+    site-nav.html  ← component markup
+    site-nav.css   ← scoped styles
+```
+
+Class names in the CSS are automatically prefixed per component instance at build time. See [Scoped Styles](/scoped-styles) for the full reference.
+
+## Using Markdown
+
+Bascik does not include a Markdown pipeline — but `data-bascik-build` scripts are Node.js, which means you can install any Markdown library and use it directly. This is the same approach used to build the page you are reading right now.
+
+### marked
+
+[marked](https://marked.js.org) is a fast, zero-dependency Markdown parser. Install it once and import it in any build script.
+
+```sh
+npm install marked
+```
+
+Read a Markdown file and output the HTML:
+
+```html
+<script data-bascik-build>
+  import { readFile } from 'node:fs/promises';
+  import { marked } from 'marked';
+
+  const md = await readFile('./content/intro.md', 'utf8');
+  console.log(marked(md));
+</script>
+```
+
+The output replaces the script tag in the compiled HTML — no client-side JavaScript runs.
+
+### Styling Rendered Markdown
+
+A Markdown parser returns ordinary HTML such as `<h2>`, `<p>`, `<ul>`, `<blockquote>`, and `<pre>`. There is no separate Markdown styling system: once Bascik injects that HTML, the browser applies CSS through the normal cascade.
+
+#### Option 1: A Page or Global Stylesheet
+
+Wrap the generated content with a stable class and link a regular stylesheet from the page:
+
+```html
+<head>
+  <link rel="stylesheet" href="/css/content.css" />
+</head>
+<body>
+  <main class="markdown-body">
+    <script data-bascik-build>
+      import { readFile } from 'node:fs/promises';
+      import { marked } from 'marked';
+
+      const md = await readFile('./content/article.md', 'utf8');
+      console.log(marked(md));
+    </script>
+  </main>
+</body>
+```
+
+Then style the HTML elements the parser emits:
+
+```css
+/* src/pages/css/content.css */
+.markdown-body {
+  max-width: 68ch;
+  margin-inline: auto;
+  color: #25282d;
+  font: 1.05rem/1.75 Georgia, serif;
+}
+
+.markdown-body h2 {
+  margin-block: 2.5rem 0.75rem;
+  font: 700 1.75rem/1.2 system-ui, sans-serif;
+}
+
+.markdown-body a {
+  color: #086f83;
+  text-decoration-thickness: 0.12em;
+  text-underline-offset: 0.16em;
+}
+
+.markdown-body blockquote {
+  margin-inline: 0;
+  padding: 1rem 1.25rem;
+  border-left: 4px solid #d7b329;
+  background: #fff9df;
+}
+
+.markdown-body pre {
+  overflow-x: auto;
+  padding: 1rem;
+  color: #f7f7f2;
+  background: #202329;
+}
+```
+
+This is the simplest choice when several pages share one editorial design. The generated elements are plain HTML, so responsive styles, custom properties, print styles, and media queries all work normally.
+
+#### Option 2: A Scoped Bascik Component
+
+For a portable content style, create a component whose default slot receives the generated HTML:
+
+```html
+<!-- src/components/markdown-content/markdown-content.html -->
+<article class="markdown-content">
+  <div data-bascik-slot></div>
+</article>
+```
+
+Pair it with component CSS. Start selectors with the wrapper class so the rules apply to HTML inserted through the slot:
+
+```css
+/* src/components/markdown-content/markdown-content.css */
+.markdown-content {
+  max-width: 68ch;
+  margin-inline: auto;
+  color: #25282d;
+  font: 1.05rem/1.75 Georgia, serif;
+}
+
+.markdown-content h2 {
+  margin-block: 2.5rem 0.75rem;
+  color: #142c35;
+  font: 700 1.75rem/1.2 system-ui, sans-serif;
+}
+
+.markdown-content blockquote {
+  margin-inline: 0;
+  padding: 1rem 1.25rem;
+  border-left: 4px solid #d7b329;
+  background: #fff9df;
+}
+
+.markdown-content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+```
+
+Have the build script emit the component tag around the parsed Markdown:
+
+```html
+<script data-bascik-build>
+  import { readFile } from 'node:fs/promises';
+  import { marked } from 'marked';
+
+  const md = await readFile('./content/article.md', 'utf8');
+  console.log(`<markdown-content>${marked(md)}</markdown-content>`);
+</script>
+```
+
+Bascik runs the script first, sees the emitted `<markdown-content>` tag, resolves it, fills its slot, and includes its scoped CSS. Only that component's wrapper receives the generated scoped class; selectors such as `.markdown-content h2` then style the ordinary heading descendants inside it.
+
+> **Use a wrapper selector for slot content.** A bare `h2 {}` rule in component CSS is transformed by Bascik and attached to headings present in the component template. Markdown headings arrive through the slot later, so write `.markdown-content h2 {}` for generated content.
+
+#### What Reaches the Browser
+
+Given this Markdown:
+
+```md
+## A practical heading
+
+Markdown stays comfortable for authors, while the published page stays **plain HTML**.
+
+> Content can have a distinct editorial treatment without adding a client runtime.
+```
+
+The parser produces normal elements inside the resolved component:
+
+```html
+<article class="bascik__markdown-content__markdown-content">
+  <h2>A practical heading</h2>
+  <p>Markdown stays comfortable for authors, while the published page stays <strong>plain HTML</strong>.</p>
+  <blockquote>
+    <p>Content can have a distinct editorial treatment without adding a client runtime.</p>
+  </blockquote>
+</article>
+```
+
+The generated class name may be shortened in production when attribute obfuscation is enabled. You continue writing `.markdown-content` in the source; Bascik keeps the HTML and CSS names synchronized.
+
+### Front Matter with gray-matter
+
+Most content workflows attach metadata (title, date, author, tags) to Markdown files using YAML front matter. [gray-matter](https://github.com/jonschlinkert/gray-matter) parses it out cleanly.
+
+```sh
+npm install gray-matter marked
+```
+
+```md
+---
+title: My First Post
+date: 2025-01-15
+tags: [css, performance]
+---
+
+This is the post body.
+```
+
+```html
+<script data-bascik-build>
+  import { readFile } from 'node:fs/promises';
+  import { marked } from 'marked';
+  import matter from 'gray-matter';
+
+  const raw = await readFile('./content/post.md', 'utf8');
+  const { data, content } = matter(raw);
+
+  console.log(`
+    <article>
+      <h1>${data.title}</h1>
+      <time datetime="${data.date}">${new Date(data.date).toLocaleDateString('en-US', { dateStyle: 'long' })}</time>
+      ${marked(content)}
+    </article>
+  `);
+</script>
+```
+
+### Building a Content Collection
+
+Read an entire folder of Markdown files and generate a list or index page:
+
+```html
+<script data-bascik-build>
+  import { readdir, readFile } from 'node:fs/promises';
+  import matter from 'gray-matter';
+
+  const files = (await readdir('./content/posts'))
+    .filter(f => f.endsWith('.md'))
+    .sort()
+    .reverse(); // newest first if files are date-prefixed
+
+  const posts = await Promise.all(files.map(async file => {
+    const raw = await readFile(`./content/posts/${file}`, 'utf8');
+    const { data } = matter(raw);
+    const slug = file.replace(/\.md$/, '');
+    return { slug, ...data };
+  }));
+
+  const items = posts.map(p => `
+    <li>
+      <a href="/posts/${p.slug}">${p.title}</a>
+      <time>${p.date}</time>
+    </li>
+  `).join('\n');
+
+  console.log(`<ul class="post-list">\n${items}\n</ul>`);
+</script>
+```
+
+> **Tip.** Each post's HTML can live on its own page too. Create `src/pages/posts/[slug].html` as a template, or use a build script to generate static output files programmatically.
+
+### markdown-it
+
+[markdown-it](https://markdown-it.github.io) is an alternative parser with a rich plugin ecosystem — syntax highlighting, footnotes, custom containers, and more.
+
+```sh
+npm install markdown-it
+```
+
+```html
+<script data-bascik-build>
+  import { readFile } from 'node:fs/promises';
+  import MarkdownIt from 'markdown-it';
+
+  const md = new MarkdownIt({ html: true, typographer: true });
+  const source = await readFile('./content/article.md', 'utf8');
+  console.log(md.render(source));
+</script>
+```
+
+Add a plugin for syntax highlighting with [highlight.js](https://highlightjs.org):
+
+```sh
+npm install markdown-it highlight.js
+```
+
+```html
+<script data-bascik-build>
+  import { readFile } from 'node:fs/promises';
+  import MarkdownIt from 'markdown-it';
+  import hljs from 'highlight.js';
+
+  const md = new MarkdownIt({
+    highlight(code, lang) {
+      if (lang && hljs.getLanguage(lang)) {
+        return hljs.highlight(code, { language: lang }).value;
+      }
+      return '';
+    }
+  });
+
+  const source = await readFile('./content/article.md', 'utf8');
+  console.log(md.render(source));
+</script>
+```
+
+Then include the highlight.js stylesheet in your page `<head>`:
+
+```html
+<link rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css" />
+```
+
+### remark / unified
+
+The [unified](https://unifiedjs.com) ecosystem provides an AST-based pipeline. It is more involved to set up but gives precise control over parsing, transforming, and serializing Markdown.
+
+```sh
+npm install unified remark-parse remark-html
+```
+
+```html
+<script data-bascik-build>
+  import { readFile } from 'node:fs/promises';
+  import { unified } from 'unified';
+  import remarkParse from 'remark-parse';
+  import remarkHtml from 'remark-html';
+
+  const md = await readFile('./content/article.md', 'utf8');
+  const file = await unified()
+    .use(remarkParse)
+    .use(remarkHtml)
+    .process(md);
+
+  console.log(String(file));
+</script>
+```
+
+The unified plugin system lets you add transformations like automatic heading IDs, GFM tables, and math rendering using `remark-*` packages.
+
+### CMS-Sourced Markdown
+
+If your content comes from a headless CMS that returns Markdown via an API, fetch it at build time:
+
+```html
+<script data-bascik-build>
+  import { marked } from 'marked';
+
+  const res = await fetch('https://your-cms.example.com/api/page/home', {
+    headers: { Authorization: `Bearer ${process.env.CMS_TOKEN}` }
+  });
+  const { body } = await res.json();
+  console.log(marked(body));
+</script>
+```
+
+The Markdown is converted to HTML and baked into the static output. No CMS API calls happen in the browser — users see plain HTML.
+
+## Sitemap & robots.txt
+
+Bascik can automatically generate a `sitemap.xml` and `robots.txt` for your site at build time. Both files are written to `dist/` alongside your compiled HTML pages.
+
+Sitemap generation is on by default. To enable it, set `siteUrl` in your config:
+
+```js
+// bascik.config.js
+export const bascikConfig = {
+  siteUrl: 'https://example.com',
+};
+```
+
+That's all — `generate.sitemap` and `generate.robots` both default to `true`, so no other change is needed.
+
+### What gets generated
+
+**`dist/sitemap.xml`** — an XML sitemap listing every `.html` page in your `src/pages` directory as an absolute URL:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://example.com/</loc>
+  </url>
+  <url>
+    <loc>https://example.com/about</loc>
+  </url>
+  <url>
+    <loc>https://example.com/blog/post</loc>
+  </url>
+</urlset>
+```
+
+**`dist/robots.txt`** — allows all crawlers and points them at the sitemap:
+
+```text
+User-agent: *
+Allow: /
+
+Sitemap: https://example.com/sitemap.xml
+```
+
+### URL path rules
+
+Each page is converted from its file path to a URL path following these rules:
+
+| Source file | URL |
+|---|---|
+| `src/pages/index.html` | `/` |
+| `src/pages/about.html` | `/about` |
+| `src/pages/blog/index.html` | `/blog` |
+| `src/pages/blog/post.html` | `/blog/post` |
+
+### Opting out
+
+Control sitemap and robots.txt generation independently via the `generate` option:
+
+```js
+export const bascikConfig = {
+  siteUrl: 'https://example.com',
+  generate: {
+    sitemap: true,  // default
+    robots: true,   // default
+  },
+};
+```
+
+Set either to `false` to skip that file:
+
+```js
+export const bascikConfig = {
+  siteUrl: 'https://example.com',
+  generate: { sitemap: true, robots: false }, // skip robots.txt
+};
+```
+
+If `generate.sitemap` or `generate.robots` is `true` but `siteUrl` is not set, Bascik logs a warning and skips generation — it cannot produce absolute URLs without a base URL.
+
+### Build-only
+
+Sitemap and robots.txt are only generated during `bascik --build`. The dev server does not write these files.
+
+## AI Skill
+
+The Bascik skill file (`SKILL.md`) teaches any AI assistant — GitHub Copilot, Cursor, Claude, or others that support instruction files — the full details of how Bascik works: its component model, scoping system, config options, CLI, and conventions.
+
+Add it once, and your AI assistant can accurately answer questions about Bascik, generate correct components, and help debug scoping issues without needing to look anything up.
+
+### Download
+
+The skill file is served from this site:
+
+```text
+https://bascik.dev/assets/SKILL.md
+```
+
+### Adding it to GitHub Copilot (VS Code)
+
+Save the file somewhere in your project (e.g. `.github/bascik-skill.md`) then reference it in your `.github/copilot-instructions.md`:
+
+```markdown
+<!-- .github/copilot-instructions.md -->
+See @.github/bascik-skill.md for the complete Bascik reference.
+```
+
+Or attach it directly in a Copilot Chat conversation using the **Attach Context** button and selecting the file.
+
+### Adding it to Cursor
+
+Place the file at `.cursor/rules/bascik.md` in your project root. Cursor picks it up automatically as a project rule.
+
+### Adding it to Claude (claude.md)
+
+Paste the contents into your `claude.md` file, or reference the file path in your project instructions.
+
+### What's inside
+
+The skill covers:
+
+- Component authoring, slots, and props
+- Scoped CSS and scoped JavaScript rules and constraints
+- Build scripts (`data-bascik-build`)
+- Configuration options (`bascik.config.js`)
+- CLI commands and workflow
+- The scoping compatibility table
+- Folder structure and naming conventions
+
+> **Keeping it current.** `SKILL.md` is regenerated from the same Markdown source files that power this docs site. When the docs update, so does the skill file.
+
+<p class="section-label">Developers</p>
+
+# Architecture
+
+<p class="page-intro">Bascik is a Node.js CLI tool written in TypeScript. Its source lives entirely in <code>pkg/src/</code>. This page maps every module to its responsibility and explains how they fit together.</p>
+
+## Entry Point
+
+`pkg/src/transpile.ts` is the CLI entry point, declared as the `bascik` bin in `package.json`. It does three things:
+
+1. Calls `watchFiles()` — starts chokidar file watchers that kick off transpilation whenever a page or component changes.
+2. In dev mode, generates a self-signed TLS certificate if one does not already exist.
+3. In dev mode, imports and starts the HTTP/2 development server.
+
+```ts
+// transpile.ts (entry point)
+if (process.argv.includes("--check")) {
+  const { checkProject } = await import("./lib/check.js");
+  const ok = await checkProject();
+  process.exit(ok ? 0 : 1);
+}
+
+watchFiles();
+
+if (!BascikConfig.isBuild) {
+  await createSelfSignedCert();
+  const { serveHttp2 } = await import("./lib/http2.js");
+  serveHttp2();
+}
+```
+
+The dynamic `import()` calls for `check.js` and `http2.js` are intentional — they avoid loading those modules when not needed (`--check` exits immediately after analysis; `--build` never starts the server).
+
+## Library Modules
+
+All logic lives in `pkg/src/lib/`. Each file has a single, well-defined responsibility:
+
+| Module | Responsibility |
+|--------|----------------|
+| `config.ts` | Loads and merges `bascik.config.js`, default config, and build overrides into a single frozen `BascikConfig` object consumed everywhere else. |
+| `userConfig.ts` | Dynamically imports the user's `bascik.config.js` from `process.cwd()`, exporting `bascikConfig` and `buildOverrideConfig`. |
+| `processing.ts` | The core transpilation pipeline. Contains `pageProcessing` (page phase) and `recursivelyTranspile` (component phase), plus pipeline utility types. |
+| `components.ts` | Loads component HTML and CSS files from disk, detects component tags in HTML strings, extracts props/slots/attributes, and injects resolved content back. |
+| `javascript.ts` | The scoping transforms: `prefixElementAttribute` (rewrites HTML attributes, JS DOM selectors, and CSS) and `namespaceScriptTags` (wraps scripts in IIFEs). |
+| `styles.ts` | All CSS transformations: element selector conversion, class prefixing, `@keyframes` / `@layer` / container scoping, custom property prefixing, CSS deduplication. |
+| `names.ts` | Generates unique instance IDs (`getUniqueId`) and hashes long scoped names to short hex strings (`obfuscateAttributeName` via SHAKE-256) when obfuscation is enabled. |
+| `build-scripts.ts` | Executes `<script data-bascik-build>` blocks as Node.js ESM modules at transpile time and replaces the tag with the script's stdout output. |
+| `check.ts` | Static analysis for `bascik --check`. Scans all pages and components for unresolved custom tags (errors) and unused component files (warnings). Exits with code 1 when errors are found so it can gate CI pipelines. |
+| `watch.ts` | Sets up chokidar watchers for pages, components, and static assets. Triggers full or selective re-transpilation on file events. |
+| `http2.ts` | The development HTTP/2 server on `https://localhost:8443`. Serves transpiled pages from the memory store, static assets from disk, and the live-reload SSE endpoint. |
+| `mem.ts` | In-memory page store. Stores brotli-compressed page buffers keyed by HTTP path, and maintains a reverse index mapping each component name to the set of pages that use it. |
+| `pki.ts` | Generates a self-signed TLS certificate (`bascik-cert.pem` / `bascik-privkey.pem`) via OpenSSL or PowerShell on Windows. |
+| `file-system.ts` | File-system helpers: recursive directory listing, path resolution between source and dist, copying static assets. |
+| `paths.ts` | Converts file-system paths to HTTP paths (stripping the `src/pages` prefix, removing `.html` extensions). |
+| `events.ts` | A simple Node.js `EventEmitter` shared between the watch system, processing pipeline, and HTTP/2 server to signal live-reload events. |
+| `mime.ts` | A static MIME type map used by the HTTP/2 server and the watch system's file-type filter. |
+| `types.ts` | Central TypeScript type definitions: `BascikComponent`, `ComponentList`, `TranspileResult`, `BascikConfigOptions`, `StoredPage`. |
+
+## Dependency Graph
+
+The data flow at a high level:
+
+```text
+transpile.ts
+  ├── config.ts ← userConfig.ts ← bascik.config.js
+  ├── (--check only)
+  │     └── check.ts ← components.ts, file-system.ts
+  ├── watch.ts
+  │     └── processing.ts
+  │           ├── components.ts ← file-system.ts
+  │           ├── javascript.ts
+  │           │     ├── styles.ts
+  │           │     └── names.ts
+  │           ├── styles.ts
+  │           ├── build-scripts.ts
+  │           ├── mem.ts ← paths.ts
+  │           └── events.ts
+  └── (dev only)
+        ├── pki.ts
+        └── http2.ts ← mem.ts, events.ts, paths.ts, mime.ts
+```
+
+## Key Design Decisions
+
+### Frozen config singleton
+
+`BascikConfig` is initialised once at startup via `config.ts` and frozen with `Object.freeze()`. Every module imports this singleton directly. There is no dependency injection — configuration is a module-level constant that is immutable at runtime.
+
+### No runtime framework
+
+Bascik has a single runtime dependency: [chokidar](https://github.com/paulmillr/chokidar) for file watching. Everything else uses Node.js built-ins (`node:fs`, `node:http2`, `node:crypto`, `node:zlib`). This keeps the install footprint minimal and eliminates version-conflict surface area for users.
+
+### Regex-based HTML parsing
+
+Bascik intentionally avoids DOM parsers (e.g. `htmlparser2`, `parse5`). Component tags are detected and replaced with targeted regular expressions. This is fast and has zero additional dependencies, but it means Bascik only supports a well-defined subset of HTML — particularly around self-closing tags and nested identical tags. The [Scoping Compatibility](/compatibility) page documents the known limitations.
+
+### TypeScript compiled to ESM
+
+The package ships as native ESM (`"type": "module"` in `package.json`). TypeScript is compiled by `tsc` using `tsconfig.build.json` which targets `ES2023` and emits to `pkg/dist/`. The `tsconfig.json` (without the `.build` suffix) is used by Vitest and includes test files.
+
+<p class="section-label">Developers</p>
+
+# Dev Server
+
+<p class="page-intro">Bascik's development server is a TLS-enabled HTTP/2 server built on Node.js built-ins. It serves transpiled pages from an in-memory store, static assets from disk, and broadcasts live-reload events via Server-Sent Events.</p>
+
+## Why HTTP/2?
+
+HTTP/2 requires TLS. Using it for development means the protocol between the dev server and the browser matches production deployments on modern static hosts, eliminating a class of "works in dev, breaks in prod" issues around protocol-level behaviour. It also means no special handling is needed for assets that load over HTTP/2 in production.
+
+## TLS Certificate Generation (`pki.ts`)
+
+On first run, Bascik generates a self-signed certificate valid for 100 years and writes two files to the project root:
+
+- `bascik-cert.pem` — the certificate
+- `bascik-privkey.pem` — the private key
+
+On subsequent runs, both files are checked for existence and generation is skipped if they are present. The generation strategy differs by platform:
+
+- **macOS / Linux:** a single `openssl req` command generates both files, including a `subjectAltName` extension for `localhost` and `127.0.0.1`.
+- **Windows:** PowerShell's `New-SelfSignedCertificate` creates the cert in the Windows certificate store, then OpenSSL extracts the PEM files from a temporary PFX export.
+
+Because the cert is self-signed, browsers will show a security warning on first visit. Trust the cert once in the browser and the warning will not reappear.
+
+<div class="callout">
+<p>These files are generated per-project, not globally. If you delete them, they are regenerated on the next <code>bascik</code> invocation.</p>
+</div>
+
+## The HTTP/2 Server (`http2.ts`)
+
+The server listens on `https://localhost:8443` and handles all requests on a single `"stream"` event handler. Only `GET` requests are accepted; all other methods receive a `405 Method Not Allowed` response.
+
+### Request routing
+
+Requests are dispatched in this order:
+
+1. **Live-reload SSE endpoint.** `GET /bascik-live-reload` — sets up a Server-Sent Events stream. When the watch system detects a change, it sends `data: reload\n\n` to all connected clients, which calls `window.location.reload()`.
+2. **Static assets with extensions.** Any path with a file extension other than `.html` is served directly from the `dist/` directory using a streaming `createReadStream`. The correct `Content-Type` is set from the `MIME_MAP`.
+3. **HTML pages.** Paths without a file extension are looked up in the in-memory store. If found, the page is served with brotli compression if the client accepts it (`Accept-Encoding: br`), otherwise the raw buffer is sent. Unknown paths fall back to the `/404` entry if one exists.
+
+### Error handling
+
+Stream-level errors (client disconnects, runtime bugs per page) are caught by an `onError` helper that responds with `404` for missing files or `500` for other errors, then closes the stream. Server-level errors (TLS config, binding failures) are caught by `server.on("error")`.
+
+## In-Memory Page Store (`mem.ts`)
+
+The `MemoryStore` class holds two maps:
+
+- `#files` — maps HTTP paths (e.g. `/getting-started`) to `StoredPage` objects containing the raw buffer, a brotli-compressed buffer, and the set of component names used on that page.
+- `#components` — an inverted index mapping each component name to the `Set<string>` of absolute page file paths that use it.
+
+This inverted index powers selective re-transpilation. When a component file changes, `selectivelyProcessPages` looks up exactly which pages need rebuilding without scanning every page in the project.
+
+### Brotli compression
+
+Pages are brotli-compressed synchronously (`zlib.brotliCompressSync`) when stored and served pre-compressed when the client sends `Accept-Encoding: br`. This avoids compressing on every request.
+
+## Watch System (`watch.ts`)
+
+Three separate chokidar watchers are started by `watchFiles()`:
+
+### Watcher 1 — Static assets
+
+Watches the pages directory for any file matching the MIME map. On `add` or `change`, the file is copied to the mirrored path in `dist/`. On `unlink`, the dist file is deleted. In dev mode, a change also emits an `"asset-changed"` event to trigger live reload.
+
+### Watcher 2 — Page HTML files
+
+Watches the pages directory for `.html` files only. On `add` or `change`, `pageProcessing(path)` is called, running the full transpilation pipeline. On `unlink`, the page is removed from the memory store and deleted from `dist/`.
+
+### Watcher 3 — Component files
+
+Watches the components directory for `.html` and `.css` files. Uses `ignoreInitial: true` so it only fires on changes after startup.
+
+- **add** — a new component was created; all pages are reprocessed because any page might use it.
+- **change / unlink** — `selectivelyProcessPages(path)` uses the inverted component index to rebuild only affected pages.
+
+## Live Reload
+
+The live-reload mechanism uses Server-Sent Events (SSE) rather than WebSockets to avoid the complexity of a bidirectional protocol for a unidirectional (server-to-browser) use case. The injected client script:
+
+```js
+(function() {
+  const eventSource = new EventSource("/bascik-live-reload");
+  eventSource.onmessage = function(event) {
+    if (event.data === 'reload') {
+      window.location.reload();
+    }
+  };
+  eventSource.onerror = function() {
+    eventSource.close();
+    console.warn('Live-Reload Connection Lost');
+  };
+  window.onbeforeunload = function () { eventSource.close(); };
+})();
+```
+
+This script is only present in dev mode. The build pipeline strips it via the `data-bascik-dev-only` filter.
+
+## Build Mode Differences
+
+When `--build` is passed (or `BASCIK_BUILD=1` is set), the server is never started. The watch system still runs, but in non-persistent mode so chokidar exits after processing all initial file events. The live-reload script is not injected, and all `data-bascik-dev-only` script tags are removed from output.
+
+<p class="section-label">Developers</p>
+
+# Developer Guide
+
+<p class="page-intro">Everything you need to work on the Bascik package itself — architecture, the transpilation pipeline, the scoping system, the dev server, and how to run the test suite.</p>
+
+## Repository Layout
+
+The monorepo is split into two top-level folders:
+
+```text
+bascik/
+  pkg/          ← the @bascik/bascik npm package
+    src/
+      transpile.ts    ← CLI entry point
+      lib/            ← all library modules
+  docs/         ← this documentation site (a Bascik project itself)
+```
+
+The `pkg/` directory is a self-contained TypeScript project with its own `package.json`, `tsconfig.json`, and `vite.config.js` (used by Vitest).
+
+## Quick Start for Contributors
+
+You need Node.js v24 or later. Clone the repo and install dependencies:
+
+```sh
+git clone https://github.com/collin-thomas/bascik.git
+cd bascik/pkg
+yarn install
+```
+
+Run the test suite:
+
+```sh
+yarn test
+```
+
+Build the package (compiles TypeScript to `dist/`):
+
+```sh
+yarn build
+```
+
+To work on the docs site with a live-reload dev server:
+
+```sh
+cd ../docs
+yarn install
+yarn dev
+```
+
+## Developer Sub-pages
+
+- [Architecture](/develop/architecture) — module map, responsibilities, and how the files relate to one another.
+- [Transpilation Pipeline](/develop/transpilation-pipeline) — the two-phase page and component pipeline that turns source HTML into deployable output.
+- [Scoping System](/develop/scoping-system) — how IDs, class names, CSS, and JavaScript references are namespaced per component instance.
+- [Dev Server](/develop/dev-server) — the HTTP/2 server, TLS certificate generation, memory store, live reload, and watch system.
+- [Testing](/develop/testing) — running tests, coverage, writing new tests, and the benchmarking suite.
+
+<p class="section-label">Developers</p>
+
+# Scoping System
+
+<p class="page-intro">Scoping prevents one component's styles and identifiers from leaking into another. Bascik rewrites HTML attributes, CSS rules, and JavaScript DOM selector strings at transpile time using a deterministic naming scheme.</p>
+
+## The Naming Scheme
+
+Every scoped name is constructed from three or four parts separated by double underscores:
+
+```text
+bascik__<componentName>__<instanceId>__<originalName>
+
+# Examples:
+bascik__site-nav__a1b2c3d4__toggle-btn    ← class (no instanceId, see below)
+bascik__site-nav__a1b2c3d4__search-input  ← id / name
+```
+
+The **instanceId** is an 8-hex-character random value generated fresh for each occurrence of a component tag in a page. It guarantees that DOM identifiers (`id`, `name`) are unique even when the same component is used multiple times on a page.
+
+### Class attributes intentionally omit the instanceId
+
+IDs and names must be unique per DOM element, so they include the `instanceId`. Class names, however, are deliberately scoped to the *component name* only:
+
+```text
+bascik__site-nav__toggle-btn   ← same on every instance
+```
+
+This means every instance of `<site-nav>` on a page shares identical scoped class names. The CSS deduplication step can therefore emit a single `<style>` block per component type, rather than duplicating rules for every instance.
+
+## HTML Attribute Pass
+
+`prefixElementAttribute` in `javascript.ts` rewrites every matching HTML attribute value in the component template:
+
+```html
+<!-- Source -->
+<button class="toggle-btn" id="menu-trigger">Menu</button>
+
+<!-- After scoping (dev mode) -->
+<button class="bascik__site-nav__toggle-btn" id="bascik__site-nav__a1b2c3d4__menu-trigger">Menu</button>
+```
+
+## CSS Pass
+
+The CSS pass runs as part of the class scoping step and rewrites the component's paired `.css` file and any inline `<style>` tags:
+
+### Class selectors
+
+```css
+/* Source */
+.toggle-btn { color: red; }
+
+/* Scoped */
+.bascik__site-nav__toggle-btn { color: red; }
+```
+
+### Element selectors → class selectors
+
+Bare element selectors in a component's CSS are converted to class selectors and the matching class is injected onto every matching element in the template HTML:
+
+```css
+/* Source CSS */
+p { margin: 0; }
+
+/* Scoped CSS */
+.bascik__site-nav__el__p { margin: 0; }
+```
+
+```html
+<!-- Scoped HTML — class injected onto every <p> in the component -->
+<p class="bascik__site-nav__el__p">Content</p>
+```
+
+### @keyframes
+
+```css
+/* Source */
+@keyframes slide-in { from { opacity: 0; } to { opacity: 1; } }
+.item { animation: slide-in 0.3s; }
+
+/* Scoped */
+@keyframes bascik__site-nav__keyframe__slide-in { from { opacity: 0; } to { opacity: 1; } }
+.bascik__site-nav__item { animation: bascik__site-nav__keyframe__slide-in 0.3s; }
+```
+
+### @layer
+
+```css
+/* Source */
+@layer utilities { .btn { padding: 4px 8px; } }
+
+/* Scoped */
+@layer bascik__site-nav__layer__utilities { .bascik__site-nav__btn { padding: 4px 8px; } }
+```
+
+### container-name
+
+```css
+/* Source */
+.wrapper { container-name: sidebar; container-type: inline-size; }
+@container sidebar (min-width: 300px) { .item { font-size: 1rem; } }
+
+/* Scoped */
+.bascik__site-nav__wrapper { container-name: bascik__site-nav__container__sidebar; container-type: inline-size; }
+@container bascik__site-nav__container__sidebar (min-width: 300px) { .bascik__site-nav__item { font-size: 1rem; } }
+```
+
+### CSS custom properties
+
+```css
+/* Source */
+:root { --brand-color: #0070f3; }
+.btn { color: var(--brand-color); }
+
+/* Scoped */
+:root { --bascik__site-nav__brand-color: #0070f3; }
+.bascik__site-nav__btn { color: var(--bascik__site-nav__brand-color); }
+```
+
+<div class="callout">
+<p><strong>Note:</strong> CSS custom properties defined in <code>:root</code> or at global scope are scoped by prefixing the variable name. Properties that should be intentionally global (design tokens consumed across components) should not be defined inside a component's CSS file.</p>
+</div>
+
+### What is NOT scoped
+
+`[id]` attribute selectors in CSS are stripped because they cannot be reliably scoped without wrapping the component HTML in a DOM container element. Use a class selector instead.
+
+## JavaScript Pass
+
+After rewriting HTML attributes, `prefixElementAttribute` also rewrites every `<script>` block in the component template:
+
+### ID selectors
+
+```js
+// Source
+document.getElementById("menu-trigger");
+document.querySelector("#menu-trigger");
+
+// Scoped
+document.getElementById("bascik__site-nav__a1b2c3d4__menu-trigger");
+document.querySelector("#bascik__site-nav__a1b2c3d4__menu-trigger");
+```
+
+### Class selectors
+
+```js
+// Source
+document.querySelector(".toggle-btn");
+el.classList.add("is-open");
+el.className = "toggle-btn is-open";
+
+// Scoped
+document.querySelector(".bascik__site-nav__toggle-btn");
+el.classList.add("bascik__site-nav__is-open");
+el.className = "bascik__site-nav__toggle-btn bascik__site-nav__is-open";
+```
+
+### Name selectors
+
+```js
+// Source
+document.getElementsByName("email-field");
+
+// Scoped
+document.getElementsByName("bascik__site-nav__a1b2c3d4__email-field");
+```
+
+## Script Namespacing
+
+`namespaceScriptTags` wraps every inline script in an IIFE so that `var` declarations cannot leak between components:
+
+```js
+// Before
+var count = 0;
+document.querySelector(".btn").addEventListener("click", function() { count++; });
+
+// After (simplified)
+(function() {
+  var count = 0;
+  document.querySelector(".bascik__my-comp__btn").addEventListener("click", function() { count++; });
+})();
+```
+
+## Obfuscation
+
+When `obfuscateAttributeNames: true` is set (the default for builds), every scoped name is hashed using SHAKE-256 (outputLength 6 bytes = 12 hex chars) and prefixed with `b` to ensure it starts with a letter:
+
+```ts
+// names.ts
+export const getAttributeNameHash = (attributeName: string): string => {
+  return `b${createHash("shake256", { outputLength: 6 })
+    .update(attributeName)
+    .digest("hex")}`;
+};
+```
+
+The hash is deterministic — the same full scoped name always produces the same short hash — so CSS and HTML always stay in sync. The obfuscated output looks like:
+
+```html
+<button class="ba1c2d3e4f5b">Menu</button>
+<style>.ba1c2d3e4f5b { color: red; }</style>
+```
+
+## CSS Deduplication
+
+After all components on a page have been resolved, `deduplicateCss` receives the list of used components. Because class-scoped names are identical across all instances of the same component, a Set-based deduplication is sufficient — each component's CSS block appears exactly once in the final `<style>` tag, regardless of how many times that component was used on the page.
+
+<p class="section-label">Developers</p>
+
+# Testing
+
+<p class="page-intro">Bascik uses <a href="https://vitest.dev" target="_blank" rel="noopener">Vitest</a> for unit tests, coverage, and benchmarks. All test files live alongside the source files they exercise, using the <code>*.test.ts</code> naming convention.</p>
+
+## Running Tests
+
+All commands are run from the `pkg/` directory:
+
+```sh
+# Interactive watch mode (re-runs on file changes)
+yarn test
+
+# Single run (used in CI)
+yarn test:ci
+
+# Single run with full coverage report
+yarn test:coverage
+
+# Run benchmarks
+yarn bench
+```
+
+## Test Configuration
+
+Vitest is configured in `pkg/vite.config.js`:
+
+```js
+export default defineConfig({
+  test: {
+    include: ["src/**/*.test.ts"],
+    benchmark: {
+      include: ["bench/**/*.bench.ts"],
+    },
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json-summary", "lcov"],
+      reportsDirectory: "./coverage",
+      include: ["src/**/*.js"],
+      exclude: ["src/**/*.test.ts"],
+    },
+  },
+});
+```
+
+Coverage is collected via V8 and written to `pkg/coverage/`. The CI script uses `text-summary` only. The full HTML report at `coverage/index.html` is useful locally.
+
+## Test Files
+
+Each library module has a paired test file:
+
+```text
+pkg/src/lib/
+  components.ts / components.test.ts       ← tag detection, slot/prop/attr logic
+  javascript.ts / javascript.test.ts       ← attribute scoping, script namespacing
+  styles.ts / styles.test.ts              ← CSS transforms, deduplication
+  names.ts / names.test.ts               ← unique ID generation, obfuscation hashing
+  build-scripts.ts / build-scripts.test.ts ← data-bascik-build execution
+  processing.ts / processing.test.ts      ← end-to-end transpilation pipeline
+  config.ts / config.test.ts             ← config loading and merging
+  userConfig.ts / userConfig.test.ts     ← user config file resolution
+  file-system.ts / file-system.test.ts   ← filesystem helpers
+  paths.ts / paths.test.ts              ← path ↔ HTTP URL conversion
+  mem.ts / mem.test.ts                  ← memory store
+  mime.ts / mime.test.ts               ← MIME map
+  events.ts / events.test.ts           ← EventEmitter singleton
+  http2.ts / http2.test.ts             ← HTTP/2 server
+  pki.ts / pki.test.ts                ← TLS cert generation
+  watch.ts / watch.test.ts             ← chokidar file watchers
+```
+
+## Writing Tests
+
+Tests use the standard Vitest `describe` / `it` / `expect` API. Because library modules depend on `BascikConfig` (a module-level singleton), tests that need a specific configuration use `vi.mock` to stub it:
+
+```ts
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("../config.ts", () => ({
+  BascikConfig: {
+    scopeScriptBlocks: true,
+    scopeAttribute: { class: true, id: true, name: true },
+    obfuscateAttributeNames: false,
+    verboseLogging: false,
+    isBuild: false,
+    minifyStyles: false,
+  },
+}));
+
+// Import the module under test AFTER mocking its dependencies
+import { prefixElementAttribute } from "./javascript.js";
+
+describe("prefixElementAttribute", () => {
+  it("scopes class attributes in HTML", () => {
+    const component = {
+      name: "my-comp",
+      fileContent: '<div class="btn">Click</div>',
+    };
+    const result = prefixElementAttribute(component, "class", "abc123");
+    expect(result.fileContent).toContain("bascik__my-comp__btn");
+  });
+});
+```
+
+<div class="callout">
+<p><strong>Important:</strong> Always import the module under test <em>after</em> calling <code>vi.mock</code>. Vitest hoists mock calls to the top of the file, but the import order still matters for ensuring the mock is in place when the module initialises its dependencies.</p>
+</div>
+
+## Benchmarks
+
+Performance benchmarks live in `pkg/bench/` and use Vitest's built-in `bench` API. They measure the transpilation pipeline on fixed, repeatable inputs:
+
+```ts
+import { bench, describe } from "vitest";
+import { recursivelyTranspile } from "../src/lib/processing.ts";
+
+describe("recursivelyTranspile", () => {
+  bench("simple page — one component", () => {
+    recursivelyTranspile(simpleHtml, componentList);
+  });
+
+  bench("complex page — nested components", () => {
+    recursivelyTranspile(complexHtml, componentList);
+  });
+});
+```
+
+## TypeScript Checking
+
+The package uses two tsconfig files:
+
+- `tsconfig.json` — used by Vitest; includes test files (`src/**/*.test.ts`, `bench/**/*.bench.ts`).
+- `tsconfig.build.json` — used by `tsc` for production builds; excludes test files and emits to `dist/`.
+
+Run type checking without emitting output:
+
+```sh
+yarn typecheck
+```
+
+## Contributing a Fix
+
+1. Fork the repository and create a branch.
+2. Make your changes in `pkg/src/`.
+3. Add or update tests in the paired `*.test.ts` file.
+4. Run `yarn test` and ensure all tests pass.
+5. Run `yarn typecheck` to confirm there are no TypeScript errors.
+6. Open a pull request against `main`.
+
+<p class="section-label">Developers</p>
+
+# Transpilation Pipeline
+
+<p class="page-intro">Bascik transforms source HTML into deployable HTML by replacing every custom component tag with its resolved, scoped content. The pipeline runs in two nested phases: the page phase and the component phase.</p>
+
+## Overview
+
+Every time a source page or component file changes, `pageProcessing(filePath)` in `processing.ts` is called. This is the top-level entry point for the whole pipeline.
+
+Build scripts (`<script data-bascik-build>`) run **first**, before minification, so their output can contain component tags that will be resolved by the component phase.
+
+## Phase 1 — Page Phase (`pageProcessing`)
+
+The page phase prepares the source HTML document and orchestrates the component phase:
+
+1. **Execute build scripts.** Any `<script data-bascik-build>` blocks are run as Node.js ESM modules. Their stdout replaces the script tag. The result can contain component tags — these will be resolved in step 5.
+2. **Minify.** HTML comments are stripped and excess whitespace is collapsed via `minifyHtml`.
+3. **Extract body and head.** The inner content of `<body>` and `<head>` are extracted separately so component injection can happen in both zones independently.
+4. **Load components.** All component HTML and CSS files are read from `src/components/` into a `ComponentList` map keyed by component name.
+5. **Run component phase.** `recursivelyTranspile` is called on both the body and head HTML strings. Each call returns a `TranspileResult` containing the resolved HTML and the list of components that were used.
+6. **Collect and deduplicate CSS.** All CSS from used components is gathered. Since multiple instances of the same component share identical scoped class names, `deduplicateCss` emits a single `<style>` block regardless of how many times a component appears on the page.
+7. **Inject live-reload script.** In dev mode only, a small `<script>` that opens a Server-Sent Events connection to `/bascik-live-reload` is appended.
+8. **Reassemble HTML.** The full document is reconstructed: `<!DOCTYPE html>`, `<html>`, `<head>` (with injected `<style>`), `<body>`.
+9. **Filter build/dev script tags.** Tags with `data-bascik-build-only` are removed in dev; tags with `data-bascik-dev-only` are removed during builds.
+10. **Write output.** The finished HTML is written to `dist/`. In dev mode it is also stored in the in-memory page store so the HTTP/2 server can serve it instantly.
+11. **Emit reload event.** `eventEmitter.emit("page-changed")` triggers live-reload for any connected browser.
+
+## Phase 2 — Component Phase (`recursivelyTranspile`)
+
+The component phase recurses until no custom component tags remain in the HTML string. On each pass it finds the first component tag, fully resolves it, and substitutes it. It then repeats until no more tags are found.
+
+For each component tag found:
+
+### Step 1 — Scoping pipeline
+
+A fresh `instanceId` (a random 8-byte hex string) is generated for this occurrence of the component. An ordered list of transform functions is assembled and applied in a pipeline (each step receives the output of the previous):
+
+1. `prefixElementAttribute(c, "id", instanceId)` — scopes `id` attributes and all corresponding JS DOM selector references.
+2. `prefixElementAttribute(c, "name", instanceId)` — scopes `name` attributes and `getElementsByName` calls.
+3. `prefixElementAttribute(c, "class", instanceId)` — scopes class names in HTML attributes, CSS, and JS selector calls.
+4. `namespaceScriptTags(c)` — wraps every inline `<script>` in an IIFE.
+
+Each step is skipped if disabled in `bascik.config.js`.
+
+### Step 2 — Template resolution
+
+1. **Props.** `injectProps` replaces every `data-bascik-prop-*` placeholder in the component template with the corresponding attribute value from the usage tag.
+2. **Named slots.** `replaceNamedSlots` fills each `data-bascik-slot="name"` zone in the template with the matching `<div data-bascik-slot="name">` content from the usage site.
+3. **Default slot.** The inner content of the usage tag is placed into the element carrying `data-bascik-slot` (no value). If the usage tag has no inner content, the template's fallback content is preserved.
+4. **Attribute inheritance.** `mergeAttributesOntoRoot` copies pass-through attributes (`aria-*`, `data-*`, `class`, etc.) from the usage tag onto the component's root element.
+
+### Step 3 — Substitution
+
+`replaceTag` replaces the original usage tag in the parent HTML string with the fully resolved component HTML. The outer loop runs again on the updated string. Because component templates can themselves contain other component tags, this naturally handles any depth of nesting.
+
+## Termination
+
+The recursion terminates when `getFirstComponent` no longer finds any custom tag in the HTML string — i.e., when all recognised component names have been replaced with plain HTML.
+
+<div class="callout">
+<p><strong>Performance note:</strong> Each call to <code>recursivelyTranspile</code> uses the same in-memory <code>ComponentList</code> built once at the start of <code>pageProcessing</code>. Components are never re-read from disk mid-pipeline.</p>
+</div>
+
+## Selective Re-transpilation
+
+When a component file changes during dev, Bascik does not reprocess every page. The memory store maintains a reverse index mapping each component name to the set of pages that use it. `selectivelyProcessPages` uses this index to retranspile only the affected pages.
+
+## Scoped Name Format
+
+All scoped attribute names follow this pattern:
+
+```text
+bascik__<componentName>__<instanceId>__<originalName>
+
+# id and name attributes include instanceId for uniqueness:
+bascik__my-nav__a1b2c3d4__search-input
+
+# class attributes use component name only (no instanceId):
+bascik__my-nav__toggle-btn
+```
+
+When `obfuscateAttributeNames` is enabled (the default for builds), each full scoped name is hashed to a short hex string using SHAKE-256 before being written to the output, e.g. `ba1c2d3e4f`. See [Scoping System](/develop/scoping-system) for full details.
+
+## Migrating from Astro
+
+Astro and Bascik are both build-time component systems that output zero-JS HTML by default. The concepts translate closely: `.astro` files become `.html` component files, frontmatter code blocks become `<script data-bascik-build>` tags, `Astro.props` becomes `data-bascik-prop-*` attributes, and Astro's `<slot />` becomes Bascik's `data-bascik-slot` attribute.
+
+### .astro Files → .html Component Files
+
+Rename the file from `ComponentName.astro` to the hyphenated tag name `component-name.html`. Move it to `src/components/`. Remove the frontmatter fences (`---`) and convert the template HTML — the Bascik component file contains only the HTML markup of the component.
+
+```text
+Before (Astro)              After (Bascik)
+src/                        src/components/
+  components/                 site-nav/
+    SiteNav.astro               site-nav.html
+    Card.astro                  site-nav.css  ← was <style> in .astro
+  pages/                      card/
+    index.astro                 card.html
+    about.astro                 card.css
+                            src/pages/
+                              index.html
+                              about.html
+```
+
+### Frontmatter → `<script data-bascik-build>`
+
+Astro's frontmatter block (`---`) runs on the server at build time. The direct equivalent in Bascik is `<script data-bascik-build>`. The script runs as a Node.js ESM module at build time; its stdout is injected into the page in place of the tag. Top-level `import` and top-level `await` are supported.
+
+```astro
+<!-- src/pages/blog.astro (Astro — before) -->
+---
+import { getCollection } from 'astro:content';
+const posts = await getCollection('blog');
+---
+
+<ul>
+  {posts.map(post => (
+    <li><a href={`/blog/${post.slug}`}>{post.data.title}</a></li>
+  ))}
+</ul>
+```
+
+```html
+<!-- src/pages/blog.html (Bascik — after) -->
+<ul>
+  <script data-bascik-build>
+    import { readdir, readFile } from 'node:fs/promises';
+    import matter from 'gray-matter';
+    const files = (await readdir('./content/blog')).filter(f => f.endsWith('.md'));
+    const items = await Promise.all(files.map(async f => {
+      const { data } = matter(await readFile(`./content/blog/${f}`, 'utf8'));
+      const slug = f.replace('.md', '');
+      return `<li><a href="/blog/${slug}">${data.title}</a></li>`;
+    }));
+    console.log(items.join('\n'));
+  </script>
+</ul>
+```
+
+> **No Astro content helpers:** Bascik has no equivalent of `getCollection` or `astro:content`. Read Markdown files directly with Node.js `fs` and a Markdown parser such as `marked` or `gray-matter`.
+
+### Astro.props → data-bascik-prop-*
+
+Astro's typed `Astro.props` becomes Bascik's `data-bascik-prop-*` attribute system. Add the attribute (with no value) on the receiver element inside the component, then supply the text value on the component tag at the usage site.
+
+```astro
+<!-- src/components/Card.astro (Astro — before) -->
+---
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
+---
+
+<div class="card">
+  <h3>{title}</h3>
+  <p>{description}</p>
+</div>
+
+<!-- Usage -->
+<Card title="Getting Started" description="Up and running in minutes." />
+```
+
+```html
+<!-- src/components/my-card/my-card.html (Bascik — after) -->
+<div class="card">
+  <h3 data-bascik-prop-title></h3>
+  <p data-bascik-prop-description></p>
+</div>
+
+<!-- Usage -->
+<my-card
+  data-bascik-prop-title="Getting Started"
+  data-bascik-prop-description="Up and running in minutes."
+></my-card>
+```
+
+> **Text only:** Bascik props accept plain text strings. Passing JSX, objects, arrays, or HTML content as a prop has no equivalent — use a slot for rich HTML content instead.
+
+### `<slot />` → data-bascik-slot
+
+Astro's default `<slot />` maps to a Bascik element with the `data-bascik-slot` attribute. Fallback content goes inside that element, equivalent to Astro's `<slot>Fallback</slot>`.
+
+```astro
+<!-- src/components/Section.astro (Astro — before) -->
+<section class="section">
+  <slot />
+</section>
+
+<!-- Usage -->
+<Section><p>Section content.</p></Section>
+```
+
+```html
+<!-- src/components/my-section/my-section.html (Bascik — after) -->
+<section class="section">
+  <div data-bascik-slot></div>
+</section>
+
+<!-- Usage -->
+<my-section><p>Section content.</p></my-section>
+```
+
+### Named Slots → data-bascik-slot="name"
+
+Astro's `<slot name="header" />` maps to a receiver element with `data-bascik-slot="header"` inside the component. Pass content from the usage site by adding `data-bascik-slot="header"` on the element you want to inject.
+
+```astro
+<!-- src/components/PageLayout.astro (Astro — before) -->
+<div class="layout">
+  <header><slot name="header" /></header>
+  <main><slot /></main>
+  <footer><slot name="footer" /></footer>
+</div>
+
+<!-- Usage -->
+<PageLayout>
+  <h1 slot="header">Page Title</h1>
+  <p>Main content.</p>
+  <p slot="footer">© 2025 Acme</p>
+</PageLayout>
+```
+
+```html
+<!-- src/components/page-layout/page-layout.html (Bascik — after) -->
+<div class="layout">
+  <header><div data-bascik-slot="header"></div></header>
+  <main><div data-bascik-slot></div></main>
+  <footer><div data-bascik-slot="footer"></div></footer>
+</div>
+
+<!-- Usage -->
+<page-layout>
+  <p>Main content.</p>
+  <div data-bascik-slot="header"><h1>Page Title</h1></div>
+  <div data-bascik-slot="footer"><p>© 2025 Acme</p></div>
+</page-layout>
+```
+
+### Astro Scoped `<style>` → Paired .css Files
+
+Astro scopes `<style>` blocks inside `.astro` files to that component. Bascik's equivalent is a paired `.css` file in the same directory as the component HTML. Remove the `<style>` block from the component file and paste its contents into the `.css` file. Class names, element selectors, and `@keyframes` are scoped automatically at build time — no changes to selectors needed.
+
+```astro
+<!-- SiteNav.astro (Astro — before) -->
+<nav class="nav">
+  <a href="/" class="logo">Acme</a>
+</nav>
+
+<style>
+  .nav { display: flex; gap: 16px; }
+  .logo { font-weight: bold; }
+</style>
+```
+
+```html
+<!-- src/components/site-nav/site-nav.html (Bascik — after) -->
+<nav class="nav">
+  <a href="/" class="logo">Acme</a>
+</nav>
+```
+
+```css
+/* src/components/site-nav/site-nav.css */
+.nav { display: flex; gap: 16px; }
+.logo { font-weight: bold; }
+```
+
+### Content Collections → `<script data-bascik-build>`
+
+Astro's Content Collections provide a typed, validated interface to Markdown and MDX files. In Bascik, read the same source files directly from the filesystem in a build script using Node.js `fs` and a Markdown/front-matter parser.
+
+```astro
+<!-- src/pages/blog/[slug].astro (Astro — before) -->
+---
+import { getCollection, getEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map(post => ({ params: { slug: post.slug }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+---
+<h1>{post.data.title}</h1>
+<Content />
+```
+
+In Bascik, generate one page file per slug before running the build:
+
+```js
+// scripts/generate-blog.js
+import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises';
+import matter from 'gray-matter';
+import { marked } from 'marked';
+
+await mkdir('./src/pages/blog', { recursive: true });
+const files = (await readdir('./content/blog')).filter(f => f.endsWith('.md'));
+
+for (const file of files) {
+  const raw = await readFile(`./content/blog/${file}`, 'utf8');
+  const { data, content } = matter(raw);
+  const slug = file.replace('.md', '');
+  const body = marked(content);
+
+  await writeFile(`./src/pages/blog/${slug}.html`, `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>${data.title}</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <site-nav></site-nav>
+  <main class="prose">
+    <h1>${data.title}</h1>
+    ${body}
+  </main>
+  <site-footer></site-footer>
+</body>
+</html>`);
+}
+```
+
+```json
+{
+  "scripts": {
+    "generate": "node scripts/generate-blog.js",
+    "dev": "npm run generate && bascik",
+    "build": "npm run generate && bascik --build"
+  }
+}
+```
+
+### import.meta.env → process.env
+
+Astro uses `import.meta.env` for environment variables. Inside a `<script data-bascik-build>` block, use standard Node.js `process.env` instead. Runtime client-side scripts use `window` or data attributes to access values that were baked in at build time — there is no equivalent of Astro's `import.meta.env.PUBLIC_*` exposure to the browser.
+
+```astro
+<!-- Before (Astro frontmatter) -->
+---
+const apiUrl = import.meta.env.API_URL;
+---
+```
+
+```html
+<!-- After (Bascik build script) -->
+<script data-bascik-build>
+  const apiUrl = process.env.API_URL;
+  const data = await fetch(apiUrl).then(r => r.json());
+  console.log(`<p>${data.message}</p>`);
+</script>
+```
+
+### MDX → HTML Component + Build Script
+
+Astro supports `.mdx` files as pages with embedded component usage. Bascik has no native MDX support. Convert MDX pages by processing the Markdown content with a build script and adding any interactive sections as plain Bascik components around the generated HTML.
+
+```mdx
+<!-- src/content/blog/intro.mdx (Astro — before) -->
+---
+title: Introduction
+---
+
+import CodeExample from '../components/CodeExample.astro';
+
+# Introduction
+
+Welcome to our docs.
+
+<CodeExample lang="js" code="console.log('hello')" />
+```
+
+```html
+<!-- src/pages/blog/intro.html (Bascik — after) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Introduction</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <site-nav></site-nav>
+  <main class="prose">
+    <script data-bascik-build>
+      import { readFile } from 'node:fs/promises';
+      import { marked } from 'marked';
+      const md = await readFile('./content/blog/intro.md', 'utf8');
+      console.log(marked(md));
+    </script>
+    <code-example
+      data-bascik-prop-lang="js"
+      data-bascik-prop-code="console.log('hello')"
+    ></code-example>
+  </main>
+  <site-footer></site-footer>
+</body>
+</html>
+```
+
+The Markdown prose is rendered at build time by the build script and injected as HTML. Bascik component tags that follow (or are output by the build script) are then expanded in the next pass.
+
+## Migrating from Eleventy
+
+Eleventy is a static site generator; Bascik is a build tool for HTML components that produces static HTML with no client-side framework runtime. The main conceptual shift is that Bascik uses its own component format — plain HTML files resolved by tag name — instead of Nunjucks, Liquid, or Handlebars templates. Front matter and template inheritance map to build scripts and slot-based layout components.
+
+### Template Languages → HTML Component Files
+
+Eleventy supports many template languages. In Bascik, all components are plain `.html` files. There is no template syntax — values are either hardcoded, injected as `data-bascik-prop-*` text props, passed as slot content, or generated by a `<script data-bascik-build>` block.
+
+```text
+Before (Eleventy)           After (Bascik)
+src/                        src/components/
+  _includes/                  site-layout/
+    base.njk                    site-layout.html
+    nav.njk                   site-nav/
+    footer.njk                  site-nav.html
+  posts/                    src/pages/
+    my-post.md                index.html
+  index.njk                   about.html
+  about.njk                   blog/
+                                my-post.html
+```
+
+### `{% include %}` → Bascik Component Tags
+
+An Eleventy `{% include 'nav.njk' %}` becomes a self-contained Bascik component tag. The file name (hyphenated, without extension) is the tag name.
+
+```njk
+{# src/_includes/nav.njk (Eleventy — before) #}
+<nav class="nav">
+  <a href="/">Home</a>
+  <a href="/about">About</a>
+  <a href="/blog">Blog</a>
+</nav>
+
+{# Used in a page with: #}
+{% include "nav.njk" %}
+```
+
+```html
+<!-- src/components/site-nav/site-nav.html (Bascik — after) -->
+<nav class="nav">
+  <a href="/">Home</a>
+  <a href="/about">About</a>
+  <a href="/blog">Blog</a>
+</nav>
+
+<!-- Used in a page with: -->
+<site-nav></site-nav>
+```
+
+### `{% extends %}` / Template Inheritance → Slot-based Layout Components
+
+Eleventy's `{% extends 'base.njk' %}` and `{% block content %}` pattern maps to a Bascik layout component that uses `data-bascik-slot` for the page content area and named slots for additional regions like the page title.
+
+```njk
+{# src/_includes/base.njk (Eleventy — before) #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>{{ title }} — Acme</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  {% include "nav.njk" %}
+  <main>{% block content %}{% endblock %}</main>
+  {% include "footer.njk" %}
+</body>
+</html>
+```
+
+```njk
+{# src/about.njk (Eleventy — before) #}
+---
+title: About
+---
+{% extends "base.njk" %}
+{% block content %}
+<h1>About</h1>
+<p>We build things.</p>
+{% endblock %}
+```
+
+In Bascik, the layout component wraps only the repeated inner structure. The `<html>`, `<head>`, and `<body>` live in the page file.
+
+```html
+<!-- src/components/site-layout/site-layout.html (Bascik — after) -->
+<site-nav></site-nav>
+<main class="content">
+  <div data-bascik-slot></div>
+</main>
+<site-footer></site-footer>
+```
+
+```html
+<!-- src/pages/about.html (Bascik — after) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>About — Acme</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <site-layout>
+    <h1>About</h1>
+    <p>We build things.</p>
+  </site-layout>
+</body>
+</html>
+```
+
+### Front Matter Data → Hardcoded HTML or Build Scripts
+
+Eleventy front matter (YAML between `---` delimiters) injects variables into the template. Bascik has no front matter. Values that differ per page are either written directly into the HTML or supplied via `data-bascik-prop-*` props. Use a `<script data-bascik-build>` block when you want to read values from an external data file at build time.
+
+```njk
+{# src/about.njk (Eleventy — before) #}
+---
+title: About
+description: Learn about Acme Corp.
+---
+<h1>{{ title }}</h1>
+<meta name="description" content="{{ description }}" />
+```
+
+```html
+<!-- src/pages/about.html (Bascik — after) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>About — Acme</title>
+  <meta name="description" content="Learn about Acme Corp." />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <site-layout>
+    <h1>About</h1>
+  </site-layout>
+</body>
+</html>
+```
+
+For many pages sharing a data-driven title pattern, extract the title into a `data-bascik-prop-title` prop on the layout component, or generate the pages entirely from a build script.
+
+### Collections → `<script data-bascik-build>`
+
+Eleventy's Collections API reads a directory of Markdown files and makes them available as a sorted array in templates. In Bascik, use a `<script data-bascik-build>` block that reads the same directory and outputs a list of HTML links directly into the page.
+
+```njk
+{# src/blog/index.njk (Eleventy — before) #}
+<ul>
+  {%- for post in collections.post | reverse -%}
+  <li>
+    <a href="{{ post.url }}">{{ post.data.title }}</a>
+    <time>{{ post.date | dateFilter }}</time>
+  </li>
+  {%- endfor -%}
+</ul>
+```
+
+```html
+<!-- src/pages/blog/index.html (Bascik — after) -->
+<ul>
+  <script data-bascik-build>
+    import { readdir, readFile } from 'node:fs/promises';
+    import matter from 'gray-matter';
+
+    const files = (await readdir('./content/posts'))
+      .filter(f => f.endsWith('.md'))
+      .sort()
+      .reverse();
+
+    const items = await Promise.all(files.map(async file => {
+      const raw = await readFile(`./content/posts/${file}`, 'utf8');
+      const { data } = matter(raw);
+      const slug = file.replace('.md', '');
+      return `<li><a href="/blog/${slug}">${data.title}</a></li>`;
+    }));
+
+    console.log(items.join('\n'));
+  </script>
+</ul>
+```
+
+> **Build scripts run first:** A build script's output can itself contain Bascik component tags. They are resolved in the next pass, so you can output `<post-card>` tags from a build script and Bascik will expand them.
+
+### Passthrough File Copy → Automatic
+
+In Eleventy, non-template files (CSS, images, fonts) must be explicitly added to the passthrough copy list in `.eleventy.js`. In Bascik, all non-`.html` files in `src/pages/` are copied to `dist/` automatically at build time — no configuration needed.
+
+```text
+src/pages/
+  index.html     ← transpiled
+  about.html     ← transpiled
+  css/
+    styles.css   ← copied as-is
+  img/
+    hero.jpg     ← copied as-is
+  fonts/
+    inter.woff2  ← copied as-is
+```
+
+### eleventy.config.js Plugins → Not Needed
+
+Many Eleventy plugins exist to scope CSS, handle image optimization, or add syntax highlighting. Bascik handles CSS and JS scoping natively. For other transformations, use standard build tooling in your `package.json` build scripts (for example, PostCSS for global styles, or a syntax highlighter library in a build script).
+
+### Before and After: Blog Index Page
+
+```njk
+{# src/index.njk (Eleventy — before) #}
+---
+layout: base.njk
+title: Home
+---
+<section class="hero">
+  <h1>Welcome to Acme Blog</h1>
+  <p>The latest from our team.</p>
+</section>
+
+<section class="posts">
+  <h2>Recent Posts</h2>
+  <ul>
+    {%- for post in collections.post | reverse | limit(5) -%}
+    <li><a href="{{ post.url }}">{{ post.data.title }}</a></li>
+    {%- endfor -%}
+  </ul>
+</section>
+```
+
+```html
+<!-- src/pages/index.html (Bascik — after) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Home — Acme Blog</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <site-nav></site-nav>
+  <section class="hero">
+    <h1>Welcome to Acme Blog</h1>
+    <p>The latest from our team.</p>
+  </section>
+  <section class="posts">
+    <h2>Recent Posts</h2>
+    <ul>
+      <script data-bascik-build>
+        import { readdir, readFile } from 'node:fs/promises';
+        import matter from 'gray-matter';
+        const files = (await readdir('./content/posts'))
+          .filter(f => f.endsWith('.md'))
+          .sort().reverse().slice(0, 5);
+        const items = await Promise.all(files.map(async f => {
+          const { data } = matter(await readFile(`./content/posts/${f}`, 'utf8'));
+          return `<li><a href="/blog/${f.replace('.md','')}">${data.title}</a></li>`;
+        }));
+        console.log(items.join('\n'));
+      </script>
+    </ul>
+  </section>
+  <site-footer></site-footer>
+</body>
+</html>
+```
+
+## Migrating from Next.js
+
+Next.js and Bascik share file-based routing, but Next.js is a full-stack React framework while Bascik is a build-time HTML assembler. The migration is largely about removing framework abstractions: replace JSX pages with HTML files, replace data-fetching functions with build scripts, and replace special Next.js components with their standard HTML equivalents.
+
+### Pages Router → src/pages/
+
+The Pages Router maps directly to Bascik's `src/pages/` directory. Each `.js` / `.tsx` page file becomes a plain `.html` file at the same relative path.
+
+```text
+Before (Next.js Pages Router)    After (Bascik)
+pages/                           src/pages/
+  index.js                         index.html
+  about.js                         about.html
+  blog/                            blog/
+    index.js                         index.html
+    [slug].js                        my-first-post.html
+                                     another-post.html
+```
+
+> **No dynamic segments:** Bascik has no equivalent of `[slug].js`. Each URL needs its own `.html` file. For many programmatically generated pages, write a Node.js script that creates the files before running `bascik --build`.
+
+### App Router Layouts → Shared Layout Components
+
+Next.js App Router uses `layout.tsx` files to wrap pages in shared UI. In Bascik, the `<html>`, `<head>`, and `<body>` tags live in each page file. Repeated structure goes into components.
+
+```jsx
+// app/layout.tsx (Next.js — before)
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <SiteNav />
+        <main>{children}</main>
+        <SiteFooter />
+      </body>
+    </html>
+  );
+}
+```
+
+```html
+<!-- src/pages/about.html (Bascik — after) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>About — Acme</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <site-nav></site-nav>
+  <main>
+    <h1>About</h1>
+    <p>We build things.</p>
+  </main>
+  <site-footer></site-footer>
+</body>
+</html>
+```
+
+If many pages share the same outer shell, extract it into a layout component that accepts a default slot for the page-specific content:
+
+```html
+<!-- src/components/site-layout/site-layout.html -->
+<site-nav></site-nav>
+<main class="content">
+  <div data-bascik-slot></div>
+</main>
+<site-footer></site-footer>
+```
+
+```html
+<!-- src/pages/about.html (using the layout component) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>About — Acme</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <site-layout>
+    <h1>About</h1>
+    <p>We build things.</p>
+  </site-layout>
+</body>
+</html>
+```
+
+> **Head components:** Components work inside `<head>` too. Create a `<site-meta>` component for shared meta tags and viewport declarations, then include it on every page.
+
+### getStaticProps → Build Scripts or Inline HTML
+
+`getStaticProps` fetches or reads data at build time and injects it as props. In Bascik, use a `<script data-bascik-build>` block. The script runs as a Node.js ESM module at build time; its stdout is injected into the page in place of the tag. Top-level `import` and top-level `await` are supported.
+
+```jsx
+// pages/products.js (Next.js — before)
+export async function getStaticProps() {
+  const res = await fetch('https://api.example.com/products');
+  const products = await res.json();
+  return { props: { products } };
+}
+
+export default function Products({ products }) {
+  return (
+    <ul>
+      {products.map(p => (
+        <li key={p.id}>{p.name} — ${p.price}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+```html
+<!-- src/pages/products.html (Bascik — after) -->
+<ul>
+  <script data-bascik-build>
+    const res = await fetch('https://api.example.com/products');
+    const products = await res.json();
+    const items = products
+      .map(p => `<li>${p.name} — $${p.price}</li>`)
+      .join('\n');
+    console.log(items);
+  </script>
+</ul>
+```
+
+### getStaticPaths → One File Per Route
+
+`getStaticPaths` tells Next.js which dynamic URLs to pre-render. In Bascik there are no dynamic segments — each URL is a separate `.html` file. Generate them in a script that runs before `bascik --build`.
+
+```json
+{
+  "scripts": {
+    "generate": "node scripts/generate-pages.js",
+    "build": "npm run generate && bascik --build"
+  }
+}
+```
+
+```js
+// scripts/generate-pages.js
+import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises';
+import { marked } from 'marked';
+
+const posts = await readdir('./content/posts');
+await mkdir('./src/pages/blog', { recursive: true });
+
+for (const file of posts.filter(f => f.endsWith('.md'))) {
+  const slug = file.replace('.md', '');
+  const md = await readFile(`./content/posts/${file}`, 'utf8');
+  const body = marked(md);
+  await writeFile(`./src/pages/blog/${slug}.html`, `
+<!DOCTYPE html>
+<html lang="en">
+<head><title>${slug} — Blog</title></head>
+<body>
+  <site-nav></site-nav>
+  <main>${body}</main>
+  <site-footer></site-footer>
+</body>
+</html>`);
+}
+```
+
+### next/image → Standard img
+
+Replace `<Image>` from `next/image` with a standard `<img>` tag. Add `width`, `height`, and `loading="lazy"` manually where you want lazy loading. Images in `src/pages/img/` are copied to `dist/` automatically.
+
+```jsx
+// Before (Next.js)
+<Image src="/hero.jpg" alt="Hero" width={1200} height={600} priority />
+```
+
+```html
+<!-- After (Bascik) -->
+<img src="/img/hero.jpg" alt="Hero" width="1200" height="600" />
+```
+
+### next/link → Standard a
+
+Replace `<Link href="...">` with a standard `<a href="...">`. There is no client-side navigation in Bascik — every link triggers a full page load, which is standard browser behaviour for static sites.
+
+### next/head → Inline head Tags
+
+Replace the `<Head>` component from `next/head` with regular `<title>` and `<meta>` tags in each page's `<head>` element.
+
+```jsx
+// pages/about.js (Next.js — before)
+import Head from 'next/head';
+
+export default function About() {
+  return (
+    <>
+      <Head>
+        <title>About — Acme</title>
+        <meta name="description" content="About Acme Corp." />
+      </Head>
+      <h1>About</h1>
+    </>
+  );
+}
+```
+
+```html
+<!-- src/pages/about.html (Bascik — after) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — Acme</title>
+  <meta name="description" content="About Acme Corp." />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <site-nav></site-nav>
+  <h1>About</h1>
+  <site-footer></site-footer>
+</body>
+</html>
+```
+
+### API Routes → Not Applicable
+
+Bascik produces static HTML at build time — there is no server process to handle API requests. Replace Next.js API routes with one of:
+
+- **Build-time data:** Use `<script data-bascik-build>` to fetch or read data and bake it into the HTML at build time.
+- **Client-side fetch:** Call external APIs directly from a `<script>` tag in the page.
+- **A separate backend:** Deploy an API server alongside the static site and point client-side JS to it.
+
+### CSS Modules → Paired .css Files
+
+Delete the `.module.css` file and create a plain `.css` file alongside the component HTML. Change `className={styles.foo}` to `class="foo"`. Bascik scopes class names at build time — no Webpack or PostCSS configuration required.
+
+### TypeScript → Not Needed
+
+Bascik component files are plain HTML. Type annotations are not applicable. If you have TypeScript utility scripts or content-generation scripts you want to keep, continue using TypeScript there — just not in Bascik component or page HTML files.
+
+## Migrating from React
+
+React and Bascik both build UIs from reusable components. The core difference is that Bascik does all component work at build time and outputs plain HTML — there is no virtual DOM, no framework runtime, and no JSX. The migration is mostly mechanical: rename files, swap JSX syntax for HTML, and replace framework abstractions with their build-time or vanilla-JS equivalents.
+
+### File and Folder Setup
+
+Move your component source files into `src/components/`. The file name becomes the HTML tag name, so names must be hyphenated. Pair each component HTML file with a `.css` file in the same directory to replace CSS Modules.
+
+```text
+Before (React)               After (Bascik)
+src/components/              src/components/
+  SiteNav.jsx                  site-nav/
+  SiteNav.module.css             site-nav.html
+  Card.jsx                       site-nav.css
+  Card.module.css              card/
+  AlertBox.jsx                   card.html
+  AlertBox.module.css            card.css
+                               alert-box/
+                                 alert-box.html
+                                 alert-box.css
+```
+
+### Component Syntax
+
+A Bascik component is a plain HTML file. There are no imports, no function declarations, and no JSX. The file name (minus the extension) is the tag name.
+
+```jsx
+// SiteNav.jsx (React — before)
+import styles from './SiteNav.module.css';
+
+export function SiteNav() {
+  return (
+    <nav className={styles.nav}>
+      <a href="/" className={styles.logo}>Acme</a>
+    </nav>
+  );
+}
+```
+
+```html
+<!-- src/components/site-nav/site-nav.html (Bascik — after) -->
+<nav class="nav">
+  <a href="/" class="logo">Acme</a>
+</nav>
+```
+
+No import statement is needed to use this component. Bascik resolves `<site-nav></site-nav>` to `src/components/site-nav/site-nav.html` automatically by tag name.
+
+### children → Default Slot
+
+React's `children` prop maps to Bascik's default slot. Add `data-bascik-slot` (no value) to any element inside the component where child content should appear. Fallback content goes inside that element and renders when the component is invoked with no children.
+
+```jsx
+// Card.jsx (React — before)
+export function Card({ children }) {
+  return <div className="card">{children}</div>;
+}
+
+// Usage
+<Card><p>Card content here.</p></Card>
+```
+
+```html
+<!-- src/components/card/card.html (Bascik — after) -->
+<div class="card">
+  <div data-bascik-slot>No content provided.</div>
+</div>
+
+<!-- Usage -->
+<card><p>Card content here.</p></card>
+```
+
+### Named Render Props / Slot Pattern → Named Slots
+
+React's named render props and compound component slot patterns map to Bascik's `data-bascik-slot="name"` attribute. Place a receiver element with `data-bascik-slot="name"` inside the component, then pass the content from the usage site using the same attribute.
+
+```jsx
+// PageLayout.jsx (React — before)
+export function PageLayout({ header, children }) {
+  return (
+    <div className="layout">
+      <header>{header}</header>
+      <main>{children}</main>
+    </div>
+  );
+}
+
+// Usage
+<PageLayout header={<h1>Welcome</h1>}>
+  <p>Main content.</p>
+</PageLayout>
+```
+
+```html
+<!-- src/components/page-layout/page-layout.html (Bascik — after) -->
+<div class="layout">
+  <header><div data-bascik-slot="header"></div></header>
+  <main><div data-bascik-slot></div></main>
+</div>
+
+<!-- Usage -->
+<page-layout>
+  <p>Main content.</p>
+  <div data-bascik-slot="header"><h1>Welcome</h1></div>
+</page-layout>
+```
+
+### String Props → data-bascik-prop-*
+
+React string props become `data-bascik-prop-*` attributes. Add the attribute (with no value) to the element inside the component that should receive the text, then supply the value at the usage site.
+
+```jsx
+// AlertBox.jsx (React — before)
+export function AlertBox({ title, message }) {
+  return (
+    <div className="alert">
+      <strong>{title}</strong>
+      <p>{message}</p>
+    </div>
+  );
+}
+
+<AlertBox title="Success" message="Your changes were saved." />
+```
+
+```html
+<!-- src/components/alert-box/alert-box.html (Bascik — after) -->
+<div class="alert">
+  <strong data-bascik-prop-title></strong>
+  <p data-bascik-prop-message></p>
+</div>
+
+<!-- Usage -->
+<alert-box
+  data-bascik-prop-title="Success"
+  data-bascik-prop-message="Your changes were saved."
+></alert-box>
+```
+
+> **Text only:** Props accept plain text strings. Boolean, number, object, and array values have no equivalent. For rich HTML content, use a named slot instead. For computed or array-based content, use a `<script data-bascik-build>` block in the page.
+
+### useState / useEffect → Vanilla JS
+
+`useState`, `useEffect`, and event handlers become plain JavaScript in a `<script>` tag inside the component. Bascik automatically scopes `id` values and class names referenced in the script, so multiple instances of the component on the same page work independently.
+
+```jsx
+// Counter.jsx (React — before)
+import { useState } from 'react';
+
+export function Counter() {
+  const [count, setCount] = useState(0);
+  return (
+    <div>
+      <span id="count">{count}</span>
+      <button onClick={() => setCount(c => c + 1)}>+</button>
+    </div>
+  );
+}
+```
+
+```html
+<!-- src/components/my-counter/my-counter.html (Bascik — after) -->
+<div>
+  <span id="count">0</span>
+  <button id="btn">+</button>
+</div>
+<script>
+  const countEl = document.getElementById("count");
+  document.getElementById("btn").addEventListener("click", () => {
+    countEl.textContent = String(Number(countEl.textContent) + 1);
+  });
+</script>
+```
+
+Bascik rewrites both `id="count"` in the HTML and the `getElementById("count")` call in the script to the same unique scoped value. Two `<my-counter>` instances on the same page each maintain their own independent state.
+
+### CSS Modules → Paired .css Files
+
+Delete the `.module.css` file and create a plain `.css` file alongside the component HTML. Change all `className={styles.foo}` attributes to `class="foo"`. Bascik scopes every class name at build time — no configuration or tooling required.
+
+```css
+/* src/components/site-nav/site-nav.css */
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo {
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.links {
+  list-style: none;
+  display: flex;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+}
+```
+
+### React Router → One .html File Per Route
+
+Replace client-side route definitions with one `.html` file per URL in `src/pages/`. There is no client-side navigation — every link triggers a full page load.
+
+```text
+Before (React Router)        After (Bascik)
+src/App.jsx                  src/pages/
+  <Route path="/" />           index.html
+  <Route path="/about" />      about.html
+  <Route path="/blog/:slug" /> blog/
+                                 my-first-post.html
+                                 another-post.html
+```
+
+There is no dynamic routing equivalent. Each URL needs its own file. For programmatically generated pages, write a Node.js script that creates the files before running `bascik --build`.
+
+### Conditional Rendering
+
+Bascik has no build-time equivalent of `{condition && <Comp />}`. Choose one of two approaches:
+
+- **Build-time decision:** Include the correct markup in each page's `.html` file directly. If two pages differ, they have different HTML. This is the right choice for things like per-page hero sections or feature flags.
+- **Runtime toggle:** Render both branches, then show or hide them with CSS (`display: none`) or vanilla JS toggling a `data-` attribute or class.
+
+### useEffect for Data → `<script data-bascik-build>`
+
+Data fetched at component mount time in React becomes a `<script data-bascik-build>` block that runs as a Node.js ESM module at build time. The script's stdout is injected into the page in place of the tag.
+
+```html
+<!-- src/pages/blog.html -->
+<main>
+  <h1>Blog</h1>
+  <ul>
+    <script data-bascik-build>
+      import { readdir } from 'node:fs/promises';
+      const files = await readdir('./content/posts');
+      const items = files
+        .filter(f => f.endsWith('.md'))
+        .map(f => {
+          const slug = f.replace('.md', '');
+          return `<li><a href="/blog/${slug}">${slug}</a></li>`;
+        });
+      console.log(items.join('\n'));
+    </script>
+  </ul>
+</main>
+```
+
+> **Build scripts run first:** The output of a `<script data-bascik-build>` block can itself contain Bascik component tags. They are resolved in the next pass.
+
+### Before and After: Navigation Component
+
+A realistic nav with a logo slot, link items, and a mobile menu toggle button.
+
+```jsx
+// SiteNav.jsx (React — before)
+import { useState } from 'react';
+import styles from './SiteNav.module.css';
+
+export function SiteNav({ logo, children }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <nav className={styles.nav}>
+      <div className={styles.logo}>{logo}</div>
+      <button
+        className={styles.toggle}
+        aria-expanded={open}
+        onClick={() => setOpen(o => !o)}
+      >
+        Menu
+      </button>
+      <ul className={`${styles.links} ${open ? styles.open : ''}`}>
+        {children}
+      </ul>
+    </nav>
+  );
+}
+```
+
+```html
+<!-- src/components/site-nav/site-nav.html (Bascik — after) -->
+<nav class="nav">
+  <div class="logo"><div data-bascik-slot="logo"></div></div>
+  <button class="toggle" id="toggle" aria-expanded="false">Menu</button>
+  <ul class="links" id="links">
+    <div data-bascik-slot></div>
+  </ul>
+</nav>
+<script>
+  const toggle = document.getElementById("toggle");
+  const links = document.getElementById("links");
+  toggle.addEventListener("click", () => {
+    const expanded = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!expanded));
+    links.classList.toggle("open");
+  });
+</script>
+```
+
+```html
+<!-- Usage in src/pages/index.html -->
+<site-nav>
+  <li><a href="/about">About</a></li>
+  <li><a href="/blog">Blog</a></li>
+  <li><a href="/contact">Contact</a></li>
+  <div data-bascik-slot="logo"><a href="/">Acme</a></div>
+</site-nav>
+```
+
+The nav links are slotted in as static `<li>` elements, the logo uses a named slot, and the mobile toggle is vanilla JS that Bascik scopes automatically per instance.

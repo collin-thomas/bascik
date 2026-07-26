@@ -1,0 +1,97 @@
+/**
+ * @module sitemap
+ *
+ * Sitemap and robots.txt Generation
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * When `generate.sitemap` and/or `generate.robots` are `true` (the defaults)
+ * and `siteUrl` is configured, Bascik writes to `dist/` at the end of a build:
+ *
+ *   dist/sitemap.xml  — XML sitemap listing every HTML page
+ *   dist/robots.txt   — robots directives pointing crawlers at the sitemap
+ *
+ * Only runs during `bascik --build`. The dev server does not generate these
+ * files.
+ *
+ * @example bascik.config.js
+ * ```js
+ * export const bascikConfig = {
+ *   siteUrl: 'https://example.com',
+ *   generate: { sitemap: true, robots: true }, // both default to true
+ * };
+ * ```
+ */
+import { writeFile } from "node:fs/promises";
+import { BascikConfig } from "./config.js";
+import { listPages } from "./file-system.js";
+import { getRelativePath } from "./file-system.js";
+/**
+ * Convert a relative page path (e.g. `pages/blog/post.html`) to an absolute
+ * URL path (e.g. `/blog/post`) suitable for use in a sitemap.
+ *
+ * Rules:
+ *  - Strip the leading `pages/` segment (already done via getRelativePath).
+ *  - Strip the `.html` extension.
+ *  - `/index` at the end of a path becomes `/`.
+ *  - `index.html` at the root becomes `/`.
+ */
+export const pagePathToUrlPath = (relativePath) => {
+    // relativePath is like "pages/index.html" or "pages/blog/post.html"
+    let path = relativePath
+        .replace(/^pages\//, "/") // leading pages/ → /
+        .replace(/\.html$/, ""); // strip .html extension
+    // /index → /
+    if (path === "/index")
+        return "/";
+    // /foo/index → /foo
+    path = path.replace(/\/index$/, "");
+    return path || "/";
+};
+/**
+ * Build the XML sitemap string from an array of URL paths.
+ */
+export const buildSitemapXml = (baseUrl, urlPaths) => {
+    const urls = urlPaths
+        .map((p) => `  <url>\n    <loc>${baseUrl}${p}</loc>\n  </url>`)
+        .join("\n");
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`;
+};
+/**
+ * Build the robots.txt string pointing at the sitemap.
+ */
+export const buildRobotsTxt = (baseUrl) => {
+    return `User-agent: *\nAllow: /\n\nSitemap: ${baseUrl}/sitemap.xml\n`;
+};
+/**
+ * Generate `dist/sitemap.xml` and `dist/robots.txt`.
+ *
+ * Called by `processAllPages` at the end of a build. Skipped silently when
+ * `generateSitemap` is `false` or `siteUrl` is not configured.
+ */
+export const generateSitemapFiles = async () => {
+    const { sitemap: doSitemap, robots: doRobots } = BascikConfig.generate;
+    if (!doSitemap && !doRobots)
+        return;
+    if (!BascikConfig.siteUrl) {
+        console.warn("[bascik] generate: `siteUrl` is not set in bascik.config.js — skipping sitemap/robots generation. " +
+            "Set `siteUrl: 'https://example.com'` to enable.");
+        return;
+    }
+    const baseUrl = BascikConfig.siteUrl.replace(/\/+$/, ""); // trim trailing slash
+    const writes = [];
+    if (doSitemap) {
+        const pages = await listPages();
+        const urlPaths = pages
+            .map((p) => getRelativePath(p, "pages"))
+            .map(pagePathToUrlPath)
+            .sort();
+        const sitemapXml = buildSitemapXml(baseUrl, urlPaths);
+        writes.push(writeFile("dist/sitemap.xml", sitemapXml, "utf8").then(() => console.log("generated: dist/sitemap.xml")));
+    }
+    if (doRobots) {
+        const robotsTxt = buildRobotsTxt(baseUrl);
+        writes.push(writeFile("dist/robots.txt", robotsTxt, "utf8").then(() => console.log("generated: dist/robots.txt")));
+    }
+    await Promise.all(writes);
+};
+//# sourceMappingURL=sitemap.js.map
