@@ -6,7 +6,7 @@ This file contains the **complete, centralized documentation and development ski
 
 ## 1. What Bascik Is & Does
 
-> Bascik is a build-time static site generator that turns reusable HTML component files into plain HTML pages. It adds zero JavaScript to the output. You write HTML, CSS, and JavaScript; Bascik scopes and assembles them.
+> Bascik is a build tool for HTML components. Write your components in plain HTML, CSS, and JavaScript — Bascik scopes and assembles them at build time, outputting plain HTML pages with zero JavaScript added. Supports static site generation (SSG) out of the box.
 
 * **Resolves custom HTML tags** (e.g. `<my-nav></my-nav>`) to their component source HTML at build time.
 * **Scopes CSS class names, element selectors, `@keyframes`, and CSS custom properties** per component so they never collide.
@@ -449,7 +449,20 @@ Port 8443 is in use, trying 8444…
 Server running at https://localhost:8444
 ```
 
-Certs are generated once and reused on subsequent starts. Delete `bascik-privkey.pem` and `bascik-cert.pem` to regenerate them (e.g. to upgrade from a self-signed cert to a mkcert-trusted one after installing mkcert).
+Certs are generated once and reused on subsequent starts. Delete `bascik-privkey.pem` and `bascik-cert.pem` to regenerate them (e.g. to upgrade from a self-signed cert to a mkcert-trusted one after installing mkcert):
+
+```sh
+rm bascik-cert.pem bascik-privkey.pem
+yarn dev   # bascik will now use mkcert
+```
+
+**Firefox users** — Firefox does not use the macOS system trust store. Install `nss` (which provides `certutil`) **before** running `mkcert -install` so mkcert can register the CA with Firefox:
+
+```sh
+brew install nss && mkcert -install
+```
+
+If you already ran `mkcert -install` without `nss`, install `nss` and re-run `mkcert -install`.
 
 #### 2. Watching for File Changes (Watch Mode)
 While the dev server is active, Bascik watches your file system and incrementally updates your build as files are added, updated, or removed:
@@ -490,6 +503,24 @@ If you introduce a syntax mistake or a runtime error inside a custom build scrip
   ```terminal
   [bascik] Unresolved component tag in "pages/about.html": <my-mistyped> — no matching component file found. Run `bascik --check` for a full report.
   ```
+
+#### 5. Production Build (`bascik --build`)
+
+Run `bascik --build` to write optimised, deployment-ready files to `dist/`:
+
+```sh
+bascik --build
+```
+
+The output uses root-relative asset paths (e.g. `/css/styles.css`) and **must be served by an HTTP server** — opening files directly from disk via `file://` will break styles and scripts because the browser cannot resolve root-relative URLs from a `file://` origin.
+
+To preview the production build locally before deploying:
+
+```sh
+cd dist && npx http-server
+```
+
+Then open the URL printed by `http-server` (default: `http://127.0.0.1:8080`).
 
 #### 4. Static Analysis (`bascik --check`)
 Run `bascik --check` from your project root to validate pages and component files without starting the dev server or writing any output:

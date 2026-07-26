@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
-    content="Bascik is a static site generator for HTML components with automatic scoped CSS and JS. No runtime. No framework." />
+    content="Bascik is a build tool for HTML components with automatic scoped CSS and JS. No runtime. No framework." />
   <title>Bascik — HTML components. Zero runtime.</title>
   <link rel="stylesheet" href="/css/styles.css" />
   <style>
@@ -77,6 +77,8 @@
       border: 1px solid var(--border);
       border-radius: var(--r);
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     .how-step-header {
@@ -108,6 +110,7 @@
       overflow-x: auto;
       font-size: 0.78rem;
       line-height: 1.65;
+      flex: 1;
     }
 
     .how-step pre code {
@@ -131,7 +134,7 @@
     }
 
     .hl-comment {
-      color: #585b70;
+      color: #7e8190;
       font-style: italic;
     }
 
@@ -148,7 +151,7 @@
 
     .pillar {
       padding: 28px 24px;
-      background: var(--accent-dim);
+      background: #2e3428;
       border: 1px solid rgba(211, 255, 141, 0.14);
       border-radius: var(--r);
     }
@@ -171,7 +174,7 @@
     .pillar p {
       margin: 0;
       font-size: 0.875rem;
-      color: var(--text-muted);
+      color: var(--text);
       line-height: 1.6;
     }
 
@@ -348,40 +351,43 @@
 
   <docs-nav></docs-nav>
 
-  <!-- ── Hero ── -->
-  <section class="hero">
-    <div class="container">
-      <div class="hero-eyebrow">
-        <span class="badge">v0.2.0</span>
-        <span class="text-muted" style="font-size:0.83rem;font-weight:500">Static site generator</span>
-      </div>
-      <h1 class="hero-title">HTML components.<br><span class="text-accent">Zero runtime.</span></h1>
-      <p class="hero-desc">Write reusable components in plain HTML. Bascik scopes your CSS and JS at build time — no
-        framework, no client-side JavaScript added.</p>
-      <div class="hero-actions">
-        <a href="/getting-started" class="btn btn-primary">Get Started →</a>
-        <a href="/why-bascik" class="btn btn-ghost">Why Bascik</a>
-        <a href="https://github.com/collin-thomas/bascik" class="btn btn-ghost" target="_blank"
-          rel="noopener noreferrer">GitHub</a>
-      </div>
-    </div>
-  </section>
+  <main>
 
-  <!-- ── How it works ── -->
-  <section class="home-section">
-    <div class="container">
-      <p class="section-label">How it works</p>
-      <h2 class="section-heading">Three steps. That's it.</h2>
-      <p class="section-sub">No config needed to start. Bascik transforms standard HTML files at build time — components
-        in, plain HTML out.</p>
+    <!-- ── Hero ── -->
+    <section class="hero">
+      <div class="container">
+        <div class="hero-eyebrow">
+          <span class="badge">v0.2.0</span>
+          <span class="text-muted" style="font-size:0.83rem;font-weight:500">Build tool</span>
+        </div>
+        <h1 class="hero-title">HTML components.<br><span class="text-accent">Zero runtime.</span></h1>
+        <p class="hero-desc">Write reusable components in plain HTML. Bascik scopes your CSS and JS at build time — no
+          framework, no client-side JavaScript added.</p>
+        <div class="hero-actions">
+          <a href="/getting-started" class="btn btn-primary">Get Started →</a>
+          <a href="/why-bascik" class="btn btn-ghost">Why Bascik</a>
+          <a href="https://github.com/collin-thomas/bascik" class="btn btn-ghost" target="_blank"
+            rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+    </section>
 
-      <div class="how-grid">
-        <div class="how-step">
-          <div class="how-step-header">
-            <p class="how-step-num">01 — Write a component</p>
-            <h3>A plain HTML file in <code>src/components/</code></h3>
-          </div>
-          <pre><code><span class="hl-comment">&lt;!-- src/components/my-card.html --&gt;</span>
+    <!-- ── How it works ── -->
+    <section class="home-section">
+      <div class="container">
+        <p class="section-label">How it works</p>
+        <h2 class="section-heading">Three steps. That's it.</h2>
+        <p class="section-sub">No config needed to start. Bascik transforms standard HTML files at build time —
+          components
+          in, plain HTML out.</p>
+
+        <div class="how-grid">
+          <div class="how-step">
+            <div class="how-step-header">
+              <p class="how-step-num">01 — Write a component</p>
+              <h3>A plain HTML file in <code>src/components/</code></h3>
+            </div>
+            <pre><code><span class="hl-comment">&lt;!-- src/components/my-card.html --&gt;</span>
 <span class="hl-tag">&lt;style&gt;</span>
   .card  { padding: 20px; }
   .title { font-size: 1.1rem; }
@@ -391,28 +397,28 @@
        <span class="hl-attr">data-bascik-prop-title</span><span class="hl-tag">&gt;&lt;/h3&gt;</span>
   <span class="hl-tag">&lt;slot&gt;&lt;/slot&gt;</span>
 <span class="hl-tag">&lt;/div&gt;</span></code></pre>
-        </div>
-
-        <div class="how-step">
-          <div class="how-step-header">
-            <p class="how-step-num">02 — Use it in a page</p>
-            <h3>Hyphenated tag name, standard HTML</h3>
           </div>
-          <pre><code><span class="hl-comment">&lt;!-- src/pages/index.html --&gt;</span>
+
+          <div class="how-step">
+            <div class="how-step-header">
+              <p class="how-step-num">02 — Use it in a page</p>
+              <h3>Hyphenated tag name, standard HTML</h3>
+            </div>
+            <pre><code><span class="hl-comment">&lt;!-- src/pages/index.html --&gt;</span>
 <span class="hl-tag">&lt;body&gt;</span>
   <span class="hl-tag">&lt;my-card</span>
     <span class="hl-attr">data-bascik-prop-title</span>=<span class="hl-val">"Hello"</span><span class="hl-tag">&gt;</span>
     <span class="hl-tag">&lt;p&gt;</span>Slot content here.<span class="hl-tag">&lt;/p&gt;</span>
   <span class="hl-tag">&lt;/my-card&gt;</span>
 <span class="hl-tag">&lt;/body&gt;</span></code></pre>
-        </div>
-
-        <div class="how-step">
-          <div class="how-step-header">
-            <p class="how-step-num">03 — Get plain HTML</p>
-            <h3>Scoped class names, no runtime added</h3>
           </div>
-          <pre><code><span class="hl-comment">&lt;!-- dist/index.html --&gt;</span>
+
+          <div class="how-step">
+            <div class="how-step-header">
+              <p class="how-step-num">03 — Get plain HTML</p>
+              <h3>Scoped class names, no runtime added</h3>
+            </div>
+            <pre><code><span class="hl-comment">&lt;!-- dist/index.html --&gt;</span>
 <span class="hl-tag">&lt;style&gt;</span>
   .<span class="hl-scoped">bascik__my-card__card</span>  { padding: 20px; }
   .<span class="hl-scoped">bascik__my-card__title</span> { font-size: 1.1rem; }
@@ -421,29 +427,30 @@
   <span class="hl-tag">&lt;h3</span> <span class="hl-attr">class</span>=<span class="hl-val">"<span class="hl-scoped">bascik__my-card__title</span>"</span><span class="hl-tag">&gt;</span>Hello<span class="hl-tag">&lt;/h3&gt;</span>
   <span class="hl-tag">&lt;p&gt;</span>Slot content here.<span class="hl-tag">&lt;/p&gt;</span>
 <span class="hl-tag">&lt;/div&gt;</span></code></pre>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- ── Live demo ── -->
-  <section class="home-section">
-    <div class="container">
-      <p class="section-label">Demo</p>
-      <h2 class="section-heading">One component. Two isolated instances.</h2>
-      <p class="section-sub">Bascik scopes CSS class names and DOM selectors at build time. Each component instance gets
-        its own namespace — no runtime, no Shadow DOM.</p>
+    <!-- ── Live demo ── -->
+    <section class="home-section">
+      <div class="container">
+        <p class="section-label">Demo</p>
+        <h2 class="section-heading">One component. Two isolated instances.</h2>
+        <p class="section-sub">Bascik scopes CSS class names and DOM selectors at build time. Each component instance
+          gets
+          its own namespace — no runtime, no Shadow DOM.</p>
 
-      <div class="demo-layout">
-        <!-- Code panel -->
-        <div class="demo-panel">
-          <div class="demo-tabs-bar">
-            <button class="demo-tab-btn active" data-tab="html">HTML</button>
-            <button class="demo-tab-btn" data-tab="css">CSS</button>
-            <button class="demo-tab-btn" data-tab="js">JS</button>
-          </div>
-          <div class="demo-pane" data-pane="html">
-            <pre><code><span class="hl-comment">&lt;!-- src/components/demo-counter.html --&gt;</span>
+        <div class="demo-layout">
+          <!-- Code panel -->
+          <div class="demo-panel">
+            <div class="demo-tabs-bar">
+              <button class="demo-tab-btn active" data-tab="html">HTML</button>
+              <button class="demo-tab-btn" data-tab="css">CSS</button>
+              <button class="demo-tab-btn" data-tab="js">JS</button>
+            </div>
+            <div class="demo-pane" data-pane="html">
+              <pre><code><span class="hl-comment">&lt;!-- src/components/demo-counter.html --&gt;</span>
 <span class="hl-tag">&lt;div</span> <span class="hl-attr">class</span>=<span class="hl-val">"ctr"</span><span class="hl-tag">&gt;</span>
   <span class="hl-tag">&lt;span</span> <span class="hl-attr">class</span>=<span class="hl-val">"ctr-label"</span>
          <span class="hl-attr">data-bascik-prop-label</span><span class="hl-tag">&gt;&lt;/span&gt;</span>
@@ -453,9 +460,9 @@
     <span class="hl-tag">&lt;button</span> <span class="hl-attr">class</span>=<span class="hl-val">"ctr-inc"</span><span class="hl-tag">&gt;</span>+<span class="hl-tag">&lt;/button&gt;</span>
   <span class="hl-tag">&lt;/div&gt;</span>
 <span class="hl-tag">&lt;/div&gt;</span></code></pre>
-          </div>
-          <div class="demo-pane" data-pane="css" hidden>
-            <pre><code><span class="hl-comment">/* Auto-scoped — class names become:
+            </div>
+            <div class="demo-pane" data-pane="css" hidden>
+              <pre><code><span class="hl-comment">/* Auto-scoped — class names become:
    .bascik__demo-counter__ctr { ... } */</span>
 .ctr { display: flex; flex-direction: column;
        align-items: center; gap: 16px; }
@@ -467,9 +474,9 @@
   width: 40px; height: 40px;
   border-radius: 6px; cursor: pointer;
 }</code></pre>
-          </div>
-          <div class="demo-pane" data-pane="js" hidden>
-            <pre><code><span class="hl-comment">// Selectors are rewritten at build time.
+            </div>
+            <div class="demo-pane" data-pane="js" hidden>
+              <pre><code><span class="hl-comment">// Selectors are rewritten at build time.
 // Each instance stays isolated — no IDs
 // or class names shared across instances.</span>
 const count = document.getElementById(<span class="hl-val">'count'</span>);
@@ -482,145 +489,155 @@ dec.addEventListener(<span class="hl-val">'click'</span>, () => {
 inc.addEventListener(<span class="hl-val">'click'</span>, () => {
   n++; count.textContent = n;
 });</code></pre>
+            </div>
           </div>
-        </div>
 
-        <!-- Live instances -->
-        <div class="demo-live">
-          <div class="demo-live-label">
-            <span class="demo-live-dot"></span>
-            <span>Two instances of one component file</span>
-          </div>
-          <div class="demo-instances">
-            <demo-counter data-bascik-prop-label="Instance A"></demo-counter>
-            <demo-counter data-bascik-prop-label="Instance B"></demo-counter>
+          <!-- Live instances -->
+          <div class="demo-live">
+            <div class="demo-live-label">
+              <span class="demo-live-dot"></span>
+              <span>Two instances of one component file</span>
+            </div>
+            <div class="demo-instances">
+              <demo-counter data-bascik-prop-label="Instance A"></demo-counter>
+              <demo-counter data-bascik-prop-label="Instance B"></demo-counter>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
-  <script>
-    document.querySelectorAll('.demo-tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const bar = btn.closest('.demo-tabs-bar');
-        const panel = bar.closest('.demo-panel');
-        bar.querySelectorAll('.demo-tab-btn').forEach(b => b.classList.remove('active'));
-        panel.querySelectorAll('.demo-pane').forEach(p => { p.hidden = true; });
-        btn.classList.add('active');
-        panel.querySelector('[data-pane="' + btn.dataset.tab + '"]').hidden = false;
+    </section>
+    <script>
+      document.querySelectorAll('.demo-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const bar = btn.closest('.demo-tabs-bar');
+          const panel = bar.closest('.demo-panel');
+          bar.querySelectorAll('.demo-tab-btn').forEach(b => b.classList.remove('active'));
+          panel.querySelectorAll('.demo-pane').forEach(p => { p.hidden = true; });
+          btn.classList.add('active');
+          panel.querySelector('[data-pane="' + btn.dataset.tab + '"]').hidden = false;
+        });
       });
-    });
-  </script>
+    </script>
 
-  <!-- ── Philosophy pillars ── -->
-  <section class="home-section">
-    <div class="container">
-      <p class="section-label">Philosophy</p>
-      <h2 class="section-heading">Use what already exists.</h2>
-      <p class="section-sub">The principle behind every decision Bascik makes — no inventions, no abstractions you have
-        to learn.</p>
+    <!-- ── Philosophy pillars ── -->
+    <section class="home-section">
+      <div class="container">
+        <p class="section-label">Philosophy</p>
+        <h2 class="section-heading">Use what already exists.</h2>
+        <p class="section-sub">The principle behind every decision Bascik makes — no inventions, no abstractions you
+          have
+          to learn.</p>
 
-      <div class="pillars-grid">
-        <div class="pillar">
-          <p class="pillar-label">No JS added</p>
-          <h3>Zero runtime footprint</h3>
-          <p>Bascik adds no JavaScript to your output. Every script in <code>dist/</code> was written by you. What you
-            ship is exactly what you wrote.</p>
-        </div>
-        <div class="pillar">
-          <p class="pillar-label">Build-time scoping</p>
-          <h3>No CSS collisions. Ever.</h3>
-          <p>Class names and DOM selectors are rewritten at build time. No CSS-in-JS, no BEM discipline, no global
-            namespace to manage.</p>
-        </div>
-        <div class="pillar">
-          <p class="pillar-label">Standard HTML</p>
-          <h3>Nothing new to learn</h3>
-          <p>No JSX, no template syntax, no special compiler directives. Write the HTML you already know — Bascik does
-            the assembly.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Docs grid ── -->
-  <section class="home-section">
-    <div class="container">
-      <p class="section-label">Docs</p>
-      <h2 class="section-heading">Explore the docs.</h2>
-      <p class="section-sub" style="margin-bottom:32px">Each feature has a dedicated page with examples and a complete
-        reference.</p>
-
-      <div class="grid-3">
-        <a href="/slots" class="card" style="text-decoration:none">
-          <p class="section-label">Slots</p>
-          <h3 style="margin-bottom:6px">Default &amp; Named Slots</h3>
-          <p style="margin:0;font-size:0.875rem">Pass inner HTML into components. Named slots target specific zones with
-            fallback content supported.</p>
-        </a>
-        <a href="/props" class="card" style="text-decoration:none">
-          <p class="section-label">Props</p>
-          <h3 style="margin-bottom:6px">Component Props</h3>
-          <p style="margin:0;font-size:0.875rem">Inject text values via <code>data-bascik-prop-*</code> attributes — no
-            runtime, no special syntax.</p>
-        </a>
-        <a href="/scoped-styles" class="card" style="text-decoration:none">
-          <p class="section-label">CSS</p>
-          <h3 style="margin-bottom:6px">Scoped Styles</h3>
-          <p style="margin:0;font-size:0.875rem">Class names, element selectors, <code>@media</code>, and
-            <code>@keyframes</code> are all automatically scoped per component.
-          </p>
-        </a>
-        <a href="/scoped-javascript" class="card" style="text-decoration:none">
-          <p class="section-label">JS</p>
-          <h3 style="margin-bottom:6px">Scoped JavaScript</h3>
-          <p style="margin:0;font-size:0.875rem">DOM queries in component scripts are rewritten to match scoped IDs and
-            class names at build time.</p>
-        </a>
-        <a href="/build-scripts" class="card" style="text-decoration:none">
-          <p class="section-label">Build</p>
-          <h3 style="margin-bottom:6px">Build Scripts</h3>
-          <p style="margin:0;font-size:0.875rem">Run arbitrary Node.js at build time with <code>data-bascik-build</code>
-            script blocks. Fetch data, render Markdown, generate anything.</p>
-        </a>
-        <a href="/configuration" class="card" style="text-decoration:none">
-          <p class="section-label">Config</p>
-          <h3 style="margin-bottom:6px">Configuration</h3>
-          <p style="margin:0;font-size:0.875rem">Override defaults in <code>bascik.config.js</code>. Toggle scoping,
-            obfuscation, and minification per project.</p>
-        </a>
-        <a href="/compatibility" class="card" style="text-decoration:none">
-          <p class="section-label">Reference</p>
-          <h3 style="margin-bottom:6px">Scoping Compatibility</h3>
-          <p style="margin:0;font-size:0.875rem">A complete audit of which CSS selectors and JS DOM patterns are scoped,
-            partial, or unsupported.</p>
-        </a>
-        <a href="/migrate" class="card" style="text-decoration:none">
-          <p class="section-label">Migration</p>
-          <h3 style="margin-bottom:6px">Migration Guides</h3>
-          <p style="margin:0;font-size:0.875rem">Moving from React, Next.js, Eleventy, or Astro. Concept mapping and
-            worked examples.</p>
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Install CTA ── -->
-  <section class="cta-section">
-    <div class="container">
-      <p class="section-label">Ready to build?</p>
-      <h2 class="section-heading">Start in under five minutes.</h2>
-      <p class="section-sub">Install the package, add two scripts to <code>package.json</code>, and run the dev server.
-        No config required to get going.</p>
-      <div>
-        <div class="install-block">
-          <span class="install-prompt">$</span>
-          <span>npm install @bascik/bascik</span>
+        <div class="pillars-grid">
+          <div class="pillar">
+            <p class="pillar-label">No JS added</p>
+            <h3>Zero runtime footprint</h3>
+            <p>Bascik adds no JavaScript to your output. Every script in <code>dist/</code> was written by you. What you
+              ship is exactly what you wrote.</p>
+          </div>
+          <div class="pillar">
+            <p class="pillar-label">Build-time scoping</p>
+            <h3>No CSS collisions. Ever.</h3>
+            <p>Class names and DOM selectors are rewritten at build time. No CSS-in-JS, no BEM discipline, no global
+              namespace to manage.</p>
+          </div>
+          <div class="pillar">
+            <p class="pillar-label">Standard HTML</p>
+            <h3>Nothing new to learn</h3>
+            <p>No JSX, no template syntax, no special compiler directives. Write the HTML you already know — Bascik does
+              the assembly.</p>
+          </div>
         </div>
       </div>
-      <a href="/getting-started" class="btn btn-primary">Read the Getting Started Guide →</a>
-    </div>
-  </section>
+    </section>
+
+    <!-- ── Docs grid ── -->
+    <section class="home-section">
+      <div class="container">
+        <p class="section-label">Docs</p>
+        <h2 class="section-heading">Explore the docs.</h2>
+        <p class="section-sub" style="margin-bottom:32px">Each feature has a dedicated page with examples and a complete
+          reference.</p>
+
+        <div class="grid-3">
+          <a href="/slots" class="card" style="text-decoration:none">
+            <p class="section-label">Slots</p>
+            <h3 style="margin-bottom:6px">Default &amp; Named Slots</h3>
+            <p style="margin:0;font-size:0.875rem">Pass inner HTML into components. Named slots target specific zones
+              with
+              fallback content supported.</p>
+          </a>
+          <a href="/props" class="card" style="text-decoration:none">
+            <p class="section-label">Props</p>
+            <h3 style="margin-bottom:6px">Component Props</h3>
+            <p style="margin:0;font-size:0.875rem">Inject text values via <code>data-bascik-prop-*</code> attributes —
+              no
+              runtime, no special syntax.</p>
+          </a>
+          <a href="/scoped-styles" class="card" style="text-decoration:none">
+            <p class="section-label">CSS</p>
+            <h3 style="margin-bottom:6px">Scoped Styles</h3>
+            <p style="margin:0;font-size:0.875rem">Class names, element selectors, <code>@media</code>, and
+              <code>@keyframes</code> are all automatically scoped per component.
+            </p>
+          </a>
+          <a href="/scoped-javascript" class="card" style="text-decoration:none">
+            <p class="section-label">JS</p>
+            <h3 style="margin-bottom:6px">Scoped JavaScript</h3>
+            <p style="margin:0;font-size:0.875rem">DOM queries in component scripts are rewritten to match scoped IDs
+              and
+              class names at build time.</p>
+          </a>
+          <a href="/build-scripts" class="card" style="text-decoration:none">
+            <p class="section-label">Build</p>
+            <h3 style="margin-bottom:6px">Build Scripts</h3>
+            <p style="margin:0;font-size:0.875rem">Run arbitrary Node.js at build time with
+              <code>data-bascik-build</code>
+              script blocks. Fetch data, render Markdown, generate anything.
+            </p>
+          </a>
+          <a href="/configuration" class="card" style="text-decoration:none">
+            <p class="section-label">Config</p>
+            <h3 style="margin-bottom:6px">Configuration</h3>
+            <p style="margin:0;font-size:0.875rem">Override defaults in <code>bascik.config.js</code>. Toggle scoping,
+              obfuscation, and minification per project.</p>
+          </a>
+          <a href="/compatibility" class="card" style="text-decoration:none">
+            <p class="section-label">Reference</p>
+            <h3 style="margin-bottom:6px">Scoping Compatibility</h3>
+            <p style="margin:0;font-size:0.875rem">A complete audit of which CSS selectors and JS DOM patterns are
+              scoped,
+              partial, or unsupported.</p>
+          </a>
+          <a href="/migrate" class="card" style="text-decoration:none">
+            <p class="section-label">Migration</p>
+            <h3 style="margin-bottom:6px">Migration Guides</h3>
+            <p style="margin:0;font-size:0.875rem">Moving from React, Next.js, Eleventy, or Astro. Concept mapping and
+              worked examples.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Install CTA ── -->
+    <section class="cta-section">
+      <div class="container">
+        <p class="section-label">Ready to build?</p>
+        <h2 class="section-heading">Start in under five minutes.</h2>
+        <p class="section-sub">Install the package, add two scripts to <code>package.json</code>, and run the dev
+          server.
+          No config required to get going.</p>
+        <div>
+          <div class="install-block">
+            <span class="install-prompt">$</span>
+            <span>npm install @bascik/bascik</span>
+          </div>
+        </div>
+        <a href="/getting-started" class="btn btn-primary">Read the Getting Started Guide →</a>
+      </div>
+    </section>
+
+  </main>
 
   <docs-footer></docs-footer>
 </body>

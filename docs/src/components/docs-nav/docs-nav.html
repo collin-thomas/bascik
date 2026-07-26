@@ -53,7 +53,7 @@
       var current = false;
       if (href === '/why-bascik') {
         current = (path === '/why-bascik');
-      } else if (href === '/getting-started') {
+      } else if (href === '/getting-started' && a.closest('.dnav-links')) {
         current = (path !== '' && path !== '/' && path !== '/why-bascik');
       } else {
         current = (href === path);

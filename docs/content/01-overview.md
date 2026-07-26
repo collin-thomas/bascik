@@ -1,6 +1,6 @@
 # Bascik
 
-> Bascik is a build-time static site generator that turns reusable HTML component files into plain HTML pages. It adds zero JavaScript to the output. You write HTML, CSS, and JavaScript; Bascik scopes and assembles them.
+> Bascik is a build tool for HTML components. Write your components in plain HTML, CSS, and JavaScript — Bascik scopes and assembles them at build time, outputting plain HTML pages with zero JavaScript added. Supports static site generation (SSG) out of the box.
 
 ## What Bascik Does
 

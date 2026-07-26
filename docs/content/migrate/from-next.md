@@ -222,7 +222,7 @@ export default function About() {
 
 ### API Routes → Not Applicable
 
-Bascik is a static site generator — there is no server process to handle API requests. Replace Next.js API routes with one of:
+Bascik produces static HTML at build time — there is no server process to handle API requests. Replace Next.js API routes with one of:
 
 - **Build-time data:** Use `<script data-bascik-build>` to fetch or read data and bake it into the HTML at build time.
 - **Client-side fetch:** Call external APIs directly from a `<script>` tag in the page.

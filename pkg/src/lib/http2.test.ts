@@ -319,6 +319,14 @@ describe("serveHttp2 – cert generation", () => {
   let mockAccess: ReturnType<typeof vi.fn>;
   let mockExecFile: ReturnType<typeof vi.fn>;
 
+  // execFile is promisified; the callback is always the last argument.
+  // mkcert gets an options object: execFile(cmd, args, opts, cb) → cb at index 3.
+  // openssl has no options:        execFile(cmd, args, cb)       → cb at index 2.
+  type ExecFileCb = (err: Error | null) => void;
+  const lastArg = (args: unknown[]) => args[args.length - 1] as ExecFileCb;
+  const succeed = (...args: unknown[]) => lastArg(args)(null);
+  const fail = (msg: string) => (...args: unknown[]) => lastArg(args)(new Error(msg));
+
   beforeEach(async () => {
     const { access } = await import("node:fs/promises");
     const { execFile } = await import("node:child_process");
@@ -326,10 +334,7 @@ describe("serveHttp2 – cert generation", () => {
     mockExecFile = execFile as unknown as ReturnType<typeof vi.fn>;
     // Default for each cert test: certs already exist, execFile succeeds.
     mockAccess.mockResolvedValue(undefined);
-    mockExecFile.mockImplementation(
-      (_cmd: string, _args: string[], cb: (err: Error | null) => void) =>
-        cb(null),
-    );
+    mockExecFile.mockImplementation(succeed);
   });
 
   it("skips cert generation when cert files already exist", async () => {
@@ -345,21 +350,26 @@ describe("serveHttp2 – cert generation", () => {
     expect(mockExecFile).toHaveBeenCalledWith(
       "mkcert",
       expect.arrayContaining(["-key-file", "-cert-file", "localhost"]),
+      expect.objectContaining({ env: expect.any(Object) }),
       expect.any(Function),
     );
+  });
+
+  it("passes augmented PATH to mkcert so Homebrew bin dirs are included", async () => {
+    mockAccess.mockRejectedValue(new Error("ENOENT"));
+
+    await serveHttp2();
+
+    const [, , opts] = mockExecFile.mock.calls[0] as [string, string[], { env: { PATH: string } }, ExecFileCb];
+    expect(opts.env.PATH).toContain("/opt/homebrew/bin");
+    expect(opts.env.PATH).toContain("/usr/local/bin");
   });
 
   it("falls back to openssl when mkcert is not available", async () => {
     mockAccess.mockRejectedValue(new Error("ENOENT"));
     mockExecFile
-      .mockImplementationOnce(
-        (_cmd: string, _args: string[], cb: (err: Error | null) => void) =>
-          cb(new Error("mkcert not found")),
-      )
-      .mockImplementationOnce(
-        (_cmd: string, _args: string[], cb: (err: Error | null) => void) =>
-          cb(null),
-      );
+      .mockImplementationOnce(fail("mkcert not found"))
+      .mockImplementationOnce(succeed);
 
     await serveHttp2();
 
@@ -369,6 +379,20 @@ describe("serveHttp2 – cert generation", () => {
       "openssl",
       expect.arrayContaining(["req", "-x509"]),
       expect.any(Function),
+    );
+  });
+
+  it("logs a message when mkcert fails and openssl is used instead", async () => {
+    mockAccess.mockRejectedValue(new Error("ENOENT"));
+    mockExecFile
+      .mockImplementationOnce(fail("spawn mkcert ENOENT"))
+      .mockImplementationOnce(succeed);
+    const consoleSpy = vi.spyOn(console, "log");
+
+    await serveHttp2();
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("mkcert not found or failed"),
     );
   });
 });

@@ -17,10 +17,13 @@
 <script>
      (function () {
           var path = window.location.pathname;
-          var a = document.querySelector('.docs-sidebar a[href="' + path + '"]');
-          if (a) {
-               a.setAttribute('aria-current', 'page');
-               a.scrollIntoView({ block: 'nearest' });
+          var sidebar = document.querySelector('.docs-sidebar');
+          if (sidebar) {
+               var a = sidebar.querySelector('a[href="' + path + '"]');
+               if (a) {
+                    a.setAttribute('aria-current', 'page');
+                    a.scrollIntoView({ block: 'nearest' });
+               }
           }
      })();
 </script>

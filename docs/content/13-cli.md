@@ -111,6 +111,24 @@ bascik --check && bascik --build
 
 > **What `bascik --check` does not cover.** The check validates component references — unknown and unused tags. It does not parse CSS or JavaScript for syntax errors. If a CSS file contains a syntax error (for example, a value accidentally split across two lines), Bascik's scoping transforms may still run on the malformed input and produce unexpected output. Complement `bascik --check` with the tools below to catch these cases before they reach your build.
 
+#### 5. Production Build (`bascik --build`)
+
+Run `bascik --build` to write optimised, deployment-ready files to `dist/`:
+
+```sh
+bascik --build
+```
+
+The output uses root-relative asset paths (e.g. `/css/styles.css`) and **must be served by an HTTP server** — opening files directly from disk via `file://` will break styles and scripts because the browser cannot resolve root-relative URLs from a `file://` origin.
+
+To preview the production build locally before deploying:
+
+```sh
+cd dist && npx http-server
+```
+
+Then open the URL printed by `http-server` (default: `http://127.0.0.1:8080`).
+
 #### Recommended Complementary Analysis Tools
 
 These tools run independently of Bascik and are not required, but they close the gap that `bascik --check` does not cover:

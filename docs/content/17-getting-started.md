@@ -30,9 +30,24 @@ Run `yarn dev` (or `npm run dev`) to start the development server. Bascik serves
 SSL certificates are generated automatically on first run. Install [mkcert](https://github.com/FiloSottile/mkcert) for a trusted cert with no browser warning:
 
 ```sh
+# macOS — install mkcert and register the local CA with the system trust store
 brew install mkcert
-mkcert -install   # installs the local CA — only needed once
+mkcert -install   # only needed once per machine
 ```
+
+> **Firefox users.** Firefox maintains its own certificate store and ignores the macOS system trust store. Install `nss` (which provides `certutil`) **before** running `mkcert -install` so mkcert can register with Firefox automatically:
+> ```sh
+> brew install nss && mkcert -install
+> ```
+> If you already ran `mkcert -install` without `nss`, install `nss` and re-run `mkcert -install`.
+
+After running `mkcert -install`, restart the dev server. Bascik will pick up mkcert automatically and generate a CA-trusted cert with no browser warning.
+
+> **Already saw the browser warning?** If Bascik started before mkcert was installed, it will have generated cert files using `openssl` (the self-signed fallback). Bascik skips cert generation when the files already exist, so installing mkcert afterward has no effect until you delete the old files:
+> ```sh
+> rm bascik-cert.pem bascik-privkey.pem
+> yarn dev   # bascik will now use mkcert
+> ```
 
 Without mkcert, Bascik falls back to `openssl` (pre-installed on macOS and Linux). Your browser will show a certificate warning — click through to proceed. Windows users without openssl can install it via `winget install ShiningLight.OpenSSL`.
 

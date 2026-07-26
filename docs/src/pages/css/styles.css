@@ -11,7 +11,7 @@
   --accent:       #d3ff8d;
   --accent-dim:   rgba(211,255,141,0.12);
   --text:         #f0f1f2;
-  --text-muted:   #7c8290;
+  --text-muted:   #8d929e;
   --mono:         'SF Mono','Fira Code',Menlo,monospace;
   --r:            10px;
   --r-sm:         6px;
@@ -44,6 +44,14 @@ p  { margin-top: 0; color: var(--text-muted); }
 
 a { color: var(--accent); text-decoration: none; transition: opacity .15s; }
 a:hover { opacity: 0.8; }
+
+/* Prose links must have a non-color indicator (WCAG 1.4.1) */
+p a,
+li a {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
 
 code {
   font-family: var(--mono);

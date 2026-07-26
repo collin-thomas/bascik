@@ -29,14 +29,26 @@ export const serveHttp2 = async () => {
     .catch(() => false);
 
   if (!certsPresent) {
+    // Augment PATH so mkcert is found even when launched from VS Code or
+    // other environments that don't source the user's shell profile.
+    const env = {
+      ...process.env,
+      PATH: [
+        process.env.PATH,
+        "/opt/homebrew/bin",   // Apple Silicon Homebrew
+        "/usr/local/bin",      // Intel Homebrew / manual installs
+      ].filter(Boolean).join(":"),
+    };
+
     try {
       await execFile("mkcert", [
         "-key-file", keyPath,
         "-cert-file", certPath,
         "localhost", "127.0.0.1", "::1",
-      ]);
+      ], { env });
       console.log("SSL: generated trusted certs via mkcert (run `mkcert -install` once if you haven't)");
-    } catch {
+    } catch (mkcertErr) {
+      console.log(`SSL: mkcert not found or failed (${(mkcertErr as Error).message?.split("\n")[0]}), falling back to openssl`);
       try {
         await execFile("openssl", [
           "req", "-x509", "-newkey", "rsa:2048",

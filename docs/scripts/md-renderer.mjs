@@ -79,6 +79,22 @@ export async function renderMd(filePath, { skipFirstHeading = false } = {}) {
     html = html.replace(/^<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>\n?/, '');
   }
 
+  // Normalize heading levels so the minimum rendered heading is h2.
+  // This ensures content headings (e.g. ### from MD) land at <h2> in
+  // the page, directly after the shell <h1>, with no skipped levels.
+  {
+    const levels = [];
+    html.replace(/<h([1-6])[^>]*>/g, (_, n) => { levels.push(+n); });
+    if (levels.length > 0) {
+      const shift = Math.min(...levels) - 2;
+      if (shift > 0) {
+        html = html.replace(/<(\/?)h([1-6])([^>]*)>/g, (_, slash, n, attrs) =>
+          `<${slash}h${Math.min(+n - shift, 6)}${attrs}>`
+        );
+      }
+    }
+  }
+
   // Convert <pre><code class="language-X"> → <code-block data-bascik-prop-lang="X">
   // marked already HTML-escapes code content, so it passes safely into the component slot.
   html = html.replace(

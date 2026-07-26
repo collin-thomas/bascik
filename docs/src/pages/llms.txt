@@ -1,6 +1,6 @@
 # Bascik
 
-> Bascik is a build-time static site generator that turns reusable HTML component files into plain HTML pages. It adds zero JavaScript to the output. You write HTML, CSS, and JavaScript; Bascik scopes and assembles them.
+> Bascik is a build tool for HTML components. Write your components in plain HTML, CSS, and JavaScript — Bascik scopes and assembles them at build time, outputting plain HTML pages with zero JavaScript added. Supports static site generation (SSG) out of the box.
 
 ## What Bascik Does
 
@@ -1412,6 +1412,24 @@ bascik --check && bascik --build
 
 > **What `bascik --check` does not cover.** The check validates component references — unknown and unused tags. It does not parse CSS or JavaScript for syntax errors. If a CSS file contains a syntax error (for example, a value accidentally split across two lines), Bascik's scoping transforms may still run on the malformed input and produce unexpected output. Complement `bascik --check` with the tools below to catch these cases before they reach your build.
 
+#### 5. Production Build (`bascik --build`)
+
+Run `bascik --build` to write optimised, deployment-ready files to `dist/`:
+
+```sh
+bascik --build
+```
+
+The output uses root-relative asset paths (e.g. `/css/styles.css`) and **must be served by an HTTP server** — opening files directly from disk via `file://` will break styles and scripts because the browser cannot resolve root-relative URLs from a `file://` origin.
+
+To preview the production build locally before deploying:
+
+```sh
+cd dist && npx http-server
+```
+
+Then open the URL printed by `http-server` (default: `http://127.0.0.1:8080`).
+
 #### Recommended Complementary Analysis Tools
 
 These tools run independently of Bascik and are not required, but they close the gap that `bascik --check` does not cover:
@@ -2367,9 +2385,24 @@ Run `yarn dev` (or `npm run dev`) to start the development server. Bascik serves
 SSL certificates are generated automatically on first run. Install [mkcert](https://github.com/FiloSottile/mkcert) for a trusted cert with no browser warning:
 
 ```sh
+# macOS — install mkcert and register the local CA with the system trust store
 brew install mkcert
-mkcert -install   # installs the local CA — only needed once
+mkcert -install   # only needed once per machine
 ```
+
+> **Firefox users.** Firefox maintains its own certificate store and ignores the macOS system trust store. Install `nss` (which provides `certutil`) **before** running `mkcert -install` so mkcert can register with Firefox automatically:
+> ```sh
+> brew install nss && mkcert -install
+> ```
+> If you already ran `mkcert -install` without `nss`, install `nss` and re-run `mkcert -install`.
+
+After running `mkcert -install`, restart the dev server. Bascik will pick up mkcert automatically and generate a CA-trusted cert with no browser warning.
+
+> **Already saw the browser warning?** If Bascik started before mkcert was installed, it will have generated cert files using `openssl` (the self-signed fallback). Bascik skips cert generation when the files already exist, so installing mkcert afterward has no effect until you delete the old files:
+> ```sh
+> rm bascik-cert.pem bascik-privkey.pem
+> yarn dev   # bascik will now use mkcert
+> ```
 
 Without mkcert, Bascik falls back to `openssl` (pre-installed on macOS and Linux). Your browser will show a certificate warning — click through to proceed. Windows users without openssl can install it via `winget install ShiningLight.OpenSSL`.
 
@@ -4038,7 +4071,7 @@ The Markdown prose is rendered at build time by the build script and injected as
 
 ## Migrating from Eleventy
 
-Eleventy and Bascik are both build-time static site generators with no client-side framework runtime. The main conceptual shift is that Bascik uses its own component format — plain HTML files resolved by tag name — instead of Nunjucks, Liquid, or Handlebars templates. Front matter and template inheritance map to build scripts and slot-based layout components.
+Eleventy is a static site generator; Bascik is a build tool for HTML components that produces static HTML with no client-side framework runtime. The main conceptual shift is that Bascik uses its own component format — plain HTML files resolved by tag name — instead of Nunjucks, Liquid, or Handlebars templates. Front matter and template inheritance map to build scripts and slot-based layout components.
 
 ### Template Languages → HTML Component Files
 
@@ -4524,7 +4557,7 @@ export default function About() {
 
 ### API Routes → Not Applicable
 
-Bascik is a static site generator — there is no server process to handle API requests. Replace Next.js API routes with one of:
+Bascik produces static HTML at build time — there is no server process to handle API requests. Replace Next.js API routes with one of:
 
 - **Build-time data:** Use `<script data-bascik-build>` to fetch or read data and bake it into the HTML at build time.
 - **Client-side fetch:** Call external APIs directly from a `<script>` tag in the page.
