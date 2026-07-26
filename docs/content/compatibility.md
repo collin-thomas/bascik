@@ -30,7 +30,10 @@ CSS scoping applies to `.css` files paired with a component's HTML file. Place t
 | `@supports`                                        | `@supports (display: grid) { .foo {} }` | ✅     | Class names inside `@supports` blocks are scoped normally.                                                                                                                                                                                                                                |
 | `@layer`                                           | `@layer base { .foo {} }`               | ✅     | Layer name scoped in all forms: declaration blocks, single-name and comma-list ordering statements.                                                                                                                                                                                       |
 | `@container`                                       | `@container sidebar (min-width: …) {}`  | ✅     | Container names declared via `container-name:` or the `container:` shorthand are scoped; `@container name (…)` queries updated to match. Unnamed queries untouched.                                                                                                                       |
-| CSS custom properties                              | `--brand: #d3ff8d` / `var(--brand)`     | ✅     | Declarations and all `var()` references in the same file scoped together                                                                                                                                                                                                                  |
+| CSS custom properties                              | `--brand: #d3ff8d` / `var(--brand)`     | ✅     | Declarations and all `var()` references in the same file scoped together. `var(--prop, fallback)` is fully supported — the fallback value is preserved and the property name is scoped.                                                                                                   |
+| Multiple `animation:` values                       | `animation: a 1s, b 2s`                 | ✅     | Both keyframe name references are scoped when an `animation:` shorthand lists more than one animation.                                                                                                                                                                                    |
+| Child / sibling combinators                        | `.a > .b`, `.a + .b`, `.a ~ .b`         | ✅     | All class names on both sides of `>`, `+`, and `~` are scoped.                                                                                                                                                                                                                            |
+| `:is()` / `:where()` / `:has()` with class args   | `:is(.foo, .bar) {}`                    | ✅     | Class names inside `:is()`, `:where()`, and `:has()` are scoped normally. Element names inside these functions are **not** converted (see below).                                                                                                                                          |
 | Inline `<style>` in component HTML                 | `<style>.foo {}</style>`                | ✅     | Full CSS scoping pipeline applied to inline `<style>` blocks — class names, element selectors, `@keyframes`, `@layer`, `@container`, and custom properties are all scoped.                                                                                                                |
 | CSS `#id` selector                                 | `#btn {}`                               | ✅     | Converted to a component-scoped class selector (`.bascik__comp__id__btn {}`) using a context-aware lookahead that correctly distinguishes selector position from hex colour values. The generated class is injected onto the HTML element. Specificity drops from (0,1,0,0) to (0,0,1,0). |
 | `[id]` / `[id="…"]` attribute selector             | `[id] {}`                               | 🚫     | Stripped at compile time. Attribute-selector forms cannot be scoped without DOM wrapping.                                                                                                                                                                                                 |
@@ -50,7 +53,8 @@ CSS scoping applies to `.css` files paired with a component's HTML file. Place t
 | `obfuscateAttributeNames` | ✅     | In production builds, verbose names like `bascik__site-nav__a1b2c3__logo` are hashed to short strings (e.g. `ba1b2c3d`). |
 | `minifyStyles`            | ✅     | Whitespace in the compiled `<style>` block is collapsed.                                                                 |
 | Comments                  | ✅     | Stripped before processing.                                                                                              |
-| `@font-face`              | ⚠️     | Passed through untouched — not scoped. The `font-family` name is global. Declare `@font-face` in a shared global stylesheet rather than a component `.css` file. |
+| SVG elements in component HTML | ✅ | `class` attributes on SVG elements (`<svg>`, `<circle>`, `<path>`, `<rect>`, etc.) are scoped with the same pipeline as HTML elements. JS `classList` and `querySelector` calls targeting SVG children are rewritten. |
+| `@font-face`              | ⚠️     | Passed through untouched — the `font-family` name is not scoped. Both the declaration and all usage sites remain unmodified, so the font resolves correctly within the page. Declare `@font-face` in a shared global stylesheet rather than a component `.css` file to avoid duplicate declarations when a component is used multiple times. |
 | `@import`                 | ❌     | Not followed by the scoping pipeline. The imported CSS file is not processed or scoped. Include CSS directly in the component file instead.                       |
 
 ---
@@ -90,10 +94,16 @@ Bascik rewrites DOM selector references inside component `<script>` tags to matc
 | `element.classList.contains`                  | `el.classList.contains("my-cls")`    | `class`          | ✅     |                                                                                                |
 | `element.classList.replace`                   | `el.classList.replace("old", "new")` | `class`          | ✅     | Both the old-token and new-token arguments are rewritten if they match a scoped class name.  |
 | Compound `querySelector` / `querySelectorAll` | `querySelector(".foo .bar")`         | `class` / `id`   | ✅     | Space-separated and combinator-separated (`>`, `+`, `~`) tokens are each rewritten. Adjacent-class compound `.foo.bar` only rewrites the leading token.                         |
-| `element.className` setter                    | `el.className = "my-cls"`            | `class`          | ✅     | Single-class and space-separated multi-class assignments (`= "…"` and `+= "…"`) are rewritten. Reading `el.className` is unchanged.                                             |
+| `element.className` setter                    | `el.className = "my-cls"`            | `class`          | ✅     | Single-class and space-separated multi-class assignments (`= "…"` and `+= "…"`) are rewritten. Template literals (e.g. `` `box ${state}` ``) are **not** rewritten — see limitations below. Reading `el.className` is unchanged. |
 | `element.setAttribute("class", …)`            | `el.setAttribute("class", "my-cls")` | `class`          | ✅     | String literal values are rewritten.                                                                                                                                            |
 | `element.setAttribute("id", …)`               | `el.setAttribute("id", "my-id")`     | `id`             | ✅     | String literal values are rewritten.                                                                                                                                            |
-| `element.setAttribute("name", …)`             | `el.setAttribute("name", "my-name")` | `name`           | ❌     | Not rewritten. Use `getElementsByName` to find elements by name and operate on the returned reference instead.                                                                  |
+| `element.setAttribute("name", …)`             | `el.setAttribute("name", "my-name")` | `name`           | ✅     | String literal values for known `name` attributes are rewritten to the per-instance scoped name.                                                                                |
+| `innerHTML` / `insertAdjacentHTML` strings    | `el.innerHTML = '<div class="box">'` | `class`          | ✅     | Known class names in HTML string literals are rewritten. Only class names that appear as static `class="…"` attributes in the component template are eligible.                  |
+| `element.removeAttribute`                     | `el.removeAttribute("class")`        | —                | 🚫     | Attribute names (not values) are passed — no rewriting needed or applied.                                                                                                       |
+| `element.hasAttribute`                        | `el.hasAttribute("id")`              | —                | 🚫     | Same as `removeAttribute` — attribute name, not value.                                                                                                                          |
+| `element.toggleAttribute`                     | `el.toggleAttribute("hidden")`       | —                | 🚫     | Boolean attribute name only — no value to rewrite.                                                                                                                              |
+| `element.style.setProperty` for CSS vars      | `el.style.setProperty("--accent", v)` | —               | ❌     | Runtime CSS custom property names are not rewritten. The statically-declared name in the `.css` file is scoped (e.g. `--bascik__comp__accent`), but a runtime `setProperty("--accent", …)` call uses the original name and will not match the scoped declaration. Use the element's computed style or pass the scoped name explicitly as a prop. |
+| Template literal in `className` / selectors   | `` el.className = `box ${state}` ``  | —                | ❌     | Template literals containing runtime expressions are not rewritten — bascik cannot safely scope dynamic string interpolation at build time. Use `classList.add`/`remove` instead. |
 | `element.id` setter                           | `el.id = "my-id"`                    | `id`             | ❌     | Not rewritten — `.id =` also matches `el.dataset.id =` and other object properties named `id`. Use `getElementById` to retrieve elements and operate on the returned reference. |
 | `querySelector` attribute selector            | `querySelector("[id='my-id']")`      | `id`             | ❌     | Use `getElementById` instead.                                                                                                                                                   |
 
@@ -112,6 +122,21 @@ The recommended pattern is to query scoped elements by a single `id` or single-c
   panel.dataset.state = "closed"; // ← data attributes for state
 </script>
 ```
+
+### Class queries are document-wide (not per-instance)
+
+Class names are scoped to the **component type**, not to individual instances. This means `querySelectorAll(".my-class")` inside a component script — which Bascik rewrites to `querySelectorAll(".bascik__comp__my-class")` — will find matching elements across **all instances** of that component on the page, not just the current instance.
+
+To operate only on the current instance's elements, query by **id** (which includes a per-instance hash) and traverse from the returned element:
+
+```javascript
+// In component — gets only THIS instance's panel:
+const panel = document.getElementById("panel"); // rewritten with instance hash
+```
+
+### FormData with scoped `name` attributes
+
+When a component uses `<input name="username">`, Bascik scopes the `name` attribute to a per-instance value like `bascik__comp__a1b2c3__username`. As a result, `new FormData(form)` entries use the **scoped** name as the key. If your server-side code expects the unscoped field name, you will need to adapt it — or extract values using `formData.get` with the scoped name, or via `form.elements` iteration.
 
 ---
 

@@ -59,7 +59,7 @@ src/components/
     site-nav.css
 ```
 
-All class names, element selectors, `#id` selectors, and `@keyframes` in the `.css` file are automatically scoped to that component instance. CSS `#id` selectors are converted to generated class selectors and the class is injected on the matching HTML element.
+All class names, element selectors, `#id` selectors, `@keyframes`, `@layer`, `@container`, `:is()/.class`, `:where()/.class`, `:has()/.class`, child/sibling combinator selectors, and CSS custom properties in the `.css` file are automatically scoped to that component. SVG elements with `class` attributes inside component HTML are also scoped. CSS `#id` selectors are converted to generated class selectors and the class is injected on the matching HTML element.
 
 ```css
 /* site-nav.css — source */
@@ -83,7 +83,7 @@ p {
 ```
 
 ### Scoped CSS Custom Properties
-CSS custom properties declared in the file are also scoped:
+CSS custom properties declared in the file are also scoped. `var(--prop, fallback)` with fallback values is fully supported — the property name is scoped and the fallback preserved:
 
 ```css
 /* source */
@@ -92,6 +92,7 @@ CSS custom properties declared in the file are also scoped:
 }
 .title {
   color: var(--brand);
+  border-color: var(--brand, rgb(150, 150, 150)); /* fallback preserved */
 }
 
 /* compiled */
@@ -100,6 +101,7 @@ CSS custom properties declared in the file are also scoped:
 }
 .bascik__site-nav__a1b2c3__title {
   color: var(--bascik__site-nav__a1b2c3__brand);
+  border-color: var(--bascik__site-nav__a1b2c3__brand, rgb(150, 150, 150));
 }
 ```
 
@@ -140,9 +142,18 @@ DOM selectors in component scripts are rewritten to match scoped names:
 * `document.getElementsByName("name")`
 * `element.closest("#id")` / `element.closest(".cls")` — compound-aware
 * `element.matches("#id")` / `element.matches(".cls")` — works for event delegation too
-* `element.classList.add/remove/toggle/contains("cls")`
-* `element.setAttribute("class", "cls")` / `setAttribute("id", "id-value")` — string literal values
-* `element.className = "cls"` or `"cls1 cls2"` or `+= " cls"` — setter forms
+* `element.classList.add/remove/toggle/contains("cls")` — all single and multi-argument forms
+* `element.classList.replace("old", "new")` — both arguments rewritten
+* `element.setAttribute("class", "cls")` / `setAttribute("id", "id-value")` / `setAttribute("name", "value")` — string literal values
+* `element.className = "cls"` or `"cls1 cls2"` or `+= " cls"` — setter forms; space-separated multi-class strings fully rewritten
+* `innerHTML` / `insertAdjacentHTML` string literals — known class names inside the HTML string are rewritten
+* `removeAttribute`, `hasAttribute`, `toggleAttribute` — take attribute names (not values), no rewriting needed
+
+### Not Rewritten (known limitations)
+* `el.id = "value"` — property setter not rewritten; use `getElementById` then work from the reference
+* `el.style.setProperty("--my-var", value)` — runtime CSS custom property names are not rewritten; the scoped var name (e.g. `--bascik__comp__my-var`) is different from the source name
+* Template literals: `` el.className = `box ${state}` `` — not rewritten; use `classList.add/remove` instead
+* `querySelector("[name='username']")` — attribute-selector form for `name`; use `getElementsByName` instead
 
 ### Scoping Model
 `id` and `name` attributes are scoped **per-instance** — each use of a component generates a different `instanceId`, guaranteeing unique DOM IDs even when the same component appears multiple times on a page. `class` attributes are scoped to the component name only (no instanceId), so all instances share the same class names and CSS deduplication emits a single `<style>` block.
