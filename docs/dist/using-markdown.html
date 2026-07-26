@@ -10,13 +10,13 @@ authors, while the published page
 stays **plain HTML**.
 
 &gt; Add an editorial treatment with
-&gt; ordinary CSS.</code></pre></div><div class="markdown-transform-arrow" aria-hidden="true">→</div><div class="markdown-transform-panel markdown-preview"><p class="markdown-transform-label">Styled browser output</p><div class="markdown-preview-body"><h2>A practical heading</h2><p>Markdown stays comfortable for authors, while the published page stays <strong>plain HTML</strong>. </p><blockquote><p>Add an editorial treatment with ordinary CSS.</p></blockquote></div></div></section><p>Bascik does not include a Markdown pipeline — but <code>data-bascik-build</code> scripts are Node.js, which means you can install any Markdown library and use it directly. This is the same approach used to build the page you are reading right now.</p><h2>marked</h2><p><a href="https://marked.js.org">marked</a> is a fast, zero-dependency Markdown parser. Install it once and import it in any build script.</p><div class="b06bfa681b787" id="bcfbb45c6f3b7"><div class="b0effe5f86a95"><span class="b49f78bb650dd">sh</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">npm install marked</code></pre></div><p>Read a Markdown file and output the HTML:</p><div class="b06bfa681b787" id="b377f355320f4"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;script data-bascik-build&gt;
+&gt; ordinary CSS.</code></pre></div><div class="markdown-transform-arrow" aria-hidden="true">→</div><div class="markdown-transform-panel markdown-preview"><p class="markdown-transform-label">Styled browser output</p><div class="markdown-preview-body"><h2>A practical heading</h2><p>Markdown stays comfortable for authors, while the published page stays <strong>plain HTML</strong>. </p><blockquote><p>Add an editorial treatment with ordinary CSS.</p></blockquote></div></div></section><p>Bascik does not include a Markdown pipeline — but <code>data-bascik-build</code> scripts are Node.js, which means you can install any Markdown library and use it directly. This is the same approach used to build the page you are reading right now.</p><h2>marked</h2><p><a href="https://marked.js.org">marked</a> is a fast, zero-dependency Markdown parser. Install it once and import it in any build script.</p><div class="b06bfa681b787" id="b1e5ac3b682e6"><div class="b0effe5f86a95"><span class="b49f78bb650dd">sh</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">npm install marked</code></pre></div><p>Read a Markdown file and output the HTML:</p><div class="b06bfa681b787" id="b1d50551e16d7"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;script data-bascik-build&gt;
   import { readFile } from &#39;node:fs/promises&#39;;
   import { marked } from &#39;marked&#39;;
 
   const md = await readFile(&#39;./content/intro.md&#39;, &#39;utf8&#39;);
   console.log(marked(md));
-&lt;/script&gt;</code></pre></div><p>The output replaces the script tag in the compiled HTML — no client-side JavaScript runs.</p><h2>Styling Rendered Markdown</h2><p>A Markdown parser returns ordinary HTML such as <code>&lt;h2&gt;</code>, <code>&lt;p&gt;</code>, <code>&lt;ul&gt;</code>, <code>&lt;blockquote&gt;</code>, and <code>&lt;pre&gt;</code>. There is no separate Markdown styling system: once Bascik injects that HTML, the browser applies CSS through the normal cascade.</p><h3>Option 1: A Page or Global Stylesheet</h3><p>Wrap the generated content with a stable class and link a regular stylesheet from the page:</p><div class="b06bfa681b787" id="b47ea44ea4327"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;head&gt;
+&lt;/script&gt;</code></pre></div><p>The output replaces the script tag in the compiled HTML — no client-side JavaScript runs.</p><h2>Styling Rendered Markdown</h2><p>A Markdown parser returns ordinary HTML such as <code>&lt;h2&gt;</code>, <code>&lt;p&gt;</code>, <code>&lt;ul&gt;</code>, <code>&lt;blockquote&gt;</code>, and <code>&lt;pre&gt;</code>. There is no separate Markdown styling system: once Bascik injects that HTML, the browser applies CSS through the normal cascade.</p><h3>Option 1: A Page or Global Stylesheet</h3><p>Wrap the generated content with a stable class and link a regular stylesheet from the page:</p><div class="b06bfa681b787" id="bbedd97001701"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;head&gt;
   &lt;link rel=&quot;stylesheet&quot; href=&quot;/css/content.css&quot; /&gt;
 &lt;/head&gt;
 &lt;body&gt;
@@ -29,7 +29,7 @@ stays **plain HTML**.
       console.log(marked(md));
     &lt;/script&gt;
   &lt;/main&gt;
-&lt;/body&gt;</code></pre></div><p>Then style the HTML elements the parser emits:</p><div class="b06bfa681b787" id="bb17f71ffc295"><div class="b0effe5f86a95"><span class="b49f78bb650dd">css</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">/* src/pages/css/content.css */
+&lt;/body&gt;</code></pre></div><p>Then style the HTML elements the parser emits:</p><div class="b06bfa681b787" id="b0b44df5b4b78"><div class="b0effe5f86a95"><span class="b49f78bb650dd">css</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">/* src/pages/css/content.css */
 .markdown-body {
   max-width: 68ch;
   margin-inline: auto;
@@ -60,10 +60,10 @@ stays **plain HTML**.
   padding: 1rem;
   color: #f7f7f2;
   background: #202329;
-}</code></pre></div><p>This is the simplest choice when several pages share one editorial design. The generated elements are plain HTML, so responsive styles, custom properties, print styles, and media queries all work normally.</p><h3>Option 2: A Scoped Bascik Component</h3><p>For a portable content style, create a component whose default slot receives the generated HTML:</p><div class="b06bfa681b787" id="b2ce87c671db8"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;!-- src/components/markdown-content/markdown-content.html --&gt;
+}</code></pre></div><p>This is the simplest choice when several pages share one editorial design. The generated elements are plain HTML, so responsive styles, custom properties, print styles, and media queries all work normally.</p><h3>Option 2: A Scoped Bascik Component</h3><p>For a portable content style, create a component whose default slot receives the generated HTML:</p><div class="b06bfa681b787" id="b4ebbdffaf533"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;!-- src/components/markdown-content/markdown-content.html --&gt;
 &lt;article class=&quot;markdown-content&quot;&gt;
   &lt;div data-bascik-slot&gt;&lt;/div&gt;
-&lt;/article&gt;</code></pre></div><p>Pair it with component CSS. Start selectors with the wrapper class so the rules apply to HTML inserted through the slot:</p><div class="b06bfa681b787" id="bbe25f167951f"><div class="b0effe5f86a95"><span class="b49f78bb650dd">css</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">/* src/components/markdown-content/markdown-content.css */
+&lt;/article&gt;</code></pre></div><p>Pair it with component CSS. Start selectors with the wrapper class so the rules apply to HTML inserted through the slot:</p><div class="b06bfa681b787" id="b8d89e0faeb6c"><div class="b0effe5f86a95"><span class="b49f78bb650dd">css</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">/* src/components/markdown-content/markdown-content.css */
 .markdown-content {
   max-width: 68ch;
   margin-inline: auto;
@@ -88,29 +88,29 @@ stays **plain HTML**.
   display: block;
   max-width: 100%;
   height: auto;
-}</code></pre></div><p>Have the build script emit the component tag around the parsed Markdown:</p><div class="b06bfa681b787" id="bf84cb23befb4"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;script data-bascik-build&gt;
+}</code></pre></div><p>Have the build script emit the component tag around the parsed Markdown:</p><div class="b06bfa681b787" id="b9e5a43ce0dd4"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;script data-bascik-build&gt;
   import { readFile } from &#39;node:fs/promises&#39;;
   import { marked } from &#39;marked&#39;;
 
   const md = await readFile(&#39;./content/article.md&#39;, &#39;utf8&#39;);
   console.log(`&lt;markdown-content&gt;${marked(md)}&lt;/markdown-content&gt;`);
-&lt;/script&gt;</code></pre></div><p>Bascik runs the script first, sees the emitted <code>&lt;markdown-content&gt;</code> tag, resolves it, fills its slot, and includes its scoped CSS. Only that component&#39;s wrapper receives the generated scoped class; selectors such as <code>.markdown-content h2</code> then style the ordinary heading descendants inside it.</p><div class="callout"><p><strong>Use a wrapper selector for slot content.</strong> A bare <code>h2 {}</code> rule in component CSS is transformed by Bascik and attached to headings present in the component template. Markdown headings arrive through the slot later, so write <code>.markdown-content h2 {}</code> for generated content.</p></div><h3>What Reaches the Browser</h3><p>Given this Markdown:</p><div class="b06bfa681b787" id="b20bab1078bbd"><div class="b0effe5f86a95"><span class="b49f78bb650dd">md</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">## A practical heading
+&lt;/script&gt;</code></pre></div><p>Bascik runs the script first, sees the emitted <code>&lt;markdown-content&gt;</code> tag, resolves it, fills its slot, and includes its scoped CSS. Only that component&#39;s wrapper receives the generated scoped class; selectors such as <code>.markdown-content h2</code> then style the ordinary heading descendants inside it.</p><div class="callout"><p><strong>Use a wrapper selector for slot content.</strong> A bare <code>h2 {}</code> rule in component CSS is transformed by Bascik and attached to headings present in the component template. Markdown headings arrive through the slot later, so write <code>.markdown-content h2 {}</code> for generated content.</p></div><h3>What Reaches the Browser</h3><p>Given this Markdown:</p><div class="b06bfa681b787" id="b5194953ecb28"><div class="b0effe5f86a95"><span class="b49f78bb650dd">md</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">## A practical heading
 
 Markdown stays comfortable for authors, while the published page stays **plain HTML**.
 
-&gt; Content can have a distinct editorial treatment without adding a client runtime.</code></pre></div><p>The parser produces normal elements inside the resolved component:</p><div class="b06bfa681b787" id="bbdb21f597433"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;article class=&quot;bascik__markdown-content__markdown-content&quot;&gt;
+&gt; Content can have a distinct editorial treatment without adding a client runtime.</code></pre></div><p>The parser produces normal elements inside the resolved component:</p><div class="b06bfa681b787" id="be0f96322c966"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;article class=&quot;bascik__markdown-content__markdown-content&quot;&gt;
   &lt;h2&gt;A practical heading&lt;/h2&gt;
   &lt;p&gt;Markdown stays comfortable for authors, while the published page stays &lt;strong&gt;plain HTML&lt;/strong&gt;.&lt;/p&gt;
   &lt;blockquote&gt;
     &lt;p&gt;Content can have a distinct editorial treatment without adding a client runtime.&lt;/p&gt;
   &lt;/blockquote&gt;
-&lt;/article&gt;</code></pre></div><p>The generated class name may be shortened in production when attribute obfuscation is enabled. You continue writing <code>.markdown-content</code> in the source; Bascik keeps the HTML and CSS names synchronized.</p><h2>Front Matter with gray-matter</h2><p>Most content workflows attach metadata (title, date, author, tags) to Markdown files using YAML front matter. <a href="https://github.com/jonschlinkert/gray-matter">gray-matter</a> parses it out cleanly.</p><div class="b06bfa681b787" id="b0d681c19a7f2"><div class="b0effe5f86a95"><span class="b49f78bb650dd">sh</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">npm install gray-matter marked</code></pre></div><div class="b06bfa681b787" id="bb381c863ea6d"><div class="b0effe5f86a95"><span class="b49f78bb650dd">md</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">---
+&lt;/article&gt;</code></pre></div><p>The generated class name may be shortened in production when attribute obfuscation is enabled. You continue writing <code>.markdown-content</code> in the source; Bascik keeps the HTML and CSS names synchronized.</p><h2>Front Matter with gray-matter</h2><p>Most content workflows attach metadata (title, date, author, tags) to Markdown files using YAML front matter. <a href="https://github.com/jonschlinkert/gray-matter">gray-matter</a> parses it out cleanly.</p><div class="b06bfa681b787" id="bfd45d07fb21e"><div class="b0effe5f86a95"><span class="b49f78bb650dd">sh</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">npm install gray-matter marked</code></pre></div><div class="b06bfa681b787" id="bc83c81eea0b3"><div class="b0effe5f86a95"><span class="b49f78bb650dd">md</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">---
 title: My First Post
 date: 2025-01-15
 tags: [css, performance]
 ---
 
-This is the post body.</code></pre></div><div class="b06bfa681b787" id="b1bcd3a340fce"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;script data-bascik-build&gt;
+This is the post body.</code></pre></div><div class="b06bfa681b787" id="b463e8b51e577"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;script data-bascik-build&gt;
   import { readFile } from &#39;node:fs/promises&#39;;
   import { marked } from &#39;marked&#39;;
   import matter from &#39;gray-matter&#39;;
@@ -125,7 +125,7 @@ This is the post body.</code></pre></div><div class="b06bfa681b787" id="b1bcd3a3
       ${marked(content)}
     &lt;/article&gt;
   `);
-&lt;/script&gt;</code></pre></div><h2>Building a Content Collection</h2><p>Read an entire folder of Markdown files and generate a list or index page:</p><div class="b06bfa681b787" id="ba473b185b35e"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;script data-bascik-build&gt;
+&lt;/script&gt;</code></pre></div><h2>Building a Content Collection</h2><p>Read an entire folder of Markdown files and generate a list or index page:</p><div class="b06bfa681b787" id="b041dd03be035"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;script data-bascik-build&gt;
   import { readdir, readFile } from &#39;node:fs/promises&#39;;
   import matter from &#39;gray-matter&#39;;
 
@@ -149,14 +149,14 @@ This is the post body.</code></pre></div><div class="b06bfa681b787" id="b1bcd3a3
   `).join(&#39;\n&#39;);
 
   console.log(`&lt;ul class=&quot;post-list&quot;&gt;\n${items}\n&lt;/ul&gt;`);
-&lt;/script&gt;</code></pre></div><div class="callout"><p><strong>Tip.</strong> Each post&#39;s HTML can live on its own page too. Create <code>src/pages/posts/[slug].html</code> as a template, or use a build script to generate static output files programmatically.</p></div><h2>markdown-it</h2><p><a href="https://markdown-it.github.io">markdown-it</a> is an alternative parser with a rich plugin ecosystem — syntax highlighting, footnotes, custom containers, and more.</p><div class="b06bfa681b787" id="b6c9dc2ceae39"><div class="b0effe5f86a95"><span class="b49f78bb650dd">sh</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">npm install markdown-it</code></pre></div><div class="b06bfa681b787" id="bba7bae00c097"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;script data-bascik-build&gt;
+&lt;/script&gt;</code></pre></div><div class="callout"><p><strong>Tip.</strong> Each post&#39;s HTML can live on its own page too. Create <code>src/pages/posts/[slug].html</code> as a template, or use a build script to generate static output files programmatically.</p></div><h2>markdown-it</h2><p><a href="https://markdown-it.github.io">markdown-it</a> is an alternative parser with a rich plugin ecosystem — syntax highlighting, footnotes, custom containers, and more.</p><div class="b06bfa681b787" id="b4cf9b1272e71"><div class="b0effe5f86a95"><span class="b49f78bb650dd">sh</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">npm install markdown-it</code></pre></div><div class="b06bfa681b787" id="b7136c1b9c7a5"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;script data-bascik-build&gt;
   import { readFile } from &#39;node:fs/promises&#39;;
   import MarkdownIt from &#39;markdown-it&#39;;
 
   const md = new MarkdownIt({ html: true, typographer: true });
   const source = await readFile(&#39;./content/article.md&#39;, &#39;utf8&#39;);
   console.log(md.render(source));
-&lt;/script&gt;</code></pre></div><p>Add a plugin for syntax highlighting with <a href="https://highlightjs.org">highlight.js</a>:</p><div class="b06bfa681b787" id="b6d0732f62fa3"><div class="b0effe5f86a95"><span class="b49f78bb650dd">sh</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">npm install markdown-it highlight.js</code></pre></div><div class="b06bfa681b787" id="b4687a36d6363"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;script data-bascik-build&gt;
+&lt;/script&gt;</code></pre></div><p>Add a plugin for syntax highlighting with <a href="https://highlightjs.org">highlight.js</a>:</p><div class="b06bfa681b787" id="be6a2ec2d21af"><div class="b0effe5f86a95"><span class="b49f78bb650dd">sh</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">npm install markdown-it highlight.js</code></pre></div><div class="b06bfa681b787" id="b3cd60f21d067"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;script data-bascik-build&gt;
   import { readFile } from &#39;node:fs/promises&#39;;
   import MarkdownIt from &#39;markdown-it&#39;;
   import hljs from &#39;highlight.js&#39;;
@@ -172,8 +172,8 @@ This is the post body.</code></pre></div><div class="b06bfa681b787" id="b1bcd3a3
 
   const source = await readFile(&#39;./content/article.md&#39;, &#39;utf8&#39;);
   console.log(md.render(source));
-&lt;/script&gt;</code></pre></div><p>Then include the highlight.js stylesheet in your page <code>&lt;head&gt;</code>:</p><div class="b06bfa681b787" id="b3eb9b1335e5e"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;link rel=&quot;stylesheet&quot;
-  href=&quot;https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css&quot; /&gt;</code></pre></div><h2>remark / unified</h2><p>The <a href="https://unifiedjs.com">unified</a> ecosystem provides an AST-based pipeline. It is more involved to set up but gives precise control over parsing, transforming, and serializing Markdown.</p><div class="b06bfa681b787" id="b298874aa47d5"><div class="b0effe5f86a95"><span class="b49f78bb650dd">sh</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">npm install unified remark-parse remark-html</code></pre></div><div class="b06bfa681b787" id="b45f655fd34de"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;script data-bascik-build&gt;
+&lt;/script&gt;</code></pre></div><p>Then include the highlight.js stylesheet in your page <code>&lt;head&gt;</code>:</p><div class="b06bfa681b787" id="bb72382b96bd8"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;link rel=&quot;stylesheet&quot;
+  href=&quot;https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css&quot; /&gt;</code></pre></div><h2>remark / unified</h2><p>The <a href="https://unifiedjs.com">unified</a> ecosystem provides an AST-based pipeline. It is more involved to set up but gives precise control over parsing, transforming, and serializing Markdown.</p><div class="b06bfa681b787" id="b20ac7862d5f6"><div class="b0effe5f86a95"><span class="b49f78bb650dd">sh</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">npm install unified remark-parse remark-html</code></pre></div><div class="b06bfa681b787" id="b00194d78c374"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;script data-bascik-build&gt;
   import { readFile } from &#39;node:fs/promises&#39;;
   import { unified } from &#39;unified&#39;;
   import remarkParse from &#39;remark-parse&#39;;
@@ -186,7 +186,7 @@ This is the post body.</code></pre></div><div class="b06bfa681b787" id="b1bcd3a3
     .process(md);
 
   console.log(String(file));
-&lt;/script&gt;</code></pre></div><p>The unified plugin system lets you add transformations like automatic heading IDs, GFM tables, and math rendering using <code>remark-*</code> packages.</p><h2>CMS-Sourced Markdown</h2><p>If your content comes from a headless CMS that returns Markdown via an API, fetch it at build time:</p><div class="b06bfa681b787" id="ba5dd2f352a1f"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;script data-bascik-build&gt;
+&lt;/script&gt;</code></pre></div><p>The unified plugin system lets you add transformations like automatic heading IDs, GFM tables, and math rendering using <code>remark-*</code> packages.</p><h2>CMS-Sourced Markdown</h2><p>If your content comes from a headless CMS that returns Markdown via an API, fetch it at build time:</p><div class="b06bfa681b787" id="b42e75859ab1c"><div class="b0effe5f86a95"><span class="b49f78bb650dd">html</span><span class="b0227d7c69f59"></span></div><pre><code class="b3b4e78f600d6">&lt;script data-bascik-build&gt;
   import { marked } from &#39;marked&#39;;
 
   const res = await fetch(&#39;https://your-cms.example.com/api/page/home&#39;, {
