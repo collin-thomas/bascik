@@ -1,0 +1,53 @@
+<div class="wrapper">
+  <ul class="list" id="item-list">
+    <li class="item" id="item-a">Item A</li>
+    <li class="item selected" id="item-b">Item B (selected)</li>
+    <li class="item" id="item-c">Item C</li>
+  </ul>
+
+  <div class="card" id="card-a">
+    <p class="card-text">Normal card</p>
+  </div>
+
+  <div class="card" id="card-b">
+    <p class="card-text">Card with error</p>
+    <p class="error-msg">Something went wrong</p>
+  </div>
+
+  <!-- Buttons to dynamically toggle classes for :has() testing -->
+  <div class="btn-row">
+    <button id="select-a-btn">Select item A</button>
+    <button id="deselect-btn">Deselect all</button>
+    <button id="add-error-btn">Add error to card A</button>
+    <button id="remove-error-btn">Remove error from card A</button>
+  </div>
+
+  <span hidden class="selected error-msg"></span>
+
+  <script>
+    const itemA = document.getElementById("item-a");
+    const itemB = document.getElementById("item-b");
+    const itemC = document.getElementById("item-c");
+    const cardA = document.getElementById("card-a");
+
+    document.getElementById("select-a-btn").addEventListener("click", () => {
+      itemA.classList.add("selected");
+      itemB.classList.remove("selected");
+      itemC.classList.remove("selected");
+    });
+    document.getElementById("deselect-btn").addEventListener("click", () => {
+      itemA.classList.remove("selected");
+      itemB.classList.remove("selected");
+    });
+    document.getElementById("add-error-btn").addEventListener("click", () => {
+      const err = document.createElement("p");
+      err.className = "error-msg";
+      err.textContent = "Card A error!";
+      cardA.appendChild(err);
+    });
+    document.getElementById("remove-error-btn").addEventListener("click", () => {
+      const err = cardA.querySelector(".error-msg");
+      if (err) cardA.removeChild(err);
+    });
+  </script>
+</div>
