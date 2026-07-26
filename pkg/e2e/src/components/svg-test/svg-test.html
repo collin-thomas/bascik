@@ -1,0 +1,50 @@
+<div class="wrapper">
+  <!-- Static SVG icon with scoped classes -->
+  <svg class="icon" id="main-icon" viewBox="0 0 24 24" width="64" height="64">
+    <!-- Background circle -->
+    <circle class="bg-circle" cx="12" cy="12" r="11" />
+    <!-- Check mark path -->
+    <path class="check-path" d="M7 12l3 3.5 7-7" stroke-linecap="round" stroke-linejoin="round" />
+  </svg>
+
+  <!-- Interactive SVG that changes on button click -->
+  <svg class="indicator" id="indicator-svg" viewBox="0 0 100 20" width="200" height="40">
+    <rect class="indicator-bar" id="fill-bar" x="0" y="5" height="10" width="0" rx="5" />
+    <text class="indicator-label" x="50" y="15" text-anchor="middle" font-size="10">0%</text>
+  </svg>
+
+  <div id="status" class="status">Click to fill</div>
+
+  <!-- Sentinel for dynamic classes -->
+  <span hidden class="active filled"></span>
+
+  <div class="btn-row">
+    <button id="fill-btn">Fill to 75%</button>
+    <button id="toggle-active-btn">Toggle active on icon</button>
+    <button id="reset-btn">Reset</button>
+  </div>
+
+  <script>
+    const icon = document.getElementById("main-icon");
+    const fillBar = document.getElementById("fill-bar");
+    const indicatorSvg = document.getElementById("indicator-svg");
+    const label = indicatorSvg.querySelector(".indicator-label");
+    const status = document.getElementById("status");
+
+    document.getElementById("fill-btn").addEventListener("click", () => {
+      fillBar.setAttribute("width", "75");
+      status.textContent = "filled to 75%";
+    });
+
+    document.getElementById("toggle-active-btn").addEventListener("click", () => {
+      icon.classList.toggle("active");
+      status.textContent = "active: " + icon.classList.contains("active");
+    });
+
+    document.getElementById("reset-btn").addEventListener("click", () => {
+      fillBar.setAttribute("width", "0");
+      icon.classList.remove("active");
+      status.textContent = "reset";
+    });
+  </script>
+</div>
