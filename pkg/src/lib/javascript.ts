@@ -156,6 +156,21 @@ export const prefixElementAttribute = (
     attributeName: string;
     obfuscatedAttributeName: string;
   }> = [];
+
+  // Shield <meta> elements from name-attribute scoping. The `name` attribute
+  // on <meta> refers to a standardized metadata vocabulary (e.g. "viewport",
+  // "description", "robots") and must never be mangled by the scoping pipeline.
+  const shieldedMetaTags: string[] = [];
+  if (attribute === "name") {
+    component.fileContent = component.fileContent.replace(
+      /<meta\b[^>]*(?:\/>|>)/gi,
+      (tag) => {
+        const idx = shieldedMetaTags.push(tag) - 1;
+        return `\x00BMETATAG${idx}\x00`;
+      },
+    );
+  }
+
   // Use [\s\n\r\t] or \s to handle newlines before the attribute name
   const regexp = new RegExp(`(?<=\\s${attribute}=")[\\s\\S]+?(?=")`, "gm");
   const scopedAttrsHtml = component.fileContent.replace(regexp, (match) => {
@@ -304,6 +319,14 @@ export const prefixElementAttribute = (
     },
   );
   component.fileContent = scopedHtml;
+
+  // Restore shielded <meta> elements.
+  if (shieldedMetaTags.length > 0) {
+    component.fileContent = component.fileContent.replace(
+      /\x00BMETATAG(\d+)\x00/g,
+      (_, idx) => shieldedMetaTags[parseInt(idx, 10)],
+    );
+  }
 
   // CSS
   if (attribute === "class") {

@@ -606,3 +606,36 @@ describe("prefixElementAttribute – skipElementContents", () => {
     expect(result.fileContent).not.toContain("BSKIP");
   });
 });
+
+describe("prefixElementAttribute – name attribute: meta element shielding", () => {
+  it("does not scope the name attribute on <meta> tags", () => {
+    const c = makeComponent(
+      `<meta name="viewport" content="width=device-width, initial-scale=1.0" /><input name="email" />`,
+    );
+    const result = prefixElementAttribute(c, "name", "test1234");
+    // <meta name="viewport"> must be left unchanged
+    expect(result.fileContent).toContain('name="viewport"');
+    // <input name="email"> must still be scoped
+    expect(result.fileContent).not.toContain('name="email"');
+  });
+
+  it("does not scope any standard meta name values", () => {
+    const c = makeComponent(
+      `<meta charset="UTF-8" /><meta name="description" content="My site." /><meta name="robots" content="noindex" />`,
+    );
+    const result = prefixElementAttribute(c, "name", "test1234");
+    expect(result.fileContent).toContain('name="description"');
+    expect(result.fileContent).toContain('name="robots"');
+    // charset meta has no name attr so it should pass through untouched
+    expect(result.fileContent).toContain('<meta charset="UTF-8" />');
+  });
+
+  it("leaves no sentinel tokens in the output", () => {
+    const c = makeComponent(
+      `<meta name="viewport" content="width=device-width" /><input name="field" />`,
+    );
+    const result = prefixElementAttribute(c, "name", "test1234");
+    expect(result.fileContent).not.toContain("\x00");
+    expect(result.fileContent).not.toContain("BMETATAG");
+  });
+});
