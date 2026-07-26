@@ -51,9 +51,15 @@
     transition: border-color .15s, background .15s;
   }
 
-  .ctr-dec:hover {
-    border-color: var(--border-hover);
-    background: var(--accent-dim);
+  @media (hover: hover) {
+    .ctr-dec:hover {
+      border-color: var(--border-hover);
+      background: var(--accent-dim);
+    }
+
+    .ctr-inc:hover {
+      border-color: var(--accent);
+    }
   }
 
   .ctr-inc {
@@ -61,10 +67,6 @@
     border-color: rgba(211, 255, 141, 0.3);
     color: var(--accent);
     font-weight: 700;
-  }
-
-  .ctr-inc:hover {
-    border-color: var(--accent);
   }
 </style>
 <div class="ctr">

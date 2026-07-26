@@ -109,9 +109,11 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
   transition: filter .15s;
 }
 .btn-primary { background: var(--accent); color: #18191b; }
-.btn-primary:hover { filter: brightness(0.88); opacity: 1; }
 .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
-.btn-ghost:hover { border-color: var(--accent); color: var(--accent); opacity: 1; }
+@media (hover: hover) {
+  .btn-primary:hover { filter: brightness(0.88); opacity: 1; }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); opacity: 1; }
+}
 
 /* ── Utilities ── */
 .text-accent  { color: var(--accent); }
