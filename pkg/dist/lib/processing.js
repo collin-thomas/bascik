@@ -57,7 +57,7 @@ import { readFileSync } from "node:fs";
 import { listPages, getDirectoryPath, getDistPagePath, deleteDistFile, getRelativePath, } from "./file-system.js";
 import { listComponents, replaceTag, getFirstComponent, getTag, minifyHtml, extractProps, injectProps, extractNamedSlotContent, extractDefaultSlotContent, replaceNamedSlots, extractInheritableAttributes, mergeAttributesOntoRoot, } from "./components.js";
 import { namespaceScriptTags, prefixElementAttribute } from "./javascript.js";
-import { deduplicateCss } from "./styles.js";
+import { deduplicateCss, minifyCss } from "./styles.js";
 import { executeBuildScripts } from "./build-scripts.js";
 import { getUniqueId } from "./names.js";
 import { BascikConfig } from "./config.js";
@@ -312,13 +312,15 @@ export const pageProcessing = async (pagePath, componentList) => {
         }
     }
     // Deduplicate CSS — each component's styles included only once even if used many times
+    const componentCss = deduplicateCss([...usedComponents, ...headUsedComponents], BascikConfig.deduplicateCss);
     let transpiledHead = `${transpiledHeadContent}
     <style>
-    ${deduplicateCss([...usedComponents, ...headUsedComponents], BascikConfig.deduplicateCss)}
+    ${BascikConfig.minifyStyles ? minifyCss(componentCss) : componentCss}
     </style>`;
-    // Compress styles
-    // Remove new lines and multiple spaces become single spaces
+    // Compress the entire head (removes newlines, collapses whitespace in inline <style> tags too)
     if (BascikConfig.minifyStyles) {
+        // Also minify any inline <style> blocks that came from the page source
+        transpiledHead = transpiledHead.replace(/<style>([\s\S]*?)<\/style>/gi, (_, css) => `<style>${minifyCss(css)}</style>`);
         transpiledHead = transpiledHead.replace(/\n/g, " ").replace(/\s\s+/g, " ");
     }
     if (!BascikConfig.isBuild) {

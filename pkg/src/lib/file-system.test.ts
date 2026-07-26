@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import {
   deepReadDir,
   deepReadDirFlat,
@@ -8,7 +8,10 @@ import {
   deleteDistFile,
   deleteDistDir,
   createDir,
+  copyReplicatePath,
 } from "./file-system.js";
+import { BascikConfig } from "./config.js";
+import { readFile, writeFile } from "node:fs/promises";
 
 const isDirMock = vi.fn().mockImplementation(() => false);
 
@@ -20,7 +23,12 @@ vi.mock("./config.js", () => ({
       pages: "pages",
       components: "components",
     },
+    minifyStyles: false,
   },
+}));
+
+vi.mock("./styles.js", () => ({
+  minifyCss: vi.fn((css: string) => css.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s+/g, " ").replace(/\s*([{}:;,])\s*/g, "$1").trim()),
 }));
 
 vi.mock("node:fs/promises", () => {
@@ -41,6 +49,9 @@ vi.mock("node:fs/promises", () => {
     ]),
     rm: vi.fn(async () => undefined),
     mkdir: vi.fn(async () => undefined),
+    readFile: vi.fn(),
+    writeFile: vi.fn(async () => undefined),
+    copyFile: vi.fn(async () => undefined),
   };
 });
 
@@ -126,5 +137,58 @@ describe("createDir", () => {
   it("test", async () => {
     const dirPath = '"./dir"';
     expect(await createDir(dirPath)).toBe(undefined);
+  });
+});
+
+describe("copyReplicatePath – CSS minification", () => {
+  beforeEach(() => {
+    vi.mocked(readFile).mockReset();
+    vi.mocked(writeFile).mockReset();
+    (BascikConfig as any).minifyStyles = true;
+  });
+
+  afterEach(() => {
+    (BascikConfig as any).minifyStyles = false;
+  });
+
+  it("writes minified CSS to dest when source and dest hashes differ", async () => {
+    const rawCss = "/* comment */\n.foo {\n  color: red;\n}";
+    vi.mocked(readFile)
+      .mockResolvedValueOnce(rawCss as any)          // read src
+      .mockRejectedValueOnce(new Error("ENOENT"));   // read dest → does not exist yet
+
+    await copyReplicatePath("pages/css/styles.css", "dist");
+
+    expect(writeFile).toHaveBeenCalledOnce();
+    const writtenContent = vi.mocked(writeFile).mock.calls[0][1] as string;
+    expect(writtenContent).not.toContain("/* comment */");
+    expect(writtenContent).not.toContain("\n");
+    expect(writtenContent).toContain(".foo");
+  });
+
+  it("skips writeFile when minified content already matches dest", async () => {
+    // The mock minifyCss strips comments and collapses whitespace;
+    // if the dest already contains the minified form, hashes match → no write.
+    const rawCss = ".foo { color: red; }";
+    const alreadyMinified = ".foo{color:red;}";
+    vi.mocked(readFile)
+      .mockResolvedValueOnce(rawCss as any)          // src
+      .mockResolvedValueOnce(alreadyMinified as any); // dest already up to date
+
+    await copyReplicatePath("pages/css/styles.css", "dist");
+
+    expect(writeFile).not.toHaveBeenCalled();
+  });
+
+  it("uses writeFile (not copyFile) for CSS files when minifyStyles is enabled", async () => {
+    const { copyFile } = await import("node:fs/promises");
+    vi.mocked(readFile)
+      .mockResolvedValueOnce(".a { color: red; }" as any)
+      .mockRejectedValueOnce(new Error("ENOENT"));
+
+    await copyReplicatePath("pages/css/styles.css", "dist");
+
+    expect(writeFile).toHaveBeenCalledOnce();
+    expect(copyFile).not.toHaveBeenCalled();
   });
 });

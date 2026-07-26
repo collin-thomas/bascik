@@ -238,6 +238,18 @@ export const removeCommentsFromCss = (css: string): string => {
   return css.replace(/\/\*[\s\S]*?\*\//gim, "");
 };
 
+/**
+ * Minify a CSS string: strip comments, collapse whitespace, and remove
+ * spaces around structural characters (`{`, `}`, `:`, `;`, `,`).
+ */
+export const minifyCss = (css: string): string => {
+  return removeCommentsFromCss(css)
+    .replace(/\n/g, " ")
+    .replace(/\s\s+/g, " ")
+    .replace(/\s*([{}:;,])\s*/g, "$1")
+    .trim();
+};
+
 export const getComponentCss = async (
   htmlFileName: string,
   cssFileNames: string[],

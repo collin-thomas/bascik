@@ -1,8 +1,9 @@
-import { readdir, rm, mkdir, copyFile } from "node:fs/promises";
+import { readdir, rm, mkdir, copyFile, readFile, writeFile } from "node:fs/promises";
 import { join, dirname, resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { BascikConfig } from "./config.js";
+import { minifyCss } from "./styles.js";
 /** Resolve an absolute path to a `parentDir/...` relative path, normalising separators. */
 export const getRelativePath = (path, parentDir) => {
     // Add pages to the path so we don't break all the existing code
@@ -40,15 +41,27 @@ export async function copyReplicatePath(src, destRoot) {
     await mkdir(destDir, { recursive: true });
     // Only copy if file hashes differ
     try {
-        const [srcHash, destHash] = await Promise.all([
-            calculateFileHash(src),
-            // The dest file might not exist, so return null
-            calculateFileHash(destPath).catch(() => null),
-        ]);
-        if (srcHash === destHash)
-            return;
-        await copyFile(src, destPath);
-        console.log("copied:", src);
+        if (BascikConfig.minifyStyles && src.endsWith(".css")) {
+            // Read, minify, and write CSS rather than doing a raw copy
+            const minified = minifyCss((await readFile(src)).toString());
+            const destHash = createHash("md5").update(await readFile(destPath).catch(() => "")).digest("hex");
+            const minifiedHash = createHash("md5").update(minified).digest("hex");
+            if (minifiedHash === destHash)
+                return;
+            await writeFile(destPath, minified);
+            console.log("copied (minified):", src);
+        }
+        else {
+            const [srcHash, destHash] = await Promise.all([
+                calculateFileHash(src),
+                // The dest file might not exist, so return null
+                calculateFileHash(destPath).catch(() => null),
+            ]);
+            if (srcHash === destHash)
+                return;
+            await copyFile(src, destPath);
+            console.log("copied:", src);
+        }
     }
     catch (err) {
         console.error("Failed to copy file:", src, err);

@@ -58,6 +58,11 @@ export declare const addIdClassesInHtml: (html: string, idsConverted: {
     className: string;
 }[]) => string;
 export declare const removeCommentsFromCss: (css: string) => string;
+/**
+ * Minify a CSS string: strip comments, collapse whitespace, and remove
+ * spaces around structural characters (`{`, `}`, `:`, `;`, `,`).
+ */
+export declare const minifyCss: (css: string) => string;
 export declare const getComponentCss: (htmlFileName: string, cssFileNames: string[]) => Promise<string | undefined>;
 /**
  * Scope CSS custom property (--var) declarations and all var() references

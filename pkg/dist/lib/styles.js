@@ -181,6 +181,17 @@ export const addIdClassesInHtml = (html, idsConverted) => {
 export const removeCommentsFromCss = (css) => {
     return css.replace(/\/\*[\s\S]*?\*\//gim, "");
 };
+/**
+ * Minify a CSS string: strip comments, collapse whitespace, and remove
+ * spaces around structural characters (`{`, `}`, `:`, `;`, `,`).
+ */
+export const minifyCss = (css) => {
+    return removeCommentsFromCss(css)
+        .replace(/\n/g, " ")
+        .replace(/\s\s+/g, " ")
+        .replace(/\s*([{}:;,])\s*/g, "$1")
+        .trim();
+};
 export const getComponentCss = async (htmlFileName, cssFileNames) => {
     if (!htmlFileName || !Array.isArray(cssFileNames))
         return;
