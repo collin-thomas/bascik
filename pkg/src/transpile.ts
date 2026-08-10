@@ -2,7 +2,7 @@ import { createSelfSignedCert } from "./lib/pki.js";
 import { BascikConfig } from "./lib/config.js";
 import { watchFiles } from "./lib/watch.js";
 
-watchFiles();
+await watchFiles();
 
 if (!BascikConfig.isBuild) {
   await createSelfSignedCert();

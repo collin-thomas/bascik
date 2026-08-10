@@ -11,9 +11,10 @@ import { minifyJs } from "./javascript.js";
 export const getRelativePath = (path: string, parentDir: string): string => {
   // Add pages to the path so we don't break all the existing code
   // that expects pages to be in a directory called pages
-  const suffix = path.split(
-    (BascikConfig.directory as Record<string, string>)[parentDir],
-  )[1];
+  const parentPath = parentDir === "pages"
+    ? BascikConfig.directory.pages
+    : BascikConfig.directory.components;
+  const suffix = path.split(parentPath)[1];
   // Normalise backslashes to forward slashes (Windows support)
   return `${parentDir}${suffix.replace(/\\/g, "/")}`;
 };

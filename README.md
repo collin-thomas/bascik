@@ -17,56 +17,36 @@ A static site generator that lets you write reusable HTML components. No JavaScr
 
 ---
 
-## Working on the Package
+## Development Setup
 
-Requires **Node.js ≥ 24**.
+Requires **Node.js ≥ 24**. The repo uses yarn workspaces — one install at the root wires everything up.
 
 ```sh
-cd pkg
 yarn install
 ```
 
-### Developing Against the Docs App
+`node_modules/@bascik/bascik` is symlinked directly to `pkg/`, so changes to `pkg/src/` are immediately available to the docs site after a rebuild — no pack or reinstall step.
 
-Link the local package so changes in `pkg/src/` reflect immediately:
+### Working on the package
 
 ```sh
-cd docs
-yarn link @bascik/bascik
-yarn pkg-dev
+yarn workspace @bascik/bascik build   # compile pkg/src/ → pkg/dist/
+yarn workspace @bascik/bascik test    # run unit tests
 ```
 
-### Local Development Setup
-
-Because this repo does not store the packaged tarball, run the local package build and pack step when you want to run `docs` from source.
-
-This is mainly for repo-local development and when `pkg/` changes; normal package consumers install `@bascik/bascik` from npm instead.
+### Developing against the docs site
 
 ```sh
-cd pkg
-yarn install
-yarn build
-npm pack
-cd ../docs
-yarn cache clean
-rm yarn.lock
-yarn
-yarn dev
+yarn workspace @bascik/bascik build   # build pkg first
+yarn --cwd docs dev                   # start docs dev server at https://localhost:8443
 ```
 
-### Install docs dependencies
+After any `pkg/src/` change, rebuild the package and the docs server will pick it up automatically (it watches for changes).
 
-Requires **Node.js ≥ 24.17.0**.
-
-If you are running the repo locally, build and pack the package once before installing the sites.
+### Running the docs build
 
 ```sh
-cd pkg
-yarn install
-yarn build
-npm pack
-cd ../docs
-yarn install
+yarn --cwd docs build
 ```
 
 

@@ -31,15 +31,13 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/attribute-inheritance.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/attribute-inheritance.md', { skipFirstHeading: true, stripDemoBlocks: true }));
         </script>
 
-        <component-demo data-bascik-prop-file="src/components/feature-card/">
+        <component-demo data-bascik-prop-file="src/components/inherit-demo-card/">
           <div data-bascik-slot="example">
-            <feature-card class="highlight" aria-label="Featured card" data-bascik-prop-label="Example"
-              data-bascik-prop-title="Attribute Inheritance"
-              data-bascik-prop-desc="The class and aria-label above were merged onto the root element.">
-            </feature-card>
+            <inherit-demo-card class="featured-card" aria-label="Featured inheritance demo" data-testid="inherit-demo">
+            </inherit-demo-card>
           </div>
           <div data-bascik-slot="source-html">
             <code-block data-bascik-prop-lang="html">
@@ -48,6 +46,16 @@
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                 console.log(await extractDemoBlock('./content/attribute-inheritance.md', 'source-html'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="source-css">
+            <code-block data-bascik-prop-lang="css">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/attribute-inheritance.md', 'source-css'));
               </script>
             </code-block>
           </div>

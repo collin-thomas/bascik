@@ -10,8 +10,10 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild"> = {
   directory: {
     pages: "src/pages",
     components: "src/components",
+    watch: [],
   },
   scopeScriptBlocks: true,
+  inheritAttributes: true,
   scopeAttribute: {
     class: true,
     id: true,
@@ -28,24 +30,38 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild"> = {
     sitemap: true,
     robots: true,
   },
-  triggerTranspile: [],
-  inlineStyles: [],
+  inlineStyles: false,
 };
 
 const initBascikConfig = (
   userConfig: Partial<Omit<BascikConfigOptions, "isBuild">>,
 ) => {
+  const userDirectory: Partial<BascikConfigOptions["directory"]> =
+    userConfig.directory ?? {};
+  const buildDirectory: Partial<BascikConfigOptions["directory"]> =
+    buildOverrideConfig.directory ?? {};
   const BascikConfig: BascikConfigOptions = {
     ...defaultConfig,
     ...userConfig,
     ...(isBuild ? buildOverrideConfig : {}),
+    directory: {
+      ...defaultConfig.directory,
+      ...userDirectory,
+      ...(isBuild ? buildDirectory : {}),
+    },
+    scopeAttribute: {
+      ...defaultConfig.scopeAttribute,
+      ...(userConfig.scopeAttribute ?? {}),
+      ...(isBuild ? (buildOverrideConfig.scopeAttribute ?? {}) : {}),
+    },
+    generate: {
+      ...defaultConfig.generate,
+      ...(userConfig.generate ?? {}),
+      ...(isBuild ? (buildOverrideConfig.generate ?? {}) : {}),
+    },
     isBuild,
   };
-  (
-    Object.keys(BascikConfig.directory) as Array<
-      keyof typeof BascikConfig.directory
-    >
-  ).forEach((key) => {
+  (["pages", "components"] as const).forEach((key) => {
     BascikConfig.directory[key] = resolve(
       process.cwd(),
       BascikConfig.directory[key],

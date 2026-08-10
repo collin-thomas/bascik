@@ -1,0 +1,55 @@
+.slot-panel {
+  width: min(100%, 34rem);
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px;
+}
+
+.slot-panel-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.slot-panel-eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.slot-panel-title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.slot-panel-body > *:first-child {
+  margin-top: 0;
+}
+
+.slot-panel-body > *:last-child {
+  margin-bottom: 0;
+}
+
+.slot-panel-actions {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.slot-panel-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.slot-panel-actions a:hover {
+  text-decoration: underline;
+}

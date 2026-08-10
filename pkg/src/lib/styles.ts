@@ -50,13 +50,16 @@ export const convertCssElementSelectorsToClasses = (
     return `.${obfuscateAttributeName(`bascik__${componentName}__el__${elementName}`)}`;
   };
 
-  // Pass 1: standalone element selectors at column 0.
-  // The `m` flag makes `^` match at every line start so indented selectors
-  // (e.g. inside @media) are intentionally not converted.
-  //  - followed by whitespace or `{`  →  plain rule:        p { }
-  //  - followed by `:`                →  pseudo-class/elem: p:hover { }  p::before { }
-  //  - followed by `,`               →  multi-selector list, handled further below
-  let result = css.replace(/^[a-z1-6]+(?=[\s{:,])/gim, toClass);
+  // Pass 1: standalone element selectors after a selector boundary.
+  // Handles top-level rules and indented selectors inside at-rules:
+  //   p { }
+  //   @media (...) { p { } }
+  //   p:hover { }
+  // The context-aware lookahead confirms we are still in selector position.
+  let result = css.replace(
+    /(^\s*|[;{}]\s*)([a-z1-6]+)(?=[^{};)]*\{)/gim,
+    (_match, prefix: string, elementName: string) => `${prefix}${toClass(elementName)}`,
+  );
 
   // Pass 2: same-line comma-separated selector list, e.g. `h1, h2 { }`.
   // Multi-line lists (`h1,\nh2`) are already handled by Pass 1.
@@ -112,19 +115,18 @@ export const addElementClassesInHtml = (
     componentHtml = componentHtml.replace(
       new RegExp(`<${element}[^>]*>([\\s\\S]*?)<\\/${element}>`, "gis"),
       (elementHtml: string) => {
-        // If the instance of the element already has classes add to it
-        if (elementHtml.match('class="')) {
+        const bascikClassName = obfuscateAttributeName(
+          `bascik__${componentName}__el__${element}`,
+        );
+        // Check only the element's own opening tag for a class attribute,
+        // not any nested child's class (which would cause the class to land
+        // on the wrong element, e.g. <code> instead of <pre>).
+        const openTag = elementHtml.match(new RegExp(`^<${element}[^>]*>`, "i"))?.[0] ?? "";
+        if (openTag.includes('class="')) {
           elementHtml = elementHtml.replace(/class=".*?(?=")/i, (classStr) => {
-            const bascikClassName = obfuscateAttributeName(
-              `bascik__${componentName}__el__${element}`,
-            );
             return `${classStr} ${bascikClassName}`;
           });
         } else {
-          // Otherwise set the element class as the only class
-          const bascikClassName = obfuscateAttributeName(
-            `bascik__${componentName}__el__${element}`,
-          );
           elementHtml = elementHtml.replace(
             new RegExp(`<${element}`, "i"),
             `<${element} class="${bascikClassName}"`,

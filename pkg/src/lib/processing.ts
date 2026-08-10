@@ -61,6 +61,7 @@ import {
   getDistPagePath,
   deleteDistFile,
   getRelativePath,
+  deepReadDirFlat,
 } from "./file-system.js";
 import {
   listComponents,
@@ -141,6 +142,16 @@ const liveReloadScript = `
   })();
 </script>
 `;
+
+const resolveInlineStyles = async (): Promise<string[]> => {
+  if (BascikConfig.inlineStyles === true) {
+    return (await deepReadDirFlat(BascikConfig.directory.pages, /\.css$/i)).sort();
+  }
+  if (Array.isArray(BascikConfig.inlineStyles)) {
+    return BascikConfig.inlineStyles;
+  }
+  return [];
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Script minification
@@ -323,8 +334,10 @@ export const recursivelyTranspile = (
 
     currentStage = "attribute inheritance";
     // Merge non-bascik attributes from the usage tag onto the component root element.
-    const inheritableAttrs = extractInheritableAttributes(component.content);
-    transpiledTag = mergeAttributesOntoRoot(transpiledTag, inheritableAttrs);
+    if (BascikConfig.inheritAttributes) {
+      const inheritableAttrs = extractInheritableAttributes(component.content);
+      transpiledTag = mergeAttributesOntoRoot(transpiledTag, inheritableAttrs);
+    }
 
     currentStage = "substitution";
     if (component.fileName) {
@@ -476,9 +489,10 @@ export const pageProcessing = async (
   // Read and inline any global stylesheets configured via `inlineStyles`.
   // Global styles are injected before component styles so component rules win.
   let globalStylesHtml = "";
-  if (BascikConfig.inlineStyles && BascikConfig.inlineStyles.length > 0) {
+  const inlineStyles = await resolveInlineStyles();
+  if (inlineStyles.length > 0) {
     const sheets = await Promise.all(
-      BascikConfig.inlineStyles.map(async (filePath) => {
+      inlineStyles.map(async (filePath) => {
         try {
           const css = (await readFile(filePath)).toString();
           return BascikConfig.minifyStyles ? minifyCss(css) : css;

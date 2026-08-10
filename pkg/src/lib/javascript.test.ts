@@ -370,6 +370,17 @@ describe("prefixElementAttribute – inline <style> tag scoping", () => {
       /<p\s[^>]*class="[^"]*bascik__my-comp__el__p/,
     );
   });
+
+  it("scopes indented element selectors in an inline <style> tag", () => {
+    const c = makeComponent(
+      "<style>\n  p { color: red; }\n</style><p>hello</p>",
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain("bascik__my-comp__el__p");
+    expect(result.fileContent).toMatch(
+      /<p\s[^>]*class="[^"]*bascik__my-comp__el__p/,
+    );
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

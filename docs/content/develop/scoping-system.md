@@ -1,4 +1,4 @@
-<p class="section-label">Developers</p>
+<p class="section-label">Internals</p>
 
 # Scoping System
 

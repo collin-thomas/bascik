@@ -1,5 +1,7 @@
 ## Props
 
+Props in Bascik borrow the same basic idea as props in React: pass values into a reusable component from the usage site. In Bascik, the mechanism is plain HTML via `data-bascik-prop-*` attributes.
+
 ### Defining Props in a Template
 
 Add a `data-bascik-prop-{name}` attribute (no value) to any element in the component template. The element's inner content will be replaced with the prop value at build time.
@@ -42,12 +44,12 @@ Other attributes on the target element are preserved. The prop marker attribute 
 <p class="lead" data-bascik-prop-body></p>
 
 <!-- compiled -->
-<p class="bascik__comp__x1__lead">Your prop value here.</p>
+<p class="bascik__comp__lead">Your prop value here.</p>
 ```
 
 ### Naming Conventions
 
-Prop names use the portion of the attribute after `data-bascik-prop-`. You can use any lowercase alphanumeric name with hyphens:
+Prop names use the portion of the attribute after `data-bascik-prop-`. You can use lowercase alphanumeric names with hyphens:
 
 ```html
 data-bascik-prop-title
@@ -56,11 +58,17 @@ data-bascik-prop-alt-text
 data-bascik-prop-icon-url
 ```
 
-> **Use slots for HTML content.** Props inject plain text values. If you need to inject rich HTML (tags, nested elements), use [slots](/slots) instead.
+> **Use slots for HTML content.** Props inject plain text values. If you need to inject rich HTML, nested elements, or reusable layout regions, use [slots](/slots) instead.
+
+### Why `data-*`?
+
+Bascik extends HTML through standard `data-*` attributes rather than a custom template language. Browsers already understand `data-*`, and you do **not** need to use props or slots to make Bascik useful — plain reusable HTML components still work without them.
+
+> **MDN reference.** For the underlying attribute rules, treat [MDN's `data-*` attribute reference](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/data-*) and the broader [HTML reference](https://developer.mozilla.org/en-US/docs/Web/HTML) as the primary documentation.
 
 ### Example: Feature Card
 
-A good real-world use of props is a card component with a configurable label, title, and description:
+A common pattern is a card component with a configurable label, title, and description:
 
 ```html
 <!-- src/components/feature-card.html -->
@@ -79,11 +87,9 @@ A good real-world use of props is a card component with a configurable label, ti
 </feature-card>
 ```
 
-### Live Demo
+### Interactive Demo
 
-The interactive props demo passes values directly to the `feature-card` component via `data-bascik-prop-*` attributes.
-
-**Usage (the code you write):**
+The demo below passes values directly into the `feature-card` component via `data-bascik-prop-*` attributes.
 
 <!-- demo:code -->
 ```html
@@ -93,8 +99,6 @@ The interactive props demo passes values directly to the `feature-card` componen
   data-bascik-prop-desc="These values are injected into the component template at build time.">
 </feature-card>
 ```
-
-**Compiled output** (prop placeholders replaced, component HTML inlined):
 
 <!-- demo:output -->
 ```html

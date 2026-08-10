@@ -1,0 +1,26 @@
+.inherit-card {
+  width: min(100%, 34rem);
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px;
+}
+
+.inherit-card-kicker {
+  margin: 0 0 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.inherit-card-title {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+}
+
+.inherit-card-body {
+  margin: 0;
+  color: var(--text-muted);
+}

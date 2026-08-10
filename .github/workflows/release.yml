@@ -23,10 +23,9 @@ jobs:
           node-version: 24
           registry-url: 'https://registry.npmjs.org'
           cache: yarn
-          cache-dependency-path: pkg/yarn.lock
+          cache-dependency-path: yarn.lock
 
       - name: Install dependencies
-        working-directory: pkg
         run: yarn install --frozen-lockfile
 
       - name: Run tests
@@ -57,10 +56,9 @@ jobs:
           node-version: 24
           registry-url: 'https://registry.npmjs.org'
           cache: yarn
-          cache-dependency-path: create/yarn.lock
+          cache-dependency-path: yarn.lock
 
       - name: Install dependencies
-        working-directory: create
         run: yarn install --frozen-lockfile
 
       - name: Run tests

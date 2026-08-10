@@ -92,9 +92,11 @@ export const bascikConfig = {
   directory: {
     pages: "src/pages", // default
     components: "src/components", // default
+    watch: [], // re-transpile all pages when these paths change in dev
   },
 
   scopeScriptBlocks: true, // wrap scripts in IIFEs, rewrite selectors
+  inheritAttributes: true, // forward non-bascik attrs onto the component root
   scopeAttribute: {
     class: true, // scope class attribute values
     id: true, // scope id attribute values
@@ -102,6 +104,7 @@ export const bascikConfig = {
   },
 
   minifyStyles: true, // collapse whitespace in compiled <style> block
+  inlineStyles: false, // false | true | ['src/pages/css/styles.css']
   obfuscateAttributeNames: true, // hash class/id names to short hex strings
   cacheHttp: false, // HTTP cache headers on dev server responses
   verboseLogging: false, // include {cause} in console.warn/error
@@ -180,10 +183,10 @@ cd create && yarn build && npm publish --access public
 
 ### Install dependencies
 
-Requires Node.js ≥ 24.
+Requires Node.js ≥ 24. The repo uses yarn workspaces — run `yarn install` from the **repo root**, not this directory.
 
 ```sh
-cd pkg
+# from repo root
 yarn install
 ```
 

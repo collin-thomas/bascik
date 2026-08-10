@@ -16,7 +16,7 @@ import { BascikConfig } from "./config.js";
 import { MIME_MAP } from "./mime.js";
 import { eventEmitter } from "./events.js";
 
-export const watchFiles = () => {
+export const watchFiles = async () => {
   // Copy non-page files
   chokidar
     .watch([BascikConfig.directory.pages], {
@@ -40,27 +40,30 @@ export const watchFiles = () => {
     .on("unlinkDir", (path) => deleteDistDir(path));
 
   // Transpile pages as they change
-  const buildPagePromises: Promise<string>[] = [];
-  chokidar
-    .watch([BascikConfig.directory.pages], {
-      // only watch html files
-      ignored: (path: string, stats?: Stats): boolean =>
-        !!(stats?.isFile() && !path.endsWith(".html")),
-      persistent: !BascikConfig.isBuild,
-    })
-    .on("add", (path) => {
-      const p = pageProcessing(path);
-      if (BascikConfig.isBuild) buildPagePromises.push(p);
-    })
-    .on("change", (path) => pageProcessing(path))
-    .on("unlink", (path: string, _stats?: Stats) => removePage(path))
-    .on("unlinkDir", (path: string, _stats?: Stats) => deleteDistDir(path))
-    .on("ready", async () => {
-      if (BascikConfig.isBuild) {
-        await Promise.all(buildPagePromises);
-        await generateSitemapFiles();
-      }
-    });
+  const initialPagePromises: Promise<unknown>[] = [];
+  await new Promise<void>((resolve) => {
+    chokidar
+      .watch([BascikConfig.directory.pages], {
+        // only watch html files
+        ignored: (path: string, stats?: Stats): boolean =>
+          !!(stats?.isFile() && !path.endsWith(".html")),
+        persistent: !BascikConfig.isBuild,
+      })
+      .on("add", (path) => {
+        const p = pageProcessing(path);
+        initialPagePromises.push(p);
+      })
+      .on("change", (path) => pageProcessing(path))
+      .on("unlink", (path: string, _stats?: Stats) => removePage(path))
+      .on("unlinkDir", (path: string, _stats?: Stats) => deleteDistDir(path))
+      .on("ready", async () => {
+        await Promise.all(initialPagePromises);
+        if (BascikConfig.isBuild) {
+          await generateSitemapFiles();
+        }
+        resolve();
+      });
+  });
 
   // Transpile pages if components change
   chokidar
@@ -80,9 +83,9 @@ export const watchFiles = () => {
     .on("unlink", async (path) => selectivelyProcessPages(path));
 
   // Re-transpile all pages when user-specified extra paths change (dev only)
-  if (!BascikConfig.isBuild && BascikConfig.triggerTranspile?.length) {
+  if (!BascikConfig.isBuild && BascikConfig.directory.watch.length) {
     chokidar
-      .watch(BascikConfig.triggerTranspile, {
+      .watch(BascikConfig.directory.watch, {
         ignoreInitial: true,
         persistent: true,
       })

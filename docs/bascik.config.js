@@ -2,13 +2,14 @@ export const bascikConfig = {
   directory: {
     pages: 'src/pages',
     components: 'src/components',
+    watch: ['scripts/'],
   },
   siteUrl: 'https://bascik.dev',
-  triggerTranspile: ['scripts/'],
   inlineStyles: ['src/pages/css/styles.css'],
   minifyStyles: false,
   obfuscateAttributeNames: false,
   scopeScriptBlocks: true,
+  inheritAttributes: true,
   scopeAttribute: {
     class: true,
     id: true,

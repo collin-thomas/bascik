@@ -5,7 +5,18 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const { mockWatch, getWatcher, clearWatchers } = vi.hoisted(() => {
   const watchers: { on: ReturnType<typeof vi.fn> }[] = [];
   const makeWatcher = () => {
-    const w = { on: vi.fn().mockReturnThis() };
+    const w = {
+      on: vi.fn(function (
+        this: { on: ReturnType<typeof vi.fn> },
+        event: string,
+        handler: (...args: any[]) => any,
+      ) {
+        if (event === "ready") {
+          void handler();
+        }
+        return this;
+      }),
+    };
     watchers.push(w);
     return w;
   };
@@ -42,6 +53,7 @@ vi.mock("./config.js", () => ({
     directory: {
       pages: "/project/src/pages",
       components: "/project/src/components",
+      watch: [],
     },
     isBuild: false,
   },
@@ -97,23 +109,23 @@ const getHandler = (
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("watchFiles – watcher setup", () => {
-  it("calls chokidar.watch three times", () => {
-    watchFiles();
+  it("calls chokidar.watch three times", async () => {
+    await watchFiles();
     expect(mockWatch).toHaveBeenCalledTimes(3);
   });
 
-  it("watches the pages directory for asset copying", () => {
-    watchFiles();
+  it("watches the pages directory for asset copying", async () => {
+    await watchFiles();
     expect(mockWatch.mock.calls[0][0]).toContain("/project/src/pages");
   });
 
-  it("watches the pages directory for html transpilation", () => {
-    watchFiles();
+  it("watches the pages directory for html transpilation", async () => {
+    await watchFiles();
     expect(mockWatch.mock.calls[1][0]).toContain("/project/src/pages");
   });
 
-  it("watches the components directory", () => {
-    watchFiles();
+  it("watches the components directory", async () => {
+    await watchFiles();
     expect(mockWatch.mock.calls[2][0]).toContain("/project/src/components");
   });
 });
@@ -123,7 +135,9 @@ describe("watchFiles – watcher setup", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("watchFiles – asset watcher (watcher 0)", () => {
-  beforeEach(() => watchFiles());
+  beforeEach(async () => {
+    await watchFiles();
+  });
 
   it("calls copyReplicatePath on 'add'", async () => {
     const handler = getHandler(0, "add");
@@ -167,7 +181,9 @@ describe("watchFiles – asset watcher (watcher 0)", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("watchFiles – html page watcher (watcher 1)", () => {
-  beforeEach(() => watchFiles());
+  beforeEach(async () => {
+    await watchFiles();
+  });
 
   it("calls pageProcessing on 'add'", () => {
     const handler = getHandler(1, "add");
@@ -193,7 +209,9 @@ describe("watchFiles – html page watcher (watcher 1)", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("watchFiles – component watcher (watcher 2)", () => {
-  beforeEach(() => watchFiles());
+  beforeEach(async () => {
+    await watchFiles();
+  });
 
   it("calls processAllPages on 'add'", async () => {
     const handler = getHandler(2, "add");

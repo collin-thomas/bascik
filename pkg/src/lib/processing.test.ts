@@ -1,22 +1,33 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { recursivelyTranspile, pageProcessing } from "./processing.js";
+import { BascikConfig } from "./config.js";
 
 // Disable all scoping so tests produce predictable, readable HTML
 vi.mock("./config.js", () => ({
   BascikConfig: {
     scopeScriptBlocks: false,
+    inheritAttributes: true,
     scopeAttribute: { class: false, id: false, name: false },
     obfuscateAttributeNames: false,
     isBuild: false,
     minifyStyles: false,
     deduplicateCss: true,
-    inlineStyles: [],
+    inlineStyles: false,
     directory: {
       pages: "src/pages",
       components: "src/components",
+      watch: [],
     },
   },
 }));
+
+vi.mock("./file-system.js", async (importOriginal) => {
+  const actual = await importOriginal() as any;
+  return {
+    ...actual,
+    deepReadDirFlat: vi.fn(actual.deepReadDirFlat),
+  };
+});
 
 vi.mock("node:fs/promises", () => ({
   readFile: vi.fn(),
@@ -81,7 +92,6 @@ vi.mock("node:fs", async (importOriginal) => {
 });
 
 import { readFile } from "node:fs/promises";
-import { BascikConfig } from "./config.js";
 import { mem } from "./mem.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -296,6 +306,10 @@ describe("recursivelyTranspile – named slot fallback content", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("recursivelyTranspile – attribute inheritance", () => {
+  beforeEach(() => {
+    (BascikConfig as Record<string, unknown>).inheritAttributes = true;
+  });
+
   it("merges class from usage tag onto component root element", () => {
     const componentList = {
       "site-nav": {
@@ -337,6 +351,22 @@ describe("recursivelyTranspile – attribute inheritance", () => {
       componentList,
     );
     expect(transpiledHtmlBody).not.toContain("data-bascik-prop-title");
+  });
+
+  it("can disable attribute inheritance via config", () => {
+    (BascikConfig as Record<string, unknown>).inheritAttributes = false;
+    const componentList = {
+      "site-nav": {
+        fileName: "components/site-nav.html",
+        fileContent: "<nav><a href='/'>Home</a></nav>",
+      },
+    };
+    const { transpiledHtmlBody } = recursivelyTranspile(
+      '<site-nav class="sticky" aria-label="main navigation"></site-nav>',
+      componentList,
+    );
+    expect(transpiledHtmlBody).not.toContain("sticky");
+    expect(transpiledHtmlBody).not.toContain('aria-label="main navigation"');
   });
 });
 
@@ -428,11 +458,11 @@ const PAGE_PATH = 'src/pages/index.html';
 describe("pageProcessing – inlineStyles", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (BascikConfig as Record<string, unknown>).inlineStyles = [];
+    (BascikConfig as Record<string, unknown>).inlineStyles = false;
     (BascikConfig as Record<string, unknown>).minifyStyles = false;
   });
 
-  it("does not inject a global <style> when inlineStyles is empty", async () => {
+  it("does not inject a global <style> when inlineStyles is false", async () => {
     (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(PAGE_HTML);
     await pageProcessing(PAGE_PATH, {});
     const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
@@ -495,5 +525,21 @@ describe("pageProcessing – inlineStyles", () => {
     expect(pageContent).toContain('body{color:red;}');
     expect(pageContent).not.toContain('body {  color:  red;  }');
   });
-});
 
+  it("inlines every page stylesheet when inlineStyles is true", async () => {
+    (BascikConfig as Record<string, unknown>).inlineStyles = true;
+    const { deepReadDirFlat } = await import("./file-system.js");
+    (deepReadDirFlat as ReturnType<typeof vi.fn>).mockResolvedValue([
+      "src/pages/css/a.css",
+      "src/pages/css/b.css",
+    ]);
+    (readFile as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce(PAGE_HTML)
+      .mockResolvedValueOnce(".a { color: red; }")
+      .mockResolvedValueOnce(".b { color: blue; }");
+    await pageProcessing(PAGE_PATH, {});
+    const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(pageContent).toContain(".a { color: red; }");
+    expect(pageContent).toContain(".b { color: blue; }");
+  });
+});

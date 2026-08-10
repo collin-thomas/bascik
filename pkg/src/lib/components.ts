@@ -249,7 +249,7 @@ export const getTag = (
   htmlString: string,
   tagName: string,
   componentList?: ComponentList,
-): { content?: string; innerContent?: string } => {
+): Partial<BascikComponent> => {
   // Try paired tags: <tagName ...>content</tagName>
   // Using [\s\S] instead of . to match newlines
   const pairedPattern = new RegExp(

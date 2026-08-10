@@ -70,8 +70,11 @@ export async function extractDemoBlock(filePath, markerId) {
     .replace(/>/g, '&gt;');
 }
 
-export async function renderMd(filePath, { skipFirstHeading = false } = {}) {
-  const md = await readFile(filePath, 'utf8');
+export async function renderMd(filePath, { skipFirstHeading = false, stripDemoBlocks = false } = {}) {
+  let md = await readFile(filePath, 'utf8');
+  if (stripDemoBlocks) {
+    md = md.replace(/<!--\s*demo:[\w-]+\s*-->\n```[\w-]*\n[\s\S]*?\n```/g, '').trim();
+  }
   let html = marked(md);
 
   // Optionally strip the first heading (h1–h6)

@@ -11,11 +11,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **CSS `@scope` support** — class names in `@scope (.selector)` and `@scope (.selector) to (.selector)` arguments are now scoped by the global class-scoping pass. Class names and element selectors inside `@scope { }` blocks follow the same rules as other at-rules. This was already implicitly working; the compatibility documentation has been updated to reflect ✅ status.
 - **Descendant element selectors after a class** (`Pass 4`) — `.card p {}`, `.list > li {}`, `.article > h2 {}` are now fully scoped. The element name is converted to a scoped class and injected onto matching HTML elements. This applies to any element selector preceded by a scoped class name with an optional combinator (`>`, `+`, `~`, or space). Bare element–element combinators (`div p {}`) still require a class anchor on the left side.
+- `inheritAttributes` config option — attribute inheritance can now be disabled explicitly while remaining enabled by default.
 
 ### Fixed
 
+- `addElementClassesInHtml`: when an element (e.g. `<pre>`) has no class of its own but a child element does, the scoped element class is now correctly injected onto the target element rather than onto the first child. Previously, a `pre {}` CSS rule in a component whose template was `<pre><code class="...">…</code></pre>` would put the generated class on `<code>` instead of `<pre>`, causing `padding` and similar properties intended for the `<pre>` block to apply only to the first line of an inline `<code>` element — producing broken indentation in rendered code blocks.
 - `scopeCssCustomProperties`: `var(--prop, fallback)` references now correctly scope the property name even when a fallback value is present. Previously only `var(--prop)` (no fallback) was rewritten; any `var(--prop, fallback)` call was left with the unscoped name, silently causing the fallback to always be used.
 - `injectProps`: the "strip remaining markers" step now only removes `data-bascik-prop-*` attributes that have **no value** (prop receivers inside the current component). Attributes with a value (e.g. `data-bascik-prop-label="featured"` on a child component tag) are preserved, so nested components correctly receive props passed through self-closing tags. Previously, the strip regex would partially match and corrupt child component usage tags (e.g. `<inner-badge data-bascik-prop-label="featured" />` became `<inner-badgel="featured" />`), causing `replaceTag` to fail to substitute the tag and leading to infinite recursion (stack overflow).
+- Bare element selectors inside indented CSS contexts — including inline `<style>` blocks and at-rules like `@media` — are now scoped instead of leaking globally.
+- The dev server now waits for the initial page transpile to finish before reporting its URL, which prevents immediate-open 404s on larger projects.
+
+### Changed
+
+- Extra dev-mode re-transpile paths now live under `directory.watch`.
+- `inlineStyles` now accepts `false`, `true`, or an explicit array of file paths so projects can choose no global inlining, all page CSS, or specific stylesheets.
 
 ## [0.1.0] - 2026-07-25
 

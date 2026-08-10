@@ -13,6 +13,10 @@ describe("defaultConfig", () => {
     expect(defaultConfig.scopeScriptBlocks).toBe(true);
   });
 
+  it("has inheritAttributes: true", () => {
+    expect(defaultConfig.inheritAttributes).toBe(true);
+  });
+
   it("has all scopeAttribute keys set to true", () => {
     expect(defaultConfig.scopeAttribute.class).toBe(true);
     expect(defaultConfig.scopeAttribute.id).toBe(true);
@@ -23,6 +27,7 @@ describe("defaultConfig", () => {
     // initBascikConfig shallow-copies defaultConfig so directory is mutated to absolute paths
     expect(defaultConfig.directory.pages).toMatch(/src[/\\]pages$/);
     expect(defaultConfig.directory.components).toMatch(/src[/\\]components$/);
+    expect(defaultConfig.directory.watch).toEqual([]);
   });
 
   it("has minifyStyles: true", () => {
@@ -52,6 +57,10 @@ describe("defaultConfig", () => {
   it("has skipTranspilingElementContents: [\"code\"]", () => {
     expect(defaultConfig.skipTranspilingElementContents).toEqual(["code"]);
   });
+
+  it("has inlineStyles: false", () => {
+    expect(defaultConfig.inlineStyles).toBe(false);
+  });
 });
 
 describe("BascikConfig", () => {
@@ -61,6 +70,7 @@ describe("BascikConfig", () => {
 
   it("contains all default keys", () => {
     expect(BascikConfig).toHaveProperty("scopeScriptBlocks");
+    expect(BascikConfig).toHaveProperty("inheritAttributes");
     expect(BascikConfig).toHaveProperty("scopeAttribute");
     expect(BascikConfig).toHaveProperty("directory");
     expect(BascikConfig).toHaveProperty("minifyStyles");
@@ -76,6 +86,7 @@ describe("BascikConfig", () => {
     expect(BascikConfig.directory.components).toMatch(
       /[/\\]src[/\\]components$/,
     );
+    expect(BascikConfig.directory.watch).toEqual([]);
   });
 });
 

@@ -142,6 +142,8 @@ Because Bascik adds no runtime scripts of its own, every `<script>` tag in your 
 
 Lighthouse's SEO audit checks for a short list of meta tags and structural signals. All of them are plain HTML attributes — nothing to install or configure.
 
+Bascik also helps with one of the easy-to-miss SEO assets: once `siteUrl` is set, `bascik --build` generates `dist/sitemap.xml` for you by default. That gives crawlers a complete list of your pages without adding another plugin or build step.
+
 ```html
 <head>
   <meta charset="UTF-8" />
@@ -590,8 +592,6 @@ Lighthouse 13.3 introduced a new **Agentic Browsing** category that audits how w
 **`llms.txt` follows recommendations.** Lighthouse checks that the `llms.txt` file at the root of a site is a valid Markdown file with at least one H1 heading. Bascik's docs generate `llms.txt` from the same content Markdown files that drive the pages, so it is always valid.
 
 > **Bascik sites score 3/3 on Agentic Browsing without any configuration.** Correct HTML, zero layout shift, and a well-formed `llms.txt` are natural properties of a statically built site. Frameworks that hydrate on the client introduce layout shift during hydration and often produce an accessibility tree that differs from the initial server-rendered HTML — both of which hurt this score.
-
-The three "Not applicable" items in the category — WebMCP form coverage, WebMCP tools registered, and WebMCP schema validation — apply to sites that implement the [WebMCP specification](https://webmcp.dev) for exposing server-side tools to AI agents. They are not required for a perfect Agentic Browsing score.
 
 ## The Kitchen Sink: Complete Head Template
 

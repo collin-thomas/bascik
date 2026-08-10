@@ -48,7 +48,7 @@ Use it in any page or other component:
 
 ## 3. Scoped CSS
 
-> **`<style>` tags inside component HTML files are NOT scoped.** Bascik only reads the paired `.css` file for scoping. A `<style>` tag placed inside a component `.html` file is passed through as-is with no transformation — its rules will leak globally. Always use the paired `.css` file instead.
+Scoped CSS can live in either a paired `.css` file or an inline `<style>` tag inside component HTML. Both go through the same scoping pipeline.
 
 Pair a `.css` file alongside the HTML in a same-named directory:
 
@@ -59,7 +59,7 @@ src/components/
     site-nav.css
 ```
 
-All class names, element selectors, `#id` selectors, `@keyframes`, `@layer`, `@container`, `:is()/.class`, `:where()/.class`, `:has()/.class`, child/sibling combinator selectors, and CSS custom properties in the `.css` file are automatically scoped to that component. SVG elements with `class` attributes inside component HTML are also scoped. CSS `#id` selectors are converted to generated class selectors and the class is injected on the matching HTML element.
+All class names, element selectors, `#id` selectors, `@keyframes`, `@layer`, `@container`, `:is()/.class`, `:where()/.class`, `:has()/.class`, child/sibling combinator selectors, and CSS custom properties in component CSS are automatically scoped to that component. SVG elements with `class` attributes inside component HTML are also scoped. CSS `#id` selectors are converted to generated class selectors and the class is injected on the matching HTML element.
 
 ```css
 /* site-nav.css — source */
@@ -259,6 +259,7 @@ Use `data-bascik-slot="name"` in the template to define named zones. At the usag
 
 ### Slot Whitespace
 Leading and trailing whitespace is trimmed from all slot content at build time. Whitespace *within* slot content is preserved exactly as written.
+By default Bascik skips transpilation inside `<code>` elements, so raw code examples stay literal.
 
 ### Props
 Inject text values into a component at usage time.
@@ -276,6 +277,7 @@ Inject text values into a component at usage time.
   data-bascik-prop-message="Your changes were saved."
 ></alert-box>
 ```
+Props in Bascik follow the same basic idea as React props, but the mechanism is plain HTML through `data-bascik-prop-*` attributes.
 *Props accept text values only. For rich HTML content, use slots.*
 
 ---
@@ -283,7 +285,7 @@ Inject text values into a component at usage time.
 ## 7. Attribute Inheritance & Tags
 
 ### Attribute Inheritance
-Non-`data-bascik-*` attributes on a usage tag are merged onto the component's root element. `id` is excluded.
+Non-`data-bascik-*` attributes on a usage tag are merged onto the component's root element when `inheritAttributes` is `true` (the default). `id` is forwarded too unless the template root already defines its own `id`.
 ```html
 <site-nav class="sticky" aria-label="main navigation"></site-nav>
 <!-- class "sticky" and aria-label are merged onto <nav> in site-nav.html -->
@@ -377,8 +379,10 @@ export const bascikConfig = {
   directory: {
     pages: "src/pages", // default
     components: "src/components", // default
+    watch: [], // re-transpile all pages when these paths change (dev only)
   },
   scopeScriptBlocks: true,
+  inheritAttributes: true,
   scopeAttribute: {
     class: true,
     id: true,
@@ -387,6 +391,7 @@ export const bascikConfig = {
   deduplicateCss: true,
   skipTranspilingElementContents: ['code'], // don't scope inside these elements
   minifyStyles: true,
+  inlineStyles: false, // false | true | ['src/pages/css/styles.css']
   obfuscateAttributeNames: true, // hash class/id names to short hex strings
   cacheHttp: false,
   verboseLogging: false,
@@ -395,7 +400,6 @@ export const bascikConfig = {
     sitemap: true, // write dist/sitemap.xml
     robots: true,  // write dist/robots.txt
   },
-  triggerTranspile: [], // re-transpile all pages when these paths change (dev only)
 };
 
 // Applied only during `bascik --build`, merged over bascikConfig
@@ -702,4 +706,3 @@ When generating code, pages, or components for a Bascik project, the following c
 6. **Dynamic Toggles:** Use `data-` attributes for runtime state that changes via JavaScript (e.g. `data-state="open"`). Scoped class names are assigned at build time and cannot be reliably looked up by JS string manipulation *unless* you utilize a scoping helper (Section 5).
 7. **Text Props:** Props accept text only. For rich HTML content, use slots.
 8. **Script Modules:** `<script type="module">` scripts are not wrapped in an IIFE, but their selectors are still rewritten.
-

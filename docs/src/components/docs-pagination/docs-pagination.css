@@ -44,3 +44,15 @@
   font-weight: 600;
   color: var(--accent);
 }
+
+@media (max-width: 640px) {
+  .docs-pagination a {
+    flex: 1 1 0;
+    max-width: none;
+    min-width: 0;
+  }
+
+  .docs-pagination a[data-pg="next"] {
+    margin-left: 0;
+  }
+}
