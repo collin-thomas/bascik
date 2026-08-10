@@ -7,51 +7,39 @@ Create a `bascik.config.js` file in your project root to override any default se
 ```js
 // bascik.config.js
 export const bascikConfig = {
-  // Source directories
   directory: {
     pages: 'src/pages',
     components: 'src/components',
+    watch: ['scripts/', 'data/'],
   },
 
-  // Scoping
   scopeScriptBlocks: true,
+  inheritAttributes: true,
   scopeAttribute: {
     class: true,
     id: true,
     name: true,
   },
-  skipTranspilingElementContents: ['code'], // don't scope inside these elements
+  skipTranspilingElementContents: ['code'],
 
-  // CSS
   deduplicateCss: true,
-  minifyStyles: true,            // remove whitespace from compiled CSS
+  minifyStyles: true,
+  inlineStyles: ['src/pages/css/styles.css'],
 
-  // JavaScript
-  minifyScripts: true,           // strip comments and collapse whitespace in scripts
+  minifyScripts: true,
 
-  obfuscateAttributeNames: true, // hash class / id names in production
+  obfuscateAttributeNames: true,
 
-  // Server
   cacheHttp: false,
+  verboseLogging: false,
 
-  // Logging
-  verboseLogging: false, // include { cause } in console.warn/error
-
-  // Sitemap
   siteUrl: 'https://example.com',
   generate: {
-    sitemap: true,  // write dist/sitemap.xml
-    robots: true,   // write dist/robots.txt
+    sitemap: true,
+    robots: true,
   },
-
-  // Dev-mode extra watch paths
-  triggerTranspile: [], // re-transpile all pages when these change
-
-  // Stylesheets to inline into every page's <head>
-  inlineStyles: [],     // eliminates render-blocking <link> requests
 };
 
-// Overrides applied only during `bascik --build`
 export const buildOverrideConfig = {
   obfuscateAttributeNames: true,
   minifyStyles: true,
@@ -77,6 +65,14 @@ Wrap component `<script>` tags in an IIFE and rewrite scoped attribute reference
 
 ```js
 scopeScriptBlocks: true // default
+```
+
+#### `inheritAttributes`
+
+Control whether non-`data-bascik-*` attributes on a component usage tag are merged onto the component root element. Defaults to `true`.
+
+```js
+inheritAttributes: true // default
 ```
 
 #### `scopeAttribute`
@@ -184,22 +180,32 @@ generate: {
 
 See [Sitemap & robots.txt](/sitemap) for a full walkthrough.
 
-#### `triggerTranspile`
+#### `directory.watch`
 
 An array of directories or files that, when changed in dev mode, trigger a full re-transpile of all pages. Useful for utility scripts, data files, or image directories that pages depend on at build time.
 
 ```js
-triggerTranspile: ['scripts/', 'data/'] // empty by default
+directory: {
+  pages: 'src/pages',
+  components: 'src/components',
+  watch: ['scripts/', 'data/'],
+}
 ```
 
 Has no effect during `bascik --build`.
 
 #### `inlineStyles`
 
-An array of stylesheet file paths (relative to the project root) that Bascik will read and inject as `<style>` tags into every page's `<head>` during transpilation. When `minifyStyles` is true the content is minified before injection. Global styles are placed before component styles so component rules take precedence.
+Controls which global stylesheets Bascik reads and injects as `<style>` tags into every page's `<head>` during transpilation. When `minifyStyles` is true the content is minified before injection. Global styles are placed before component styles so component rules take precedence.
+
+- `false` — inline nothing
+- `true` — inline every `.css` file under `directory.pages`
+- `string[]` — inline only the listed stylesheet paths
 
 ```js
-inlineStyles: ['src/pages/css/styles.css'] // empty by default
+inlineStyles: false // default
+inlineStyles: true
+inlineStyles: ['src/pages/css/styles.css']
 ```
 
 This eliminates the render-blocking `<link rel="stylesheet">` request — the CSS arrives in the same HTTP response as the HTML. It pairs naturally with `buildOverrideConfig` to minify only in production:

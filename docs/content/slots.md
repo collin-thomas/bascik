@@ -74,15 +74,12 @@ At the usage site:
 ```html
 <!-- index.html -->
 <page-layout>
-  <!-- default slot content -->
   <p>Main body content.</p>
 
-  <!-- named slot: header -->
   <div data-bascik-slot="header">
     <h1>Page Title</h1>
   </div>
 
-  <!-- named slot: sidebar -->
   <div data-bascik-slot="sidebar">
     <nav>Sidebar nav</nav>
   </div>
@@ -107,39 +104,99 @@ Leading and trailing whitespace is trimmed from all slot content at build time. 
 
 Whitespace *within* slot content is preserved exactly as written.
 
-> **Note for `<pre>` contexts:** Bascik skips transpilation inside `<pre>` and `<code>` elements, so slot trimming only applies to regular component resolution — not to raw preformatted content you write directly inside those elements.
+> **Code examples stay literal by default.** Bascik skips transpilation inside `<code>` elements by default, so slot trimming only applies to regular component resolution. If you opt into `skipTranspilingElementContents: ['code', 'pre']`, raw `<pre>` content is preserved too.
 
-### Live Demo
+> **MDN reference.** Bascik slots are build-time insertion points built with standard HTML plus `data-*` attributes. For the actual elements you place into slots, treat [MDN's HTML reference](https://developer.mozilla.org/en-US/docs/Web/HTML) as the primary source of truth.
 
-The interactive slot demo passes a button into the `feature-card` component's default slot.
+### Interactive Demo
 
-**Usage (the code you write):**
+This demo uses two named slots (`eyebrow` and `actions`) plus the default slot for the body content.
 
-<!-- demo:code -->
+<!-- demo:source-html -->
 ```html
-<feature-card
-  data-bascik-prop-label="Example"
-  data-bascik-prop-title="Named Slots"
-  data-bascik-prop-desc="...">
-  <!-- content for default slot -->
-  <div style="padding-top:12px;...">
-    <button class="btn btn-primary">Read More</button>
-  </div>
-</feature-card>
-```
+<section class="slot-panel">
+  <header class="slot-panel-header">
+    <p class="slot-panel-eyebrow">
+      <span data-bascik-slot="eyebrow">Overview</span>
+    </p>
+    <h3 class="slot-panel-title">
+      <span data-bascik-slot="title">Fallback title</span>
+    </h3>
+  </header>
 
-**Compiled output** (slot content injected into the `fcard-slot` div):
-
-<!-- demo:output -->
-```html
-<div class="bascik__feature-card__fcard">
-  <p class="bascik__feature-card__fcard-label">Example</p>
-  <h3 class="bascik__feature-card__fcard-title">Named Slots</h3>
-  <p class="bascik__feature-card__fcard-desc">...</p>
-  <div class="bascik__feature-card__fcard-slot">
-    <div style="...">
-      <button class="...">Read More</button>
+  <div class="slot-panel-body">
+    <div data-bascik-slot>
+      <p>Fallback body copy.</p>
     </div>
   </div>
-</div>
+
+  <footer class="slot-panel-actions">
+    <div data-bascik-slot="actions">
+      <a href="/getting-started">Read docs</a>
+    </div>
+  </footer>
+</section>
+```
+
+<!-- demo:source-css -->
+```css
+.slot-panel {
+  width: min(100%, 34rem);
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px;
+}
+
+.slot-panel-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.slot-panel-eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.slot-panel-title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.slot-panel-actions {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.slot-panel-actions a {
+  display: inline-flex;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+```
+
+<!-- demo:output-html -->
+```html
+<section class="bascik__slot-layout-demo__slot-panel">
+  <header class="bascik__slot-layout-demo__slot-panel-header">
+    <p class="bascik__slot-layout-demo__slot-panel-eyebrow">Named slot</p>
+    <h3 class="bascik__slot-layout-demo__slot-panel-title">Build-time slot layout</h3>
+  </header>
+
+  <div class="bascik__slot-layout-demo__slot-panel-body">
+    <p>Use named slots for fixed regions and the default slot for the main body content.</p>
+  </div>
+
+  <footer class="bascik__slot-layout-demo__slot-panel-actions">
+    <a href="/configuration">Read configuration</a>
+  </footer>
+</section>
 ```

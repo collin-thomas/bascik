@@ -205,6 +205,18 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
   color: var(--accent);
 }
 
+@media (max-width: 640px) {
+  .docs-pagination a {
+    flex: 1 1 0;
+    max-width: none;
+    min-width: 0;
+  }
+
+  .docs-pagination a[data-pg="next"] {
+    margin-left: 0;
+  }
+}
+
 /* ── Print ── */
 @media print {
   /* Reset colors to black-on-white */

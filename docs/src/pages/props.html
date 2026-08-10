@@ -20,7 +20,7 @@
         <p class="section-label">Feature</p>
         <h1>Props</h1>
         <p class="page-intro">Props let you pass text values into a component template at usage time using
-          <code>data-bascik-prop-*</code> attributes. Think of them as named text slots.
+        <code>data-bascik-prop-*</code> attributes.
         </p>
 
         <!-- Content rendered from docs/content/props.md at build time.
@@ -31,11 +31,8 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/props.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/props.md', { skipFirstHeading: true, stripDemoBlocks: true }));
         </script>
-
-        <h2>Interactive Props Demo</h2>
-        <p>Experiment with passing values to the <code>feature-card</code> component via data attributes.</p>
 
         <component-demo data-bascik-prop-file="src/pages/index.html">
           <div data-bascik-slot="example">

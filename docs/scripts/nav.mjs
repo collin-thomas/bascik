@@ -20,9 +20,9 @@ export const NAV = [
   { section: 'Features', pages: [
     { href: '/slots', label: 'Slots' },
     { href: '/props', label: 'Props' },
-    { href: '/attribute-inheritance', label: 'Attribute Inheritance' },
     { href: '/scoped-styles', label: 'Scoped Styles' },
     { href: '/scoped-javascript', label: 'Scoped JavaScript' },
+    { href: '/attribute-inheritance', label: 'Attribute Inheritance' },
     { href: '/build-scripts', label: 'Build Scripts' },
     { href: '/sitemap', label: 'Sitemap & robots.txt' },
     { href: '/libraries', label: 'JavaScript Libraries' },
@@ -41,8 +41,8 @@ export const NAV = [
     { href: '/migrate/from-eleventy', label: 'From Eleventy' },
     { href: '/migrate/from-astro', label: 'From Astro' },
   ]},
-  { section: 'Developers', pages: [
-    { href: '/develop', label: 'Developer Overview' },
+  { section: 'Internals', pages: [
+    { href: '/develop', label: 'Internals Overview' },
     { href: '/develop/architecture', label: 'Architecture' },
     { href: '/develop/transpilation-pipeline', label: 'Transpilation Pipeline' },
     { href: '/develop/scoping-system', label: 'Scoping System' },

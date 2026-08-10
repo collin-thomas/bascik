@@ -8,8 +8,7 @@
  *   - Usage 3: data-* passthrough
  *   - Usage 4: aria-label passthrough
  *   - Usage 5: style passthrough
- *   - Usage 6: id passthrough (id IS inherited by the current implementation,
- *               despite the docs stating otherwise — noted as a discrepancy)
+ *   - Usage 6: id passthrough when the template root does not already define an id
  *   - Usage 7: multiple attrs combined
  *
  * The fixture is built with `obfuscateAttributeNames: false` so scoped names
@@ -98,8 +97,6 @@ test.describe('attr-inherit-test page', () => {
 
   // -------------------------------------------------------------------------
   // Usage 6 — id passthrough
-  // NOTE: The docs state that `id` is excluded from inheritance, but the
-  // current implementation inherits it. This test documents actual behavior.
   // -------------------------------------------------------------------------
 
   test('usage 6: id attribute is inherited onto root element', async ({ page }) => {

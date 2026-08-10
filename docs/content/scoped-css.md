@@ -1,5 +1,16 @@
 ## Scoped CSS
 
+Bascik automatically namespaces your component CSS at build time. Paired `.css` files and inline `<style>` tags inside component HTML both go through the same scoping pipeline, so class names, element selectors, `@media` queries, and `@keyframes` stay isolated to the component.
+
+### Where Scoped CSS Can Live
+
+You can define component CSS in either of these places:
+
+- a paired `.css` file next to the component HTML
+- an inline `<style>` tag inside the component HTML
+
+Use paired files for most components so the HTML and CSS stay easy to scan. Inline `<style>` tags are still fully supported when keeping a small component in one file is more convenient.
+
 ### CSS File Pairing
 
 Scoped styles are defined in a `.css` file with the same name as the component, placed in the same directory:
@@ -10,8 +21,6 @@ src/components/
     site-nav.html
     site-nav.css  ← scoped to site-nav
 ```
-
-> **`<style>` tags inside component files are not scoped.** Bascik only reads the paired `.css` file for scoping. A `<style>` tag placed inside a component `.html` file will be passed through as-is with no transformation — its rules will leak globally. Use the `.css` file pairing instead.
 
 ### Class Scoping
 
@@ -148,6 +157,8 @@ export const bascikConfig = {
   },
 };
 ```
+
+> **MDN reference.** Scoped CSS changes how selectors are rewritten at build time, but the CSS you write is still normal CSS. Use [MDN's CSS reference](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference) as the primary source for selectors, at-rules, and properties.
 
 ### Class Selectors in Component Scripts
 

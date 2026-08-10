@@ -10,7 +10,7 @@
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
           const { NAV } = await import(pathToFileURL(join(process.cwd(), 'scripts/nav.mjs')).href);
-          const sections = NAV.filter(s => s.section !== 'Developers');
+          const sections = NAV.filter(s => s.section !== 'Internals');
           let html = '';
           for (const section of sections) {
             html += `<div class="dfooter-col"><p class="dfooter-col-heading">${section.section}</p><ul class="dfooter-col-links">`;

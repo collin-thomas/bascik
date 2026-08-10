@@ -38,8 +38,10 @@ const initBascikConfig = (
   userConfig: Partial<Omit<BascikConfigOptions, "isBuild">>,
 ) => {
   const legacyWatch = userConfig.triggerTranspile ?? [];
-  const userDirectory = userConfig.directory ?? {};
-  const buildDirectory = buildOverrideConfig.directory ?? {};
+  const userDirectory: Partial<BascikConfigOptions["directory"]> =
+    userConfig.directory ?? {};
+  const buildDirectory: Partial<BascikConfigOptions["directory"]> =
+    buildOverrideConfig.directory ?? {};
   const BascikConfig: BascikConfigOptions = {
     ...defaultConfig,
     ...userConfig,

@@ -1,6 +1,18 @@
 ## Attribute Inheritance
 
-Non-`data-bascik-*` attributes on a component usage tag are automatically merged onto the component's root element. `id` is excluded.
+Any attribute on a component usage tag that is not a Bascik-specific `data-bascik-*` attribute can be forwarded to the component's root element.
+
+### Configuring It
+
+Attribute inheritance is configurable and enabled by default:
+
+```js
+export const bascikConfig = {
+  inheritAttributes: true,
+};
+```
+
+Set it to `false` when you want every component root to be controlled only by the component template.
 
 ### How It Works
 
@@ -25,7 +37,7 @@ When Bascik transpiles a component, it reads the usage tag, extracts any inherit
 ```html
 <!-- compiled output -->
 <nav
-  class="bascik__site-nav__x1__nav sticky"
+  class="bascik__site-nav__nav sticky"
   aria-label="main navigation"
   data-testid="main-nav">
   <a href="/">Home</a>
@@ -38,29 +50,53 @@ When the root element already has a scoped `class` attribute, the inherited clas
 
 ```html
 <!-- root element has scoped class -->
-<nav class="bascik__site-nav__x1__nav">...</nav>
+<nav class="bascik__site-nav__nav">...</nav>
 
 <!-- after merging class="sticky" -->
-<nav class="bascik__site-nav__x1__nav sticky">...</nav>
+<nav class="bascik__site-nav__nav sticky">...</nav>
 ```
 
 ### What Gets Inherited
 
-All attributes on the usage tag are inherited **except**:
+All attributes on the usage tag are inherited **except** `data-bascik-*` attributes, which are consumed by Bascik for slots, props, and build instructions.
 
-- Any `data-bascik-*` attribute — these are consumed by Bascik for slots, props, etc.
-- `id` — not inherited to avoid conflicting with the component template's own scoped IDs.
-
-Common use cases for inheritance:
+Common use cases:
 
 - **Layout classes** — `class="sticky"`, `class="hidden"`
 - **Accessibility** — `aria-label`, `role`, `aria-hidden`
 - **Testing hooks** — `data-testid`, `data-cy`
-- **Custom data** — any `data-*` attribute (except `data-bascik-*`)
+- **Custom data** — any `data-*` attribute except `data-bascik-*`
+
+### What Happens with `id`
+
+`id` is treated like any other inheritable attribute **unless the component root already has its own `id`**.
+
+```html
+<!-- usage -->
+<brand-logo id="footer-logo"></brand-logo>
+```
+
+```html
+<!-- template root has no id -->
+<div class="logo-wrap">
+  <img src="/img/logo.svg" alt="Brand logo" />
+</div>
+```
+
+```html
+<!-- compiled output -->
+<div class="bascik__brand-logo__logo-wrap" id="footer-logo">
+  <img src="/img/logo.svg" alt="Brand logo" />
+</div>
+```
+
+If the template root already defines an `id`, Bascik keeps the template's root `id` and does not overwrite it with the usage-site `id`. That prevents root-level collisions while still letting you anchor page-level CSS or JavaScript to a component root that does not already declare one.
+
+> **Practical rule:** If page code needs to target a component root by `id`, put the `id` on the usage tag only when the component root does not already define one.
 
 ### Interaction with Scoped Classes
 
-Inherited class names are _not_ scoped — they are treated as global classes. This is intentional: you are passing a page-level concern onto the component's root element.
+Inherited class names are not scoped — they are treated as global classes. This is intentional: you are passing a page-level concern onto the component's root element.
 
 ```html
 <my-card class="featured">
@@ -72,31 +108,61 @@ The `featured` class is a global class that you define in your page-level styles
 
 > **Self-closing syntax works too:** Attribute inheritance works with both paired and self-closing usage syntax: `<my-icon class="large" aria-hidden="true" />`
 
-### Live Example
+> **MDN reference.** Bascik forwards standard HTML attributes instead of inventing a new API. Use [MDN's HTML attribute reference](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes) as the primary guide for what each inherited attribute means.
 
-The following passes `class="highlight"` and `aria-label="Featured card"` on the component usage tag. Both are inherited — `class` is appended to the existing scoped class, and `aria-label` is added to the root element verbatim.
+### Interactive Demo
+
+The demo below forwards a class, an accessibility label, and a testing hook onto the component root.
 
 <!-- demo:source-html -->
 ```html
-<feature-card
-  class="highlight"
-  aria-label="Featured card"
-  data-bascik-prop-label="Example"
-  data-bascik-prop-title="Attribute Inheritance"
-  data-bascik-prop-desc="The class and aria-label above were merged onto the root element.">
-</feature-card>
+<article class="inherit-card">
+  <p class="inherit-card-kicker">Template root</p>
+  <h3 class="inherit-card-title">Attribute inheritance</h3>
+  <p class="inherit-card-body">Usage attributes merge onto this root element at build time.</p>
+</article>
+```
+
+<!-- demo:source-css -->
+```css
+.inherit-card {
+  width: min(100%, 34rem);
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px;
+}
+
+.inherit-card-kicker {
+  margin: 0 0 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.inherit-card-title {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+}
+
+.inherit-card-body {
+  margin: 0;
+  color: var(--text-muted);
+}
 ```
 
 <!-- demo:output-html -->
 ```html
-<div class="bascik__feature-card__x1__fcard highlight" aria-label="Featured card">
-  <p class="bascik__feature-card__x1__fcard-label">Example</p>
-  <h3 class="bascik__feature-card__x1__fcard-title">Attribute Inheritance</h3>
-  <p class="bascik__feature-card__x1__fcard-desc">
-    The class and aria-label above were merged onto the root element.
-  </p>
-  <div class="bascik__feature-card__x1__fcard-slot"><div></div></div>
-</div>
+<article
+  class="bascik__inherit-demo-card__inherit-card featured-card"
+  aria-label="Featured inheritance demo"
+  data-testid="inherit-demo">
+  <p class="bascik__inherit-demo-card__inherit-card-kicker">Template root</p>
+  <h3 class="bascik__inherit-demo-card__inherit-card-title">Attribute inheritance</h3>
+  <p class="bascik__inherit-demo-card__inherit-card-body">Usage attributes merge onto this root element at build time.</p>
+</article>
 ```
 
 ## Build-time Scripts
@@ -254,164 +320,160 @@ Install dependencies now? (Y/n)
 Start the dev server after install? (Y/n)
 ```
 
-Select Y for both and you're live at **https://localhost:8443** — no further commands needed. If you select N to either prompt, the remaining manual steps are printed at the end.
+Select **Y** for both and you're live at `https://localhost:8443` with no extra commands.
 
----
-
-### `bascik` CLI reference
+### CLI reference
 
 ```sh
-bascik          # dev: transpile, start HTTP/2 server at https://localhost:8443, watch
+bascik          # dev: transpile, start HTTPS dev server, watch
 bascik --build  # production: transpile to dist/ only
 bascik --check  # static analysis: validate pages and components without building
 ```
 
-### Development Workflow & Server Output
+### Starting the dev server
 
-Bascik's command-line interface is designed to provide clean, minimal, and informative terminal output. Here is what you will see in your terminal during development.
+When you run `bascik`, Bascik transpiles your pages, generates local TLS certificates if needed, starts the built-in HTTP/2 server, and begins watching for changes.
 
-#### 1. Starting the Dev Server
-When you start the dev server, Bascik automatically generates local SSL/TLS certificates for its built-in HTTP/2 server, transpiles all pages inside your pages directory, and begins watching for changes:
+Typical output:
 
 ```terminal
 SSL: generated trusted certs via mkcert (run `mkcert -install` once if you haven't)
-Server running at https://localhost:8443
 
 transpiled: pages/getting-started.html
 transpiled: pages/index.html
 transpiled: pages/about.html
 
 ✓ 3 pages transpiled in 45ms
-```
-
-If [mkcert](https://github.com/FiloSottile/mkcert) is not installed, Bascik falls back to a self-signed certificate (browsers will show a security warning until you accept the exception):
-
-```terminal
-SSL: self-signed cert generated (install mkcert for no browser warning)
 Server running at https://localhost:8443
 ```
 
-If port 8443 is already in use, Bascik automatically tries the next available port:
+If [mkcert](https://github.com/FiloSottile/mkcert) is not installed, Bascik falls back to a self-signed certificate:
+
+```terminal
+SSL: self-signed cert generated (install mkcert for no browser warning)
+transpiled: pages/index.html
+✓ 1 page transpiled in 18ms
+Server running at https://localhost:8443
+```
+
+If port `8443` is already in use, Bascik automatically tries the next available port:
 
 ```terminal
 Port 8443 is in use, trying 8444…
 Server running at https://localhost:8444
 ```
 
-Certs are generated once and reused on subsequent starts. Delete `bascik-privkey.pem` and `bascik-cert.pem` to regenerate them (e.g. to upgrade from a self-signed cert to a mkcert-trusted one after installing mkcert).
+Certs are generated once and reused on subsequent starts. Delete `bascik-privkey.pem` and `bascik-cert.pem` to regenerate them.
 
-#### 2. Watching for File Changes (Watch Mode)
-While the dev server is active, Bascik watches your file system and incrementally updates your build as files are added, updated, or removed:
+### Watching for file changes
 
-* **Modifying/Adding Pages:** Editing or adding an HTML page in your pages directory (e.g., `src/pages/about.html`) triggers incremental transpilation of just that page:
+While the dev server is active, Bascik incrementally updates your build as files are added, updated, or removed.
+
+- **Modifying or adding pages** rebuilds just that page:
   ```terminal
   transpiled: pages/about.html
   ```
-* **Modifying Components:** Editing a component (e.g., `src/components/site-nav/site-nav.html`) triggers selective transpilation. Bascik tracks dependency mappings and only rebuilds pages that actually reference that component:
+- **Modifying components** rebuilds only the pages that use that component:
   ```terminal
   transpiled: pages/index.html
   transpiled: pages/about.html
   ```
-* **Static Assets:** Replicating any non-HTML static assets (like custom CSS, JS files, or images) from pages directly into the output directory:
+- **Static assets** are copied into `dist/`:
   ```terminal
-  copied: /Users/collin/github/bascik/docs/src/pages/css/custom.css
+  copied: pages/css/custom.css
   ```
-* **Deleting Pages:** Removing a page from your pages directory automatically cleans up its compiled output counterpart to prevent dead files:
+- **Deleting pages** removes the compiled output:
   ```terminal
-  deleted file: /Users/collin/github/bascik/docs/src/pages/old-page.html
-  ```
-
-#### 3. Transpilation & Build Errors
-If you introduce a syntax mistake or a runtime error inside a custom build script, Bascik prevents the server from crashing, gracefully logs a descriptive error with the file and exact line/column location, and continues running.
-
-* **Component Transpilation Failure:** If a component markup or CSS scoping parser fails during transpilation:
-  ```terminal
-  [bascik] Transpilation failed for component <site-nav> during css-scoping in "pages/about.html" at (line 22, column 8)
-    Defined in component template: "components/site-nav/site-nav.html"
-    Error: ParseError: CSS Selector is invalid or could not be parsed.
-  ```
-* **Build Script Failure:** If a build-time JavaScript execution block (using `<script data-bascik-build>`) encounters an error:
-  ```terminal
-  [bascik] build script error in "pages/index.html" at (line 12, column 5):
-  ReferenceError: marked is not defined
-  ```
-* **Unknown Component Tags:** If a page references a hyphenated tag with no matching component file, Bascik warns during transpilation:
-  ```terminal
-  [bascik] Unresolved component tag in "pages/about.html": <my-mistyped> — no matching component file found. Run `bascik --check` for a full report.
+  deleted file: pages/old-page.html
   ```
 
-#### 4. Static Analysis (`bascik --check`)
-Run `bascik --check` from your project root to validate all pages and component files without starting the dev server or writing any output files:
+### Transpilation and build errors
+
+If you introduce a syntax mistake or a build-script error, Bascik logs the file and location without crashing the dev server.
+
+Component transpilation failure:
 
 ```terminal
+[bascik] Transpilation failed for component <site-nav> during css-scoping in "pages/about.html" at (line 22, column 8)
+  Defined in component template: "components/site-nav/site-nav.html"
+  Error: ParseError: CSS Selector is invalid or could not be parsed.
+```
+
+Build script failure:
+
+```terminal
+[bascik] build script error in "pages/index.html" at (line 12, column 5):
+ReferenceError: marked is not defined
+```
+
+Unknown component tag:
+
+```terminal
+[bascik] Unresolved component tag in "pages/about.html": <my-mistyped> — no matching component file found. Run `bascik --check` for a full report.
+```
+
+### Static analysis with `bascik --check`
+
+Run `bascik --check` from your project root to validate all pages and component files without starting the dev server or writing any output files:
+
+```sh
 bascik --check
 ```
 
-Bascik will scan every `.html` file in your pages and components directories and report:
+It reports:
 
-* **Errors** — hyphenated tags that have no matching component file (causes the tag to render as-is in the output):
-  ```terminal
-  [bascik check] Unknown component in "pages/about.html": <my-missing> — no matching component file found
-  ```
-* **Warnings** — component files that exist but are never referenced in any page or other component:
-  ```terminal
-  [bascik check] Unused component: <old-widget> — defined but never referenced
-  ```
-* **Success** — exits with code `0` when no errors are found (unused warnings are still printed):
-  ```terminal
-  [bascik check] ✓ 8 pages and 12 components checked — no errors
-  ```
+- **Errors** — hyphenated tags that have no matching component file
+- **Warnings** — component files that exist but are never referenced
+- **Success** — exits with code `0` when no errors are found
 
-`bascik --check` exits with code `1` when errors are found, making it suitable for use in CI pipelines:
+Example output:
+
+```terminal
+[bascik check] ✓ 8 pages and 12 components checked — no errors
+```
+
+`bascik --check` exits with code `1` when errors are found, which makes it suitable for CI:
 
 ```sh
-# In a CI script:
 bascik --check && bascik --build
 ```
 
-> **What `bascik --check` does not cover.** The check validates component references — unknown and unused tags. It does not parse CSS or JavaScript for syntax errors. If a CSS file contains a syntax error (for example, a value accidentally split across two lines), Bascik's scoping transforms may still run on the malformed input and produce unexpected output. Complement `bascik --check` with the tools below to catch these cases before they reach your build.
+`bascik --check` does **not** validate CSS or JavaScript syntax. Use those tools immediately around it rather than treating them as a separate, later concern:
 
-#### 5. Production Build (`bascik --build`)
+| Tool | What it catches | How to use |
+|---|---|---|
+| **VS Code built-in CSS** | CSS syntax errors in `.css` files | Enabled by default |
+| **[Stylelint](https://stylelint.io)** | CSS syntax errors, invalid properties, custom conventions | `npm install -D stylelint && npx stylelint "**/*.css"` |
+| **[HTMLHint](https://htmlhint.com)** | HTML structure errors in page and component `.html` files | `npm install -D htmlhint && npx htmlhint "src/**/*.html"` |
+| **[ESLint](https://eslint.org)** | JavaScript syntax and logic errors in `.js` files | `npm install -D eslint && npx eslint "src/**/*.js"` |
 
-Run `bascik --build` to write optimised, deployment-ready files to `dist/`:
+For most teams, the most useful CI command sequence is:
+
+```sh
+npx stylelint "src/**/*.css" && bascik --check && bascik --build
+```
+
+### Production builds
+
+Run `bascik --build` to write deployment-ready files to `dist/`:
 
 ```sh
 bascik --build
 ```
 
-The output uses root-relative asset paths (e.g. `/css/styles.css`) and **must be served by an HTTP server** — opening files directly from disk via `file://` will break styles and scripts because the browser cannot resolve root-relative URLs from a `file://` origin.
+The output uses root-relative asset paths (for example `/css/styles.css`) and must be served by an HTTP server. Opening files directly with `file://` will break stylesheet and script loading.
 
-To preview the production build locally before deploying:
+To preview the production build locally:
 
 ```sh
-cd dist && npx http-server
+npx http-server dist
 ```
 
 Then open the URL printed by `http-server` (default: `http://127.0.0.1:8080`).
 
-#### Recommended Complementary Analysis Tools
+### Editor setup and output inspection
 
-These tools run independently of Bascik and are not required, but they close the gap that `bascik --check` does not cover:
-
-| Tool | What it catches | How to use |
-|---|---|---|
-| **VS Code built-in CSS** | CSS syntax errors (squiggly lines in `.css` files in the editor) | Enabled by default — no install needed |
-| **[Stylelint](https://stylelint.io)** | CSS syntax errors, invalid properties, rule ordering, custom conventions | `npm install -D stylelint && npx stylelint "**/*.css"` |
-| **[HTMLHint](https://htmlhint.com)** | HTML structure errors in page and component `.html` files | `npm install -D htmlhint && npx htmlhint "src/**/*.html"` |
-| **[ESLint](https://eslint.org)** | JavaScript syntax and logic errors in component `<script>` blocks | `npm install -D eslint && npx eslint "src/**/*.js"` |
-
-Adding a Stylelint step to CI is the most effective single addition for catching CSS issues that affect Bascik's scoping output:
-
-```sh
-# CI pipeline with CSS and component validation:
-npx stylelint "src/**/*.css" && bascik --check && bascik --build
-```
-
-#### Editor Configuration
-
-Editors validate `<script>` blocks in an HTML file as if they all share one scope. This causes false "variable already declared" errors when the same variable name appears in two different script blocks — even though Bascik wraps each block in an IIFE at build time, keeping their scopes completely isolated.
-
-**VS Code** ships with a built-in HTML script validator that triggers this. Disable it for your project by adding a `.vscode/settings.json` file:
+**VS Code false positives.** Editors validate multiple `<script>` blocks in an HTML file as if they shared one scope. Bascik wraps each component script block in an IIFE at build time, so those editor warnings can be misleading. In VS Code, disable the project-level script validation:
 
 ```json
 {
@@ -419,40 +481,14 @@ Editors validate `<script>` blocks in an HTML file as if they all share one scop
 }
 ```
 
-This suppresses the false positives without affecting `.js` file validation or any other language feature. The actual runtime isolation comes from Bascik's IIFE wrapping at build time, not from editor validation.
+**Inspect `dist/` directly.** Both the dev server and `bascik --build` write compiled HTML to `dist/` on disk. This is the fastest way to confirm what Bascik emitted:
 
-> **Committing `.vscode/settings.json`.** Checking this file into your repository means every contributor gets the correct editor behaviour without any manual setup step.
+- custom component tags should be gone
+- scoped class names should be present where component CSS applies
+- the page `<head>` should contain injected styles
+- build-script output should already be inlined
 
-If you prefer a per-block fix rather than a project-wide setting, add `// @ts-nocheck` as the first line inside any script block that triggers the warning:
-
-```html
-<script>
-  // @ts-nocheck
-  const count = 0;
-  document.getElementById('count-btn').addEventListener('click', () => { … });
-</script>
-```
-
-#### 5. Inspecting the `dist/` Directory
-
-Both the dev server and `bascik --build` write compiled HTML to `dist/` on disk. This is the most direct way to confirm that Bascik did what you expected.
-
-The `dist/` structure mirrors your `src/pages/` directory with the leading `src/pages/` stripped:
-
-```
-src/pages/about.html       →  dist/about.html
-src/pages/blog/post.html   →  dist/blog/post.html
-```
-
-Open any compiled file and check:
-
-* **Component resolution** — custom tags like `<site-nav>` should be gone, replaced with the component's full HTML. If a hyphenated tag is still present in the output, no matching component file was found.
-* **Scoped class names** — elements that came from a component will have classes like `bascik__site-nav__nav` (or a short hash when `obfuscateAttributeNames` is enabled). If classes look unscoped, check that the `.css` file is paired correctly in the same directory as the component's `.html` file.
-* **Injected CSS** — each page's `<head>` contains a single `<style>` block assembled from all components used on that page. If styles are missing or duplicated unexpectedly, open the style block and search for the component name.
-* **Build script output** — `<script data-bascik-build>` tags are replaced with their stdout. If the output is missing or wrong, check the terminal for a `[bascik] build script error` message and inspect the script directly.
-* **Slot and prop content** — verify that slot fallbacks and prop values were injected where expected.
-
-The browser's **View Source** (or DevTools **Sources** panel) shows the same content as `dist/` and is often faster for live debugging during development.
+> **MDN reference.** The CLI helps you build and inspect output, but the resulting HTML, CSS, and JavaScript are still standard web platform files. Keep [MDN's documentation](https://developer.mozilla.org/) close by when you need the canonical reference.
 
 # Bascik Scoping Compatibility
 
@@ -478,7 +514,7 @@ CSS scoping applies to `.css` files paired with a component's HTML file. Place t
 | Class selector                                     | `.foo {}`                               | ✅     | Scoped with unique instance prefix                                                                                                                                                                                                                                                        |
 | Descendant with class                              | `.foo .bar {}`                          | ✅     | All class names in selector scoped                                                                                                                                                                                                                                                        |
 | Multi-class                                        | `.foo.bar {}`                           | ✅     | Both class names scoped                                                                                                                                                                                                                                                                   |
-| Standalone element selector                        | `p {}`                                  | ✅     | Converted to generated class; injected on matching elements in component HTML                                                                                                                                                                                                             |
+| Standalone element selector                        | `p {}`                                  | ✅     | Converted to a generated class and injected on matching elements in component HTML, including indented selectors inside at-rules such as `@media` and inline `<style>` blocks.                                                                                                             |
 | Element pseudo-class                               | `p:hover {}`                            | ✅     | Element converted to class; pseudo-class preserved: `.bascik__...__el__p:hover {}`                                                                                                                                                                                                        |
 | Element pseudo-element                             | `p::before {}`                          | ✅     | Element converted to class; pseudo-element preserved: `.bascik__...__el__p::before {}`                                                                                                                                                                                                    |
 | `@keyframes` name                                  | `@keyframes spin {}`                    | ✅     | Name scoped; `animation:` and `animation-name:` references updated to match                                                                                                                                                                                                               |
@@ -499,7 +535,7 @@ CSS scoping applies to `.css` files paired with a component's HTML file. Place t
 | `:is()` / `:where()` / `:has()` with element names | `:is(p, h2) {}`                         | ❌     | Element names inside these functions are not converted. Class equivalents work fine: `:is(.foo, .bar) {}`. See Design Decisions.                                                                                                                                                          |
 | CSS nesting — class selectors                      | `& .child {}`                           | ✅     | Class selectors inside nesting are scoped normally.                                                                                                                                                                                                                                       |
 | CSS nesting — element selectors                    | `& p {}`, `& > h2 {}`                   | ⚠️     | Element selectors directly after `& ` (with optional single combinator `>`, `+`, `~`) are converted. Complex patterns (`& .parent p {}`, `&p {}`) are not converted.                                                                                                                      |
-| `@scope` (native)                                  | `@scope (.foo) { .bar {} }`             | ✅     | Class names in both the `@scope (.selector)` argument and the optional `to (.selector)` clause are scoped normally (handled by the global class-scoping pass). Class names inside the `@scope` block are also scoped. Element names in `@scope` arguments and indented element selectors inside the block follow the same rules as other at-rules (standalone column-0 elements and `.class element` descendants are converted; purely bare element selectors that are indented are not). |
+| `@scope` (native)                                  | `@scope (.foo) { .bar {} }`             | ✅     | Class names in both the `@scope (.selector)` argument and the optional `to (.selector)` clause are scoped normally (handled by the global class-scoping pass). Class names inside the `@scope` block are also scoped. Element names in `@scope` arguments and indented element selectors inside the block follow the same rules as other at-rules. |
 
 ### Other CSS Features
 
@@ -732,51 +768,39 @@ Create a `bascik.config.js` file in your project root to override any default se
 ```js
 // bascik.config.js
 export const bascikConfig = {
-  // Source directories
   directory: {
     pages: 'src/pages',
     components: 'src/components',
+    watch: ['scripts/', 'data/'],
   },
 
-  // Scoping
   scopeScriptBlocks: true,
+  inheritAttributes: true,
   scopeAttribute: {
     class: true,
     id: true,
     name: true,
   },
-  skipTranspilingElementContents: ['code'], // don't scope inside these elements
+  skipTranspilingElementContents: ['code'],
 
-  // CSS
   deduplicateCss: true,
-  minifyStyles: true,            // remove whitespace from compiled CSS
+  minifyStyles: true,
+  inlineStyles: ['src/pages/css/styles.css'],
 
-  // JavaScript
-  minifyScripts: true,           // strip comments and collapse whitespace in scripts
+  minifyScripts: true,
 
-  obfuscateAttributeNames: true, // hash class / id names in production
+  obfuscateAttributeNames: true,
 
-  // Server
   cacheHttp: false,
+  verboseLogging: false,
 
-  // Logging
-  verboseLogging: false, // include { cause } in console.warn/error
-
-  // Sitemap
   siteUrl: 'https://example.com',
   generate: {
-    sitemap: true,  // write dist/sitemap.xml
-    robots: true,   // write dist/robots.txt
+    sitemap: true,
+    robots: true,
   },
-
-  // Dev-mode extra watch paths
-  triggerTranspile: [], // re-transpile all pages when these change
-
-  // Stylesheets to inline into every page's <head>
-  inlineStyles: [],     // eliminates render-blocking <link> requests
 };
 
-// Overrides applied only during `bascik --build`
 export const buildOverrideConfig = {
   obfuscateAttributeNames: true,
   minifyStyles: true,
@@ -802,6 +826,14 @@ Wrap component `<script>` tags in an IIFE and rewrite scoped attribute reference
 
 ```js
 scopeScriptBlocks: true // default
+```
+
+#### `inheritAttributes`
+
+Control whether non-`data-bascik-*` attributes on a component usage tag are merged onto the component root element. Defaults to `true`.
+
+```js
+inheritAttributes: true // default
 ```
 
 #### `scopeAttribute`
@@ -909,22 +941,32 @@ generate: {
 
 See [Sitemap & robots.txt](/sitemap) for a full walkthrough.
 
-#### `triggerTranspile`
+#### `directory.watch`
 
 An array of directories or files that, when changed in dev mode, trigger a full re-transpile of all pages. Useful for utility scripts, data files, or image directories that pages depend on at build time.
 
 ```js
-triggerTranspile: ['scripts/', 'data/'] // empty by default
+directory: {
+  pages: 'src/pages',
+  components: 'src/components',
+  watch: ['scripts/', 'data/'],
+}
 ```
 
 Has no effect during `bascik --build`.
 
 #### `inlineStyles`
 
-An array of stylesheet file paths (relative to the project root) that Bascik will read and inject as `<style>` tags into every page's `<head>` during transpilation. When `minifyStyles` is true the content is minified before injection. Global styles are placed before component styles so component rules take precedence.
+Controls which global stylesheets Bascik reads and injects as `<style>` tags into every page's `<head>` during transpilation. When `minifyStyles` is true the content is minified before injection. Global styles are placed before component styles so component rules take precedence.
+
+- `false` — inline nothing
+- `true` — inline every `.css` file under `directory.pages`
+- `string[]` — inline only the listed stylesheet paths
 
 ```js
-inlineStyles: ['src/pages/css/styles.css'] // empty by default
+inlineStyles: false // default
+inlineStyles: true
+inlineStyles: ['src/pages/css/styles.css']
 ```
 
 This eliminates the render-blocking `<link rel="stylesheet">` request — the CSS arrives in the same HTTP response as the HTML. It pairs naturally with `buildOverrideConfig` to minify only in production:
@@ -1012,7 +1054,7 @@ The skill covers:
 
 > **Keeping it current.** `SKILL.md` is regenerated from the same Markdown source files that power this docs site. When the docs update, so does the skill file.
 
-<p class="section-label">Developers</p>
+<p class="section-label">Internals</p>
 
 # Architecture
 
@@ -1112,7 +1154,7 @@ Bascik intentionally avoids DOM parsers (e.g. `htmlparser2`, `parse5`). Componen
 
 The package ships as native ESM (`"type": "module"` in `package.json`). TypeScript is compiled by `tsc` using `tsconfig.build.json` which targets `ES2023` and emits to `pkg/dist/`. The `tsconfig.json` (without the `.build` suffix) is used by Vitest and includes test files.
 
-<p class="section-label">Developers</p>
+<p class="section-label">Internals</p>
 
 # Dev Server
 
@@ -1214,9 +1256,9 @@ This script is only present in dev mode. The build pipeline does not inject it d
 
 When `--build` is passed (or `BASCIK_BUILD=1` is set), the server is never started. The watch system still runs, but in non-persistent mode so chokidar exits after processing all initial file events. The live-reload script is not injected.
 
-<p class="section-label">Developers</p>
+<p class="section-label">Internals</p>
 
-# Developer Guide
+# Internals Guide
 
 <p class="page-intro">Everything you need to work on the Bascik package itself — architecture, the transpilation pipeline, the scoping system, the dev server, and how to run the test suite.</p>
 
@@ -1265,7 +1307,7 @@ yarn install
 yarn dev
 ```
 
-## Developer Sub-pages
+## Internals Sub-pages
 
 - [Architecture](/develop/architecture) — module map, responsibilities, and how the files relate to one another.
 - [Transpilation Pipeline](/develop/transpilation-pipeline) — the two-phase page and component pipeline that turns source HTML into deployable output.
@@ -1273,7 +1315,7 @@ yarn dev
 - [Dev Server](/develop/dev-server) — the HTTP/2 server, TLS certificate generation, memory store, live reload, and watch system.
 - [Testing](/develop/testing) — running tests, coverage, writing new tests, and the benchmarking suite.
 
-<p class="section-label">Developers</p>
+<p class="section-label">Internals</p>
 
 # Scoping System
 
@@ -1480,7 +1522,7 @@ The hash is deterministic — the same full scoped name always produces the same
 
 After all components on a page have been resolved, `deduplicateCss` receives the list of used components. Because class-scoped names are identical across all instances of the same component, a Set-based deduplication is sufficient — each component's CSS block appears exactly once in the final `<style>` tag, regardless of how many times that component was used on the page.
 
-<p class="section-label">Developers</p>
+<p class="section-label">Internals</p>
 
 # Testing
 
@@ -1630,7 +1672,7 @@ yarn typecheck
 5. Run `yarn typecheck` to confirm there are no TypeScript errors.
 6. Open a pull request against `main`.
 
-<p class="section-label">Developers</p>
+<p class="section-label">Internals</p>
 
 # Transpilation Pipeline
 
@@ -1728,88 +1770,23 @@ If you create a `404.html` file in your pages directory (e.g. `src/pages/404.htm
 
 When you build your site for production (`bascik --build`), this file is compiled to `dist/404.html`, which is the standard location recognized by most static hosting providers (such as GitHub Pages, Netlify, Vercel, and Cloudflare Pages) to serve custom 404 pages.
 
-## Getting Started: CLI & Workflow
+## What to Read Next
 
-### CLI & Development Workflow
+Once your first page is running, the next docs pages map cleanly to the next questions people usually have:
 
-Bascik's command-line interface is designed to provide clean, minimal, and informative terminal output. Here is a guide on what you will see in your terminal during development.
+- **[CLI / Command Line](/cli)** — command output, watch behavior, `--check`, and production preview commands
+- **[Configuration](/configuration)** — every `bascik.config.js` option in one place
+- **[Scoped Styles](/scoped-styles)** — how paired `.css` files and inline `<style>` tags are isolated per component
 
-#### Starting the Dev Server
+### A Small First Habit
 
-When you start the dev server via `yarn dev` (or `bascik`), Bascik automatically generates local SSL/TLS certificates for its built-in HTTP/2 server, transpiles all pages inside your pages directory, and begins watching for changes:
+Open the compiled file in `dist/` after your first build. It is the fastest way to verify what Bascik actually emitted:
 
-```terminal
-Generated self-signed certificate for the development server
-Server running at https://localhost:8443
+- component tags should be replaced with plain HTML
+- scoped class names should be present where component CSS applies
+- build-script output should already be inlined into the page
 
-transpiled: pages/getting-started.html
-transpiled: pages/index.html
-transpiled: pages/about.html
-
-✓ 3 pages transpiled in 45ms
-```
-
-#### Watching for File Changes
-
-While the dev server is active, Bascik watches your file system and incrementally updates your build as files are added, updated, or removed.
-
-- **Modifying/Adding Pages:** Editing or adding an HTML page in your pages directory triggers incremental transpilation of just that page:
-
-```terminal
-transpiled: pages/about.html
-```
-
-- **Modifying Components:** Editing a component triggers selective transpilation. Bascik tracks dependency mappings and only rebuilds pages that actually reference that component:
-
-```terminal
-transpiled: pages/index.html
-transpiled: pages/about.html
-```
-
-- **Static Assets:** Replicating any non-HTML static assets (like custom CSS, JS files, or images) from pages directly into the output directory:
-
-```terminal
-copied: /Users/collin/github/bascik/docs/src/pages/css/custom.css
-```
-
-- **Deleting Pages:** Removing a page from your pages directory automatically cleans up its compiled output counterpart to prevent dead files:
-
-```terminal
-deleted file: /Users/collin/github/bascik/docs/src/pages/old-page.html
-```
-
-#### Transpilation & Build Errors
-
-If you introduce a syntax mistake or a runtime error inside a custom build script, Bascik prevents the server from crashing, gracefully logs a descriptive error with the file and exact line/column location, and continues running.
-
-- **Component Transpilation Failure:**
-
-```terminal
-[bascik] Transpilation failed for component <site-nav>
-during css-scoping in "pages/about.html" at (line 22, column 8)
-Defined in component template: "components/site-nav/site-nav.html"
-Error: ParseError: CSS Selector is invalid or could not be parsed.
-```
-
-- **Build Script Failure:**
-
-```terminal
-[bascik] build script error in "pages/index.html" at (line 12, column 5):
-ReferenceError: marked is not defined
-```
-
-### Scoped Styles Quick Intro
-
-Pair a `.css` file with your component HTML by using the same name in the same directory:
-
-```text
-src/components/
-  site-nav/
-    site-nav.html  ← component markup
-    site-nav.css   ← scoped styles
-```
-
-Class names in the CSS are automatically prefixed per component instance at build time. See [Scoped Styles](/scoped-styles) for the full reference.
+When you need the detailed terminal output for dev mode, build mode, static checks, or file watching, use the [CLI page](/cli). Keeping that output reference in one place makes the Getting Started guide easier to skim.
 
 ## Getting Started
 
@@ -3474,6 +3451,8 @@ Because Bascik adds no runtime scripts of its own, every `<script>` tag in your 
 
 Lighthouse's SEO audit checks for a short list of meta tags and structural signals. All of them are plain HTML attributes — nothing to install or configure.
 
+Bascik also helps with one of the easy-to-miss SEO assets: once `siteUrl` is set, `bascik --build` generates `dist/sitemap.xml` for you by default. That gives crawlers a complete list of your pages without adding another plugin or build step.
+
 ```html
 <head>
   <meta charset="UTF-8" />
@@ -3923,8 +3902,6 @@ Lighthouse 13.3 introduced a new **Agentic Browsing** category that audits how w
 
 > **Bascik sites score 3/3 on Agentic Browsing without any configuration.** Correct HTML, zero layout shift, and a well-formed `llms.txt` are natural properties of a statically built site. Frameworks that hydrate on the client introduce layout shift during hydration and often produce an accessibility tree that differs from the initial server-rendered HTML — both of which hurt this score.
 
-The three "Not applicable" items in the category — WebMCP form coverage, WebMCP tools registered, and WebMCP schema validation — apply to sites that implement the [WebMCP specification](https://webmcp.dev) for exposing server-side tools to AI agents. They are not required for a perfect Agentic Browsing score.
-
 ## The Kitchen Sink: Complete Head Template
 
 Here is a complete `<head>` combining every technique on this page. Copy it as a starting point for any Bascik page and fill in the values specific to your site.
@@ -3968,6 +3945,8 @@ Here is a complete `<head>` combining every technique on this page. Copy it as a
 
 ## Props
 
+Props in Bascik borrow the same basic idea as props in React: pass values into a reusable component from the usage site. In Bascik, the mechanism is plain HTML via `data-bascik-prop-*` attributes.
+
 ### Defining Props in a Template
 
 Add a `data-bascik-prop-{name}` attribute (no value) to any element in the component template. The element's inner content will be replaced with the prop value at build time.
@@ -4010,12 +3989,12 @@ Other attributes on the target element are preserved. The prop marker attribute 
 <p class="lead" data-bascik-prop-body></p>
 
 <!-- compiled -->
-<p class="bascik__comp__x1__lead">Your prop value here.</p>
+<p class="bascik__comp__lead">Your prop value here.</p>
 ```
 
 ### Naming Conventions
 
-Prop names use the portion of the attribute after `data-bascik-prop-`. You can use any lowercase alphanumeric name with hyphens:
+Prop names use the portion of the attribute after `data-bascik-prop-`. You can use lowercase alphanumeric names with hyphens:
 
 ```html
 data-bascik-prop-title
@@ -4024,11 +4003,17 @@ data-bascik-prop-alt-text
 data-bascik-prop-icon-url
 ```
 
-> **Use slots for HTML content.** Props inject plain text values. If you need to inject rich HTML (tags, nested elements), use [slots](/slots) instead.
+> **Use slots for HTML content.** Props inject plain text values. If you need to inject rich HTML, nested elements, or reusable layout regions, use [slots](/slots) instead.
+
+### Why `data-*`?
+
+Bascik extends HTML through standard `data-*` attributes rather than a custom template language. Browsers already understand `data-*`, and you do **not** need to use props or slots to make Bascik useful — plain reusable HTML components still work without them.
+
+> **MDN reference.** For the underlying attribute rules, treat [MDN's `data-*` attribute reference](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/data-*) and the broader [HTML reference](https://developer.mozilla.org/en-US/docs/Web/HTML) as the primary documentation.
 
 ### Example: Feature Card
 
-A good real-world use of props is a card component with a configurable label, title, and description:
+A common pattern is a card component with a configurable label, title, and description:
 
 ```html
 <!-- src/components/feature-card.html -->
@@ -4047,11 +4032,9 @@ A good real-world use of props is a card component with a configurable label, ti
 </feature-card>
 ```
 
-### Live Demo
+### Interactive Demo
 
-The interactive props demo passes values directly to the `feature-card` component via `data-bascik-prop-*` attributes.
-
-**Usage (the code you write):**
+The demo below passes values directly into the `feature-card` component via `data-bascik-prop-*` attributes.
 
 <!-- demo:code -->
 ```html
@@ -4061,8 +4044,6 @@ The interactive props demo passes values directly to the `feature-card` componen
   data-bascik-prop-desc="These values are injected into the component template at build time.">
 </feature-card>
 ```
-
-**Compiled output** (prop placeholders replaced, component HTML inlined):
 
 <!-- demo:output -->
 ```html
@@ -4077,6 +4058,17 @@ The interactive props demo passes values directly to the `feature-card` componen
 
 ## Scoped CSS
 
+Bascik automatically namespaces your component CSS at build time. Paired `.css` files and inline `<style>` tags inside component HTML both go through the same scoping pipeline, so class names, element selectors, `@media` queries, and `@keyframes` stay isolated to the component.
+
+### Where Scoped CSS Can Live
+
+You can define component CSS in either of these places:
+
+- a paired `.css` file next to the component HTML
+- an inline `<style>` tag inside the component HTML
+
+Use paired files for most components so the HTML and CSS stay easy to scan. Inline `<style>` tags are still fully supported when keeping a small component in one file is more convenient.
+
 ### CSS File Pairing
 
 Scoped styles are defined in a `.css` file with the same name as the component, placed in the same directory:
@@ -4087,8 +4079,6 @@ src/components/
     site-nav.html
     site-nav.css  ← scoped to site-nav
 ```
-
-> **`<style>` tags inside component files are not scoped.** Bascik only reads the paired `.css` file for scoping. A `<style>` tag placed inside a component `.html` file will be passed through as-is with no transformation — its rules will leak globally. Use the `.css` file pairing instead.
 
 ### Class Scoping
 
@@ -4225,6 +4215,8 @@ export const bascikConfig = {
   },
 };
 ```
+
+> **MDN reference.** Scoped CSS changes how selectors are rewritten at build time, but the CSS you write is still normal CSS. Use [MDN's CSS reference](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference) as the primary source for selectors, at-rules, and properties.
 
 ### Class Selectors in Component Scripts
 
@@ -4393,6 +4385,8 @@ The `feature-card` component used throughout these docs illustrates scoped style
 ```
 
 ## Scoped JavaScript
+
+Bascik rewrites DOM selector calls inside component `<script>` tags so they match the scoped IDs and class names in the compiled output. Each component instance gets unique identifiers where needed, so multiple instances on the same page work independently.
 
 ### Scoping Model
 
@@ -4804,15 +4798,12 @@ At the usage site:
 ```html
 <!-- index.html -->
 <page-layout>
-  <!-- default slot content -->
   <p>Main body content.</p>
 
-  <!-- named slot: header -->
   <div data-bascik-slot="header">
     <h1>Page Title</h1>
   </div>
 
-  <!-- named slot: sidebar -->
   <div data-bascik-slot="sidebar">
     <nav>Sidebar nav</nav>
   </div>
@@ -4837,41 +4828,101 @@ Leading and trailing whitespace is trimmed from all slot content at build time. 
 
 Whitespace *within* slot content is preserved exactly as written.
 
-> **Note for `<pre>` contexts:** Bascik skips transpilation inside `<pre>` and `<code>` elements, so slot trimming only applies to regular component resolution — not to raw preformatted content you write directly inside those elements.
+> **Code examples stay literal by default.** Bascik skips transpilation inside `<code>` elements by default, so slot trimming only applies to regular component resolution. If you opt into `skipTranspilingElementContents: ['code', 'pre']`, raw `<pre>` content is preserved too.
 
-### Live Demo
+> **MDN reference.** Bascik slots are build-time insertion points built with standard HTML plus `data-*` attributes. For the actual elements you place into slots, treat [MDN's HTML reference](https://developer.mozilla.org/en-US/docs/Web/HTML) as the primary source of truth.
 
-The interactive slot demo passes a button into the `feature-card` component's default slot.
+### Interactive Demo
 
-**Usage (the code you write):**
+This demo uses two named slots (`eyebrow` and `actions`) plus the default slot for the body content.
 
-<!-- demo:code -->
+<!-- demo:source-html -->
 ```html
-<feature-card
-  data-bascik-prop-label="Example"
-  data-bascik-prop-title="Named Slots"
-  data-bascik-prop-desc="...">
-  <!-- content for default slot -->
-  <div style="padding-top:12px;...">
-    <button class="btn btn-primary">Read More</button>
-  </div>
-</feature-card>
-```
+<section class="slot-panel">
+  <header class="slot-panel-header">
+    <p class="slot-panel-eyebrow">
+      <span data-bascik-slot="eyebrow">Overview</span>
+    </p>
+    <h3 class="slot-panel-title">
+      <span data-bascik-slot="title">Fallback title</span>
+    </h3>
+  </header>
 
-**Compiled output** (slot content injected into the `fcard-slot` div):
-
-<!-- demo:output -->
-```html
-<div class="bascik__feature-card__fcard">
-  <p class="bascik__feature-card__fcard-label">Example</p>
-  <h3 class="bascik__feature-card__fcard-title">Named Slots</h3>
-  <p class="bascik__feature-card__fcard-desc">...</p>
-  <div class="bascik__feature-card__fcard-slot">
-    <div style="...">
-      <button class="...">Read More</button>
+  <div class="slot-panel-body">
+    <div data-bascik-slot>
+      <p>Fallback body copy.</p>
     </div>
   </div>
-</div>
+
+  <footer class="slot-panel-actions">
+    <div data-bascik-slot="actions">
+      <a href="/getting-started">Read docs</a>
+    </div>
+  </footer>
+</section>
+```
+
+<!-- demo:source-css -->
+```css
+.slot-panel {
+  width: min(100%, 34rem);
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px;
+}
+
+.slot-panel-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.slot-panel-eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.slot-panel-title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.slot-panel-actions {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.slot-panel-actions a {
+  display: inline-flex;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+```
+
+<!-- demo:output-html -->
+```html
+<section class="bascik__slot-layout-demo__slot-panel">
+  <header class="bascik__slot-layout-demo__slot-panel-header">
+    <p class="bascik__slot-layout-demo__slot-panel-eyebrow">Named slot</p>
+    <h3 class="bascik__slot-layout-demo__slot-panel-title">Build-time slot layout</h3>
+  </header>
+
+  <div class="bascik__slot-layout-demo__slot-panel-body">
+    <p>Use named slots for fixed regions and the default slot for the main body content.</p>
+  </div>
+
+  <footer class="bascik__slot-layout-demo__slot-panel-actions">
+    <a href="/configuration">Read configuration</a>
+  </footer>
+</section>
 ```
 
 ## Using Markdown
@@ -5269,6 +5320,14 @@ For sites that need selective reactivity on specific components, petite-vue (~5 
 
 Like HTMX, Alpine is compatible with Bascik. Bascik resolves components at build time; Alpine runs in the browser on whatever HTML Bascik produced.
 
+### Static Site Builders: Hugo, Eleventy, Jekyll
+
+Traditional static site builders such as [Hugo](https://gohugo.io), [Eleventy](https://www.11ty.dev), and [Jekyll](https://jekyllrb.com) focus on content pipelines: Markdown collections, templates, front matter, taxonomies, and data-driven page generation.
+
+Bascik overlaps with them at the output level — all of these tools can ship plain static HTML — but the authoring model is different. Bascik stays close to hand-written HTML pages and reusable HTML components. It does not require a separate template language, collection system, or front matter format just to reuse a header, card, or footer.
+
+If your site is primarily content-driven and you want a full publishing pipeline, a static site builder may be the better fit. If your site is primarily HTML pages and reusable UI fragments, Bascik is the smaller tool.
+
 ### The Key Difference
 
 | Tool | Runtime shipped | Components or API to learn | Attribute / source syntax | Requires server |
@@ -5278,6 +5337,7 @@ Like HTMX, Alpine is compatible with Bascik. Bascik resolves components at build
 | **Alpine.js** | ~16 KB | Alpine state and directive model | `x-*` and `@*` directives interpreted at runtime | No |
 | **petite-vue** | ~5 KB | Vue reactivity and directive model | `v-*` and `@*` directives interpreted at runtime | No |
 | **Vue / React** | 40–100+ KB | Framework component model, lifecycle, and state APIs | Vue directives/templates or React JSX | No |
+| **Hugo / Eleventy / Jekyll** | None | Template syntax, content collections, front matter, generator conventions | Builder-specific templating languages | No |
 
 The browser can parse Bascik's source without needing to understand a new runtime language: custom tags are valid custom-element-shaped HTML names, and build instructions use the web platform's `data-*` convention. Bascik resolves both before deployment. By contrast, runtime directives such as `hx-get`, `x-data`, and `v-scope` only gain behavior after their library's JavaScript loads.
 

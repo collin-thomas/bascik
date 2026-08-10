@@ -51,6 +51,14 @@ For sites that need selective reactivity on specific components, petite-vue (~5 
 
 Like HTMX, Alpine is compatible with Bascik. Bascik resolves components at build time; Alpine runs in the browser on whatever HTML Bascik produced.
 
+### Static Site Builders: Hugo, Eleventy, Jekyll
+
+Traditional static site builders such as [Hugo](https://gohugo.io), [Eleventy](https://www.11ty.dev), and [Jekyll](https://jekyllrb.com) focus on content pipelines: Markdown collections, templates, front matter, taxonomies, and data-driven page generation.
+
+Bascik overlaps with them at the output level — all of these tools can ship plain static HTML — but the authoring model is different. Bascik stays close to hand-written HTML pages and reusable HTML components. It does not require a separate template language, collection system, or front matter format just to reuse a header, card, or footer.
+
+If your site is primarily content-driven and you want a full publishing pipeline, a static site builder may be the better fit. If your site is primarily HTML pages and reusable UI fragments, Bascik is the smaller tool.
+
 ### The Key Difference
 
 | Tool | Runtime shipped | Components or API to learn | Attribute / source syntax | Requires server |
@@ -60,6 +68,7 @@ Like HTMX, Alpine is compatible with Bascik. Bascik resolves components at build
 | **Alpine.js** | ~16 KB | Alpine state and directive model | `x-*` and `@*` directives interpreted at runtime | No |
 | **petite-vue** | ~5 KB | Vue reactivity and directive model | `v-*` and `@*` directives interpreted at runtime | No |
 | **Vue / React** | 40–100+ KB | Framework component model, lifecycle, and state APIs | Vue directives/templates or React JSX | No |
+| **Hugo / Eleventy / Jekyll** | None | Template syntax, content collections, front matter, generator conventions | Builder-specific templating languages | No |
 
 The browser can parse Bascik's source without needing to understand a new runtime language: custom tags are valid custom-element-shaped HTML names, and build instructions use the web platform's `data-*` convention. Bascik resolves both before deployment. By contrast, runtime directives such as `hx-get`, `x-data`, and `v-scope` only gain behavior after their library's JavaScript loads.
 

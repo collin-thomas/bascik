@@ -1,6 +1,6 @@
-<p class="section-label">Developers</p>
+<p class="section-label">Internals</p>
 
-# Developer Guide
+# Internals Guide
 
 <p class="page-intro">Everything you need to work on the Bascik package itself — architecture, the transpilation pipeline, the scoping system, the dev server, and how to run the test suite.</p>
 
@@ -49,7 +49,7 @@ yarn install
 yarn dev
 ```
 
-## Developer Sub-pages
+## Internals Sub-pages
 
 - [Architecture](/develop/architecture) — module map, responsibilities, and how the files relate to one another.
 - [Transpilation Pipeline](/develop/transpilation-pipeline) — the two-phase page and component pipeline that turns source HTML into deployable output.
