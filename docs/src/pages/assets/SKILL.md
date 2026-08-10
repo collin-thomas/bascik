@@ -477,34 +477,18 @@ bascik --check  # static analysis: validate pages and components without buildin
 Bascik's CLI is designed to provide clean, minimal, and informative terminal output.
 
 #### 1. Starting the Dev Server
-When you start the dev server, Bascik automatically generates local SSL/TLS certificates for its built-in HTTP/2 server, transpiles all pages inside your pages directory, and begins watching for changes:
+When you start the dev server, Bascik automatically generates local SSL/TLS certificates for its built-in HTTP/2 server, transpiles all pages inside your pages directory, stores each page in memory, then starts the server. Pages are served from memory — no disk I/O is required at request time in dev mode.
 
 ```terminal
-SSL: generated trusted certs via mkcert (run `mkcert -install` once if you haven't)
-Server running at https://localhost:8443
-
 transpiled: pages/getting-started.html
 transpiled: pages/index.html
 transpiled: pages/about.html
 
 ✓ 3 pages transpiled in 45ms
-```
-
-If [mkcert](https://github.com/FiloSottile/mkcert) is not installed, Bascik falls back to a self-signed certificate (browsers will show a security warning until you accept the exception):
-
-```terminal
-SSL: self-signed cert generated (install mkcert for no browser warning)
 Server running at https://localhost:8443
 ```
 
-If port 8443 is already in use, Bascik automatically tries the next available port:
-
-```terminal
-Port 8443 is in use, trying 8444…
-Server running at https://localhost:8444
-```
-
-Certs are generated once and reused on subsequent starts. Delete `bascik-privkey.pem` and `bascik-cert.pem` to regenerate them (e.g. to upgrade from a self-signed cert to a mkcert-trusted one after installing mkcert).
+On startup, Bascik computes the full component list and global styles **once**, then transpiles all pages. By default pages transpile sequentially on the main thread; setting `useWorkers: true` in `bascik.config.js` distributes them across a pool of CPU-core worker threads instead. Worker startup has a fixed cost (each worker loads the transpiler's module graph independently), so `useWorkers` is opt-in and best suited to larger sites or CPU-heavy per-page work — small sites are usually faster with the sequential default. Brotli compression for each page runs in the background after storage and does not block the page from being marked ready or served; the server falls back to serving uncompressed content for any request that arrives before compression finishes. The server becomes ready as soon as memory is populated; no writes to `dist/` happen during dev mode.
 
 #### 2. Watching for File Changes (Watch Mode)
 While the dev server is active, Bascik watches your file system and incrementally updates your build as files are added, updated, or removed:

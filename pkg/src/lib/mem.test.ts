@@ -33,9 +33,9 @@ beforeEach(async () => {
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-const storeSample = (key = "test-page", components: string[] = []) => {
+const storeSample = async (key = "test-page", components: string[] = []) => {
   // With identity mocks, relativePagePath == absolutePagePath == httpPath
-  mem.storePage({
+  await mem.storePage({
     relativePagePath: key,
     absolutePagePath: key,
     pageContent: `<html><body>Page: ${key}</body></html>`,
@@ -48,28 +48,30 @@ const storeSample = (key = "test-page", components: string[] = []) => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("storePage + getPage round-trip", () => {
-  it("returns the stored page for the correct httpPath", () => {
-    storeSample("rt-test");
+  it("returns the stored page for the correct httpPath", async () => {
+    await storeSample("rt-test");
     const page = mem.getPage("rt-test");
     expect(page).toBeDefined();
     expect(page?.relativePagePath).toBe("rt-test");
     expect(page?.absolutePagePath).toBe("rt-test");
   });
 
-  it("page content is stored as a Buffer", () => {
-    storeSample("buf-test");
+  it("page content is stored as a Buffer", async () => {
+    await storeSample("buf-test");
     const page = mem.getPage("buf-test");
     expect(Buffer.isBuffer(page?.content)).toBe(true);
   });
 
-  it("page compressedContent is stored as a Buffer", () => {
-    storeSample("br-test");
-    const page = mem.getPage("br-test");
-    expect(Buffer.isBuffer(page?.compressedContent)).toBe(true);
+  it("page compressedContent is eventually populated as a Buffer (background compression)", async () => {
+    await storeSample("br-test");
+    await vi.waitFor(() => {
+      const page = mem.getPage("br-test");
+      expect(Buffer.isBuffer(page?.compressedContent)).toBe(true);
+    });
   });
 
-  it("stores usedComponentsSet as a Set", () => {
-    storeSample("comp-test", ["my-nav", "my-footer"]);
+  it("stores usedComponentsSet as a Set", async () => {
+    await storeSample("comp-test", ["my-nav", "my-footer"]);
     const page = mem.getPage("comp-test");
     expect(page?.usedComponentsSet).toBeInstanceOf(Set);
     expect(page?.usedComponentsSet.has("my-nav")).toBe(true);
@@ -87,8 +89,8 @@ describe("getPage fallback to /404", () => {
     expect(page).toBeUndefined();
   });
 
-  it("returns the /404 page as a fallback for unknown paths", () => {
-    storeSample("/404");
+  it("returns the /404 page as a fallback for unknown paths", async () => {
+    await storeSample("/404");
     const fallback = mem.getPage("/this-does-not-exist");
     expect(fallback).toBeDefined();
     expect(fallback?.relativePagePath).toBe("/404");
@@ -100,8 +102,8 @@ describe("getPage fallback to /404", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("removePage", () => {
-  it("removes the page so getPage returns undefined", () => {
-    storeSample("remove-me");
+  it("removes the page so getPage returns undefined", async () => {
+    await storeSample("remove-me");
     expect(mem.getPage("remove-me")).toBeDefined();
     mem.removePage("remove-me");
     expect(mem.getPage("remove-me")).toBeUndefined();
@@ -118,9 +120,9 @@ describe("removePage", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("pagesThisComponentIsUsedOn", () => {
-  it("returns pages that use the given component", () => {
-    storeSample("page-a", ["my-nav"]);
-    storeSample("page-b", ["my-nav", "my-footer"]);
+  it("returns pages that use the given component", async () => {
+    await storeSample("page-a", ["my-nav"]);
+    await storeSample("page-b", ["my-nav", "my-footer"]);
     const pages = mem.pagesThisComponentIsUsedOn("my-nav");
     expect(pages).toContain("page-a");
     expect(pages).toContain("page-b");
@@ -130,8 +132,8 @@ describe("pagesThisComponentIsUsedOn", () => {
     expect(mem.pagesThisComponentIsUsedOn("unused-comp")).toEqual([]);
   });
 
-  it("removes a page from the component index when the page is removed", () => {
-    storeSample("comp-page", ["my-widget"]);
+  it("removes a page from the component index when the page is removed", async () => {
+    await storeSample("comp-page", ["my-widget"]);
     expect(mem.pagesThisComponentIsUsedOn("my-widget")).toContain("comp-page");
     mem.removePage("comp-page");
     expect(mem.pagesThisComponentIsUsedOn("my-widget")).not.toContain(
@@ -145,13 +147,13 @@ describe("pagesThisComponentIsUsedOn", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("storePage update", () => {
-  it("overwrites an existing page with new content", () => {
-    mem.storePage({
+  it("overwrites an existing page with new content", async () => {
+    await mem.storePage({
       relativePagePath: "update-test",
       absolutePagePath: "update-test",
       pageContent: "<html>v1</html>",
     });
-    mem.storePage({
+    await mem.storePage({
       relativePagePath: "update-test",
       absolutePagePath: "update-test",
       pageContent: "<html>v2</html>",
@@ -162,9 +164,9 @@ describe("storePage update", () => {
     expect(page?.content.toString()).not.toContain("v1");
   });
 
-  it("updates the component index when a page drops a component", () => {
+  it("updates the component index when a page drops a component", async () => {
     // First store with two components
-    mem.storePage({
+    await mem.storePage({
       relativePagePath: "upd-comp",
       absolutePagePath: "upd-comp",
       pageContent: "<html></html>",
@@ -173,7 +175,7 @@ describe("storePage update", () => {
     expect(mem.pagesThisComponentIsUsedOn("comp-b")).toContain("upd-comp");
 
     // Re-store with only comp-a (comp-b dropped)
-    mem.storePage({
+    await mem.storePage({
       relativePagePath: "upd-comp",
       absolutePagePath: "upd-comp",
       pageContent: "<html></html>",

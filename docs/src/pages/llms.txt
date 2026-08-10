@@ -799,6 +799,8 @@ export const bascikConfig = {
     sitemap: true,
     robots: true,
   },
+
+  useWorkers: false,
 };
 
 export const buildOverrideConfig = {
@@ -984,6 +986,19 @@ export const buildOverrideConfig = {
 
 > **When to inline.** Stylesheets under ~15 KB (gzipped) are good candidates. Larger stylesheets are better loaded asynchronously or split into critical and non-critical parts.
 
+#### `useWorkers`
+
+Transpile pages across a pool of CPU-core worker threads instead of sequentially on the main thread.
+
+```js
+useWorkers: false // default
+useWorkers: true
+```
+
+Spinning up the worker pool has a fixed cost — each worker loads the transpiler's module graph independently, which takes roughly 15-250ms in total depending on machine and cache state (all workers load in parallel, so this is a one-time fixed delay, not a per-page cost). For small sites, or sites without slow per-page work, this fixed cost outweighs the benefit of spreading pages across cores, and sequential transpilation on the main thread finishes first.
+
+> **When to enable.** Turn this on for larger sites (dozens of pages or more) doing CPU-heavy work per page — complex CSS/JS scoping across many components. It will not help much on sites whose slow parts are I/O-bound (e.g. `<script data-bascik-build>` blocks that fetch data or spawn subprocesses), since that work is already asynchronous regardless of which thread initiates it.
+
 ### `buildOverrideConfig`
 
 Exporting a second `buildOverrideConfig` object lets you set options that only apply during `bascik --build`, overriding the values in `bascikConfig`. A common pattern is to enable obfuscation and minification only in production:
@@ -1105,12 +1120,14 @@ All logic lives in `pkg/src/lib/`. Each file has a single, well-defined responsi
 | `watch.ts` | Sets up chokidar watchers for pages, components, and static assets. Triggers full or selective re-transpilation on file events. |
 | `http2.ts` | The development HTTP/2 server on `https://localhost:8443`. Serves transpiled pages from the memory store, static assets from disk, and the live-reload SSE endpoint. |
 | `mem.ts` | In-memory page store. Stores brotli-compressed page buffers keyed by HTTP path, and maintains a reverse index mapping each component name to the set of pages that use it. |
+| `worker-pool.ts` | Generic fixed-size thread pool. Spawns N workers once, dispatches tasks via a queue, and reuses workers across calls to avoid per-task spawn overhead. |
+| `page-worker.ts` | Worker thread entry point. Receives a page path, calls `transpilePage()` (pure computation, no side effects), and posts the result back to the pool. |
 | `pki.ts` | Generates a self-signed TLS certificate (`bascik-cert.pem` / `bascik-privkey.pem`) via OpenSSL or PowerShell on Windows. |
 | `file-system.ts` | File-system helpers: recursive directory listing, path resolution between source and dist, copying static assets. |
 | `paths.ts` | Converts file-system paths to HTTP paths (stripping the `src/pages` prefix, removing `.html` extensions). |
 | `events.ts` | A simple Node.js `EventEmitter` shared between the watch system, processing pipeline, and HTTP/2 server to signal live-reload events. |
 | `mime.ts` | A static MIME type map used by the HTTP/2 server and the watch system's file-type filter. |
-| `types.ts` | Central TypeScript type definitions: `BascikComponent`, `ComponentList`, `TranspileResult`, `BascikConfigOptions`, `StoredPage`. |
+| `types.ts` | Central TypeScript type definitions: `BascikComponent`, `ComponentList`, `TranspileResult`, `TranspilePageResult`, `BascikConfigOptions`, `StoredPage`. |
 
 ## Dependency Graph
 
@@ -1129,6 +1146,8 @@ transpile.ts
   │           │     └── names.ts
   │           ├── styles.ts
   │           ├── build-scripts.ts
+  │           ├── worker-pool.ts → page-worker.ts
+  │           │     └── (transpilePage — no side effects)
   │           ├── mem.ts ← paths.ts
   │           └── events.ts
   └── (dev only)
@@ -1153,6 +1172,16 @@ Bascik intentionally avoids DOM parsers (e.g. `htmlparser2`, `parse5`). Componen
 ### TypeScript compiled to ESM
 
 The package ships as native ESM (`"type": "module"` in `package.json`). TypeScript is compiled by `tsc` using `tsconfig.build.json` which targets `ES2023` and emits to `pkg/dist/`. The `tsconfig.json` (without the `.build` suffix) is used by Vitest and includes test files.
+
+### CPU-aware worker pool (opt-in)
+
+When `useWorkers: true` is set in `bascik.config.js` (default `false`), `processAllPages()` creates `Math.min(os.cpus().length, pageCount)` worker threads via `worker-pool.ts` instead of transpiling sequentially on the main thread. Each worker is initialised once with the pre-computed `componentList` and `globalStylesHtml`, then reused for every page assigned to it. The main thread dispatches page paths through the pool's task queue and collects results to apply side effects (memory storage, event emission) after all workers complete.
+
+Spinning up the pool has a fixed cost — each worker loads the transpiler's module graph independently before it can process its first page. This pays for itself on larger sites with CPU-heavy per-page work, but for small sites (or sites whose slow parts are I/O-bound, like `<script data-bascik-build>` blocks) sequential transpilation on the main thread is often faster overall. See the [`useWorkers`](/configuration#useworkers) config option.
+
+### Memory-first dev serving
+
+In dev mode, `pageProcessing()` writes the transpiled HTML to the in-memory store and emits the `"transpiled"` event before writing anything to disk. The HTTP/2 server can serve the updated page immediately. Disk writes are skipped entirely in dev — `dist/` is only written during `--build`.
 
 <p class="section-label">Internals</p>
 
@@ -1209,11 +1238,11 @@ This inverted index powers selective re-transpilation. When a component file cha
 
 ### Brotli compression
 
-Pages are brotli-compressed synchronously (`zlib.brotliCompressSync`) when stored and served pre-compressed when the client sends `Accept-Encoding: br`. This avoids compressing on every request.
+Pages are brotli-compressed asynchronously (`zlib.brotliCompress`) when stored. All in-flight compression calls for a given batch of pages run concurrently via `Promise.all`, so startup cost scales with the slowest single page rather than the sum. The compressed buffer is served pre-compressed when the client sends `Accept-Encoding: br`, avoiding per-request compression.
 
 ## Watch System (`watch.ts`)
 
-Three separate chokidar watchers are started by `watchFiles()`:
+Three separate chokidar watchers are started by `watchFiles()`. All watchers use polling mode (`usePolling: true`) to avoid hitting OS file-descriptor limits on large projects.
 
 ### Watcher 1 — Static assets
 
@@ -1221,13 +1250,15 @@ Watches the pages directory for any file matching the MIME map. On `add` or `cha
 
 ### Watcher 2 — Page HTML files
 
-Watches the pages directory for `.html` files only. On `add` or `change`, `pageProcessing(path)` is called, running the full transpilation pipeline. On `unlink`, the page is removed from the memory store and deleted from `dist/`.
+Watches the pages directory for `.html` files only. On the initial `"ready"` event, `processAllPages()` is called — this pre-computes the component list once, then transpiles all pages sequentially on the main thread by default, or across a CPU-aware worker pool if `useWorkers: true` is configured. After the initial scan, individual `add` or `change` events call `pageProcessing(path)` for that file alone.
+
+On `unlink`, the page is removed from the memory store and deleted from `dist/`.
 
 ### Watcher 3 — Component files
 
 Watches the components directory for `.html` and `.css` files. Uses `ignoreInitial: true` so it only fires on changes after startup.
 
-- **add** — a new component was created; all pages are reprocessed because any page might use it.
+- **add** — a new component was created; `processAllPages()` is called to rebuild everything using the updated component list.
 - **change / unlink** — `selectivelyProcessPages(path)` uses the inverted component index to rebuild only affected pages.
 
 ## Live Reload
@@ -1684,6 +1715,15 @@ Every time a source page or component file changes, `pageProcessing(filePath)` i
 
 Build scripts (`<script data-bascik-build>`) run **first**, before minification, so their output can contain component tags that will be resolved by the component phase.
 
+## Multi-Page Startup: `processAllPages`
+
+On startup (and whenever a component is added), the watch system calls `processAllPages()` instead of invoking `pageProcessing()` once per file. This avoids redundant I/O:
+
+1. **Hoist shared computation.** `listComponents()` and `resolveInlineStylesHtml()` each run **once**, in parallel, before any page is processed. The results are passed to every page rather than re-computed per page.
+2. **Transpile each page.** By default, pages are transpiled sequentially on the main thread. If `useWorkers: true` is set in `bascik.config.js`, a `WorkerPool` is created instead with `Math.min(os.cpus().length, pageCount)` workers, and each worker is initialised with the shared `componentList` and `globalStylesHtml` via `workerData`. The main thread dispatches page paths through the pool's queue and awaits all results. Worker startup has a fixed cost (each worker loads the transpiler's module graph independently), so this only pays off for larger sites or CPU-heavy per-page work — see the [`useWorkers`](/configuration#useworkers) config option.
+3. **Apply side effects on the main thread.** After transpilation completes, the main thread runs `mem.storePage()` and emits the `"transpiled"` event for each result. Brotli compression inside `storePage()` runs in the background and does not block the page from being marked ready or served.
+4. **Write to disk only in build mode.** In dev mode, pages are served entirely from the in-memory store — no `dist/` writes happen, so the server is ready as soon as memory is populated.
+
 ## Phase 1 — Page Phase (`pageProcessing`)
 
 The page phase prepares the source HTML document and orchestrates the component phase:
@@ -1733,7 +1773,7 @@ Each step is skipped if disabled in `bascik.config.js`.
 The recursion terminates when `getFirstComponent` no longer finds any custom tag in the HTML string — i.e., when all recognised component names have been replaced with plain HTML.
 
 <div class="callout">
-<p><strong>Performance note:</strong> Each call to <code>recursivelyTranspile</code> uses the same in-memory <code>ComponentList</code> built once at the start of <code>pageProcessing</code>. Components are never re-read from disk mid-pipeline.</p>
+<p><strong>Performance note:</strong> Each call to <code>recursivelyTranspile</code> uses the same in-memory <code>ComponentList</code> built once at the start of the pipeline. In the multi-page startup path, this list is pre-computed once and passed to every worker via <code>workerData</code> — components are never re-read from disk per page or per worker.</p>
 </div>
 
 ## Selective Re-transpilation

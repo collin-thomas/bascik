@@ -38,6 +38,8 @@ export const bascikConfig = {
     sitemap: true,
     robots: true,
   },
+
+  useWorkers: false,
 };
 
 export const buildOverrideConfig = {
@@ -222,6 +224,19 @@ export const buildOverrideConfig = {
 ```
 
 > **When to inline.** Stylesheets under ~15 KB (gzipped) are good candidates. Larger stylesheets are better loaded asynchronously or split into critical and non-critical parts.
+
+#### `useWorkers`
+
+Transpile pages across a pool of CPU-core worker threads instead of sequentially on the main thread.
+
+```js
+useWorkers: false // default
+useWorkers: true
+```
+
+Spinning up the worker pool has a fixed cost — each worker loads the transpiler's module graph independently, which takes roughly 15-250ms in total depending on machine and cache state (all workers load in parallel, so this is a one-time fixed delay, not a per-page cost). For small sites, or sites without slow per-page work, this fixed cost outweighs the benefit of spreading pages across cores, and sequential transpilation on the main thread finishes first.
+
+> **When to enable.** Turn this on for larger sites (dozens of pages or more) doing CPU-heavy work per page — complex CSS/JS scoping across many components. It will not help much on sites whose slow parts are I/O-bound (e.g. `<script data-bascik-build>` blocks that fetch data or spawn subprocesses), since that work is already asynchronous regardless of which thread initiates it.
 
 ### `buildOverrideConfig`
 

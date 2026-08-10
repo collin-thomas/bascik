@@ -161,3 +161,17 @@ describe("deduplicateCss", () => {
     deduplicateCss(usedComponents);
   });
 });
+
+describe("multi-page transpilation simulation", () => {
+  bench("20 pages × recursivelyTranspile (sequential)", () => {
+    for (let p = 0; p < 20; p++) {
+      recursivelyTranspile(PAGE_BODY_10, COMPONENT_LIST_10);
+    }
+  });
+
+  bench("50 pages × recursivelyTranspile (sequential)", () => {
+    for (let p = 0; p < 50; p++) {
+      recursivelyTranspile(PAGE_BODY_10, COMPONENT_LIST_10);
+    }
+  });
+});

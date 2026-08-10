@@ -55,6 +55,8 @@
 
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { readFileSync } from "node:fs";
+import { cpus } from "node:os";
+import { fileURLToPath } from "node:url";
 import {
   listPages,
   getDirectoryPath,
@@ -85,10 +87,12 @@ import { BascikConfig } from "./config.js";
 import { mem } from "./mem.js";
 import { eventEmitter } from "./events.js";
 import { generateSitemapFiles } from "./sitemap.js";
+import { WorkerPool } from "./worker-pool.js";
 import type {
   BascikComponent,
   ComponentList,
   TranspileResult,
+  TranspilePageResult,
 } from "./types.js";
 
 export const getFilePosition = (
@@ -151,6 +155,24 @@ const resolveInlineStyles = async (): Promise<string[]> => {
     return BascikConfig.inlineStyles;
   }
   return [];
+};
+
+export const resolveInlineStylesHtml = async (): Promise<string> => {
+  const inlineStyles = await resolveInlineStyles();
+  if (!inlineStyles.length) return "";
+  const sheets = await Promise.all(
+    inlineStyles.map(async (filePath) => {
+      try {
+        const css = (await readFile(filePath)).toString();
+        return BascikConfig.minifyStyles ? minifyCss(css) : css;
+      } catch (error) {
+        console.warn(`[bascik] inlineStyles: could not read "${filePath}":`, (error as Error).message);
+        return "";
+      }
+    }),
+  );
+  const combined = sheets.filter(Boolean).join(" ");
+  return combined ? `<style>${combined}</style>` : "";
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -387,25 +409,59 @@ export const selectivelyProcessPages = async (path: string): Promise<void> => {
   if (!componentName) return;
   const pagesToTranspile = mem.pagesThisComponentIsUsedOn(componentName);
   const componentList = await listComponents();
-  pagesToTranspile.map((absolutePagePath: string) => {
-    // We need the absolute page path for pageProcessing
-    return pageProcessing(absolutePagePath, componentList);
-  });
-};
-
-export const processAllPages = async () => {
-  const start = performance.now();
-  // Parallel processing of pages
-  const [pages, componentList] = await Promise.all([
-    listPages(),
-    listComponents(),
-  ]);
-  const pageList = pages ?? [];
-  const results = await Promise.all(
-    pageList.map((path: string) => {
-      return pageProcessing(path, componentList);
+  await Promise.all(
+    pagesToTranspile.map((absolutePagePath: string) => {
+      // We need the absolute page path for pageProcessing
+      return pageProcessing(absolutePagePath, componentList);
     }),
   );
+};
+
+export const processAllPages = async (options?: { useWorkers?: boolean }) => {
+  const useWorkers = options?.useWorkers ?? BascikConfig.useWorkers ?? false;
+  const start = performance.now();
+  // Parallel processing of pages
+  const [pages, componentList, globalStylesHtml] = await Promise.all([
+    listPages(),
+    listComponents(),
+    resolveInlineStylesHtml(),
+  ]);
+  const pageList = pages ?? [];
+
+  let results: (TranspilePageResult | null)[];
+
+  if (useWorkers && pageList.length > 0) {
+    const workerUrl = new URL("./page-worker.js", import.meta.url);
+    const poolSize = Math.min(cpus().length, pageList.length);
+    const pool = new WorkerPool<string, TranspilePageResult | null>(
+      fileURLToPath(workerUrl),
+      poolSize,
+      { componentList, globalStylesHtml },
+    );
+    results = await Promise.all(pageList.map((path) => pool.run(path)));
+    pool.terminate();
+  } else {
+    results = await Promise.all(
+      pageList.map((path) => transpilePage(path, componentList, globalStylesHtml)),
+    );
+  }
+
+  // Side effects that must happen on the main thread
+  await Promise.all(
+    results.map(async (result) => {
+      if (!result) return;
+      if (!BascikConfig.isBuild) {
+        await mem.storePage({
+          relativePagePath: result.relativePagePath,
+          absolutePagePath: result.absolutePagePath,
+          pageContent: result.distHtml,
+          usedComponentsNames: result.usedComponentsNames,
+        });
+      }
+      eventEmitter.emit("transpiled", { relativePagePath: result.relativePagePath });
+    })
+  );
+
   const count = results.filter(Boolean).length;
   const elapsed = Math.round(performance.now() - start);
   console.log(
@@ -416,13 +472,34 @@ export const processAllPages = async () => {
     await generateSitemapFiles();
   }
 
-  return results;
+  return results.map((r) => r?.relativePagePath ?? null);
 };
 
 export const pageProcessing = async (
   pagePath: string,
   componentList?: ComponentList,
+  globalStylesHtml?: string,
 ) => {
+  const result = await transpilePage(pagePath, componentList, globalStylesHtml);
+  if (!result) return;
+  const { relativePagePath, absolutePagePath, distHtml, usedComponentsNames } = result;
+  if (!BascikConfig.isBuild) {
+    await mem.storePage({
+      relativePagePath,
+      absolutePagePath,
+      pageContent: distHtml,
+      usedComponentsNames,
+    });
+  }
+  eventEmitter.emit("transpiled", { relativePagePath });
+  return relativePagePath;
+};
+
+export const transpilePage = async (
+  pagePath: string,
+  componentList?: ComponentList,
+  globalStylesHtml?: string,
+): Promise<TranspilePageResult | null> => {
   const relativePagePath = getRelativePath(pagePath, "pages");
 
   if (!componentList) {
@@ -488,22 +565,8 @@ export const pageProcessing = async (
 
   // Read and inline any global stylesheets configured via `inlineStyles`.
   // Global styles are injected before component styles so component rules win.
-  let globalStylesHtml = "";
-  const inlineStyles = await resolveInlineStyles();
-  if (inlineStyles.length > 0) {
-    const sheets = await Promise.all(
-      inlineStyles.map(async (filePath) => {
-        try {
-          const css = (await readFile(filePath)).toString();
-          return BascikConfig.minifyStyles ? minifyCss(css) : css;
-        } catch (error) {
-          console.warn(`[bascik] inlineStyles: could not read "${filePath}":`, (error as Error).message);
-          return "";
-        }
-      }),
-    );
-    const combined = sheets.filter(Boolean).join(" ");
-    if (combined) globalStylesHtml = `<style>${combined}</style>`;
+  if (globalStylesHtml === undefined) {
+    globalStylesHtml = await resolveInlineStylesHtml();
   }
 
   let transpiledHead = `${transpiledHeadContent}${globalStylesHtml}
@@ -543,46 +606,32 @@ export const pageProcessing = async (
 
   const allUsedComponents = [...usedComponents, ...headUsedComponents];
 
-  // Memory
-  if (!BascikConfig.isBuild) {
-    mem.storePage({
-      relativePagePath,
-      absolutePagePath: pagePath,
-      pageContent: distHtml,
-      usedComponentsNames: allUsedComponents.map(({ name }) => name),
-    });
-  }
-
-  // File system is done async.
-  // Wrapped in try catch in IIFE so we know where the exception came from.
-  (async () => {
-    // Create directory
-    // Doesn't hurt to run it if it exists, and it creates dist if it doesn't exist
+  // Only write to disk during build. Dev server serves from memory.
+  if (BascikConfig.isBuild) {
     const directoryPath = getDirectoryPath(relativePagePath);
     try {
       await mkdir(`dist/${directoryPath}`, { recursive: true });
     } catch (error) {
       console.error("Make directory error", error);
     }
-
-    // Write the transpiled html
     const distPagePath = getDistPagePath(relativePagePath);
     try {
       await writeFile(distPagePath, distHtml);
     } catch (error) {
-      // Ignore file doesn't exist, race condition
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
         console.error("Write file error", error);
       }
     }
-  })();
+  }
 
   console.log(`transpiled: ${relativePagePath}`);
 
-  eventEmitter.emit("transpiled", { relativePagePath });
-
-  // The return is only for debugging
-  return relativePagePath;
+  return {
+    relativePagePath,
+    absolutePagePath: pagePath,
+    distHtml,
+    usedComponentsNames: allUsedComponents.map(({ name }) => name),
+  };
 };
 
 export const removePage = (absolutePagePath: string): void => {

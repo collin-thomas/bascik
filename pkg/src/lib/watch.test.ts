@@ -185,10 +185,18 @@ describe("watchFiles – html page watcher (watcher 1)", () => {
     await watchFiles();
   });
 
-  it("calls pageProcessing on 'add'", () => {
-    const handler = getHandler(1, "add");
-    handler?.("/path/to/page.html");
-    expect(pageProcessing).toHaveBeenCalledWith("/path/to/page.html");
+  it("calls processAllPages on 'ready'", async () => {
+    const readyHandler = getHandler(1, "ready");
+    vi.clearAllMocks();
+    await readyHandler?.();
+    expect(processAllPages).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls pageProcessing on 'add' after ready", () => {
+    // ready already fired during watchFiles() in beforeEach; initialScanDone is true
+    const addHandler = getHandler(1, "add");
+    addHandler?.("/path/to/new-page.html");
+    expect(pageProcessing).toHaveBeenCalledWith("/path/to/new-page.html");
   });
 
   it("calls pageProcessing on 'change'", () => {

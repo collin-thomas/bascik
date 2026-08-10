@@ -10,6 +10,15 @@ Every time a source page or component file changes, `pageProcessing(filePath)` i
 
 Build scripts (`<script data-bascik-build>`) run **first**, before minification, so their output can contain component tags that will be resolved by the component phase.
 
+## Multi-Page Startup: `processAllPages`
+
+On startup (and whenever a component is added), the watch system calls `processAllPages()` instead of invoking `pageProcessing()` once per file. This avoids redundant I/O:
+
+1. **Hoist shared computation.** `listComponents()` and `resolveInlineStylesHtml()` each run **once**, in parallel, before any page is processed. The results are passed to every page rather than re-computed per page.
+2. **Transpile each page.** By default, pages are transpiled sequentially on the main thread. If `useWorkers: true` is set in `bascik.config.js`, a `WorkerPool` is created instead with `Math.min(os.cpus().length, pageCount)` workers, and each worker is initialised with the shared `componentList` and `globalStylesHtml` via `workerData`. The main thread dispatches page paths through the pool's queue and awaits all results. Worker startup has a fixed cost (each worker loads the transpiler's module graph independently), so this only pays off for larger sites or CPU-heavy per-page work — see the [`useWorkers`](/configuration#useworkers) config option.
+3. **Apply side effects on the main thread.** After transpilation completes, the main thread runs `mem.storePage()` and emits the `"transpiled"` event for each result. Brotli compression inside `storePage()` runs in the background and does not block the page from being marked ready or served.
+4. **Write to disk only in build mode.** In dev mode, pages are served entirely from the in-memory store — no `dist/` writes happen, so the server is ready as soon as memory is populated.
+
 ## Phase 1 — Page Phase (`pageProcessing`)
 
 The page phase prepares the source HTML document and orchestrates the component phase:
@@ -59,7 +68,7 @@ Each step is skipped if disabled in `bascik.config.js`.
 The recursion terminates when `getFirstComponent` no longer finds any custom tag in the HTML string — i.e., when all recognised component names have been replaced with plain HTML.
 
 <div class="callout">
-<p><strong>Performance note:</strong> Each call to <code>recursivelyTranspile</code> uses the same in-memory <code>ComponentList</code> built once at the start of <code>pageProcessing</code>. Components are never re-read from disk mid-pipeline.</p>
+<p><strong>Performance note:</strong> Each call to <code>recursivelyTranspile</code> uses the same in-memory <code>ComponentList</code> built once at the start of the pipeline. In the multi-page startup path, this list is pre-computed once and passed to every worker via <code>workerData</code> — components are never re-read from disk per page or per worker.</p>
 </div>
 
 ## Selective Re-transpilation

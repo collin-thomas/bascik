@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CSS `@scope` support** — class names in `@scope (.selector)` and `@scope (.selector) to (.selector)` arguments are now scoped by the global class-scoping pass. Class names and element selectors inside `@scope { }` blocks follow the same rules as other at-rules. This was already implicitly working; the compatibility documentation has been updated to reflect ✅ status.
 - **Descendant element selectors after a class** (`Pass 4`) — `.card p {}`, `.list > li {}`, `.article > h2 {}` are now fully scoped. The element name is converted to a scoped class and injected onto matching HTML elements. This applies to any element selector preceded by a scoped class name with an optional combinator (`>`, `+`, `~`, or space). Bare element–element combinators (`div p {}`) still require a class anchor on the left side.
 - `inheritAttributes` config option — attribute inheritance can now be disabled explicitly while remaining enabled by default.
+- `useWorkers` config option — transpile pages across a pool of CPU-core worker threads instead of sequentially on the main thread. Defaults to `false`; recommended for larger sites or CPU-heavy per-page work, since worker startup has a fixed cost that isn't worth paying on small sites. Component list and global inline styles are pre-computed once and shared across all workers via `workerData`.
+- The dev server now serves pages from memory as soon as they are transpiled, without waiting on disk writes — disk output is skipped entirely in dev mode and only happens during `--build`.
 
 ### Fixed
 
@@ -20,11 +22,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `injectProps`: the "strip remaining markers" step now only removes `data-bascik-prop-*` attributes that have **no value** (prop receivers inside the current component). Attributes with a value (e.g. `data-bascik-prop-label="featured"` on a child component tag) are preserved, so nested components correctly receive props passed through self-closing tags. Previously, the strip regex would partially match and corrupt child component usage tags (e.g. `<inner-badge data-bascik-prop-label="featured" />` became `<inner-badgel="featured" />`), causing `replaceTag` to fail to substitute the tag and leading to infinite recursion (stack overflow).
 - Bare element selectors inside indented CSS contexts — including inline `<style>` blocks and at-rules like `@media` — are now scoped instead of leaking globally.
 - The dev server now waits for the initial page transpile to finish before reporting its URL, which prevents immediate-open 404s on larger projects.
+- `BascikConfig.isBuild` is now correctly `true` inside worker threads during `bascik --build`. Worker threads do not inherit the main process's CLI arguments (`process.argv`), only their own script path, so `isBuild` previously evaluated to `false` inside every worker — silently skipping all disk writes and any other `isBuild`-gated config overrides whenever the worker pool was used (the default). Fixed by propagating `isBuild` through `process.env.BASCIK_BUILD`, which workers do inherit.
+- `chokidar` watchers now use `usePolling` to avoid hitting the OS file-descriptor limit (`EMFILE`) on projects with a large number of files.
+- The disk write in `transpilePage()` is now awaited instead of fire-and-forget, so `processAllPages()` no longer terminates the worker pool before pending writes complete.
+- `mem.storePage()` now compresses page content with async `zlib.brotliCompress` instead of `brotliCompressSync`, allowing all pages in a batch to compress concurrently instead of blocking the event loop one at a time.
+- Brotli compression no longer blocks a page from being marked "transpiled" or served. `mem.storePage()` stores the raw content immediately and compresses in the background; the server falls back to uncompressed content for any request that arrives before compression finishes. This removed ~1 second from a 30-page dev-server startup (roughly 40% of total time) that was previously spent entirely on brotli quality-11 compression before the server could report itself ready.
 
 ### Changed
 
 - Extra dev-mode re-transpile paths now live under `directory.watch`.
 - `inlineStyles` now accepts `false`, `true`, or an explicit array of file paths so projects can choose no global inlining, all page CSS, or specific stylesheets.
+- `useWorkers` now defaults to `false` (sequential main-thread transpilation). Worker startup has a fixed cost — each worker independently loads the transpiler's module graph before processing its first page — which outweighs the parallelism benefit on small sites or sites whose slow parts are I/O-bound (e.g. `<script data-bascik-build>` blocks), rather than CPU-bound.
 
 ## [0.1.0] - 2026-07-25
 

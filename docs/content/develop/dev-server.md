@@ -53,11 +53,11 @@ This inverted index powers selective re-transpilation. When a component file cha
 
 ### Brotli compression
 
-Pages are brotli-compressed synchronously (`zlib.brotliCompressSync`) when stored and served pre-compressed when the client sends `Accept-Encoding: br`. This avoids compressing on every request.
+Pages are brotli-compressed asynchronously (`zlib.brotliCompress`) when stored. All in-flight compression calls for a given batch of pages run concurrently via `Promise.all`, so startup cost scales with the slowest single page rather than the sum. The compressed buffer is served pre-compressed when the client sends `Accept-Encoding: br`, avoiding per-request compression.
 
 ## Watch System (`watch.ts`)
 
-Three separate chokidar watchers are started by `watchFiles()`:
+Three separate chokidar watchers are started by `watchFiles()`. All watchers use polling mode (`usePolling: true`) to avoid hitting OS file-descriptor limits on large projects.
 
 ### Watcher 1 — Static assets
 
@@ -65,13 +65,15 @@ Watches the pages directory for any file matching the MIME map. On `add` or `cha
 
 ### Watcher 2 — Page HTML files
 
-Watches the pages directory for `.html` files only. On `add` or `change`, `pageProcessing(path)` is called, running the full transpilation pipeline. On `unlink`, the page is removed from the memory store and deleted from `dist/`.
+Watches the pages directory for `.html` files only. On the initial `"ready"` event, `processAllPages()` is called — this pre-computes the component list once, then transpiles all pages sequentially on the main thread by default, or across a CPU-aware worker pool if `useWorkers: true` is configured. After the initial scan, individual `add` or `change` events call `pageProcessing(path)` for that file alone.
+
+On `unlink`, the page is removed from the memory store and deleted from `dist/`.
 
 ### Watcher 3 — Component files
 
 Watches the components directory for `.html` and `.css` files. Uses `ignoreInitial: true` so it only fires on changes after startup.
 
-- **add** — a new component was created; all pages are reprocessed because any page might use it.
+- **add** — a new component was created; `processAllPages()` is called to rebuild everything using the updated component list.
 - **change / unlink** — `selectivelyProcessPages(path)` uses the inverted component index to rebuild only affected pages.
 
 ## Live Reload
