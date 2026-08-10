@@ -100,10 +100,6 @@ export interface BascikConfigOptions {
    */
   siteUrl?: string;
   /**
-  * @deprecated Use `directory.watch` instead.
-  */
-  triggerTranspile?: string[];
-  /**
   * Stylesheets to inline into every page's `<head>` during transpilation.
   *
   * - `false` (default) — do not inline any global stylesheets.

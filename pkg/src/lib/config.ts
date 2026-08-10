@@ -30,39 +30,44 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild"> = {
     sitemap: true,
     robots: true,
   },
-  triggerTranspile: [],
   inlineStyles: false,
 };
 
 const initBascikConfig = (
   userConfig: Partial<Omit<BascikConfigOptions, "isBuild">>,
 ) => {
-  const legacyWatch = userConfig.triggerTranspile ?? [];
+  const { triggerTranspile: _removedTriggerTranspile, ...sanitizedUserConfig } =
+    userConfig as Partial<Omit<BascikConfigOptions, "isBuild">> & {
+      triggerTranspile?: string[];
+    };
+  const {
+    triggerTranspile: _removedBuildOverrideTriggerTranspile,
+    ...sanitizedBuildOverrideConfig
+  } = buildOverrideConfig as Partial<Omit<BascikConfigOptions, "isBuild">> & {
+    triggerTranspile?: string[];
+  };
   const userDirectory: Partial<BascikConfigOptions["directory"]> =
-    userConfig.directory ?? {};
+    sanitizedUserConfig.directory ?? {};
   const buildDirectory: Partial<BascikConfigOptions["directory"]> =
-    buildOverrideConfig.directory ?? {};
+    sanitizedBuildOverrideConfig.directory ?? {};
   const BascikConfig: BascikConfigOptions = {
     ...defaultConfig,
-    ...userConfig,
-    ...(isBuild ? buildOverrideConfig : {}),
+    ...sanitizedUserConfig,
+    ...(isBuild ? sanitizedBuildOverrideConfig : {}),
     directory: {
       ...defaultConfig.directory,
       ...userDirectory,
-      ...(legacyWatch.length && !(userDirectory.watch?.length ?? 0)
-        ? { watch: legacyWatch }
-        : {}),
       ...(isBuild ? buildDirectory : {}),
     },
     scopeAttribute: {
       ...defaultConfig.scopeAttribute,
-      ...(userConfig.scopeAttribute ?? {}),
-      ...(isBuild ? (buildOverrideConfig.scopeAttribute ?? {}) : {}),
+      ...(sanitizedUserConfig.scopeAttribute ?? {}),
+      ...(isBuild ? (sanitizedBuildOverrideConfig.scopeAttribute ?? {}) : {}),
     },
     generate: {
       ...defaultConfig.generate,
-      ...(userConfig.generate ?? {}),
-      ...(isBuild ? (buildOverrideConfig.generate ?? {}) : {}),
+      ...(sanitizedUserConfig.generate ?? {}),
+      ...(isBuild ? (sanitizedBuildOverrideConfig.generate ?? {}) : {}),
     },
     isBuild,
   };

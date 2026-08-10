@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Extra dev-mode re-transpile paths now live under `directory.watch`; the previous `triggerTranspile` config key remains supported as a compatibility alias.
+- Extra dev-mode re-transpile paths now live under `directory.watch`.
 - `inlineStyles` now accepts `false`, `true`, or an explicit array of file paths so projects can choose no global inlining, all page CSS, or specific stylesheets.
 
 ## [0.1.0] - 2026-07-25
