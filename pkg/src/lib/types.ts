@@ -23,6 +23,7 @@ export interface TranspileResult {
 
 export interface BascikConfigOptions {
   scopeScriptBlocks: boolean;
+  inheritAttributes: boolean;
   scopeAttribute: {
     class: boolean;
     id: boolean;
@@ -39,6 +40,15 @@ export interface BascikConfigOptions {
   directory: {
     pages: string;
     components: string;
+    /**
+     * Extra directories or files to watch in dev mode. Any change inside these
+     * paths triggers a full re-transpile of all pages, just like a component
+     * change would. Has no effect during `bascik --build`.
+     *
+     * @example
+     * watch: ['scripts/', 'data/']
+     */
+    watch: string[];
   };
   minifyStyles: boolean;
   /**
@@ -66,7 +76,7 @@ export interface BascikConfigOptions {
    * Tag names whose inner content is left untouched by the scoping pipeline.
    * Attribute values, element-selector class injection, and JS selector
    * rewriting are all skipped inside these elements.
-   * Defaults to ["code", "pre"].
+   * Defaults to ["code"].
    */
   skipTranspilingElementContents: string[];
   /**
@@ -90,25 +100,25 @@ export interface BascikConfigOptions {
    */
   siteUrl?: string;
   /**
-   * Extra directories or files to watch in dev mode. Any change inside these
-   * paths triggers a full re-transpile of all pages, just like a component
-   * change would. Has no effect during `bascik --build`.
-   *
-   * @example
-   * triggerTranspile: ['scripts/', 'images/']
-   */
+  * @deprecated Use `directory.watch` instead.
+  */
   triggerTranspile?: string[];
   /**
-   * Stylesheet files to read and inline as `<style>` tags into every page's
-   * `<head>` during transpilation. Paths are relative to the project root.
+  * Stylesheets to inline into every page's `<head>` during transpilation.
+  *
+  * - `false` (default) — do not inline any global stylesheets.
+  * - `true` — inline every `.css` file under `directory.pages`.
+  * - `string[]` — inline only the listed stylesheet paths (relative to the
+  *   project root).
+  *
    * When `minifyStyles` is true the content is minified before injection.
-   * Global styles are injected before component styles so component rules
-   * take precedence.
+  * Global styles are injected before component styles so component rules take
+  * precedence.
    *
    * @example
    * inlineStyles: ['src/pages/css/styles.css']
    */
-  inlineStyles?: string[];
+  inlineStyles?: boolean | string[];
   isBuild?: boolean;
 }
 

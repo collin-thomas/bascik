@@ -6,14 +6,10 @@
  *   - The component's <style> block stays inline in the body (not hoisted to <head>)
  *   - No <style> tag appears inside the .card div itself (it precedes it as a sibling)
  *   - Class-scoped rules (.bascik__inline-style__card etc.) apply correct colours
+ *   - Bare element selectors inside the inline <style> block are scoped too
  *   - Prop values are injected correctly
  *   - Both instances share the same scoped class names and styles
  *   - Class-scoped rules do not bleed to elements outside the component
- *
- * Note: the `p { }` rule in the component's inline style is indented, so the
- * element-selector-to-class conversion (which only matches column-0 selectors)
- * does NOT scope it.  As a result, the `p { color: rgb(120, 180, 120); }` rule
- * is a global selector and applies to ALL <p> elements on the page.
  */
 import { test, expect, type Locator } from '@playwright/test';
 
@@ -69,21 +65,16 @@ test.describe('inline-style-test page', () => {
   });
 
   test('paragraph inside component has inline-style p rule applied', async ({ page }) => {
-    // The `p { color: rgb(120, 180, 120); }` rule in the inline style is a
-    // global selector (not scoped to a class) so it applies to the <p> inside
-    // the card.
     const { a } = getInstances(page);
     const p = a.locator('p');
     const color = await p.evaluate(el => getComputedStyle(el).color);
     expect(color).toBe('rgb(120, 180, 120)');
   });
 
-  test('class-scoped styles do not bleed: outside <p> has no card background', async ({ page }) => {
-    // The card background (rgb(14, 30, 14)) is tied to the scoped class
-    // .bascik__inline-style__card and must not appear on the outside <p>.
+  test('inline-style element selectors do not bleed to outside <p> elements', async ({ page }) => {
     const outsideP = page.locator('body > p');
-    const bg = await outsideP.evaluate(el => getComputedStyle(el).backgroundColor);
-    expect(bg).not.toBe('rgb(14, 30, 14)');
+    const color = await outsideP.evaluate(el => getComputedStyle(el).color);
+    expect(color).not.toBe('rgb(120, 180, 120)');
   });
 
   test('highlight-box has correct background color', async ({ page }) => {
