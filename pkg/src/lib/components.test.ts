@@ -447,7 +447,6 @@ describe("injectProps", () => {
   });
 
   it("handles undefined fileContent gracefully", () => {
-    // @ts-expect-error testing invalid input
     expect(injectProps(undefined, {})).toBe("");
   });
 });
