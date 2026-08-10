@@ -6,7 +6,11 @@ const { mockWatch, getWatcher, clearWatchers } = vi.hoisted(() => {
   const watchers: { on: ReturnType<typeof vi.fn> }[] = [];
   const makeWatcher = () => {
     const w = {
-      on: vi.fn(function (event: string, handler: (...args: any[]) => any) {
+      on: vi.fn(function (
+        this: { on: ReturnType<typeof vi.fn> },
+        event: string,
+        handler: (...args: any[]) => any,
+      ) {
         if (event === "ready") {
           void handler();
         }
