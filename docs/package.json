@@ -10,7 +10,7 @@
     "generate:llms": "node scripts/generate-llms-txt.mjs"
   },
   "dependencies": {
-    "@bascik/bascik": "../pkg/bascik-bascik-0.1.0.tgz",
+    "@bascik/bascik": "*",
     "esbuild": "^0.28.1",
     "marked": "^18.0.7"
   }

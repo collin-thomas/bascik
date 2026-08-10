@@ -1,0 +1,6 @@
+[build]
+  command   = "yarn workspace @bascik/bascik build && yarn --cwd docs bascik --build"
+  publish   = "docs/dist"
+
+[build.environment]
+  NODE_VERSION = "22"

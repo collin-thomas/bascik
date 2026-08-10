@@ -183,10 +183,10 @@ cd create && yarn build && npm publish --access public
 
 ### Install dependencies
 
-Requires Node.js ≥ 24.
+Requires Node.js ≥ 24. The repo uses yarn workspaces — run `yarn install` from the **repo root**, not this directory.
 
 ```sh
-cd pkg
+# from repo root
 yarn install
 ```
 
