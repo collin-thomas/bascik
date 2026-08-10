@@ -118,17 +118,4 @@ describe("BascikConfig.isBuild", () => {
     expect(mod.BascikConfig.isBuild).toBe(true);
     process.argv = original;
   });
-
-  it("ignores triggerTranspile from user config", async () => {
-    vi.doMock("./userConfig.js", () => ({
-      bascikConfig: {
-        triggerTranspile: ["scripts/", "data/"],
-      },
-      buildOverrideConfig: {},
-    }));
-    vi.resetModules();
-    const mod = await import("./config.js");
-    expect(mod.BascikConfig.directory.watch).toEqual([]);
-    expect(mod.BascikConfig).not.toHaveProperty("triggerTranspile");
-  });
 });

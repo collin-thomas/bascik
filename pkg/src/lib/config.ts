@@ -36,24 +36,14 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild"> = {
 const initBascikConfig = (
   userConfig: Partial<Omit<BascikConfigOptions, "isBuild">>,
 ) => {
-  const { triggerTranspile: _removedTriggerTranspile, ...sanitizedUserConfig } =
-    userConfig as Partial<Omit<BascikConfigOptions, "isBuild">> & {
-      triggerTranspile?: string[];
-    };
-  const {
-    triggerTranspile: _removedBuildOverrideTriggerTranspile,
-    ...sanitizedBuildOverrideConfig
-  } = buildOverrideConfig as Partial<Omit<BascikConfigOptions, "isBuild">> & {
-    triggerTranspile?: string[];
-  };
   const userDirectory: Partial<BascikConfigOptions["directory"]> =
-    sanitizedUserConfig.directory ?? {};
+    userConfig.directory ?? {};
   const buildDirectory: Partial<BascikConfigOptions["directory"]> =
-    sanitizedBuildOverrideConfig.directory ?? {};
+    buildOverrideConfig.directory ?? {};
   const BascikConfig: BascikConfigOptions = {
     ...defaultConfig,
-    ...sanitizedUserConfig,
-    ...(isBuild ? sanitizedBuildOverrideConfig : {}),
+    ...userConfig,
+    ...(isBuild ? buildOverrideConfig : {}),
     directory: {
       ...defaultConfig.directory,
       ...userDirectory,
@@ -61,13 +51,13 @@ const initBascikConfig = (
     },
     scopeAttribute: {
       ...defaultConfig.scopeAttribute,
-      ...(sanitizedUserConfig.scopeAttribute ?? {}),
-      ...(isBuild ? (sanitizedBuildOverrideConfig.scopeAttribute ?? {}) : {}),
+      ...(userConfig.scopeAttribute ?? {}),
+      ...(isBuild ? (buildOverrideConfig.scopeAttribute ?? {}) : {}),
     },
     generate: {
       ...defaultConfig.generate,
-      ...(sanitizedUserConfig.generate ?? {}),
-      ...(isBuild ? (sanitizedBuildOverrideConfig.generate ?? {}) : {}),
+      ...(userConfig.generate ?? {}),
+      ...(isBuild ? (buildOverrideConfig.generate ?? {}) : {}),
     },
     isBuild,
   };
