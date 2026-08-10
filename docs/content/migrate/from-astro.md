@@ -1,8 +1,8 @@
-## Migrating from Astro
+# Migrating from Astro
 
 Astro and Bascik are both build-time component systems that output zero-JS HTML by default. The concepts translate closely: `.astro` files become `.html` component files, frontmatter code blocks become `<script data-bascik-build>` tags, `Astro.props` becomes `data-bascik-prop-*` attributes, and Astro's `<slot />` becomes Bascik's `data-bascik-slot` attribute.
 
-### .astro Files → .html Component Files
+## .astro Files → .html Component Files
 
 Rename the file from `ComponentName.astro` to the hyphenated tag name `component-name.html`. Move it to `src/components/`. Remove the frontmatter fences (`---`) and convert the template HTML — the Bascik component file contains only the HTML markup of the component.
 
@@ -20,7 +20,7 @@ src/                        src/components/
                               about.html
 ```
 
-### Frontmatter → `<script data-bascik-build>`
+## Frontmatter → `<script data-bascik-build>`
 
 Astro's frontmatter block (`---`) runs on the server at build time. The direct equivalent in Bascik is `<script data-bascik-build>`. The script runs as a Node.js ESM module at build time; its stdout is injected into the page in place of the tag. Top-level `import` and top-level `await` are supported.
 
@@ -57,7 +57,7 @@ const posts = await getCollection('blog');
 
 > **No Astro content helpers:** Bascik has no equivalent of `getCollection` or `astro:content`. Read Markdown files directly with Node.js `fs` and a Markdown parser such as `marked` or `gray-matter`.
 
-### Astro.props → data-bascik-prop-*
+## Astro.props → data-bascik-prop-*
 
 Astro's typed `Astro.props` becomes Bascik's `data-bascik-prop-*` attribute system. Add the attribute (with no value) on the receiver element inside the component, then supply the text value on the component tag at the usage site.
 
@@ -96,7 +96,7 @@ const { title, description } = Astro.props;
 
 > **Text only:** Bascik props accept plain text strings. Passing JSX, objects, arrays, or HTML content as a prop has no equivalent — use a slot for rich HTML content instead.
 
-### `<slot />` → data-bascik-slot
+## `<slot />` → data-bascik-slot
 
 Astro's default `<slot />` maps to a Bascik element with the `data-bascik-slot` attribute. Fallback content goes inside that element, equivalent to Astro's `<slot>Fallback</slot>`.
 
@@ -120,7 +120,7 @@ Astro's default `<slot />` maps to a Bascik element with the `data-bascik-slot` 
 <my-section><p>Section content.</p></my-section>
 ```
 
-### Named Slots → data-bascik-slot="name"
+## Named Slots → data-bascik-slot="name"
 
 Astro's `<slot name="header" />` maps to a receiver element with `data-bascik-slot="header"` inside the component. Pass content from the usage site by adding `data-bascik-slot="header"` on the element you want to inject.
 
@@ -156,7 +156,7 @@ Astro's `<slot name="header" />` maps to a receiver element with `data-bascik-sl
 </page-layout>
 ```
 
-### Astro Scoped `<style>` → Paired .css Files
+## Astro Scoped `<style>` → Paired .css Files
 
 Astro scopes `<style>` blocks inside `.astro` files to that component. Bascik's equivalent is a paired `.css` file in the same directory as the component HTML. Remove the `<style>` block from the component file and paste its contents into the `.css` file. Class names, element selectors, and `@keyframes` are scoped automatically at build time — no changes to selectors needed.
 
@@ -185,7 +185,7 @@ Astro scopes `<style>` blocks inside `.astro` files to that component. Bascik's 
 .logo { font-weight: bold; }
 ```
 
-### Content Collections → `<script data-bascik-build>`
+## Content Collections → `<script data-bascik-build>`
 
 Astro's Content Collections provide a typed, validated interface to Markdown and MDX files. In Bascik, read the same source files directly from the filesystem in a build script using Node.js `fs` and a Markdown/front-matter parser.
 
@@ -251,7 +251,7 @@ for (const file of files) {
 }
 ```
 
-### import.meta.env → process.env
+## import.meta.env → process.env
 
 Astro uses `import.meta.env` for environment variables. Inside a `<script data-bascik-build>` block, use standard Node.js `process.env` instead. Runtime client-side scripts use `window` or data attributes to access values that were baked in at build time — there is no equivalent of Astro's `import.meta.env.PUBLIC_*` exposure to the browser.
 
@@ -271,7 +271,7 @@ const apiUrl = import.meta.env.API_URL;
 </script>
 ```
 
-### MDX → HTML Component + Build Script
+## MDX → HTML Component + Build Script
 
 Astro supports `.mdx` files as pages with embedded component usage. Bascik has no native MDX support. Convert MDX pages by processing the Markdown content with a build script and adding any interactive sections as plain Bascik components around the generated HTML.
 

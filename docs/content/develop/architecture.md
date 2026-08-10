@@ -1,8 +1,6 @@
-<p class="section-label">Internals</p>
-
 # Architecture
 
-<p class="page-intro">Bascik is a Node.js CLI tool written in TypeScript. Its source lives entirely in <code>pkg/src/</code>. This page maps every module to its responsibility and explains how they fit together.</p>
+Bascik is a Node.js CLI tool written in TypeScript. Its source lives entirely in `pkg/src/`. This page maps every module to its responsibility and explains how they fit together.
 
 ## Entry Point
 

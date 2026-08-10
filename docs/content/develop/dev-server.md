@@ -1,8 +1,6 @@
-<p class="section-label">Internals</p>
-
 # Dev Server
 
-<p class="page-intro">Bascik's development server is a TLS-enabled HTTP/2 server built on Node.js built-ins. It serves transpiled pages from an in-memory store, static assets from disk, and broadcasts live-reload events via Server-Sent Events.</p>
+Bascik's development server is a TLS-enabled HTTP/2 server built on Node.js built-ins. It serves transpiled pages from an in-memory store, static assets from disk, and broadcasts live-reload events via Server-Sent Events.
 
 ## Why HTTP/2?
 

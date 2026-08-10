@@ -1,8 +1,8 @@
-## JavaScript Libraries
+# JavaScript Libraries
 
 Bascik adds zero JavaScript to your pages — but that is a default, not a rule. You are free to include any JavaScript library you want. CDN-delivered libraries, bundled scripts, and lightweight reactivity tools all work alongside Bascik without any special configuration.
 
-### How to Include a Library
+## How to Include a Library
 
 Add a `<script src>` tag to your page's `<head>` or to a shared head component. Bascik passes external script tags through completely unchanged — only inline `<script>` blocks with component-scoped selectors are rewritten.
 
@@ -30,7 +30,7 @@ Alternatively, co-locate the script tag inside the component file so the library
 
 > **Tip:** If multiple components on the same page all include the same CDN `<script src>` tag, the browser deduplicates requests via HTTP caching. For cleaner output, place the shared CDN tag in a head component instead.
 
-### petite-vue
+## petite-vue
 
 [petite-vue](https://github.com/vuejs/petite-vue) is a ~5 KB subset of Vue optimized for progressive enhancement. It auto-mounts any element with a `v-scope` attribute, giving it isolated reactive state — no build step, no bundler.
 
@@ -40,13 +40,18 @@ Include it once with the `init` attribute and it mounts all `v-scope` elements o
 <script src="https://unpkg.com/petite-vue" defer init></script>
 ```
 
-#### Reactive Counter
+### Reactive Counter
 
 Each instance of this component has its own isolated state. Place it on a page as many times as you want — the counters are independent:
 
+<!-- demo:source-usage -->
+```html
+<my-counter></my-counter>
+<my-counter></my-counter>
+```
+
 <!-- demo:source-html -->
 ```html
-<!-- src/components/my-counter.html -->
 <div class="counter" v-scope="{ count: 0 }">
   <button class="btn" @click="count--">−</button>
   <span class="count-value">{{ count }}</span>
@@ -114,7 +119,7 @@ Each instance of this component has its own isolated state. Place it on a page a
 }
 ```
 
-#### Live Filter
+### Live Filter
 
 petite-vue's `v-for` and `v-model` work as expected. Filter a list in real time without writing any manual DOM manipulation:
 
@@ -135,7 +140,7 @@ petite-vue's `v-for` and `v-model` work as expected. Filter a list in real time 
 </div>
 ```
 
-#### Shared State Across Components
+### Shared State Across Components
 
 For state that needs to be shared between separate components, define it in a plain JavaScript module and import it in a `data-bascik-build` script or a regular `<script type="module">`:
 
@@ -157,7 +162,7 @@ export const store = reactive({ cart: [] });
 </div>
 ```
 
-### Alpine.js
+## Alpine.js
 
 [Alpine.js](https://alpinejs.dev) is another lightweight option for adding reactive behavior. It uses `x-data` for state, `@click` / `x-on` for events, and `x-show` / `x-bind` for DOM updates — all declaratively in the HTML.
 
@@ -174,7 +179,7 @@ export const store = reactive({ cart: [] });
 <script src="https://unpkg.com/alpinejs" defer></script>
 ```
 
-### Tailwind CSS
+## Tailwind CSS
 
 [Tailwind CSS](https://tailwindcss.com) is a utility-first CSS framework. Because Tailwind's utility classes are global by design, you need to tell Bascik not to scope class attributes — otherwise Bascik renames `class="flex gap-4"` to `class="bascik__my-comp__flex bascik__my-comp__gap-4"`, which Tailwind's CSS will never match.
 
@@ -235,7 +240,7 @@ For production, replace the CDN tag with a [Tailwind CLI](https://tailwindcss.co
 
 > **Trade-off.** With `class: false`, Bascik no longer isolates component class names — you give up class-level CSS isolation in exchange for Tailwind compatibility. IDs and names are still scoped independently. For most Tailwind projects this is the right choice since Tailwind's utilities are intentionally global.
 
-### Any Library Works
+## Any Library Works
 
 Bascik places no restrictions on which libraries you use. A few common patterns:
 
@@ -256,7 +261,7 @@ Bascik places no restrictions on which libraries you use. A few common patterns:
 </script>
 ```
 
-### Scoping Compatibility
+## Scoping Compatibility
 
 **Bascik scopes `class`, `id`, and `name` attributes at build time.** Library-specific attributes — `v-scope`, `x-data`, `@click`, `hx-get`, `data-controller` — are never touched.
 

@@ -20,9 +20,7 @@
 
       <!-- Content -->
       <main class="docs-content">
-        <p class="section-label">Guide</p>
-        <h1>Getting Started</h1>
-        <p class="page-intro">Bascik requires Node.js v24+. Get up and running in under five minutes.</p>
+        <p class="section-label">Start Here</p>
 
         <!-- Content rendered from docs/content/getting-started.md at build time.
              To update page content, edit the MD file — not this file. -->
@@ -32,7 +30,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/getting-started.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/getting-started.md'));
         </script>
 
         <h2>Your First Component</h2>
@@ -42,10 +40,11 @@
           <div class="step-body">
             <h3>Create the component file</h3>
             <p>The file name becomes the tag name.</p>
-            <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/components/site-nav.html">&lt;nav class="nav"&gt;
-  &lt;a href="/"&gt;Home&lt;/a&gt;
-  &lt;a href="/about"&gt;About&lt;/a&gt;
-&lt;/nav&gt;</code-block>
+            <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/components/site-nav.html">&lt;nav
+              class="nav"&gt;
+              &lt;a href="/"&gt;Home&lt;/a&gt;
+              &lt;a href="/about"&gt;About&lt;/a&gt;
+              &lt;/nav&gt;</code-block>
           </div>
         </div>
 
@@ -55,13 +54,13 @@
             <h3>Reference it in a page</h3>
             <p>No imports or registration. Just use the tag.</p>
             <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/pages/index.html">&lt;!DOCTYPE html&gt;
-&lt;html&gt;
-&lt;head&gt;&lt;title&gt;Home&lt;/title&gt;&lt;/head&gt;
-&lt;body&gt;
-  &lt;site-nav&gt;&lt;/site-nav&gt;
-  &lt;h1&gt;Hello world&lt;/h1&gt;
-&lt;/body&gt;
-&lt;/html&gt;</code-block>
+              &lt;html&gt;
+              &lt;head&gt;&lt;title&gt;Home&lt;/title&gt;&lt;/head&gt;
+              &lt;body&gt;
+              &lt;site-nav&gt;&lt;/site-nav&gt;
+              &lt;h1&gt;Hello world&lt;/h1&gt;
+              &lt;/body&gt;
+              &lt;/html&gt;</code-block>
           </div>
         </div>
 
@@ -85,8 +84,8 @@
 
         <div class="callout">
           <p><strong>Next:</strong> Add scoped CSS to your component by creating
-            <code>src/components/site-nav.css</code> alongside your HTML file. See <a
-              href="/scoped-styles">Scoped Styles →</a>
+            <code>src/components/site-nav.css</code> alongside your HTML file. See <a href="/scoped-styles">Scoped
+              Styles →</a>
           </p>
         </div>
 
@@ -98,7 +97,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/getting-started-workflow.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/getting-started-workflow.md'));
         </script>
 
         <script data-bascik-build>

@@ -1,10 +1,8 @@
-## Bascik vs Frameworks
+# Bascik vs Frameworks
 
-Bascik is not a framework. It is a build tool that resolves HTML components at compile time and then gets out of the way. No runtime ships to the browser. There is no framework-owned component library or request lifecycle to learn. The output is plain HTML.
+Bascik is not a framework. It is a build tool that resolves components at compile time and then disappears. Understanding how that differs from popular lightweight frameworks helps you pick the right tool — and shows how they can work together.
 
-That distinction matters when choosing a tool, so this page compares Bascik against lightweight frameworks that are often considered in the same conversation.
-
-### What Bascik Does
+## What Bascik Does
 
 Bascik solves one problem: component reuse at build time. Write a navigation bar once, use it on every page, and get clean HTML out. That is the entire scope.
 
@@ -14,7 +12,7 @@ The custom component tags in a Bascik project are the ones **you create**. If yo
 
 Bascik does use a small set of build instructions such as `data-bascik-slot`, `data-bascik-prop-*`, and `data-bascik-build`. They follow HTML's standard `data-*` extension mechanism, so browsers parse them as valid custom data attributes. Bascik consumes them during the build; they are not runtime directives that require browser JavaScript to interpret.
 
-### HTMX
+## HTMX
 
 [HTMX](https://htmx.org) is a popular library that extends HTML with server-driven partial updates. You add attributes like `hx-get`, `hx-post`, `hx-target`, and `hx-swap` to elements, and HTMX intercepts the resulting events, fires requests to your server, and swaps portions of the page with the response.
 
@@ -35,7 +33,7 @@ Bascik produces plain HTML. HTMX ships a JavaScript runtime. These are different
 </button>
 ```
 
-### Vue and React
+## Vue and React
 
 Full-featured frameworks like Vue and React solve a different problem: client-side applications with complex reactive state, component trees, and client-side routing. They ship a significant JavaScript runtime (~40–100+ KB), require a bundler, and introduce a complete component model with lifecycle hooks, reactivity systems, and state management conventions.
 
@@ -45,13 +43,13 @@ Bascik's component model lives entirely at build time. There is no runtime equiv
 
 For sites that need selective reactivity on specific components, petite-vue (~5 KB) is a better fit than full Vue. See the [JavaScript Libraries](/libraries) page for examples.
 
-### Alpine.js
+## Alpine.js
 
 [Alpine.js](https://alpinejs.dev) (~16 KB) occupies similar territory to HTMX: a declarative attribute-based system for adding behavior to HTML. Alpine uses `x-data` for state, `x-bind` / `@click` / `x-show` for DOM interactions.
 
 Like HTMX, Alpine is compatible with Bascik. Bascik resolves components at build time; Alpine runs in the browser on whatever HTML Bascik produced.
 
-### Static Site Builders: Hugo, Eleventy, Jekyll
+## Static Site Builders: Hugo, Eleventy, Jekyll
 
 Traditional static site builders such as [Hugo](https://gohugo.io), [Eleventy](https://www.11ty.dev), and [Jekyll](https://jekyllrb.com) focus on content pipelines: Markdown collections, templates, front matter, taxonomies, and data-driven page generation.
 
@@ -59,7 +57,7 @@ Bascik overlaps with them at the output level — all of these tools can ship pl
 
 If your site is primarily content-driven and you want a full publishing pipeline, a static site builder may be the better fit. If your site is primarily HTML pages and reusable UI fragments, Bascik is the smaller tool.
 
-### The Key Difference
+## The Key Difference
 
 | Tool | Runtime shipped | Components or API to learn | Attribute / source syntax | Requires server |
 | --- | ---: | --- | --- | --- |

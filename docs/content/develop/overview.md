@@ -1,8 +1,6 @@
-<p class="section-label">Internals</p>
-
 # Internals Guide
 
-<p class="page-intro">Everything you need to work on the Bascik package itself — architecture, the transpilation pipeline, the scoping system, the dev server, and how to run the test suite.</p>
+Everything you need to work on the Bascik package itself — architecture, the transpilation pipeline, the scoping system, the dev server, and how to run the test suite.
 
 ## Repository Layout
 

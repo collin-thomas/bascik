@@ -29,15 +29,13 @@ Each docs page that has a corresponding MD file uses a `<script data-bascik-buil
   const { renderMd } = await import(
     pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
   );
-  console.log(await renderMd('./content/topic.md', { skipFirstHeading: true }));
+  console.log(await renderMd('./content/topic.md'));
 </script>
 ```
 
 The `renderMd` helper (`docs/scripts/md-renderer.mjs`) applies these transformations:
 - Fenced code blocks (` ``` `) → `<code-block data-bascik-prop-lang="…">` component
 - Blockquotes (`>`) → `<div class="callout">`
-
-The `skipFirstHeading: true` option strips the leading `## Section Name` heading that each MD file starts with (needed for llms.txt consistency) since the HTML shell already provides the `<h1>`.
 
 ## HTML Page Shell Structure
 
@@ -54,12 +52,7 @@ The `skipFirstHeading: true` option strips the leading `## Section Name` heading
       <docs-sidebar></docs-sidebar>
       <main class="docs-content">
         <p class="section-label">Category</p>
-        <h1>Page Title</h1>
-        <p class="page-intro">One or two sentence intro.</p>
-
-        <!-- Any page-specific decorative UI (score grids, etc.) -->
-
-        <!-- MD-driven content block -->
+        <!-- h1, page-intro p, and all content come from MD -->
         <script data-bascik-build>…</script>
 
         <!-- Any page-specific summary UI (technique grids, etc.) -->
@@ -77,11 +70,12 @@ The `skipFirstHeading: true` option strips the leading `## Section Name` heading
 
 ## Markdown File Conventions
 
-- First line: `## Section Name` (h2 — matches the section name in llms.txt)
+- First lines: `# Page Title` (h1), then a plain intro paragraph (styled as page-intro via CSS)
 - Prose: plain Markdown paragraphs
+- Section headings: `##` (h2), sub-sections: `###` (h3)
 - Code examples: fenced code blocks with a language tag (` ```html `, ` ```css `, ` ```js `, etc.)
 - Callout/tip boxes: Markdown blockquote (`> **Label.** body text`)
-- Inline HTML is allowed for one-off structural elements, but keep it minimal
+- No inline HTML in MD files — keep MD pure Markdown
 
 ## Updating llms.txt and SKILL.md
 

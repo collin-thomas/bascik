@@ -1,8 +1,8 @@
-## Migrating from React
+# Migrating from React
 
 React and Bascik both build UIs from reusable components. The core difference is that Bascik does all component work at build time and outputs plain HTML — there is no virtual DOM, no framework runtime, and no JSX. The migration is mostly mechanical: rename files, swap JSX syntax for HTML, and replace framework abstractions with their build-time or vanilla-JS equivalents.
 
-### File and Folder Setup
+## File and Folder Setup
 
 Move your component source files into `src/components/`. The file name becomes the HTML tag name, so names must be hyphenated. Pair each component HTML file with a `.css` file in the same directory to replace CSS Modules.
 
@@ -20,7 +20,7 @@ src/components/              src/components/
                                  alert-box.css
 ```
 
-### Component Syntax
+## Component Syntax
 
 A Bascik component is a plain HTML file. There are no imports, no function declarations, and no JSX. The file name (minus the extension) is the tag name.
 
@@ -46,7 +46,7 @@ export function SiteNav() {
 
 No import statement is needed to use this component. Bascik resolves `<site-nav></site-nav>` to `src/components/site-nav/site-nav.html` automatically by tag name.
 
-### children → Default Slot
+## children → Default Slot
 
 React's `children` prop maps to Bascik's default slot. Add `data-bascik-slot` (no value) to any element inside the component where child content should appear. Fallback content goes inside that element and renders when the component is invoked with no children.
 
@@ -70,7 +70,7 @@ export function Card({ children }) {
 <card><p>Card content here.</p></card>
 ```
 
-### Named Render Props / Slot Pattern → Named Slots
+## Named Render Props / Slot Pattern → Named Slots
 
 React's named render props and compound component slot patterns map to Bascik's `data-bascik-slot="name"` attribute. Place a receiver element with `data-bascik-slot="name"` inside the component, then pass the content from the usage site using the same attribute.
 
@@ -105,7 +105,7 @@ export function PageLayout({ header, children }) {
 </page-layout>
 ```
 
-### String Props → data-bascik-prop-*
+## String Props → data-bascik-prop-*
 
 React string props become `data-bascik-prop-*` attributes. Add the attribute (with no value) to the element inside the component that should receive the text, then supply the value at the usage site.
 
@@ -139,7 +139,7 @@ export function AlertBox({ title, message }) {
 
 > **Text only:** Props accept plain text strings. Boolean, number, object, and array values have no equivalent. For rich HTML content, use a named slot instead. For computed or array-based content, use a `<script data-bascik-build>` block in the page.
 
-### useState / useEffect → Vanilla JS
+## useState / useEffect → Vanilla JS
 
 `useState`, `useEffect`, and event handlers become plain JavaScript in a `<script>` tag inside the component. Bascik automatically scopes `id` values and class names referenced in the script, so multiple instances of the component on the same page work independently.
 
@@ -174,7 +174,7 @@ export function Counter() {
 
 Bascik rewrites both `id="count"` in the HTML and the `getElementById("count")` call in the script to the same unique scoped value. Two `<my-counter>` instances on the same page each maintain their own independent state.
 
-### CSS Modules → Paired .css Files
+## CSS Modules → Paired .css Files
 
 Delete the `.module.css` file and create a plain `.css` file alongside the component HTML. Change all `className={styles.foo}` attributes to `class="foo"`. Bascik scopes every class name at build time — no configuration or tooling required.
 
@@ -200,7 +200,7 @@ Delete the `.module.css` file and create a plain `.css` file alongside the compo
 }
 ```
 
-### React Router → One .html File Per Route
+## React Router → One .html File Per Route
 
 Replace client-side route definitions with one `.html` file per URL in `src/pages/`. There is no client-side navigation — every link triggers a full page load.
 
@@ -216,14 +216,14 @@ src/App.jsx                  src/pages/
 
 There is no dynamic routing equivalent. Each URL needs its own file. For programmatically generated pages, write a Node.js script that creates the files before running `bascik --build`.
 
-### Conditional Rendering
+## Conditional Rendering
 
 Bascik has no build-time equivalent of `{condition && <Comp />}`. Choose one of two approaches:
 
 - **Build-time decision:** Include the correct markup in each page's `.html` file directly. If two pages differ, they have different HTML. This is the right choice for things like per-page hero sections or feature flags.
 - **Runtime toggle:** Render both branches, then show or hide them with CSS (`display: none`) or vanilla JS toggling a `data-` attribute or class.
 
-### useEffect for Data → `<script data-bascik-build>`
+## useEffect for Data → `<script data-bascik-build>`
 
 Data fetched at component mount time in React becomes a `<script data-bascik-build>` block that runs as a Node.js ESM module at build time. The script's stdout is injected into the page in place of the tag.
 
@@ -249,7 +249,7 @@ Data fetched at component mount time in React becomes a `<script data-bascik-bui
 
 > **Build scripts run first:** The output of a `<script data-bascik-build>` block can itself contain Bascik component tags. They are resolved in the next pass.
 
-### Before and After: Navigation Component
+## Before and After: Navigation Component
 
 A realistic nav with a logo slot, link items, and a mobile menu toggle button.
 

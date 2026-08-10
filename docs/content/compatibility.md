@@ -1,7 +1,5 @@
 # Bascik Scoping Compatibility
 
-This page tracks which CSS and JavaScript patterns Bascik's build-time scoping engine handles.
-
 **Legend**
 
 - ✅ Supported and tested

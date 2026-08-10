@@ -1,6 +1,8 @@
-## CLI
+# Command Line Interface (CLI)
 
-### `npm create bascik@latest` — scaffold a new project
+Bascik features a simple, fast, and highly informative CLI for both development and production building.
+
+## `npm create bascik@latest` — scaffold a new project
 
 ```sh
 npm create bascik@latest
@@ -41,7 +43,7 @@ Start the dev server after install? (Y/n)
 
 Select **Y** for both and you're live at `https://localhost:8443` with no extra commands.
 
-### CLI reference
+## CLI reference
 
 ```sh
 bascik          # dev: transpile, start HTTPS dev server, watch
@@ -49,7 +51,7 @@ bascik --build  # production: transpile to dist/ only
 bascik --check  # static analysis: validate pages and components without building
 ```
 
-### Starting the dev server
+## Starting the dev server
 
 When you run `bascik`, Bascik transpiles your pages, generates local TLS certificates if needed, starts the built-in HTTP/2 server, and begins watching for changes.
 
@@ -84,7 +86,7 @@ Server running at https://localhost:8444
 
 Certs are generated once and reused on subsequent starts. Delete `bascik-privkey.pem` and `bascik-cert.pem` to regenerate them.
 
-### Watching for file changes
+## Watching for file changes
 
 While the dev server is active, Bascik incrementally updates your build as files are added, updated, or removed.
 
@@ -106,7 +108,7 @@ While the dev server is active, Bascik incrementally updates your build as files
   deleted file: pages/old-page.html
   ```
 
-### Transpilation and build errors
+## Transpilation and build errors
 
 If you introduce a syntax mistake or a build-script error, Bascik logs the file and location without crashing the dev server.
 
@@ -131,7 +133,7 @@ Unknown component tag:
 [bascik] Unresolved component tag in "pages/about.html": <my-mistyped> — no matching component file found. Run `bascik --check` for a full report.
 ```
 
-### Static analysis with `bascik --check`
+## Static analysis with `bascik --check`
 
 Run `bascik --check` from your project root to validate all pages and component files without starting the dev server or writing any output files:
 
@@ -172,7 +174,7 @@ For most teams, the most useful CI command sequence is:
 npx stylelint "src/**/*.css" && bascik --check && bascik --build
 ```
 
-### Production builds
+## Production builds
 
 Run `bascik --build` to write deployment-ready files to `dist/`:
 
@@ -190,7 +192,7 @@ npx http-server dist
 
 Then open the URL printed by `http-server` (default: `http://127.0.0.1:8080`).
 
-### Editor setup and output inspection
+## Editor setup and output inspection
 
 **VS Code false positives.** Editors validate multiple `<script>` blocks in an HTML file as if they shared one scope. Bascik wraps each component script block in an IIFE at build time, so those editor warnings can be misleading. In VS Code, disable the project-level script validation:
 

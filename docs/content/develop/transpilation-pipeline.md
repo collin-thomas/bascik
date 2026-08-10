@@ -1,8 +1,6 @@
-<p class="section-label">Internals</p>
-
 # Transpilation Pipeline
 
-<p class="page-intro">Bascik transforms source HTML into deployable HTML by replacing every custom component tag with its resolved, scoped content. The pipeline runs in two nested phases: the page phase and the component phase.</p>
+Bascik transforms source HTML into deployable HTML by replacing every custom component tag with its resolved, scoped content. The pipeline runs in two nested phases: the page phase and the component phase.
 
 ## Overview
 

@@ -1,8 +1,6 @@
-<p class="section-label">Internals</p>
-
 # Scoping System
 
-<p class="page-intro">Scoping prevents one component's styles and identifiers from leaking into another. Bascik rewrites HTML attributes, CSS rules, and JavaScript DOM selector strings at transpile time using a deterministic naming scheme.</p>
+Scoping prevents one component's styles and identifiers from leaking into another. Bascik rewrites HTML attributes, CSS rules, and JavaScript DOM selector strings at transpile time using a deterministic naming scheme.
 
 ## The Naming Scheme
 

@@ -1,8 +1,8 @@
-## Configuration (`bascik.config.js`)
+# Configuration
 
 Create a `bascik.config.js` file in your project root to override any default settings.
 
-### Full Example
+## Full Example
 
 ```js
 // bascik.config.js
@@ -48,9 +48,9 @@ export const buildOverrideConfig = {
 };
 ```
 
-### Options Reference
+## Options Reference
 
-#### `directory`
+### `directory`
 
 Paths to your pages and components directories. Relative to the project root.
 
@@ -61,7 +61,7 @@ directory: {
 }
 ```
 
-#### `scopeScriptBlocks`
+### `scopeScriptBlocks`
 
 Wrap component `<script>` tags in an IIFE and rewrite scoped attribute references. Set to `false` if you want raw unmodified script output.
 
@@ -69,7 +69,7 @@ Wrap component `<script>` tags in an IIFE and rewrite scoped attribute reference
 scopeScriptBlocks: true // default
 ```
 
-#### `inheritAttributes`
+### `inheritAttributes`
 
 Control whether non-`data-bascik-*` attributes on a component usage tag are merged onto the component root element. Defaults to `true`.
 
@@ -77,7 +77,7 @@ Control whether non-`data-bascik-*` attributes on a component usage tag are merg
 inheritAttributes: true // default
 ```
 
-#### `scopeAttribute`
+### `scopeAttribute`
 
 Control which HTML attribute types are scoped independently. Useful if you're using Tailwind (`class: false`) or don't need name scoping.
 
@@ -89,7 +89,7 @@ scopeAttribute: {
 }
 ```
 
-#### `deduplicateCss`
+### `deduplicateCss`
 
 When `true` (default), all instances of the same component share the same scoped class names so the compiled `<style>` block is emitted only once per component type, regardless of how many times the component appears on the page.
 
@@ -101,7 +101,7 @@ deduplicateCss: true // default
 
 > **Choosing `false`:** Use per-instance class scoping when a component's JavaScript needs to use class selectors to locate its own root element and you have multiple instances of that component on the same page. For most components, using an `id` attribute to anchor the script (which is always per-instance) is a simpler alternative.
 
-#### `skipTranspilingElementContents`
+### `skipTranspilingElementContents`
 
 An array of HTML element names whose inner content is left untouched by the scoping pipeline. Attribute values, element-selector class injection, and JS selector rewriting are all skipped for any HTML found *inside* these elements. The elements' own opening-tag attributes (e.g. `class="cblock-body"` on `<code>` itself) are still scoped normally.
 
@@ -113,11 +113,11 @@ skipTranspilingElementContents: ['code'] // default
 
 Set to an empty array to disable the protection entirely, or extend the list for other elements whose contents should be preserved as-is.
 
-#### `minifyStyles`
+### `minifyStyles`
 
 Collapse whitespace and newlines in the injected `<style>` block. Defaults to `true`.
 
-#### `minifyScripts`
+### `minifyScripts`
 
 Minify inline `<script>` content and `.js` static files in the build output. Accepts three forms:
 
@@ -139,7 +139,7 @@ export const buildOverrideConfig = {
 
 Only applies to inline scripts (those without a `src` attribute) and to `.js` files copied into `dist/`. Non-JS script types such as `application/ld+json` are always left untouched.
 
-#### `obfuscateAttributeNames`
+### `obfuscateAttributeNames`
 
 Hash the generated class and id names to short hex strings instead of the verbose `bascik__component__id__name` format. Recommended for production.
 
@@ -149,11 +149,11 @@ obfuscateAttributeNames: true // production default
 // becomes: bab12cd34
 ```
 
-#### `cacheHttp`
+### `cacheHttp`
 
 Enable HTTP cache headers on the dev server responses. Keep `false` during development.
 
-#### `verboseLogging`
+### `verboseLogging`
 
 Include the `{ cause }` detail object in `console.warn` and `console.error` calls. Useful for debugging component processing errors.
 
@@ -161,7 +161,7 @@ Include the `{ cause }` detail object in `console.warn` and `console.error` call
 verboseLogging: false // default
 ```
 
-#### `siteUrl`
+### `siteUrl`
 
 The canonical base URL of your deployed site (e.g. `'https://example.com'`). Required for sitemap generation. Trailing slashes are trimmed automatically.
 
@@ -169,7 +169,7 @@ The canonical base URL of your deployed site (e.g. `'https://example.com'`). Req
 siteUrl: 'https://example.com'
 ```
 
-#### `generate`
+### `generate`
 
 Control which files are written to `dist/` during `bascik --build`. Both default to `true`. Requires `siteUrl` to be set.
 
@@ -182,7 +182,7 @@ generate: {
 
 See [Sitemap & robots.txt](/sitemap) for a full walkthrough.
 
-#### `directory.watch`
+### `directory.watch`
 
 An array of directories or files that, when changed in dev mode, trigger a full re-transpile of all pages. Useful for utility scripts, data files, or image directories that pages depend on at build time.
 
@@ -196,7 +196,7 @@ directory: {
 
 Has no effect during `bascik --build`.
 
-#### `inlineStyles`
+### `inlineStyles`
 
 Controls which global stylesheets Bascik reads and injects as `<style>` tags into every page's `<head>` during transpilation. When `minifyStyles` is true the content is minified before injection. Global styles are placed before component styles so component rules take precedence.
 
@@ -225,7 +225,7 @@ export const buildOverrideConfig = {
 
 > **When to inline.** Stylesheets under ~15 KB (gzipped) are good candidates. Larger stylesheets are better loaded asynchronously or split into critical and non-critical parts.
 
-#### `useWorkers`
+### `useWorkers`
 
 Transpile pages across a pool of CPU-core worker threads instead of sequentially on the main thread.
 
@@ -238,7 +238,7 @@ Spinning up the worker pool has a fixed cost — each worker loads the transpile
 
 > **When to enable.** Turn this on for larger sites (dozens of pages or more) doing CPU-heavy work per page — complex CSS/JS scoping across many components. It will not help much on sites whose slow parts are I/O-bound (e.g. `<script data-bascik-build>` blocks that fetch data or spawn subprocesses), since that work is already asynchronous regardless of which thread initiates it.
 
-### `buildOverrideConfig`
+## `buildOverrideConfig`
 
 Exporting a second `buildOverrideConfig` object lets you set options that only apply during `bascik --build`, overriding the values in `bascikConfig`. A common pattern is to enable obfuscation and minification only in production:
 

@@ -7,7 +7,6 @@
     content="Bascik adds zero JavaScript to your pages by default, but you are free to bundle any library — Alpine.js, HTMX, or a custom bundle." />
   <title>JavaScript Libraries — Bascik Docs</title>
   <script src="https://unpkg.com/petite-vue" defer init></script>
-  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body>
@@ -20,10 +19,6 @@
 
       <main class="docs-content">
         <p class="section-label">Feature</p>
-        <h1>JavaScript Libraries</h1>
-        <p class="page-intro">Bascik adds zero JavaScript to your pages — but that is a default, not a rule. You are
-          free to include any JavaScript library you want. CDN-delivered libraries, bundled scripts, and lightweight
-          reactivity tools all work alongside Bascik without any special configuration.</p>
 
         <!-- Content rendered from docs/content/libraries.md at build time.
              To update page content, edit the MD file — not this file. -->
@@ -33,7 +28,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/libraries.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/libraries.md'));
         </script>
 
         <h2>Live Counter Demo</h2>
@@ -54,6 +49,16 @@
                 <my-counter></my-counter>
               </div>
             </div>
+          </div>
+          <div data-bascik-slot="source-usage">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/libraries.md', 'source-usage'));
+              </script>
+            </code-block>
           </div>
           <div data-bascik-slot="source-html">
             <code-block data-bascik-prop-lang="html">

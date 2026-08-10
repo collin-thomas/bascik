@@ -17,10 +17,7 @@
       <docs-sidebar></docs-sidebar>
 
       <main class="docs-content">
-        <p class="section-label">Reference</p>
-        <h1>Configuration</h1>
-        <p class="page-intro">Create a <code>bascik.config.js</code> file in your project root to override any default
-          settings.</p>
+        <p class="section-label">Start Here</p>
 
         <!-- Content rendered from docs/content/config.md at build time.
              To update page content, edit the MD file — not this file. -->
@@ -30,7 +27,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/config.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/config.md'));
         </script>
 
         <script data-bascik-build>

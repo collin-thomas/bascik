@@ -18,10 +18,6 @@
 
       <main class="docs-content">
         <p class="section-label">Feature</p>
-        <h1>Props</h1>
-        <p class="page-intro">Props let you pass text values into a component template at usage time using
-        <code>data-bascik-prop-*</code> attributes.
-        </p>
 
         <!-- Content rendered from docs/content/props.md at build time.
              To update page content, edit the MD file — not this file. -->
@@ -31,7 +27,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/props.md', { skipFirstHeading: true, stripDemoBlocks: true }));
+          console.log(await renderMd('./content/props.md', { stripDemoBlocks: true }));
         </script>
 
         <component-demo data-bascik-prop-file="src/pages/index.html">

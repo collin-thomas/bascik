@@ -7,58 +7,6 @@
     content="Bascik does not ship a Markdown pipeline, but build-time scripts are Node.js — so any Markdown library works out of the box." />
   <title>Using Markdown — Bascik Docs</title>
   <style>
-    .markdown-transform {
-      display: grid;
-      grid-template-columns: minmax(0, 0.85fr) 36px minmax(0, 1.15fr);
-      align-items: stretch;
-      margin: 32px 0 48px;
-    }
-
-    .markdown-transform-panel {
-      min-width: 0;
-      overflow: hidden;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-    }
-
-    .markdown-transform-label {
-      margin: 0;
-      padding: 8px 14px;
-      color: var(--text-muted);
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      font: 700 0.72rem/1.4 var(--mono);
-      text-transform: uppercase;
-    }
-
-    .markdown-source pre {
-      min-height: 100%;
-      padding: 22px;
-      border: 0;
-      border-radius: 0;
-    }
-
-    .markdown-source pre code {
-      white-space: pre-wrap;
-    }
-
-    .markdown-transform-arrow {
-      display: grid;
-      place-items: center;
-      color: var(--accent);
-      font-size: 1.4rem;
-    }
-
-    .markdown-preview {
-      background: #f4f5ef;
-    }
-
-    .markdown-preview .markdown-transform-label {
-      color: #59636a;
-      background: #e8ebe4;
-      border-color: #d5d9d1;
-    }
-
     .markdown-preview-body {
       padding: 22px 24px 24px;
       color: #25282d;
@@ -89,17 +37,6 @@
       margin: 0;
       color: #3d3a2a;
     }
-
-    @media (max-width: 700px) {
-      .markdown-transform {
-        grid-template-columns: minmax(0, 1fr);
-      }
-
-      .markdown-transform-arrow {
-        min-height: 36px;
-        transform: rotate(90deg);
-      }
-    }
   </style>
 </head>
 
@@ -112,40 +49,7 @@
       <docs-sidebar></docs-sidebar>
 
       <main class="docs-content">
-        <p class="section-label">Recipes</p>
-        <h1>Using Markdown</h1>
-        <p class="page-intro">Bascik does not ship a Markdown pipeline, but build-time scripts are Node.js — so any
-          Markdown library works. This page shows common patterns using <code>marked</code>, <code>gray-matter</code>,
-          <code>markdown-it</code>, and the <code>unified</code> / <code>remark</code> ecosystem.
-        </p>
-
-        <section class="markdown-transform" aria-label="Markdown source transformed into styled HTML">
-          <div class="markdown-transform-panel markdown-source">
-            <p class="markdown-transform-label">Markdown source</p>
-            <pre><code>## A practical heading
-
-Markdown stays comfortable for
-authors, while the published page
-stays **plain HTML**.
-
-&gt; Add an editorial treatment with
-&gt; ordinary CSS.</code></pre>
-          </div>
-
-          <div class="markdown-transform-arrow" aria-hidden="true">→</div>
-
-          <div class="markdown-transform-panel markdown-preview">
-            <p class="markdown-transform-label">Styled browser output</p>
-            <div class="markdown-preview-body">
-              <h2>A practical heading</h2>
-              <p>Markdown stays comfortable for authors, while the published page stays <strong>plain HTML</strong>.
-              </p>
-              <blockquote>
-                <p>Add an editorial treatment with ordinary CSS.</p>
-              </blockquote>
-            </div>
-          </div>
-        </section>
+        <p class="section-label">Recipe</p>
 
         <!-- Content rendered from docs/content/using-markdown.md at build time.
              To update page content, edit the MD file — not this file.
@@ -156,8 +60,27 @@ stays **plain HTML**.
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/using-markdown.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/using-markdown.md'));
         </script>
+
+        <component-demo>
+          <div data-bascik-slot="example">
+            <div class="markdown-preview-body">
+              <h2>A practical heading</h2>
+              <p>Markdown stays comfortable for authors, while the published page stays <strong>plain HTML</strong>.</p>
+              <blockquote>
+                <p>Add an editorial treatment with ordinary CSS.</p>
+              </blockquote>
+            </div>
+          </div>
+          <div data-bascik-slot="source-usage">
+            <code-block data-bascik-prop-lang="md">
+              <script data-bascik-build>
+                console.log(`## A practical heading\n\nMarkdown stays comfortable for\nauthors, while the published page\nstays **plain HTML**.\n\n> Add an editorial treatment with\n> ordinary CSS.`);
+              </script>
+            </code-block>
+          </div>
+        </component-demo>
 
         <script data-bascik-build>
           import { join } from 'node:path';

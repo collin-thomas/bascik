@@ -522,7 +522,7 @@ export const transpilePage = async (
     console.warn(
       `warning: ${pagePath} does not contain <body></body> or body does not have content`,
     );
-    return;
+    return null;
   }
 
   let { transpiledHtmlBody, usedComponents } = recursivelyTranspile(

@@ -18,10 +18,6 @@
 
       <main class="docs-content">
         <p class="section-label">Feature</p>
-        <h1>Attribute Inheritance</h1>
-        <p class="page-intro">Any attribute on a component usage tag that is not a Bascik-specific attribute
-          (<code>data-bascik-*</code>) is automatically merged onto the component's root element. This is analogous to
-          Vue's "fallthrough attributes".</p>
 
         <!-- Content rendered from docs/content/attribute-inheritance.md at build time.
              To update page content, edit the MD file — not this file. -->
@@ -31,13 +27,23 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/attribute-inheritance.md', { skipFirstHeading: true, stripDemoBlocks: true }));
+          console.log(await renderMd('./content/attribute-inheritance.md', { stripDemoBlocks: true }));
         </script>
 
         <component-demo data-bascik-prop-file="src/components/inherit-demo-card/">
           <div data-bascik-slot="example">
             <inherit-demo-card class="featured-card" aria-label="Featured inheritance demo" data-testid="inherit-demo">
             </inherit-demo-card>
+          </div>
+          <div data-bascik-slot="source-usage">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/attribute-inheritance.md', 'source-usage'));
+              </script>
+            </code-block>
           </div>
           <div data-bascik-slot="source-html">
             <code-block data-bascik-prop-lang="html">

@@ -110,9 +110,30 @@ export async function renderMd(filePath, { skipFirstHeading = false, stripDemoBl
     (_, code) => `<code-block data-bascik-prop-lang="text">${code}</code-block>\n`
   );
 
+  // Wrap compiled-output markers in a collapsible <details> element.
+  // The <!-- compiled-output --> comment in MD signals a code block that shows
+  // bascik's generated output — interesting for internals but not front-and-center.
+  html = html.replace(
+    /<!-- compiled-output -->\n?(<code-block[^>]*>[\s\S]*?<\/code-block>)/g,
+    '<details class="compiled-output">\n<summary>View compiled output</summary>\n$1\n</details>'
+  );
+
+  // Wrap all prose code-blocks in a spacing div so global CSS can add margin-bottom
+  // without fighting bascik's component CSS scoping (which hashes .cblock class names).
+  html = html.replace(
+    /(<code-block[^>]*>[\s\S]*?<\/code-block>)/g,
+    '<div class="prose-codeblock">$1</div>'
+  );
+
   // Convert <blockquote> → <div class="callout">
   html = html.replace(/<blockquote>\n?/g, '<div class="callout">');
   html = html.replace(/\n?<\/blockquote>/g, '</div>');
+
+  // Open external links in a new tab
+  html = html.replace(
+    /<a href="(https?:\/\/[^"]+)"/g,
+    '<a target="_blank" rel="noopener noreferrer" href="$1"'
+  );
 
   return html;
 }
