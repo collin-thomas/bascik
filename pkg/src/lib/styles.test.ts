@@ -511,6 +511,20 @@ describe("addElementClassesInHtml – multiline content", () => {
   });
 });
 
+describe("addElementClassesInHtml – element with classless child", () => {
+  it("adds class to element itself when only a child has a class", () => {
+    const html = '<pre><code class="cblock-body">content</code></pre>';
+    const result = addElementClassesInHtml(html, "code-block", ["pre"]);
+    expect(result).toBe('<pre class="bascik__code-block__el__pre"><code class="cblock-body">content</code></pre>');
+  });
+
+  it("does not add class to nested child when parent lacks class", () => {
+    const html = '<pre><code class="cblock-body">content</code></pre>';
+    const result = addElementClassesInHtml(html, "code-block", ["pre"]);
+    expect(result).not.toContain('class="cblock-body bascik__');
+  });
+});
+
 // ─── scopeLayerNames ─────────────────────────────────────────────────────────
 
 describe("scopeLayerNames", () => {

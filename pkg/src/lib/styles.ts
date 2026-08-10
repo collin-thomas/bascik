@@ -115,19 +115,18 @@ export const addElementClassesInHtml = (
     componentHtml = componentHtml.replace(
       new RegExp(`<${element}[^>]*>([\\s\\S]*?)<\\/${element}>`, "gis"),
       (elementHtml: string) => {
-        // If the instance of the element already has classes add to it
-        if (elementHtml.match('class="')) {
+        const bascikClassName = obfuscateAttributeName(
+          `bascik__${componentName}__el__${element}`,
+        );
+        // Check only the element's own opening tag for a class attribute,
+        // not any nested child's class (which would cause the class to land
+        // on the wrong element, e.g. <code> instead of <pre>).
+        const openTag = elementHtml.match(new RegExp(`^<${element}[^>]*>`, "i"))?.[0] ?? "";
+        if (openTag.includes('class="')) {
           elementHtml = elementHtml.replace(/class=".*?(?=")/i, (classStr) => {
-            const bascikClassName = obfuscateAttributeName(
-              `bascik__${componentName}__el__${element}`,
-            );
             return `${classStr} ${bascikClassName}`;
           });
         } else {
-          // Otherwise set the element class as the only class
-          const bascikClassName = obfuscateAttributeName(
-            `bascik__${componentName}__el__${element}`,
-          );
           elementHtml = elementHtml.replace(
             new RegExp(`<${element}`, "i"),
             `<${element} class="${bascikClassName}"`,
