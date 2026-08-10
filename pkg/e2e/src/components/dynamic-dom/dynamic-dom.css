@@ -1,0 +1,46 @@
+.wrapper {
+  border: 1px solid #444;
+  padding: 16px;
+}
+
+.list {
+  list-style: none;
+  padding: 4px;
+  margin: 0 0 12px;
+  min-height: 40px;
+  background: #111;
+  border-radius: 4px;
+}
+
+.item {
+  padding: 6px 10px;
+  color: rgb(74, 222, 128);
+  border-bottom: 1px solid #222;
+  font-size: 0.85rem;
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+.status {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #888;
+  margin-bottom: 10px;
+}
+
+.btn-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+button {
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  background: #222;
+  border: 1px solid #555;
+  color: #ddd;
+  cursor: pointer;
+}

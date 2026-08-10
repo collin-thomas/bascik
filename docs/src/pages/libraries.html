@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <docs-head></docs-head>
+  <meta name="description"
+    content="Bascik adds zero JavaScript to your pages by default, but you are free to bundle any library — Alpine.js, HTMX, or a custom bundle." />
+  <title>JavaScript Libraries — Bascik Docs</title>
+  <script src="https://unpkg.com/petite-vue" defer init></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+      <docs-sidebar></docs-sidebar>
+
+      <main class="docs-content">
+        <p class="section-label">Feature</p>
+        <h1>JavaScript Libraries</h1>
+        <p class="page-intro">Bascik adds zero JavaScript to your pages — but that is a default, not a rule. You are
+          free to include any JavaScript library you want. CDN-delivered libraries, bundled scripts, and lightweight
+          reactivity tools all work alongside Bascik without any special configuration.</p>
+
+        <!-- Content rendered from docs/content/libraries.md at build time.
+             To update page content, edit the MD file — not this file. -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMd } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMd('./content/libraries.md', { skipFirstHeading: true }));
+        </script>
+
+        <h2>Live Counter Demo</h2>
+        <p>Two independent instances of <code>my-counter</code> running on the same page. Each has its own isolated
+          reactive state — clicking buttons in one has no effect on the other.</p>
+
+        <component-demo data-bascik-prop-file="src/components/my-counter/">
+          <div data-bascik-slot="example">
+            <div style="display:flex;gap:48px;flex-wrap:wrap;align-items:center">
+              <div>
+                <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:12px;font-family:var(--font-mono)">
+                  Instance 1</p>
+                <my-counter></my-counter>
+              </div>
+              <div>
+                <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:12px;font-family:var(--font-mono)">
+                  Instance 2</p>
+                <my-counter></my-counter>
+              </div>
+            </div>
+          </div>
+          <div data-bascik-slot="source-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/libraries.md', 'source-html'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="source-css">
+            <code-block data-bascik-prop-lang="css">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/libraries.md', 'source-css'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="source-js">
+            <code-block data-bascik-prop-lang="js">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/libraries.md', 'source-js'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/libraries.md', 'output-html'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-css">
+            <code-block data-bascik-prop-lang="css">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/libraries.md', 'output-css'));
+              </script>
+            </code-block>
+          </div>
+        </component-demo>
+
+        <h2>Live Tailwind Demo</h2>
+        <p>These cards are plain HTML placed directly in the page — not inside a component — so Bascik leaves the class
+          names untouched and Tailwind styles them as normal.</p>
+
+        <component-demo>
+          <div data-bascik-slot="example">
+            <div style="display:flex;gap:1rem;flex-wrap:wrap">
+              <div class="rounded-xl border border-gray-200 p-6 shadow-sm" style="width:220px">
+                <h3 class="mb-2 text-lg font-semibold" style="color:var(--accent)">Zero Runtime</h3>
+                <p class="text-sm" style="color:var(--text)">Bascik outputs plain HTML with no client-side overhead.</p>
+              </div>
+              <div class="rounded-xl border border-gray-200 p-6 shadow-sm" style="width:220px">
+                <h3 class="mb-2 text-lg font-semibold" style="color:var(--accent)">Scoped CSS</h3>
+                <p class="text-sm" style="color:var(--text)">Component styles never leak — isolation is guaranteed at
+                  build time.</p>
+              </div>
+            </div>
+          </div>
+          <div data-bascik-slot="source-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/libraries.md', 'tailwind-html'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="source-js">
+            <code-block data-bascik-prop-lang="js">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/libraries.md', 'tailwind-source-js'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/libraries.md', 'tailwind-output-html'));
+              </script>
+            </code-block>
+          </div>
+        </component-demo>
+
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/libraries'));
+        </script>
+
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+</body>
+
+</html>

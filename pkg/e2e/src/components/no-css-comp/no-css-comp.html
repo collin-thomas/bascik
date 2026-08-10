@@ -1,0 +1,14 @@
+<div class="bare-wrapper" id="bare-root">
+  <p class="bare-text">This component has no CSS file.</p>
+  <div id="counter" class="bare-counter">0</div>
+  <button id="inc-btn">Increment</button>
+
+  <script>
+    let count = 0;
+    const display = document.getElementById("counter");
+    document.getElementById("inc-btn").addEventListener("click", () => {
+      count++;
+      display.textContent = count;
+    });
+  </script>
+</div>

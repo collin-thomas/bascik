@@ -1,0 +1,38 @@
+<div class="wrapper" id="wrapper">
+  <div id="result" class="result">No event yet</div>
+  <div id="custom-result" class="result">No custom event yet</div>
+
+  <div class="btn-row">
+    <button id="dispatch-btn">Dispatch custom event</button>
+    <button id="trigger-resize-btn">Simulate resize</button>
+  </div>
+
+  <script>
+    const result = document.getElementById("result");
+    const customResult = document.getElementById("custom-result");
+
+    // Window-level listener — fires for ALL instances but each has scoped IDs
+    window.addEventListener("resize", () => {
+      result.textContent = "resize fired";
+    });
+
+    // Dispatch a CustomEvent from THIS instance
+    document.getElementById("dispatch-btn").addEventListener("click", () => {
+      const event = new CustomEvent("comp-update", {
+        bubbles: true,
+        detail: { instanceId: document.getElementById("wrapper").id }
+      });
+      document.getElementById("wrapper").dispatchEvent(event);
+    });
+
+    // Listen for CustomEvent on document — receives events from ALL instances
+    document.addEventListener("comp-update", (e) => {
+      customResult.textContent = "custom: " + e.detail.instanceId;
+    });
+
+    // Simulate resize by manually firing the resize event
+    document.getElementById("trigger-resize-btn").addEventListener("click", () => {
+      window.dispatchEvent(new Event("resize"));
+    });
+  </script>
+</div>

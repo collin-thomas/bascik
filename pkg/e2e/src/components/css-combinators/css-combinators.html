@@ -1,0 +1,32 @@
+<div class="wrapper">
+
+  <!-- Child combinator: only direct .item children of .list get styled -->
+  <ul class="list">
+    <li class="item">Direct child item 1</li>
+    <li class="item">Direct child item 2</li>
+    <div class="nested-wrapper">
+      <li class="item">Nested item (NOT a direct child of .list)</li>
+    </div>
+  </ul>
+
+  <!-- Adjacent sibling: .subtitle immediately after .title gets styled -->
+  <h3 class="title">Section Title</h3>
+  <p class="subtitle">Subtitle (adjacent to title)</p>
+  <p class="subtitle">Second subtitle (NOT adjacent to title)</p>
+
+  <!-- General sibling: .content-item elements after .header-label -->
+  <div class="header-label">Header</div>
+  <div class="content-item">Content 1 (sibling of header)</div>
+  <div class="content-item">Content 2 (sibling of header)</div>
+
+  <!-- Descendant: .label inside .card -->
+  <div class="card">
+    <span class="label">Label inside card</span>
+  </div>
+  <span class="label">Label outside card (unstyled)</span>
+
+  <!-- Compound: .box.active gets special style -->
+  <div class="box">Plain box</div>
+  <div class="box active">Active box</div>
+
+</div>

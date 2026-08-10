@@ -1,0 +1,21 @@
+<div class="wrapper">
+  <!-- var() with defined custom prop (--accent set on .wrapper) -->
+  <div class="box" id="defined-box">Defined --accent</div>
+
+  <!-- var() with fallback (--undefined-prop never defined) -->
+  <div class="fallback-box" id="fallback-box">Fallback color</div>
+
+  <!-- Multiple animations -->
+  <div class="animated" id="anim-box">Multi-animation box</div>
+
+  <!-- Button to toggle animation -->
+  <button id="toggle-anim-btn">Toggle animation</button>
+
+  <span hidden class="animating"></span>
+
+  <script>
+    document.getElementById("toggle-anim-btn").addEventListener("click", () => {
+      document.getElementById("anim-box").classList.toggle("animating");
+    });
+  </script>
+</div>

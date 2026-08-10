@@ -1,0 +1,64 @@
+<nav class="dnav">
+  <div class="dnav-inner">
+    <a href="/" class="dnav-logo" aria-label="Bascik home"><docs-logo></docs-logo></a>
+    <button type="button" class="dnav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+      <span class="dnav-toggle-icon"></span>
+    </button>
+    <div class="dnav-links-wrapper">
+      <ul class="dnav-links">
+        <li><a href="/why-bascik">Why Bascik</a></li>
+        <li><a href="/getting-started">Docs</a></li>
+        <li><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
+      <div class="mobile-only-sections">
+        <hr class="mobile-sep" />
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { NAV } = await import(pathToFileURL(join(process.cwd(), 'scripts/nav.mjs')).href);
+          let html = '';
+          for (const section of NAV) {
+            html += `<p class="mobile-sec-heading">${section.section}</p><ul class="mobile-sec-nav">`;
+            for (const page of section.pages) {
+              html += `<li><a href="${page.href}">${page.label}</a></li>`;
+            }
+            html += '</ul>';
+          }
+          console.log(html);
+        </script>
+        <hr class="mobile-sep" />
+        <ul class="mobile-sec-nav">
+          <li><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener">GitHub &#x2197;</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+<script>
+  (function () {
+    var toggle = document.querySelector('.dnav-toggle');
+    var wrapper = document.querySelector('.dnav-links-wrapper');
+    if (toggle && wrapper) {
+      toggle.addEventListener('click', function () {
+        var isOpen = toggle.getAttribute('aria-expanded') !== 'true';
+        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      });
+    }
+
+    var path = window.location.pathname;
+    document.querySelectorAll('.dnav a').forEach(function (a) {
+      var href = a.getAttribute('href');
+      if (!href || href.startsWith('http')) return;
+      var current = false;
+      if (href === '/why-bascik') {
+        current = (path === '/why-bascik');
+      } else if (href === '/getting-started' && a.closest('.dnav-links')) {
+        current = (path !== '' && path !== '/' && path !== '/why-bascik');
+      } else {
+        current = (href === path);
+      }
+      if (current) a.setAttribute('aria-current', 'page');
+    });
+  })();
+</script>

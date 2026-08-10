@@ -1,0 +1,49 @@
+<div class="wrapper" id="main">
+  <div id="target" class="target-box" data-theme="dark">Target element</div>
+  <div id="status" class="status">Ready</div>
+
+  <!-- Sentinel for dynamic class -->
+  <span hidden class="highlighted"></span>
+
+  <div class="btn-row">
+    <button id="add-class-btn">Add .highlighted class</button>
+    <button id="has-class-btn">Check hasClass (via className)</button>
+    <button id="remove-attr-btn">removeAttribute("class")</button>
+    <button id="toggle-hidden-btn">toggleAttribute("hidden") on target</button>
+    <button id="check-hidden-btn">Check target.hidden</button>
+    <button id="dataset-btn">Read data-theme dataset</button>
+  </div>
+
+  <script>
+    const target = document.getElementById("target");
+    const status = document.getElementById("status");
+
+    document.getElementById("add-class-btn").addEventListener("click", () => {
+      target.classList.add("highlighted");
+      status.textContent = "class added";
+    });
+
+    document.getElementById("has-class-btn").addEventListener("click", () => {
+      const has = target.classList.contains("highlighted");
+      status.textContent = "has highlighted: " + has;
+    });
+
+    document.getElementById("remove-attr-btn").addEventListener("click", () => {
+      target.removeAttribute("class");
+      status.textContent = "class attr removed";
+    });
+
+    document.getElementById("toggle-hidden-btn").addEventListener("click", () => {
+      target.toggleAttribute("hidden");
+      status.textContent = "hidden toggled: " + target.hidden;
+    });
+
+    document.getElementById("check-hidden-btn").addEventListener("click", () => {
+      status.textContent = "target.hidden = " + target.hidden;
+    });
+
+    document.getElementById("dataset-btn").addEventListener("click", () => {
+      status.textContent = "data-theme = " + target.dataset.theme;
+    });
+  </script>
+</div>

@@ -1,0 +1,71 @@
+<div class="wrapper">
+  <!-- MutationObserver section -->
+  <div class="section">
+    <h3 class="section-title">MutationObserver</h3>
+    <div id="container" class="container">
+      <div class="placeholder">Container (watch for mutations)</div>
+    </div>
+    <div id="mutation-status" class="status">waiting for mutations...</div>
+    <div class="btn-row">
+      <button id="add-child-btn">Add child</button>
+      <button id="remove-child-btn">Remove child</button>
+    </div>
+  </div>
+
+  <!-- IntersectionObserver section -->
+  <div class="section">
+    <h3 class="section-title">IntersectionObserver</h3>
+    <div id="observe-target" class="observe-box">Intersection target</div>
+    <div id="intersection-status" class="status">not observed yet</div>
+  </div>
+
+  <!-- ResizeObserver section -->
+  <div class="section">
+    <h3 class="section-title">ResizeObserver</h3>
+    <div id="resize-box" class="resize-box">Resize me (ResizeObserver)</div>
+    <div id="size-display" class="status">size: ?</div>
+  </div>
+
+  <script>
+    // MutationObserver
+    const container = document.getElementById("container");
+    const mutStatus = document.getElementById("mutation-status");
+    const mutObserver = new MutationObserver((mutations) => {
+      mutStatus.textContent = "mutations: " + mutations[0].addedNodes.length + " added, " + mutations[0].removedNodes.length + " removed";
+    });
+    mutObserver.observe(container, { childList: true });
+
+    let childCount = 0;
+    document.getElementById("add-child-btn").addEventListener("click", () => {
+      childCount++;
+      const div = document.createElement("div");
+      div.className = "child-item";
+      div.textContent = "Child " + childCount;
+      container.appendChild(div);
+    });
+    document.getElementById("remove-child-btn").addEventListener("click", () => {
+      const items = container.querySelectorAll(".child-item");
+      if (items.length > 0) container.removeChild(items[items.length - 1]);
+    });
+
+    // IntersectionObserver — element is in viewport, fires immediately
+    const observeTarget = document.getElementById("observe-target");
+    const intStatus = document.getElementById("intersection-status");
+    const io = new IntersectionObserver((entries) => {
+      intStatus.textContent = entries[0].isIntersecting ? "intersecting" : "not intersecting";
+    }, { threshold: 0 });
+    io.observe(observeTarget);
+
+    // ResizeObserver
+    const resizeBox = document.getElementById("resize-box");
+    const sizeDisplay = document.getElementById("size-display");
+    const ro = new ResizeObserver((entries) => {
+      const { width } = entries[0].contentRect;
+      sizeDisplay.textContent = "width: " + Math.round(width) + "px";
+    });
+    ro.observe(resizeBox);
+  </script>
+
+  <!-- Sentinel: declare child-item so bascik scopes the className setter -->
+  <span hidden class="child-item"></span>
+</div>

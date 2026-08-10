@@ -1,0 +1,21 @@
+<div class="wrapper">
+  <div id="box" class="box">Transition box</div>
+  <div id="status" class="status">idle</div>
+  <div class="btn-row">
+    <button id="activate-btn">Activate (add .active)</button>
+    <button id="deactivate-btn">Deactivate (remove .active)</button>
+  </div>
+  <span hidden class="active"></span>
+  <script>
+    const box = document.getElementById("box");
+    const status = document.getElementById("status");
+    document.getElementById("activate-btn").addEventListener("click", () => {
+      box.classList.add("active");
+      status.textContent = "active";
+    });
+    document.getElementById("deactivate-btn").addEventListener("click", () => {
+      box.classList.remove("active");
+      status.textContent = "idle";
+    });
+  </script>
+</div>

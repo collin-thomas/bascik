@@ -1,0 +1,41 @@
+{
+  "name": "@bascik/bascik",
+  "description": "A Web Framework",
+  "version": "0.1.0",
+  "license": "AGPL-3.0-only",
+  "homepage": "https://bascik.dev",
+  "author": "Collin Thomas",
+  "type": "module",
+  "files": [
+    "dist/",
+    "src/",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "bin": {
+    "bascik": "dist/index.js"
+  },
+  "engines": {
+    "node": ">=24.17.0"
+  },
+  "dependencies": {
+    "chokidar": "^5.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.0",
+    "@types/node": "^24.0.0",
+    "@vitest/coverage-v8": "^4.1.10",
+    "typescript": "^7.0.2",
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10"
+  },
+  "scripts": {
+    "build": "node_modules/.bin/tsc -p tsconfig.build.json",
+    "test": "vitest",
+    "test:ci": "vitest run --coverage.enabled --coverage.reporter='text-summary'",
+    "test:coverage": "vitest run --coverage.enabled",
+    "bench": "vitest bench",
+    "typecheck": "node_modules/.bin/tsc --noEmit",
+    "e2e": "node_modules/.bin/playwright test --config e2e/playwright.config.ts"
+  }
+}

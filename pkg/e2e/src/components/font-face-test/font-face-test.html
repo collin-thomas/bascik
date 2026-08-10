@@ -1,0 +1,13 @@
+<div class="wrapper">
+  <p class="custom-font-text">Text using CompFont</p>
+  <p class="regular-text">Regular text for comparison</p>
+  <div id="font-info" class="info">Font info</div>
+  <button id="check-font-btn">Check font family</button>
+  <script>
+    document.getElementById("check-font-btn").addEventListener("click", () => {
+      const el = document.querySelector(".custom-font-text");
+      const ff = getComputedStyle(el).fontFamily;
+      document.getElementById("font-info").textContent = "fontFamily: " + ff;
+    });
+  </script>
+</div>

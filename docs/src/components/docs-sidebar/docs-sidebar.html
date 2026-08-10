@@ -1,0 +1,37 @@
+<aside class="docs-sidebar">
+     <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { NAV } = await import(pathToFileURL(join(process.cwd(), 'scripts/nav.mjs')).href);
+          let html = '';
+          for (const section of NAV) {
+               html += `<p class="sidebar-heading">${section.section}</p><ul class="sidebar-nav">`;
+               for (const page of section.pages) {
+                    html += `<li><a href="${page.href}">${page.label}</a></li>`;
+               }
+               html += '</ul>';
+          }
+          console.log(html);
+     </script>
+</aside>
+<script>
+     (function () {
+          var path = window.location.pathname;
+          var sidebar = document.querySelector('.docs-sidebar');
+          if (sidebar) {
+               var links = Array.from(sidebar.querySelectorAll('a'));
+               var idx = links.findIndex(function (a) { return a.getAttribute('href') === path; });
+               if (idx !== -1) {
+                    links[idx].setAttribute('aria-current', 'page');
+                    links[idx].scrollIntoView({ block: 'nearest' });
+                    var next = links[idx + 1];
+                    if (next) {
+                         var link = document.createElement('link');
+                         link.rel = 'prefetch';
+                         link.href = next.getAttribute('href');
+                         document.head.appendChild(link);
+                    }
+               }
+          }
+     })();
+</script>

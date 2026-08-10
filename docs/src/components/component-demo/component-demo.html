@@ -1,0 +1,245 @@
+<div class="demo-box" id="demo-root">
+  <div class="demo-nav">
+    <div class="demo-tabs">
+      <button class="demo-tab active" data-tab="preview">Preview</button>
+      <button class="demo-tab" data-tab="code">Source</button>
+      <button class="demo-tab" data-tab="output">Output</button>
+    </div>
+    <div class="demo-meta" data-bascik-prop-file></div>
+  </div>
+
+  <div class="demo-panes">
+    <div class="demo-pane active" data-pane="preview">
+      <div class="demo-preview-content">
+        <div data-bascik-slot="example"></div>
+      </div>
+    </div>
+    <div class="demo-pane" data-pane="code">
+      <div class="demo-language-tabs" role="tablist" aria-label="Source language">
+        <button class="demo-language-tab active" data-language="html" type="button">HTML</button>
+        <button class="demo-language-tab" data-language="css" type="button">CSS</button>
+        <button class="demo-language-tab" data-language="js" type="button">JS</button>
+      </div>
+      <div class="demo-language-pane active" data-language-pane="html">
+        <div data-bascik-slot="source-html"></div>
+      </div>
+      <div class="demo-language-pane" data-language-pane="css">
+        <div data-bascik-slot="source-css"></div>
+      </div>
+      <div class="demo-language-pane" data-language-pane="js">
+        <div data-bascik-slot="source-js"></div>
+      </div>
+      <div data-bascik-slot="code"></div>
+    </div>
+    <div class="demo-pane" data-pane="output">
+      <div class="demo-language-tabs" role="tablist" aria-label="Output language">
+        <button class="demo-language-tab active" data-language="html" type="button">HTML</button>
+        <button class="demo-language-tab" data-language="css" type="button">CSS</button>
+        <button class="demo-language-tab" data-language="js" type="button">JS</button>
+      </div>
+      <div class="demo-language-pane active" data-language-pane="html">
+        <div data-bascik-slot="output-html"></div>
+      </div>
+      <div class="demo-language-pane" data-language-pane="css">
+        <div data-bascik-slot="output-css"></div>
+      </div>
+      <div class="demo-language-pane" data-language-pane="js">
+        <div data-bascik-slot="output-js"></div>
+      </div>
+      <div data-bascik-slot="output"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .demo-box {
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    margin: 24px 0;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .demo-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-muted);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+  }
+
+  .demo-tabs {
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  .demo-tab {
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: all 0.2s;
+  }
+
+  @media (hover: hover) {
+    .demo-tab:hover {
+      color: var(--text);
+    }
+  }
+
+  .demo-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .demo-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .demo-panes {
+    position: relative;
+  }
+
+  .demo-pane {
+    display: none;
+  }
+
+  .demo-pane.active {
+    display: block;
+  }
+
+  .demo-language-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 8px 12px;
+    background: var(--bg-muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .demo-language-tab {
+    min-width: 48px;
+    padding: 6px 10px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .demo-language-tab:hover {
+    color: var(--text);
+  }
+
+  .demo-language-tab.active {
+    color: var(--text);
+    background: var(--bg);
+    border-color: var(--border);
+  }
+
+  .demo-language-pane {
+    display: none;
+  }
+
+  .demo-language-pane.active {
+    display: block;
+  }
+
+  .demo-preview-content {
+    padding: 32px;
+    background-image:
+      linear-gradient(45deg, var(--bg-muted) 25%, transparent 25%),
+      linear-gradient(-45deg, var(--bg-muted) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, var(--bg-muted) 75%),
+      linear-gradient(-45deg, transparent 75%, var(--bg-muted) 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Override code-block styles inside demo-pane if needed */
+  .demo-pane code-block {
+    margin: 0;
+  }
+
+  .demo-pane .cblock {
+    border: none;
+    border-radius: 0;
+  }
+</style>
+
+<script>
+  const demoBox = document.getElementById('demo-root');
+  const tabs = demoBox.querySelectorAll('.demo-tab');
+  const panes = demoBox.querySelectorAll('.demo-pane');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.tab;
+
+      tabs.forEach(t => t.classList.remove('active'));
+      panes.forEach(p => p.classList.remove('active'));
+
+      tab.classList.add('active');
+      demoBox.querySelector(`[data-pane="${target}"]`).classList.add('active');
+    });
+  });
+
+  demoBox.querySelectorAll('[data-pane="code"], [data-pane="output"]').forEach(pane => {
+    const languageTabs = pane.querySelectorAll('.demo-language-tab');
+    const languagePanes = pane.querySelectorAll('.demo-language-pane');
+
+    // Hide the language tab bar when none of the language panes have content.
+    // Pages that use only the legacy 'code'/'output' slots leave these panes
+    // empty, so there is nothing to switch between.
+    const hasLanguageContent = Array.from(languagePanes).some(p => p.children.length > 0);
+    if (!hasLanguageContent) {
+      const tabBar = pane.querySelector('[role="tablist"]');
+      if (tabBar) tabBar.style.display = 'none';
+    } else {
+      // Hide individual language tabs/panes that have no content.
+      languageTabs.forEach(tab => {
+        const langPane = pane.querySelector(`[data-language-pane="${tab.dataset.language}"]`);
+        if (langPane && langPane.children.length === 0) {
+          tab.hidden = true;
+          tab.classList.remove('active');
+          langPane.classList.remove('active');
+        }
+      });
+      // If the default active tab was hidden, activate the first visible one.
+      const activeTab = Array.from(languageTabs).find(t => t.classList.contains('active') && !t.hidden);
+      if (!activeTab) {
+        const firstVisible = Array.from(languageTabs).find(t => !t.hidden);
+        if (firstVisible) {
+          firstVisible.classList.add('active');
+          pane.querySelector(`[data-language-pane="${firstVisible.dataset.language}"]`).classList.add('active');
+        }
+      }
+    }
+
+    languageTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        languageTabs.forEach(item => item.classList.remove('active'));
+        languagePanes.forEach(item => item.classList.remove('active'));
+
+        tab.classList.add('active');
+        pane.querySelector(`[data-language-pane="${tab.dataset.language}"]`).classList.add('active');
+      });
+    });
+  });
+</script>

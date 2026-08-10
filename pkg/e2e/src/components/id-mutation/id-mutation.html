@@ -1,0 +1,40 @@
+<div class="wrapper">
+  <div id="my-id" class="box">Box with initial ID</div>
+  <div id="id-display" class="status">Initial ID displayed here</div>
+  <div id="result" class="result">Ready</div>
+
+  <div class="btn-row">
+    <button id="set-id-btn">Set .id = "new-id"</button>
+    <button id="set-attr-btn">setAttribute("id", "attr-id")</button>
+    <button id="read-id-btn">Read current .id</button>
+    <button id="reset-id-btn">Reset to initial id</button>
+  </div>
+
+  <script>
+    const box = document.getElementById("my-id");
+    const display = document.getElementById("id-display");
+    const result = document.getElementById("result");
+
+    // Show initial id on load
+    display.textContent = "id = " + box.id;
+
+    document.getElementById("set-id-btn").addEventListener("click", () => {
+      box.id = "new-id";
+      result.textContent = "id set to: " + box.id;
+    });
+
+    document.getElementById("set-attr-btn").addEventListener("click", () => {
+      box.setAttribute("id", "attr-id");
+      result.textContent = "id via setAttribute: " + box.id;
+    });
+
+    document.getElementById("read-id-btn").addEventListener("click", () => {
+      result.textContent = "current id: " + box.id;
+    });
+
+    document.getElementById("reset-id-btn").addEventListener("click", () => {
+      box.id = document.getElementById("my-id")?.id || "bascik__id-mutation__my-id";
+      result.textContent = "reset attempted";
+    });
+  </script>
+</div>

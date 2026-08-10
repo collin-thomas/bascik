@@ -1,0 +1,53 @@
+<div class="wrapper">
+  <!-- Container where dynamic elements will be appended -->
+  <ul id="dynamic-list" class="list">
+    <!-- Items added dynamically via JS -->
+  </ul>
+
+  <div id="status" class="status">0 items</div>
+
+  <div class="btn-row">
+    <button id="add-scoped-btn">Add item (scoped class)</button>
+    <button id="add-unscoped-btn">Add item (unscoped class)</button>
+    <button id="clear-btn">Clear list</button>
+  </div>
+
+  <!--
+    Sentinel: declare 'item' here so bascik includes it in the scoped class map.
+    That makes li.className = "item" get rewritten to the scoped class name.
+  -->
+  <span hidden class="item"></span>
+
+  <script>
+    const list = document.getElementById("dynamic-list");
+    const status = document.getElementById("status");
+
+    function updateStatus() {
+      status.textContent = list.children.length + " items";
+    }
+
+    document.getElementById("add-scoped-btn").addEventListener("click", () => {
+      const li = document.createElement("li");
+      // 'item' is a known class (sentinel above) so className setter is scoped
+      li.className = "item";
+      li.textContent = "Scoped item " + (list.children.length + 1);
+      list.appendChild(li);
+      updateStatus();
+    });
+
+    document.getElementById("add-unscoped-btn").addEventListener("click", () => {
+      const li = document.createElement("li");
+      // setAttribute with a string literal that contains a known class name —
+      // bascik may or may not scope "item" here depending on the rewrite rules
+      li.setAttribute("class", "item unscoped-item");
+      li.textContent = "Unscoped item " + (list.children.length + 1);
+      list.appendChild(li);
+      updateStatus();
+    });
+
+    document.getElementById("clear-btn").addEventListener("click", () => {
+      list.innerHTML = "";
+      updateStatus();
+    });
+  </script>
+</div>

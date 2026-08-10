@@ -1,0 +1,16 @@
+.box {
+  padding: 20px;
+  background: rgb(30, 58, 95);
+  border: 2px solid rgb(96, 165, 250);
+  border-radius: 6px;
+  margin: 8px;
+  display: inline-block;
+  min-width: 80px;
+  text-align: center;
+}
+
+.label {
+  color: rgb(96, 165, 250);
+  font-weight: 600;
+  font-size: 0.9rem;
+}

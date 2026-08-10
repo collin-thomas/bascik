@@ -1,0 +1,33 @@
+<div class="wrapper">
+
+  <!-- @scope test: .container scopes its inner classes -->
+  <div class="container">
+    <h3 class="title">Scoped Title (via @scope)</h3>
+    <p class="body">Scoped body text (via @scope)</p>
+  </div>
+
+  <!-- @scope with "to" clause -->
+  <div class="widget">
+    <div class="label">Widget label (via @scope...to)</div>
+    <div class="boundary">
+      <div class="label">Label inside boundary (excluded by @scope to)</div>
+    </div>
+  </div>
+
+  <!-- Descendant element selectors (.card p, .list > li, .article > h2) -->
+  <div class="card">
+    <p>Paragraph inside .card (should get scoped p styles)</p>
+    <span>Span inside .card (not targeted)</span>
+  </div>
+
+  <ul class="list">
+    <li>Direct li child 1</li>
+    <li>Direct li child 2</li>
+  </ul>
+
+  <article class="article">
+    <h2>Article heading (via .article > h2)</h2>
+    <p>Article paragraph</p>
+  </article>
+
+</div>

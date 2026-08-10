@@ -1,0 +1,17 @@
+.panel {
+  border: 1px solid rgb(96, 165, 250);
+  padding: 12px;
+  border-radius: 6px;
+  background: rgb(8, 28, 69);
+  margin-bottom: 8px;
+}
+.panel-header {
+  color: rgb(96, 165, 250);
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+.panel-body {
+  display: flex;
+  gap: 6px;
+}

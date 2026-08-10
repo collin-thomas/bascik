@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <docs-head></docs-head>
+  <meta name="description"
+    content="The guiding principle behind Bascik is simple: use what already exists. Do not invent new abstractions where plain HTML already works." />
+  <title>Why Bascik — Bascik Docs</title>
+  <style>
+    .philosophy-section {
+      margin-bottom: 48px;
+    }
+
+    .pull-quote {
+      border-left: 3px solid var(--accent);
+      padding: 16px 24px;
+      margin: 32px 0;
+      background: rgba(211, 255, 141, 0.04);
+      border-radius: 0 6px 6px 0;
+    }
+
+    .pull-quote p {
+      font-size: 1.15rem;
+      font-style: italic;
+      margin: 0;
+      color: var(--fg);
+    }
+  </style>
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+
+      <docs-sidebar></docs-sidebar>
+
+      <main class="docs-content">
+        <p class="section-label">Philosophy</p>
+        <h1>Why Bascik</h1>
+        <p class="page-intro">The guiding principle behind Bascik is simple: use what already exists. Do not invent new
+          syntax, do not add a runtime, do not get in the way. HTML, CSS, and JavaScript are enough.</p>
+
+        <div class="philosophy-section">
+          <h2>The Problem Bascik Solves</h2>
+          <p>You've been here. You're building a straightforward site and you've copy-pasted the same navigation markup
+            into every page for the third time. You Google <em>"how to reuse HTML on multiple pages without a
+              framework"</em> or ask ChatGPT <em>"HTML components without React."</em> The answers are always the same:
+            Web Components (verbose, requires JavaScript to render), server-side includes (awkward, server-dependent),
+            or a full framework (React, Vue, Astro) that feels like enormous overkill for something this simple.</p>
+          <p>Building a website has never been simpler at the language level. HTML structures content, CSS styles it,
+            JavaScript animates it. Every browser speaks all three fluently. Developers have spent thirty years learning
+            them, and documentation is exhaustive.</p>
+          <p>The problem is organization, not language. Once a project grows past a handful of pages, copy-pasting the
+            same navigation markup into every file becomes painful. Styles that were meant to be local start bleeding
+            across the page. Script variables in one section collide with variables in another.</p>
+          <p>Frameworks like React and Vue solve this problem well — for interactive applications that genuinely need
+            component state, client-side routing, and reactive data binding. Most websites are not that. A marketing
+            site, a documentation portal, a portfolio, a blog — these are mostly static documents with a handful of
+            interactive moments sprinkled in. Reaching for a full framework for these projects means paying the runtime
+            cost, the build complexity, and the mental overhead of an entire abstraction layer when the underlying
+            platform already has everything needed.</p>
+
+          <div class="pull-quote">
+            <p>Frameworks were built for people writing large interactive applications. Bascik was built for everyone
+              else — and for the tools that write code on their behalf.</p>
+          </div>
+        </div>
+
+        <div class="philosophy-section">
+          <h2>The Component Convention</h2>
+          <p>In Bascik, creating a component is creating a file. Name a file <code>my-nav.html</code> and it becomes the
+            <code>&lt;my-nav&gt;</code> tag — automatically, everywhere. There is no registration step, no import
+            statement, no export, no class to define. The filename is the entire interface.</p>
+          <p>CSS inside that file scopes itself to that component. Write <code>.card { padding: 20px; }</code> and
+            Bascik rewrites it to something like <code>.bascik__my-card__card { padding: 20px; }</code> at build time.
+            You never manage a namespace. You never worry about a class name colliding with another component. You write
+            CSS the way you always have — it just works.</p>
+          <p>JavaScript inside that file scopes itself too. Write <code>document.getElementById('count')</code> and
+            Bascik rewrites it to target the scoped version of that element — so two instances of the same counter on
+            one page stay completely isolated, not through Shadow DOM or any runtime trick, but because the selectors
+            were rewritten before the browser ever saw them.</p>
+
+          <div class="pull-quote">
+            <p>Create a file. Use the tag. Everything inside it — HTML, CSS, JavaScript — stays contained. No imports.
+              No exports. No configuration. No special syntax to learn.</p>
+          </div>
+        </div>
+
+        <div class="philosophy-section">
+          <h2>The Platform Caught Up</h2>
+          <p>There is a historical pattern worth recognizing. A language or platform ships without a feature the
+            community needs. Someone builds a library to fill the gap. The library becomes ubiquitous. Years later, the
+            platform ships the feature natively, but the ecosystem keeps reaching for the library out of habit.</p>
+          <p>jQuery filled a gap when DOM APIs were inconsistent across browsers. Underscore and Lodash filled a gap
+            when JavaScript lacked functional array utilities. Tailwind filled a gap when organizing CSS at scale was
+            genuinely hard. All of those tools were the right answer for their moment.</p>
+          <p>That moment has passed. Browser DOM APIs are consistent and capable. JavaScript ships with
+            <code>Array.map</code>, <code>Array.filter</code>, <code>Object.assign</code>, optional chaining, and
+            everything Lodash offered for free. CSS ships with custom properties, cascade layers, container queries,
+            <code>:is()</code>, <code>:has()</code>, and logical properties. The platform caught up.
+          </p>
+          <p>The only gap that remains is component organization — a way to write a navigation bar once and reuse it
+            across pages without a runtime. That is the gap Bascik fills, using a build step rather than adding to the
+            runtime.</p>
+        </div>
+
+        <div class="philosophy-section">
+          <h2>Why Not Web Components?</h2>
+          <p>Web Components are a browser-native component model, and they are a legitimate answer to the organization
+            problem. But they come with trade-offs that make them a poor fit for statically rendered sites.</p>
+          <p>Every Web Component requires JavaScript to be parsed, evaluated, and registered before the component
+            renders. On a page with ten components, that is ten class definitions loading at runtime just to display
+            static content. Search engines, accessibility tools, and users on slow connections all pay that cost.</p>
+          <p>Web Components also introduce a non-trivial API surface: custom element registries, shadow DOM, light DOM,
+            lifecycle callbacks, slot distribution rules. For a developer writing a navigation bar, none of that is
+            relevant. It is framework complexity without the framework ecosystem.</p>
+          <p>Bascik takes a different position: run the component resolution at build time, ship plain HTML. A
+            <code>&lt;site-nav&gt;</code> tag in source becomes a <code>&lt;nav&gt;</code> element in the output.
+            <strong>Zero JavaScript is added to your pages.</strong> Every script in the final HTML was written by
+            you.
+          </p>
+        </div>
+
+        <div class="philosophy-section">
+          <h2>Bascik and AI</h2>
+          <p>Bascik was built before large language models became capable coding tools. As they advanced, something
+            interesting became clear: AI is a better fit for Bascik than it is for most frameworks.</p>
+          <p>Language models were trained on the entire history of the web. They know HTML, CSS, and JavaScript
+            exceptionally well — not just the syntax, but the patterns, the semantics, the accessibility attributes, the
+            browser quirks. They can write assembly if asked. Writing a navigation component in HTML is trivial.</p>
+          <p>Frameworks introduce a layer the model has to reason through in addition to the underlying platform. To
+            build a navigation component in React, the model must know React's component model, JSX syntax, hooks,
+            prop types, and the conventions of the specific project setup — and then it must also know HTML, CSS, and
+            the browser APIs that sit underneath. Every abstraction is another surface where the model can make a
+            mistake, produce outdated patterns, or hallucinate an API that does not exist.</p>
+          <p>With Bascik, the model writes HTML, CSS, and JavaScript — three languages it knows precisely, with
+            exhaustive documentation and decades of examples. Scoping and component resolution happen at build time
+            without the model needing to understand any custom runtime. The component format is close enough to plain
+            HTML that the model rarely needs to consult any Bascik-specific documentation at all.</p>
+
+          <div class="pull-quote">
+            <p>AI can write assembly. It does not need a framework to write a button. It needs a way to organize that
+              button so it is reusable, maintainable, and ships as fast HTML. That is Bascik.</p>
+          </div>
+        </div>
+
+        <div class="philosophy-section">
+          <h2>Bascik and Other Libraries</h2>
+          <p>Bascik is not exclusionary. It solves one problem — component organization at build time — and
+            deliberately does nothing else. Everything else you might want on top of your HTML is still available
+            to you.</p>
+          <p>Because Bascik's output is plain HTML, any library that works with HTML works with Bascik.
+            <a href="https://github.com/vuejs/petite-vue" target="_blank" rel="noopener">Petite Vue</a> can
+            mount reactive islands on the page. <a href="https://alpinejs.dev" target="_blank"
+              rel="noopener">Alpine.js</a>
+            can handle dropdowns and toggles.
+            <a href="https://htmx.org" target="_blank" rel="noopener">HTMX</a> can fetch partial HTML from a server.
+            Any chart library, animation library, or analytics script drops straight in with a
+            <code>&lt;script&gt;</code> tag — because that is all it takes to load a library into a plain HTML page.
+          </p>
+          <p>This is the opposite of a full-stack framework, which tends to control the entire rendering pipeline and
+            make integrating outside tools awkward. Bascik controls nothing at runtime. It hands you finished HTML and
+            steps aside. What you do with that HTML — whether you add Alpine.js, nothing at all, or a WebGL canvas
+            — is entirely up to you.</p>
+
+          <div class="pull-quote">
+            <p>Bascik organizes your source. The browser runs your output. Any tool that works with HTML works with
+              Bascik.</p>
+          </div>
+        </div>
+
+        <div class="philosophy-section">
+          <h2>The Core Principle</h2>
+          <p>Every decision in Bascik follows from one rule: use what already exists. Do not invent a template language.
+            Do not add a reactive data system. Do not require a runtime. Do not get between the developer and the
+            browser.</p>
+          <p>Bascik is a find-and-replace at build time. Custom component tags are resolved to their source HTML. CSS
+            class names are scoped so they cannot collide. Script variables are isolated so they cannot leak. The output
+            is a directory of plain HTML files that any server can host, any browser can render, and any tool can
+            inspect without knowing Bascik exists.</p>
+          <p>If the web platform ever ships a native, zero-runtime, build-time component model that does exactly this,
+            Bascik becomes unnecessary. Until then, it stays out of the way and lets you write the web the way it was
+            designed to be written.</p>
+        </div>
+
+        <div class="callout">
+          <p><strong>Next:</strong> Read the <a href="/getting-started">Getting Started guide</a> to install Bascik and
+            write your first component in under five minutes. Or jump to <a href="/compatibility">Scoping
+              Compatibility</a> to see exactly what CSS and JavaScript patterns are supported.</p>
+        </div>
+
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/why-bascik'));
+        </script>
+
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+</body>
+
+</html>

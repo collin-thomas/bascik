@@ -1,0 +1,46 @@
+.docs-pagination {
+  display: flex;
+  gap: 12px;
+  margin-top: 64px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+
+.docs-pagination a {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  text-decoration: none;
+  color: var(--text);
+  max-width: 48%;
+  transition: border-color .15s, background .15s;
+}
+
+.docs-pagination a:hover {
+  border-color: var(--border-hover);
+  background: var(--elevated);
+  opacity: 1;
+}
+
+.docs-pagination a[data-pg="next"] {
+  margin-left: auto;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.docs-pagination [data-pg-dir] {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text-muted);
+}
+
+.docs-pagination [data-pg-label] {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+}

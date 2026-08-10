@@ -1,0 +1,38 @@
+<div class="wrapper">
+  <div id="target" class="target">Target</div>
+  <div id="dynamic-area" class="dynamic-area">Dynamic area</div>
+  <div id="result" class="result">No change</div>
+
+  <div class="btn-row">
+    <button id="set-inner-html-btn">innerHTML with .box class</button>
+    <button id="insert-adjacent-btn">insertAdjacentHTML</button>
+    <button id="check-inner-btn">Check inner content class</button>
+  </div>
+
+  <!-- Sentinels for dynamic classes: bascik only scopes what it sees declared -->
+  <span hidden class="injected box"></span>
+
+  <script>
+    const area = document.getElementById("dynamic-area");
+    const result = document.getElementById("result");
+
+    document.getElementById("set-inner-html-btn").addEventListener("click", () => {
+      // Setting innerHTML with class="box" — "box" is NOT scoped in strings
+      area.innerHTML = '<div class="box">Injected via innerHTML</div>';
+      result.textContent = "innerHTML set";
+    });
+
+    document.getElementById("insert-adjacent-btn").addEventListener("click", () => {
+      // Same limitation — class names in HTML strings are not scoped
+      area.insertAdjacentHTML("beforeend", '<div class="injected">Adjacent HTML</div>');
+      result.textContent = "insertAdjacentHTML done";
+    });
+
+    document.getElementById("check-inner-btn").addEventListener("click", () => {
+      const inner = area.querySelector(".box");
+      // Since innerHTML set class="box" (unscoped), querySelector(".box") will NOT
+      // find it (bascik scoped the querySelector to .bascik__js-limitations__box)
+      result.textContent = "querySelector(.box) found: " + !!inner;
+    });
+  </script>
+</div>

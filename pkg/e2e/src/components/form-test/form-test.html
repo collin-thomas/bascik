@@ -1,0 +1,38 @@
+<form class="form" id="login-form">
+  <div class="field-group">
+    <label class="label" for="username-input">Username</label>
+    <input id="username-input" class="input" name="username" type="text" value="alice">
+  </div>
+  <div class="field-group">
+    <label class="label" for="email-input">Email</label>
+    <input id="email-input" class="input" name="email" type="email" value="alice@example.com">
+  </div>
+  <div class="field-group">
+    <label class="label" for="role-select">Role</label>
+    <select id="role-select" class="select" name="role">
+      <option value="admin">Admin</option>
+      <option value="user" selected>User</option>
+    </select>
+  </div>
+  <div id="result" class="result">No submission yet</div>
+  <div class="btn-row">
+    <button id="submit-btn" class="btn" type="button">Read FormData</button>
+    <button id="check-entries-btn" class="btn" type="button">Count FormData entries</button>
+  </div>
+
+  <script>
+    const form = document.getElementById("login-form");
+    const result = document.getElementById("result");
+
+    document.getElementById("submit-btn").addEventListener("click", () => {
+      const fd = new FormData(form);
+      const entries = [...fd.entries()];
+      result.textContent = "keys: " + entries.map(([k]) => k).join(", ");
+    });
+
+    document.getElementById("check-entries-btn").addEventListener("click", () => {
+      const fd = new FormData(form);
+      result.textContent = "count: " + [...fd.entries()].length;
+    });
+  </script>
+</form>

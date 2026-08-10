@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <docs-head></docs-head>
+  <meta name="description"
+    content="Download the Bascik skill file and attach it to GitHub Copilot, Cursor, Claude, or any AI tool that supports custom instructions." />
+  <title>AI Skill — Bascik Docs</title>
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+      <docs-sidebar></docs-sidebar>
+
+      <main class="docs-content">
+        <p class="section-label">Reference</p>
+        <h1>AI Skill</h1>
+        <p class="page-intro">Download the Bascik skill file and attach it to GitHub Copilot, Cursor, Claude, or any AI
+          assistant that supports instruction files — so it understands Bascik's component model, scoping rules, and
+          conventions out of the box.</p>
+
+        <!-- Content rendered from docs/content/copilot-skill.md at build time.
+             To update page content, edit the MD file — not this file. -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMd } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMd('./content/copilot-skill.md', { skipFirstHeading: true }));
+        </script>
+
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+
+</body>
+
+</html>

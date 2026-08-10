@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <docs-head></docs-head>
+  <meta name="description"
+    content="Slots let you pass inner HTML content into a component at the usage site. Bascik supports both default and named slots." />
+  <title>Slots — Bascik Docs</title>
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+      <docs-sidebar></docs-sidebar>
+
+      <main class="docs-content">
+        <p class="section-label">Feature</p>
+        <h1>Slots</h1>
+        <p class="page-intro">Slots let you pass inner HTML content into a component at the usage site. Bascik supports
+          a default slot, named slots, and slot fallback content.</p>
+
+        <!-- Content rendered from docs/content/slots.md at build time.
+             To update page content, edit the MD file — not this file. -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMd } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMd('./content/slots.md', { skipFirstHeading: true }));
+        </script>
+
+        <!-- Interactive demo: named slots in action -->
+        <component-demo data-bascik-prop-file="src/pages/index.html">
+          <div data-bascik-slot="example">
+            <feature-card data-bascik-prop-label="Example" data-bascik-prop-title="Named Slots"
+              data-bascik-prop-desc="This is a demo of named slots in action.">
+              <div
+                style="padding-top:12px;border-top:1px solid var(--border);margin-top:12px;display:flex;justify-content:flex-end">
+                <button class="btn btn-primary" style="font-size:0.75rem;padding:6px 12px">Read More</button>
+              </div>
+            </feature-card>
+          </div>
+          <div data-bascik-slot="code">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/slots.md', 'code'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/slots.md', 'output'));
+              </script>
+            </code-block>
+          </div>
+        </component-demo>
+
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/slots'));
+        </script>
+
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+</body>
+
+</html>

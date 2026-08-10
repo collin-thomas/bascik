@@ -1,0 +1,40 @@
+<div class="wrapper" id="root">
+  <div class="themed-box" id="themed-box">Themed box</div>
+  <div id="result" class="result">No change yet</div>
+  <div class="btn-row">
+    <button id="set-scoped-btn">Set scoped var (workaround)</button>
+    <button id="set-unscoped-btn">Set unscoped var</button>
+    <button id="read-var-btn">Read computed var</button>
+    <button id="reset-btn">Reset</button>
+  </div>
+  <script>
+    const root = document.getElementById("root");
+    const box = document.getElementById("themed-box");
+    const result = document.getElementById("result");
+
+    document.getElementById("set-scoped-btn").addEventListener("click", () => {
+      // Workaround: manually use the scoped property name
+      // (bascik can't scope this setProperty call since it's a string at runtime)
+      root.style.setProperty("--theme-color", "rgb(74, 222, 128)");
+      result.textContent = "set --theme-color directly";
+    });
+
+    document.getElementById("set-unscoped-btn").addEventListener("click", () => {
+      // Setting the original name — won't affect the scoped CSS since the CSS
+      // uses the scoped --bascik__runtime-vars__theme-color name
+      root.style.setProperty("--unscoped-color", "rgb(239, 68, 68)");
+      result.textContent = "set --unscoped-color (unused by CSS)";
+    });
+
+    document.getElementById("read-var-btn").addEventListener("click", () => {
+      const val = getComputedStyle(root).getPropertyValue("--theme-color").trim();
+      result.textContent = "--theme-color = '" + val + "'";
+    });
+
+    document.getElementById("reset-btn").addEventListener("click", () => {
+      root.style.removeProperty("--theme-color");
+      root.style.removeProperty("--unscoped-color");
+      result.textContent = "reset";
+    });
+  </script>
+</div>

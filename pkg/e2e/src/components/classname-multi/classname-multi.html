@@ -1,0 +1,48 @@
+<div class="wrapper">
+
+  <!--
+    Sentinel: declares every class name the JS may assign at runtime so bascik
+    includes them in the scoped class map.
+  -->
+  <span hidden class="active highlighted inactive featured"></span>
+
+  <div id="target-box" class="box">Target box</div>
+  <div id="status" class="status">No change</div>
+  <div class="btn-row">
+    <button id="multi-class-btn">Set multi-class</button>
+    <button id="reset-btn">Reset to box only</button>
+    <button id="append-btn">Append active</button>
+    <button id="template-btn">Template literal set</button>
+  </div>
+
+  <script>
+    const box = document.getElementById("target-box");
+    const status = document.getElementById("status");
+
+    document.getElementById("multi-class-btn").addEventListener("click", () => {
+      // Multi-class setter — ALL known classes should be scoped
+      box.className = "box active highlighted";
+      status.textContent = "set: box active highlighted";
+    });
+
+    document.getElementById("reset-btn").addEventListener("click", () => {
+      box.className = "box";
+      status.textContent = "reset to box";
+    });
+
+    document.getElementById("append-btn").addEventListener("click", () => {
+      // className += appends — the ' active' literal should be scoped
+      box.className = "box";
+      box.className += " active";
+      status.textContent = "appended active";
+    });
+
+    document.getElementById("template-btn").addEventListener("click", () => {
+      // Template literal — the literal 'featured' part may be scoped
+      // but runtime expressions are not
+      const extra = "inactive"; // runtime value, not scoped
+      box.className = `box featured ${extra}`;
+      status.textContent = "template: box featured " + extra;
+    });
+  </script>
+</div>

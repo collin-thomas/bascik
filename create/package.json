@@ -1,0 +1,32 @@
+{
+  "name": "create-bascik",
+  "description": "Create a new Bascik project",
+  "version": "0.1.0",
+  "license": "AGPL-3.0-only",
+  "homepage": "https://bascik.dev",
+  "author": "Collin Thomas",
+  "type": "module",
+  "files": [
+    "dist/",
+    "src/",
+    "README.md"
+  ],
+  "bin": {
+    "create-bascik": "dist/index.js"
+  },
+  "engines": {
+    "node": ">=24.17.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10"
+  },
+  "scripts": {
+    "build": "node_modules/.bin/tsc -p tsconfig.build.json",
+    "test": "vitest",
+    "test:ci": "vitest run",
+    "typecheck": "node_modules/.bin/tsc --noEmit"
+  }
+}

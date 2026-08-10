@@ -1,0 +1,31 @@
+<div class="wrapper">
+  <div id="result" class="result">No result</div>
+  <div class="btn-row">
+    <button id="timeout-btn">setTimeout query</button>
+    <button id="promise-btn">Promise query</button>
+    <button id="microtask-btn">queueMicrotask query</button>
+  </div>
+  <script>
+    document.getElementById("timeout-btn").addEventListener("click", () => {
+      setTimeout(() => {
+        // getElementById scoped at build time — works in async callback
+        const el = document.getElementById("result");
+        el.textContent = "timeout: found #result";
+      }, 50);
+    });
+
+    document.getElementById("promise-btn").addEventListener("click", () => {
+      Promise.resolve().then(() => {
+        const el = document.querySelector(".result");
+        el.textContent = "promise: found .result";
+      });
+    });
+
+    document.getElementById("microtask-btn").addEventListener("click", () => {
+      queueMicrotask(() => {
+        const el = document.getElementById("result");
+        el.textContent = "microtask: found #result";
+      });
+    });
+  </script>
+</div>

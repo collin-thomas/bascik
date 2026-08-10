@@ -1,0 +1,19 @@
+<div class="wrapper">
+  <!-- :is() test — both .card and .panel should get same border-radius -->
+  <div class="card">Card (via :is)</div>
+  <div class="panel">Panel (via :is)</div>
+
+  <!-- :where() test — both .highlight and .featured get font-weight: 700 -->
+  <div class="highlight">Highlighted text</div>
+  <div class="featured">Featured text</div>
+
+  <!-- :not() test — .item without .disabled gets green color -->
+  <ul class="list">
+    <li class="item">Active item (no disabled)</li>
+    <li class="item disabled">Disabled item</li>
+    <li class="item">Another active item</li>
+  </ul>
+
+  <!-- Sentinel for dynamic classes (for the disabled toggle test) -->
+  <span hidden class="disabled"></span>
+</div>

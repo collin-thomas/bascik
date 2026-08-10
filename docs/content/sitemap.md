@@ -1,0 +1,82 @@
+## Sitemap & robots.txt
+
+Bascik can automatically generate a `sitemap.xml` and `robots.txt` for your site at build time. Both files are written to `dist/` alongside your compiled HTML pages.
+
+Sitemap generation is on by default. To enable it, set `siteUrl` in your config:
+
+```js
+// bascik.config.js
+export const bascikConfig = {
+  siteUrl: 'https://example.com',
+};
+```
+
+That's all — `generate.sitemap` and `generate.robots` both default to `true`, so no other change is needed.
+
+### What gets generated
+
+**`dist/sitemap.xml`** — an XML sitemap listing every `.html` page in your `src/pages` directory as an absolute URL:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://example.com/</loc>
+  </url>
+  <url>
+    <loc>https://example.com/about</loc>
+  </url>
+  <url>
+    <loc>https://example.com/blog/post</loc>
+  </url>
+</urlset>
+```
+
+**`dist/robots.txt`** — allows all crawlers and points them at the sitemap:
+
+```text
+User-agent: *
+Allow: /
+
+Sitemap: https://example.com/sitemap.xml
+```
+
+### URL path rules
+
+Each page is converted from its file path to a URL path following these rules:
+
+| Source file | URL |
+|---|---|
+| `src/pages/index.html` | `/` |
+| `src/pages/about.html` | `/about` |
+| `src/pages/blog/index.html` | `/blog` |
+| `src/pages/blog/post.html` | `/blog/post` |
+
+### Opting out
+
+Control sitemap and robots.txt generation independently via the `generate` option:
+
+```js
+export const bascikConfig = {
+  siteUrl: 'https://example.com',
+  generate: {
+    sitemap: true,  // default
+    robots: true,   // default
+  },
+};
+```
+
+Set either to `false` to skip that file:
+
+```js
+export const bascikConfig = {
+  siteUrl: 'https://example.com',
+  generate: { sitemap: true, robots: false }, // skip robots.txt
+};
+```
+
+If `generate.sitemap` or `generate.robots` is `true` but `siteUrl` is not set, Bascik logs a warning and skips generation — it cannot produce absolute URLs without a base URL.
+
+### Build-only
+
+Sitemap and robots.txt are only generated during `bascik --build`. The dev server does not write these files.

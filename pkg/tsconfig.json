@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    // Type-check only — Node 24 strips types natively; tsc is used for IDE support and CI checks
+    "noEmit": true,
+
+    // Strict mode catches the most mistakes
+    "strict": true,
+
+    // Allow .ts extension in import specifiers (required with noEmit)
+    "allowImportingTsExtensions": true,
+
+    // ESM / Node.js settings
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+
+    // Source paths
+    "rootDir": ".",
+
+    // Include Node types for IDE support
+    "types": ["node"],
+    "lib": ["ES2025"],
+
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*.ts", "bench/**/*.ts"],
+  "exclude": ["node_modules", "coverage"]
+}

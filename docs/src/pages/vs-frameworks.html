@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <docs-head></docs-head>
+  <meta name="description"
+    content="Bascik is not a framework. It is a build tool that resolves components at compile time and outputs plain HTML — no runtime required." />
+  <title>Bascik vs Frameworks — Bascik Docs</title>
+  <style>
+    @media (max-width: 700px) {
+      .docs-content {
+        overflow: hidden;
+      }
+
+      .docs-content table {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        scrollbar-width: thin;
+      }
+
+      .docs-content th,
+      .docs-content td {
+        min-width: 148px;
+        white-space: normal;
+      }
+
+      .docs-content th:first-child,
+      .docs-content td:first-child {
+        min-width: 100px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+      <docs-sidebar></docs-sidebar>
+
+      <main class="docs-content">
+        <p class="section-label">Philosophy</p>
+        <h1>Bascik vs Frameworks</h1>
+        <p class="page-intro">Bascik is not a framework. It is a build tool that resolves components at compile time and
+          then disappears. Understanding how that differs from popular lightweight frameworks helps you pick the right
+          tool — and shows how they can work together.</p>
+
+        <!-- Content rendered from docs/content/vs-frameworks.md at build time.
+             To update page content, edit the MD file — not this file.
+             The MD file also feeds into llms.txt via scripts/generate-llms-txt.mjs. -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMd } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMd('./content/vs-frameworks.md', { skipFirstHeading: true }));
+        </script>
+
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/vs-frameworks'));
+        </script>
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+
+</body>
+
+</html>

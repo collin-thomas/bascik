@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <docs-head></docs-head>
+  <meta name="description"
+    content="Bascik rewrites DOM selector calls inside component script tags to be scoped to the current component instance automatically." />
+  <title>Scoped JavaScript — Bascik Docs</title>
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+      <docs-sidebar></docs-sidebar>
+
+      <main class="docs-content">
+        <p class="section-label">Feature</p>
+        <h1>Scoped JavaScript</h1>
+        <p class="page-intro">Bascik rewrites DOM selector calls inside component <code>&lt;script&gt;</code> tags to
+          match the scoped IDs and class names. Each component instance gets unique identifiers, so multiple instances
+          on the same page work independently.</p>
+
+        <!-- Content rendered from docs/content/scoped-js.md at build time.
+             To update page content, edit the MD file — not this file. -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMd } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMd('./content/scoped-js.md', { skipFirstHeading: true }));
+        </script>
+
+        <h2>Live Scoping Example</h2>
+        <p>Multiple instances of the same component operate independently. Click the buttons below — they only affect
+          the elements inside their own component instance.</p>
+
+        <component-demo style="margin-top:24px" data-bascik-prop-file="src/components/test-comp.html">
+          <div data-bascik-slot="example">
+            <div style="display:flex;gap:24px;flex-wrap:wrap;width:100%">
+              <div>
+                <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;font-family:var(--font-mono)">
+                  Instance 1</p>
+                <test-comp></test-comp>
+              </div>
+              <div>
+                <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;font-family:var(--font-mono)">
+                  Instance 2</p>
+                <test-comp></test-comp>
+              </div>
+            </div>
+          </div>
+          <div data-bascik-slot="source-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/scoped-js.md', 'source-html'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="source-css">
+            <code-block data-bascik-prop-lang="css">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/scoped-js.md', 'source-css'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="source-js">
+            <code-block data-bascik-prop-lang="js">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/scoped-js.md', 'source-js'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/scoped-js.md', 'output-html'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-css">
+            <code-block data-bascik-prop-lang="css">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/scoped-js.md', 'output-css'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-js">
+            <code-block data-bascik-prop-lang="js">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/scoped-js.md', 'output-js'));
+              </script>
+            </code-block>
+          </div>
+        </component-demo>
+
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/scoped-javascript'));
+        </script>
+
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+</body>
+
+</html>

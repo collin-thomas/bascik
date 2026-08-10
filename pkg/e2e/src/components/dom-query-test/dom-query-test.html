@@ -1,0 +1,49 @@
+<div class="wrapper">
+
+  <!--
+    Sentinels: declare every class name the JS may add at runtime so bascik
+    includes them in the scoped class map. Also declares the "found" state
+    so classList.add("found") is scoped correctly.
+  -->
+  <span hidden class="found"></span>
+
+  <div id="result-box" class="result-box">No query yet</div>
+  <div class="card">Card 1</div>
+  <div class="card">Card 2</div>
+  <input name="username" type="hidden" value="alice">
+
+  <div class="btn-row">
+    <button id="query-by-id-btn">getElementById</button>
+    <button id="query-by-class-btn">querySelectorAll .card</button>
+    <button id="query-by-name-btn">querySelector [name=username]</button>
+    <button id="get-by-class-btn">getElementsByClassName</button>
+  </div>
+
+  <script>
+    const resultBox = document.getElementById("result-box");
+
+    document.getElementById("query-by-id-btn").addEventListener("click", () => {
+      const el = document.getElementById("result-box");
+      el.textContent = "found by id: " + el.id;
+      el.classList.add("found");
+    });
+
+    document.getElementById("query-by-class-btn").addEventListener("click", () => {
+      const cards = document.querySelectorAll(".card");
+      resultBox.textContent = "cards found: " + cards.length;
+      resultBox.classList.add("found");
+    });
+
+    document.getElementById("query-by-name-btn").addEventListener("click", () => {
+      const inp = document.querySelector("[name='username']");
+      resultBox.textContent = "name found: " + (inp ? inp.value : "null");
+      resultBox.classList.add("found");
+    });
+
+    document.getElementById("get-by-class-btn").addEventListener("click", () => {
+      const cards = document.getElementsByClassName("card");
+      resultBox.textContent = "byClassName: " + cards.length;
+      resultBox.classList.add("found");
+    });
+  </script>
+</div>

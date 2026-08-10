@@ -1,0 +1,185 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+// ─── Mocks ───────────────────────────────────────────────────────────────────
+
+vi.mock("./paths.js", () => ({
+  getHttpPath: vi.fn((p: string) => p),
+}));
+
+vi.mock("./file-system.js", () => ({
+  getRelativePath: vi.fn((p: string) => p),
+}));
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Use dynamic imports so each test gets a fresh MemoryStore instance
+let mem: Awaited<typeof import("./mem.js")>["mem"];
+let mockGetHttpPath: ReturnType<typeof vi.fn>;
+let mockGetRelativePath: ReturnType<typeof vi.fn>;
+
+beforeEach(async () => {
+  vi.resetModules();
+  // Re-import mem; the mocked paths/file-system factories are called fresh
+  const memMod = await import("./mem.js");
+  mem = memMod.mem;
+  // Grab fresh mock instances (same object the mem module received)
+  const pathsMod = (await import("./paths.js")) as any;
+  mockGetHttpPath = pathsMod.getHttpPath;
+  const fsMod = (await import("./file-system.js")) as any;
+  mockGetRelativePath = fsMod.getRelativePath;
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+const storeSample = (key = "test-page", components: string[] = []) => {
+  // With identity mocks, relativePagePath == absolutePagePath == httpPath
+  mem.storePage({
+    relativePagePath: key,
+    absolutePagePath: key,
+    pageContent: `<html><body>Page: ${key}</body></html>`,
+    usedComponentsNames: components,
+  });
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// storePage / getPage round-trip
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("storePage + getPage round-trip", () => {
+  it("returns the stored page for the correct httpPath", () => {
+    storeSample("rt-test");
+    const page = mem.getPage("rt-test");
+    expect(page).toBeDefined();
+    expect(page?.relativePagePath).toBe("rt-test");
+    expect(page?.absolutePagePath).toBe("rt-test");
+  });
+
+  it("page content is stored as a Buffer", () => {
+    storeSample("buf-test");
+    const page = mem.getPage("buf-test");
+    expect(Buffer.isBuffer(page?.content)).toBe(true);
+  });
+
+  it("page compressedContent is stored as a Buffer", () => {
+    storeSample("br-test");
+    const page = mem.getPage("br-test");
+    expect(Buffer.isBuffer(page?.compressedContent)).toBe(true);
+  });
+
+  it("stores usedComponentsSet as a Set", () => {
+    storeSample("comp-test", ["my-nav", "my-footer"]);
+    const page = mem.getPage("comp-test");
+    expect(page?.usedComponentsSet).toBeInstanceOf(Set);
+    expect(page?.usedComponentsSet.has("my-nav")).toBe(true);
+    expect(page?.usedComponentsSet.has("my-footer")).toBe(true);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// getPage fallback to 404
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("getPage fallback to /404", () => {
+  it("returns undefined when path not found and no /404 page stored", () => {
+    const page = mem.getPage("/definitely-not-stored");
+    expect(page).toBeUndefined();
+  });
+
+  it("returns the /404 page as a fallback for unknown paths", () => {
+    storeSample("/404");
+    const fallback = mem.getPage("/this-does-not-exist");
+    expect(fallback).toBeDefined();
+    expect(fallback?.relativePagePath).toBe("/404");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// removePage
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("removePage", () => {
+  it("removes the page so getPage returns undefined", () => {
+    storeSample("remove-me");
+    expect(mem.getPage("remove-me")).toBeDefined();
+    mem.removePage("remove-me");
+    expect(mem.getPage("remove-me")).toBeUndefined();
+  });
+
+  it("does nothing when the page does not exist", () => {
+    // Should not throw
+    expect(() => mem.removePage("nonexistent-key")).not.toThrow();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Component reverse-index (pagesThisComponentIsUsedOn)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("pagesThisComponentIsUsedOn", () => {
+  it("returns pages that use the given component", () => {
+    storeSample("page-a", ["my-nav"]);
+    storeSample("page-b", ["my-nav", "my-footer"]);
+    const pages = mem.pagesThisComponentIsUsedOn("my-nav");
+    expect(pages).toContain("page-a");
+    expect(pages).toContain("page-b");
+  });
+
+  it("returns an empty array for a component that has no pages", () => {
+    expect(mem.pagesThisComponentIsUsedOn("unused-comp")).toEqual([]);
+  });
+
+  it("removes a page from the component index when the page is removed", () => {
+    storeSample("comp-page", ["my-widget"]);
+    expect(mem.pagesThisComponentIsUsedOn("my-widget")).toContain("comp-page");
+    mem.removePage("comp-page");
+    expect(mem.pagesThisComponentIsUsedOn("my-widget")).not.toContain(
+      "comp-page",
+    );
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Update (store same page twice)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("storePage update", () => {
+  it("overwrites an existing page with new content", () => {
+    mem.storePage({
+      relativePagePath: "update-test",
+      absolutePagePath: "update-test",
+      pageContent: "<html>v1</html>",
+    });
+    mem.storePage({
+      relativePagePath: "update-test",
+      absolutePagePath: "update-test",
+      pageContent: "<html>v2</html>",
+    });
+    const page = mem.getPage("update-test");
+    // The content buffer should contain v2
+    expect(page?.content.toString()).toContain("v2");
+    expect(page?.content.toString()).not.toContain("v1");
+  });
+
+  it("updates the component index when a page drops a component", () => {
+    // First store with two components
+    mem.storePage({
+      relativePagePath: "upd-comp",
+      absolutePagePath: "upd-comp",
+      pageContent: "<html></html>",
+      usedComponentsNames: ["comp-a", "comp-b"],
+    });
+    expect(mem.pagesThisComponentIsUsedOn("comp-b")).toContain("upd-comp");
+
+    // Re-store with only comp-a (comp-b dropped)
+    mem.storePage({
+      relativePagePath: "upd-comp",
+      absolutePagePath: "upd-comp",
+      pageContent: "<html></html>",
+      usedComponentsNames: ["comp-a"],
+    });
+    expect(mem.pagesThisComponentIsUsedOn("comp-a")).toContain("upd-comp");
+    expect(mem.pagesThisComponentIsUsedOn("comp-b")).not.toContain("upd-comp");
+  });
+});

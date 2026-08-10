@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <docs-head></docs-head>
+  <meta name="description"
+    content="Any attribute on a component usage tag that is not a Bascik-specific attribute is forwarded to the root element automatically." />
+  <title>Attribute Inheritance — Bascik Docs</title>
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+      <docs-sidebar></docs-sidebar>
+
+      <main class="docs-content">
+        <p class="section-label">Feature</p>
+        <h1>Attribute Inheritance</h1>
+        <p class="page-intro">Any attribute on a component usage tag that is not a Bascik-specific attribute
+          (<code>data-bascik-*</code>) is automatically merged onto the component's root element. This is analogous to
+          Vue's "fallthrough attributes".</p>
+
+        <!-- Content rendered from docs/content/attribute-inheritance.md at build time.
+             To update page content, edit the MD file — not this file. -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMd } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMd('./content/attribute-inheritance.md', { skipFirstHeading: true }));
+        </script>
+
+        <component-demo data-bascik-prop-file="src/components/feature-card/">
+          <div data-bascik-slot="example">
+            <feature-card class="highlight" aria-label="Featured card" data-bascik-prop-label="Example"
+              data-bascik-prop-title="Attribute Inheritance"
+              data-bascik-prop-desc="The class and aria-label above were merged onto the root element.">
+            </feature-card>
+          </div>
+          <div data-bascik-slot="source-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/attribute-inheritance.md', 'source-html'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/attribute-inheritance.md', 'output-html'));
+              </script>
+            </code-block>
+          </div>
+        </component-demo>
+
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/attribute-inheritance'));
+        </script>
+
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+</body>
+
+</html>

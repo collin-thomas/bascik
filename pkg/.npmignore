@@ -1,0 +1,5 @@
+# README.md & package.json are never ignored
+# Ignore everything
+*
+# Only allow source
+!src/**/*

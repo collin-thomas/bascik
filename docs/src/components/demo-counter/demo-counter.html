@@ -1,0 +1,88 @@
+<style>
+  .ctr {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 24px 20px;
+    background: var(--elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    transition: border-color .2s;
+  }
+
+  .ctr:hover {
+    border-color: var(--border-hover);
+  }
+
+  .ctr-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--text-muted);
+  }
+
+  .ctr-count {
+    font-family: var(--mono);
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    min-width: 2ch;
+    text-align: center;
+  }
+
+  .ctr-btns {
+    display: flex;
+    gap: 10px;
+  }
+
+  .ctr-dec,
+  .ctr-inc {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--r-sm);
+    font-size: 1.1rem;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    touch-action: manipulation;
+    transition: border-color .15s, background .15s;
+  }
+
+  @media (hover: hover) {
+    .ctr-dec:hover {
+      border-color: var(--border-hover);
+      background: var(--accent-dim);
+    }
+
+    .ctr-inc:hover {
+      border-color: var(--accent);
+    }
+  }
+
+  .ctr-inc {
+    background: var(--accent-dim);
+    border-color: rgba(211, 255, 141, 0.3);
+    color: var(--accent);
+    font-weight: 700;
+  }
+</style>
+<div class="ctr">
+  <span class="ctr-label" data-bascik-prop-label>Counter</span>
+  <span class="ctr-count" id="count">0</span>
+  <div class="ctr-btns">
+    <button class="ctr-dec" id="dec">−</button>
+    <button class="ctr-inc" id="inc">+</button>
+  </div>
+</div>
+<script>
+  const count = document.getElementById('count');
+  const dec = document.getElementById('dec');
+  const inc = document.getElementById('inc');
+  let n = 0;
+  dec.addEventListener('click', () => { n--; count.textContent = n; });
+  inc.addEventListener('click', () => { n++; count.textContent = n; });
+</script>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <docs-head></docs-head>
+  <meta name="description"
+    content="Props let you pass text values into a component template at usage time using data-bascik-prop-* attributes on the component tag." />
+  <title>Props — Bascik Docs</title>
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+      <docs-sidebar></docs-sidebar>
+
+      <main class="docs-content">
+        <p class="section-label">Feature</p>
+        <h1>Props</h1>
+        <p class="page-intro">Props let you pass text values into a component template at usage time using
+          <code>data-bascik-prop-*</code> attributes. Think of them as named text slots.
+        </p>
+
+        <!-- Content rendered from docs/content/props.md at build time.
+             To update page content, edit the MD file — not this file. -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMd } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMd('./content/props.md', { skipFirstHeading: true }));
+        </script>
+
+        <h2>Interactive Props Demo</h2>
+        <p>Experiment with passing values to the <code>feature-card</code> component via data attributes.</p>
+
+        <component-demo data-bascik-prop-file="src/pages/index.html">
+          <div data-bascik-slot="example">
+            <feature-card data-bascik-prop-label="Interactive" data-bascik-prop-title="Component Props"
+              data-bascik-prop-desc="These values are injected into the component template at build time.">
+            </feature-card>
+          </div>
+          <div data-bascik-slot="code">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/props.md', 'code'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/props.md', 'output'));
+              </script>
+            </code-block>
+          </div>
+        </component-demo>
+
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/props'));
+        </script>
+
+      </main>
+    </div>
+  </div>
+
+
+  <docs-footer></docs-footer>
+</body>
+
+</html>

@@ -1,0 +1,47 @@
+<div class="container" id="container">
+  <div id="result" class="result">No event yet</div>
+
+  <!-- List of items — delegate click to container -->
+  <ul class="list" id="item-list">
+    <li class="item" data-value="alpha">
+      <button class="btn">Click Alpha</button>
+    </li>
+    <li class="item" data-value="beta">
+      <button class="btn">Click Beta</button>
+    </li>
+    <li class="item" data-value="gamma">
+      <button class="btn">Click Gamma</button>
+    </li>
+  </ul>
+
+  <!-- A separate button to test direct listener -->
+  <button id="direct-btn" class="direct-btn">Direct listener</button>
+
+  <script>
+    const container = document.getElementById("container");
+    const result = document.getElementById("result");
+
+    // Delegated listener using matches('.btn')
+    container.addEventListener("click", (e) => {
+      if (e.target.matches(".btn")) {
+        // Walk up to find the parent .item to get data-value
+        const item = e.target.closest(".item");
+        result.textContent = "delegated btn: " + (item ? item.dataset.value : "no-item");
+      }
+    });
+
+    // Delegated listener using closest('.item')
+    container.addEventListener("click", (e) => {
+      const item = e.target.closest(".item");
+      if (item && !e.target.matches(".btn")) {
+        // Clicked on the li directly (not the button)
+        result.textContent = "delegated item: " + item.dataset.value;
+      }
+    });
+
+    // Direct listener (not delegated)
+    document.getElementById("direct-btn").addEventListener("click", () => {
+      result.textContent = "direct-btn clicked";
+    });
+  </script>
+</div>

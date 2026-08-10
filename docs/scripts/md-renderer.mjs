@@ -1,0 +1,115 @@
+/**
+ * md-renderer.mjs
+ *
+ * Renders a Markdown file to HTML for use inside a Bascik docs page.
+ * Import this from a `data-bascik-build` script block in a page:
+ *
+ *   <script data-bascik-build>
+ *     import { join } from 'node:path';
+ *     import { pathToFileURL } from 'node:url';
+ *     const { renderMd } = await import(
+ *       pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+ *     );
+ *     console.log(await renderMd('./content/16-performance.md'));
+ *   </script>
+ *
+ * Transformations applied on top of standard marked output:
+ *   - Fenced code blocks  →  <code-block data-bascik-prop-lang="..."> component
+ *   - Blockquotes         →  <div class="callout">
+ *
+ * Because `data-bascik-build` output is processed before component resolution,
+ * the emitted <code-block> tags are resolved normally by Bascik.
+ */
+
+import { readFile } from 'node:fs/promises';
+import { marked } from 'marked';
+
+/**
+ * Reads a Markdown file and returns the rendered HTML string.
+ *
+ * @param {string} filePath - Path relative to process.cwd() (the project root).
+ * @param {object} [options]
+ * @param {boolean} [options.skipFirstHeading=false] - Strip the first <h1>–<h6> from
+ *   the output. Useful when the page HTML shell already contains a <h1> that matches
+ *   the section heading at the top of the MD file (needed for llms.txt consistency).
+ */
+/**
+ * Extracts and HTML-escapes a specific named code block from a Markdown file.
+ *
+ * Code blocks are identified by an HTML comment marker placed immediately
+ * before the fenced code block in the MD source:
+ *
+ *   <!-- demo:source-html -->
+ *   ```html
+ *   <div class="fcard">…</div>
+ *   ```
+ *
+ * Use inside a `data-bascik-build` script in a slot to keep code examples
+ * in MD (so they feed llms.txt / SKILL.md) rather than writing raw
+ * &lt;/&gt; entities directly in the HTML page.
+ *
+ * @param {string} filePath - Path relative to process.cwd().
+ * @param {string} markerId - The marker identifier, e.g. 'source-html'.
+ * @returns {Promise<string>} HTML-escaped code ready for a <code-block> slot.
+ */
+export async function extractDemoBlock(filePath, markerId) {
+  const md = await readFile(filePath, 'utf8');
+  const markerRe = new RegExp(`<!--\\s*demo:${markerId}\\s*-->`, 'i');
+  const markerMatch = markerRe.exec(md);
+  if (!markerMatch) return `<!-- demo:${markerId} not found in ${filePath} -->`;
+
+  const rest = md.slice(markerMatch.index + markerMatch[0].length);
+  // Match the next fenced code block (``` ... ```)
+  const codeRe = /^```\w*\n([\s\S]*?)\n^```/m;
+  const codeMatch = codeRe.exec(rest);
+  if (!codeMatch) return `<!-- no code block after demo:${markerId} -->`;
+
+  return codeMatch[1]
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+export async function renderMd(filePath, { skipFirstHeading = false } = {}) {
+  const md = await readFile(filePath, 'utf8');
+  let html = marked(md);
+
+  // Optionally strip the first heading (h1–h6)
+  if (skipFirstHeading) {
+    html = html.replace(/^<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>\n?/, '');
+  }
+
+  // Normalize heading levels so the minimum rendered heading is h2.
+  // This ensures content headings (e.g. ### from MD) land at <h2> in
+  // the page, directly after the shell <h1>, with no skipped levels.
+  {
+    const levels = [];
+    html.replace(/<h([1-6])[^>]*>/g, (_, n) => { levels.push(+n); });
+    if (levels.length > 0) {
+      const shift = Math.min(...levels) - 2;
+      if (shift > 0) {
+        html = html.replace(/<(\/?)h([1-6])([^>]*)>/g, (_, slash, n, attrs) =>
+          `<${slash}h${Math.min(+n - shift, 6)}${attrs}>`
+        );
+      }
+    }
+  }
+
+  // Convert <pre><code class="language-X"> → <code-block data-bascik-prop-lang="X">
+  // marked already HTML-escapes code content, so it passes safely into the component slot.
+  html = html.replace(
+    /<pre><code class="language-([^"]+)">([\s\S]*?)<\/code><\/pre>/g,
+    (_, lang, code) => `<code-block data-bascik-prop-lang="${lang}">${code}</code-block>\n`
+  );
+  // Code blocks with no language tag
+  html = html.replace(
+    /<pre><code>([\s\S]*?)<\/code><\/pre>/g,
+    (_, code) => `<code-block data-bascik-prop-lang="text">${code}</code-block>\n`
+  );
+
+  // Convert <blockquote> → <div class="callout">
+  html = html.replace(/<blockquote>\n?/g, '<div class="callout">');
+  html = html.replace(/\n?<\/blockquote>/g, '</div>');
+
+  return html;
+}
