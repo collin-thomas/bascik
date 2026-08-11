@@ -1,6 +1,6 @@
 # JavaScript Libraries
 
-Bascik does not add any JavaScript to your pages. However, You are free to include any JavaScript library you want. CDN-delivered libraries, bundled scripts, and lightweight reactivity tools all work alongside Bascik without any special configuration.
+Bascik does not add any JavaScript to your pages. However, you are free to include any JavaScript library you want. CDN-delivered libraries, bundled scripts, and lightweight reactivity tools all work alongside Bascik without any special configuration.
 
 ## How to Include a Library
 
