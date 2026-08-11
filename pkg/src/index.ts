@@ -15,4 +15,11 @@ if (args.includes("--check")) {
   process.exit(ok ? 0 : 1);
 }
 
-await import("./transpile.js");
+if (args.includes("--serve")) {
+  const { createSelfSignedCert } = await import("./lib/pki.js");
+  await createSelfSignedCert();
+  const { serveProduction } = await import("./lib/serve.js");
+  await serveProduction();
+} else {
+  await import("./transpile.js");
+}

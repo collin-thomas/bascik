@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <docs-head></docs-head>
+  <meta name="description"
+    content="Run Bascik as a production HTTP/2 server. Use data-bascik-server scripts to personalize pages at request time — no framework required." />
+  <title>Production Server — Bascik Docs</title>
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+      <docs-sidebar></docs-sidebar>
+
+      <main class="docs-content">
+        <p class="section-label">Feature</p>
+
+        <!-- Content rendered from docs/content/server.md at build time.
+             To update page content, edit the MD file — not this file. -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMd } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMd('./content/server.md'));
+        </script>
+
+        <div class="callout">
+          <p><strong>Next:</strong> Learn how <a href="/build-scripts">build scripts</a> run at transpile time, or see
+            the <a href="/configuration">configuration reference</a> for all <code>serve</code> options.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+</body>
+
+</html>

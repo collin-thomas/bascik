@@ -141,6 +141,35 @@ export interface BascikConfigOptions {
    */
   useWorkers?: boolean;
   isBuild?: boolean;
+  isServe?: boolean;
+  /**
+   * HTTP server configuration used in both dev and production (`bascik --serve`) modes.
+   *
+   * @example
+   * // bascik.config.js
+   * export const bascikConfig = {
+   *   serve: {
+   *     port: 443,
+   *     hostname: '0.0.0.0',
+   *     keyFile: '/etc/ssl/private/site.key',
+   *     certFile: '/etc/ssl/certs/site.crt',
+   *   },
+   * };
+   */
+  serve?: {
+    /** Port to listen on. Defaults to `8443`. */
+    port?: number;
+    /**
+     * Hostname or IP to bind to. Use `"0.0.0.0"` to listen on all interfaces
+     * (required when running in a container or behind a proxy). Defaults to
+     * `"localhost"`.
+     */
+    hostname?: string;
+    /** Path to a TLS private-key file (PEM). Auto-generated when omitted. */
+    keyFile?: string;
+    /** Path to a TLS certificate file (PEM). Auto-generated when omitted. */
+    certFile?: string;
+  };
 }
 
 export interface StoredPage {
@@ -151,4 +180,6 @@ export interface StoredPage {
   // compression finishes, in which case the server serves uncompressed.
   compressedContent: Buffer | undefined;
   usedComponentsSet: Set<string>;
+  /** True when the stored HTML contains `data-bascik-server` script blocks. */
+  hasServerScripts: boolean;
 }

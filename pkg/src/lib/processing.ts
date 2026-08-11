@@ -208,6 +208,8 @@ const minifyScriptTagsInHtml = async (
     // Skip non-JS types (e.g. application/ld+json, text/template)
     const typeMatch = open.match(/type\s*=\s*["']?([^"'>\s]+)["']?/i);
     if (typeMatch && typeMatch[1].toLowerCase() !== "text/javascript") continue;
+    // Server scripts run at request time in Node.js — skip them here
+    if (/\bdata-bascik-server\b/.test(open)) continue;
     // Skip external scripts — no inline content to minify
     if (/\bsrc\s*=/i.test(open)) continue;
     ops.push({ index: m.index, len: full.length, open, code, close });

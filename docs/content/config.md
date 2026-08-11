@@ -30,7 +30,7 @@ export const bascikConfig = {
 
   obfuscateAttributeNames: true,
 
-  cacheHttp: false,
+  cacheHttp: false,  // true by default in --serve mode
   verboseLogging: false,
 
   siteUrl: 'https://example.com',
@@ -151,7 +151,26 @@ obfuscateAttributeNames: true // production default
 
 ### `cacheHttp`
 
-Enable HTTP cache headers on the dev server responses. Keep `false` during development.
+Controls HTTP caching on server responses. Defaults to `false` in dev mode and `true` in `--serve` (production) mode — you rarely need to set this explicitly.
+
+When `true`, HTML pages receive an `ETag` header and the server returns `304 Not Modified` for unchanged content. Static assets get `Cache-Control: public, max-age=3600`. When `false`, responses include `Cache-Control: no-store` so browsers always fetch fresh content.
+
+Set `cacheHttp: false` explicitly when running `--serve` behind a CDN that manages its own caching.
+
+### `serve`
+
+Configure the production HTTP/2 server started by `bascik --serve`. Has no effect during `bascik --build` or `bascik` (dev mode).
+
+```js
+serve: {
+  port: 8443,              // default
+  hostname: 'localhost',   // default; set '0.0.0.0' to bind all interfaces
+  keyFile: 'bascik-privkey.pem',  // path to TLS private key
+  certFile: 'bascik-cert.pem',    // path to TLS certificate
+}
+```
+
+See [Production Server](/server) for the full guide.
 
 ### `verboseLogging`
 

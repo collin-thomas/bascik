@@ -1,6 +1,7 @@
 import zlib from "node:zlib";
 import { getHttpPath } from "./paths.js";
 import { getRelativePath } from "./file-system.js";
+import { htmlHasServerScripts } from "./server-scripts.js";
 import type { StoredPage } from "./types.js";
 
 interface StorePageArgs {
@@ -46,6 +47,7 @@ class MemoryStore {
       content: buffer,
       compressedContent: undefined,
       usedComponentsSet,
+      hasServerScripts: htmlHasServerScripts(pageContent),
     });
 
     // Invert map for reverse lookup to efficiently know what files to update
