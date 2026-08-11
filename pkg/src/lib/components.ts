@@ -441,7 +441,7 @@ export const injectProps = (
     // (e.g. title="a > b") does not end the opening tag early.
     result = result.replace(
       new RegExp(
-        `<(\\w+(?:-\\w+)*?)((?:${ATTR_VALUE})*?)\\s+${attrName}(?:=("[^"]*"|'[^']*'))?((?:${ATTR_VALUE})*)>([\\s\\S]*?)<\\/\\1>`,
+        `<(\\w+(?:-\\w+)*?)(${ATTR_VALUE}?)\\s+${attrName}(?:=("[^"]*"|'[^']*'))?(${ATTR_VALUE})>([\\s\\S]*?)<\\/\\1>`,
         "gi",
       ),
       (
@@ -619,7 +619,7 @@ export const extractInheritableAttributes = (
   // The attribute scan is quote-aware so a `>` inside a quoted attribute value
   // (e.g. title="a > b") does not end the opening tag early.
   const openTagMatch = componentContent.match(
-    new RegExp(`^<[\\w-]+(${ATTR_VALUE}?)(?:\\s*\\/?>)`),
+    new RegExp(`^<[\\w-]+(${ATTR_VALUE})(?:\\s*\\/?>)`),
   );
   if (!openTagMatch || !openTagMatch[1]) return attrs;
   const attrStr = openTagMatch[1];

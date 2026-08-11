@@ -74,7 +74,15 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild" | "isServe"> = {
  * `serve`) would remain mutable at runtime.
  */
 const deepFreeze = <T>(value: T): Readonly<T> => {
-  if (value !== null && typeof value === "object" && !Object.isFrozen(value)) {
+  // Only freeze plain objects/arrays. Functions (e.g. a custom `minifyScripts`
+  // implementation) are left untouched — freezing a function would break any
+  // internal state it carries, and functions hold no mutable config values.
+  if (
+    value !== null &&
+    typeof value !== "function" &&
+    typeof value === "object" &&
+    !Object.isFrozen(value)
+  ) {
     for (const key of Object.keys(value)) {
       deepFreeze((value as Record<string, unknown>)[key]);
     }
