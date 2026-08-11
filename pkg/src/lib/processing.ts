@@ -56,6 +56,7 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import { cpus } from "node:os";
+import { basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   listPages,
@@ -401,6 +402,29 @@ export const recursivelyTranspile = (
   );
 };
 
+
+export const selectivelyProcessPagesForWatchPath = async (changedPath: string): Promise<void> => {
+  const filename = basename(changedPath);
+  const [pages, componentList, globalStylesHtml] = await Promise.all([
+    listPages(),
+    listComponents(),
+    resolveInlineStylesHtml(),
+  ]);
+  const pageList = pages ?? [];
+
+  // Only re-transpile pages whose source references the changed filename.
+  const matching = (await Promise.all(
+    pageList.map(async (pagePath) => {
+      const src = await readFile(pagePath, "utf8");
+      return src.includes(filename) ? pagePath : null;
+    }),
+  )).filter((p): p is string => p !== null);
+
+  const toTranspile = matching.length > 0 ? matching : pageList;
+  await Promise.all(
+    toTranspile.map((path) => pageProcessing(path, componentList, globalStylesHtml)),
+  );
+};
 
 export const selectivelyProcessPages = async (path: string): Promise<void> => {
   const relativePath = getRelativePath(path, "components");

@@ -5,6 +5,7 @@ import {
   processAllPages,
   removePage,
   selectivelyProcessPages,
+  selectivelyProcessPagesForWatchPath,
 } from "./processing.js";
 import {
   copyReplicatePath,
@@ -93,8 +94,8 @@ export const watchFiles = async () => {
         usePolling: true,
         interval: 1000,
       })
-      .on("add", async () => processAllPages())
-      .on("change", async () => processAllPages())
+      .on("add", async (path) => selectivelyProcessPagesForWatchPath(path))
+      .on("change", async (path) => selectivelyProcessPagesForWatchPath(path))
       .on("unlink", async () => processAllPages());
   }
 };
