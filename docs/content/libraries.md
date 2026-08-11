@@ -4,7 +4,7 @@ Bascik does not add any JavaScript to your pages. However, you are free to inclu
 
 ## How to Include a Library
 
-Add a `<script src>` tag to your page's `<head>` or to a shared head component. Bascik passes external script tags through completely unchanged — only inline `<script>` blocks with component-scoped selectors are rewritten.
+Add a `<script src>` tag to your page's `<head>` or to a shared head component. Bascik passes external script tags through completely unchanged, only inline `<script>` blocks with component-scoped selectors are rewritten.
 
 ```html
 <!-- src/pages/index.html -->
@@ -32,7 +32,7 @@ Alternatively, co-locate the script tag inside the component file so the library
 
 ## petite-vue
 
-[petite-vue](https://github.com/vuejs/petite-vue) is a ~5 KB subset of Vue optimized for progressive enhancement. It auto-mounts any element with a `v-scope` attribute, giving it isolated reactive state — no build step, no bundler.
+[petite-vue](https://github.com/vuejs/petite-vue) is a ~5 KB subset of Vue optimized for progressive enhancement. It auto-mounts any element with a `v-scope` attribute, giving it isolated reactive state with no build step, no bundler.
 
 Include it once with the `init` attribute and it mounts all `v-scope` elements on the page automatically:
 
@@ -42,7 +42,7 @@ Include it once with the `init` attribute and it mounts all `v-scope` elements o
 
 ### Reactive Counter
 
-Each instance of this component has its own isolated state. Place it on a page as many times as you want — the counters are independent.
+Each instance of this component has its own isolated state. Place it on a page as many times as you want, the counters are independent.
 
 <!-- demo:source-usage -->
 ```html
@@ -164,7 +164,7 @@ export const store = reactive({ cart: [] });
 
 ## Alpine.js
 
-[Alpine.js](https://alpinejs.dev) is another lightweight option for adding reactive behavior. It uses `x-data` for state, `@click` / `x-on` for events, and `x-show` / `x-bind` for DOM updates — all declaratively in the HTML.
+[Alpine.js](https://alpinejs.dev) is another lightweight option for adding reactive behavior. It uses `x-data` for state, `@click` / `x-on` for events, and `x-show` / `x-bind` for DOM updates, all declaratively in the HTML.
 
 <!-- demo:alpine-html -->
 ```html
@@ -182,7 +182,7 @@ export const store = reactive({ cart: [] });
 
 ## Tailwind CSS
 
-[Tailwind CSS](https://tailwindcss.com) is a utility-first CSS framework. Because Tailwind's utility classes are global by design, you need to tell Bascik not to scope class attributes — otherwise Bascik renames `class="flex gap-4"` to `class="bascik__my-comp__flex bascik__my-comp__gap-4"`, which Tailwind's CSS will never match.
+[Tailwind CSS](https://tailwindcss.com) is a utility-first CSS framework. Because Tailwind's utility classes are global by design, you need to tell Bascik not to scope class attributes, otherwise Bascik renames `class="flex gap-4"` to `class="bascik__my-comp__flex bascik__my-comp__gap-4"`, which Tailwind's CSS will never match.
 
 Set `scopeAttribute.class` to `false` in `bascik.config.js`:
 
@@ -237,17 +237,17 @@ With class scoping turned off, Tailwind utility classes work normally inside any
 // For production, use the Tailwind CLI instead.
 ```
 
-For production, replace the CDN tag with a [Tailwind CLI](https://tailwindcss.com/docs/installation) build step that scans your source files and emits a single CSS file — the CDN is only recommended for development.
+For production, replace the CDN tag with a [Tailwind CLI](https://tailwindcss.com/docs/installation) build step that scans your source files and emits a single CSS file; the CDN is only recommended for development.
 
-> **Trade-off.** With `class: false`, Bascik no longer isolates component class names — you give up class-level CSS isolation in exchange for Tailwind compatibility. IDs and names are still scoped independently. For most Tailwind projects this is the right choice since Tailwind's utilities are intentionally global.
+> **Trade-off.** With `class: false`, Bascik no longer isolates component class names; you give up class-level CSS isolation in exchange for Tailwind compatibility. IDs and names are still scoped independently. For most Tailwind projects this is the right choice since Tailwind's utilities are intentionally global.
 
 ## Any Library Works
 
 Bascik places no restrictions on which libraries you use. A few common patterns:
 
-- **[HTMX](https://htmx.org)** — add `hx-get`, `hx-post` attributes to elements for server-driven partial updates.
-- **[Stimulus](https://stimulus.hotwired.dev)** — attach controllers to elements via `data-controller`; pairs well with Bascik's component structure.
-- **Chart.js, D3, Leaflet** — include via CDN and initialize with a `<script>` block in the component. Bascik scopes the ID selector used to find the mount element automatically.
+- **[HTMX](https://htmx.org):** add `hx-get`, `hx-post` attributes to elements for server-driven partial updates.
+- **[Stimulus](https://stimulus.hotwired.dev):** attach controllers to elements via `data-controller`; pairs well with Bascik's component structure.
+- **Chart.js, D3, Leaflet:** include via CDN and initialize with a `<script>` block in the component. Bascik scopes the ID selector used to find the mount element automatically.
 
 ```html
 <!-- src/components/bar-chart.html -->
@@ -264,11 +264,11 @@ Bascik places no restrictions on which libraries you use. A few common patterns:
 
 ## Scoping Compatibility
 
-**Bascik scopes `class`, `id`, and `name` attributes at build time.** Library-specific attributes — `v-scope`, `x-data`, `@click`, `hx-get`, `data-controller` — are never touched.
+**Bascik scopes `class`, `id`, and `name` attributes at build time.** Library-specific attributes, `v-scope`, `x-data`, `@click`, `hx-get`, `data-controller`: are never touched.
 
-One thing to be aware of: if a library dynamically sets a class or ID value at runtime (e.g. `:class="activeClass"` where `activeClass` is a JavaScript variable), that value is a runtime string and will *not* correspond to a Bascik-scoped class name. Use `data-*` attributes for runtime-toggled state and target them with CSS attribute selectors instead. Bascik scopes the class name at build time, but the `[data-state="on"]` part is a plain attribute selector that survives scoping unchanged — so the CSS correctly matches the attribute value the library sets at runtime.
+One thing to be aware of: if a library dynamically sets a class or ID value at runtime (e.g. `:class="activeClass"` where `activeClass` is a JavaScript variable), that value is a runtime string and will *not* correspond to a Bascik-scoped class name. Use `data-*` attributes for runtime-toggled state and target them with CSS attribute selectors instead. Bascik scopes the class name at build time, but the `[data-state="on"]` part is a plain attribute selector that survives scoping unchanged, so the CSS correctly matches the attribute value the library sets at runtime.
 
-> **Alpine.js equivalent.** Use `x-bind:data-state="open ? 'on' : 'off'"` — syntax differs but the principle is identical across petite-vue, Alpine, and any attribute-binding library.
+> **Alpine.js equivalent.** Use `x-bind:data-state="open ? 'on' : 'off'"`: syntax differs but the principle is identical across petite-vue, Alpine, and any attribute-binding library.
 
 <!-- demo:state-html -->
 ```html

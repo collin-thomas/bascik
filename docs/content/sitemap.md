@@ -1,6 +1,6 @@
 # Sitemap & robots.txt
 
-Bascik generates a `sitemap.xml` and `robots.txt` automatically at build time. Set your site URL in the config and both files appear in `dist/` alongside your compiled pages — no plugins, no extra steps.
+Bascik generates a `sitemap.xml` and `robots.txt` automatically at build time. Set your site URL in the config and both files appear in `dist/` alongside your compiled pages with no plugins, no extra steps.
 
 Sitemap generation is on by default. To enable it, set `siteUrl` in your config:
 
@@ -11,11 +11,11 @@ export const bascikConfig = {
 };
 ```
 
-That's all — `generate.sitemap` and `generate.robots` both default to `true`, so no other change is needed.
+That's all, `generate.sitemap` and `generate.robots` both default to `true`, so no other change is needed.
 
 ## What gets generated
 
-**`dist/sitemap.xml`** — an XML sitemap listing every `.html` page in your `src/pages` directory as an absolute URL:
+**`dist/sitemap.xml`:** an XML sitemap listing every `.html` page in your `src/pages` directory as an absolute URL:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -32,7 +32,7 @@ That's all — `generate.sitemap` and `generate.robots` both default to `true`, 
 </urlset>
 ```
 
-**`dist/robots.txt`** — allows all crawlers and points them at the sitemap:
+**`dist/robots.txt`:** allows all crawlers and points them at the sitemap:
 
 ```text
 User-agent: *
@@ -75,7 +75,7 @@ export const bascikConfig = {
 };
 ```
 
-If `generate.sitemap` or `generate.robots` is `true` but `siteUrl` is not set, Bascik logs a warning and skips generation — it cannot produce absolute URLs without a base URL.
+If `generate.sitemap` or `generate.robots` is `true` but `siteUrl` is not set, Bascik logs a warning and skips generation; it cannot produce absolute URLs without a base URL.
 
 ## Build-only
 

@@ -1,6 +1,6 @@
 # Migrating from React
 
-React and Bascik both build UIs from reusable components. The core difference is that Bascik does all component work at build time and outputs plain HTML — there is no virtual DOM, no framework runtime, and no JSX. The migration is mostly mechanical: rename files, swap JSX syntax for HTML, and replace framework abstractions with their build-time or vanilla-JS equivalents.
+React and Bascik both build UIs from reusable components. The core difference is that Bascik does all component work at build time and outputs plain HTML, there is no virtual DOM, no framework runtime, and no JSX. The migration is mostly mechanical: rename files, swap JSX syntax for HTML, and replace framework abstractions with their build-time or vanilla-JS equivalents.
 
 ## File and Folder Setup
 
@@ -176,7 +176,7 @@ Bascik rewrites both `id="count"` in the HTML and the `getElementById("count")` 
 
 ## CSS Modules → Paired .css Files
 
-Delete the `.module.css` file and create a plain `.css` file alongside the component HTML. Change all `className={styles.foo}` attributes to `class="foo"`. Bascik scopes every class name at build time — no configuration or tooling required.
+Delete the `.module.css` file and create a plain `.css` file alongside the component HTML. Change all `className={styles.foo}` attributes to `class="foo"`. Bascik scopes every class name at build time with no configuration or tooling required.
 
 ```css
 /* src/components/site-nav/site-nav.css */
@@ -202,7 +202,7 @@ Delete the `.module.css` file and create a plain `.css` file alongside the compo
 
 ## React Router → One .html File Per Route
 
-Replace client-side route definitions with one `.html` file per URL in `src/pages/`. There is no client-side navigation — every link triggers a full page load.
+Replace client-side route definitions with one `.html` file per URL in `src/pages/`. There is no client-side navigation, every link triggers a full page load.
 
 ```text
 Before (React Router)        After (Bascik)

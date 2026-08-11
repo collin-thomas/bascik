@@ -1,6 +1,6 @@
 # Build-time Scripts
 
-Build-time scripts let you run Node.js code at transpile time and inject the output directly into the page — no client-side JavaScript required. Use them to pull in Markdown files, generate navigation from JSON, or fetch remote data at build time.
+Build-time scripts let you run Node.js code at transpile time and inject the output directly into the page with no client-side JavaScript required. Use them to pull in Markdown files, generate navigation from JSON, or fetch remote data at build time.
 
 ## data-bascik-build
 
@@ -18,7 +18,7 @@ Output in the compiled HTML:
 <p>This text was generated at build time.</p>
 ```
 
-> **A few rules to know:** Top-level `import` and `await` are supported. Paths are relative to the project root (where you run `bascik`). Write output with `console.log()`. Runs during both dev and production builds. Component tags in the output are resolved normally — so your build script can emit `<my-card>` and it will be transpiled.
+> **A few rules to know:** Top-level `import` and `await` are supported. Paths are relative to the project root (where you run `bascik`). Write output with `console.log()`. Runs during both dev and production builds. Component tags in the output are resolved normally, so your build script can emit `<my-card>` and it will be transpiled.
 
 ## Error Handling
 
@@ -85,7 +85,7 @@ Components work inside `<head>` as well as `<body>`. This lets you extract repea
 </head>
 ```
 
-Bascik resolves the component tag the same way it does in body content — the component HTML is substituted in place. CSS scoping and prop injection work normally.
+Bascik resolves the component tag the same way it does in body content, the component HTML is substituted in place. CSS scoping and prop injection work normally.
 
 ## When to Use Build Scripts
 
@@ -99,7 +99,7 @@ Prefer plain hardcoded HTML when the content is short, stable, and doesn't come 
 
 ## npm Packages
 
-A Bascik project is a Node.js project — any npm package can be installed and used in build scripts. Install it once and import it anywhere:
+A Bascik project is a Node.js project, any npm package can be installed and used in build scripts. Install it once and import it anywhere:
 
 ```sh
 npm install gray-matter
@@ -123,7 +123,7 @@ npm install gray-matter
 
 ## Shared Scripts
 
-Build scripts are just ESM modules. You can write utility functions in your project and import them across pages — no special Bascik API required:
+Build scripts are just ESM modules. You can write utility functions in your project and import them across pages with no special Bascik API required:
 
 ```js
 // scripts/render-cards.js
@@ -165,10 +165,10 @@ Environment variables set in your shell or a `.env` file (loaded with a tool lik
 
 ## Limitations
 
-- **No streaming** — the full stdout of the script is collected before injection. You cannot stream HTML into the page incrementally.
-- **No HMR awareness** — in dev mode Bascik watches source files. If a build script reads an external file, changes to that file won't automatically re-trigger the script. Restart the dev server to re-run.
-- **ESM only** — scripts are written as `.mjs` files. Use `import` syntax; `require()` is not available.
-- **Node.js only** — browser globals like `window` and `document` are not available in build scripts.
+- **No streaming:** the full stdout of the script is collected before injection. You cannot stream HTML into the page incrementally.
+- **No HMR awareness:** in dev mode Bascik watches source files. If a build script reads an external file, changes to that file won't automatically re-trigger the script. Restart the dev server to re-run.
+- **ESM only:** scripts are written as `.mjs` files. Use `import` syntax; `require()` is not available.
+- **Node.js only:** browser globals like `window` and `document` are not available in build scripts.
 
 For per-request server-side rendering, see [Server scripts](/server).
 

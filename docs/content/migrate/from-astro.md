@@ -4,7 +4,7 @@ Astro and Bascik are both build-time component systems that output zero-JS HTML 
 
 ## .astro Files → .html Component Files
 
-Rename the file from `ComponentName.astro` to the hyphenated tag name `component-name.html`. Move it to `src/components/`. Remove the frontmatter fences (`---`) and convert the template HTML — the Bascik component file contains only the HTML markup of the component.
+Rename the file from `ComponentName.astro` to the hyphenated tag name `component-name.html`. Move it to `src/components/`. Remove the frontmatter fences (`---`) and convert the template HTML, the Bascik component file contains only the HTML markup of the component.
 
 ```text
 Before (Astro)              After (Bascik)
@@ -94,7 +94,7 @@ const { title, description } = Astro.props;
 ></my-card>
 ```
 
-> **Text only:** Bascik props accept plain text strings. Passing JSX, objects, arrays, or HTML content as a prop has no equivalent — use a slot for rich HTML content instead.
+> **Text only:** Bascik props accept plain text strings. Passing JSX, objects, arrays, or HTML content as a prop has no equivalent, use a slot for rich HTML content instead.
 
 ## `<slot />` → data-bascik-slot
 
@@ -158,7 +158,7 @@ Astro's `<slot name="header" />` maps to a receiver element with `data-bascik-sl
 
 ## Astro Scoped `<style>` → Paired .css Files
 
-Astro scopes `<style>` blocks inside `.astro` files to that component. Bascik's equivalent is a paired `.css` file in the same directory as the component HTML. Remove the `<style>` block from the component file and paste its contents into the `.css` file. Class names, element selectors, and `@keyframes` are scoped automatically at build time — no changes to selectors needed.
+Astro scopes `<style>` blocks inside `.astro` files to that component. Bascik's equivalent is a paired `.css` file in the same directory as the component HTML. Remove the `<style>` block from the component file and paste its contents into the `.css` file. Class names, element selectors, and `@keyframes` are scoped automatically at build time with no changes to selectors needed.
 
 ```astro
 <!-- SiteNav.astro (Astro — before) -->
@@ -253,7 +253,7 @@ for (const file of files) {
 
 ## import.meta.env → process.env
 
-Astro uses `import.meta.env` for environment variables. Inside a `<script data-bascik-build>` block, use standard Node.js `process.env` instead. Runtime client-side scripts use `window` or data attributes to access values that were baked in at build time — there is no equivalent of Astro's `import.meta.env.PUBLIC_*` exposure to the browser.
+Astro uses `import.meta.env` for environment variables. Inside a `<script data-bascik-build>` block, use standard Node.js `process.env` instead. Runtime client-side scripts use `window` or data attributes to access values that were baked in at build time, there is no equivalent of Astro's `import.meta.env.PUBLIC_*` exposure to the browser.
 
 ```astro
 <!-- Before (Astro frontmatter) -->

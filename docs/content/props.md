@@ -64,7 +64,7 @@ data-bascik-prop-icon-url
 
 ## Why `data-*`?
 
-Bascik extends HTML through standard `data-*` attributes rather than a custom template language. Browsers already understand `data-*`, and you do **not** need to use props or slots to make Bascik useful — plain reusable HTML components still work without them.
+Bascik extends HTML through standard `data-*` attributes rather than a custom template language. Browsers already understand `data-*`, and you do **not** need to use props or slots to make Bascik useful, plain reusable HTML components still work without them.
 
 > **MDN reference.** For the underlying attribute rules, treat [MDN's `data-*` attribute reference](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/data-*) and the broader [HTML reference](https://developer.mozilla.org/en-US/docs/Web/HTML) as the primary documentation.
 

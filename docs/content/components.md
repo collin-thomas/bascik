@@ -18,4 +18,4 @@ Use it in any page or other component:
 
 Self-closing syntax works too: `<site-nav />`
 
-> **No restart needed.** The dev server watches the components directory. Drop a new `.html` (or paired `.css`) file in and all pages that use that tag are automatically re-transpiled and reloaded — no server restart required.
+> **No restart needed.** The dev server watches the components directory. Drop a new `.html` (or paired `.css`) file in and all pages that use that tag are automatically re-transpiled and reloaded with no server restart required.

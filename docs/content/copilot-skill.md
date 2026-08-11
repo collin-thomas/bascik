@@ -1,8 +1,8 @@
 # AI Skill
 
-Download the Bascik skill file and attach it to GitHub Copilot, Cursor, Claude, or any AI assistant that supports instruction files — so it understands Bascik's component model, scoping rules, and conventions out of the box.
+Download the Bascik skill file and attach it to GitHub Copilot, Cursor, Claude, or any AI assistant that supports instruction files, so it understands Bascik's component model, scoping rules, and conventions out of the box.
 
-The Bascik skill file (`SKILL.md`) teaches any AI assistant — GitHub Copilot, Cursor, Claude, or others that support instruction files — the full details of how Bascik works: its component model, scoping system, config options, CLI, and conventions.
+The Bascik skill file (`SKILL.md`) teaches any AI assistant, GitHub Copilot, Cursor, Claude, or others that support instruction files, the full details of how Bascik works: its component model, scoping system, config options, CLI, and conventions.
 
 Add it once, and your AI assistant can accurately answer questions about Bascik, generate correct components, and help debug scoping issues without needing to look anything up.
 

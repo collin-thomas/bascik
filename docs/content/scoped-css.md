@@ -56,7 +56,7 @@ h2 { font-size: 2rem; }
 .bascik__my-comp__x1__el__h2 { font-size: 2rem; }
 ```
 
-Every `<p>` and `<h2>` inside the component gets the generated class injected at build time — you never write these class names yourself.
+Every `<p>` and `<h2>` inside the component gets the generated class injected at build time, you never write these class names yourself.
 
 <!-- compiled-output -->
 ```html
@@ -100,7 +100,7 @@ Keyframe names are also prefixed so animations from different components never c
 ```
 ## CSS ID Selectors
 
-CSS `#id` selectors are converted to scoped class selectors, and the generated class is injected onto the matching element in the HTML. This means `#btn {}` in a component is fully isolated — the same ID name in another component or on the page produces a completely different selector.
+CSS `#id` selectors are converted to scoped class selectors, and the generated class is injected onto the matching element in the HTML. This means `#btn {}` in a component is fully isolated, the same ID name in another component or on the page produces a completely different selector.
 
 ```css
 /* my-comp.css — source */
@@ -120,10 +120,10 @@ CSS `#id` selectors are converted to scoped class selectors, and the generated c
         class="bascik__my-comp__id__submit-btn">Submit</button>
 ```
 
-> **Specificity note:** Converting `#id` to a class drops specificity from `(0,1,0,0)` to `(0,0,1,0)`. `[id]` and `[id="…"]` attribute-selector forms are stripped at compile time — use a class selector instead.
+> **Specificity note:** Converting `#id` to a class drops specificity from `(0,1,0,0)` to `(0,0,1,0)`. `[id]` and `[id="…"]` attribute-selector forms are stripped at compile time, use a class selector instead.
 ## CSS Custom Properties
 
-`--var-name` declarations in a component's CSS are automatically scoped. All `var(--var-name)` references within the same file are updated to match — so custom properties stay isolated to their component.
+`--var-name` declarations in a component's CSS are automatically scoped. All `var(--var-name)` references within the same file are updated to match, so custom properties stay isolated to their component.
 
 ```css
 /* source */
@@ -170,7 +170,7 @@ export const bascikConfig = {
 
 ## Class Selectors in Component Scripts
 
-Because all instances of the same component share the same scoped class names (for CSS deduplication), `document.querySelector('.myClass')` inside a component script will always return the **first** matching element on the page — not necessarily the element belonging to the current instance. If you have multiple instances of the same component, each instance's script will target the same (first) element.
+Because all instances of the same component share the same scoped class names (for CSS deduplication), `document.querySelector('.myClass')` inside a component script will always return the **first** matching element on the page, not necessarily the element belonging to the current instance. If you have multiple instances of the same component, each instance's script will target the same (first) element.
 
 **The correct pattern** is to use an `id` attribute as your root anchor. `id` attributes are scoped per-instance, so `getElementById` always finds exactly the right element:
 
@@ -207,7 +207,7 @@ export const bascikConfig = {
 };
 ```
 
-With `deduplicateCss: false`, class selectors behave like `id` selectors — scoped per instance — but Bascik emits a separate `<style>` block for every component instance. Use the `id`-based pattern above instead whenever possible; it works with the default settings and avoids extra style blocks.
+With `deduplicateCss: false`, class selectors behave like `id` selectors, scoped per instance, but Bascik emits a separate `<style>` block for every component instance. Use the `id`-based pattern above instead whenever possible; it works with the default settings and avoids extra style blocks.
 
 ## Live Demo
 

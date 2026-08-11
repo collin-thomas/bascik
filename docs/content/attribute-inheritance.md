@@ -16,7 +16,7 @@ Set it to `false` when you want every component root to be controlled only by th
 
 ## How It Works
 
-When Bascik transpiles a component, it reads the usage tag, extracts any inheritable attributes, and merges them onto the first element of the compiled output. The component template and the usage attributes are combined — classes are appended, all other attributes are forwarded:
+When Bascik transpiles a component, it reads the usage tag, extracts any inheritable attributes, and merges them onto the first element of the compiled output. The component template and the usage attributes are combined, classes are appended, all other attributes are forwarded:
 
 ```html
 <!-- usage in your page HTML -->
@@ -61,10 +61,10 @@ All attributes on the usage tag are inherited **except** `data-bascik-*` attribu
 
 Common use cases:
 
-- **Layout classes** — `class="sticky"`, `class="hidden"`
-- **Accessibility** — `aria-label`, `role`, `aria-hidden`
-- **Testing hooks** — `data-testid`, `data-cy`
-- **Custom data** — any `data-*` attribute except `data-bascik-*`
+- **Layout classes:** `class="sticky"`, `class="hidden"`
+- **Accessibility:** `aria-label`, `role`, `aria-hidden`
+- **Testing hooks:** `data-testid`, `data-cy`
+- **Custom data:** any `data-*` attribute except `data-bascik-*`
 
 ## What Happens with `id`
 
@@ -97,7 +97,7 @@ If the template root already defines an `id`, Bascik keeps the template's root `
 
 ## Interaction with Scoped Classes
 
-Inherited class names are not scoped — they are treated as global classes. This is intentional: you are passing a page-level concern onto the component's root element.
+Inherited class names are not scoped, they are treated as global classes. This is intentional: you are passing a page-level concern onto the component's root element.
 
 ```html
 <my-card class="featured">
