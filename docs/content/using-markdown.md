@@ -1,6 +1,6 @@
 # Using Markdown
 
-Bascik does not ship a Markdown pipeline, but build-time scripts are Node.js — so any Markdown library works. This page shows common patterns using `marked`, `gray-matter`, `markdown-it`, and the `unified` / `remark` ecosystem.
+Bascik does not ship a Markdown pipeline, but build-time scripts are Node.js, so any Markdown library works. This page shows common patterns using `marked`, `gray-matter`, `markdown-it`, and the `unified` / `remark` ecosystem.
 
 ## marked
 
@@ -22,7 +22,7 @@ Read a Markdown file and output the HTML:
 </script>
 ```
 
-The output replaces the script tag in the compiled HTML — no client-side JavaScript runs.
+The output replaces the script tag in the compiled HTML with no client-side JavaScript runs.
 
 <!-- demo:source-md -->
 ```md
@@ -263,7 +263,7 @@ Read an entire folder of Markdown files and generate a list or index page:
 
 ## markdown-it
 
-[markdown-it](https://markdown-it.github.io) is an alternative parser with a rich plugin ecosystem — syntax highlighting, footnotes, custom containers, and more.
+[markdown-it](https://markdown-it.github.io) is an alternative parser with a rich plugin ecosystem, syntax highlighting, footnotes, custom containers, and more.
 
 ```sh
 npm install markdown-it
@@ -356,4 +356,4 @@ If your content comes from a headless CMS that returns Markdown via an API, fetc
 </script>
 ```
 
-The Markdown is converted to HTML and baked into the static output. No CMS API calls happen in the browser — users see plain HTML.
+The Markdown is converted to HTML and baked into the static output. No CMS API calls happen in the browser, users see plain HTML.

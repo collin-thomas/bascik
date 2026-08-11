@@ -630,8 +630,10 @@ export const transpilePage = async (
 
   // Puts our processed markup back between the <body></body> tags
   let distHtml = htmlWithBuildOutput
-    .replace(/<body>([\s\S]*?)<\/body>/i, `<body>${transpiledHtmlBody}</body>`)
-    .replace(/<head>([\s\S]*?)<\/head>/i, `<head>${transpiledHead}</head>`);
+    // Use function replacements so that $1, $2, $& etc. in transpiledHtmlBody/Head
+    // are never interpreted as back-reference patterns.
+    .replace(/<body>([\s\S]*?)<\/body>/i, () => `<body>${transpiledHtmlBody}</body>`)
+    .replace(/<head>([\s\S]*?)<\/head>/i, () => `<head>${transpiledHead}</head>`);
 
   const allUsedComponents = [...usedComponents, ...headUsedComponents];
 

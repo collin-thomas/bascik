@@ -1,6 +1,6 @@
 # Bascik
 
-> Bascik is a build tool for HTML components. Write your components in plain HTML, CSS, and JavaScript — Bascik scopes and assembles them at build time, outputting plain HTML pages with zero JavaScript added. Supports static site generation (SSG) out of the box.
+> Bascik is a build tool for HTML components. Write your components in plain HTML, CSS, and JavaScript. Bascik scopes and assembles them at build time, outputting plain HTML pages with zero JavaScript added. Supports static site generation (SSG) out of the box.
 
 ## What Bascik Does
 
@@ -8,7 +8,7 @@
 - Scopes CSS class names, element selectors, `@keyframes`, and CSS custom properties per component so they never collide.
 - Rewrites DOM selector calls (`getElementById`, `querySelector`, etc.) in component scripts to match scoped attribute names.
 - Wraps component scripts in IIFEs so variables do not leak between components.
-- Outputs a `dist/` directory of plain `.html` files — no framework runtime, no client-side JS added by Bascik itself.
+- Outputs a `dist/` directory of plain `.html` files with no framework runtime, no client-side JS added by Bascik itself.
 
 ## What Bascik Does Not Do
 

@@ -238,4 +238,28 @@ describe("executeServerScripts", () => {
     const cmd = mockExecFile.mock.calls[0][0] as string;
     expect(cmd).toBe(process.execPath);
   });
+
+  it("does not expand $1 in script output as a regex back-reference", async () => {
+    // A Postgres server script whose stdout contains $1 must be injected verbatim.
+    // Previously result.replace(fullTag, output) treated $1 in output as a capture
+    // group reference, expanding it to empty string or the capture group value.
+    resolveWith("<p>session_id = $1</p>");
+    const html = "<main><script data-bascik-server>pg()</script></main>";
+    const result = await executeServerScripts(html, baseRequest);
+    expect(result).toBe("<main><p>session_id = $1</p></main>");
+  });
+
+  it("does not expand $2 in script output as a regex back-reference", async () => {
+    resolveWith("<p>value is $2</p>");
+    const html = "<main><script data-bascik-server>pg()</script></main>";
+    const result = await executeServerScripts(html, baseRequest);
+    expect(result).toBe("<main><p>value is $2</p></main>");
+  });
+
+  it("does not expand $& in script output (would insert the matched script tag)", async () => {
+    resolveWith("<p>cost: $&amp; tax included</p>");
+    const html = "<div><script data-bascik-server>price()</script></div>";
+    const result = await executeServerScripts(html, baseRequest);
+    expect(result).toBe("<div><p>cost: $&amp; tax included</p></div>");
+  });
 });

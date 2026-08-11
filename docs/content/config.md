@@ -93,7 +93,7 @@ scopeAttribute: {
 
 When `true` (default), all instances of the same component share the same scoped class names so the compiled `<style>` block is emitted only once per component type, regardless of how many times the component appears on the page.
 
-When `false`, every instance gets its own unique per-instance class names (the same scheme used for `id` scoping). This means a `querySelector('.myClass')` inside a component script will naturally target only elements inside that specific instance — but each instance emits its own `<style>` block.
+When `false`, every instance gets its own unique per-instance class names (the same scheme used for `id` scoping). This means a `querySelector('.myClass')` inside a component script will naturally target only elements inside that specific instance, but each instance emits its own `<style>` block.
 
 ```js
 deduplicateCss: true // default
@@ -105,7 +105,7 @@ deduplicateCss: true // default
 
 An array of HTML element names whose inner content is left untouched by the scoping pipeline. Attribute values, element-selector class injection, and JS selector rewriting are all skipped for any HTML found *inside* these elements. The elements' own opening-tag attributes (e.g. `class="cblock-body"` on `<code>` itself) are still scoped normally.
 
-Defaults to `["code"]` — the typical element used to display literal code examples. Add `"pre"` only if your templates contain raw text inside `<pre>` blocks that aren't wrapped in `<code>` and whose content has attribute patterns you don't want scoped. Note: when `"pre"` is in the list, attributes on elements *inside* `<pre>` (such as `class="cblock-body"` on a `<code>` child) are also excluded from scoping.
+Defaults to `["code"]`: the typical element used to display literal code examples. Add `"pre"` only if your templates contain raw text inside `<pre>` blocks that aren't wrapped in `<code>` and whose content has attribute patterns you don't want scoped. Note: when `"pre"` is in the list, attributes on elements *inside* `<pre>` (such as `class="cblock-body"` on a `<code>` child) are also excluded from scoping.
 
 ```js
 skipTranspilingElementContents: ['code'] // default
@@ -121,9 +121,9 @@ Collapse whitespace and newlines in the injected `<style>` block. Defaults to `t
 
 Minify inline `<script>` content and `.js` static files in the build output. Accepts three forms:
 
-- **`true`** (default) — built-in minifier: strips block and line comments, collapses whitespace. String and template literals are preserved verbatim.
-- **`false`** — no minification.
-- **`(fn)`** — a custom async-capable function called for each script body. Use this to plug in esbuild, terser, or any other tool:
+- **`true`** (default), built-in minifier: strips block and line comments, collapses whitespace. String and template literals are preserved verbatim.
+- **`false`:** no minification.
+- **`(fn)`:** a custom async-capable function called for each script body. Use this to plug in esbuild, terser, or any other tool:
 
 ```js
 // bascik.config.js
@@ -151,7 +151,7 @@ obfuscateAttributeNames: true // production default
 
 ### `cacheHttp`
 
-Controls HTTP caching on server responses. Defaults to `false` in dev mode and `true` in `--serve` (production) mode — you rarely need to set this explicitly.
+Controls HTTP caching on server responses. Defaults to `false` in dev mode and `true` in `--serve` (production) mode, you rarely need to set this explicitly.
 
 When `true`, HTML pages receive an `ETag` header and the server returns `304 Not Modified` for unchanged content. Static assets get `Cache-Control: public, max-age=3600`. When `false`, responses include `Cache-Control: no-store` so browsers always fetch fresh content.
 
@@ -219,9 +219,9 @@ Has no effect during `bascik --build`.
 
 Controls which global stylesheets Bascik reads and injects as `<style>` tags into every page's `<head>` during transpilation. When `minifyStyles` is true the content is minified before injection. Global styles are placed before component styles so component rules take precedence.
 
-- `false` — inline nothing
-- `true` — inline every `.css` file under `directory.pages`
-- `string[]` — inline only the listed stylesheet paths
+- `false`: inline nothing
+- `true`: inline every `.css` file under `directory.pages`
+- `string[]`: inline only the listed stylesheet paths
 
 ```js
 inlineStyles: false // default
@@ -229,7 +229,7 @@ inlineStyles: true
 inlineStyles: ['src/pages/css/styles.css']
 ```
 
-This eliminates the render-blocking `<link rel="stylesheet">` request — the CSS arrives in the same HTTP response as the HTML. It pairs naturally with `buildOverrideConfig` to minify only in production:
+This eliminates the render-blocking `<link rel="stylesheet">` request, the CSS arrives in the same HTTP response as the HTML. It pairs naturally with `buildOverrideConfig` to minify only in production:
 
 ```js
 export const bascikConfig = {
@@ -253,9 +253,9 @@ useWorkers: false // default
 useWorkers: true
 ```
 
-Spinning up the worker pool has a fixed cost — each worker loads the transpiler's module graph independently, which takes roughly 15-250ms in total depending on machine and cache state (all workers load in parallel, so this is a one-time fixed delay, not a per-page cost). For small sites, or sites without slow per-page work, this fixed cost outweighs the benefit of spreading pages across cores, and sequential transpilation on the main thread finishes first.
+Spinning up the worker pool has a fixed cost, each worker loads the transpiler's module graph independently, which takes roughly 15-250ms in total depending on machine and cache state (all workers load in parallel, so this is a one-time fixed delay, not a per-page cost). For small sites, or sites without slow per-page work, this fixed cost outweighs the benefit of spreading pages across cores, and sequential transpilation on the main thread finishes first.
 
-> **When to enable.** Turn this on for larger sites (dozens of pages or more) doing CPU-heavy work per page — complex CSS/JS scoping across many components. It will not help much on sites whose slow parts are I/O-bound (e.g. `<script data-bascik-build>` blocks that fetch data or spawn subprocesses), since that work is already asynchronous regardless of which thread initiates it.
+> **When to enable.** Turn this on for larger sites (dozens of pages or more) doing CPU-heavy work per page, complex CSS/JS scoping across many components. It will not help much on sites whose slow parts are I/O-bound (e.g. `<script data-bascik-build>` blocks that fetch data or spawn subprocesses), since that work is already asynchronous regardless of which thread initiates it.
 
 ## `buildOverrideConfig`
 

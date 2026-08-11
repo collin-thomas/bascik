@@ -1,12 +1,12 @@
 # Scoped JavaScript
 
-Write `<script>` tags directly in your component HTML — Bascik automatically rewrites selector strings to match each instance's unique identifiers. Multiple instances of the same component on the same page stay completely independent.
+Write `<script>` tags directly in your component HTML. Bascik automatically rewrites selector strings to match each instance's unique identifiers. Multiple instances of the same component on the same page stay completely independent.
 
 > **Key rule.** Use `id` attributes to identify elements you need to control in JS, and `getElementById` to find them. Bascik scopes each instance's `id` values uniquely, so every call returns exactly the right element.
 
 ## Writing Component Scripts
 
-A component script looks like ordinary JavaScript. Declare `id` on any element you need to reference, then use `getElementById` — Bascik rewrites the strings at build time:
+A component script looks like ordinary JavaScript. Declare `id` on any element you need to reference, then use `getElementById`. Bascik rewrites the strings at build time:
 
 ```html
 <span id="status">Ready</span>
@@ -29,7 +29,7 @@ You don't write or deal with the generated names. Bascik handles the rewriting a
 
 ## Multiple Instances
 
-Place the same component on a page more than once and each instance runs independently — no extra work needed:
+Place the same component on a page more than once and each instance runs independently with no extra work needed:
 
 ```html
 <my-toggle></my-toggle>
@@ -83,13 +83,13 @@ Because class names are shared across all instances of the same component (for C
 </script>
 ```
 
-The `class` attribute can still coexist on the same element for styling — just add an `id` for the JS lookup.
+The `class` attribute can still coexist on the same element for styling, just add an `id` for the JS lookup.
 
 > **Rule of thumb.** Use `getElementById` (or `getElementsByName`) for elements you need to control per-instance. Reserve `querySelector`/`querySelectorAll` for cases where you intentionally want to sweep across all instances.
 
 ## Dynamic Runtime Classes
 
-If a class is only toggled at runtime (`classList.toggle("is-open")`) but doesn't appear on any element in the template HTML, Bascik's compiler won't register it. The CSS side obfuscates the name but the JS side doesn't — causing a silent mismatch at runtime.
+If a class is only toggled at runtime (`classList.toggle("is-open")`) but doesn't appear on any element in the template HTML, Bascik's compiler won't register it. The CSS side obfuscates the name but the JS side doesn't, causing a silent mismatch at runtime.
 
 **Fix: declare the class on a hidden element in the template so the compiler sees it:**
 
@@ -121,7 +121,7 @@ Additional rewritten forms include `element.closest()`, `element.matches()`, `el
 
 ## Build-time Scripts
 
-`<script data-bascik-build>` blocks run at transpile time as Node.js ESM modules. Their stdout replaces the tag in the page — useful for pulling in Markdown, JSON, or other external content at build time:
+`<script data-bascik-build>` blocks run at transpile time as Node.js ESM modules. Their stdout replaces the tag in the page, useful for pulling in Markdown, JSON, or other external content at build time:
 
 ```html
 <script data-bascik-build>
@@ -136,7 +136,7 @@ Additional rewritten forms include `element.closest()`, `element.matches()`, `el
 
 ## Non-JavaScript Script Types
 
-Script tags with a `type` other than `text/javascript` are left completely untouched — no IIFE, no scoping:
+Script tags with a `type` other than `text/javascript` are left completely untouched, no IIFE, no scoping:
 
 ```html
 <script type="application/json" id="config-data">

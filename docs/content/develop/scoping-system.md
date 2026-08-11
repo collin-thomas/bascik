@@ -222,7 +222,7 @@ export const getAttributeNameHash = (attributeName: string): string => {
 };
 ```
 
-The hash is deterministic — the same full scoped name always produces the same short hash — so CSS and HTML always stay in sync. The obfuscated output looks like:
+The hash is deterministic, the same full scoped name always produces the same short hash, so CSS and HTML always stay in sync. The obfuscated output looks like:
 
 ```html
 <button class="ba1c2d3e4f5b">Menu</button>
@@ -231,4 +231,4 @@ The hash is deterministic — the same full scoped name always produces the same
 
 ## CSS Deduplication
 
-After all components on a page have been resolved, `deduplicateCss` receives the list of used components. Because class-scoped names are identical across all instances of the same component, a Set-based deduplication is sufficient — each component's CSS block appears exactly once in the final `<style>` tag, regardless of how many times that component was used on the page.
+After all components on a page have been resolved, `deduplicateCss` receives the list of used components. Because class-scoped names are identical across all instances of the same component, a Set-based deduplication is sufficient, each component's CSS block appears exactly once in the final `<style>` tag, regardless of how many times that component was used on the page.

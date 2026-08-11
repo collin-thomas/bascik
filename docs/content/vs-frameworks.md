@@ -1,12 +1,12 @@
 # Bascik vs Frameworks
 
-Bascik is not a framework. It is a build tool that resolves components at compile time and then disappears. Understanding how that differs from popular lightweight frameworks helps you pick the right tool — and shows how they can work together.
+Bascik is not a framework. It is a build tool that resolves components at compile time and then disappears. Understanding how that differs from popular lightweight frameworks helps you pick the right tool, and shows how they can work together.
 
 ## What Bascik Does
 
 Bascik solves one problem: component reuse at build time. Write a navigation bar once, use it on every page, and get clean HTML out. That is the entire scope.
 
-Everything else — interactivity, server communication, reactive state — is your decision. You can ship zero JavaScript, or you can add as much as the project needs. Bascik does not have an opinion.
+Everything else, interactivity, server communication, reactive state, is your decision. You can ship zero JavaScript, or you can add as much as the project needs. Bascik does not have an opinion.
 
 The custom component tags in a Bascik project are the ones **you create**. If you create `site-nav.html`, you can write `<site-nav>`. Bascik does not add a catalog of framework components with their own behavior or API.
 
@@ -20,11 +20,11 @@ Bascik does use a small set of build instructions such as `data-bascik-slot`, `d
 
 - ~14 KB of JavaScript (minified and gzipped) loaded on every page
 - A new attribute vocabulary to learn and maintain (`hx-get`, `hx-post`, `hx-target`, `hx-swap`, `hx-trigger`, `hx-push-url`, `hx-select`, `hx-boost`, and more)
-- A server requirement — HTMX works best when the backend returns HTML fragments
+- A server requirement: HTMX works best when the backend returns HTML fragments
 
 HTMX is well-suited to applications that need dynamic server-driven updates without a full JavaScript client. It is not suited to pages that are mostly static, where the overhead of loading and running a JavaScript library is not justified.
 
-Bascik produces plain HTML. HTMX ships a JavaScript runtime. These are different tools aimed at different problems. For pages that genuinely need server-driven interactivity, you can use HTMX alongside Bascik — Bascik handles component organization at build time, and HTMX handles server communication at runtime.
+Bascik produces plain HTML. HTMX ships a JavaScript runtime. These are different tools aimed at different problems. For pages that genuinely need server-driven interactivity, you can use HTMX alongside Bascik: Bascik handles component organization at build time, and HTMX handles server communication at runtime.
 
 ```html
 <!-- Bascik component that includes HTMX attributes — fully compatible -->
@@ -37,9 +37,9 @@ Bascik produces plain HTML. HTMX ships a JavaScript runtime. These are different
 
 Full-featured frameworks like Vue and React solve a different problem: client-side applications with complex reactive state, component trees, and client-side routing. They ship a significant JavaScript runtime (~40–100+ KB), require a bundler, and introduce a complete component model with lifecycle hooks, reactivity systems, and state management conventions.
 
-For documents — marketing sites, docs portals, blogs, portfolios — most of that machinery is unused. The framework runtime loads and runs on every page visit in exchange for features the page does not use.
+For documents, marketing sites, docs portals, blogs, portfolios, most of that machinery is unused. The framework runtime loads and runs on every page visit in exchange for features the page does not use.
 
-Bascik's component model lives entirely at build time. There is no runtime equivalent. A `<site-nav>` tag in source becomes a `<nav>` element in output — no JavaScript involved.
+Bascik's component model lives entirely at build time. There is no runtime equivalent. A `<site-nav>` tag in source becomes a `<nav>` element in output, no JavaScript involved.
 
 For sites that need selective reactivity on specific components, petite-vue (~5 KB) is a better fit than full Vue. See the [JavaScript Libraries](/libraries) page for examples.
 
@@ -53,7 +53,7 @@ Like HTMX, Alpine is compatible with Bascik. Bascik resolves components at build
 
 Traditional static site builders such as [Hugo](https://gohugo.io), [Eleventy](https://www.11ty.dev), and [Jekyll](https://jekyllrb.com) focus on content pipelines: Markdown collections, templates, front matter, taxonomies, and data-driven page generation.
 
-Bascik overlaps with them at the output level — all of these tools can ship plain static HTML — but the authoring model is different. Bascik stays close to hand-written HTML pages and reusable HTML components. It does not require a separate template language, collection system, or front matter format just to reuse a header, card, or footer.
+Bascik overlaps with them at the output level, all of these tools can ship plain static HTML, but the authoring model is different. Bascik stays close to hand-written HTML pages and reusable HTML components. It does not require a separate template language, collection system, or front matter format just to reuse a header, card, or footer.
 
 If your site is primarily content-driven and you want a full publishing pipeline, a static site builder may be the better fit. If your site is primarily HTML pages and reusable UI fragments, Bascik is the smaller tool.
 
@@ -70,6 +70,6 @@ If your site is primarily content-driven and you want a full publishing pipeline
 
 The browser can parse Bascik's source without needing to understand a new runtime language: custom tags are valid custom-element-shaped HTML names, and build instructions use the web platform's `data-*` convention. Bascik resolves both before deployment. By contrast, runtime directives such as `hx-get`, `x-data`, and `v-scope` only gain behavior after their library's JavaScript loads.
 
-Bascik does not compete with any of these tools for what they are good at. It fills the gap they leave open: component organization without a runtime. You can use Bascik as the build layer and any of the above as the interactivity layer — they compose cleanly.
+Bascik does not compete with any of these tools for what they are good at. It fills the gap they leave open: component organization without a runtime. You can use Bascik as the build layer and any of the above as the interactivity layer, they compose cleanly.
 
 > **Combining tools.** A common pattern is Bascik for layout components (nav, footer, hero sections) and HTMX or Alpine for specific interactive elements. Each tool does what it is best at, and neither one intrudes on the other's domain.

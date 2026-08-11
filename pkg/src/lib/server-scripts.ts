@@ -172,7 +172,9 @@ export const executeServerScripts = async (
 
   let result = html;
   for (const { fullTag, output } of results) {
-    result = result.replace(fullTag, output);
+    // Use a function replacement so that `$` characters in `output` (e.g.
+    // `$&`, `$1` from code examples) are never interpreted as special patterns.
+    result = result.replace(fullTag, () => output);
   }
   return result;
 };

@@ -12,10 +12,10 @@ npm create bascik@latest
 
 Enter a project name when prompted (or press Enter for `bascik-app`). The tool then asks two questions:
 
-- **Install dependencies now?** — select Y to run `npm install` immediately
-- **Start the dev server after install?** — select Y to launch the dev server right away
+- **Install dependencies now?:** select Y to run `npm install` immediately
+- **Start the dev server after install?:** select Y to launch the dev server right away
 
-Select Y for both and you're live at **https://localhost:8443** — no further commands needed.
+Select Y for both and you're live at **https://localhost:8443:** no further commands needed.
 
 `npm create bascik@latest` scaffolds a complete starter site: pages, components, global CSS, `bascik.config.js`, and a `.gitignore`. If you prefer to set everything up yourself, see [Manual Setup](#manual-setup) below.
 
@@ -67,7 +67,7 @@ After running `mkcert -install`, restart the dev server. Bascik will pick up mkc
 > yarn dev   # bascik will now use mkcert
 > ```
 
-Without mkcert, Bascik falls back to `openssl` (pre-installed on macOS and Linux). Your browser will show a certificate warning — click through to proceed. Windows users without openssl can install it via `winget install ShiningLight.OpenSSL`.
+Without mkcert, Bascik falls back to `openssl` (pre-installed on macOS and Linux). Your browser will show a certificate warning; click through to proceed. Windows users without openssl can install it via `winget install ShiningLight.OpenSSL`.
 
 ## Folder Structure
 
