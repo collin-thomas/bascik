@@ -28,7 +28,8 @@ export const createSelfSignedCert = async () => {
           if (-not $cert) { \
             $cert = New-SelfSignedCertificate -DnsName 'localhost' -CertStoreLocation Cert:\\CurrentUser\\My -KeyExportPolicy Exportable -NotAfter (Get-Date).AddYears(100) -TextExtension @('2.5.29.17={text}DNS=localhost,IP=127.0.0.1'); \
           }; \
-          Export-PfxCertificate -Cert $cert -FilePath '${pfxPath}' -Password (ConvertTo-SecureString -String '' -Force -AsPlainText) \
+          $pwd = ConvertTo-SecureString -String '' -Force -AsPlainText; \
+          Export-PfxCertificate -Cert $cert -FilePath '${pfxPath}'****** \
         "`
       );
 
@@ -51,8 +52,10 @@ export const createSelfSignedCert = async () => {
     }
     console.log('Generated self-signed certificate for the development server');
   } catch (err) {
-    console.error('Failed to generate self-signed certificate for the development server', err);
-    process.exit(1);
+    throw new Error(
+      'Failed to generate self-signed certificate for the development server: ' +
+      (err instanceof Error ? err.message : String(err)),
+    );
   }
 };
 

@@ -88,6 +88,7 @@ import {
   scopeCounterStyleNames,
   scopeAnchorNames,
   scopeInlineStyleTags,
+  shieldCssStrings,
 } from "./styles.js";
 import type { BascikComponent } from "./types.js";
 
@@ -382,12 +383,17 @@ export const prefixElementAttribute = (
     let allIdsConverted: { idName: string; className: string }[] = [];
 
     if (component.cssFileContent) {
-      // Handle basic replacement of classnames in css file
-      component.cssFileContent = component.cssFileContent.replace(
-        /(?<=\.)[a-z_][a-z0-9-_]*/gim,
-        (className) => {
+      // Handle basic replacement of classnames in css file.
+      // Shield string literals and url(...) contents first so dots inside
+      // them (file extensions, domains) are never mistaken for class selectors:
+      //   url(./img.png)  must NOT become  url(./img.bascik__…__png)
+      const { css: shieldedCss, restore: restoreCssStrings } = shieldCssStrings(
+        component.cssFileContent,
+      );
+      component.cssFileContent = restoreCssStrings(
+        shieldedCss.replace(/(?<=\.)[a-z_][a-z0-9-_]*/gim, (className) => {
           return obfuscateAttributeName(`bascik__${scopeKey}__${className}`);
-        },
+        }),
       );
 
       const { css: elSelectorToClassCss, elementsConvertedClasses } =

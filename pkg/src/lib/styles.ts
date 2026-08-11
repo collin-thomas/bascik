@@ -103,6 +103,13 @@ export const convertCssElementSelectorsToClasses = (
 /**
  * If a component's css styles any element, add bascik classes to those elements
  */
+// HTML void elements — they have no closing tag, so the paired-tag regex in
+// addElementClassesInHtml never matches them. Handle them separately.
+const VOID_ELEMENTS = new Set([
+  "area", "base", "br", "col", "embed", "hr", "img", "input",
+  "link", "meta", "param", "source", "track", "wbr",
+]);
+
 export const addElementClassesInHtml = (
   componentHtml: string,
   componentName: string,
@@ -110,30 +117,39 @@ export const addElementClassesInHtml = (
 ): string => {
   // Loop through each element that has styling
   elementsConvertedClasses.forEach((element) => {
+    const bascikClassName = obfuscateAttributeName(
+      `bascik__${componentName}__el__${element}`,
+    );
+    const injectClass = (elementHtml: string): string => {
+      // Check only the element's own opening tag for a class attribute,
+      // not any nested child's class (which would cause the class to land
+      // on the wrong element, e.g. <code> instead of <pre>).
+      const openTag = elementHtml.match(new RegExp(`^<${element}[^>]*>`, "i"))?.[0] ?? "";
+      if (openTag.includes('class="')) {
+        return elementHtml.replace(/class=".*?(?=")/i, (classStr) => {
+          return `${classStr} ${bascikClassName}`;
+        });
+      }
+      return elementHtml.replace(
+        new RegExp(`<${element}`, "i"),
+        `<${element} class="${bascikClassName}"`,
+      );
+    };
+
+    if (VOID_ELEMENTS.has(element)) {
+      // Void elements: match the standalone opening tag (no closing tag).
+      componentHtml = componentHtml.replace(
+        new RegExp(`<${element}(\\s[^>]*?)?\\/?>`, "gis"),
+        (tag) => injectClass(tag),
+      );
+      return;
+    }
+
     // Find all the instances of that element in the component.
     // The `s` (dotAll) flag lets `.` match newlines for multi-line element content.
     componentHtml = componentHtml.replace(
       new RegExp(`<${element}[^>]*>([\\s\\S]*?)<\\/${element}>`, "gis"),
-      (elementHtml: string) => {
-        const bascikClassName = obfuscateAttributeName(
-          `bascik__${componentName}__el__${element}`,
-        );
-        // Check only the element's own opening tag for a class attribute,
-        // not any nested child's class (which would cause the class to land
-        // on the wrong element, e.g. <code> instead of <pre>).
-        const openTag = elementHtml.match(new RegExp(`^<${element}[^>]*>`, "i"))?.[0] ?? "";
-        if (openTag.includes('class="')) {
-          elementHtml = elementHtml.replace(/class=".*?(?=")/i, (classStr) => {
-            return `${classStr} ${bascikClassName}`;
-          });
-        } else {
-          elementHtml = elementHtml.replace(
-            new RegExp(`<${element}`, "i"),
-            `<${element} class="${bascikClassName}"`,
-          );
-        }
-        return elementHtml;
-      },
+      (elementHtml: string) => injectClass(elementHtml),
     );
   });
   return componentHtml;
@@ -147,20 +163,34 @@ export const getCssClasses = (css: string): string[] => {
 };
 
 export const getKeyframeNames = (css: string): string[] | null => {
-  return css.match(/(?<=@keyframes.*?)([a-z]+)(?=[\s]*{)/gim);
+  // Anchor on the @keyframes at-rule itself so only the declared animation
+  // name is captured — never `from`/`to`/percentage selectors or idents that
+  // merely appear later in the stylesheet. Full CSS ident: [\w-]+ covers
+  // dashed (fade-in), digit (spin2), and uppercase (pulseFast) names.
+  const matches = css.matchAll(/@keyframes\s+([\w-]+)\s*\{/gi);
+  const names = [...new Set([...matches].map((m) => m[1]))];
+  return names.length ? names : null;
 };
 
 export const prefixKeyframes = (css: string, componentName: string): string => {
   const keyframeNames = getKeyframeNames(css);
   if (!Array.isArray(keyframeNames)) return css;
-  return css.replace(
-    new RegExp(`${keyframeNames.join("|")}`, "gmi"),
-    (keyframeName) => {
-      return obfuscateAttributeName(
-        `bascik__${componentName}__keyframe__${keyframeName}`,
-      );
-    },
-  );
+  let result = css;
+  for (const name of keyframeNames) {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const scoped = obfuscateAttributeName(
+      `bascik__${componentName}__keyframe__${name}`,
+    );
+    // Rewrite every standalone occurrence of the name — both the @keyframes
+    // declaration and animation references. The word-boundary guards
+    // ((?<![\w-]) / (?![\w-])) ensure `spin` never rewrites `spin-slow`,
+    // `spinFast`, `transform`, or the `@keyframes` keyword itself.
+    result = result.replace(
+      new RegExp(`(?<![\\w-])${escaped}(?![\\w-])`, "g"),
+      scoped,
+    );
+  }
+  return result;
 };
 
 export const removeIdSelectors = (css: string): string => {
@@ -253,20 +283,55 @@ export const addIdClassesInHtml = (
   return html;
 };
 
+/**
+ * Shield quoted string literals (and `url(...)` contents) in a CSS string,
+ * replacing each with a placeholder sentinel so downstream regex transforms
+ * never touch their contents.  Returns the shielded css plus a `restore`
+ * function.  Mirrors the sentinel pattern used by `preserveElementContents`
+ * in javascript.ts.
+ */
+export const shieldCssStrings = (
+  css: string,
+): { css: string; restore: (s: string) => string } => {
+  const preserved: string[] = [];
+  // Quoted strings (with escape handling) and url(...) contents.
+  const shielded = css.replace(
+    /("(?:[^"\\]|\\[\s\S])*"|'(?:[^'\\]|\\[\s\S])*')|url\(\s*(?:[^)"']|"[^"]*"|'[^']*')*\s*\)/gi,
+    (match) => {
+      preserved.push(match);
+      return `\x00CSSSTR${preserved.length - 1}\x00`;
+    },
+  );
+  return {
+    css: shielded,
+    restore: (s: string) =>
+      s.replace(/\x00CSSSTR(\d+)\x00/g, (_m, i) => preserved[parseInt(i, 10)]),
+  };
+};
+
 export const removeCommentsFromCss = (css: string): string => {
-  return css.replace(/\/\*[\s\S]*?\*\//gim, "");
+  // Strip comments only outside string literals — `/*` inside a quoted
+  // string or url() is data, not a comment.
+  const { css: shielded, restore } = shieldCssStrings(css);
+  return restore(shielded.replace(/\/\*[\s\S]*?\*\//gim, ""));
 };
 
 /**
  * Minify a CSS string: strip comments, collapse whitespace, and remove
  * spaces around structural characters (`{`, `}`, `:`, `;`, `,`).
+ *
+ * String literals and `url()` contents are preserved verbatim — whitespace
+ * and punctuation inside them (e.g. `content: "a: b; c"`, `[title="a  b"]`,
+ * `url(data:...)`) is never altered.
  */
 export const minifyCss = (css: string): string => {
-  return removeCommentsFromCss(css)
+  const { css: shielded, restore } = shieldCssStrings(removeCommentsFromCss(css));
+  const minified = shielded
     .replace(/\n/g, " ")
     .replace(/\s\s+/g, " ")
     .replace(/\s*([{}:;,])\s*/g, "$1")
     .trim();
+  return restore(minified);
 };
 
 export const getComponentCss = async (
@@ -624,8 +689,12 @@ export const scopeInlineStyleTags = (
     /(<style\b[^>]*>)([\s\S]*?)(<\/style>)/gi,
     (_match, open: string, styleContent: string, close: string) => {
       let css = removeCommentsFromCss(styleContent);
-      css = css.replace(/(?<=\.)[a-z_][a-z0-9-_]*/gim, (className) =>
-        obfuscateAttributeName(`bascik__${componentName}__${className}`),
+      // Shield strings/url() so dots inside them aren't treated as class selectors
+      const { css: shieldedCss, restore } = shieldCssStrings(css);
+      css = restore(
+        shieldedCss.replace(/(?<=\.)[a-z_][a-z0-9-_]*/gim, (className) =>
+          obfuscateAttributeName(`bascik__${componentName}__${className}`),
+        ),
       );
       const { css: elCss, elementsConvertedClasses } =
         convertCssElementSelectorsToClasses(css, componentName);

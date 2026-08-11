@@ -148,10 +148,12 @@ export const serveHttp2 = async () => {
   */
   const onError = (error: unknown, stream: ServerHttp2Stream): void => {
     try {
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-        stream.respond({ ":status": 404 });
-      } else {
-        stream.respond({ ":status": 500 });
+      if (!stream.headersSent) {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+          stream.respond({ ":status": 404, ...SECURITY_HEADERS });
+        } else {
+          stream.respond({ ":status": 500, ...SECURITY_HEADERS });
+        }
       }
     } catch (respondErr) {
       console.error("Error responding to stream:", respondErr);
@@ -274,6 +276,12 @@ export const serveHttp2 = async () => {
 
           fileStream.on("error", (err) => {
             if (stream.destroyed) return;
+            if (stream.headersSent) {
+              // Headers already went out on "open" — a second respond() would
+              // throw ERR_HTTP2_HEADERS_SENT.  Abort the stream instead.
+              stream.close(http2.constants.NGHTTP2_INTERNAL_ERROR);
+              return;
+            }
             responseStatus = (err as NodeJS.ErrnoException).code === "ENOENT" ? 404 : 500;
             stream.respond({ ":status": responseStatus, ...SECURITY_HEADERS });
             stream.end(responseStatus === 404 ? "Not Found" : "Internal Server Error");
@@ -318,7 +326,17 @@ export const serveHttp2 = async () => {
           }: {
             relativePagePath: string;
           }) => {
-            const refererUrl = new URL(headers.referer as string);
+            // Referer is optional — direct navigation, privacy extensions, and
+            // `Referrer-Policy: no-referrer` all omit it.  new URL(undefined)
+            // throws inside this event listener (outside the request try/catch),
+            // which would crash the process on every save for such clients.
+            let refererUrl: URL | null = null;
+            try {
+              if (headers.referer) refererUrl = new URL(headers.referer as string);
+            } catch {
+              refererUrl = null;
+            }
+            if (!refererUrl) return;
             const httpPath = getHttpPath(relativePagePath);
             if (refererUrl.pathname !== httpPath) return;
             stream.write(`data: reload\n\n`);
@@ -340,7 +358,12 @@ export const serveHttp2 = async () => {
 
         // ── In-memory page lookup ────────────────────────────────────────────
         const reqUrl = `${origin}${req.path}`;
-        const page = mem.getPage(pathname);
+        // Try the literal path first, then the trailing-slash toggle so that
+        // `/blog` and `/blog/` both resolve a page stored as `pages/blog/index.html`.
+        const page =
+          mem.getPageExact(pathname) ??
+          mem.getPageExact(pathname.endsWith("/") ? pathname.slice(0, -1) : `${pathname}/`) ??
+          mem.getPage(pathname);
 
         if (!page) {
           responseStatus = 404;
@@ -350,10 +373,9 @@ export const serveHttp2 = async () => {
 
         console.log(`serving: ${reqUrl}`);
 
-        const is404Page =
-          page.relativePagePath === "/404" ||
-          page.relativePagePath.endsWith("404.html") ||
-          getHttpPath(page.relativePagePath) === "/404";
+        // A page is the 404 page only when its resolved HTTP path is exactly
+        // /404 — `pages/blog/404.html` (a page *about* 404s) must not match.
+        const is404Page = getHttpPath(page.relativePagePath) === "/404";
 
         responseStatus = is404Page ? 404 : 200;
 
