@@ -41,12 +41,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The disk write in `transpilePage()` is now awaited instead of fire-and-forget, so `processAllPages()` no longer terminates the worker pool before pending writes complete.
 - `mem.storePage()` now compresses page content with async `zlib.brotliCompress` instead of `brotliCompressSync`, allowing all pages in a batch to compress concurrently instead of blocking the event loop one at a time.
 - Brotli compression no longer blocks a page from being marked "transpiled" or served. `mem.storePage()` stores the raw content immediately and compresses in the background; the server falls back to uncompressed content for any request that arrives before compression finishes. This removed ~1 second from a 30-page dev-server startup (roughly 40% of total time) that was previously spent entirely on brotli quality-11 compression before the server could report itself ready.
+- **Nested same-name components mis-pairing** — `getTag` and `replaceTag` now locate the balanced closing tag using a depth counter instead of a lazy regex, so a component nested inside another instance of itself (e.g. `<my-list>…<my-list></my-list>…</my-list>`) is no longer truncated at the inner `</my-list>`.
+- **JS selector rewriting with regex-special class/id names** — `getElementById`, `setAttribute("id", …)`, `getElementsByClassName`, and `setAttribute("class", …)` now use the regex-escaped attribute name, so ids/classes containing characters like `$` or `.` are correctly rewritten in script references (previously the HTML was scoped but the JS reference silently was not).
+- **`--check` false errors** — `bascik --check` no longer reports "unknown component" for hyphenated tags that appear inside `<script>`, `<style>`, `<textarea>`, or protected raw-text elements (`skipTranspilingElementContents`), whose literal contents are now stripped before scanning. Files containing a `<script data-bascik-build>` block no longer produce false "unused component" warnings, since build scripts may generate component usage at build time.
+- **`<script data-bascik-build>` attribute parsing** — a `>` inside a quoted attribute value no longer ends the tag match early, and `data-bascik-build` appearing only inside another attribute's value is no longer mistaken for the flag. Identical build-script blocks on the same page now each receive their own output (matched by index, not by text).
+- **Build-script timeout** — build scripts now run with a 60-second `execFile` timeout (`SIGTERM`), so a hung script fails with a warning and removes the tag instead of hanging the build forever.
+- **Sitemap correctness** — `sitemap.xml` now XML-escapes URLs and excludes the 404 page.
+- **CLI argument handling** — `bascik --help`/`-h` and `--version`/`-v` now print usage/version and exit instead of starting the dev server; unknown flags print an error and exit 1 without starting the server.
+- **Quote-aware attribute scanning** — prop extraction/injection, inheritable-attribute extraction, and `preserveElementContents` now handle single-quoted attribute values and `>` inside quoted attribute values.
 
 ### Changed
 
 - Extra dev-mode re-transpile paths now live under `directory.watch`.
 - `inlineStyles` now accepts `false`, `true`, or an explicit array of file paths so projects can choose no global inlining, all page CSS, or specific stylesheets.
 - `useWorkers` now defaults to `false` (sequential main-thread transpilation). Worker startup has a fixed cost — each worker independently loads the transpiler's module graph before processing its first page — which outweighs the parallelism benefit on small sites or sites whose slow parts are I/O-bound (e.g. `<script data-bascik-build>` blocks), rather than CPU-bound.
+- `minifyStyles`, `minifyScripts`, and `obfuscateAttributeNames` now default to `false` in dev and `true` only during `bascik --build` (previously they were `true` even in dev, contradicting the docs which describe them as production defaults). `buildOverrideConfig.serve` is now merged during builds, and the resolved `BascikConfig` is recursively frozen.
 
 ## [0.1.0] - 2026-07-25
 

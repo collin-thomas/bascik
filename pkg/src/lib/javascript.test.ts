@@ -601,6 +601,58 @@ describe("prefixElementAttribute – element.className setter", () => {
   });
 });
 
+// ─── regex metacharacters in attribute values ───────────────────────────────
+
+describe("prefixElementAttribute – attribute names with regex metacharacters", () => {
+  it("scopes getElementById for an id containing '$'", () => {
+    const c = makeComponent(
+      '<div id="a$b"></div><script>document.getElementById("a$b")</script>',
+    );
+    const result = prefixElementAttribute(c, "id", "test1234");
+    expect(result.fileContent).toContain(`getElementById("${scope("a$b")}")`);
+    expect(result.fileContent).not.toContain('getElementById("a$b")');
+  });
+
+  it("scopes setAttribute(\"id\", …) for an id containing '$'", () => {
+    const c = makeComponent(
+      '<div id="a$b"></div><script>el.setAttribute("id", "a$b")</script>',
+    );
+    const result = prefixElementAttribute(c, "id", "test1234");
+    expect(result.fileContent).toContain(
+      `setAttribute("id", "${scope("a$b")}")`,
+    );
+  });
+
+  it("scopes getElementsByClassName for a class containing '.'", () => {
+    const c = makeComponent(
+      '<div class="a.b"></div><script>document.getElementsByClassName("a.b")</script>',
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain(
+      `getElementsByClassName("${scopeClass("a.b")}")`,
+    );
+  });
+
+  it("scopes setAttribute(\"class\", …) for a class containing '.'", () => {
+    const c = makeComponent(
+      '<div class="a.b"></div><script>el.setAttribute("class", "a.b")</script>',
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain(
+      `setAttribute("class", "${scopeClass("a.b")}")`,
+    );
+  });
+
+  it("does not over-match similar names when the class contains '.'", () => {
+    // Unescaped, the pattern /a.b/ would also match "axb" — it must not.
+    const c = makeComponent(
+      '<div class="a.b"></div><script>document.getElementsByClassName("axb")</script>',
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain('getElementsByClassName("axb")');
+  });
+});
+
 // ─── skipElementContents ────────────────────────────────────────────────────────
 
 describe("prefixElementAttribute – skipElementContents", () => {
@@ -680,6 +732,38 @@ describe("prefixElementAttribute – skipElementContents", () => {
     // preserved zone — a known trade-off when "pre" is in the skip list.
     // This is why the default is ["code"] only, not ["code", "pre"].
     expect(result.fileContent).toContain('class="cblock-body"');
+  });
+
+  it("handles a '>' inside a quoted attribute value on the skip element's open tag", () => {
+    // Regression: the open-tag match used [^>]*, so a `>` inside a quoted
+    // attribute value (data-x="a>b") terminated the match early and corrupted
+    // the shielding.
+    const inner = '<div class="inner">literal</div>';
+    const c = makeComponent(
+      `<code class="cblock-body" data-x="a>b">${inner}</code><div class="outer"></div>`,
+    );
+    const result = prefixElementAttribute(c, "class", "test1234", true, ["code"]);
+    // Open tag attribute must survive verbatim (not truncated at the `>`)
+    expect(result.fileContent).toContain('data-x="a>b"');
+    // Content inside <code> is shielded
+    expect(result.fileContent).toContain(inner);
+    expect(result.fileContent).not.toContain(scopeClass("inner"));
+    // Content outside <code> is still scoped
+    expect(result.fileContent).toContain(scopeClass("outer"));
+    expect(result.fileContent).toContain(scopeClass("cblock-body"));
+    // No sentinel may survive in the output
+    expect(result.fileContent).not.toContain("BSKIP");
+  });
+
+  it("handles a '>' inside a single-quoted attribute value on the skip element's open tag", () => {
+    const c = makeComponent(
+      `<code data-x='a>b'><div class="inner">literal</div></code><div class="outer"></div>`,
+    );
+    const result = prefixElementAttribute(c, "class", "test1234", true, ["code"]);
+    expect(result.fileContent).toContain("data-x='a>b'");
+    expect(result.fileContent).toContain('<div class="inner">literal</div>');
+    expect(result.fileContent).toContain(scopeClass("outer"));
+    expect(result.fileContent).not.toContain("BSKIP");
   });
 
   it("restores slot markers inside pre>code so slot injection can proceed", () => {

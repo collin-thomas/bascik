@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { pagePathToUrlPath, buildSitemapXml, buildRobotsTxt } from "./sitemap.js";
+import { pagePathToUrlPath, buildSitemapXml, buildRobotsTxt, escapeXml, is404Page, generateSitemapFiles } from "./sitemap.js";
+import { listPages } from "./file-system.js";
+import { writeFile } from "node:fs/promises";
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -69,6 +71,83 @@ describe("buildSitemapXml", () => {
     const xml = buildSitemapXml("https://example.com", ["/blog"]);
     expect(xml).toContain("<loc>https://example.com/blog</loc>");
     expect(xml).not.toContain("//blog");
+  });
+
+  it("XML-escapes the base URL", () => {
+    const xml = buildSitemapXml("https://example.com/?a=1&b=2", ["/x"]);
+    expect(xml).toContain("<loc>https://example.com/?a=1&amp;b=2/x</loc>");
+    expect(xml).not.toContain("a=1&b=2");
+  });
+
+  it("XML-escapes angle brackets and quotes in the base URL", () => {
+    const xml = buildSitemapXml('https://example.com/<script>"x"', ["/"]);
+    expect(xml).toContain(
+      "<loc>https://example.com/&lt;script&gt;&quot;x&quot;/</loc>",
+    );
+    expect(xml).not.toContain("<script>");
+  });
+
+  it("XML-escapes apostrophes in the base URL", () => {
+    const xml = buildSitemapXml("https://example.com/it's", ["/"]);
+    expect(xml).toContain("<loc>https://example.com/it&apos;s/</loc>");
+  });
+
+  it("XML-escapes URL paths", () => {
+    const xml = buildSitemapXml("https://example.com", ["/a&b"]);
+    expect(xml).toContain("<loc>https://example.com/a&amp;b</loc>");
+  });
+});
+
+describe("escapeXml", () => {
+  it("escapes all five XML metacharacters", () => {
+    expect(escapeXml(`&<>"'`)).toBe("&amp;&lt;&gt;&quot;&apos;");
+  });
+
+  it("escapes ampersands first so entities are not double-escaped", () => {
+    expect(escapeXml("&amp;")).toBe("&amp;amp;");
+  });
+
+  it("leaves safe strings unchanged", () => {
+    expect(escapeXml("https://example.com/path?q=1")).toBe(
+      "https://example.com/path?q=1",
+    );
+  });
+});
+
+describe("is404Page", () => {
+  it("matches pages/404.html", () => {
+    expect(is404Page("pages/404.html")).toBe(true);
+  });
+
+  it("does not match a nested 404 page", () => {
+    expect(is404Page("pages/blog/404.html")).toBe(false);
+  });
+
+  it("does not match a regular page", () => {
+    expect(is404Page("pages/about.html")).toBe(false);
+  });
+
+  it("does not match the root index", () => {
+    expect(is404Page("pages/index.html")).toBe(false);
+  });
+});
+
+describe("generateSitemapFiles", () => {
+  it("excludes the 404 page from sitemap.xml", async () => {
+    vi.mocked(listPages).mockResolvedValue([
+      "/project/src/pages/index.html",
+      "/project/src/pages/about.html",
+      "/project/src/pages/404.html",
+    ]);
+    await generateSitemapFiles();
+    const sitemapCall = vi
+      .mocked(writeFile)
+      .mock.calls.find(([file]) => String(file).endsWith("sitemap.xml"));
+    expect(sitemapCall).toBeDefined();
+    const xml = String(sitemapCall?.[1]);
+    expect(xml).toContain("<loc>https://example.com/</loc>");
+    expect(xml).toContain("<loc>https://example.com/about</loc>");
+    expect(xml).not.toContain("/404");
   });
 });
 

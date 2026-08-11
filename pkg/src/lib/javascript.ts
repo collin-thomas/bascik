@@ -107,8 +107,12 @@ const preserveElementContents = (
   let result = html;
   for (const tag of tags) {
     const esc = tag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    // Quote-aware open tag: attribute values may contain `>` (e.g.
+    // <code data-x="a>b">), so consume quoted strings or non-`>` runs
+    // instead of a plain [^>]* that would end the match early.
+    const attr = `(?:"[^"]*"|'[^']*'|[^>"'])*`;
     result = result.replace(
-      new RegExp(`(<${esc}(?:\\b[^>]*)?>)([\\s\\S]*?)(<\\/${esc}>)`, "gi"),
+      new RegExp(`(<${esc}(?:\\b${attr})?>)([\\s\\S]*?)(<\\/${esc}>)`, "gi"),
       (_match, open, inner, close) => {
         preserved.push(inner);
         return `${open}\x00BSKIP${preserved.length - 1}\x00${close}`;
@@ -247,7 +251,7 @@ export const prefixElementAttribute = (
           if (attribute === "id") {
             updatedMatch = rewriteSelectorRef(
               new RegExp(
-                `(?<start>getElementById\\(["'])(?<middle>${attributeName})(?<end>["']\\))`,
+                `(?<start>getElementById\\(["'])(?<middle>${escapedAttr})(?<end>["']\\))`,
                 "gm",
               ),
             );
@@ -263,7 +267,7 @@ export const prefixElementAttribute = (
             // element.setAttribute("id", "value")
             updatedMatch = rewriteSelectorRef(
               new RegExp(
-                `(?<start>setAttribute\\(["']id["'],\\s*["'])(?<middle>${attributeName})(?<end>["']\\))`,
+                `(?<start>setAttribute\\(["']id["'],\\s*["'])(?<middle>${escapedAttr})(?<end>["']\\))`,
                 "gm",
               ),
             );
@@ -284,7 +288,7 @@ export const prefixElementAttribute = (
           } else if (attribute === "class") {
             updatedMatch = rewriteSelectorRef(
               new RegExp(
-                `(?<start>getElementsByClassName\\(["'])(?<middle>${attributeName})(?<end>["']\\))`,
+                `(?<start>getElementsByClassName\\(["'])(?<middle>${escapedAttr})(?<end>["']\\))`,
                 "gm",
               ),
             );
@@ -338,7 +342,7 @@ export const prefixElementAttribute = (
             // element.setAttribute("class", "value")
             updatedMatch = rewriteSelectorRef(
               new RegExp(
-                `(?<start>setAttribute\\(["']class["'],\\s*["'])(?<middle>${attributeName})(?<end>["']\\))`,
+                `(?<start>setAttribute\\(["']class["'],\\s*["'])(?<middle>${escapedAttr})(?<end>["']\\))`,
                 "gm",
               ),
             );

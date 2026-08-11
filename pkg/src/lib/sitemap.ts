@@ -26,6 +26,20 @@ import { writeFile } from "node:fs/promises";
 import { BascikConfig } from "./config.js";
 import { listPages } from "./file-system.js";
 import { getRelativePath } from "./file-system.js";
+import { getHttpPath } from "./paths.js";
+
+/**
+ * Escape the five XML metacharacters for safe interpolation into `<loc>` etc.
+ * Applied to the user-configured `siteUrl`; URL paths derived from page
+ * filenames are already safe but are escaped too for defence in depth.
+ */
+export const escapeXml = (value: string): string =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 
 /**
  * Convert a relative page path (e.g. `pages/blog/post.html`) to an absolute
@@ -52,11 +66,21 @@ export const pagePathToUrlPath = (relativePath: string): string => {
 };
 
 /**
+ * True when a relative page path resolves to the site's 404 page
+ * (`pages/404.html` → `/404`). Mirrors the detection in `http2.ts` — a page
+ * is the 404 page only when its resolved HTTP path is exactly `/404`, so
+ * `pages/blog/404.html` (a page *about* 404s) does not match.
+ */
+export const is404Page = (relativePath: string): boolean =>
+  getHttpPath(relativePath) === "/404";
+
+/**
  * Build the XML sitemap string from an array of URL paths.
  */
 export const buildSitemapXml = (baseUrl: string, urlPaths: string[]): string => {
+  const safeBase = escapeXml(baseUrl);
   const urls = urlPaths
-    .map((p) => `  <url>\n    <loc>${baseUrl}${p}</loc>\n  </url>`)
+    .map((p) => `  <url>\n    <loc>${safeBase}${escapeXml(p)}</loc>\n  </url>`)
     .join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`;
 };
@@ -94,6 +118,8 @@ export const generateSitemapFiles = async (): Promise<void> => {
     const pages = await listPages();
     const urlPaths = pages
       .map((p) => getRelativePath(p, "pages"))
+      // Exclude the 404 page — it is an error document, not a crawlable URL.
+      .filter((rel) => !is404Page(rel))
       .map(pagePathToUrlPath)
       .sort();
     const sitemapXml = buildSitemapXml(baseUrl, urlPaths);

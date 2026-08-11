@@ -793,6 +793,179 @@ describe("getTag – case sensitivity bug repro", () => {
   });
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Bug 1: nested same-name component pairing
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("getTag – nested same-name tags", () => {
+  it("pairs with the balanced close tag, not the first inner close tag", () => {
+    const html =
+      "<my-list><li>one</li><my-list><li>nested</li></my-list><li>two</li></my-list>";
+    const result = getTag(html, "my-list");
+    expect(result.content).toBe(html);
+    expect(result.innerContent).toBe(
+      "<li>one</li><my-list><li>nested</li></my-list><li>two</li>",
+    );
+  });
+
+  it("handles deeply nested same-name tags", () => {
+    const html = "<my-list>a<my-list>b<my-list>c</my-list>d</my-list>e</my-list>";
+    const result = getTag(html, "my-list");
+    expect(result.content).toBe(html);
+    expect(result.innerContent).toBe(
+      "a<my-list>b<my-list>c</my-list>d</my-list>e",
+    );
+  });
+
+  it("returns the first balanced element when siblings follow", () => {
+    const html =
+      "<my-list><my-list>x</my-list></my-list><my-list>second</my-list>";
+    const result = getTag(html, "my-list");
+    expect(result.content).toBe("<my-list><my-list>x</my-list></my-list>");
+    expect(result.innerContent).toBe("<my-list>x</my-list>");
+  });
+
+  it("still pairs correctly when attributes contain >", () => {
+    const html =
+      '<my-comp title="a > b"><span>body</span></my-comp>';
+    const result = getTag(html, "my-comp");
+    expect(result.content).toBe(html);
+    expect(result.innerContent).toBe("<span>body</span>");
+  });
+
+  it("keeps non-nested behavior identical (regression)", () => {
+    const html = "<div>before</div><my-comp>inner</my-comp><div>after</div>";
+    const result = getTag(html, "my-comp");
+    expect(result.content).toBe("<my-comp>inner</my-comp>");
+    expect(result.innerContent).toBe("inner");
+  });
+});
+
+describe("replaceTag – nested same-name tags", () => {
+  it("replaces the whole balanced element, not just up to the inner close", () => {
+    const html =
+      "<div>before</div><my-list><li>one</li><my-list><li>nested</li></my-list><li>two</li></my-list><div>after</div>";
+    const result = replaceTag(html, "my-list", "<ul>transpiled</ul>");
+    expect(result).toBe(
+      "<div>before</div><ul>transpiled</ul><div>after</div>",
+    );
+  });
+
+  it("does not treat $ in the replacement as a back-reference", () => {
+    const html = "<my-list><my-list>x</my-list></my-list>";
+    const result = replaceTag(html, "my-list", "<ul>$1 $& $`</ul>");
+    expect(result).toBe("<ul>$1 $& $`</ul>");
+  });
+
+  it("keeps replacing only the first instance with nesting", () => {
+    const html =
+      "<my-list><my-list>x</my-list></my-list><my-list>second</my-list>";
+    const result = replaceTag(html, "my-list", "<ul>done</ul>");
+    expect(result).toBe("<ul>done</ul><my-list>second</my-list>");
+  });
+
+  it("still replaces paired tags with attributes (regression)", () => {
+    expect(
+      replaceTag(
+        '<div><my-nav class="x">inner</my-nav></div>',
+        "my-nav",
+        "<nav>inner</nav>",
+      ),
+    ).toBe('<div><nav>inner</nav></div>');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Bug 2: quote-aware props & attribute scanning
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("extractProps – single-quoted values", () => {
+  it("extracts a single-quoted prop value", () => {
+    expect(
+      extractProps("<my-comp data-bascik-prop-title='Hi'></my-comp>"),
+    ).toEqual({ title: "Hi" });
+  });
+
+  it("extracts mixed single- and double-quoted prop values", () => {
+    expect(
+      extractProps(
+        `<my-comp data-bascik-prop-title='Hi' data-bascik-prop-href="/about"></my-comp>`,
+      ),
+    ).toEqual({ title: "Hi", href: "/about" });
+  });
+
+  it("extracts a single-quoted value containing double quotes", () => {
+    expect(
+      extractProps(
+        `<my-comp data-bascik-prop-title='say "hi"'></my-comp>`,
+      ),
+    ).toEqual({ title: 'say "hi"' });
+  });
+});
+
+describe("extractInheritableAttributes – quote-aware scanning", () => {
+  it("does not end the open tag at a > inside a double-quoted value", () => {
+    expect(
+      extractInheritableAttributes(
+        '<my-comp title="a > b" class="sticky"></my-comp>',
+      ),
+    ).toEqual({ title: "a > b", class: "sticky" });
+  });
+
+  it("does not end the open tag at a > inside a single-quoted value", () => {
+    expect(
+      extractInheritableAttributes(
+        "<my-comp title='a > b' class=\"sticky\"></my-comp>",
+      ),
+    ).toEqual({ title: "a > b", class: "sticky" });
+  });
+
+  it("accepts single-quoted attribute values", () => {
+    expect(
+      extractInheritableAttributes("<my-nav class='sticky'></my-nav>"),
+    ).toEqual({ class: "sticky" });
+  });
+
+  it("keeps extracting attributes after one with > in its value", () => {
+    const result = extractInheritableAttributes(
+      '<my-nav data-tip="1 > 0" aria-label="nav" id="top"></my-nav>',
+    );
+    expect(result).toEqual({
+      "data-tip": "1 > 0",
+      "aria-label": "nav",
+      id: "top",
+    });
+  });
+});
+
+describe("injectProps – quote-aware scanning", () => {
+  it("matches the marker element when a previous attribute value contains >", () => {
+    const template = '<p title="a > b" data-bascik-prop-title></p>';
+    expect(injectProps(template, { title: "Hi" })).toBe(
+      '<p title="a > b">Hi</p>',
+    );
+  });
+
+  it("matches the marker element when a following attribute value contains >", () => {
+    const template = '<p data-bascik-prop-title data-tip="1 > 0"></p>';
+    expect(injectProps(template, { title: "Hi" })).toBe(
+      '<p data-tip="1 > 0">Hi</p>',
+    );
+  });
+
+  it("supports single-quoted attribute values on the marker element", () => {
+    const template = "<p class='lead' data-bascik-prop-title></p>";
+    expect(injectProps(template, { title: "Hello" })).toBe(
+      "<p class='lead'>Hello</p>",
+    );
+  });
+
+  it("handles a valued single-quoted marker attribute", () => {
+    const template = "<p data-bascik-prop-title='featured'></p>";
+    expect(injectProps(template, { title: "Hi" })).toBe("<p>Hi</p>");
+  });
+});
+
 describe("recursivelyTranspile – complex regression", () => {
   it("finds a component even if it has newlines in the tag", () => {
     const html = `

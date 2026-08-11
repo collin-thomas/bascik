@@ -23,6 +23,19 @@ const serveDefaultConfig: Partial<Omit<BascikConfigOptions, "isBuild" | "isServe
   cacheHttp: true,
 };
 
+// Applied on top of defaultConfig (and serveDefaultConfig) when --build is
+// active, before user config. Minification and attribute-name obfuscation are
+// production-only defaults: they slow down rebuilds and make debugging harder,
+// so they stay off in dev but on for `bascik --build`. Users can still
+// override any of them in bascik.config.js (or via buildOverrideConfig).
+export const buildDefaultConfig: Partial<
+  Omit<BascikConfigOptions, "isBuild" | "isServe">
+> = {
+  minifyStyles: true,
+  minifyScripts: true,
+  obfuscateAttributeNames: true,
+};
+
 export const defaultConfig: Omit<BascikConfigOptions, "isBuild" | "isServe"> = {
   directory: {
     pages: "src/pages",
@@ -38,9 +51,9 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild" | "isServe"> = {
   },
   skipTranspilingElementContents: ["code"],
   deduplicateCss: true,
-  minifyStyles: true,
-  minifyScripts: true,
-  obfuscateAttributeNames: true,
+  minifyStyles: false,
+  minifyScripts: false,
+  obfuscateAttributeNames: false,
   cacheHttp: false,
   verboseLogging: false,
   generate: {
@@ -55,18 +68,50 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild" | "isServe"> = {
   },
 };
 
-const initBascikConfig = (
-  userConfig: Partial<Omit<BascikConfigOptions, "isBuild" | "isServe">>,
+/**
+ * Recursively freeze the config object. `Object.freeze` alone is shallow —
+ * without this, nested objects (`directory`, `scopeAttribute`, `generate`,
+ * `serve`) would remain mutable at runtime.
+ */
+const deepFreeze = <T>(value: T): Readonly<T> => {
+  if (value !== null && typeof value === "object" && !Object.isFrozen(value)) {
+    for (const key of Object.keys(value)) {
+      deepFreeze((value as Record<string, unknown>)[key]);
+    }
+    Object.freeze(value);
+  }
+  return value;
+};
+
+type ConfigInput = Partial<Omit<BascikConfigOptions, "isBuild" | "isServe">>;
+
+/**
+ * Merge the layered configs into the final, frozen `BascikConfig`.
+ *
+ * Layer order (lowest → highest precedence):
+ *   defaultConfig → (isServe ? serveDefaultConfig) → (isBuild ? buildDefaultConfig)
+ *   → userConfig → (isBuild ? buildOverride)
+ *
+ * Exported (pure) so tests can exercise the merge logic directly without
+ * relying on module-cache manipulation of the argv/env-derived singleton.
+ */
+export const initBascikConfig = (
+  userConfig: ConfigInput,
+  buildOverride: ConfigInput = {},
+  flags: { isBuild?: boolean; isServe?: boolean } = {},
 ) => {
+  const isBuild = flags.isBuild ?? false;
+  const isServe = flags.isServe ?? false;
   const userDirectory: Partial<BascikConfigOptions["directory"]> =
     userConfig.directory ?? {};
   const buildDirectory: Partial<BascikConfigOptions["directory"]> =
-    buildOverrideConfig.directory ?? {};
+    buildOverride.directory ?? {};
   const BascikConfig: BascikConfigOptions = {
     ...defaultConfig,
     ...(isServe ? serveDefaultConfig : {}),
+    ...(isBuild ? buildDefaultConfig : {}),
     ...userConfig,
-    ...(isBuild ? buildOverrideConfig : {}),
+    ...(isBuild ? buildOverride : {}),
     directory: {
       ...defaultConfig.directory,
       ...userDirectory,
@@ -75,16 +120,17 @@ const initBascikConfig = (
     scopeAttribute: {
       ...defaultConfig.scopeAttribute,
       ...(userConfig.scopeAttribute ?? {}),
-      ...(isBuild ? (buildOverrideConfig.scopeAttribute ?? {}) : {}),
+      ...(isBuild ? (buildOverride.scopeAttribute ?? {}) : {}),
     },
     generate: {
       ...defaultConfig.generate,
       ...(userConfig.generate ?? {}),
-      ...(isBuild ? (buildOverrideConfig.generate ?? {}) : {}),
+      ...(isBuild ? (buildOverride.generate ?? {}) : {}),
     },
     serve: {
       ...defaultConfig.serve,
       ...(userConfig.serve ?? {}),
+      ...(isBuild ? (buildOverride.serve ?? {}) : {}),
     },
     isBuild,
     isServe,
@@ -95,7 +141,11 @@ const initBascikConfig = (
       BascikConfig.directory[key],
     );
   });
-  return { BascikConfig: Object.freeze(BascikConfig) };
+  return { BascikConfig: deepFreeze(BascikConfig) };
 };
 
-export const { BascikConfig } = initBascikConfig(bascikConfig ?? {});
+export const { BascikConfig } = initBascikConfig(
+  bascikConfig ?? {},
+  buildOverrideConfig ?? {},
+  { isBuild, isServe },
+);
