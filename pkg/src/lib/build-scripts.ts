@@ -84,8 +84,10 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
   const tempDir = join(process.cwd(), "node_modules", ".cache", "bascik");
   await mkdir(tempDir, { recursive: true });
 
-  // Run all build scripts in parallel; collect outputs keyed by tag to avoid race conditions.
-  const outputs = await Promise.all(matches.map(async (match) => {
+  // Run build scripts sequentially to avoid spawning many Node processes at once,
+  // which exhausts memory on constrained CI environments (e.g. Netlify's 2 GB VMs).
+  const outputs: Array<{ fullTag: string; output: string }> = [];
+  for (const match of matches) {
     const [fullTag, scriptContent] = match;
     const tmpPath = join(
       tempDir,
@@ -95,7 +97,7 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
       await writeFile(tmpPath, scriptContent.trim(), "utf8");
       const { stdout, stderr } = await runModule(tmpPath);
       if (stderr) process.stderr.write(stderr);
-      return { fullTag, output: stdout };
+      outputs.push({ fullTag, output: stdout });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       let errorMsg = `[bascik] build script error`;
@@ -110,14 +112,16 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
         }
       }
       console.warn(`${errorMsg}:\n${msg}`);
-      return { fullTag, output: "" };
+      outputs.push({ fullTag, output: "" });
     } finally {
       await unlink(tmpPath).catch(() => { });
     }
-  }));
+  }
 
   for (const { fullTag, output } of outputs) {
-    result = result.replace(fullTag, output);
+    // Use a function replacement so that `$` characters in `output` (e.g.
+    // `$&`, `$1` from code examples) are never interpreted as special patterns.
+    result = result.replace(fullTag, () => output);
   }
 
   return result;

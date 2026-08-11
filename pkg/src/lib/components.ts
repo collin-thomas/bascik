@@ -204,11 +204,14 @@ export const replaceTag = (
     "i",
   );
   if (pairedRegexp.test(htmlString)) {
-    return htmlString.replace(pairedRegexp, transpiledTag);
+    // Use a replacement function so that `$` characters in transpiledTag (e.g.
+    // SQL positional parameters like $1, $2 in slot content) are never
+    // interpreted as back-references, which would cause infinite expansion loops.
+    return htmlString.replace(pairedRegexp, () => transpiledTag);
   }
   // Fall back to self-closing: <tagName ... /> or <tagName/>
   const selfClosingRegexp = new RegExp(`<${tagName}(\\s[^>]*)?\\/?>`, "i");
-  return htmlString.replace(selfClosingRegexp, transpiledTag);
+  return htmlString.replace(selfClosingRegexp, () => transpiledTag);
 };
 
 export const getTagContents = (
