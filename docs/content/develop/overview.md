@@ -20,33 +20,34 @@ The `pkg/` directory is a self-contained TypeScript project with its own `packag
 
 ## Quick Start for Contributors
 
-You need Node.js v24 or later. Clone the repo and install dependencies:
+You need Node.js v24 or later. Clone the repo and install dependencies from the root — yarn workspaces wires everything up in one step:
 
 ```sh
 git clone https://github.com/collin-thomas/bascik.git
-cd bascik/pkg
+cd bascik
 yarn install
 ```
 
 Run the test suite:
 
 ```sh
-yarn test
+yarn workspace @bascik/bascik test
 ```
 
-Build the package (compiles TypeScript to `dist/`):
+Build the package (compiles TypeScript to `pkg/dist/`):
 
 ```sh
-yarn build
+yarn workspace @bascik/bascik build
 ```
 
 To work on the docs site with a live-reload dev server:
 
 ```sh
-cd ../docs
-yarn install
-yarn dev
+yarn workspace @bascik/bascik build   # build pkg first
+yarn --cwd docs dev                   # https://localhost:8443
 ```
+
+After any `pkg/src/` change, rebuild the package and the docs server will pick it up automatically.
 
 ## Internals Sub-pages
 

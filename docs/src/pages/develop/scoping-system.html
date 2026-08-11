@@ -26,7 +26,8 @@
           marked.use({
             renderer: {
               code({ text, lang }) {
-                const encoded = text.replace(/\n( *)/g, (_, s) => '&#10;' + s.replace(/ /g, '&#32;'));
+                const safe = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const encoded = safe.replace(/\n( *)/g, (_, s) => '&#10;' + s.replace(/ /g, '&#32;'));
                 const attr = lang ? ` data-bascik-prop-lang="${lang}"` : '';
                 return `<code-block${attr}>${encoded}</code-block>`;
               }

@@ -8,6 +8,10 @@ Bascik gives you an enormous head start on Lighthouse scores. Because it outputs
 
 > **Why Bascik wins by default.** Framework-rendered pages ship a JavaScript runtime, a hydration pass, and client-side routing logic before a single pixel of your content appears. Bascik ships none of that. The browser receives finished HTML. Every byte saved at the start compounds through every Core Web Vital metric.
 
+---
+
+This page is dedicated to helping you get the most out of the performance floor Bascik gives you. The techniques below are standard HTML and link-tag patterns — no build plugins or dependencies required. Apply them to any page and you will keep those 100s as your site grows.
+
 ## Responsive Images with `srcset`
 
 Sending a 2400 px image to a 375 px phone is one of the most common performance killers on the web. The `srcset` attribute tells the browser which image file to choose based on the device's pixel density and viewport width — no JavaScript required.

@@ -61,7 +61,7 @@ pkg/e2e/
 
 Playwright's `webServer` hook runs two commands before any test:
 
-1. `node dist/index.js --build` — transpiles the fixture site into `e2e/dist/`
+1. `node dist/index.js --config bascik.config.js --build` — transpiles the fixture site into `e2e/dist/`
 2. `node server.mjs 4200` — serves `dist/` on `http://localhost:4200`
 
 Tests then navigate to pages on that server and assert against the live browser DOM.
@@ -83,7 +83,7 @@ Each fixture page renders two or more instances of the component under test so i
 
 ## Test Files
 
-There are 44 Playwright test files, each paired with a fixture page:
+There are 50 Playwright test files, each paired with a fixture page:
 
 ```text
 pkg/e2e/tests/
@@ -99,9 +99,16 @@ pkg/e2e/tests/
   css-grid.test.ts             ← grid/flex layout properties pass through
   css-dedup.test.ts            ← duplicate CSS rule deduplication
   css-vars-multi.test.ts       ← CSS custom properties across instances
+  css-anchor.test.ts           ← CSS anchor positioning
+  css-at-property.test.ts      ← @property at-rule scoping
+  css-counter-style.test.ts    ← @counter-style scoping
+  css-nth-child-of.test.ts     ← :nth-child(n of .class) syntax
+  css-starting-style.test.ts   ← @starting-style blocks
+  css-view-transition.test.ts  ← CSS view transition names
   font-face.test.ts            ← @font-face is not scoped
   root-vars.test.ts            ← :root variables hoist correctly
   nested-vars.test.ts          ← nested CSS variable references
+  runtime-vars.test.ts         ← CSS variable changes at runtime
   inline-style.test.ts         ← inline style attributes pass through
   nesting.test.ts              ← native CSS nesting (&)
   new-selectors.test.ts        ← newer pseudo-classes
@@ -197,6 +204,7 @@ Each library module has a paired test file:
 ```text
 pkg/src/lib/
   components.ts / components.test.ts       ← tag detection, slot/prop/attr logic
+  components.ts / list-components.test.ts  ← listComponents ordering vs build scripts
   javascript.ts / javascript.test.ts       ← attribute scoping, script namespacing
   styles.ts / styles.test.ts              ← CSS transforms, deduplication
   names.ts / names.test.ts               ← unique ID generation, obfuscation hashing
@@ -204,6 +212,8 @@ pkg/src/lib/
   processing.ts / processing.test.ts      ← end-to-end transpilation pipeline
   config.ts / config.test.ts             ← config loading and merging
   userConfig.ts / userConfig.test.ts     ← user config file resolution
+  init.ts / init.test.ts                 ← bascik init scaffolding
+  sitemap.ts / sitemap.test.ts           ← sitemap.xml and robots.txt generation
   file-system.ts / file-system.test.ts   ← filesystem helpers
   paths.ts / paths.test.ts              ← path ↔ HTTP URL conversion
   mem.ts / mem.test.ts                  ← memory store
