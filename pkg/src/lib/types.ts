@@ -169,6 +169,12 @@ export interface BascikConfigOptions {
     keyFile?: string;
     /** Path to a TLS certificate file (PEM). Auto-generated when omitted. */
     certFile?: string;
+    /**
+     * Maximum execution time (ms) for each `data-bascik-server` child process.
+     * Scripts that exceed this deadline are killed and their output is dropped.
+     * Defaults to `30000` (30 s).
+     */
+    scriptTimeout?: number;
   };
 }
 

@@ -13,7 +13,7 @@ import { eventEmitter } from "./events.js";
 import { getHttpPath } from "./paths.js";
 import { MIME_MAP } from "./mime.js";
 import { createReadStream } from "node:fs";
-import { executeServerScripts } from "./server-scripts.js";
+import { executeServerScripts, DEFAULT_SCRIPT_TIMEOUT_MS } from "./server-scripts.js";
 
 // ─── Security headers sent on every response ──────────────────────────────────
 const SECURITY_HEADERS: Record<string, string> = {
@@ -387,7 +387,7 @@ export const serveHttp2 = async () => {
             method: req.method ?? "GET",
             headers: requestHeaders,
             searchParams,
-          });
+          }, BascikConfig.serve?.scriptTimeout ?? DEFAULT_SCRIPT_TIMEOUT_MS);
           const htmlBuf = Buffer.from(html);
           responseHeaders["cache-control"] = "private, no-store";
           responseHeaders["content-length"] = htmlBuf.byteLength;

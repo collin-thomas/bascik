@@ -80,7 +80,7 @@ export const htmlHasServerScripts = (html: string): boolean => {
 };
 
 /** Default execution timeout per server-script child process (ms). */
-const SCRIPT_TIMEOUT_MS = 30_000;
+export const DEFAULT_SCRIPT_TIMEOUT_MS = 30_000;
 
 /**
  * Maximum number of server-script child processes that may run concurrently
@@ -95,6 +95,7 @@ const MAX_CONCURRENT_SCRIPTS = Math.max(4, os.availableParallelism?.() ?? os.cpu
 const runModule = (
   path: string,
   request: ServerRequest,
+  timeoutMs: number,
 ): Promise<{ stdout: string; stderr: string }> =>
   new Promise((resolve, reject) => {
     execFile(
@@ -102,7 +103,8 @@ const runModule = (
       [path],
       {
         cwd: process.cwd(),
-        timeout: SCRIPT_TIMEOUT_MS,
+        timeout: timeoutMs,
+        killSignal: "SIGKILL",
         env: {
           ...process.env,
           BASCIK_REQUEST: JSON.stringify(request),
@@ -119,10 +121,15 @@ const runModule = (
  * Find every `<script data-bascik-server>` block in `html`, execute each as a
  * Node.js ESM module with the supplied request context, and replace the tag
  * with the script's stdout output.
+ *
+ * @param timeoutMs - Per-script execution deadline in milliseconds.
+ *   Defaults to {@link DEFAULT_SCRIPT_TIMEOUT_MS}.  Scripts that exceed the
+ *   deadline are killed (SIGKILL) and their block is removed from the output.
  */
 export const executeServerScripts = async (
   html: string,
   request: ServerRequest,
+  timeoutMs: number = DEFAULT_SCRIPT_TIMEOUT_MS,
 ): Promise<string> => {
   SERVER_SCRIPT_RE.lastIndex = 0;
   const matches = [...html.matchAll(SERVER_SCRIPT_RE)];
@@ -146,7 +153,7 @@ export const executeServerScripts = async (
         );
         try {
           await writeFile(tmpPath, scriptContent.trim(), "utf8");
-          const { stdout, stderr } = await runModule(tmpPath, request);
+          const { stdout, stderr } = await runModule(tmpPath, request, timeoutMs);
           if (stderr) process.stderr.write(stderr);
           return { fullTag, output: stdout };
         } catch (err) {
