@@ -107,6 +107,16 @@ CSS custom properties declared in the file are also scoped. `var(--prop, fallbac
 }
 ```
 
+### CSS Scoping Limitations (not yet supported)
+* `@property` — registered custom property names are not scoped; declare in a shared global stylesheet
+* `@starting-style` — class/element selectors inside the block are not scoped; wrap rules in a class anchor as a workaround
+* `@counter-style` — custom counter names and their references in `list-style`, `counter()`, `counters()` are not scoped
+* `view-transition-name` — property values are not scoped; use globally unique names manually
+* `anchor-name` / `@position-try` — anchor names and fallback option identifiers are not scoped; use globally unique names manually
+* `:nth-child(An+B of .selector)` — class names in the `of <selector>` filter argument are not scoped
+* `@font-face` — passed through untouched; declare in a shared stylesheet to avoid duplicate injections
+* `@import` — not followed; include CSS directly in the component file instead
+
 ---
 
 ## 4. Scoped JavaScript
