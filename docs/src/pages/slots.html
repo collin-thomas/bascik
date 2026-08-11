@@ -18,9 +18,6 @@
 
       <main class="docs-content">
         <p class="section-label">Feature</p>
-        <h1>Slots</h1>
-        <p class="page-intro">Slots let you pass inner HTML content into a component at the usage site. Bascik supports
-          a default slot, named slots, and slot fallback content.</p>
 
         <!-- Content rendered from docs/content/slots.md at build time.
              To update page content, edit the MD file — not this file. -->
@@ -30,7 +27,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/slots.md', { skipFirstHeading: true, stripDemoBlocks: true }));
+          console.log(await renderMd('./content/slots.md', { stripDemoBlocks: true }));
         </script>
 
         <component-demo data-bascik-prop-file="src/components/slot-layout-demo/">
@@ -41,6 +38,16 @@
               <p>Use named slots for fixed regions and the default slot for the main body content.</p>
               <a data-bascik-slot="actions" class="slot-demo-link" href="/configuration">Read configuration</a>
             </slot-layout-demo>
+          </div>
+          <div data-bascik-slot="source-usage">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/slots.md', 'source-usage'));
+              </script>
+            </code-block>
           </div>
           <div data-bascik-slot="source-html">
             <code-block data-bascik-prop-lang="html">

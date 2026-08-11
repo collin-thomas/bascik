@@ -7,40 +7,30 @@
     content="Bascik gives you an enormous head start on Lighthouse scores. Learn responsive images, lazy loading, preload hints, and SEO best practices." />
   <title>Lighthouse 100s — Bascik Docs</title>
   <style>
-    .score-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin: 32px 0;
+    .docs-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 24px 0 40px;
     }
 
-    @media (max-width: 600px) {
-      .score-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    .score-card {
-      background: rgba(211, 255, 141, 0.04);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px 16px;
+    .docs-content table th {
       text-align: center;
-    }
-
-    .score-number {
-      font-size: 2.4rem;
-      font-weight: 700;
-      color: var(--accent);
-      line-height: 1;
-      margin-bottom: 6px;
-    }
-
-    .score-label {
-      font-size: 0.78rem;
-      color: var(--fg-muted);
+      font-size: 0.75rem;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.06em;
+      color: var(--fg-muted);
+      padding: 0 8px 12px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .docs-content table td {
+      text-align: center;
+      font-size: 2.6rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+      padding: 16px 8px 0;
     }
 
     .technique-grid {
@@ -116,31 +106,7 @@
       <docs-sidebar></docs-sidebar>
 
       <main class="docs-content">
-        <p class="section-label">Guide</p>
-        <h1>Lighthouse 100s</h1>
-        <p class="page-intro">Bascik gives you an enormous head start on Lighthouse scores. Because it outputs plain
-          HTML with zero framework runtime, you begin every page with near-perfect scores — and reaching 100 across
-          Performance, Accessibility, Best Practices, and SEO is a matter of applying a small, well-known set of HTML
-          attributes and link tags.</p>
-
-        <div class="score-grid">
-          <div class="score-card">
-            <div class="score-number">100</div>
-            <div class="score-label">Performance</div>
-          </div>
-          <div class="score-card">
-            <div class="score-number">100</div>
-            <div class="score-label">Accessibility</div>
-          </div>
-          <div class="score-card">
-            <div class="score-number">100</div>
-            <div class="score-label">Best Practices</div>
-          </div>
-          <div class="score-card">
-            <div class="score-number">100</div>
-            <div class="score-label">SEO</div>
-          </div>
-        </div>
+        <p class="section-label">Philosophy</p>
 
         <!-- Content rendered from docs/content/performance.md at build time.
              To update page content, edit the MD file — not this file.
@@ -151,9 +117,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          // skipFirstHeading: the MD starts with "## Lighthouse 100s" for llms.txt;
-          // the <h1> above already provides the page title.
-          console.log(await renderMd('./content/performance.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/performance.md'));
         </script>
 
         <h2>Technique Summary</h2>

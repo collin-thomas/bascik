@@ -1,8 +1,8 @@
-## Attribute Inheritance
+# Attribute Inheritance
 
-Any attribute on a component usage tag that is not a Bascik-specific `data-bascik-*` attribute can be forwarded to the component's root element.
+Any attribute on a component usage tag that is not a Bascik-specific attribute (`data-bascik-*`) is automatically merged onto the component's root element. This is analogous to Vue's “fallthrough attributes”.
 
-### Configuring It
+## Configuring It
 
 Attribute inheritance is configurable and enabled by default:
 
@@ -14,26 +14,25 @@ export const bascikConfig = {
 
 Set it to `false` when you want every component root to be controlled only by the component template.
 
-### How It Works
+## How It Works
 
-When Bascik transpiles a component, it reads the usage tag, extracts any inheritable attributes, and merges them onto the first element of the compiled output.
+When Bascik transpiles a component, it reads the usage tag, extracts any inheritable attributes, and merges them onto the first element of the compiled output. The component template and the usage attributes are combined — classes are appended, all other attributes are forwarded:
 
 ```html
-<!-- usage -->
+<!-- usage in your page HTML -->
 <site-nav
   class="sticky"
   aria-label="main navigation"
   data-testid="main-nav">
 </site-nav>
-```
 
-```html
-<!-- site-nav.html -->
+<!-- site-nav.html — component template -->
 <nav class="nav">
   <a href="/">Home</a>
 </nav>
 ```
 
+<!-- compiled-output -->
 ```html
 <!-- compiled output -->
 <nav
@@ -44,9 +43,9 @@ When Bascik transpiles a component, it reads the usage tag, extracts any inherit
 </nav>
 ```
 
-### Class Merging
+## Class Merging
 
-When the root element already has a scoped `class` attribute, the inherited class is **appended** rather than replacing it.
+When the root element already has a scoped `class`, the inherited class is **appended** rather than replacing it.
 
 ```html
 <!-- root element has scoped class -->
@@ -56,7 +55,7 @@ When the root element already has a scoped `class` attribute, the inherited clas
 <nav class="bascik__site-nav__nav sticky">...</nav>
 ```
 
-### What Gets Inherited
+## What Gets Inherited
 
 All attributes on the usage tag are inherited **except** `data-bascik-*` attributes, which are consumed by Bascik for slots, props, and build instructions.
 
@@ -67,7 +66,7 @@ Common use cases:
 - **Testing hooks** — `data-testid`, `data-cy`
 - **Custom data** — any `data-*` attribute except `data-bascik-*`
 
-### What Happens with `id`
+## What Happens with `id`
 
 `id` is treated like any other inheritable attribute **unless the component root already has its own `id`**.
 
@@ -76,15 +75,17 @@ Common use cases:
 <brand-logo id="footer-logo"></brand-logo>
 ```
 
+<!-- compiled-output -->
 ```html
 <!-- template root has no id -->
-<div class="logo-wrap">
+<div class="bascik__brand-logo__logo-wrap">
   <img src="/img/logo.svg" alt="Brand logo" />
 </div>
 ```
 
+<!-- compiled-output -->
 ```html
-<!-- compiled output -->
+<!-- compiled output — id forwarded from usage tag -->
 <div class="bascik__brand-logo__logo-wrap" id="footer-logo">
   <img src="/img/logo.svg" alt="Brand logo" />
 </div>
@@ -94,7 +95,7 @@ If the template root already defines an `id`, Bascik keeps the template's root `
 
 > **Practical rule:** If page code needs to target a component root by `id`, put the `id` on the usage tag only when the component root does not already define one.
 
-### Interaction with Scoped Classes
+## Interaction with Scoped Classes
 
 Inherited class names are not scoped — they are treated as global classes. This is intentional: you are passing a page-level concern onto the component's root element.
 
@@ -110,9 +111,18 @@ The `featured` class is a global class that you define in your page-level styles
 
 > **MDN reference.** Bascik forwards standard HTML attributes instead of inventing a new API. Use [MDN's HTML attribute reference](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes) as the primary guide for what each inherited attribute means.
 
-### Interactive Demo
+## Interactive Demo
 
 The demo below forwards a class, an accessibility label, and a testing hook onto the component root.
+
+<!-- demo:source-usage -->
+```html
+<inherit-demo-card
+  class="featured-card"
+  aria-label="Featured inheritance demo"
+  data-testid="inherit-demo">
+</inherit-demo-card>
+```
 
 <!-- demo:source-html -->
 ```html

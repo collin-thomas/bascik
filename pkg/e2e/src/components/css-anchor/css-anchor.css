@@ -1,0 +1,32 @@
+.wrapper {
+  position: relative;
+  padding: 40px;
+  border: 1px solid #444;
+  display: inline-block;
+}
+
+.anchor-btn {
+  anchor-name: --my-anchor;
+  padding: 8px 16px;
+  background: rgb(74, 222, 128);
+  color: #000;
+  border: none;
+  cursor: pointer;
+}
+
+.tooltip {
+  position: absolute;
+  position-anchor: --my-anchor;
+  background: #222;
+  color: #eee;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  top: anchor(bottom);
+  left: anchor(left);
+}
+
+@position-try --my-anchor {
+  top: auto;
+  bottom: anchor(top);
+}

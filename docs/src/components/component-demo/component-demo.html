@@ -16,11 +16,15 @@
     </div>
     <div class="demo-pane" data-pane="code">
       <div class="demo-language-tabs" role="tablist" aria-label="Source language">
-        <button class="demo-language-tab active" data-language="html" type="button">HTML</button>
+        <button class="demo-language-tab active" data-language="usage" type="button">Usage</button>
+        <button class="demo-language-tab" data-language="html" type="button">HTML</button>
         <button class="demo-language-tab" data-language="css" type="button">CSS</button>
         <button class="demo-language-tab" data-language="js" type="button">JS</button>
       </div>
-      <div class="demo-language-pane active" data-language-pane="html">
+      <div class="demo-language-pane active" data-language-pane="usage">
+        <div data-bascik-slot="source-usage"></div>
+      </div>
+      <div class="demo-language-pane" data-language-pane="html">
         <div data-bascik-slot="source-html"></div>
       </div>
       <div class="demo-language-pane" data-language-pane="css">

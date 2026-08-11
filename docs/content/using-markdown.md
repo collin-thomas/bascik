@@ -1,8 +1,8 @@
-## Using Markdown
+# Using Markdown
 
-Bascik does not include a Markdown pipeline — but `data-bascik-build` scripts are Node.js, which means you can install any Markdown library and use it directly. This is the same approach used to build the page you are reading right now.
+Bascik does not ship a Markdown pipeline, but build-time scripts are Node.js — so any Markdown library works. This page shows common patterns using `marked`, `gray-matter`, `markdown-it`, and the `unified` / `remark` ecosystem.
 
-### marked
+## marked
 
 [marked](https://marked.js.org) is a fast, zero-dependency Markdown parser. Install it once and import it in any build script.
 
@@ -24,11 +24,29 @@ Read a Markdown file and output the HTML:
 
 The output replaces the script tag in the compiled HTML — no client-side JavaScript runs.
 
-### Styling Rendered Markdown
+<!-- demo:source-md -->
+```md
+## A practical heading
+
+Markdown stays comfortable for authors, while the published page stays **plain HTML**.
+
+> Add an editorial treatment with ordinary CSS.
+```
+
+<!-- demo:output-html -->
+```html
+<h2>A practical heading</h2>
+<p>Markdown stays comfortable for authors, while the published page stays <strong>plain HTML</strong>.</p>
+<blockquote>
+<p>Add an editorial treatment with ordinary CSS.</p>
+</blockquote>
+```
+
+## Styling Rendered Markdown
 
 A Markdown parser returns ordinary HTML such as `<h2>`, `<p>`, `<ul>`, `<blockquote>`, and `<pre>`. There is no separate Markdown styling system: once Bascik injects that HTML, the browser applies CSS through the normal cascade.
 
-#### Option 1: A Page or Global Stylesheet
+### Option 1: A Page or Global Stylesheet
 
 Wrap the generated content with a stable class and link a regular stylesheet from the page:
 
@@ -88,7 +106,7 @@ Then style the HTML elements the parser emits:
 
 This is the simplest choice when several pages share one editorial design. The generated elements are plain HTML, so responsive styles, custom properties, print styles, and media queries all work normally.
 
-#### Option 2: A Scoped Bascik Component
+### Option 2: A Scoped Bascik Component
 
 For a portable content style, create a component whose default slot receives the generated HTML:
 
@@ -146,7 +164,7 @@ Bascik runs the script first, sees the emitted `<markdown-content>` tag, resolve
 
 > **Use a wrapper selector for slot content.** A bare `h2 {}` rule in component CSS is transformed by Bascik and attached to headings present in the component template. Markdown headings arrive through the slot later, so write `.markdown-content h2 {}` for generated content.
 
-#### What Reaches the Browser
+### What Reaches the Browser
 
 Given this Markdown:
 
@@ -172,7 +190,7 @@ The parser produces normal elements inside the resolved component:
 
 The generated class name may be shortened in production when attribute obfuscation is enabled. You continue writing `.markdown-content` in the source; Bascik keeps the HTML and CSS names synchronized.
 
-### Front Matter with gray-matter
+## Front Matter with gray-matter
 
 Most content workflows attach metadata (title, date, author, tags) to Markdown files using YAML front matter. [gray-matter](https://github.com/jonschlinkert/gray-matter) parses it out cleanly.
 
@@ -209,7 +227,7 @@ This is the post body.
 </script>
 ```
 
-### Building a Content Collection
+## Building a Content Collection
 
 Read an entire folder of Markdown files and generate a list or index page:
 
@@ -243,7 +261,7 @@ Read an entire folder of Markdown files and generate a list or index page:
 
 > **Tip.** Each post's HTML can live on its own page too. Create `src/pages/posts/[slug].html` as a template, or use a build script to generate static output files programmatically.
 
-### markdown-it
+## markdown-it
 
 [markdown-it](https://markdown-it.github.io) is an alternative parser with a rich plugin ecosystem — syntax highlighting, footnotes, custom containers, and more.
 
@@ -295,7 +313,7 @@ Then include the highlight.js stylesheet in your page `<head>`:
   href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css" />
 ```
 
-### remark / unified
+## remark / unified
 
 The [unified](https://unifiedjs.com) ecosystem provides an AST-based pipeline. It is more involved to set up but gives precise control over parsing, transforming, and serializing Markdown.
 
@@ -322,7 +340,7 @@ npm install unified remark-parse remark-html
 
 The unified plugin system lets you add transformations like automatic heading IDs, GFM tables, and math rendering using `remark-*` packages.
 
-### CMS-Sourced Markdown
+## CMS-Sourced Markdown
 
 If your content comes from a headless CMS that returns Markdown via an API, fetch it at build time:
 

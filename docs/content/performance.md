@@ -1,6 +1,16 @@
-## Lighthouse 100s
+# Lighthouse 100s
+
+Bascik gives you an enormous head start on Lighthouse scores. Because it outputs plain HTML with zero framework runtime, you begin every page with near-perfect scores — and reaching 100 across Performance, Accessibility, Best Practices, and SEO is a matter of applying a small, well-known set of HTML attributes and link tags.
+
+| Performance | Accessibility | Best Practices | SEO |
+| :---: | :---: | :---: | :---: |
+| 100 | 100 | 100 | 100 |
 
 > **Why Bascik wins by default.** Framework-rendered pages ship a JavaScript runtime, a hydration pass, and client-side routing logic before a single pixel of your content appears. Bascik ships none of that. The browser receives finished HTML. Every byte saved at the start compounds through every Core Web Vital metric.
+
+---
+
+This page is dedicated to helping you get the most out of the performance floor Bascik gives you. The techniques below are standard HTML and link-tag patterns — no build plugins or dependencies required. Apply them to any page and you will keep those 100s as your site grows.
 
 ## Responsive Images with `srcset`
 

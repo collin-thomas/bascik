@@ -44,6 +44,8 @@ Use it in any page or other component:
 ```
 *Self-closing tags are also supported:* `<site-nav />` or `<site-nav class="top" />`
 
+**No restart needed.** The dev server watches the components directory. Drop a new `.html` (or paired `.css`) file in and all pages that use that tag are automatically re-transpiled and reloaded — no server restart required.
+
 ---
 
 ## 3. Scoped CSS
@@ -105,9 +107,21 @@ CSS custom properties declared in the file are also scoped. `var(--prop, fallbac
 }
 ```
 
+### CSS Scoping Limitations (not yet supported)
+* `@property` — `@property --name { }` declaration names are scoped along with any matching `--name:` declarations and `var(--name)` references in the same component
+* `@starting-style` — class names and element selectors inside `@starting-style` blocks are scoped by the same passes that handle other at-rules; both standalone `@starting-style { .foo { } }` and nested `.foo { @starting-style { } }` forms work
+* `@counter-style` — `@counter-style name { }` declaration names are scoped; references in `list-style`, `list-style-type`, `counter(counter, name)`, and `counters(counter, sep, name)` in the same CSS file are updated to match
+* `view-transition-name` — ✓ values are scoped per component (`bascik__<comp>__vtn__<name>`); matching `::view-transition-old/new/group/image-pair()` pseudo-element references in the same file are updated; `none` and `auto` are not scoped
+* `anchor-name` / `@position-try` — `anchor-name: --name` declarations are scoped per component; matching `position-anchor: --name` references and `@position-try --name { }` at-rules in the same CSS file are updated to match; only anchors declared in the component's own CSS are scoped
+* `:nth-child(An+B of .selector)` — class names in the `of <selector>` argument are scoped (same global `(?<=\.)` pass as `:is()`, `:where()`, `:has()`); works for `:nth-child` and `:nth-last-child`
+* `@font-face` — passed through untouched; declare in a shared stylesheet to avoid duplicate injections
+* `@import` — not followed; include CSS directly in the component file instead
+
 ---
 
 ## 4. Scoped JavaScript
+
+**Key rule:** Use `id` attributes to identify elements you need to control per-instance, and `getElementById` to find them. Bascik rewrites selector strings at build time — you write your component as if it's the only one on the page.
 
 DOM selectors in component scripts are rewritten to match scoped names:
 
@@ -186,7 +200,13 @@ Because class names are scoped to the component **name** (not per-instance), `qu
 </script>
 ```
 
-**Escape hatch:** Set `deduplicateCss: false` in `bascik.config.js` to switch to per-instance class scoping. Class selectors will then behave like ID selectors — but each instance emits its own `<style>` block. For most components, using an `id` to anchor the script is simpler.
+**Escape hatch:** Set `deduplicateCss: false` in `bascik.config.js` to switch to per-instance class scoping. By default, all instances of the same component share identical scoped class names so Bascik emits one shared `<style>` block per component. With `deduplicateCss: false`, class selectors become unique per instance (like IDs), but Bascik emits a separate `<style>` block for each component instance. For most components, using an `id` to anchor the script is simpler.
+
+```js
+export const bascikConfig = {
+  deduplicateCss: false, // each instance gets unique class names, one <style> per instance
+};
+```
 
 ---
 
@@ -285,11 +305,22 @@ Props in Bascik follow the same basic idea as React props, but the mechanism is 
 ## 7. Attribute Inheritance & Tags
 
 ### Attribute Inheritance
-Non-`data-bascik-*` attributes on a usage tag are merged onto the component's root element when `inheritAttributes` is `true` (the default). `id` is forwarded too unless the template root already defines its own `id`.
+Non-`data-bascik-*` attributes on a usage tag are merged onto the component's root element when `inheritAttributes` is `true` (the default). `id` is forwarded too unless the template root already defines its own `id`. Class names are appended, not replaced.
+
 ```html
+<!-- usage — attributes here are forwarded onto the component root -->
 <site-nav class="sticky" aria-label="main navigation"></site-nav>
-<!-- class "sticky" and aria-label are merged onto <nav> in site-nav.html -->
+
+<!-- site-nav.html — component template -->
+<nav class="nav"><a href="/">Home</a></nav>
+
+<!-- compiled output — class appended, aria-label forwarded -->
+<nav class="bascik__site-nav__nav sticky" aria-label="main navigation">
+  <a href="/">Home</a>
+</nav>
 ```
+
+Inherited class names are not scoped — they are treated as global page-level classes.
 
 ### Self-Closing Tags
 ```html
@@ -343,6 +374,26 @@ Install a Markdown parser such as `marked`, read the source in a build script, a
   const md = await readFile('./content/article.md', 'utf8');
   console.log(marked(md));
 </script>
+```
+
+Given this Markdown source:
+
+```md
+## A practical heading
+
+Markdown stays comfortable for authors, while the published page stays **plain HTML**.
+
+> Add an editorial treatment with ordinary CSS.
+```
+
+`marked()` emits:
+
+```html
+<h2>A practical heading</h2>
+<p>Markdown stays comfortable for authors, while the published page stays <strong>plain HTML</strong>.</p>
+<blockquote>
+<p>Add an editorial treatment with ordinary CSS.</p>
+</blockquote>
 ```
 
 The parser emits ordinary HTML, so it can be styled by a global stylesheet or wrapped in a Bascik component. For reusable scoped styles, have the script emit `<markdown-content>${marked(md)}</markdown-content>` and give that component a default slot.
@@ -477,34 +528,18 @@ bascik --check  # static analysis: validate pages and components without buildin
 Bascik's CLI is designed to provide clean, minimal, and informative terminal output.
 
 #### 1. Starting the Dev Server
-When you start the dev server, Bascik automatically generates local SSL/TLS certificates for its built-in HTTP/2 server, transpiles all pages inside your pages directory, and begins watching for changes:
+When you start the dev server, Bascik automatically generates local SSL/TLS certificates for its built-in HTTP/2 server, transpiles all pages inside your pages directory, stores each page in memory, then starts the server. Pages are served from memory — no disk I/O is required at request time in dev mode.
 
 ```terminal
-SSL: generated trusted certs via mkcert (run `mkcert -install` once if you haven't)
-Server running at https://localhost:8443
-
 transpiled: pages/getting-started.html
 transpiled: pages/index.html
 transpiled: pages/about.html
 
 ✓ 3 pages transpiled in 45ms
-```
-
-If [mkcert](https://github.com/FiloSottile/mkcert) is not installed, Bascik falls back to a self-signed certificate (browsers will show a security warning until you accept the exception):
-
-```terminal
-SSL: self-signed cert generated (install mkcert for no browser warning)
 Server running at https://localhost:8443
 ```
 
-If port 8443 is already in use, Bascik automatically tries the next available port:
-
-```terminal
-Port 8443 is in use, trying 8444…
-Server running at https://localhost:8444
-```
-
-Certs are generated once and reused on subsequent starts. Delete `bascik-privkey.pem` and `bascik-cert.pem` to regenerate them (e.g. to upgrade from a self-signed cert to a mkcert-trusted one after installing mkcert).
+On startup, Bascik computes the full component list and global styles **once**, then transpiles all pages. By default pages transpile sequentially on the main thread; setting `useWorkers: true` in `bascik.config.js` distributes them across a pool of CPU-core worker threads instead. Worker startup has a fixed cost (each worker loads the transpiler's module graph independently), so `useWorkers` is opt-in and best suited to larger sites or CPU-heavy per-page work — small sites are usually faster with the sequential default. Brotli compression for each page runs in the background after storage and does not block the page from being marked ready or served; the server falls back to serving uncompressed content for any request that arrives before compression finishes. The server becomes ready as soon as memory is populated; no writes to `dist/` happen during dev mode.
 
 #### 2. Watching for File Changes (Watch Mode)
 While the dev server is active, Bascik watches your file system and incrementally updates your build as files are added, updated, or removed:
@@ -694,7 +729,57 @@ Trade-off: with `class: false`, Bascik no longer isolates component class names.
 
 ---
 
-## 13. Key Constraints & Rules for AI Code Generation (MUST FOLLOW)
+## 13. Testing
+
+Bascik has two test suites, both run from `pkg/`.
+
+### Unit Tests (Vitest)
+
+```sh
+yarn test          # watch mode
+yarn test:ci       # single run (CI)
+yarn test:coverage # with coverage report
+yarn bench         # benchmarks
+```
+
+Each `pkg/src/lib/*.ts` module has a paired `*.test.ts`. Because modules depend on `BascikConfig` (a singleton), unit tests use `vi.mock('../config.ts', ...)` to stub configuration, then import the module under test **after** the mock call.
+
+### End-to-End Tests (Playwright)
+
+```sh
+yarn build && yarn e2e   # build package first, then run all e2e tests
+```
+
+The e2e suite lives in `pkg/e2e/`. Playwright's `webServer` hook:
+1. Builds the fixture site (`pkg/e2e/src/`) using the current `pkg/dist/`
+2. Serves `e2e/dist/` on `http://localhost:4200`
+
+The fixture config sets `obfuscateAttributeNames: false` so Playwright selectors can use readable scoped names like `bascik__my-comp__btn` instead of opaque hashes.
+
+**Adding a new e2e test:**
+1. Add a component in `pkg/e2e/src/components/my-feature/`
+2. Add a page in `pkg/e2e/src/pages/my-feature-test.html` with two or more instances (to verify isolation)
+3. Add `pkg/e2e/tests/my-feature.test.ts` using the standard pattern:
+
+```ts
+import { test, expect } from '@playwright/test';
+
+test.describe('my-feature-test page', () => {
+  test.beforeEach(async ({ page }) => { await page.goto('/my-feature-test'); });
+
+  test('instances are isolated', async ({ page }) => {
+    const a = page.locator('.bascik__my-feature__wrapper').nth(0);
+    const b = page.locator('.bascik__my-feature__wrapper').nth(1);
+    // assert A and B are independent
+  });
+});
+```
+
+There are 44 e2e test files covering CSS scoping, JS scoping, slots, props, attribute inheritance, animations, observers, SVG, and head components.
+
+---
+
+## 14. Key Constraints & Rules for AI Code Generation (MUST FOLLOW)
 
 When generating code, pages, or components for a Bascik project, the following conventions are strictly enforced:
 

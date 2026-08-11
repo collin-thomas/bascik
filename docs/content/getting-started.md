@@ -1,6 +1,8 @@
-## Getting Started
+# Getting Started
 
-### Quick Start
+Bascik requires Node.js v24+. Get up and running in under five minutes.
+
+## Quick Start
 
 The fastest way to start a new Bascik project:
 
@@ -17,7 +19,7 @@ Select Y for both and you're live at **https://localhost:8443** — no further c
 
 `npm create bascik@latest` scaffolds a complete starter site: pages, components, global CSS, `bascik.config.js`, and a `.gitignore`. If you prefer to set everything up yourself, see [Manual Setup](#manual-setup) below.
 
-### Manual Setup
+## Manual Setup
 
 **For an existing project**, install Bascik with your preferred package manager:
 
@@ -67,7 +69,7 @@ After running `mkcert -install`, restart the dev server. Bascik will pick up mkc
 
 Without mkcert, Bascik falls back to `openssl` (pre-installed on macOS and Linux). Your browser will show a certificate warning — click through to proceed. Windows users without openssl can install it via `winget install ShiningLight.OpenSSL`.
 
-### Folder Structure
+## Folder Structure
 
 Bascik looks for two directories by default. Both can be overridden in [bascik.config.js](/configuration).
 
@@ -77,7 +79,7 @@ src/
   pages/       ← one .html file per route
 ```
 
-### Custom 404 Page
+## Custom 404 Page
 
 If you create a `404.html` file in your pages directory (e.g. `src/pages/404.html`), Bascik's built-in development server will automatically serve it as a fallback for any non-existent routes with a `404` status code.
 

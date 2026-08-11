@@ -2,7 +2,7 @@ export const bascikConfig = {
   directory: {
     pages: 'src/pages',
     components: 'src/components',
-    watch: ['scripts/'],
+    watch: ['scripts/', 'content/'],
   },
   siteUrl: 'https://bascik.dev',
   inlineStyles: ['src/pages/css/styles.css'],

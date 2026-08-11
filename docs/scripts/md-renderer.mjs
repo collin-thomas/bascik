@@ -72,6 +72,43 @@ export async function extractDemoBlock(filePath, markerId) {
 
 export async function renderMd(filePath, { skipFirstHeading = false, stripDemoBlocks = false } = {}) {
   let md = await readFile(filePath, 'utf8');
+  return _transformMd(md, { skipFirstHeading, stripDemoBlocks });
+}
+
+/**
+ * Renders a slice of a Markdown file between two heading texts.
+ *
+ * @param {string} filePath
+ * @param {object} [range]
+ * @param {string} [range.from] - Start from this heading text (inclusive). Omit to start from file beginning.
+ * @param {string} [range.to]   - Stop before this heading text (exclusive). Omit to go to end of file.
+ * @param {object} [options]    - Same options as renderMd, except heading normalisation is off by default.
+ */
+export async function renderMdRange(filePath, { from, to } = {}, options = {}) {
+  let md = await readFile(filePath, 'utf8');
+
+  if (from) {
+    const idx = _headingIndex(md, from);
+    if (idx !== -1) md = md.slice(idx);
+  }
+  if (to) {
+    const idx = _headingIndex(md, to);
+    if (idx !== -1) md = md.slice(0, idx);
+  }
+
+  // Heading-level normalisation is only meaningful for full-document renders.
+  return _transformMd(md, { normalizeHeadings: false, ...options });
+}
+
+function _headingIndex(md, headingText) {
+  const escaped = headingText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(`(^|\\n)(#{1,6} ${escaped}[ \\t]*)(?=\\n|$)`);
+  const m = re.exec(md);
+  if (!m) return -1;
+  return m[1] === '' ? m.index : m.index + 1;
+}
+
+function _transformMd(md, { skipFirstHeading = false, stripDemoBlocks = false, normalizeHeadings = true } = {}) {
   if (stripDemoBlocks) {
     md = md.replace(/<!--\s*demo:[\w-]+\s*-->\n```[\w-]*\n[\s\S]*?\n```/g, '').trim();
   }
@@ -83,9 +120,8 @@ export async function renderMd(filePath, { skipFirstHeading = false, stripDemoBl
   }
 
   // Normalize heading levels so the minimum rendered heading is h2.
-  // This ensures content headings (e.g. ### from MD) land at <h2> in
-  // the page, directly after the shell <h1>, with no skipped levels.
-  {
+  // Disabled for mid-document slices (renderMdRange) where levels are already correct.
+  if (normalizeHeadings) {
     const levels = [];
     html.replace(/<h([1-6])[^>]*>/g, (_, n) => { levels.push(+n); });
     if (levels.length > 0) {
@@ -110,9 +146,30 @@ export async function renderMd(filePath, { skipFirstHeading = false, stripDemoBl
     (_, code) => `<code-block data-bascik-prop-lang="text">${code}</code-block>\n`
   );
 
+  // Wrap compiled-output markers in a collapsible <details> element.
+  // The <!-- compiled-output --> comment in MD signals a code block that shows
+  // bascik's generated output — interesting for internals but not front-and-center.
+  html = html.replace(
+    /<!-- compiled-output -->\n?(<code-block[^>]*>[\s\S]*?<\/code-block>)/g,
+    '<details class="compiled-output">\n<summary>View compiled output</summary>\n$1\n</details>'
+  );
+
+  // Wrap all prose code-blocks in a spacing div so global CSS can add margin-bottom
+  // without fighting bascik's component CSS scoping (which hashes .cblock class names).
+  html = html.replace(
+    /(<code-block[^>]*>[\s\S]*?<\/code-block>)/g,
+    '<div class="prose-codeblock">$1</div>'
+  );
+
   // Convert <blockquote> → <div class="callout">
   html = html.replace(/<blockquote>\n?/g, '<div class="callout">');
   html = html.replace(/\n?<\/blockquote>/g, '</div>');
+
+  // Open external links in a new tab
+  html = html.replace(
+    /<a href="(https?:\/\/[^"]+)"/g,
+    '<a target="_blank" rel="noopener noreferrer" href="$1"'
+  );
 
   return html;
 }

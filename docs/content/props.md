@@ -1,8 +1,10 @@
-## Props
+# Props
+
+Props let you pass text values into a component template at usage time using `data-bascik-prop-*` attributes.
 
 Props in Bascik borrow the same basic idea as props in React: pass values into a reusable component from the usage site. In Bascik, the mechanism is plain HTML via `data-bascik-prop-*` attributes.
 
-### Defining Props in a Template
+## Defining Props in a Template
 
 Add a `data-bascik-prop-{name}` attribute (no value) to any element in the component template. The element's inner content will be replaced with the prop value at build time.
 
@@ -14,7 +16,7 @@ Add a `data-bascik-prop-{name}` attribute (no value) to any element in the compo
 </div>
 ```
 
-### Passing Props at Usage
+## Passing Props at Usage
 
 Set `data-bascik-prop-{name}="value"` on the component tag. The value is injected into the matching template element.
 
@@ -35,7 +37,7 @@ Output:
 </div>
 ```
 
-### Props with Existing Attributes
+## Props with Existing Attributes
 
 Other attributes on the target element are preserved. The prop marker attribute itself is removed from the output.
 
@@ -47,7 +49,7 @@ Other attributes on the target element are preserved. The prop marker attribute 
 <p class="bascik__comp__lead">Your prop value here.</p>
 ```
 
-### Naming Conventions
+## Naming Conventions
 
 Prop names use the portion of the attribute after `data-bascik-prop-`. You can use lowercase alphanumeric names with hyphens:
 
@@ -60,13 +62,13 @@ data-bascik-prop-icon-url
 
 > **Use slots for HTML content.** Props inject plain text values. If you need to inject rich HTML, nested elements, or reusable layout regions, use [slots](/slots) instead.
 
-### Why `data-*`?
+## Why `data-*`?
 
 Bascik extends HTML through standard `data-*` attributes rather than a custom template language. Browsers already understand `data-*`, and you do **not** need to use props or slots to make Bascik useful — plain reusable HTML components still work without them.
 
 > **MDN reference.** For the underlying attribute rules, treat [MDN's `data-*` attribute reference](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/data-*) and the broader [HTML reference](https://developer.mozilla.org/en-US/docs/Web/HTML) as the primary documentation.
 
-### Example: Feature Card
+## Example: Feature Card
 
 A common pattern is a card component with a configurable label, title, and description:
 
@@ -87,7 +89,7 @@ A common pattern is a card component with a configurable label, title, and descr
 </feature-card>
 ```
 
-### Interactive Demo
+## Interactive Demo
 
 The demo below passes values directly into the `feature-card` component via `data-bascik-prop-*` attributes.
 

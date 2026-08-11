@@ -19,11 +19,6 @@
 
       <main class="docs-content">
         <p class="section-label">Migration</p>
-        <h1>Migrating from Eleventy</h1>
-        <p class="page-intro">Eleventy and Bascik are both build-time static site generators with no client-side
-          framework runtime. The main conceptual shift is that Bascik uses its own component format — plain HTML
-          files resolved by tag name — instead of Nunjucks, Liquid, or Handlebars templates. Front matter and
-          template inheritance map to build scripts and slot-based layout components.</p>
 
         <!-- Content rendered from docs/content/migrate/from-eleventy.md at build time.
              To update page content, edit the MD file — not this file. -->
@@ -33,7 +28,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/migrate/from-eleventy.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/migrate/from-eleventy.md'));
         </script>
 
         <script data-bascik-build>

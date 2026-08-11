@@ -120,8 +120,15 @@ const NATIVE_HTML_ELEMENTS = new Set([
   "wbr",
 ]);
 
+let componentListCache: ComponentList | null = null;
+
+export const invalidateComponentListCache = () => {
+  componentListCache = null;
+};
+
 /** Load all component HTML and CSS files from the configured components directory. */
 export const listComponents = async (): Promise<ComponentList> => {
+  if (componentListCache) return componentListCache;
   const componentFileNames =
     (await deepReadDirFlat(
       BascikConfig.directory.components,
@@ -171,7 +178,7 @@ export const listComponents = async (): Promise<ComponentList> => {
       }
     }),
   );
-  return (components as BascikComponent[]).reduce(
+  componentListCache = (components as BascikComponent[]).reduce(
     (acc: ComponentList, { name, ...rest }) => {
       if (!name) return acc;
       acc[name] = rest as Omit<BascikComponent, "name">;
@@ -179,6 +186,7 @@ export const listComponents = async (): Promise<ComponentList> => {
     },
     {} as ComponentList,
   );
+  return componentListCache;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -1,0 +1,20 @@
+.card {
+  view-transition-name: my-card;
+  background: rgb(74, 222, 128);
+  padding: 16px;
+  display: inline-block;
+  color: #000;
+}
+
+.title {
+  margin: 0;
+  font-weight: bold;
+}
+
+::view-transition-old(my-card) {
+  animation: none;
+}
+
+::view-transition-new(my-card) {
+  animation: none;
+}

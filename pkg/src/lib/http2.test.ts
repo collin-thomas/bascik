@@ -234,6 +234,24 @@ describe("serveHttp2 – stream handler", () => {
     expect(stream.end).toHaveBeenCalledWith(mockPage.compressedContent);
   });
 
+  it("falls back to uncompressed content when background brotli compression hasn't finished yet", async () => {
+    const mockPage = {
+      relativePagePath: "pages/index.html",
+      absolutePagePath: "/abs/pages/index.html",
+      content: Buffer.from("<html>Home</html>"),
+      compressedContent: undefined,
+      usedComponentsSet: new Set<string>(),
+    };
+    mockMem.getPage.mockReturnValue(mockPage);
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/", "GET", "br, gzip"));
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.not.objectContaining({ "content-encoding": "br" }),
+    );
+    expect(stream.end).toHaveBeenCalledWith(mockPage.content);
+  });
+
   it("sets no-cache headers when BascikConfig.cacheHttp is false", async () => {
     const mockPage = {
       relativePagePath: "pages/index.html",

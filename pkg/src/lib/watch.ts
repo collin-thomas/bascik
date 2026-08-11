@@ -5,8 +5,8 @@ import {
   processAllPages,
   removePage,
   selectivelyProcessPages,
+  selectivelyProcessPagesForWatchPath,
 } from "./processing.js";
-import { generateSitemapFiles } from "./sitemap.js";
 import {
   copyReplicatePath,
   deleteDistDir,
@@ -27,6 +27,8 @@ export const watchFiles = async () => {
         return !!(stats?.isFile() && !hasFileExt);
       },
       persistent: !BascikConfig.isBuild,
+      usePolling: true,
+      interval: 100,
     })
     .on("add", (path) => copyReplicatePath(path, "dist"))
     .on("change", async (path) => {
@@ -40,7 +42,7 @@ export const watchFiles = async () => {
     .on("unlinkDir", (path) => deleteDistDir(path));
 
   // Transpile pages as they change
-  const initialPagePromises: Promise<unknown>[] = [];
+  let initialScanDone = false;
   await new Promise<void>((resolve) => {
     chokidar
       .watch([BascikConfig.directory.pages], {
@@ -48,19 +50,18 @@ export const watchFiles = async () => {
         ignored: (path: string, stats?: Stats): boolean =>
           !!(stats?.isFile() && !path.endsWith(".html")),
         persistent: !BascikConfig.isBuild,
+        usePolling: true,
+        interval: 100,
       })
       .on("add", (path) => {
-        const p = pageProcessing(path);
-        initialPagePromises.push(p);
+        if (initialScanDone) pageProcessing(path);
       })
       .on("change", (path) => pageProcessing(path))
       .on("unlink", (path: string, _stats?: Stats) => removePage(path))
       .on("unlinkDir", (path: string, _stats?: Stats) => deleteDistDir(path))
       .on("ready", async () => {
-        await Promise.all(initialPagePromises);
-        if (BascikConfig.isBuild) {
-          await generateSitemapFiles();
-        }
+        initialScanDone = true;
+        await processAllPages();
         resolve();
       });
   });
@@ -75,6 +76,8 @@ export const watchFiles = async () => {
       },
       ignoreInitial: true,
       persistent: !BascikConfig.isBuild,
+      usePolling: true,
+      interval: 100,
     })
     // If you add a component, how will we know what pages to update unless we go and look
     .on("add", async () => processAllPages())
@@ -88,9 +91,11 @@ export const watchFiles = async () => {
       .watch(BascikConfig.directory.watch, {
         ignoreInitial: true,
         persistent: true,
+        usePolling: true,
+        interval: 100,
       })
-      .on("add", async () => processAllPages())
-      .on("change", async () => processAllPages())
+      .on("add", async (path) => selectivelyProcessPagesForWatchPath(path))
+      .on("change", async (path) => selectivelyProcessPagesForWatchPath(path))
       .on("unlink", async () => processAllPages());
   }
 };

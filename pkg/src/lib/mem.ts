@@ -19,18 +19,16 @@ class MemoryStore {
     this.#components = new Map();
   }
 
-  storePage({
+  async storePage({
     relativePagePath,
     absolutePagePath,
     pageContent,
     usedComponentsNames = [],
-  }: StorePageArgs): void {
+  }: StorePageArgs): Promise<void> {
     const httpPath = getHttpPath(relativePagePath);
 
     //this.#files.set(httpPath, pageContent)
     const buffer = Buffer.from(pageContent, "utf8");
-
-    const br = zlib.brotliCompressSync(buffer);
 
     const usedComponentsSet = new Set(usedComponentsNames);
 
@@ -38,12 +36,15 @@ class MemoryStore {
       this.#files.get(httpPath)?.usedComponentsSet,
     );
 
-    // More efficient to send Buffers to http2 stream.end()
+    // Store the raw content immediately so the page is servable right away.
+    // Brotli compression (quality 11 is CPU-heavy) is computed in the
+    // background below and does not block "page ready" — the server falls
+    // back to uncompressed content until compression finishes.
     this.#files.set(httpPath, {
       relativePagePath,
       absolutePagePath,
       content: buffer,
-      compressedContent: br,
+      compressedContent: undefined,
       usedComponentsSet,
     });
 
@@ -65,6 +66,16 @@ class MemoryStore {
       .forEach((unusedComponent: string) => {
         this.#components.get(unusedComponent)?.delete(absolutePagePath);
       });
+
+    // Fire-and-forget: compress in the background and attach the result once
+    // done. If the page has since been replaced or removed, discard the result.
+    zlib.brotliCompress(buffer, (err, compressed) => {
+      if (err) return;
+      const current = this.#files.get(httpPath);
+      if (current && current.content === buffer) {
+        current.compressedContent = compressed;
+      }
+    });
 
     //console.log('stored page in memory:', httpPath)
   }

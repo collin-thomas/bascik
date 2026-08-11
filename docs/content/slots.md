@@ -1,6 +1,8 @@
-## Slots
+# Slots
 
-### Default Slot
+Slots let you pass inner HTML content into a component at the usage site. Bascik supports a default slot, named slots, and slot fallback content.
+
+## Default Slot
 
 Add `data-bascik-slot` (no value) to any element in your component template to mark where inner content should be inserted. The element itself is replaced by the slot content.
 
@@ -29,7 +31,7 @@ Output:
 </div>
 ```
 
-### Slot Fallback Content
+## Slot Fallback Content
 
 Place default content inside the slot marker. It renders when the usage site passes no inner content.
 
@@ -48,7 +50,7 @@ Place default content inside the slot marker. It renders when the usage site pas
 <my-card><p>Custom content.</p></my-card>
 ```
 
-### Named Slots
+## Named Slots
 
 Use `data-bascik-slot="name"` in the component template to define named slot zones. At the usage site, wrap content for each zone with the same attribute.
 
@@ -88,7 +90,7 @@ At the usage site:
 
 > **How it works:** Named slot wrappers in the usage inner HTML are extracted by name and injected into the matching `data-bascik-slot="name"` placeholder in the template. Everything left over goes into the default slot.
 
-### Whitespace Handling
+## Whitespace Handling
 
 Leading and trailing whitespace is trimmed from all slot content at build time. This means you can write component usage on multiple lines without worrying about stray newlines or indentation appearing in the output:
 
@@ -108,9 +110,19 @@ Whitespace *within* slot content is preserved exactly as written.
 
 > **MDN reference.** Bascik slots are build-time insertion points built with standard HTML plus `data-*` attributes. For the actual elements you place into slots, treat [MDN's HTML reference](https://developer.mozilla.org/en-US/docs/Web/HTML) as the primary source of truth.
 
-### Interactive Demo
+## Interactive Demo
 
 This demo uses two named slots (`eyebrow` and `actions`) plus the default slot for the body content.
+
+<!-- demo:source-usage -->
+```html
+<slot-layout-demo>
+  <span data-bascik-slot="eyebrow">Named slot</span>
+  <span data-bascik-slot="title">Build-time slot layout</span>
+  <p>Use named slots for fixed regions and the default slot for body content.</p>
+  <a data-bascik-slot="actions" href="/configuration">Read configuration</a>
+</slot-layout-demo>
+```
 
 <!-- demo:source-html -->
 ```html

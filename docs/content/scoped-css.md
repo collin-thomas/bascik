@@ -1,8 +1,8 @@
-## Scoped CSS
+# Scoped Styles
 
 Bascik automatically namespaces your component CSS at build time. Paired `.css` files and inline `<style>` tags inside component HTML both go through the same scoping pipeline, so class names, element selectors, `@media` queries, and `@keyframes` stay isolated to the component.
 
-### Where Scoped CSS Can Live
+## Where Scoped CSS Can Live
 
 You can define component CSS in either of these places:
 
@@ -11,7 +11,7 @@ You can define component CSS in either of these places:
 
 Use paired files for most components so the HTML and CSS stay easy to scan. Inline `<style>` tags are still fully supported when keeping a small component in one file is more convenient.
 
-### CSS File Pairing
+## CSS File Pairing
 
 Scoped styles are defined in a `.css` file with the same name as the component, placed in the same directory:
 
@@ -22,7 +22,7 @@ src/components/
     site-nav.css  ← scoped to site-nav
 ```
 
-### Class Scoping
+## Class Scoping
 
 Every class name in the `.css` file is prefixed with a unique instance ID. The corresponding HTML attributes are updated to match.
 
@@ -32,13 +32,14 @@ Every class name in the `.css` file is prefixed with a unique instance ID. The c
 .navigation ul li a { padding: 8px; }
 ```
 
+<!-- compiled-output -->
 ```css
 /* compiled output */
 .bascik__site-nav__a1b2c3__navigation ul { list-style-type: none; }
 .bascik__site-nav__a1b2c3__navigation ul li a { padding: 8px; }
 ```
 
-### Element Selector Scoping
+## Element Selector Scoping
 
 Bare element selectors like `p {}` or `h2 {}` are converted to generated class selectors and injected onto matching elements inside the component.
 
@@ -48,21 +49,23 @@ p { color: #d3ff8d; }
 h2 { font-size: 2rem; }
 ```
 
+<!-- compiled-output -->
 ```css
 /* compiled output */
 .bascik__my-comp__x1__el__p { color: #d3ff8d; }
 .bascik__my-comp__x1__el__h2 { font-size: 2rem; }
 ```
 
-And in the HTML, every `<p>` and `<h2>` inside the component gets the generated class injected:
+Every `<p>` and `<h2>` inside the component gets the generated class injected at build time — you never write these class names yourself.
 
+<!-- compiled-output -->
 ```html
 <p class="bascik__my-comp__x1__el__p">...</p>
 ```
 
 > **Isolation guarantee:** Element styles only affect elements inside the component. A `p {}` rule in `my-comp.css` will never affect `<p>` tags on the page or in other components.
 
-### @media Support
+## @media Support
 
 Media queries work normally. Class names inside them are scoped like any other rule:
 
@@ -72,13 +75,14 @@ Media queries work normally. Class names inside them are scoped like any other r
 }
 ```
 
+<!-- compiled-output -->
 ```css
 @media (max-width: 600px) {
   .bascik__comp__x1__logo { font-size: 0.9rem; }
 }
 ```
 
-### @keyframes Scoping
+## @keyframes Scoping
 
 Keyframe names are also prefixed so animations from different components never collide:
 
@@ -87,13 +91,14 @@ Keyframe names are also prefixed so animations from different components never c
 .icon { animation: spin 1s linear infinite; }
 ```
 
+<!-- compiled-output -->
 ```css
 @keyframes bascik__comp__x1__keyframe__spin { to { transform: rotate(360deg); } }
 .bascik__comp__x1__icon {
   animation: bascik__comp__x1__keyframe__spin 1s linear infinite;
 }
 ```
-### CSS ID Selectors
+## CSS ID Selectors
 
 CSS `#id` selectors are converted to scoped class selectors, and the generated class is injected onto the matching element in the HTML. This means `#btn {}` in a component is fully isolated — the same ID name in another component or on the page produces a completely different selector.
 
@@ -102,11 +107,13 @@ CSS `#id` selectors are converted to scoped class selectors, and the generated c
 #submit-btn { background: #d3ff8d; }
 ```
 
+<!-- compiled-output -->
 ```css
 /* compiled output */
 .bascik__my-comp__id__submit-btn { background: #d3ff8d; }
 ```
 
+<!-- compiled-output -->
 ```html
 <!-- The matching element gets the generated class injected -->
 <button id="bascik__my-comp__a1b2__submit-btn"
@@ -114,7 +121,7 @@ CSS `#id` selectors are converted to scoped class selectors, and the generated c
 ```
 
 > **Specificity note:** Converting `#id` to a class drops specificity from `(0,1,0,0)` to `(0,0,1,0)`. `[id]` and `[id="…"]` attribute-selector forms are stripped at compile time — use a class selector instead.
-### CSS Custom Properties
+## CSS Custom Properties
 
 `--var-name` declarations in a component's CSS are automatically scoped. All `var(--var-name)` references within the same file are updated to match — so custom properties stay isolated to their component.
 
@@ -130,6 +137,7 @@ CSS `#id` selectors are converted to scoped class selectors, and the generated c
 }
 ```
 
+<!-- compiled-output -->
 ```css
 /* compiled */
 :root {
@@ -144,7 +152,7 @@ CSS `#id` selectors are converted to scoped class selectors, and the generated c
 
 > **Only locally-declared properties are scoped.** If a component uses `var(--global-var)` but doesn't declare `--global-var` in its own CSS, that reference is left untouched so it still resolves from a global stylesheet.
 
-### Toggling Scoping
+## Toggling Scoping
 
 All scoping can be controlled in [`bascik.config.js`](/configuration):
 
@@ -160,7 +168,7 @@ export const bascikConfig = {
 
 > **MDN reference.** Scoped CSS changes how selectors are rewritten at build time, but the CSS you write is still normal CSS. Use [MDN's CSS reference](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference) as the primary source for selectors, at-rules, and properties.
 
-### Class Selectors in Component Scripts
+## Class Selectors in Component Scripts
 
 Because all instances of the same component share the same scoped class names (for CSS deduplication), `document.querySelector('.myClass')` inside a component script will always return the **first** matching element on the page — not necessarily the element belonging to the current instance. If you have multiple instances of the same component, each instance's script will target the same (first) element.
 
@@ -191,13 +199,30 @@ Avoid this anti-pattern:
 </script>
 ```
 
-Alternatively, set `deduplicateCss: false` in `bascik.config.js` to switch to per-instance class scoping. This makes class selectors behave like id selectors at the cost of emitting one `<style>` block per component instance.
+By default, all instances of the same component share identical scoped class names so Bascik can emit a single `<style>` block per component, regardless of how many times it appears on the page. If you genuinely need class selectors to be unique per instance (for example, to use `querySelector` safely across multiple instances), set `deduplicateCss: false`:
 
-### Live Demo
+```js
+export const bascikConfig = {
+  deduplicateCss: false, // each instance gets its own unique class names
+};
+```
+
+With `deduplicateCss: false`, class selectors behave like `id` selectors — scoped per instance — but Bascik emits a separate `<style>` block for every component instance. Use the `id`-based pattern above instead whenever possible; it works with the default settings and avoids extra style blocks.
+
+## Live Demo
 
 The `feature-card` component used throughout these docs illustrates scoped styles end-to-end. Source files and compiled output are shown below.
 
 **Source HTML** (`feature-card.html`):
+
+<!-- demo:source-usage -->
+```html
+<feature-card
+  data-bascik-prop-label="Scoped"
+  data-bascik-prop-title="Isolated Styles"
+  data-bascik-prop-desc="Hover to see scoped transitions.">
+</feature-card>
+```
 
 <!-- demo:source-html -->
 ```html

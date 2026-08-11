@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { recursivelyTranspile, pageProcessing } from "./processing.js";
+import { recursivelyTranspile, pageProcessing, selectivelyProcessPagesForWatchPath } from "./processing.js";
 import { BascikConfig } from "./config.js";
 
 // Disable all scoping so tests produce predictable, readable HTML
@@ -25,6 +25,7 @@ vi.mock("./file-system.js", async (importOriginal) => {
   const actual = await importOriginal() as any;
   return {
     ...actual,
+    listPages: vi.fn(),
     deepReadDirFlat: vi.fn(actual.deepReadDirFlat),
   };
 });
@@ -60,6 +61,7 @@ vi.mock("./components.js", async (importOriginal) => {
   const actual = await importOriginal() as any;
   return {
     ...actual,
+    invalidateComponentListCache: vi.fn(),
     injectProps: (fileContent: any, props: any) => {
       if (fileContent && fileContent.includes("fail-during-prop-injection")) {
         throw new Error("Simulated prop injection failure");
@@ -93,6 +95,8 @@ vi.mock("node:fs", async (importOriginal) => {
 
 import { readFile } from "node:fs/promises";
 import { mem } from "./mem.js";
+import { invalidateComponentListCache } from "./components.js";
+import { listPages } from "./file-system.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // A: Slot fallback content
@@ -541,5 +545,46 @@ describe("pageProcessing – inlineStyles", () => {
     const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(pageContent).toContain(".a { color: red; }");
     expect(pageContent).toContain(".b { color: blue; }");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// F: selectivelyProcessPagesForWatchPath
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("selectivelyProcessPagesForWatchPath", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (BascikConfig as Record<string, unknown>).inlineStyles = false;
+  });
+
+  it("invalidates the component list cache before fetching components", async () => {
+    (listPages as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    await selectivelyProcessPagesForWatchPath("scripts/nav.mjs");
+    expect(invalidateComponentListCache).toHaveBeenCalledOnce();
+  });
+
+  it("rebuilds all pages when no page source references the changed filename", async () => {
+    const pages = ["src/pages/index.html", "src/pages/about.html"];
+    (listPages as ReturnType<typeof vi.fn>).mockResolvedValue(pages);
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(
+      "<html><body><p>no mention of the watched file</p></body></html>",
+    );
+    await selectivelyProcessPagesForWatchPath("scripts/nav.mjs");
+    const { eventEmitter } = await import("./events.js");
+    // Both pages transpiled → one "transpiled" emit each
+    expect(eventEmitter.emit).toHaveBeenCalledTimes(pages.length);
+  });
+
+  it("rebuilds only pages that reference the changed filename", async () => {
+    const pages = ["src/pages/index.html", "src/pages/about.html"];
+    (listPages as ReturnType<typeof vi.fn>).mockResolvedValue(pages);
+    (readFile as ReturnType<typeof vi.fn>).mockImplementation((path: string) => {
+      if (path === "src/pages/index.html") return Promise.resolve("<html><body>uses nav.mjs</body></html>");
+      return Promise.resolve("<html><body>unrelated</body></html>");
+    });
+    await selectivelyProcessPagesForWatchPath("scripts/nav.mjs");
+    const { eventEmitter } = await import("./events.js");
+    expect(eventEmitter.emit).toHaveBeenCalledTimes(1);
   });
 });

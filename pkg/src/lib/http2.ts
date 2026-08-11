@@ -231,8 +231,9 @@ export const serveHttp2 = async () => {
 
         const acceptEncoding = headers["accept-encoding"] || "";
 
-        // Send compressed
-        if (/\bbr\b/.test(acceptEncoding)) {
+        // Send compressed (falls back to uncompressed if background
+        // brotli compression hasn't finished for this page yet).
+        if (/\bbr\b/.test(acceptEncoding) && page.compressedContent) {
           responseHeaders["content-encoding"] = "br";
           stream.respond(responseHeaders);
           return stream.end(page.compressedContent);

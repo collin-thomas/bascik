@@ -61,6 +61,10 @@ describe("defaultConfig", () => {
   it("has inlineStyles: false", () => {
     expect(defaultConfig.inlineStyles).toBe(false);
   });
+
+  it("has useWorkers: false", () => {
+    expect(defaultConfig.useWorkers).toBe(false);
+  });
 });
 
 describe("BascikConfig", () => {

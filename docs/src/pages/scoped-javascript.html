@@ -18,7 +18,6 @@
 
       <main class="docs-content">
         <p class="section-label">Feature</p>
-        <h1>Scoped JavaScript</h1>
         <!-- Content rendered from docs/content/scoped-js.md at build time.
              To update page content, edit the MD file — not this file. -->
         <script data-bascik-build>
@@ -27,27 +26,29 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/scoped-js.md', { skipFirstHeading: true }));
+          console.log(await renderMd('./content/scoped-js.md', { stripDemoBlocks: true }));
         </script>
 
-        <h2>Live Scoping Example</h2>
-        <p>Multiple instances of the same component operate independently. Click the buttons below — they only affect
-          the elements inside their own component instance.</p>
+        <h2>Live Demo</h2>
+        <p>Two independent counters — each one only controls its own count. Click + or − in one; the other stays put.
+        </p>
 
-        <component-demo style="margin-top:24px" data-bascik-prop-file="src/components/test-comp.html">
+        <component-demo style="margin-top:24px" data-bascik-prop-file="src/components/demo-counter/">
           <div data-bascik-slot="example">
-            <div style="display:flex;gap:24px;flex-wrap:wrap;width:100%">
-              <div>
-                <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;font-family:var(--font-mono)">
-                  Instance 1</p>
-                <test-comp></test-comp>
-              </div>
-              <div>
-                <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;font-family:var(--font-mono)">
-                  Instance 2</p>
-                <test-comp></test-comp>
-              </div>
+            <div style="display:flex;gap:32px;flex-wrap:wrap;justify-content:center;padding:8px 0">
+              <demo-counter data-bascik-prop-label="Counter A"></demo-counter>
+              <demo-counter data-bascik-prop-label="Counter B"></demo-counter>
             </div>
+          </div>
+          <div data-bascik-slot="source-usage">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/scoped-js.md', 'source-usage'));
+              </script>
+            </code-block>
           </div>
           <div data-bascik-slot="source-html">
             <code-block data-bascik-prop-lang="html">

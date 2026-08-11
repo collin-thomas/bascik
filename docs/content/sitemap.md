@@ -1,6 +1,6 @@
-## Sitemap & robots.txt
+# Sitemap & robots.txt
 
-Bascik can automatically generate a `sitemap.xml` and `robots.txt` for your site at build time. Both files are written to `dist/` alongside your compiled HTML pages.
+Bascik generates a `sitemap.xml` and `robots.txt` automatically at build time. Set your site URL in the config and both files appear in `dist/` alongside your compiled pages — no plugins, no extra steps.
 
 Sitemap generation is on by default. To enable it, set `siteUrl` in your config:
 
@@ -13,7 +13,7 @@ export const bascikConfig = {
 
 That's all — `generate.sitemap` and `generate.robots` both default to `true`, so no other change is needed.
 
-### What gets generated
+## What gets generated
 
 **`dist/sitemap.xml`** — an XML sitemap listing every `.html` page in your `src/pages` directory as an absolute URL:
 
@@ -41,7 +41,7 @@ Allow: /
 Sitemap: https://example.com/sitemap.xml
 ```
 
-### URL path rules
+## URL path rules
 
 Each page is converted from its file path to a URL path following these rules:
 
@@ -52,7 +52,7 @@ Each page is converted from its file path to a URL path following these rules:
 | `src/pages/blog/index.html` | `/blog` |
 | `src/pages/blog/post.html` | `/blog/post` |
 
-### Opting out
+## Opting out
 
 Control sitemap and robots.txt generation independently via the `generate` option:
 
@@ -77,6 +77,6 @@ export const bascikConfig = {
 
 If `generate.sitemap` or `generate.robots` is `true` but `siteUrl` is not set, Bascik logs a warning and skips generation — it cannot produce absolute URLs without a base URL.
 
-### Build-only
+## Build-only
 
 Sitemap and robots.txt are only generated during `bascik --build`. The dev server does not write these files.

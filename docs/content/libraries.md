@@ -1,8 +1,8 @@
-## JavaScript Libraries
+# JavaScript Libraries
 
-Bascik adds zero JavaScript to your pages — but that is a default, not a rule. You are free to include any JavaScript library you want. CDN-delivered libraries, bundled scripts, and lightweight reactivity tools all work alongside Bascik without any special configuration.
+Bascik does not add any JavaScript to your pages. However, you are free to include any JavaScript library you want. CDN-delivered libraries, bundled scripts, and lightweight reactivity tools all work alongside Bascik without any special configuration.
 
-### How to Include a Library
+## How to Include a Library
 
 Add a `<script src>` tag to your page's `<head>` or to a shared head component. Bascik passes external script tags through completely unchanged — only inline `<script>` blocks with component-scoped selectors are rewritten.
 
@@ -30,7 +30,7 @@ Alternatively, co-locate the script tag inside the component file so the library
 
 > **Tip:** If multiple components on the same page all include the same CDN `<script src>` tag, the browser deduplicates requests via HTTP caching. For cleaner output, place the shared CDN tag in a head component instead.
 
-### petite-vue
+## petite-vue
 
 [petite-vue](https://github.com/vuejs/petite-vue) is a ~5 KB subset of Vue optimized for progressive enhancement. It auto-mounts any element with a `v-scope` attribute, giving it isolated reactive state — no build step, no bundler.
 
@@ -40,13 +40,18 @@ Include it once with the `init` attribute and it mounts all `v-scope` elements o
 <script src="https://unpkg.com/petite-vue" defer init></script>
 ```
 
-#### Reactive Counter
+### Reactive Counter
 
-Each instance of this component has its own isolated state. Place it on a page as many times as you want — the counters are independent:
+Each instance of this component has its own isolated state. Place it on a page as many times as you want — the counters are independent.
+
+<!-- demo:source-usage -->
+```html
+<my-counter></my-counter>
+<my-counter></my-counter>
+```
 
 <!-- demo:source-html -->
 ```html
-<!-- src/components/my-counter.html -->
 <div class="counter" v-scope="{ count: 0 }">
   <button class="btn" @click="count--">−</button>
   <span class="count-value">{{ count }}</span>
@@ -114,12 +119,12 @@ Each instance of this component has its own isolated state. Place it on a page a
 }
 ```
 
-#### Live Filter
+### Live Filter
 
-petite-vue's `v-for` and `v-model` work as expected. Filter a list in real time without writing any manual DOM manipulation:
+petite-vue's `v-for` and `v-model` work as expected. Filter a list in real time without writing any manual DOM manipulation.
 
+<!-- demo:filter-html -->
 ```html
-<!-- src/components/item-filter.html -->
 <div v-scope="{
   query: '',
   items: ['Astro', 'Eleventy', 'Next.js', 'Nuxt', 'SvelteKit']
@@ -135,7 +140,7 @@ petite-vue's `v-for` and `v-model` work as expected. Filter a list in real time 
 </div>
 ```
 
-#### Shared State Across Components
+### Shared State Across Components
 
 For state that needs to be shared between separate components, define it in a plain JavaScript module and import it in a `data-bascik-build` script or a regular `<script type="module">`:
 
@@ -157,10 +162,11 @@ export const store = reactive({ cart: [] });
 </div>
 ```
 
-### Alpine.js
+## Alpine.js
 
 [Alpine.js](https://alpinejs.dev) is another lightweight option for adding reactive behavior. It uses `x-data` for state, `@click` / `x-on` for events, and `x-show` / `x-bind` for DOM updates — all declaratively in the HTML.
 
+<!-- demo:alpine-html -->
 ```html
 <!-- src/components/disclosure.html -->
 <div x-data="{ open: false }">
@@ -174,7 +180,7 @@ export const store = reactive({ cart: [] });
 <script src="https://unpkg.com/alpinejs" defer></script>
 ```
 
-### Tailwind CSS
+## Tailwind CSS
 
 [Tailwind CSS](https://tailwindcss.com) is a utility-first CSS framework. Because Tailwind's utility classes are global by design, you need to tell Bascik not to scope class attributes — otherwise Bascik renames `class="flex gap-4"` to `class="bascik__my-comp__flex bascik__my-comp__gap-4"`, which Tailwind's CSS will never match.
 
@@ -201,7 +207,7 @@ Then include Tailwind via CDN in your head component or page `<head>`. The CDN s
 </head>
 ```
 
-With class scoping turned off, Tailwind utility classes work normally inside any component:
+With class scoping turned off, Tailwind utility classes work normally inside any component.
 
 <!-- demo:tailwind-html -->
 ```html
@@ -235,7 +241,7 @@ For production, replace the CDN tag with a [Tailwind CLI](https://tailwindcss.co
 
 > **Trade-off.** With `class: false`, Bascik no longer isolates component class names — you give up class-level CSS isolation in exchange for Tailwind compatibility. IDs and names are still scoped independently. For most Tailwind projects this is the right choice since Tailwind's utilities are intentionally global.
 
-### Any Library Works
+## Any Library Works
 
 Bascik places no restrictions on which libraries you use. A few common patterns:
 
@@ -256,8 +262,90 @@ Bascik places no restrictions on which libraries you use. A few common patterns:
 </script>
 ```
 
-### Scoping Compatibility
+## Scoping Compatibility
 
 **Bascik scopes `class`, `id`, and `name` attributes at build time.** Library-specific attributes — `v-scope`, `x-data`, `@click`, `hx-get`, `data-controller` — are never touched.
 
-One thing to be aware of: if a library dynamically sets a class or ID value at runtime (e.g. `:class="activeClass"` where `activeClass` is a JavaScript variable), that value is a runtime string and will *not* correspond to a Bascik-scoped class name. Use `data-*` attributes for runtime-toggled state and target them with CSS `[data-state="active"]` selectors.
+One thing to be aware of: if a library dynamically sets a class or ID value at runtime (e.g. `:class="activeClass"` where `activeClass` is a JavaScript variable), that value is a runtime string and will *not* correspond to a Bascik-scoped class name. Use `data-*` attributes for runtime-toggled state and target them with CSS attribute selectors instead. Bascik scopes the class name at build time, but the `[data-state="on"]` part is a plain attribute selector that survives scoping unchanged — so the CSS correctly matches the attribute value the library sets at runtime.
+
+> **Alpine.js equivalent.** Use `x-bind:data-state="open ? 'on' : 'off'"` — syntax differs but the principle is identical across petite-vue, Alpine, and any attribute-binding library.
+
+<!-- demo:state-html -->
+```html
+<!-- src/components/state-tab.html -->
+<div v-scope="{ active: false }">
+  <button class="tab" :data-state="active ? 'on' : 'off'" @click="active = !active">
+    Dashboard
+  </button>
+  <p class="status">data-state: <span v-text="active ? 'on' : 'off'"></span></p>
+</div>
+```
+
+<!-- demo:state-css -->
+```css
+/* src/components/state-tab.css */
+.tab {
+  padding: 8px 20px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text);
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.tab[data-state="on"] {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.status {
+  margin: 12px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+```
+
+<!-- demo:state-output-html -->
+```html
+<!-- .tab and .status are scoped; attribute selector is untouched -->
+<div v-scope="{ active: false }">
+  <button class="bascik__state-tab__tab" :data-state="active ? 'on' : 'off'" @click="active = !active">
+    Dashboard
+  </button>
+  <p class="bascik__state-tab__status">data-state: <span v-text="active ? 'on' : 'off'"></span></p>
+</div>
+```
+
+<!-- demo:state-output-css -->
+```css
+.bascik__state-tab__tab {
+  padding: 8px 20px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text);
+  transition: color 0.15s, border-color 0.15s;
+}
+
+/* .tab scoped to .bascik__state-tab__tab; [data-state="on"] passes through unchanged */
+.bascik__state-tab__tab[data-state="on"] {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.bascik__state-tab__status {
+  margin: 12px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+```

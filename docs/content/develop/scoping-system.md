@@ -1,8 +1,6 @@
-<p class="section-label">Internals</p>
-
 # Scoping System
 
-<p class="page-intro">Scoping prevents one component's styles and identifiers from leaking into another. Bascik rewrites HTML attributes, CSS rules, and JavaScript DOM selector strings at transpile time using a deterministic naming scheme.</p>
+Scoping prevents one component's styles and identifiers from leaking into another. Bascik rewrites HTML attributes, CSS rules, and JavaScript DOM selector strings at transpile time using a deterministic naming scheme.
 
 ## The Naming Scheme
 
@@ -135,10 +133,18 @@ After rewriting HTML attributes, `prefixElementAttribute` also rewrites every `<
 // Source
 document.getElementById("menu-trigger");
 document.querySelector("#menu-trigger");
+document.querySelectorAll("#menu-trigger");
+el.closest("#menu-trigger");
+el.matches("#menu-trigger");
+el.setAttribute("id", "menu-trigger");
 
 // Scoped
 document.getElementById("bascik__site-nav__a1b2c3d4__menu-trigger");
 document.querySelector("#bascik__site-nav__a1b2c3d4__menu-trigger");
+document.querySelectorAll("#bascik__site-nav__a1b2c3d4__menu-trigger");
+el.closest("#bascik__site-nav__a1b2c3d4__menu-trigger");
+el.matches("#bascik__site-nav__a1b2c3d4__menu-trigger");
+el.setAttribute("id", "bascik__site-nav__a1b2c3d4__menu-trigger");
 ```
 
 ### Class selectors
@@ -146,13 +152,33 @@ document.querySelector("#bascik__site-nav__a1b2c3d4__menu-trigger");
 ```js
 // Source
 document.querySelector(".toggle-btn");
+document.querySelectorAll(".toggle-btn");
+el.closest(".toggle-btn");
+el.matches(".toggle-btn");
+el.getElementsByClassName("toggle-btn");
 el.classList.add("is-open");
+el.classList.remove("is-open");
+el.classList.toggle("is-open");
+el.classList.contains("is-open");
+el.classList.replace("is-open", "is-closed");
 el.className = "toggle-btn is-open";
+el.className += " is-open";
+el.setAttribute("class", "toggle-btn");
 
 // Scoped
 document.querySelector(".bascik__site-nav__toggle-btn");
+document.querySelectorAll(".bascik__site-nav__toggle-btn");
+el.closest(".bascik__site-nav__toggle-btn");
+el.matches(".bascik__site-nav__toggle-btn");
+el.getElementsByClassName("bascik__site-nav__toggle-btn");
 el.classList.add("bascik__site-nav__is-open");
+el.classList.remove("bascik__site-nav__is-open");
+el.classList.toggle("bascik__site-nav__is-open");
+el.classList.contains("bascik__site-nav__is-open");
+el.classList.replace("bascik__site-nav__is-open", "bascik__site-nav__is-closed");
 el.className = "bascik__site-nav__toggle-btn bascik__site-nav__is-open";
+el.className += " bascik__site-nav__is-open";
+el.setAttribute("class", "bascik__site-nav__toggle-btn");
 ```
 
 ### Name selectors
@@ -160,9 +186,11 @@ el.className = "bascik__site-nav__toggle-btn bascik__site-nav__is-open";
 ```js
 // Source
 document.getElementsByName("email-field");
+el.setAttribute("name", "email-field");
 
 // Scoped
 document.getElementsByName("bascik__site-nav__a1b2c3d4__email-field");
+el.setAttribute("name", "bascik__site-nav__a1b2c3d4__email-field");
 ```
 
 ## Script Namespacing

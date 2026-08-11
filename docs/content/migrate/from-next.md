@@ -1,8 +1,8 @@
-## Migrating from Next.js
+# Migrating from Next.js
 
 Next.js and Bascik share file-based routing, but Next.js is a full-stack React framework while Bascik is a build-time HTML assembler. The migration is largely about removing framework abstractions: replace JSX pages with HTML files, replace data-fetching functions with build scripts, and replace special Next.js components with their standard HTML equivalents.
 
-### Pages Router → src/pages/
+## Pages Router → src/pages/
 
 The Pages Router maps directly to Bascik's `src/pages/` directory. Each `.js` / `.tsx` page file becomes a plain `.html` file at the same relative path.
 
@@ -19,7 +19,7 @@ pages/                           src/pages/
 
 > **No dynamic segments:** Bascik has no equivalent of `[slug].js`. Each URL needs its own `.html` file. For many programmatically generated pages, write a Node.js script that creates the files before running `bascik --build`.
 
-### App Router Layouts → Shared Layout Components
+## App Router Layouts → Shared Layout Components
 
 Next.js App Router uses `layout.tsx` files to wrap pages in shared UI. In Bascik, the `<html>`, `<head>`, and `<body>` tags live in each page file. Repeated structure goes into components.
 
@@ -87,7 +87,7 @@ If many pages share the same outer shell, extract it into a layout component tha
 
 > **Head components:** Components work inside `<head>` too. Create a `<site-meta>` component for shared meta tags and viewport declarations, then include it on every page.
 
-### getStaticProps → Build Scripts or Inline HTML
+## getStaticProps → Build Scripts or Inline HTML
 
 `getStaticProps` fetches or reads data at build time and injects it as props. In Bascik, use a `<script data-bascik-build>` block. The script runs as a Node.js ESM module at build time; its stdout is injected into the page in place of the tag. Top-level `import` and top-level `await` are supported.
 
@@ -124,7 +124,7 @@ export default function Products({ products }) {
 </ul>
 ```
 
-### getStaticPaths → One File Per Route
+## getStaticPaths → One File Per Route
 
 `getStaticPaths` tells Next.js which dynamic URLs to pre-render. In Bascik there are no dynamic segments — each URL is a separate `.html` file. Generate them in a script that runs before `bascik --build`.
 
@@ -162,7 +162,7 @@ for (const file of posts.filter(f => f.endsWith('.md'))) {
 }
 ```
 
-### next/image → Standard img
+## next/image → Standard img
 
 Replace `<Image>` from `next/image` with a standard `<img>` tag. Add `width`, `height`, and `loading="lazy"` manually where you want lazy loading. Images in `src/pages/img/` are copied to `dist/` automatically.
 
@@ -176,11 +176,11 @@ Replace `<Image>` from `next/image` with a standard `<img>` tag. Add `width`, `h
 <img src="/img/hero.jpg" alt="Hero" width="1200" height="600" />
 ```
 
-### next/link → Standard a
+## next/link → Standard a
 
 Replace `<Link href="...">` with a standard `<a href="...">`. There is no client-side navigation in Bascik — every link triggers a full page load, which is standard browser behaviour for static sites.
 
-### next/head → Inline head Tags
+## next/head → Inline head Tags
 
 Replace the `<Head>` component from `next/head` with regular `<title>` and `<meta>` tags in each page's `<head>` element.
 
@@ -220,7 +220,7 @@ export default function About() {
 </html>
 ```
 
-### API Routes → Not Applicable
+## API Routes → Not Applicable
 
 Bascik produces static HTML at build time — there is no server process to handle API requests. Replace Next.js API routes with one of:
 
@@ -228,10 +228,10 @@ Bascik produces static HTML at build time — there is no server process to hand
 - **Client-side fetch:** Call external APIs directly from a `<script>` tag in the page.
 - **A separate backend:** Deploy an API server alongside the static site and point client-side JS to it.
 
-### CSS Modules → Paired .css Files
+## CSS Modules → Paired .css Files
 
 Delete the `.module.css` file and create a plain `.css` file alongside the component HTML. Change `className={styles.foo}` to `class="foo"`. Bascik scopes class names at build time — no Webpack or PostCSS configuration required.
 
-### TypeScript → Not Needed
+## TypeScript → Not Needed
 
 Bascik component files are plain HTML. Type annotations are not applicable. If you have TypeScript utility scripts or content-generation scripts you want to keep, continue using TypeScript there — just not in Bascik component or page HTML files.

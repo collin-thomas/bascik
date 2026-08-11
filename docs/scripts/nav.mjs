@@ -18,10 +18,10 @@ export const NAV = [
     { href: '/configuration', label: 'Configuration' },
   ]},
   { section: 'Features', pages: [
-    { href: '/slots', label: 'Slots' },
-    { href: '/props', label: 'Props' },
     { href: '/scoped-styles', label: 'Scoped Styles' },
     { href: '/scoped-javascript', label: 'Scoped JavaScript' },
+    { href: '/slots', label: 'Slots' },
+    { href: '/props', label: 'Props' },
     { href: '/attribute-inheritance', label: 'Attribute Inheritance' },
     { href: '/build-scripts', label: 'Build Scripts' },
     { href: '/sitemap', label: 'Sitemap & robots.txt' },
@@ -40,6 +40,7 @@ export const NAV = [
     { href: '/migrate/from-next', label: 'From Next.js' },
     { href: '/migrate/from-eleventy', label: 'From Eleventy' },
     { href: '/migrate/from-astro', label: 'From Astro' },
+    { href: '/migrate/from-hugo', label: 'From Hugo' },
   ]},
   { section: 'Internals', pages: [
     { href: '/develop', label: 'Internals Overview' },

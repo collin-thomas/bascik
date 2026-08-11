@@ -6,6 +6,13 @@ const args = process.argv.slice(2);
 const isBuild =
   args.includes("--build") || parseInt(process.env.BASCIK_BUILD ?? "0") === 1;
 
+// Worker threads do not inherit the main thread's process.argv (they only see
+// their own script path), but they DO inherit process.env. Propagate isBuild
+// via the env var fallback above so worker threads compute the same isBuild
+// value as the main thread — otherwise disk writes and other isBuild-gated
+// behaviour silently no-op inside every worker.
+process.env.BASCIK_BUILD = isBuild ? "1" : "0";
+
 export const defaultConfig: Omit<BascikConfigOptions, "isBuild"> = {
   directory: {
     pages: "src/pages",
@@ -31,6 +38,7 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild"> = {
     robots: true,
   },
   inlineStyles: false,
+  useWorkers: false,
 };
 
 const initBascikConfig = (

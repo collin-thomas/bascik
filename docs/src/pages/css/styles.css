@@ -122,7 +122,8 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
   font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
   letter-spacing: .1em; color: var(--accent); margin-bottom: 6px;
 }
-.page-intro { font-size: 1.05rem; max-width: 600px; margin-bottom: 40px; }
+.page-intro,
+.docs-content h1 + p { font-size: 1.05rem; max-width: 600px; margin-bottom: 40px; }
 .step {
   display: flex; gap: 16px; margin-bottom: 24px;
 }
@@ -135,6 +136,48 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
 }
 .step-body h3 { margin: 0 0 6px; }
 .step-body p  { margin: 0; }
+
+/* ── Prose code-block spacing ── */
+.prose-codeblock {
+  margin-bottom: 24px;
+}
+
+/* ── Compiled-output collapsible ── */
+.compiled-output {
+  margin-bottom: 24px;
+}
+
+.compiled-output summary {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-family: var(--mono);
+  color: var(--text-muted);
+  padding: 4px 0;
+  margin-bottom: 8px;
+  user-select: none;
+  list-style: none;
+}
+
+.compiled-output summary::before {
+  content: '▶';
+  font-size: 0.6rem;
+  transition: transform .15s;
+}
+
+.compiled-output[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.compiled-output summary:hover {
+  color: var(--text);
+}
+
+.compiled-output .prose-codeblock {
+  margin-bottom: 0;
+}
 
 /* ── Tables ── */
 .docs-content table {

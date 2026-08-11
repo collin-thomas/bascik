@@ -1,50 +1,71 @@
-## Scoped JavaScript
+# Scoped JavaScript
 
-Bascik rewrites DOM selector calls inside component `<script>` tags so they match the scoped IDs and class names in the compiled output. Each component instance gets unique identifiers where needed, so multiple instances on the same page work independently.
+Write `<script>` tags directly in your component HTML — Bascik automatically rewrites selector strings to match each instance's unique identifiers. Multiple instances of the same component on the same page stay completely independent.
 
-### Scoping Model
+> **Key rule.** Use `id` attributes to identify elements you need to control in JS, and `getElementById` to find them. Bascik scopes each instance's `id` values uniquely, so every call returns exactly the right element.
 
-`id` and `name` attributes are scoped **per-instance** — each use of a component generates a different `instanceId`, so element IDs are guaranteed unique across the entire page. `class` attributes are scoped to the component **name** only, so all instances share the same class names and CSS deduplication can emit a single `<style>` block no matter how many times the component is used.
+## Writing Component Scripts
 
-```text
-class  →  bascik__<componentName>__<originalName>
-id     →  bascik__<componentName>__<instanceId>__<originalName>
-name   →  bascik__<componentName>__<instanceId>__<originalName>
-```
-
-### Multiple Instances
-
-Using a component more than once on the same page works automatically. Each use generates a different `instanceId`, so element IDs never collide and the scripts inside each instance stay independent:
+A component script looks like ordinary JavaScript. Declare `id` on any element you need to reference, then use `getElementById` — Bascik rewrites the strings at build time:
 
 ```html
-<!-- Two uses of <like-btn> on the same page -->
-<like-btn></like-btn>
-<like-btn></like-btn>
+<span id="status">Ready</span>
+<button id="toggle-btn">Toggle</button>
+
+<script>
+  const status = document.getElementById('status');
+  const btn    = document.getElementById('toggle-btn');
+  let on = false;
+
+  btn.addEventListener('click', () => {
+    on = !on;
+    status.textContent = on ? 'On' : 'Off';
+    status.style.color = on ? 'var(--accent)' : '';
+  });
+</script>
 ```
+
+You don't write or deal with the generated names. Bascik handles the rewriting at build time and each use of the component gets its own independent copy.
+
+## Multiple Instances
+
+Place the same component on a page more than once and each instance runs independently — no extra work needed:
 
 ```html
-<!-- Compiled — first instance -->
-<button id="bascik__like-btn__a1b2__btn">Like</button>
+<my-toggle></my-toggle>
+<my-toggle></my-toggle>
+```
+
+Bascik gives each instance a unique ID prefix so the two script copies never interfere with each other.
+
+<!-- compiled-output -->
+```html
+<!-- first instance -->
+<span id="bascik__my-toggle__a1b2__status">Ready</span>
+<button id="bascik__my-toggle__a1b2__toggle-btn">Toggle</button>
 <script>(function() {
-  document.getElementById("bascik__like-btn__a1b2__btn")
-    .addEventListener("click", …);
+  const status = document.getElementById("bascik__my-toggle__a1b2__status");
+  const btn    = document.getElementById("bascik__my-toggle__a1b2__toggle-btn");
+  let on = false;
+  btn.addEventListener("click", () => { ... });
 })();</script>
 
-<!-- Compiled — second instance -->
-<button id="bascik__like-btn__c3d4__btn">Like</button>
+<!-- second instance — different instanceId, fully independent -->
+<span id="bascik__my-toggle__c3d4__status">Ready</span>
+<button id="bascik__my-toggle__c3d4__toggle-btn">Toggle</button>
 <script>(function() {
-  document.getElementById("bascik__like-btn__c3d4__btn")
-    .addEventListener("click", …);
+  const status = document.getElementById("bascik__my-toggle__c3d4__status");
+  const btn    = document.getElementById("bascik__my-toggle__c3d4__toggle-btn");
+  let on = false;
+  btn.addEventListener("click", () => { ... });
 })();</script>
 ```
 
-Both buttons are fully independent. The first instance's click handler only fires for the first button, and vice versa.
+## Pitfall: Class-Based DOM Lookups
 
-### Class Selectors and Multiple Instances (Pitfall)
+Because class names are shared across all instances of the same component (for CSS deduplication), `document.querySelector('.my-class')` always returns the **first** matching element in the document. When the same component appears more than once, every instance's script ends up targeting the first instance's elements.
 
-Because class names are scoped to the component **name** (not the instance), `querySelector('.my-class')` and `querySelectorAll('.my-class')` will always return the **first** matching element in the document — even after Bascik rewrites the class name. When the same component appears more than once on a page, every instance's script will target the first instance's elements.
-
-**Never use class-based DOM lookups to find elements you need to control per-instance.** Use `id` attributes instead — IDs are scoped per-instance and `getElementById` always resolves to the correct element:
+**Use `id` + `getElementById` instead:**
 
 ```html
 <!-- ❌ Broken for multiple instances — querySelector returns first instance's button -->
@@ -55,66 +76,31 @@ Because class names are scoped to the component **name** (not the instance), `qu
 ```
 
 ```html
-<!-- ✅ Correct — id is per-instance, getElementById targets the right element -->
+<!-- ✅ Correct — id is scoped per instance -->
 <button id="my-btn" class="my-btn">Click</button>
 <script>
   document.getElementById('my-btn').addEventListener('click', () => { … });
 </script>
 ```
 
-The `class` attribute can coexist on the element for styling — just add an `id` for the JS lookup.
+The `class` attribute can still coexist on the same element for styling — just add an `id` for the JS lookup.
 
-> **Rule of thumb.** In component scripts, always use `getElementById` (or `getElementsByName`) to locate specific elements. Reserve `querySelector`/`querySelectorAll` for cases where you intentionally want to sweep across all instances (e.g. event delegation from a parent outside the component).
+> **Rule of thumb.** Use `getElementById` (or `getElementsByName`) for elements you need to control per-instance. Reserve `querySelector`/`querySelectorAll` for cases where you intentionally want to sweep across all instances.
 
-### IIFE Isolation
+## Dynamic Runtime Classes
 
-Every component script is wrapped in an immediately-invoked function expression (IIFE) to prevent variable leaks between components:
+If a class is only toggled at runtime (`classList.toggle("is-open")`) but doesn't appear on any element in the template HTML, Bascik's compiler won't register it. The CSS side obfuscates the name but the JS side doesn't — causing a silent mismatch at runtime.
 
-```html
-<!-- source -->
-<script>
-  const count = 0;
-  console.log(count);
-</script>
-```
+**Fix: declare the class on a hidden element in the template so the compiler sees it:**
 
 ```html
-<!-- compiled -->
-<script>
-  (function() {
-    const count = 0;
-    console.log(count);
-  })();
-</script>
+<!-- scoping helper — keeps runtime classes registered at compile time -->
+<div class="is-open is-active" style="display:none"></div>
 ```
 
-### ID Scoping
+## Supported Selectors
 
-The `id` attribute value in the HTML and all references to it in scripts are rewritten with the same unique prefix:
-
-```html
-<!-- source -->
-<button id="my-btn">Click</button>
-<script>
-  document.getElementById("my-btn")
-    .addEventListener("click", () => alert("hi"));
-</script>
-```
-
-```html
-<!-- compiled -->
-<button id="bascik__my-btn__a1b2__my-btn">Click</button>
-<script>
-  (function() {
-    document.getElementById("bascik__my-btn__a1b2__my-btn")
-      .addEventListener("click", () => alert("hi"));
-  })();
-</script>
-```
-
-### Supported Selectors
-
-All of the following DOM methods are updated when they reference a scoped attribute:
+All of the following DOM methods are rewritten when they reference a scoped attribute:
 
 ```js
 // id attribute
@@ -131,31 +117,11 @@ document.querySelectorAll(".my-class")
 document.getElementsByName("my-name")
 ```
 
-Additional rewritten forms include `element.closest()`, `element.matches()`, `element.classList.add/remove/toggle/contains()`, `element.setAttribute("class", ...)` and `element.setAttribute("id", ...)` with string literal values, and `element.className` setter forms.
+Additional rewritten forms include `element.closest()`, `element.matches()`, `element.classList.add/remove/toggle/contains()`, `element.setAttribute("class", …)` and `element.setAttribute("id", …)` with string literal values, and `element.className` setter forms.
 
-### Dynamic Runtime Class Scoping (CRITICAL)
+## Build-time Scripts
 
-If you have a class or ID name that is **only toggled or added dynamically at runtime** by JavaScript (for example, with `.classList.toggle("is-open")` or `.classList.add("is-active")`) but **does not exist on any HTML tag inside the template at compile time**, Bascik's HTML compiler will not discover or register it.
-
-This causes a compile mismatch:
-- The **CSS parser** *will* obfuscate the class name inside your stylesheet.
-- The **JS parser** *will not* obfuscate the class name inside your scripts because it was never registered in the HTML pass.
-- At runtime, your script will toggle `"is-open"`, but the CSS will be listening for the obfuscated `.bf5a887ac3134` class, causing interactive elements like menus or modals to fail silently.
-
-#### The Solution: Scoping Helpers
-
-Always declare any dynamic classes or IDs inside a hidden scoping helper element inside your HTML template. This forces Bascik's HTML parser to register the names during compilation:
-
-```html
-<!-- Scoping helper for dynamic runtime classes -->
-<div class="is-open is-active" style="display: none;"></div>
-```
-
-### Build-time Scripts
-
-`<script data-bascik-build>` blocks are executed at transpile time as Node.js ESM modules. Whatever the script writes to stdout is injected into the page in place of the tag. Top-level `import` and top-level `await` are supported. Scripts run with the project root as their working directory.
-
-Use this to pull in external data sources — markdown files, JSON, API responses, generated content — and inline the result directly into your HTML at build time.
+`<script data-bascik-build>` blocks run at transpile time as Node.js ESM modules. Their stdout replaces the tag in the page — useful for pulling in Markdown, JSON, or other external content at build time:
 
 ```html
 <script data-bascik-build>
@@ -166,16 +132,13 @@ Use this to pull in external data sources — markdown files, JSON, API response
 </script>
 ```
 
-The entire script tag (including opening and closing tags) is replaced by the stdout output. If the script produces no output, the tag is replaced with an empty string. On error, a warning is logged and the tag is removed.
+> **Component tags work too.** Build script output is processed in the component resolution step, so its output can contain Bascik component tags.
 
-> **Component tags work too:** Build scripts run before component resolution, so their output can contain Bascik component tags that will be transpiled in the next step.
+## Non-JavaScript Script Types
 
-### Non-JavaScript Script Types
-
-Script tags with a `type` other than `text/javascript` (e.g. `type="application/json"`) are left completely untouched — they are not wrapped in an IIFE and their attributes are not scoped.
+Script tags with a `type` other than `text/javascript` are left completely untouched — no IIFE, no scoping:
 
 ```html
-<!-- This passes through unchanged -->
 <script type="application/json" id="config-data">
   { "theme": "dark" }
 </script>
@@ -183,66 +146,142 @@ Script tags with a `type` other than `text/javascript` (e.g. `type="application/
 
 > **Tip:** Disable JS scoping entirely with `scopeScriptBlocks: false` in [bascik.config.js](/configuration).
 
-### Live Demo
+## How Scoping Works
 
-Two instances of `test-comp` run independently on the same page. Clicking the button in one instance only affects elements inside that instance.
+Every component `<script>` is wrapped in an IIFE to prevent variable leaks, and every selector string that references a scoped attribute is rewritten to match:
 
-**Source HTML** (`test-comp.html` — core elements, scripts omitted for brevity):
+<!-- compiled-output -->
+```html
+<!-- source -->
+<button id="my-btn">Click</button>
+<script>
+  document.getElementById('my-btn').addEventListener('click', () => alert('hi'));
+</script>
+
+<!-- compiled -->
+<button id="bascik__my-comp__a1b2__my-btn">Click</button>
+<script>
+(function() {
+  document.getElementById("bascik__my-comp__a1b2__my-btn")
+    .addEventListener("click", () => alert("hi"));
+})();
+</script>
+```
+
+The scoping format:
+- `class` → `bascik__<componentName>__<originalName>` (shared across all instances)
+- `id` / `name` → `bascik__<componentName>__<instanceId>__<originalName>` (unique per instance)
+
+<!-- demo:source-usage -->
+```html
+<demo-counter data-bascik-prop-label="Counter A"></demo-counter>
+<demo-counter data-bascik-prop-label="Counter B"></demo-counter>
+```
 
 <!-- demo:source-html -->
 ```html
-<div id="my-div-id" name="my-name">Test Comp Div Tag</div>
-<p name="my-name">Test Comp P Tag</p>
-<button id="btn" class="btn">Change Color</button>
+<div class="ctr">
+  <span class="ctr-label" data-bascik-prop-label>Counter</span>
+  <span class="ctr-count" id="count">0</span>
+  <div class="ctr-btns">
+    <button class="ctr-dec" id="dec">−</button>
+    <button class="ctr-inc" id="inc">+</button>
+  </div>
+</div>
 ```
-
-**Source CSS:**
 
 <!-- demo:source-css -->
 ```css
-.btn { margin: 16px; }
-.btn:hover { background-color: #333; color: #fff; }
+.ctr {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px 20px;
+  transition: border-color .2s;
+}
+.ctr:hover { border-color: var(--border-hover); }
+.ctr-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text-muted);
+}
+.ctr-count {
+  font-family: var(--mono);
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+.ctr-dec, .ctr-inc {
+  width: 40px; height: 40px;
+  border-radius: var(--r-sm);
+  font-size: 1.1rem;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+.ctr-inc {
+  background: var(--accent-dim);
+  border-color: rgba(211,255,141,0.3);
+  color: var(--accent);
+  font-weight: 700;
+}
 ```
-
-**Source JS** (one of the scripts in `test-comp.html`):
 
 <!-- demo:source-js -->
 ```js
-document.getElementById("btn").addEventListener("click", () => {
-  document.getElementsByName('my-name').forEach(el => {
-    el.style.color = '#ff7a09';
-  });
-});
+const count = document.getElementById('count');
+const dec   = document.getElementById('dec');
+const inc   = document.getElementById('inc');
+let n = 0;
+dec.addEventListener('click', () => { n--; count.textContent = n; });
+inc.addEventListener('click', () => { n++; count.textContent = n; });
 ```
-
-**Compiled output HTML** (IDs and name attributes scoped per instance):
 
 <!-- demo:output-html -->
 ```html
-<div id="bascik__test-comp__a1b2c3__my-div-id"
-     name="bascik__test-comp__a1b2c3__my-name">Test Comp Div Tag</div>
-<p name="bascik__test-comp__a1b2c3__my-name">Test Comp P Tag</p>
-<button id="bascik__test-comp__a1b2c3__btn"
-        class="bascik__test-comp__btn">Change Color</button>
+<div class="bascik__demo-counter__ctr">
+  <span class="bascik__demo-counter__ctr-label">Counter A</span>
+  <span class="bascik__demo-counter__ctr-count"
+        id="bascik__demo-counter__a1b2__count">0</span>
+  <div class="bascik__demo-counter__ctr-btns">
+    <button class="bascik__demo-counter__ctr-dec"
+            id="bascik__demo-counter__a1b2__dec">−</button>
+    <button class="bascik__demo-counter__ctr-inc"
+            id="bascik__demo-counter__a1b2__inc">+</button>
+  </div>
+</div>
 ```
-
-**Compiled output CSS** (class selectors scoped, shared across all instances):
 
 <!-- demo:output-css -->
 ```css
-.bascik__test-comp__btn { margin: 16px; }
-.bascik__test-comp__btn:hover { background-color: #333; color: #fff; }
+.bascik__demo-counter__ctr {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px 20px;
+  transition: border-color .2s;
+}
+.bascik__demo-counter__ctr-count {
+  font-family: var(--mono);
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+/* class names are shared across all instances of demo-counter */
 ```
-
-**Compiled output JS** (selector strings rewritten to match scoped names, wrapped in IIFE):
 
 <!-- demo:output-js -->
 ```js
 (function() {
-  document.getElementById("bascik__test-comp__a1b2c3__btn")
-    .addEventListener("click", () => {
-      document.getElementsByName('bascik__test-comp__a1b2c3__my-name')
-        .forEach(el => { el.style.color = '#ff7a09'; });
-    });
+  const count = document.getElementById("bascik__demo-counter__a1b2__count");
+  const dec   = document.getElementById("bascik__demo-counter__a1b2__dec");
+  const inc   = document.getElementById("bascik__demo-counter__a1b2__inc");
+  let n = 0;
+  dec.addEventListener("click", () => { n--; count.textContent = n; });
+  inc.addEventListener("click", () => { n++; count.textContent = n; });
 })();
 ```

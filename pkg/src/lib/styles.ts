@@ -303,7 +303,7 @@ export const scopeCssCustomProperties = (
   componentName: string,
 ): string => {
   const propMap = new Map();
-  // Collect all --var-name declarations in this CSS
+  // Collect --var-name from element-level declarations:  --name:
   const declRegex = /(?<!-)--(\w[\w-]*)(?=\s*:)/gm;
   let m;
   while ((m = declRegex.exec(css)) !== null) {
@@ -315,9 +315,25 @@ export const scopeCssCustomProperties = (
       );
     }
   }
+  // Collect --name from @property at-rule declarations:  @property --name {
+  const atPropertyRegex = /@property\s+--(\w[\w-]*)\s*\{/gm;
+  while ((m = atPropertyRegex.exec(css)) !== null) {
+    const originalName = m[1];
+    if (!propMap.has(originalName)) {
+      propMap.set(
+        originalName,
+        obfuscateAttributeName(`bascik__${componentName}__${originalName}`),
+      );
+    }
+  }
   if (propMap.size === 0) return css;
   let result = css;
   propMap.forEach((scopedName, originalName) => {
+    // Replace @property --original { declarations
+    result = result.replace(
+      new RegExp(`(@property\\s+)--${originalName}(?=\\s*\\{)`, "gm"),
+      `$1--${scopedName}`,
+    );
     // Replace declarations:  --original:
     result = result.replace(
       new RegExp(`(?<!-)--${originalName}(?=\\s*:)`, "gm"),
@@ -411,6 +427,178 @@ export const scopeContainerNames = (
   return result;
 };
 
+// ─── view-transition-name Scoping ────────────────────────────────────────────
+
+/**
+ * Scope `view-transition-name` property values so transition names from
+ * different components never collide on the same page.
+ *
+ * Only names *declared* via `view-transition-name:` in this CSS are scoped —
+ * any `::view-transition-*` pseudo-elements referencing names not declared here
+ * are left untouched. The keywords `none` and `auto` are not scoped.
+ */
+export const scopeViewTransitionNames = (
+  css: string,
+  componentName: string,
+): string => {
+  const names = new Set<string>();
+  css.replace(
+    /view-transition-name\s*:\s*([\w-]+)/g,
+    (_: string, name: string) => {
+      if (name !== "none" && name !== "auto") names.add(name);
+      return "";
+    },
+  );
+  if (names.size === 0) return css;
+
+  let result = css;
+  names.forEach((name) => {
+    const scoped = obfuscateAttributeName(
+      `bascik__${componentName}__vtn__${name}`,
+    );
+    result = result.replace(
+      new RegExp(`(view-transition-name\\s*:\\s*)${name}\\b`, "gm"),
+      `$1${scoped}`,
+    );
+    for (const pseudo of [
+      "view-transition-old",
+      "view-transition-new",
+      "view-transition-group",
+      "view-transition-image-pair",
+    ]) {
+      result = result.replace(
+        new RegExp(`(::${pseudo}\\()${name}(\\))`, "gm"),
+        `$1${scoped}$2`,
+      );
+    }
+  });
+  return result;
+};
+
+// ─── @counter-style Name Scoping ─────────────────────────────────────────────
+
+/**
+ * Scope `@counter-style` names so that custom counter identifiers from
+ * different components never collide.
+ *
+ * Handles:
+ *   @counter-style thumbs { … }              →  @counter-style bascik__comp__counter__thumbs { … }
+ *   list-style: thumbs                        →  list-style: bascik__comp__counter__thumbs
+ *   list-style-type: thumbs                   →  list-style-type: bascik__comp__counter__thumbs
+ *   counter(section, thumbs)                  →  counter(section, bascik__comp__counter__thumbs)
+ *   counters(section, ".", thumbs)            →  counters(section, ".", bascik__comp__counter__thumbs)
+ *
+ * Only names *declared* in this CSS are scoped — built-in counter styles
+ * (e.g. `decimal`, `disc`, `none`) and names from other components are
+ * left untouched.
+ */
+export const scopeCounterStyleNames = (
+  css: string,
+  componentName: string,
+): string => {
+  const names = new Set<string>();
+  // Collect all @counter-style declarations
+  css.replace(
+    /@counter-style\s+([\w-]+)\s*\{/g,
+    (_: string, name: string) => {
+      names.add(name);
+      return "";
+    },
+  );
+  if (names.size === 0) return css;
+
+  let result = css;
+  names.forEach((name) => {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const scoped = obfuscateAttributeName(
+      `bascik__${componentName}__counter__${name}`,
+    );
+    // Scope the @counter-style declaration
+    result = result.replace(
+      new RegExp(`(@counter-style\\s+)${escaped}(?=\\s*\\{)`, "gm"),
+      `$1${scoped}`,
+    );
+    // Scope list-style and list-style-type property references
+    result = result.replace(
+      new RegExp(`(list-style(?:-type)?\\s*:\\s*)${escaped}\\b`, "gm"),
+      `$1${scoped}`,
+    );
+    // Scope counter() second argument: counter(name, style)
+    result = result.replace(
+      new RegExp(`(counter\\([^,)]+,\\s*)${escaped}(?=[^)]*\\))`, "gm"),
+      `$1${scoped}`,
+    );
+    // Scope counters() third argument: counters(name, sep, style)
+    result = result.replace(
+      new RegExp(
+        `(counters\\([^,)]+,\\s*[^,)]+,\\s*)${escaped}(?=[^)]*\\))`,
+        "gm",
+      ),
+      `$1${scoped}`,
+    );
+  });
+  return result;
+};
+
+// ─── anchor-name / @position-try Scoping ─────────────────────────────────────
+
+/**
+ * Scope CSS anchor names (dashed-idents declared with `anchor-name`) so that
+ * anchor identifiers from different components never collide on the same page.
+ *
+ * Handles:
+ *   anchor-name: --my-anchor              →  anchor-name: --bascik__comp__anchor__my-anchor
+ *   position-anchor: --my-anchor          →  position-anchor: --bascik__comp__anchor__my-anchor
+ *   @position-try --my-anchor { … }       →  @position-try --bascik__comp__anchor__my-anchor { … }
+ *
+ * Only anchor names *declared* via `anchor-name:` in this CSS are scoped.
+ * References in `position-anchor` or `@position-try` that reference names not
+ * declared here are left untouched.
+ *
+ * Note: anchor names are dashed-idents (`--name`) like CSS custom properties
+ * but are a separate namespace — this function is independent of
+ * `scopeCssCustomProperties`.
+ */
+export const scopeAnchorNames = (
+  css: string,
+  componentName: string,
+): string => {
+  const names = new Set<string>();
+  // Collect all anchor-name: --name declarations
+  css.replace(
+    /anchor-name\s*:\s*--(\w[\w-]*)/g,
+    (_: string, name: string) => {
+      names.add(name);
+      return "";
+    },
+  );
+  if (names.size === 0) return css;
+
+  let result = css;
+  names.forEach((name) => {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const scoped = obfuscateAttributeName(
+      `bascik__${componentName}__anchor__${name}`,
+    );
+    // Scope anchor-name: --name declarations
+    result = result.replace(
+      new RegExp(`(anchor-name\\s*:\\s*)--${escaped}\\b`, "gm"),
+      `$1--${scoped}`,
+    );
+    // Scope position-anchor: --name references
+    result = result.replace(
+      new RegExp(`(position-anchor\\s*:\\s*)--${escaped}\\b`, "gm"),
+      `$1--${scoped}`,
+    );
+    // Scope @position-try --name { ... } at-rules
+    result = result.replace(
+      new RegExp(`(@position-try\\s+)--${escaped}(?=\\s*\\{)`, "gm"),
+      `$1--${scoped}`,
+    );
+  });
+  return result;
+};
+
 // ─── Inline <style> Tag Scoping ───────────────────────────────────────────────
 
 /**
@@ -454,6 +642,9 @@ export const scopeInlineStyleTags = (
       css = scopeCssCustomProperties(css, componentName);
       css = scopeLayerNames(css, componentName);
       css = scopeContainerNames(css, componentName);
+      css = scopeViewTransitionNames(css, componentName);
+      css = scopeCounterStyleNames(css, componentName);
+      css = scopeAnchorNames(css, componentName);
       return `${open}${css}${close}`;
     },
   );

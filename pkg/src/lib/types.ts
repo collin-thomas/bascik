@@ -21,6 +21,12 @@ export interface TranspileResult {
   usedComponents: BascikComponent[];
 }
 
+export interface TranspilePageResult {
+  relativePagePath: string;
+  absolutePagePath: string;
+  distHtml: string;
+  usedComponentsNames: string[];
+}
 export interface BascikConfigOptions {
   scopeScriptBlocks: boolean;
   inheritAttributes: boolean;
@@ -115,6 +121,25 @@ export interface BascikConfigOptions {
    * inlineStyles: ['src/pages/css/styles.css']
    */
   inlineStyles?: boolean | string[];
+  /**
+   * Transpile pages across a pool of CPU-core worker threads instead of
+   * sequentially on the main thread. Defaults to `false`.
+   *
+   * Spinning up the pool has a fixed cost (loading the transpiler's module
+   * graph into each worker thread, roughly 200-300ms total the first time,
+   * in parallel across workers) before any page can be processed. For small
+   * sites, or sites without expensive `<script data-bascik-build>` blocks,
+   * this fixed cost outweighs the parallelism benefit and sequential
+   * transpilation on the main thread is faster overall.
+   *
+   * Enable this for larger sites (dozens of pages) or sites with slow
+   * per-page work (e.g. build scripts that fetch data or run markdown
+   * rendering), where spreading pages across CPU cores pays for itself.
+   *
+   * @example
+   * export const bascikConfig = { useWorkers: true };
+   */
+  useWorkers?: boolean;
   isBuild?: boolean;
 }
 
@@ -122,6 +147,8 @@ export interface StoredPage {
   relativePagePath: string;
   absolutePagePath: string;
   content: Buffer;
-  compressedContent: Buffer;
+  // Computed asynchronously in the background; undefined until brotli
+  // compression finishes, in which case the server serves uncompressed.
+  compressedContent: Buffer | undefined;
   usedComponentsSet: Set<string>;
 }

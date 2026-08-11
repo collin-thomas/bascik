@@ -86,59 +86,164 @@
     }
 
     /* ── How it works ── */
-    .how-grid {
+    .how-split {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: 1fr 360px;
       gap: 20px;
+      align-items: start;
     }
 
-    .how-step {
-      background: var(--surface);
+    .how-code {
+      background: #0d0e0f;
       border: 1px solid var(--border);
       border-radius: var(--r);
       overflow: hidden;
+    }
+
+    .how-code-tabs {
       display: flex;
-      flex-direction: column;
+      gap: 2px;
+      padding: 10px 12px 0;
+      background: rgba(255, 255, 255, 0.025);
+      border-bottom: 1px solid var(--border);
     }
 
-    .how-step-header {
-      padding: 16px 20px 0;
-    }
-
-    .how-step-num {
-      font-size: 0.7rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .1em;
-      color: var(--accent);
-      margin-bottom: 4px;
-    }
-
-    .how-step-header h3 {
-      margin: 0 0 14px;
-      font-size: 0.95rem;
-      color: var(--text);
-    }
-
-    .how-step pre {
-      background: #0d0e0f;
+    .how-code-tab {
+      padding: 6px 14px 9px;
+      background: transparent;
       border: none;
-      border-top: 1px solid var(--border);
-      border-radius: 0;
-      padding: 18px 20px;
-      margin: 0;
-      overflow-x: auto;
+      border-radius: var(--r-sm) var(--r-sm) 0 0;
+      color: var(--text-muted);
+      font-family: var(--mono);
       font-size: 0.78rem;
-      line-height: 1.65;
-      flex: 1;
+      font-weight: 600;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: color .15s, background .15s;
     }
 
-    .how-step pre code {
+    .how-code-tab.active {
+      color: var(--text);
+      background: #0d0e0f;
+    }
+
+    @media (hover: hover) {
+      .how-code-tab:hover:not(.active) {
+        color: var(--text);
+      }
+    }
+
+    .how-src-pane {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 22px 24px;
+      margin: 0;
+      font-size: 0.82rem;
+      line-height: 1.72;
+      min-height: 220px;
+    }
+
+    .how-src-pane code {
       background: none;
       border: none;
       padding: 0;
       color: #cdd6f4;
       font-size: inherit;
+    }
+
+    .how-result {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .how-result-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--accent);
+      margin: 0;
+    }
+
+    .how-result-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px rgba(211, 255, 141, 0.45);
+      flex-shrink: 0;
+      animation: livepulse 2.5s ease-in-out infinite;
+    }
+
+    .how-result-card {
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 26px 28px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .how-result-card:hover {
+      border-color: var(--border-hover);
+      box-shadow: 0 0 0 1px var(--accent-dim);
+    }
+
+    .how-result-card h3 {
+      margin: 0 0 8px;
+      font-size: 1.05rem;
+      color: var(--text);
+    }
+
+    .how-result-card p {
+      margin: 0 0 14px;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    .how-result-card a {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .how-result-scoped {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .how-result-scoped code {
+      font-size: 0.7rem;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid rgba(211, 255, 141, 0.15);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .how-result-card[data-active] {
+      background: rgba(211, 255, 141, 0.07);
+      border-color: rgba(211, 255, 141, 0.5);
+      box-shadow: 0 0 0 1px rgba(211, 255, 141, 0.25), 0 0 20px rgba(211, 255, 141, 0.08);
+    }
+
+    .how-result-card[data-active] h3 {
+      color: var(--accent);
+    }
+
+    #how-demo-card {
+      cursor: pointer;
     }
 
     .hl-tag {
@@ -345,7 +450,7 @@
     }
 
     @media (max-width: 820px) {
-      .how-grid {
+      .how-split {
         grid-template-columns: 1fr;
       }
 
@@ -383,9 +488,10 @@
           <span class="badge">v0.1.0</span>
         </div>
         <h1 class="hero-title">HTML components.<br><span class="text-accent">Zero runtime.</span></h1>
-        <p class="hero-desc">You just want to reuse your nav on every page — without installing a framework to do
-          something this simple. Create a file. The filename is the tag name. CSS and JS inside it scope themselves
-          automatically. No imports, no exports.</p>
+        <p class="hero-desc">There's times where you just want to reuse a component like a nav on every page, and not
+          need a whole framework. Bascik solves that problem. Create a file, the filename is the component name. Add
+          CSS and JS inside the file, that gets scoped automatically.
+          Then simply reference that component name in your page as an HTML tag.</p>
         <div class="hero-actions">
           <a href="/getting-started" class="btn btn-primary">Get Started →</a>
           <a href="/why-bascik" class="btn btn-ghost">Why Bascik</a>
@@ -400,58 +506,83 @@
     <section class="home-section">
       <div class="container">
         <p class="section-label">How it works</p>
-        <h2 class="section-heading">Three steps. That's it.</h2>
-        <p class="section-sub">No config needed to start. Name a file <code>my-nav.html</code> and use
-          <code>&lt;my-nav&gt;</code> on any page — the filename is always the tag name. No imports, no exports, no
-          registration.
-        </p>
+        <h2 class="section-heading">You write the HTML. Bascik scopes it.</h2>
+        <p class="section-sub">Name a file — it becomes the tag. Add slots for content. CSS scopes itself at build
+          time. No config, no imports, no framework.</p>
 
-        <div class="how-grid">
-          <div class="how-step">
-            <div class="how-step-header">
-              <p class="how-step-num">01 — Create a file</p>
-              <h3>The filename is the tag name — no imports, no exports</h3>
+        <div class="how-split">
+          <!-- Code panel with tabs -->
+          <div class="how-code">
+            <div class="how-code-tabs">
+              <button class="how-code-tab active" data-how="component">my-card.html</button>
+              <button class="how-code-tab" data-how="usage">index.html</button>
+              <button class="how-code-tab" data-how="output">dist/index.html</button>
             </div>
-            <pre><code><span class="hl-comment">&lt;!-- src/components/my-card.html --&gt;</span>
+            <pre class="how-src-pane" id="how-component"><code><span class="hl-comment">&lt;!-- src/components/my-card.html --&gt;</span>
 <span class="hl-tag">&lt;style&gt;</span>
-  .card  { padding: 20px; }
-  .title { font-size: 1.1rem; }
+  .card {
+    padding: 26px 28px;
+    background: #1e2022;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+
+    h3 { margin: 0 0 8px; color: #f0f1f2; }
+    p  { margin: 0; color: #8d929e; }
+  }
 <span class="hl-tag">&lt;/style&gt;</span>
-<span class="hl-tag">&lt;div</span> <span class="hl-attr">class</span>=<span class="hl-val">"card"</span><span class="hl-tag">&gt;</span>
-  <span class="hl-tag">&lt;h3</span> <span class="hl-attr">class</span>=<span class="hl-val">"title"</span>
-       <span class="hl-attr">data-bascik-prop-title</span><span class="hl-tag">&gt;&lt;/h3&gt;</span>
-  <span class="hl-tag">&lt;slot&gt;&lt;/slot&gt;</span>
-<span class="hl-tag">&lt;/div&gt;</span></code></pre>
+<span class="hl-tag">&lt;div</span> <span class="hl-attr">class</span>=<span class="hl-val">"card"</span> <span class="hl-attr">id</span>=<span class="hl-val">"card"</span><span class="hl-tag">&gt;</span>
+  <span class="hl-tag">&lt;div</span> <span class="hl-attr">data-bascik-slot</span><span class="hl-tag">&gt;&lt;/div&gt;</span>
+<span class="hl-tag">&lt;/div&gt;</span>
+<span class="hl-tag">&lt;script&gt;</span>
+  const card = document.getElementById(<span class="hl-val">'card'</span>);
+  card.addEventListener(<span class="hl-val">'click'</span>, () =&gt; {
+    card.classList.toggle(<span class="hl-val">'active'</span>);
+  });
+<span class="hl-tag">&lt;/script&gt;</span></code></pre>
+            <pre class="how-src-pane" id="how-usage" hidden><code><span class="hl-comment">&lt;!-- src/pages/index.html --&gt;</span>
+<span class="hl-tag">&lt;my-card&gt;</span>
+  <span class="hl-tag">&lt;h3&gt;</span>My Card<span class="hl-tag">&lt;/h3&gt;</span>
+  <span class="hl-tag">&lt;p&gt;</span>Any HTML goes inside as slot content.<span class="hl-tag">&lt;/p&gt;</span>
+<span class="hl-tag">&lt;/my-card&gt;</span></code></pre>
+            <pre class="how-src-pane" id="how-output" hidden><code><span class="hl-comment">&lt;!-- dist/index.html — CSS classes and JS selectors scoped --&gt;</span>
+<span class="hl-tag">&lt;style&gt;</span>
+  .<span class="hl-scoped">bascik__my-card__card</span> {
+    padding: 26px 28px;
+    background: #1e2022;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+
+    h3 { margin: 0 0 8px; color: #f0f1f2; }
+    p  { margin: 0; color: #8d929e; }
+  }
+<span class="hl-tag">&lt;/style&gt;</span>
+<span class="hl-tag">&lt;div</span> <span class="hl-attr">class</span>=<span class="hl-val">"<span class="hl-scoped">bascik__my-card__card</span>"</span> <span class="hl-attr">id</span>=<span class="hl-val">"<span class="hl-scoped">bascik__my-card__a1b__card</span>"</span><span class="hl-tag">&gt;</span>
+  <span class="hl-tag">&lt;h3&gt;</span>My Card<span class="hl-tag">&lt;/h3&gt;</span>
+  <span class="hl-tag">&lt;p&gt;</span>Any HTML goes inside as slot content.<span class="hl-tag">&lt;/p&gt;</span>
+<span class="hl-tag">&lt;/div&gt;</span>
+<span class="hl-tag">&lt;script&gt;</span>
+  (function(){
+  const card = document.getElementById(<span class="hl-val">'<span class="hl-scoped">bascik__my-card__a1b__card</span>'</span>);
+  card.addEventListener(<span class="hl-val">'click'</span>, () => {
+    card.classList.toggle(<span class="hl-val">'<span class="hl-scoped">bascik__my-card__active</span>'</span>);
+  });
+  })();
+<span class="hl-tag">&lt;/script&gt;</span></code></pre>
           </div>
 
-          <div class="how-step">
-            <div class="how-step-header">
-              <p class="how-step-num">02 — Use it in a page</p>
-              <h3>Hyphenated tag name, standard HTML</h3>
+          <!-- Live rendered result -->
+          <div class="how-result">
+            <p class="how-result-eyebrow">
+              <span class="how-result-dot"></span>
+              Live render
+            </p>
+            <div class="how-result-card" id="how-demo-card">
+              <h3>My Card</h3>
+              <p>Any HTML goes inside as slot content. Click to toggle state.</p>
             </div>
-            <pre><code><span class="hl-comment">&lt;!-- src/pages/index.html --&gt;</span>
-<span class="hl-tag">&lt;body&gt;</span>
-  <span class="hl-tag">&lt;my-card</span>
-    <span class="hl-attr">data-bascik-prop-title</span>=<span class="hl-val">"Hello"</span><span class="hl-tag">&gt;</span>
-    <span class="hl-tag">&lt;p&gt;</span>Slot content here.<span class="hl-tag">&lt;/p&gt;</span>
-  <span class="hl-tag">&lt;/my-card&gt;</span>
-<span class="hl-tag">&lt;/body&gt;</span></code></pre>
-          </div>
-
-          <div class="how-step">
-            <div class="how-step-header">
-              <p class="how-step-num">03 — Get plain HTML</p>
-              <h3>Scoped class names, no runtime added</h3>
-            </div>
-            <pre><code><span class="hl-comment">&lt;!-- dist/index.html --&gt;</span>
-<span class="hl-tag">&lt;style&gt;</span>
-  .<span class="hl-scoped">bascik__my-card__card</span>  { padding: 20px; }
-  .<span class="hl-scoped">bascik__my-card__title</span> { font-size: 1.1rem; }
-<span class="hl-tag">&lt;/style&gt;</span>
-<span class="hl-tag">&lt;div</span> <span class="hl-attr">class</span>=<span class="hl-val">"<span class="hl-scoped">bascik__my-card__card</span>"</span><span class="hl-tag">&gt;</span>
-  <span class="hl-tag">&lt;h3</span> <span class="hl-attr">class</span>=<span class="hl-val">"<span class="hl-scoped">bascik__my-card__title</span>"</span><span class="hl-tag">&gt;</span>Hello<span class="hl-tag">&lt;/h3&gt;</span>
-  <span class="hl-tag">&lt;p&gt;</span>Slot content here.<span class="hl-tag">&lt;/p&gt;</span>
-<span class="hl-tag">&lt;/div&gt;</span></code></pre>
+            <p class="how-result-scoped">
+              CSS and JS scoped to <code>.bascik__my-card__*</code> — zero collisions, zero runtime.
+            </p>
           </div>
         </div>
       </div>
@@ -475,7 +606,7 @@
               <button class="demo-tab-btn" data-tab="js">JS</button>
             </div>
             <div class="demo-pane" data-pane="html">
-              <pre><code><span class="hl-comment">&lt;!-- src/components/demo-counter.html --&gt;</span>
+              <pre><code><span class="hl-comment">&lt;!-- src/components/demo-counter.html — component template --&gt;</span>
 <span class="hl-tag">&lt;div</span> <span class="hl-attr">class</span>=<span class="hl-val">"ctr"</span><span class="hl-tag">&gt;</span>
   <span class="hl-tag">&lt;span</span> <span class="hl-attr">class</span>=<span class="hl-val">"ctr-label"</span>
          <span class="hl-attr">data-bascik-prop-label</span><span class="hl-tag">&gt;&lt;/span&gt;</span>
@@ -484,7 +615,11 @@
     <span class="hl-tag">&lt;button</span> <span class="hl-attr">class</span>=<span class="hl-val">"ctr-dec"</span><span class="hl-tag">&gt;</span>−<span class="hl-tag">&lt;/button&gt;</span>
     <span class="hl-tag">&lt;button</span> <span class="hl-attr">class</span>=<span class="hl-val">"ctr-inc"</span><span class="hl-tag">&gt;</span>+<span class="hl-tag">&lt;/button&gt;</span>
   <span class="hl-tag">&lt;/div&gt;</span>
-<span class="hl-tag">&lt;/div&gt;</span></code></pre>
+<span class="hl-tag">&lt;/div&gt;</span>
+
+<span class="hl-comment">&lt;!-- src/pages/index.html — usage --&gt;</span>
+<span class="hl-tag">&lt;demo-counter</span> <span class="hl-attr">data-bascik-prop-label</span>=<span class="hl-val">"Instance A"</span><span class="hl-tag">&gt;&lt;/demo-counter&gt;</span>
+<span class="hl-tag">&lt;demo-counter</span> <span class="hl-attr">data-bascik-prop-label</span>=<span class="hl-val">"Instance B"</span><span class="hl-tag">&gt;&lt;/demo-counter&gt;</span></code></pre>
             </div>
             <div class="demo-pane" data-pane="css" hidden>
               <pre><code><span class="hl-comment">/* Auto-scoped — class names become:
@@ -532,6 +667,22 @@ inc.addEventListener(<span class="hl-val">'click'</span>, () => {
       </div>
     </section>
     <script>
+      // How it works — live card toggle
+      document.getElementById('how-demo-card').addEventListener('click', () => {
+        document.getElementById('how-demo-card').toggleAttribute('data-active');
+      });
+
+      // How it works — tab switcher
+      document.querySelectorAll('.how-code-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.how-code-tab').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.how-src-pane').forEach(p => { p.hidden = true; });
+          btn.classList.add('active');
+          document.getElementById('how-' + btn.dataset.how).hidden = false;
+        });
+      });
+
+      // Live demo — tab switcher
       document.querySelectorAll('.demo-tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const bar = btn.closest('.demo-tabs-bar');
@@ -585,20 +736,6 @@ inc.addEventListener(<span class="hl-val">'click'</span>, () => {
           reference.</p>
 
         <div class="grid-3">
-          <a href="/slots" class="card" style="text-decoration:none">
-            <p class="section-label">Slots</p>
-            <h3 style="margin-bottom:6px">Default &amp; Named Slots</h3>
-            <p style="margin:0;font-size:0.875rem">Pass inner HTML into components. Named slots target specific zones
-              with
-              fallback content supported.</p>
-          </a>
-          <a href="/props" class="card" style="text-decoration:none">
-            <p class="section-label">Props</p>
-            <h3 style="margin-bottom:6px">Component Props</h3>
-            <p style="margin:0;font-size:0.875rem">Inject text values via <code>data-bascik-prop-*</code> attributes —
-              no
-              runtime, no special syntax.</p>
-          </a>
           <a href="/scoped-styles" class="card" style="text-decoration:none">
             <p class="section-label">CSS</p>
             <h3 style="margin-bottom:6px">Scoped Styles</h3>
@@ -612,6 +749,20 @@ inc.addEventListener(<span class="hl-val">'click'</span>, () => {
             <p style="margin:0;font-size:0.875rem">DOM queries in component scripts are rewritten to match scoped IDs
               and
               class names at build time.</p>
+          </a>
+          <a href="/slots" class="card" style="text-decoration:none">
+            <p class="section-label">Slots</p>
+            <h3 style="margin-bottom:6px">Default &amp; Named Slots</h3>
+            <p style="margin:0;font-size:0.875rem">Pass inner HTML into components. Named slots target specific zones
+              with
+              fallback content supported.</p>
+          </a>
+          <a href="/props" class="card" style="text-decoration:none">
+            <p class="section-label">Props</p>
+            <h3 style="margin-bottom:6px">Component Props</h3>
+            <p style="margin:0;font-size:0.875rem">Inject text values via <code>data-bascik-prop-*</code> attributes —
+              no
+              runtime, no special syntax.</p>
           </a>
           <a href="/build-scripts" class="card" style="text-decoration:none">
             <p class="section-label">Build</p>
