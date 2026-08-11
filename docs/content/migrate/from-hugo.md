@@ -107,7 +107,7 @@ Hugo's `baseof.html` with `{{ block "main" . }}` / `{{ define "main" }}` maps to
 
 ## Template Variables → data-bascik-prop-*
 
-Hugo's `{{ .Title }}` and `{{ .Params.description }}` pull values from front matter at build time. Bascik uses `data-bascik-prop-*` attributes — the value is set on the component tag at the usage site, and the attribute (with no value) marks the receiver element inside the component.
+Hugo's `{{ .Title }}` and `{{ .Params.description }}` pull values from front matter at build time. Bascik uses `data-bascik-prop-*` attributes, the value is set on the component tag at the usage site, and the attribute (with no value) marks the receiver element inside the component.
 
 ```html
 <!-- layouts/partials/post-card.html (Hugo — before) -->
@@ -134,7 +134,7 @@ Hugo's `{{ .Title }}` and `{{ .Params.description }}` pull values from front mat
 ></post-card>
 ```
 
-> **Text only:** Bascik props carry plain text strings. For rich HTML content — such as a post body rendered from Markdown — use a slot instead of a prop.
+> **Text only:** Bascik props carry plain text strings. For rich HTML content, such as a post body rendered from Markdown, use a slot instead of a prop.
 
 ## `{{ range }}` Loops → `<script data-bascik-build>`
 
@@ -200,7 +200,7 @@ Hugo shortcodes (`{{< callout >}}text{{< /callout >}}`) are reusable template fr
 
 ## SCSS / Sass → Plain CSS
 
-Hugo ships a built-in asset pipeline with SCSS/Sass support via `resources.ToCSS`. Bascik does not include a CSS preprocessor — write plain CSS in the paired `.css` file alongside each component. Bascik's scoping engine handles selector scoping automatically, so there is rarely a need for nesting or variables beyond what native CSS custom properties and `:is()` provide.
+Hugo ships a built-in asset pipeline with SCSS/Sass support via `resources.ToCSS`. Bascik does not include a CSS preprocessor, write plain CSS in the paired `.css` file alongside each component. Bascik's scoping engine handles selector scoping automatically, so there is rarely a need for nesting or variables beyond what native CSS custom properties and `:is()` provide.
 
 ```text
 Before (Hugo)                After (Bascik)
@@ -216,7 +216,7 @@ assets/
 
 ## Front Matter Data → Build Scripts or Inline HTML
 
-Hugo reads YAML/TOML front matter from content files and makes it available in templates as `.Params`. In Bascik, individual pages are HTML files — front matter has no direct runtime equivalent. For pages generated from Markdown (a blog, for example), read the front matter with `gray-matter` inside a `<script data-bascik-build>` block and inline the values into the HTML.
+Hugo reads YAML/TOML front matter from content files and makes it available in templates as `.Params`. In Bascik, individual pages are HTML files, front matter has no direct runtime equivalent. For pages generated from Markdown (a blog, for example), read the front matter with `gray-matter` inside a `<script data-bascik-build>` block and inline the values into the HTML.
 
 ```yaml
 # content/posts/my-post.md (Hugo — before)

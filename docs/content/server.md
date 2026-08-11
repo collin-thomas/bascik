@@ -1,82 +1,17 @@
 # Production Server
 
-Bascik ships its own HTTP/2 production server. After building your site with `bascik --build`, start the server with `bascik --serve`. No separate web server software is required.
+Bascik generates static output, HTML, CSS, and JS that a CDN or any file server can deliver. You only need `bascik --serve` when you want **per-request dynamic content**: personalized dashboards, user-specific data, server-rendered pagination, or anything that must be different for each visitor.
+
+The mechanism is `data-bascik-server`: a script tag that runs on the server on every request and injects its stdout into the page. Everything else, layout, navigation, styles, components, is still compiled at build time. You get the performance of static assets with the flexibility of server-rendered sections exactly where you need them.
 
 ```sh
-bascik --build   # transpile to dist/
-bascik --serve   # start the HTTP/2 server against dist/
+bascik --build   # compile to dist/ (static assets)
+bascik --serve   # start the HTTP/2 server; runs data-bascik-server scripts per request
 ```
 
-The server handles TLS automatically. If [mkcert](https://github.com/FiloSottile/mkcert) is installed it issues a CA-trusted certificate; otherwise it falls back to a self-signed certificate via `openssl`.
+If your site has no `data-bascik-server` scripts, you do not need `bascik --serve`: any static host will do.
 
-> **Production checklist.** Before going live: bind to `0.0.0.0` so the server is reachable from outside the machine, provide real TLS certificates from a public CA (Let's Encrypt, etc.), and run behind a reverse proxy (nginx, Caddy) if you need load balancing or advanced routing.
-
-## What `--serve` does differently from `--build`
-
-| Capability | `bascik --build` | `bascik --serve` |
-|---|---|---|
-| Transpile pages to `dist/` | ✅ | ❌ (reads existing `dist/`) |
-| Watch source files for changes | ❌ | ❌ |
-| Live-reload SSE | ❌ | ❌ |
-| HTTP/2 server | ❌ | ✅ |
-| Brotli compression | ❌ | ✅ |
-| HTTP caching (ETags, 304) | ❌ | ✅ (default; see `cacheHttp`) |
-| Rate limiting | ❌ | ✅ (per-IP) |
-| Security response headers | ❌ | ✅ |
-| Graceful shutdown | ❌ | ✅ (SIGTERM / SIGINT) |
-| `data-bascik-server` scripts | ❌ (preserved) | ✅ (run per-request) |
-
-## `serve` config block
-
-Configure the production server in `bascik.config.js` under the `serve` key.
-
-```js
-// bascik.config.js
-export const bascikConfig = {
-  cacheHttp: true,     // default in --serve; false in dev
-  serve: {
-    port: 8443,         // default
-    hostname: 'localhost',  // default; use '0.0.0.0' to bind all interfaces
-    keyFile: 'bascik-privkey.pem',  // default; path to your TLS private key
-    certFile: 'bascik-cert.pem',    // default; path to your TLS certificate
-  },
-};
-```
-
-Bascik increments the port automatically if the preferred port is already in use.
-
-`cacheHttp` defaults to `true` in `--serve` mode and `false` in the dev server. When `true`, pages receive `ETag` headers and the server returns `304 Not Modified` when a client's cached copy is still fresh. Static assets also get `Cache-Control: public, max-age=3600`. Set `cacheHttp: false` to disable all of this if you are behind a CDN that manages caching itself.
-
-## Production hardening
-
-The Bascik HTTP server applies several hardening measures. Most of these are active in both the dev server (`bascik`) and the production server (`bascik --serve`); rate limiting is the only protection that is production-only.
-
-### Security response headers
-
-Every response includes these headers:
-
-| Header | Value |
-|---|---|
-| `x-content-type-options` | `nosniff` |
-| `x-frame-options` | `SAMEORIGIN` |
-| `referrer-policy` | `strict-origin-when-cross-origin` |
-| `permissions-policy` | `interest-cohort=()` |
-
-These are sent on HTML pages, static assets, and error responses in both dev and production. If you are terminating TLS at a proxy and want to add `Strict-Transport-Security`, add it there rather than in Bascik — the proxy already knows the scheme of the outer connection.
-
-### Rate limiting
-
-In `--serve` mode the server enforces a per-IP request limit of **500 requests per 10 seconds**. Clients that exceed the limit receive `429 Too Many Requests` with a `Retry-After` header. The limit resets automatically after the window expires. Rate limiting is not active in the dev server.
-
-### Graceful shutdown
-
-The server listens for `SIGTERM` and `SIGINT` in both dev and production. On either signal it stops accepting new connections and waits for in-flight requests to finish, then exits cleanly. If the drain takes longer than 10 seconds, the process force-exits. This means `systemd` stop, `docker stop`, and Kubernetes pod eviction all wait for requests to complete before the process ends.
-
-### Path traversal protection
-
-Static asset URLs (requests with a file extension) are validated so the resolved path always stays inside the `dist/` directory. Requests that would escape it — via `/../` sequences or similar — receive `400 Bad Request` before any file I/O occurs. This applies in both dev and production.
-
-## Server scripts — `data-bascik-server`
+## Server scripts: `data-bascik-server`
 
 Tag a `<script>` block with `data-bascik-server` to run it at **request time** on the server instead of at build time. The script's stdout is injected into the page in place of the script tag, on every request.
 
@@ -89,7 +24,7 @@ Tag a `<script>` block with `data-bascik-server` to run it at **request time** o
 </script>
 ```
 
-This lets you personalize pages per visitor — reading session cookies, querying a database, or rendering content based on query parameters — without a full server framework.
+This lets you personalize pages per visitor, reading session cookies, querying a database, or rendering content based on query parameters, without a full server framework.
 
 ### Request context
 
@@ -132,16 +67,9 @@ Server scripts are run as Node.js ESM modules. Both top-level `await` and top-le
 
 The script's working directory is your project root (`process.cwd()`), so relative file paths work as expected.
 
-### Rules and behavior
-
-- Scripts run on **every request** and are **never cached** — the output is always fresh.
-- `data-bascik-build` and `data-bascik-server` are independent: a page can use both on the same page and they compose freely.
-- During `bascik --build`, server script tags are **preserved as-is** in `dist/` and are NOT executed. Execution only happens when the page is served.
-- On error, Bascik logs a warning to stderr and replaces the script tag with an empty string rather than aborting the request. The rest of the page renders normally.
-- The script tag (including all its attributes and the closing `</script>` tag) is completely replaced by stdout output. Empty stdout means the tag slot becomes an empty string.
-- Anything written to stderr from within the script is forwarded to the server's stderr.
-
 ### Combining build and server scripts
+
+`data-bascik-build` and `data-bascik-server` are independent and compose freely on the same page:
 
 ```html
 <!-- runs once at build time: injects a static nav from a data file -->
@@ -159,109 +87,64 @@ The script's working directory is your project root (`process.cwd()`), so relati
 </script>
 ```
 
+### Rules and behavior
+
+- Scripts run on **every request** and are **never cached:** the output is always fresh.
+- During `bascik --build`, server script tags are **preserved as-is** in `dist/` and are NOT executed. Execution only happens when the page is served.
+- On error, Bascik logs a warning to stderr and replaces the script tag with an empty string rather than aborting the request. The rest of the page renders normally.
+- The script tag (including all its attributes and the closing `</script>` tag) is completely replaced by stdout output. Empty stdout means the tag slot becomes an empty string.
+- Anything written to stderr from within the script is forwarded to the server's stderr.
+
 ## Practical examples
 
-> **Escape user-controlled output.** Any value that originates from a request (cookies, query params, headers, database rows written by users) must be HTML-escaped before being written with `console.log`. A minimal helper: `` const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') ``.
+> **Escape user-controlled output.** Any value from a request (cookies, query params, headers, database rows) must be HTML-escaped before writing with `console.log`. A minimal helper: `` const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') ``.
 
-### Identifying the current user
-
-Read a session cookie, look up the session in a SQLite database, and render a user badge. Install `better-sqlite3` once for your project:
-
-```sh
-npm install better-sqlite3
-```
+### Reading request context
 
 ```html
 <script data-bascik-server>
-  import Database from 'better-sqlite3';
-  import { join } from 'node:path';
-
-  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const { headers } = JSON.parse(process.env.BASCIK_REQUEST);
-  const sessionId = headers['cookie']?.match(/session=([^;]+)/)?.[1];
-
-  if (!sessionId) {
-    console.log('<p class="notice">You are not signed in.</p>');
-  } else {
-    const db = new Database(join(process.cwd(), 'data/app.db'));
-    const user = db
-      .prepare('SELECT name, email FROM users WHERE session_id = ?')
-      .get(sessionId);
-
-    if (!user) {
-      console.log('<p class="notice">Session expired. Please sign in again.</p>');
-    } else {
-      console.log(`
-        <div class="user-badge">
-          <p class="user-name">${esc(user.name)}</p>
-          <p class="user-email">${esc(user.email)}</p>
-        </div>
-      `);
-    }
-  }
+  const { headers, searchParams } = JSON.parse(process.env.BASCIK_REQUEST);
+  const user = headers['x-display-name'] ?? 'Guest';
+  const tab = searchParams.tab ?? 'overview';
+  console.log(`<p>Hello ${user} — tab: ${tab}</p>`);
 </script>
 ```
 
-### Rendering user data from a database
+### Querying a database
 
-Once you have the user's identity, query their records and render them directly into the page — no API round-trip from the browser needed.
+Read a session cookie, look up the user in SQLite, and render a greeting.
 
 ```html
 <script data-bascik-server>
   import Database from 'better-sqlite3';
-  import { join } from 'node:path';
-
-  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const { headers } = JSON.parse(process.env.BASCIK_REQUEST);
   const sessionId = headers['cookie']?.match(/session=([^;]+)/)?.[1];
+  const db = new Database('./data/app.db');
+  const user = sessionId && db.prepare('SELECT name FROM users WHERE session_id = ?').get(sessionId);
+  console.log(user ? `<p>Hello, ${esc(user.name)}</p>` : '<p>Not signed in.</p>');
+</script>
+```
 
-  if (!sessionId) {
-    console.log('<p>Please sign in to view your orders.</p>');
-  } else {
-    const db = new Database(join(process.cwd(), 'data/app.db'));
-    const user = db
-      .prepare('SELECT id FROM users WHERE session_id = ?')
-      .get(sessionId);
+### Paginating results
 
-    if (!user) {
-      console.log('<p>Session expired.</p>');
-    } else {
-      const orders = db
-        .prepare(`
-          SELECT id, created_at, total_cents
-          FROM orders
-          WHERE user_id = ?
-          ORDER BY created_at DESC
-          LIMIT 5
-        `)
-        .all(user.id);
+Use `searchParams` to drive server-rendered pagination with no client-side JavaScript needed.
 
-      if (orders.length === 0) {
-        console.log('<p>No orders yet.</p>');
-      } else {
-        const rows = orders.map(o => `
-          <tr>
-            <td>#${esc(o.id)}</td>
-            <td>${new Date(o.created_at).toLocaleDateString()}</td>
-            <td>$${(o.total_cents / 100).toFixed(2)}</td>
-          </tr>
-        `).join('');
-
-        console.log(`
-          <table>
-            <thead><tr><th>Order</th><th>Date</th><th>Total</th></tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
-        `);
-      }
-    }
-  }
+```html
+<script data-bascik-server>
+  import Database from 'better-sqlite3';
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const { searchParams } = JSON.parse(process.env.BASCIK_REQUEST);
+  const page = Math.max(1, Number(searchParams.page ?? 1));
+  const db = new Database('./data/app.db');
+  const items = db.prepare('SELECT title FROM articles ORDER BY created_at DESC LIMIT 20 OFFSET ?').all((page - 1) * 20);
+  console.log(`<ul>${items.map(a => `<li>${esc(a.title)}</li>`).join('')}</ul>`);
 </script>
 ```
 
 ### Using PostgreSQL
 
-For a Postgres database, use the `pg` client. Top-level `await` makes async queries straightforward.
+For a Postgres database, use the `pg` client. Top-level `await` makes async queries straightforward. Postgres uses numbered parameters (`$1`, `$2`, etc.) in query strings.
 
 ```sh
 npm install pg
@@ -270,100 +153,93 @@ npm install pg
 ```html
 <script data-bascik-server>
   import pg from 'pg';
-
-  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const { headers } = JSON.parse(process.env.BASCIK_REQUEST);
-  const sessionId = headers['cookie']?.match(/session=([^;]+)/)?.[1];
-
-  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
-
-  try {
-    const { rows: [user] } = await pool.query(
-      'SELECT id, name FROM users WHERE session_id = $1',
-      [sessionId ?? '']
-    );
-
-    if (!user) {
-      console.log('<p>Not signed in.</p>');
-    } else {
-      const { rows: posts } = await pool.query(
-        `SELECT title, published_at FROM posts
-         WHERE author_id = $1
-         ORDER BY published_at DESC
-         LIMIT 10`,
-        [user.id]
-      );
-
-      const items = posts.map(p =>
-        `<li>${esc(p.title)} — ${new Date(p.published_at).toLocaleDateString()}</li>`
-      ).join('');
-
-      console.log(`<h2>Posts by ${esc(user.name)}</h2><ul>${items}</ul>`);
-    }
-  } finally {
-    await pool.end();
-  }
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const db = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+  const { rows } = await db.query('SELECT title FROM articles ORDER BY created_at DESC LIMIT 10');
+  await db.end();
+  console.log(`<ul>${rows.map(r => `<li>${esc(r.title)}</li>`).join('')}</ul>`);
 </script>
 ```
 
-> **Connection pooling.** Each `data-bascik-server` block runs in a fresh Node.js child process that exits after producing its output, so in-process pools cannot be shared across requests. For production Postgres workloads, use an external connection pooler such as [PgBouncer](https://www.pgbouncer.org/) and open a single connection per script invocation (rather than a pool), or switch to a protocol that amortises connection cost per-query (e.g. a REST API backed by a pooled service).
+> **Connection pooling.** Each `data-bascik-server` block runs in a fresh Node.js child process, so in-process pools cannot be shared across requests. For production Postgres use an external pooler such as [PgBouncer](https://www.pgbouncer.org/).
 
-### Paginating query results
+## Server configuration
 
-Use `searchParams` to drive server-rendered pagination. No client-side JavaScript is required.
+Configure the production server in `bascik.config.js` under the `serve` key.
 
-```html
-<script data-bascik-server>
-  import Database from 'better-sqlite3';
-  import { join } from 'node:path';
-
-  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const { searchParams } = JSON.parse(process.env.BASCIK_REQUEST);
-  const page = Math.max(1, parseInt(searchParams.page ?? '1', 10));
-  const pageSize = 20;
-  const offset = (page - 1) * pageSize;
-
-  const db = new Database(join(process.cwd(), 'data/app.db'));
-  const articles = db
-    .prepare(`
-      SELECT slug, title, summary FROM articles
-      ORDER BY published_at DESC
-      LIMIT ? OFFSET ?
-    `)
-    .all(pageSize, offset);
-
-  const { total } = db.prepare('SELECT COUNT(*) AS total FROM articles').get();
-  const totalPages = Math.ceil(total / pageSize);
-
-  const cards = articles.map(a => `
-    <article class="card">
-      <h2><a href="/articles/${esc(a.slug)}">${esc(a.title)}</a></h2>
-      <p>${esc(a.summary)}</p>
-    </article>
-  `).join('');
-
-  const prev = page > 1 ? `<a href="?page=${page - 1}">← Previous</a>` : '';
-  const next = page < totalPages ? `<a href="?page=${page + 1}">Next →</a>` : '';
-
-  console.log(`
-    <div class="article-list">${cards}</div>
-    <nav class="pagination">${prev} ${next}</nav>
-  `);
-</script>
+```js
+// bascik.config.js
+export const bascikConfig = {
+  cacheHttp: true,     // default in --serve; false in dev
+  serve: {
+    port: 8443,         // default
+    hostname: 'localhost',  // default; use '0.0.0.0' to bind all interfaces
+    keyFile: 'bascik-privkey.pem',  // default; path to your TLS private key
+    certFile: 'bascik-cert.pem',    // default; path to your TLS certificate
+  },
+};
 ```
+
+Bascik increments the port automatically if the preferred port is already in use.
+
+`cacheHttp` defaults to `true` in `--serve` mode and `false` in the dev server. When `true`, pages receive `ETag` headers and the server returns `304 Not Modified` when a client's cached copy is still fresh. Static assets also get `Cache-Control: public, max-age=3600`. Set `cacheHttp: false` to disable all of this if you are behind a CDN that manages caching itself.
+
+## What `--serve` does differently from `--build`
+
+| Capability | `bascik --build` | `bascik --serve` |
+|---|---|---|
+| Transpile pages to `dist/` | ✓ | ✕ (reads existing `dist/`) |
+| Watch source files for changes | ✕ | ✕ |
+| Live-reload SSE | ✕ | ✕ |
+| HTTP/2 server | ✕ | ✓ |
+| Brotli compression | ✕ | ✓ |
+| HTTP caching (ETags, 304) | ✕ | ✓ (default; see `cacheHttp`) |
+| Rate limiting | ✕ | ✓ (per-IP) |
+| Security response headers | ✕ | ✓ |
+| Graceful shutdown | ✕ | ✓ (SIGTERM / SIGINT) |
+| `data-bascik-server` scripts | ✕ (preserved) | ✓ (run per-request) |
+
+## Production hardening
+
+The Bascik HTTP server applies several hardening measures. Most of these are active in both the dev server (`bascik`) and the production server (`bascik --serve`); rate limiting is the only protection that is production-only.
+
+### Security response headers
+
+Every response includes these headers:
+
+| Header | Value |
+|---|---|
+| `x-content-type-options` | `nosniff` |
+| `x-frame-options` | `SAMEORIGIN` |
+| `referrer-policy` | `strict-origin-when-cross-origin` |
+| `permissions-policy` | `interest-cohort=()` |
+
+These are sent on HTML pages, static assets, and error responses in both dev and production. If you are terminating TLS at a proxy and want to add `Strict-Transport-Security`, add it there rather than in Bascik, the proxy already knows the scheme of the outer connection.
+
+### Rate limiting
+
+In `--serve` mode the server enforces a per-IP request limit of **500 requests per 10 seconds**. Clients that exceed the limit receive `429 Too Many Requests` with a `Retry-After` header. The limit resets automatically after the window expires. Rate limiting is not active in the dev server.
+
+### Graceful shutdown
+
+The server listens for `SIGTERM` and `SIGINT` in both dev and production. On either signal it stops accepting new connections and waits for in-flight requests to finish, then exits cleanly. If the drain takes longer than 10 seconds, the process force-exits. This means `systemd` stop, `docker stop`, and Kubernetes pod eviction all wait for requests to complete before the process ends.
+
+### Path traversal protection
+
+Static asset URLs (requests with a file extension) are validated so the resolved path always stays inside the `dist/` directory. Requests that would escape it, via `/../` sequences or similar, receive `400 Bad Request` before any file I/O occurs. This applies in both dev and production.
 
 ## TLS certificates
 
 On first start, Bascik looks for `bascik-cert.pem` and `bascik-privkey.pem` in the project root. If either is missing, it generates both automatically:
 
-1. **mkcert** — preferred. Produces a CA-trusted cert (no browser warning). Run `mkcert -install` once to install the root CA before running Bascik. Install mkcert with `brew install mkcert` on macOS.
-2. **openssl** — fallback. Produces a self-signed cert that browsers will warn about.
+1. **mkcert:** preferred. Produces a CA-trusted cert (no browser warning). Run `mkcert -install` once to install the root CA before running Bascik. Install mkcert with `brew install mkcert` on macOS.
+2. **openssl:** fallback. Produces a self-signed cert that browsers will warn about.
 
 To use your own certificates (e.g. from Let's Encrypt), set `keyFile` and `certFile` in the `serve` config block and Bascik will use them instead of generating new ones.
 
 ## Deployment
 
-Bascik's server always uses TLS — there is no plaintext HTTP mode. Most cloud platforms terminate TLS at the edge and send cleartext to the container, which is incompatible with Bascik's HTTPS-only server. The examples below use platforms and approaches that either pass TLS through to the container or work with Bascik's built-in cert handling.
+Bascik's server always uses TLS, there is no plaintext HTTP mode. Most cloud platforms terminate TLS at the edge and send cleartext to the container, which is incompatible with Bascik's HTTPS-only server. The examples below use platforms and approaches that either pass TLS through to the container or work with Bascik's built-in cert handling.
 
 > **Security note.** Before going live: set `hostname: '0.0.0.0'` to bind all interfaces, supply a real CA-issued certificate via `keyFile`/`certFile`, and ensure only the required port is open in your firewall or security group.
 
@@ -409,7 +285,7 @@ docker run -p 8443:8443 \
 
 ### Google Cloud Run
 
-Cloud Run terminates TLS at the edge. Enable **end-to-end encryption** in the Cloud Run service settings so Google forwards HTTPS (not cleartext) to your container — Bascik needs HTTPS on the container port.
+Cloud Run terminates TLS at the edge. Enable **end-to-end encryption** in the Cloud Run service settings so Google forwards HTTPS (not cleartext) to your container, Bascik needs HTTPS on the container port.
 
 ```sh
 # Build and push the image to Artifact Registry
@@ -434,44 +310,9 @@ export const bascikConfig = {
 };
 ```
 
-### Fly.io
-
-Fly.io can proxy HTTPS directly to a container that speaks HTTPS — Bascik's cert does not need to be CA-trusted because Fly handles the public-facing TLS. In `fly.toml`:
-
-```toml
-[http_service]
-  internal_port = 8443
-  force_https = true
-
-  [[http_service.checks]]
-    interval = "30s"
-    timeout = "5s"
-    grace_period = "10s"
-    method = "GET"
-    path = "/"
-```
-
-Deploy:
-
-```sh
-fly launch        # first time: generates fly.toml and provisions the app
-fly deploy        # subsequent deploys
-```
-
-Fly automatically issues a certificate for your `*.fly.dev` subdomain and any custom domains you add with `fly certs add example.com`.
-
-For the `bascik.config.js` inside the container:
-
-```js
-export const bascikConfig = {
-  siteUrl: 'https://my-site.fly.dev',
-  serve: { port: 8443, hostname: '0.0.0.0' },
-};
-```
-
 ### VPS or dedicated server
 
-On a VPS (EC2, DigitalOcean Droplet, Hetzner, etc.) Bascik can own port 443 directly — no reverse proxy required.
+On a VPS (EC2, DigitalOcean Droplet, Hetzner, etc.) Bascik can own port 443 directly with no reverse proxy required.
 
 Get a certificate from Let's Encrypt:
 

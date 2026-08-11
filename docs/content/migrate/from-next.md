@@ -126,7 +126,7 @@ export default function Products({ products }) {
 
 ## getStaticPaths → One File Per Route
 
-`getStaticPaths` tells Next.js which dynamic URLs to pre-render. In Bascik there are no dynamic segments — each URL is a separate `.html` file. Generate them in a script that runs before `bascik --build`.
+`getStaticPaths` tells Next.js which dynamic URLs to pre-render. In Bascik there are no dynamic segments, each URL is a separate `.html` file. Generate them in a script that runs before `bascik --build`.
 
 ```json
 {
@@ -178,7 +178,7 @@ Replace `<Image>` from `next/image` with a standard `<img>` tag. Add `width`, `h
 
 ## next/link → Standard a
 
-Replace `<Link href="...">` with a standard `<a href="...">`. There is no client-side navigation in Bascik — every link triggers a full page load, which is standard browser behaviour for static sites.
+Replace `<Link href="...">` with a standard `<a href="...">`. There is no client-side navigation in Bascik, every link triggers a full page load, which is standard browser behaviour for static sites.
 
 ## next/head → Inline head Tags
 
@@ -222,7 +222,7 @@ export default function About() {
 
 ## API Routes → Not Applicable
 
-Bascik produces static HTML at build time — there is no server process to handle API requests. Replace Next.js API routes with one of:
+Bascik produces static HTML at build time, there is no server process to handle API requests. Replace Next.js API routes with one of:
 
 - **Build-time data:** Use `<script data-bascik-build>` to fetch or read data and bake it into the HTML at build time.
 - **Client-side fetch:** Call external APIs directly from a `<script>` tag in the page.
@@ -230,8 +230,8 @@ Bascik produces static HTML at build time — there is no server process to hand
 
 ## CSS Modules → Paired .css Files
 
-Delete the `.module.css` file and create a plain `.css` file alongside the component HTML. Change `className={styles.foo}` to `class="foo"`. Bascik scopes class names at build time — no Webpack or PostCSS configuration required.
+Delete the `.module.css` file and create a plain `.css` file alongside the component HTML. Change `className={styles.foo}` to `class="foo"`. Bascik scopes class names at build time, no Webpack or PostCSS configuration required.
 
 ## TypeScript → Not Needed
 
-Bascik component files are plain HTML. Type annotations are not applicable. If you have TypeScript utility scripts or content-generation scripts you want to keep, continue using TypeScript there — just not in Bascik component or page HTML files.
+Bascik component files are plain HTML. Type annotations are not applicable. If you have TypeScript utility scripts or content-generation scripts you want to keep, continue using TypeScript there, just not in Bascik component or page HTML files.

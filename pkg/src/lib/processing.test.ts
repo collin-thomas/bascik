@@ -459,6 +459,45 @@ describe("recursivelyTranspile – detailed transpilation errors", () => {
 const PAGE_HTML = '<!DOCTYPE html><html lang="en"><head></head><body><p>hello</p></body></html>';
 const PAGE_PATH = 'src/pages/index.html';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// $ -pattern safety — body/head reassembly
+// Regression: body/head replacement used string replacements, so $1, $2, $&
+// in transpiled page content were expanded as capture-group back-references.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("pageProcessing – $-pattern safety in body/head reassembly", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (BascikConfig as Record<string, unknown>).inlineStyles = false;
+    (BascikConfig as Record<string, unknown>).minifyStyles = false;
+  });
+
+  it("preserves $1 in page body verbatim (not expanded as capture-group back-ref)", async () => {
+    const html = '<!DOCTYPE html><html lang="en"><head></head><body><p><code>$1</code></p></body></html>';
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(html);
+    await pageProcessing(PAGE_PATH, {});
+    const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(pageContent).toContain('<code>$1</code>');
+  });
+
+  it("preserves $1 and $2 together in page body", async () => {
+    const html = '<!DOCTYPE html><html lang="en"><head></head><body><p>params <code>$1</code>, <code>$2</code></p></body></html>';
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(html);
+    await pageProcessing(PAGE_PATH, {});
+    const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(pageContent).toContain('<code>$1</code>');
+    expect(pageContent).toContain('<code>$2</code>');
+  });
+
+  it("preserves $& in page body verbatim", async () => {
+    const html = '<!DOCTYPE html><html lang="en"><head></head><body><p>cost $&amp; tax</p></body></html>';
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(html);
+    await pageProcessing(PAGE_PATH, {});
+    const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(pageContent).toContain('cost $&amp; tax');
+  });
+});
+
 describe("pageProcessing – inlineStyles", () => {
   beforeEach(() => {
     vi.clearAllMocks();

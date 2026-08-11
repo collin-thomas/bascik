@@ -13,15 +13,15 @@ Build scripts (`<script data-bascik-build>`) run **first**, before component res
 On startup (and whenever a component is added), the watch system calls `processAllPages()` instead of invoking `pageProcessing()` once per file. This avoids redundant I/O:
 
 1. **Hoist shared computation.** `listComponents()` and `resolveInlineStylesHtml()` each run **once**, in parallel, before any page is processed. The results are passed to every page rather than re-computed per page.
-2. **Transpile each page.** By default, pages are transpiled sequentially on the main thread. If `useWorkers: true` is set in `bascik.config.js`, a `WorkerPool` is created instead with `Math.min(os.cpus().length, pageCount)` workers, and each worker is initialised with the shared `componentList` and `globalStylesHtml` via `workerData`. The main thread dispatches page paths through the pool's queue and awaits all results. Worker startup has a fixed cost (each worker loads the transpiler's module graph independently), so this only pays off for larger sites or CPU-heavy per-page work — see the [`useWorkers`](/configuration#useworkers) config option.
+2. **Transpile each page.** By default, pages are transpiled sequentially on the main thread. If `useWorkers: true` is set in `bascik.config.js`, a `WorkerPool` is created instead with `Math.min(os.cpus().length, pageCount)` workers, and each worker is initialised with the shared `componentList` and `globalStylesHtml` via `workerData`. The main thread dispatches page paths through the pool's queue and awaits all results. Worker startup has a fixed cost (each worker loads the transpiler's module graph independently), so this only pays off for larger sites or CPU-heavy per-page work, see the [`useWorkers`](/configuration#useworkers) config option.
 3. **Apply side effects on the main thread.** After transpilation completes, the main thread runs `mem.storePage()` and emits the `"transpiled"` event for each result. Brotli compression inside `storePage()` runs in the background and does not block the page from being marked ready or served.
-4. **Write to disk only in build mode.** In dev mode, pages are served entirely from the in-memory store — no `dist/` writes happen, so the server is ready as soon as memory is populated.
+4. **Write to disk only in build mode.** In dev mode, pages are served entirely from the in-memory store, no `dist/` writes happen, so the server is ready as soon as memory is populated.
 
-## Phase 1 — Page Phase (`pageProcessing`)
+## Phase 1: Page Phase (`pageProcessing`)
 
 The page phase prepares the source HTML document and orchestrates the component phase:
 
-1. **Execute build scripts.** Any `<script data-bascik-build>` blocks are run as Node.js ESM modules. Their stdout replaces the script tag. The result can contain component tags — these will be resolved in step 4.
+1. **Execute build scripts.** Any `<script data-bascik-build>` blocks are run as Node.js ESM modules. Their stdout replaces the script tag. The result can contain component tags, these will be resolved in step 4.
 2. **Extract body and head.** The inner content of `<body>` and `<head>` are extracted separately so component injection can happen in both zones independently.
 3. **Obtain component list.** On the multi-page startup path (`processAllPages`), the list is pre-computed once and passed in. On a single-page re-transpilation, it is loaded from `src/components/` at this point.
 4. **Run component phase.** `recursivelyTranspile` is called on both the body and head HTML strings. Each call returns a `TranspileResult` containing the resolved HTML and the list of components that were used.
@@ -29,43 +29,43 @@ The page phase prepares the source HTML document and orchestrates the component 
 6. **Inject live-reload script.** In dev mode only, a small `<script>` that opens a Server-Sent Events connection to `/bascik-live-reload` is appended to the body.
 7. **Minify.** HTML comments are stripped and excess whitespace is collapsed via `minifyHtml`. This runs *after* component resolution so that whitespace-sensitive content inside resolved components (e.g. `<pre>` blocks from `<code-block>`) is preserved intact.
 8. **Reassemble HTML.** The resolved body and head are placed back into the original HTML document structure.
-9. **Write output.** In build mode, the finished HTML is written to `dist/`. In dev mode, no disk write occurs — the result is stored in the in-memory page store so the HTTP/2 server can serve it instantly.
+9. **Write output.** In build mode, the finished HTML is written to `dist/`. In dev mode, no disk write occurs, the result is stored in the in-memory page store so the HTTP/2 server can serve it instantly.
 10. **Emit transpiled event.** `eventEmitter.emit("transpiled")` triggers live-reload for any connected browser.
 
-## Phase 2 — Component Phase (`recursivelyTranspile`)
+## Phase 2: Component Phase (`recursivelyTranspile`)
 
 The component phase recurses until no custom component tags remain in the HTML string. On each pass it finds the first component tag, fully resolves it, and substitutes it. It then repeats until no more tags are found.
 
 For each component tag found:
 
-### Step 1 — Scoping pipeline
+### Step 1: Scoping pipeline
 
 A fresh `instanceId` (a random 8-byte hex string) is generated for this occurrence of the component. An ordered list of transform functions is assembled and applied in a pipeline (each step receives the output of the previous):
 
-1. `prefixElementAttribute(c, "id", instanceId)` — scopes `id` attributes and all corresponding JS DOM selector references.
-2. `prefixElementAttribute(c, "name", instanceId)` — scopes `name` attributes and `getElementsByName` calls.
-3. `prefixElementAttribute(c, "class", instanceId)` — scopes class names in HTML attributes, CSS, and JS selector calls.
-4. `namespaceScriptTags(c)` — wraps every inline `<script>` in an IIFE.
+1. `prefixElementAttribute(c, "id", instanceId)`: scopes `id` attributes and all corresponding JS DOM selector references.
+2. `prefixElementAttribute(c, "name", instanceId)`: scopes `name` attributes and `getElementsByName` calls.
+3. `prefixElementAttribute(c, "class", instanceId)`: scopes class names in HTML attributes, CSS, and JS selector calls.
+4. `namespaceScriptTags(c)`: wraps every inline `<script>` in an IIFE.
 
 Each step is skipped if disabled in `bascik.config.js`.
 
-### Step 2 — Template resolution
+### Step 2: Template resolution
 
 1. **Props.** `injectProps` replaces every `data-bascik-prop-*` placeholder in the component template with the corresponding attribute value from the usage tag.
 2. **Named slots.** `replaceNamedSlots` fills each `data-bascik-slot="name"` zone in the template with the matching `<div data-bascik-slot="name">` content from the usage site.
 3. **Default slot.** The inner content of the usage tag is placed into the element carrying `data-bascik-slot` (no value). If the usage tag has no inner content, the template's fallback content is preserved.
 4. **Attribute inheritance.** `mergeAttributesOntoRoot` copies pass-through attributes (`aria-*`, `data-*`, `class`, etc.) from the usage tag onto the component's root element.
 
-### Step 3 — Substitution
+### Step 3: Substitution
 
 `replaceTag` replaces the original usage tag in the parent HTML string with the fully resolved component HTML. The outer loop runs again on the updated string. Because component templates can themselves contain other component tags, this naturally handles any depth of nesting.
 
 ## Termination
 
-The recursion terminates when `getFirstComponent` no longer finds any custom tag in the HTML string — i.e., when all recognised component names have been replaced with plain HTML.
+The recursion terminates when `getFirstComponent` no longer finds any custom tag in the HTML string, i.e., when all recognised component names have been replaced with plain HTML.
 
 <div class="callout">
-<p><strong>Performance note:</strong> Each call to <code>recursivelyTranspile</code> uses the same in-memory <code>ComponentList</code> built once at the start of the pipeline. In the multi-page startup path, this list is pre-computed once and passed to every worker via <code>workerData</code> — components are never re-read from disk per page or per worker.</p>
+<p><strong>Performance note:</strong> Each call to <code>recursivelyTranspile</code> uses the same in-memory <code>ComponentList</code> built once at the start of the pipeline. In the multi-page startup path, this list is pre-computed once and passed to every worker via <code>workerData</code>, components are never re-read from disk per page or per worker.</p>
 </div>
 
 ## Selective Re-transpilation

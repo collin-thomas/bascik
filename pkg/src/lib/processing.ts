@@ -678,6 +678,9 @@ export const transpilePage = async (
   // verbatim — `<body class="dark">` or `<head data-x>` must not silently
   // drop the processed content (which is what a bare-<body>-only replace did).
   let distHtml = htmlWithBuildOutput
+    // Use function replacements so that $1, $2, $& etc. in transpiledHtmlBody/Head
+    // are never interpreted as back-reference patterns.  The open tags are matched
+    // with attributes (`<body[^>]*>`) so e.g. `<body class="dark">` is preserved.
     .replace(
       /(<body[^>]*>)[\s\S]*?(<\/body>)/i,
       (_m, open, close) => `${open}${transpiledHtmlBody}${close}`,

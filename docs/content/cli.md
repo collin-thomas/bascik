@@ -2,7 +2,7 @@
 
 Bascik features a simple, fast, and highly informative CLI for both development and production building.
 
-## `npm create bascik@latest` — scaffold a new project
+## `npm create bascik@latest`: scaffold a new project
 
 ```sh
 npm create bascik@latest
@@ -144,9 +144,9 @@ bascik --check
 
 It reports:
 
-- **Errors** — hyphenated tags that have no matching component file
-- **Warnings** — component files that exist but are never referenced
-- **Success** — exits with code `0` when no errors are found
+- **Errors:** hyphenated tags that have no matching component file
+- **Warnings:** component files that exist but are never referenced
+- **Success:** exits with code `0` when no errors are found
 
 Example output:
 

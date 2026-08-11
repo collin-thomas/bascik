@@ -12,7 +12,7 @@ This file contains the **complete, centralized documentation and development ski
 * **Scopes CSS class names, element selectors, `@keyframes`, and CSS custom properties** per component so they never collide.
 * **Rewrites DOM selector calls** (`getElementById`, `querySelector`, etc.) in component scripts to match scoped attribute names.
 * **Wraps component scripts in IIFEs** so variables do not leak between components.
-* **Outputs a `dist/` directory of plain `.html` files** — no framework runtime, no client-side JS added by Bascik itself.
+* **Outputs a `dist/` directory of plain `.html` files:** no framework runtime, no client-side JS added by Bascik itself.
 
 ### What Bascik Does NOT Do
 * It is not a JavaScript framework. There is no virtual DOM, no reactive state, no client-side routing.
@@ -44,7 +44,7 @@ Use it in any page or other component:
 ```
 *Self-closing tags are also supported:* `<site-nav />` or `<site-nav class="top" />`
 
-**No restart needed.** The dev server watches the components directory. Drop a new `.html` (or paired `.css`) file in and all pages that use that tag are automatically re-transpiled and reloaded — no server restart required.
+**No restart needed.** The dev server watches the components directory. Drop a new `.html` (or paired `.css`) file in and all pages that use that tag are automatically re-transpiled and reloaded with no server restart required.
 
 ---
 
@@ -85,7 +85,7 @@ p {
 ```
 
 ### Scoped CSS Custom Properties
-CSS custom properties declared in the file are also scoped. `var(--prop, fallback)` with fallback values is fully supported — the property name is scoped and the fallback preserved:
+CSS custom properties declared in the file are also scoped. `var(--prop, fallback)` with fallback values is fully supported, the property name is scoped and the fallback preserved:
 
 ```css
 /* source */
@@ -108,20 +108,20 @@ CSS custom properties declared in the file are also scoped. `var(--prop, fallbac
 ```
 
 ### CSS Scoping Limitations (not yet supported)
-* `@property` — `@property --name { }` declaration names are scoped along with any matching `--name:` declarations and `var(--name)` references in the same component
-* `@starting-style` — class names and element selectors inside `@starting-style` blocks are scoped by the same passes that handle other at-rules; both standalone `@starting-style { .foo { } }` and nested `.foo { @starting-style { } }` forms work
-* `@counter-style` — `@counter-style name { }` declaration names are scoped; references in `list-style`, `list-style-type`, `counter(counter, name)`, and `counters(counter, sep, name)` in the same CSS file are updated to match
-* `view-transition-name` — ✓ values are scoped per component (`bascik__<comp>__vtn__<name>`); matching `::view-transition-old/new/group/image-pair()` pseudo-element references in the same file are updated; `none` and `auto` are not scoped
-* `anchor-name` / `@position-try` — `anchor-name: --name` declarations are scoped per component; matching `position-anchor: --name` references and `@position-try --name { }` at-rules in the same CSS file are updated to match; only anchors declared in the component's own CSS are scoped
-* `:nth-child(An+B of .selector)` — class names in the `of <selector>` argument are scoped (same global `(?<=\.)` pass as `:is()`, `:where()`, `:has()`); works for `:nth-child` and `:nth-last-child`
-* `@font-face` — passed through untouched; declare in a shared stylesheet to avoid duplicate injections
-* `@import` — not followed; include CSS directly in the component file instead
+* `@property`: `@property --name { }` declaration names are scoped along with any matching `--name:` declarations and `var(--name)` references in the same component
+* `@starting-style`: class names and element selectors inside `@starting-style` blocks are scoped by the same passes that handle other at-rules; both standalone `@starting-style { .foo { } }` and nested `.foo { @starting-style { } }` forms work
+* `@counter-style`: `@counter-style name { }` declaration names are scoped; references in `list-style`, `list-style-type`, `counter(counter, name)`, and `counters(counter, sep, name)` in the same CSS file are updated to match
+* `view-transition-name`: ✓ values are scoped per component (`bascik__<comp>__vtn__<name>`); matching `::view-transition-old/new/group/image-pair()` pseudo-element references in the same file are updated; `none` and `auto` are not scoped
+* `anchor-name` / `@position-try`: `anchor-name: --name` declarations are scoped per component; matching `position-anchor: --name` references and `@position-try --name { }` at-rules in the same CSS file are updated to match; only anchors declared in the component's own CSS are scoped
+* `:nth-child(An+B of .selector)`: class names in the `of <selector>` argument are scoped (same global `(?<=\.)` pass as `:is()`, `:where()`, `:has()`); works for `:nth-child` and `:nth-last-child`
+* `@font-face`: passed through untouched; declare in a shared stylesheet to avoid duplicate injections
+* `@import`: not followed; include CSS directly in the component file instead
 
 ---
 
 ## 4. Scoped JavaScript
 
-**Key rule:** Use `id` attributes to identify elements you need to control per-instance, and `getElementById` to find them. Bascik rewrites selector strings at build time — you write your component as if it's the only one on the page.
+**Key rule:** Use `id` attributes to identify elements you need to control per-instance, and `getElementById` to find them. Bascik rewrites selector strings at build time, you write your component as if it's the only one on the page.
 
 DOM selectors in component scripts are rewritten to match scoped names:
 
@@ -150,27 +150,27 @@ DOM selectors in component scripts are rewritten to match scoped names:
 ### Supported DOM Methods (auto-rewritten)
 * `document.getElementById("id")`
 * `document.querySelector("#id")` / `document.querySelectorAll("#id")`
-* `document.querySelector(".cls")` / `document.querySelectorAll(".cls")` — single OR compound selectors
-* `document.querySelector(".foo .bar")` / `querySelector("#id .child")` — compound selectors supported
+* `document.querySelector(".cls")` / `document.querySelectorAll(".cls")`: single OR compound selectors
+* `document.querySelector(".foo .bar")` / `querySelector("#id .child")`: compound selectors supported
 * `document.getElementsByClassName("cls")`
 * `document.getElementsByName("name")`
-* `element.closest("#id")` / `element.closest(".cls")` — compound-aware
-* `element.matches("#id")` / `element.matches(".cls")` — works for event delegation too
-* `element.classList.add/remove/toggle/contains("cls")` — all single and multi-argument forms
-* `element.classList.replace("old", "new")` — both arguments rewritten
-* `element.setAttribute("class", "cls")` / `setAttribute("id", "id-value")` / `setAttribute("name", "value")` — string literal values
-* `element.className = "cls"` or `"cls1 cls2"` or `+= " cls"` — setter forms; space-separated multi-class strings fully rewritten
-* `innerHTML` / `insertAdjacentHTML` string literals — known class names inside the HTML string are rewritten
-* `removeAttribute`, `hasAttribute`, `toggleAttribute` — take attribute names (not values), no rewriting needed
+* `element.closest("#id")` / `element.closest(".cls")`: compound-aware
+* `element.matches("#id")` / `element.matches(".cls")`: works for event delegation too
+* `element.classList.add/remove/toggle/contains("cls")`: all single and multi-argument forms
+* `element.classList.replace("old", "new")`: both arguments rewritten
+* `element.setAttribute("class", "cls")` / `setAttribute("id", "id-value")` / `setAttribute("name", "value")`: string literal values
+* `element.className = "cls"` or `"cls1 cls2"` or `+= " cls"`: setter forms; space-separated multi-class strings fully rewritten
+* `innerHTML` / `insertAdjacentHTML` string literals, known class names inside the HTML string are rewritten
+* `removeAttribute`, `hasAttribute`, `toggleAttribute`: take attribute names (not values), no rewriting needed
 
 ### Not Rewritten (known limitations)
-* `el.id = "value"` — property setter not rewritten; use `getElementById` then work from the reference
-* `el.style.setProperty("--my-var", value)` — runtime CSS custom property names are not rewritten; the scoped var name (e.g. `--bascik__comp__my-var`) is different from the source name
-* Template literals: `` el.className = `box ${state}` `` — not rewritten; use `classList.add/remove` instead
-* `querySelector("[name='username']")` — attribute-selector form for `name`; use `getElementsByName` instead
+* `el.id = "value"`: property setter not rewritten; use `getElementById` then work from the reference
+* `el.style.setProperty("--my-var", value)`: runtime CSS custom property names are not rewritten; the scoped var name (e.g. `--bascik__comp__my-var`) is different from the source name
+* Template literals: `` el.className = `box ${state}` ``, not rewritten; use `classList.add/remove` instead
+* `querySelector("[name='username']")`: attribute-selector form for `name`; use `getElementsByName` instead
 
 ### Scoping Model
-`id` and `name` attributes are scoped **per-instance** — each use of a component generates a different `instanceId`, guaranteeing unique DOM IDs even when the same component appears multiple times on a page. `class` attributes are scoped to the component name only (no instanceId), so all instances share the same class names and CSS deduplication emits a single `<style>` block.
+`id` and `name` attributes are scoped **per-instance:** each use of a component generates a different `instanceId`, guaranteeing unique DOM IDs even when the same component appears multiple times on a page. `class` attributes are scoped to the component name only (no instanceId), so all instances share the same class names and CSS deduplication emits a single `<style>` block.
 
 ```
 class  →  bascik__<componentName>__<originalName>
@@ -179,12 +179,12 @@ name   →  bascik__<componentName>__<instanceId>__<originalName>
 ```
 
 ### Multiple Instances
-Using a component more than once works automatically — each use gets a different `instanceId`, so IDs never collide and each instance's scripts reference only its own elements.
+Using a component more than once works automatically, each use gets a different `instanceId`, so IDs never collide and each instance's scripts reference only its own elements.
 
 ### Class Selectors and Multiple Instances (PITFALL)
-Because class names are scoped to the component **name** (not per-instance), `querySelector('.my-class')` and `querySelectorAll('.my-class')` **always return the first matching element in the document**, even after Bascik rewrites the class name. When the same component is used more than once on a page, every instance's script will target the first instance's elements — the other instances' buttons/inputs/etc. will appear non-functional.
+Because class names are scoped to the component **name** (not per-instance), `querySelector('.my-class')` and `querySelectorAll('.my-class')` **always return the first matching element in the document**, even after Bascik rewrites the class name. When the same component is used more than once on a page, every instance's script will target the first instance's elements, the other instances' buttons/inputs/etc. will appear non-functional.
 
-**Rule:** In component scripts, always use `getElementById` (or `getElementsByName`) to locate specific elements — both are per-instance scoped and always resolve to the correct element. Never use `querySelector`/`querySelectorAll` with a class selector to find an element you need to control per-instance.
+**Rule:** In component scripts, always use `getElementById` (or `getElementsByName`) to locate specific elements, both are per-instance scoped and always resolve to the correct element. Never use `querySelector`/`querySelectorAll` with a class selector to find an element you need to control per-instance.
 
 ```html
 <!-- ❌ Broken for multiple instances -->
@@ -320,7 +320,7 @@ Non-`data-bascik-*` attributes on a usage tag are merged onto the component's ro
 </nav>
 ```
 
-Inherited class names are not scoped — they are treated as global page-level classes.
+Inherited class names are not scoped, they are treated as global page-level classes.
 
 ### Self-Closing Tags
 ```html
@@ -423,7 +423,7 @@ Useful for debug logging, development overlays, or any browser script that shoul
 
 ### data-bascik-server
 
-Tag a `<script>` block with `data-bascik-server` to run it **at request time** on the server. Unlike `data-bascik-build` (which executes once at transpile time), server scripts execute on every request and are never cached. Use them to personalize pages per visitor — reading cookies, querying a database, rendering content based on query parameters.
+Tag a `<script>` block with `data-bascik-server` to run it **at request time** on the server. Unlike `data-bascik-build` (which executes once at transpile time), server scripts execute on every request and are never cached. Use them to personalize pages per visitor, reading cookies, querying a database, rendering content based on query parameters.
 
 ```html
 <script data-bascik-server>
@@ -436,10 +436,10 @@ Tag a `<script>` block with `data-bascik-server` to run it **at request time** o
 
 `process.env.BASCIK_REQUEST` is a JSON string with four keys:
 
-* `path` — URL path without query string, e.g. `"/about"`
-* `method` — HTTP method in uppercase, e.g. `"GET"`
-* `headers` — request headers as string-to-string object (HTTP/2 pseudo-headers excluded)
-* `searchParams` — parsed query params as string-to-string object
+* `path`: URL path without query string, e.g. `"/about"`
+* `method`: HTTP method in uppercase, e.g. `"GET"`
+* `headers`: request headers as string-to-string object (HTTP/2 pseudo-headers excluded)
+* `searchParams`: parsed query params as string-to-string object
 
 Rules:
 * Top-level `import` and `await` are supported.
@@ -529,7 +529,7 @@ Install dependencies now? (Y/n)
 Start the dev server after install? (Y/n)
 ```
 
-Select Y for both and you're live at **https://localhost:8443** — no further commands needed. If you select N, the remaining steps are printed at the end.
+Select Y for both and you're live at **https://localhost:8443:** no further commands needed. If you select N, the remaining steps are printed at the end.
 
 ### Adding to an Existing Project
 
@@ -558,9 +558,9 @@ bascik --serve  # production server: serve a pre-built dist/ with HTTP/2
 bascik --check  # static analysis: validate pages and components without building
 ```
 
-**`bascik --serve`** — starts the HTTP/2 server against a pre-built `dist/` directory. Run `bascik --build` first, then `bascik --serve`. Unlike the dev server, `--serve` does not watch files or inject live-reload. `data-bascik-server` scripts execute per-request in both modes.
+**`bascik --serve`:** starts the HTTP/2 server against a pre-built `dist/` directory. **Only needed when the site uses `data-bascik-server` scripts** for per-request dynamic content (personalized dashboards, user-specific data, server-rendered pagination). Sites with no server scripts can be deployed to any static host with no runtime server required. Run `bascik --build` first, then `bascik --serve`. Unlike the dev server, `--serve` does not watch files or inject live-reload. `data-bascik-server` scripts execute per-request in both modes.
 
-**`serve` config block** — configure the production server in `bascik.config.js`:
+**`serve` config block:** configure the production server in `bascik.config.js`:
 ```js
 export const bascikConfig = {
   cacheHttp: true,       // default in --serve; false in dev
@@ -574,15 +574,15 @@ export const bascikConfig = {
 ```
 TLS certs are generated automatically (mkcert if available, openssl fallback) when `keyFile`/`certFile` are absent. Provide your own certs from a public CA for production.
 
-**`cacheHttp`** — defaults to `true` in `--serve` and `false` in the dev server. When `true`: pages receive `ETag` headers and the server returns `304 Not Modified` for unchanged content; static assets get `Cache-Control: public, max-age=3600`. Set `false` if a CDN manages caching externally.
+**`cacheHttp`:** defaults to `true` in `--serve` and `false` in the dev server. When `true`: pages receive `ETag` headers and the server returns `304 Not Modified` for unchanged content; static assets get `Cache-Control: public, max-age=3600`. Set `false` if a CDN manages caching externally.
 
 **Production hardening (automatic in `--serve`):**
-* **Security headers** — every response includes `x-content-type-options: nosniff`, `x-frame-options: SAMEORIGIN`, `referrer-policy: strict-origin-when-cross-origin`, `permissions-policy: interest-cohort=()`.
-* **Rate limiting** — 500 requests per 10 seconds per IP. Clients over the limit get `429 Too Many Requests` with `Retry-After`. Not active in the dev server. When behind a reverse proxy the limit applies to the proxy's IP; use the proxy's own rate limiting for per-client control.
-* **Graceful shutdown** — SIGTERM and SIGINT stop accepting connections and drain in-flight requests before exiting. Force-exits after 10 seconds if sessions haven't drained.
-* **Path traversal protection** — static asset URLs are validated against `dist/`; requests that escape with `/../` sequences get `400 Bad Request`.
+* **Security headers:** every response includes `x-content-type-options: nosniff`, `x-frame-options: SAMEORIGIN`, `referrer-policy: strict-origin-when-cross-origin`, `permissions-policy: interest-cohort=()`.
+* **Rate limiting:** 500 requests per 10 seconds per IP. Clients over the limit get `429 Too Many Requests` with `Retry-After`. Not active in the dev server. When behind a reverse proxy the limit applies to the proxy's IP; use the proxy's own rate limiting for per-client control.
+* **Graceful shutdown:** SIGTERM and SIGINT stop accepting connections and drain in-flight requests before exiting. Force-exits after 10 seconds if sessions haven't drained.
+* **Path traversal protection:** static asset URLs are validated against `dist/`; requests that escape with `/../` sequences get `400 Bad Request`.
 
-**Deployment** — Bascik's server always uses TLS; there is no cleartext HTTP mode. Platforms that terminate TLS at the edge and send cleartext to the container (Cloud Run default, most PaaS) need end-to-end TLS enabled so HTTPS reaches the container. Key patterns:
+**Deployment:** Bascik's server always uses TLS; there is no cleartext HTTP mode. Platforms that terminate TLS at the edge and send cleartext to the container (Cloud Run default, most PaaS) need end-to-end TLS enabled so HTTPS reaches the container. Key patterns:
 
 * **VPS / dedicated**: bind `hostname: '0.0.0.0'`, supply Let's Encrypt certs via `keyFile`/`certFile`, run as a `systemd` service.
 * **Docker**: multi-stage build (build stage: `npx bascik --build`; serve stage: `npx bascik --serve`). Mount real certs at runtime via volume.
@@ -596,7 +596,7 @@ When using a reverse proxy, forward `X-Real-IP` and any auth headers so `data-ba
 Bascik's CLI is designed to provide clean, minimal, and informative terminal output.
 
 #### 1. Starting the Dev Server
-When you start the dev server, Bascik automatically generates local SSL/TLS certificates for its built-in HTTP/2 server, transpiles all pages inside your pages directory, stores each page in memory, then starts the server. Pages are served from memory — no disk I/O is required at request time in dev mode.
+When you start the dev server, Bascik automatically generates local SSL/TLS certificates for its built-in HTTP/2 server, transpiles all pages inside your pages directory, stores each page in memory, then starts the server. Pages are served from memory with no disk I/O is required at request time in dev mode.
 
 ```terminal
 transpiled: pages/getting-started.html
@@ -607,7 +607,7 @@ transpiled: pages/about.html
 Server running at https://localhost:8443
 ```
 
-On startup, Bascik computes the full component list and global styles **once**, then transpiles all pages. By default pages transpile sequentially on the main thread; setting `useWorkers: true` in `bascik.config.js` distributes them across a pool of CPU-core worker threads instead. Worker startup has a fixed cost (each worker loads the transpiler's module graph independently), so `useWorkers` is opt-in and best suited to larger sites or CPU-heavy per-page work — small sites are usually faster with the sequential default. Brotli compression for each page runs in the background after storage and does not block the page from being marked ready or served; the server falls back to serving uncompressed content for any request that arrives before compression finishes. The server becomes ready as soon as memory is populated; no writes to `dist/` happen during dev mode.
+On startup, Bascik computes the full component list and global styles **once**, then transpiles all pages. By default pages transpile sequentially on the main thread; setting `useWorkers: true` in `bascik.config.js` distributes them across a pool of CPU-core worker threads instead. Worker startup has a fixed cost (each worker loads the transpiler's module graph independently), so `useWorkers` is opt-in and best suited to larger sites or CPU-heavy per-page work, small sites are usually faster with the sequential default. Brotli compression for each page runs in the background after storage and does not block the page from being marked ready or served; the server falls back to serving uncompressed content for any request that arrives before compression finishes. The server becomes ready as soon as memory is populated; no writes to `dist/` happen during dev mode.
 
 #### 2. Watching for File Changes (Watch Mode)
 While the dev server is active, Bascik watches your file system and incrementally updates your build as files are added, updated, or removed:
@@ -657,11 +657,11 @@ bascik --check
 ```
 
 Bascik scans every `.html` file in your pages and components directories and reports:
-* **Errors** — hyphenated tags with no matching component file (the tag renders as-is in the HTML output):
+* **Errors:** hyphenated tags with no matching component file (the tag renders as-is in the HTML output):
   ```terminal
   [bascik check] Unknown component in "pages/about.html": <my-missing> — no matching component file found
   ```
-* **Warnings** — component files that are never referenced:
+* **Warnings:** component files that are never referenced:
   ```terminal
   [bascik check] Unused component: <old-widget> — defined but never referenced
   ```
@@ -670,12 +670,12 @@ Bascik scans every `.html` file in your pages and components directories and rep
   [bascik check] ✓ 8 pages and 12 components checked — no errors
   ```
 
-Exits with code `1` on errors — suitable for CI:
+Exits with code `1` on errors, suitable for CI:
 ```sh
 bascik --check && bascik --build
 ```
 
-**What `bascik --check` does not cover:** it validates component references only — not CSS or JavaScript syntax. A CSS syntax error can cause bascik's scoping transforms to produce garbled output without any warning. Use external tools alongside `--check`:
+**What `bascik --check` does not cover:** it validates component references only, not CSS or JavaScript syntax. A CSS syntax error can cause bascik's scoping transforms to produce garbled output without any warning. Use external tools alongside `--check`:
 
 | Tool | What it catches |
 |---|---|
@@ -693,7 +693,7 @@ npx stylelint "src/**/*.css" && bascik --check && bascik --build
 
 Editors validate all `<script>` blocks in an HTML file as sharing one scope, causing false "variable already declared" errors. Bascik wraps each block in an IIFE at build time, so the errors are false positives.
 
-**VS Code fix** — add `.vscode/settings.json`:
+**VS Code fix:** add `.vscode/settings.json`:
 ```json
 { "html.validate.scripts": false }
 ```
@@ -702,7 +702,7 @@ Commit this file so all contributors get the correct behaviour automatically. Al
 
 #### 5. Inspecting `dist/` Output
 
-Both the dev server and `bascik --build` write compiled HTML to `dist/` on disk — this is the ground truth of what Bascik produced. The `dist/` structure mirrors `src/pages/` with the leading directory stripped:
+Both the dev server and `bascik --build` write compiled HTML to `dist/` on disk, this is the ground truth of what Bascik produced. The `dist/` structure mirrors `src/pages/` with the leading directory stripped:
 
 ```
 src/pages/about.html       →  dist/about.html
@@ -714,7 +714,7 @@ What to check in compiled output:
 * **Scoped class names:** attributes like `class="bascik__site-nav__nav"` (or a short hash with `obfuscateAttributeNames`) confirm CSS scoping ran correctly.
 * **Injected `<style>` block:** the `<head>` should contain one combined `<style>` with CSS from all components used on that page.
 * **Build script output:** `<script data-bascik-build>` is replaced with stdout; if missing, check the terminal for a `[bascik] build script error` line.
-* **Server script output:** `<script data-bascik-server>` is replaced at request time; if output is missing on a live request, check the terminal for a `[bascik] server script error` line. Remember these scripts run in Node.js, not the browser — they require `bascik --serve` or the dev server to execute.
+* **Server script output:** `<script data-bascik-server>` is replaced at request time; if output is missing on a live request, check the terminal for a `[bascik] server script error` line. Remember these scripts run in Node.js, not the browser, they require `bascik --serve` or the dev server to execute.
 * **Slot and prop values:** verify fallback and injected text appear in the right place.
 
 The browser's **View Source** (or DevTools **Sources** panel) is equivalent to reading `dist/` and is often faster during development.
@@ -764,7 +764,7 @@ Alpine.js uses `x-data` for state and `@click` / `x-show` for events and visibil
 ### Tailwind CSS
 Tailwind utility classes are global by design. Bascik's class scoping would rename `class="flex gap-4"` to `class="bascik__comp__flex bascik__comp__gap-4"`, breaking Tailwind's CSS.
 
-**Required config** — disable class scoping in `bascik.config.js`:
+**Required config:** disable class scoping in `bascik.config.js`:
 ```js
 export const bascikConfig = {
   scopeAttribute: {
@@ -792,9 +792,9 @@ With `class: false`, utility classes work normally inside any component:
 Trade-off: with `class: false`, Bascik no longer isolates component class names. IDs and names remain scoped independently.
 
 ### HTMX, Stimulus, and Others
-* **HTMX** — Uses `hx-get`, `hx-post` attributes for server-driven partial updates.
-* **Stimulus** — Uses `data-controller` for attaching behavior to DOM structures.
-* **Chart.js, D3, Leaflet** — Mounts to elements via `getElementById`; Bascik rewrites the ID and matching selectors at build-time so they stay in sync.
+* **HTMX:** Uses `hx-get`, `hx-post` attributes for server-driven partial updates.
+* **Stimulus:** Uses `data-controller` for attaching behavior to DOM structures.
+* **Chart.js, D3, Leaflet:** Mounts to elements via `getElementById`; Bascik rewrites the ID and matching selectors at build-time so they stay in sync.
 
 ---
 
@@ -855,7 +855,7 @@ When generating code, pages, or components for a Bascik project, the following c
 1. **Hyphenated Custom Tags:** Component tag names must be hyphenated (e.g. `my-nav`, `site-header`). Single-word tags are not valid custom element names.
 2. **Scoping Rules:** CSS scoping only applies to paired `.css` files and inline `<style>` tags inside component HTML.
 3. **Selector Rewrites:** CSS `#id {}` hash selectors are converted to component-scoped class selectors; the class is automatically injected onto the matching element. The `[id]` attribute-selector form is stripped.
-4. **Script Selectors:** Use `id` and `class` selectors in JS that exactly match the attributes in the component HTML — Bascik rewrites them at build time.
+4. **Script Selectors:** Use `id` and `class` selectors in JS that exactly match the attributes in the component HTML, Bascik rewrites them at build time.
 5. **DOM Traversal:** For compound DOM queries, query by a single scoped `id` first, then traverse from the returned element.
 6. **Dynamic Toggles:** Use `data-` attributes for runtime state that changes via JavaScript (e.g. `data-state="open"`). Scoped class names are assigned at build time and cannot be reliably looked up by JS string manipulation *unless* you utilize a scoping helper (Section 5).
 7. **Text Props:** Props accept text only. For rich HTML content, use slots.

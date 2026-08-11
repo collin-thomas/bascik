@@ -10,8 +10,8 @@ HTTP/2 requires TLS. Using it for development means the protocol between the dev
 
 On first run, Bascik generates a self-signed certificate valid for 100 years and writes two files to the project root:
 
-- `bascik-cert.pem` — the certificate
-- `bascik-privkey.pem` — the private key
+- `bascik-cert.pem`: the certificate
+- `bascik-privkey.pem`: the private key
 
 On subsequent runs, both files are checked for existence and generation is skipped if they are present. The generation strategy differs by platform:
 
@@ -32,7 +32,7 @@ The server listens on `https://localhost:8443` and handles all requests on a sin
 
 Requests are dispatched in this order:
 
-1. **Live-reload SSE endpoint.** `GET /bascik-live-reload` — sets up a Server-Sent Events stream. When the watch system detects a change, it sends `data: reload\n\n` to all connected clients, which calls `window.location.reload()`.
+1. **Live-reload SSE endpoint.** `GET /bascik-live-reload`: sets up a Server-Sent Events stream. When the watch system detects a change, it sends `data: reload\n\n` to all connected clients, which calls `window.location.reload()`.
 2. **Static assets with extensions.** Any path with a file extension other than `.html` is served directly from the `dist/` directory using a streaming `createReadStream`. The correct `Content-Type` is set from the `MIME_MAP`.
 3. **HTML pages.** Paths without a file extension are looked up in the in-memory store. If found, the page is served with brotli compression if the client accepts it (`Accept-Encoding: br`), otherwise the raw buffer is sent. Unknown paths fall back to the `/404` entry if one exists.
 
@@ -44,8 +44,8 @@ Stream-level errors (client disconnects, runtime bugs per page) are caught by an
 
 The `MemoryStore` class holds two maps:
 
-- `#files` — maps HTTP paths (e.g. `/getting-started`) to `StoredPage` objects containing the raw buffer, a brotli-compressed buffer, and the set of component names used on that page.
-- `#components` — an inverted index mapping each component name to the `Set<string>` of absolute page file paths that use it.
+- `#files`: maps HTTP paths (e.g. `/getting-started`) to `StoredPage` objects containing the raw buffer, a brotli-compressed buffer, and the set of component names used on that page.
+- `#components`: an inverted index mapping each component name to the `Set<string>` of absolute page file paths that use it.
 
 This inverted index powers selective re-transpilation. When a component file changes, `selectivelyProcessPages` looks up exactly which pages need rebuilding without scanning every page in the project.
 
@@ -57,22 +57,22 @@ Pages are brotli-compressed asynchronously (`zlib.brotliCompress`) when stored. 
 
 Three separate chokidar watchers are started by `watchFiles()`. All watchers use polling mode (`usePolling: true`) to avoid hitting OS file-descriptor limits on large projects.
 
-### Watcher 1 — Static assets
+### Watcher 1: Static assets
 
 Watches the pages directory for any file matching the MIME map. On `add` or `change`, the file is copied to the mirrored path in `dist/`. On `unlink`, the dist file is deleted. In dev mode, a change also emits an `"asset-changed"` event to trigger live reload.
 
-### Watcher 2 — Page HTML files
+### Watcher 2: Page HTML files
 
-Watches the pages directory for `.html` files only. On the initial `"ready"` event, `processAllPages()` is called — this pre-computes the component list once, then transpiles all pages sequentially on the main thread by default, or across a CPU-aware worker pool if `useWorkers: true` is configured. After the initial scan, individual `add` or `change` events call `pageProcessing(path)` for that file alone.
+Watches the pages directory for `.html` files only. On the initial `"ready"` event, `processAllPages()` is called, this pre-computes the component list once, then transpiles all pages sequentially on the main thread by default, or across a CPU-aware worker pool if `useWorkers: true` is configured. After the initial scan, individual `add` or `change` events call `pageProcessing(path)` for that file alone.
 
 On `unlink`, the page is removed from the memory store and deleted from `dist/`.
 
-### Watcher 3 — Component files
+### Watcher 3: Component files
 
 Watches the components directory for `.html` and `.css` files. Uses `ignoreInitial: true` so it only fires on changes after startup.
 
-- **add** — a new component was created; `processAllPages()` is called to rebuild everything using the updated component list.
-- **change / unlink** — `selectivelyProcessPages(path)` uses the inverted component index to rebuild only affected pages.
+- **add:** a new component was created; `processAllPages()` is called to rebuild everything using the updated component list.
+- **change / unlink:** `selectivelyProcessPages(path)` uses the inverted component index to rebuild only affected pages.
 
 ## Live Reload
 

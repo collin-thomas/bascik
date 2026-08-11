@@ -61,8 +61,8 @@ pkg/e2e/
 
 Playwright's `webServer` hook runs two commands before any test:
 
-1. `node dist/index.js --config bascik.config.js --build` — transpiles the fixture site into `e2e/dist/`
-2. `node server.mjs 4200` — serves `dist/` on `http://localhost:4200`
+1. `node dist/index.js --config bascik.config.js --build`: transpiles the fixture site into `e2e/dist/`
+2. `node server.mjs 4200`: serves `dist/` on `http://localhost:4200`
 
 Tests then navigate to pages on that server and assert against the live browser DOM.
 
@@ -79,7 +79,7 @@ export const bascikConfig = {
 };
 ```
 
-Each fixture page renders two or more instances of the component under test so isolation can be verified — changes to instance A must not affect instance B.
+Each fixture page renders two or more instances of the component under test so isolation can be verified, changes to instance A must not affect instance B.
 
 ## Test Files
 
@@ -284,8 +284,8 @@ describe("recursivelyTranspile", () => {
 
 The package uses two tsconfig files:
 
-- `tsconfig.json` — used by Vitest; includes test files (`src/**/*.test.ts`, `bench/**/*.bench.ts`).
-- `tsconfig.build.json` — used by `tsc` for production builds; excludes test files and emits to `dist/`.
+- `tsconfig.json`: used by Vitest; includes test files (`src/**/*.test.ts`, `bench/**/*.bench.ts`).
+- `tsconfig.build.json`: used by `tsc` for production builds; excludes test files and emits to `dist/`.
 
 Run type checking without emitting output:
 
