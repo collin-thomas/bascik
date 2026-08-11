@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Server Scripts Test</title>
+</head>
+
+<body>
+  <p id="static-before">static-before</p>
+
+  <!-- output from x-test-name header (or "guest" fallback) -->
+  <script data-bascik-server>
+    const req = JSON.parse(process.env.BASCIK_REQUEST);
+    const name = req.headers['x-test-name'] ?? 'guest';
+    process.stdout.write(`<p id="from-header">${name}</p>`);
+  </script>
+
+  <!-- output from ?color= query param (or "none" fallback) -->
+  <script data-bascik-server>
+    const { searchParams } = JSON.parse(process.env.BASCIK_REQUEST);
+    const color = searchParams.color ?? 'none';
+    process.stdout.write(`<p id="from-query">${color}</p>`);
+  </script>
+
+  <!-- output the request path -->
+  <script data-bascik-server>
+    const { path } = JSON.parse(process.env.BASCIK_REQUEST);
+    process.stdout.write(`<p id="from-path">${path}</p>`);
+  </script>
+
+  <!-- top-level await works in server scripts -->
+  <script data-bascik-server>
+    await new Promise(r => setTimeout(r, 0));
+    process.stdout.write('<p id="from-async">async-ok</p>');
+  </script>
+
+  <!-- this script intentionally throws; the tag should become empty -->
+  <script data-bascik-server>
+    throw new Error('intentional-error');
+  </script>
+
+  <p id="static-after">static-after</p>
+</body>
+
+</html>

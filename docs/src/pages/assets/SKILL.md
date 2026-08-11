@@ -421,6 +421,33 @@ Useful for debug logging, development overlays, or any browser script that shoul
 
 > **dev vs. build:** `data-bascik-build` executes at transpile time and injects HTML into the page. `data-bascik-dev` runs in the browser, but only in dev mode.
 
+### data-bascik-server
+
+Tag a `<script>` block with `data-bascik-server` to run it **at request time** on the server. Unlike `data-bascik-build` (which executes once at transpile time), server scripts execute on every request and are never cached. Use them to personalize pages per visitor — reading cookies, querying a database, rendering content based on query parameters.
+
+```html
+<script data-bascik-server>
+  const req = JSON.parse(process.env.BASCIK_REQUEST);
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const name = esc(req.headers['x-display-name'] ?? 'Guest');
+  console.log(`<p>Welcome, ${name}!</p>`);
+</script>
+```
+
+`process.env.BASCIK_REQUEST` is a JSON string with four keys:
+
+* `path` — URL path without query string, e.g. `"/about"`
+* `method` — HTTP method in uppercase, e.g. `"GET"`
+* `headers` — request headers as string-to-string object (HTTP/2 pseudo-headers excluded)
+* `searchParams` — parsed query params as string-to-string object
+
+Rules:
+* Top-level `import` and `await` are supported.
+* `data-bascik-server` blocks are preserved through `bascik --build` and executed at request time when served with `bascik --serve` or the dev server.
+* They are NOT executed during `bascik --build` itself.
+* Scripts are NOT wrapped in an IIFE (they are Node.js code, not browser JS).
+* On error, a warning is logged and the tag is replaced with an empty string.
+
 ---
 
 ## 9. Configuration (`bascik.config.js`)
@@ -444,12 +471,18 @@ export const bascikConfig = {
   minifyStyles: true,
   inlineStyles: false, // false | true | ['src/pages/css/styles.css']
   obfuscateAttributeNames: true, // hash class/id names to short hex strings
-  cacheHttp: false,
+  cacheHttp: false, // dev default; automatically true in --serve mode
   verboseLogging: false,
   siteUrl: 'https://example.com',
   generate: {
     sitemap: true, // write dist/sitemap.xml
     robots: true,  // write dist/robots.txt
+  },
+  serve: {
+    port: 8443,           // default
+    hostname: 'localhost', // use '0.0.0.0' to bind all interfaces (containers/proxies)
+    keyFile: '/etc/ssl/site.key',  // optional: provide your own TLS cert
+    certFile: '/etc/ssl/site.crt', // optional: provide your own TLS cert
   },
 };
 
@@ -521,8 +554,43 @@ Then run `bascik init` to scaffold the starter files and folder structure, or ad
 ```sh
 bascik          # dev: transpile, start HTTP/2 server at https://localhost:8443, watch
 bascik --build  # production: transpile to dist/ only
+bascik --serve  # production server: serve a pre-built dist/ with HTTP/2
 bascik --check  # static analysis: validate pages and components without building
 ```
+
+**`bascik --serve`** — starts the HTTP/2 server against a pre-built `dist/` directory. Run `bascik --build` first, then `bascik --serve`. Unlike the dev server, `--serve` does not watch files or inject live-reload. `data-bascik-server` scripts execute per-request in both modes.
+
+**`serve` config block** — configure the production server in `bascik.config.js`:
+```js
+export const bascikConfig = {
+  cacheHttp: true,       // default in --serve; false in dev
+  serve: {
+    port: 8443,            // default
+    hostname: 'localhost', // set '0.0.0.0' to bind all interfaces
+    keyFile: 'bascik-privkey.pem',
+    certFile: 'bascik-cert.pem',
+  },
+};
+```
+TLS certs are generated automatically (mkcert if available, openssl fallback) when `keyFile`/`certFile` are absent. Provide your own certs from a public CA for production.
+
+**`cacheHttp`** — defaults to `true` in `--serve` and `false` in the dev server. When `true`: pages receive `ETag` headers and the server returns `304 Not Modified` for unchanged content; static assets get `Cache-Control: public, max-age=3600`. Set `false` if a CDN manages caching externally.
+
+**Production hardening (automatic in `--serve`):**
+* **Security headers** — every response includes `x-content-type-options: nosniff`, `x-frame-options: SAMEORIGIN`, `referrer-policy: strict-origin-when-cross-origin`, `permissions-policy: interest-cohort=()`.
+* **Rate limiting** — 500 requests per 10 seconds per IP. Clients over the limit get `429 Too Many Requests` with `Retry-After`. Not active in the dev server. When behind a reverse proxy the limit applies to the proxy's IP; use the proxy's own rate limiting for per-client control.
+* **Graceful shutdown** — SIGTERM and SIGINT stop accepting connections and drain in-flight requests before exiting. Force-exits after 10 seconds if sessions haven't drained.
+* **Path traversal protection** — static asset URLs are validated against `dist/`; requests that escape with `/../` sequences get `400 Bad Request`.
+
+**Deployment** — Bascik's server always uses TLS; there is no cleartext HTTP mode. Platforms that terminate TLS at the edge and send cleartext to the container (Cloud Run default, most PaaS) need end-to-end TLS enabled so HTTPS reaches the container. Key patterns:
+
+* **VPS / dedicated**: bind `hostname: '0.0.0.0'`, supply Let's Encrypt certs via `keyFile`/`certFile`, run as a `systemd` service.
+* **Docker**: multi-stage build (build stage: `npx bascik --build`; serve stage: `npx bascik --serve`). Mount real certs at runtime via volume.
+* **Google Cloud Run**: deploy the Docker image with `--port 8443`, then enable **End-to-end encryption (HTTP/2)** in the service settings. Cloud Run will not verify Bascik's container cert.
+* **Fly.io**: set `internal_port = 8443` in `fly.toml`; Fly proxies HTTPS to the container without verifying the container cert.
+* **nginx / Caddy reverse proxy**: proxy to `https://localhost:8443` with TLS verification disabled for the backend leg (`proxy_ssl_verify off` in nginx; `tls_insecure_skip_verify` in Caddy transport). The proxy holds the public CA cert; Bascik holds a self-signed cert.
+
+When using a reverse proxy, forward `X-Real-IP` and any auth headers so `data-bascik-server` scripts receive them via `headers` in `BASCIK_REQUEST`.
 
 ### Development Workflow & Server Output
 Bascik's CLI is designed to provide clean, minimal, and informative terminal output.
@@ -646,6 +714,7 @@ What to check in compiled output:
 * **Scoped class names:** attributes like `class="bascik__site-nav__nav"` (or a short hash with `obfuscateAttributeNames`) confirm CSS scoping ran correctly.
 * **Injected `<style>` block:** the `<head>` should contain one combined `<style>` with CSS from all components used on that page.
 * **Build script output:** `<script data-bascik-build>` is replaced with stdout; if missing, check the terminal for a `[bascik] build script error` line.
+* **Server script output:** `<script data-bascik-server>` is replaced at request time; if output is missing on a live request, check the terminal for a `[bascik] server script error` line. Remember these scripts run in Node.js, not the browser — they require `bascik --serve` or the dev server to execute.
 * **Slot and prop values:** verify fallback and injected text appear in the right place.
 
 The browser's **View Source** (or DevTools **Sources** panel) is equivalent to reading `dist/` and is often faster during development.

@@ -24,6 +24,7 @@ export const NAV = [
     { href: '/props', label: 'Props' },
     { href: '/attribute-inheritance', label: 'Attribute Inheritance' },
     { href: '/build-scripts', label: 'Build Scripts' },
+    { href: '/server', label: 'Production Server' },
     { href: '/sitemap', label: 'Sitemap & robots.txt' },
     { href: '/libraries', label: 'JavaScript Libraries' },
   ]},

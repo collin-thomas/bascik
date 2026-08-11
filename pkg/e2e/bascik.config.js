@@ -18,4 +18,8 @@ export const bascikConfig = {
     id: true,
     name: true,
   },
+  serve: {
+    port: 9443,
+    hostname: 'localhost',
+  },
 };

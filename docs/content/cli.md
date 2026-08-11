@@ -48,6 +48,7 @@ Select **Y** for both and you're live at `https://localhost:8443` with no extra 
 ```sh
 bascik          # dev: transpile, start HTTPS dev server, watch
 bascik --build  # production: transpile to dist/ only
+bascik --serve  # production server: serve a pre-built dist/ with HTTP/2
 bascik --check  # static analysis: validate pages and components without building
 ```
 
@@ -184,7 +185,46 @@ bascik --build
 
 The output uses root-relative asset paths (for example `/css/styles.css`) and must be served by an HTTP server. Opening files directly with `file://` will break stylesheet and script loading.
 
-To preview the production build locally:
+## Production server
+
+`bascik --serve` starts the same HTTP/2 server used for development, but pointed at a pre-built `dist/` directory. Run `--build` first, then `--serve`:
+
+```sh
+bascik --build && bascik --serve
+```
+
+The production server:
+
+- Serves pre-compiled pages from `dist/` without watching for source changes.
+- Has no live-reload SSE endpoint.
+- Executes `data-bascik-server` script blocks on every request, just like the dev server.
+
+### Configuring the server
+
+Use the `serve` key in `bascik.config.js` to customize the server for both dev and production:
+
+```js
+// bascik.config.js
+export const bascikConfig = {
+  serve: {
+    port: 443,
+    hostname: '0.0.0.0',   // bind all interfaces (needed in containers)
+    keyFile: '/etc/ssl/site.key',
+    certFile: '/etc/ssl/site.crt',
+  },
+};
+```
+
+| Option | Default | Description |
+|---|---|---|
+| `port` | `8443` | TCP port to listen on |
+| `hostname` | `"localhost"` | Hostname or IP to bind to |
+| `keyFile` | auto-generated | Path to a PEM private key. Omit to use the auto-generated cert. |
+| `certFile` | auto-generated | Path to a PEM certificate. Omit to use the auto-generated cert. |
+
+When `keyFile` / `certFile` are omitted, Bascik generates certificates automatically using `mkcert` (if installed) or `openssl` as a fallback.
+
+To preview the production build with a third-party HTTP server:
 
 ```sh
 npx http-server dist

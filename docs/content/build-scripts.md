@@ -170,6 +170,8 @@ Environment variables set in your shell or a `.env` file (loaded with a tool lik
 - **ESM only** — scripts are written as `.mjs` files. Use `import` syntax; `require()` is not available.
 - **Node.js only** — browser globals like `window` and `document` are not available in build scripts.
 
+For per-request server-side rendering, see [Server scripts](/server).
+
 <!-- demo:code -->
 ```html
 <script data-bascik-build>
