@@ -84,18 +84,18 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
   const tempDir = join(process.cwd(), "node_modules", ".cache", "bascik");
   await mkdir(tempDir, { recursive: true });
 
-  for (const match of matches) {
+  // Run all build scripts in parallel; collect outputs keyed by tag to avoid race conditions.
+  const outputs = await Promise.all(matches.map(async (match) => {
     const [fullTag, scriptContent] = match;
     const tmpPath = join(
       tempDir,
       `build-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
     );
-
     try {
       await writeFile(tmpPath, scriptContent.trim(), "utf8");
       const { stdout, stderr } = await runModule(tmpPath);
       if (stderr) process.stderr.write(stderr);
-      result = result.replace(fullTag, stdout);
+      return { fullTag, output: stdout };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       let errorMsg = `[bascik] build script error`;
@@ -110,10 +110,14 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
         }
       }
       console.warn(`${errorMsg}:\n${msg}`);
-      result = result.replace(fullTag, "");
+      return { fullTag, output: "" };
     } finally {
       await unlink(tmpPath).catch(() => { });
     }
+  }));
+
+  for (const { fullTag, output } of outputs) {
+    result = result.replace(fullTag, output);
   }
 
   return result;

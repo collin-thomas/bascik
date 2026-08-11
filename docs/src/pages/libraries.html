@@ -7,6 +7,7 @@
     content="Bascik adds zero JavaScript to your pages by default, but you are free to bundle any library — Alpine.js, HTMX, or a custom bundle." />
   <title>JavaScript Libraries — Bascik Docs</title>
   <script src="https://unpkg.com/petite-vue" defer init></script>
+  <script src="https://unpkg.com/alpinejs" defer></script>
 </head>
 
 <body>
@@ -20,20 +21,13 @@
       <main class="docs-content">
         <p class="section-label">Feature</p>
 
-        <!-- Content rendered from docs/content/libraries.md at build time.
-             To update page content, edit the MD file — not this file. -->
+        <!-- Slice 1: intro → Reactive Counter section (demo blocks stripped; counter demo follows) -->
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
-          const { renderMd } = await import(
-            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
-          );
-          console.log(await renderMd('./content/libraries.md'));
+          const { renderMdRange } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+          console.log(await renderMdRange('./content/libraries.md', { to: 'Live Filter' }, { stripDemoBlocks: true }));
         </script>
-
-        <h2>Live Counter Demo</h2>
-        <p>Two independent instances of <code>my-counter</code> running on the same page. Each has its own isolated
-          reactive state — clicking buttons in one has no effect on the other.</p>
 
         <component-demo data-bascik-prop-file="src/components/my-counter/">
           <div data-bascik-slot="example">
@@ -112,9 +106,86 @@
           </div>
         </component-demo>
 
-        <h2>Live Tailwind Demo</h2>
-        <p>These cards are plain HTML placed directly in the page — not inside a component — so Bascik leaves the class
-          names untouched and Tailwind styles them as normal.</p>
+        <!-- Slice 2: Live Filter section (demo block stripped; filter demo follows) -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMdRange } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+          console.log(await renderMdRange('./content/libraries.md', { from: 'Live Filter', to: 'Shared State Across Components' }, { stripDemoBlocks: true }));
+        </script>
+
+        <component-demo>
+          <div data-bascik-slot="example">
+            <div v-scope="{
+              query: '',
+              items: ['Astro', 'Eleventy', 'Next.js', 'Nuxt', 'SvelteKit']
+            }" style="display:flex;flex-direction:column;gap:12px;max-width:280px">
+              <input type="search" v-model="query" placeholder="Filter frameworks…"
+                style="padding:8px 12px;background:var(--bg-muted);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:inherit" />
+              <ul style="margin:0;padding-left:16px;color:var(--text)">
+                <template v-for="item in items.filter(i => i.toLowerCase().includes(query.toLowerCase()))">
+                  <li>{{ item }}</li>
+                </template>
+              </ul>
+            </div>
+          </div>
+          <div data-bascik-slot="source-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/libraries.md', 'filter-html'));
+              </script>
+            </code-block>
+          </div>
+        </component-demo>
+
+        <!-- Slice 3: Shared State section (plain code blocks, no demo markers) -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMdRange } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+          console.log(await renderMdRange('./content/libraries.md', { from: 'Shared State Across Components', to: 'Alpine.js' }));
+        </script>
+
+        <!-- Slice 4: Alpine.js section (demo block stripped; Alpine demo follows) -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMdRange } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+          console.log(await renderMdRange('./content/libraries.md', { from: 'Alpine.js', to: 'Tailwind CSS' }, { stripDemoBlocks: true }));
+        </script>
+
+        <component-demo>
+          <div data-bascik-slot="example">
+            <div x-data="{ open: false }" style="display:flex;flex-direction:column;gap:12px;max-width:280px">
+              <button @click="open = !open"
+                style="padding:8px 16px;background:var(--accent);color:var(--bg);border:none;border-radius:6px;cursor:pointer;font-weight:600;font-family:inherit">
+                Toggle details
+              </button>
+              <p x-show="open" style="margin:0;color:var(--text)">Here is the hidden content.</p>
+            </div>
+          </div>
+          <div data-bascik-slot="source-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/libraries.md', 'alpine-html'));
+              </script>
+            </code-block>
+          </div>
+        </component-demo>
+
+        <!-- Slice 5: Tailwind CSS section (demo blocks stripped; Tailwind demo follows) -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMdRange } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+          console.log(await renderMdRange('./content/libraries.md', { from: 'Tailwind CSS', to: 'Any Library Works' }, { stripDemoBlocks: true }));
+        </script>
 
         <component-demo>
           <div data-bascik-slot="example">
@@ -157,6 +228,68 @@
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                 console.log(await extractDemoBlock('./content/libraries.md', 'tailwind-output-html'));
+              </script>
+            </code-block>
+          </div>
+        </component-demo>
+
+        <!-- Slice 6a: Any Library Works section -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMdRange } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+          console.log(await renderMdRange('./content/libraries.md', { from: 'Any Library Works', to: 'Scoping Compatibility' }));
+        </script>
+
+        <!-- Slice 6b: Scoping Compatibility (demo blocks stripped; component-demo follows) -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMdRange } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+          console.log(await renderMdRange('./content/libraries.md', { from: 'Scoping Compatibility' }, { stripDemoBlocks: true }));
+        </script>
+
+        <component-demo data-bascik-prop-file="src/components/state-tab/">
+          <div data-bascik-slot="example">
+            <state-tab></state-tab>
+          </div>
+          <div data-bascik-slot="source-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/libraries.md', 'state-html'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="source-css">
+            <code-block data-bascik-prop-lang="css">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/libraries.md', 'state-css'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/libraries.md', 'state-output-html'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-css">
+            <code-block data-bascik-prop-lang="css">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/libraries.md', 'state-output-css'));
               </script>
             </code-block>
           </div>

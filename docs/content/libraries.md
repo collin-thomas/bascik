@@ -42,7 +42,7 @@ Include it once with the `init` attribute and it mounts all `v-scope` elements o
 
 ### Reactive Counter
 
-Each instance of this component has its own isolated state. Place it on a page as many times as you want — the counters are independent:
+Each instance of this component has its own isolated state. Place it on a page as many times as you want — the counters are independent.
 
 <!-- demo:source-usage -->
 ```html
@@ -121,10 +121,10 @@ Each instance of this component has its own isolated state. Place it on a page a
 
 ### Live Filter
 
-petite-vue's `v-for` and `v-model` work as expected. Filter a list in real time without writing any manual DOM manipulation:
+petite-vue's `v-for` and `v-model` work as expected. Filter a list in real time without writing any manual DOM manipulation.
 
+<!-- demo:filter-html -->
 ```html
-<!-- src/components/item-filter.html -->
 <div v-scope="{
   query: '',
   items: ['Astro', 'Eleventy', 'Next.js', 'Nuxt', 'SvelteKit']
@@ -166,6 +166,7 @@ export const store = reactive({ cart: [] });
 
 [Alpine.js](https://alpinejs.dev) is another lightweight option for adding reactive behavior. It uses `x-data` for state, `@click` / `x-on` for events, and `x-show` / `x-bind` for DOM updates — all declaratively in the HTML.
 
+<!-- demo:alpine-html -->
 ```html
 <!-- src/components/disclosure.html -->
 <div x-data="{ open: false }">
@@ -206,7 +207,7 @@ Then include Tailwind via CDN in your head component or page `<head>`. The CDN s
 </head>
 ```
 
-With class scoping turned off, Tailwind utility classes work normally inside any component:
+With class scoping turned off, Tailwind utility classes work normally inside any component.
 
 <!-- demo:tailwind-html -->
 ```html
@@ -265,4 +266,86 @@ Bascik places no restrictions on which libraries you use. A few common patterns:
 
 **Bascik scopes `class`, `id`, and `name` attributes at build time.** Library-specific attributes — `v-scope`, `x-data`, `@click`, `hx-get`, `data-controller` — are never touched.
 
-One thing to be aware of: if a library dynamically sets a class or ID value at runtime (e.g. `:class="activeClass"` where `activeClass` is a JavaScript variable), that value is a runtime string and will *not* correspond to a Bascik-scoped class name. Use `data-*` attributes for runtime-toggled state and target them with CSS `[data-state="active"]` selectors.
+One thing to be aware of: if a library dynamically sets a class or ID value at runtime (e.g. `:class="activeClass"` where `activeClass` is a JavaScript variable), that value is a runtime string and will *not* correspond to a Bascik-scoped class name. Use `data-*` attributes for runtime-toggled state and target them with CSS attribute selectors instead. Bascik scopes the class name at build time, but the `[data-state="on"]` part is a plain attribute selector that survives scoping unchanged — so the CSS correctly matches the attribute value the library sets at runtime.
+
+> **Alpine.js equivalent.** Use `x-bind:data-state="open ? 'on' : 'off'"` — syntax differs but the principle is identical across petite-vue, Alpine, and any attribute-binding library.
+
+<!-- demo:state-html -->
+```html
+<!-- src/components/state-tab.html -->
+<div v-scope="{ active: false }">
+  <button class="tab" :data-state="active ? 'on' : 'off'" @click="active = !active">
+    Dashboard
+  </button>
+  <p class="status">data-state: <span v-text="active ? 'on' : 'off'"></span></p>
+</div>
+```
+
+<!-- demo:state-css -->
+```css
+/* src/components/state-tab.css */
+.tab {
+  padding: 8px 20px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text);
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.tab[data-state="on"] {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.status {
+  margin: 12px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+```
+
+<!-- demo:state-output-html -->
+```html
+<!-- .tab and .status are scoped; attribute selector is untouched -->
+<div v-scope="{ active: false }">
+  <button class="bascik__state-tab__tab" :data-state="active ? 'on' : 'off'" @click="active = !active">
+    Dashboard
+  </button>
+  <p class="bascik__state-tab__status">data-state: <span v-text="active ? 'on' : 'off'"></span></p>
+</div>
+```
+
+<!-- demo:state-output-css -->
+```css
+.bascik__state-tab__tab {
+  padding: 8px 20px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text);
+  transition: color 0.15s, border-color 0.15s;
+}
+
+/* .tab scoped to .bascik__state-tab__tab; [data-state="on"] passes through unchanged */
+.bascik__state-tab__tab[data-state="on"] {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.bascik__state-tab__status {
+  margin: 12px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+```

@@ -44,6 +44,8 @@ Use it in any page or other component:
 ```
 *Self-closing tags are also supported:* `<site-nav />` or `<site-nav class="top" />`
 
+**No restart needed.** The dev server watches the components directory. Drop a new `.html` (or paired `.css`) file in and all pages that use that tag are automatically re-transpiled and reloaded — no server restart required.
+
 ---
 
 ## 3. Scoped CSS
