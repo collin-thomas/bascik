@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Sitemap correctness** — `sitemap.xml` now XML-escapes URLs and excludes the 404 page.
 - **CLI argument handling** — `bascik --help`/`-h` and `--version`/`-v` now print usage/version and exit instead of starting the dev server; unknown flags print an error and exit 1 without starting the server.
 - **Quote-aware attribute scanning** — prop extraction/injection, inheritable-attribute extraction, and `preserveElementContents` now handle single-quoted attribute values and `>` inside quoted attribute values.
+- **`injectProps` build hang** — the `injectProps` regex previously wrapped `ATTR_VALUE` (which is itself `(...)*`) in an outer `((?:ATTR_VALUE)*?)` / `((?:ATTR_VALUE)*)` group, creating nested quantifiers `((?:...)*)*` that caused catastrophic backtracking on pages with many attributes. Replaced with `(ATTR_VALUE?)` / `(ATTR_VALUE)` — equivalent semantically but without nesting. A similar redundant `?` on the `extractInheritableAttributes` open-tag scan was removed for the same reason.
 
 ### Changed
 
