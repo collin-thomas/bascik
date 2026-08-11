@@ -211,7 +211,7 @@ const findOpenTag = (
   tagName: string,
 ): { openTag: string; start: number; end: number } | null => {
   const tn = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const openTagRegexp = new RegExp(`<${tn}(?:${ATTR_VALUE})?>`, "i");
+  const openTagRegexp = new RegExp(`<${tn}(?:${ATTR_VALUE})>`, "i");
   const openTagMatch = openTagRegexp.exec(htmlString);
   if (!openTagMatch) return null;
   return {
