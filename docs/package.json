@@ -2,7 +2,7 @@
   "name": "bascik-docs",
   "version": "1.0.0",
   "type": "module",
-  "license": "AGPL-3.0-only",
+  "license": "Elastic-2.0",
   "scripts": {
     "dev": "bascik",
     "build": "bascik --build",
