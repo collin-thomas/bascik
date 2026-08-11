@@ -468,12 +468,10 @@ export const processAllPages = async (options?: { useWorkers?: boolean }) => {
     results = await Promise.all(pageList.map((path) => pool.run(path)));
     pool.terminate();
   } else {
-    // Process pages one at a time to avoid spawning all build-script child processes
-    // simultaneously, which causes OOM on memory-constrained CI environments.
-    results = [];
-    for (const path of pageList) {
-      results.push(await transpilePage(path, componentList, globalStylesHtml));
-    }
+    // Concurrent — child process concurrency is capped at the semaphore in runModule.
+    results = await Promise.all(
+      pageList.map((path) => transpilePage(path, componentList, globalStylesHtml)),
+    );
   }
 
   // Side effects that must happen on the main thread

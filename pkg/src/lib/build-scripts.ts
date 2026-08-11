@@ -40,15 +40,41 @@
 
 import { execFile } from "node:child_process";
 import { writeFile, unlink, mkdir } from "node:fs/promises";
+import { freemem, totalmem } from "node:os";
 import { join } from "node:path";
 import { getRelativePath } from "./file-system.js";
 import { BascikConfig } from "./config.js";
 
+// Limits concurrent child-process spawns based on available memory.
+// Initialized lazily on first use so freemem() reflects the live state at startup.
+class Semaphore {
+  private slots: number;
+  private readonly queue: Array<() => void> = [];
+  constructor(limit: number) { this.slots = limit; }
+  acquire(): Promise<void> {
+    if (this.slots > 0) { this.slots--; return Promise.resolve(); }
+    return new Promise(resolve => this.queue.push(resolve));
+  }
+  release(): void {
+    const next = this.queue.shift();
+    if (next) next(); else this.slots++;
+  }
+}
+
+const MEM_PER_CHILD = 100 * 1024 * 1024; // ~100 MB per Node child process
+let _sem: Semaphore | undefined;
+const childSemaphore = () => _sem ??= new Semaphore(
+  // freemem() is near-zero on macOS (compressed/inactive memory isn't "free"),
+  // so floor at 25% of total RAM to avoid artificially serialising on dev machines.
+  Math.max(1, Math.floor(Math.max(freemem() * 0.6, totalmem() * 0.25) / MEM_PER_CHILD))
+);
 
 // Manual promise wrapper so tests can mock execFile with a plain vi.fn()
 // without needing to simulate Node's promisify.custom symbol.
-const runModule = (path: string): Promise<{ stdout: string; stderr: string }> =>
-  new Promise((resolve, reject) => {
+const runModule = async (path: string): Promise<{ stdout: string; stderr: string }> => {
+  const sem = childSemaphore();
+  await sem.acquire();
+  return new Promise((resolve, reject) => {
     execFile(
       process.execPath,
       [path],
@@ -57,11 +83,13 @@ const runModule = (path: string): Promise<{ stdout: string; stderr: string }> =>
         env: { ...process.env, BASCIK_BUILD: BascikConfig.isBuild ? "1" : "0" },
       },
       (err, stdout, stderr) => {
+        sem.release();
         if (err) reject(Object.assign(err, { stdout, stderr }));
         else resolve({ stdout, stderr });
       },
     );
   });
+};
 
 // Match <script data-bascik-build …> … </script> (captures inner content)
 const BUILD_SCRIPT_RE =
@@ -84,10 +112,9 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
   const tempDir = join(process.cwd(), "node_modules", ".cache", "bascik");
   await mkdir(tempDir, { recursive: true });
 
-  // Run build scripts sequentially to avoid spawning many Node processes at once,
-  // which exhausts memory on constrained CI environments (e.g. Netlify's 2 GB VMs).
-  const outputs: Array<{ fullTag: string; output: string }> = [];
-  for (const match of matches) {
+  // All scripts start concurrently; the semaphore in runModule caps how many
+  // child processes are alive at once based on available system memory.
+  const outputs = await Promise.all(matches.map(async (match) => {
     const [fullTag, scriptContent] = match;
     const tmpPath = join(
       tempDir,
@@ -97,7 +124,7 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
       await writeFile(tmpPath, scriptContent.trim(), "utf8");
       const { stdout, stderr } = await runModule(tmpPath);
       if (stderr) process.stderr.write(stderr);
-      outputs.push({ fullTag, output: stdout });
+      return { fullTag, output: stdout };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       let errorMsg = `[bascik] build script error`;
@@ -112,11 +139,11 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
         }
       }
       console.warn(`${errorMsg}:\n${msg}`);
-      outputs.push({ fullTag, output: "" });
+      return { fullTag, output: "" };
     } finally {
       await unlink(tmpPath).catch(() => { });
     }
-  }
+  }));
 
   for (const { fullTag, output } of outputs) {
     // Use a function replacement so that `$` characters in `output` (e.g.
