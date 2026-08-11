@@ -405,6 +405,7 @@ export const recursivelyTranspile = (
 
 
 export const selectivelyProcessPagesForWatchPath = async (changedPath: string): Promise<void> => {
+  invalidateComponentListCache();
   const filename = basename(changedPath);
   const [pages, componentList, globalStylesHtml] = await Promise.all([
     listPages(),

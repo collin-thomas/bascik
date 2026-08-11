@@ -376,6 +376,26 @@ Install a Markdown parser such as `marked`, read the source in a build script, a
 </script>
 ```
 
+Given this Markdown source:
+
+```md
+## A practical heading
+
+Markdown stays comfortable for authors, while the published page stays **plain HTML**.
+
+> Add an editorial treatment with ordinary CSS.
+```
+
+`marked()` emits:
+
+```html
+<h2>A practical heading</h2>
+<p>Markdown stays comfortable for authors, while the published page stays <strong>plain HTML</strong>.</p>
+<blockquote>
+<p>Add an editorial treatment with ordinary CSS.</p>
+</blockquote>
+```
+
 The parser emits ordinary HTML, so it can be styled by a global stylesheet or wrapped in a Bascik component. For reusable scoped styles, have the script emit `<markdown-content>${marked(md)}</markdown-content>` and give that component a default slot.
 
 Use wrapper descendant selectors for generated slot content:

@@ -1180,30 +1180,28 @@ Bascik is a Node.js CLI tool written in TypeScript. Its source lives entirely in
 
 ## Entry Point
 
-`pkg/src/transpile.ts` is the CLI entry point, declared as the `bascik` bin in `package.json`. It does three things:
-
-1. Calls `watchFiles()` — starts chokidar file watchers that kick off transpilation whenever a page or component changes.
-2. In dev mode, generates a self-signed TLS certificate if one does not already exist.
-3. In dev mode, imports and starts the HTTP/2 development server.
+`pkg/src/index.ts` is the CLI entry point, declared as the `bascik` bin in `package.json`. It dispatches based on the CLI arguments:
 
 ```ts
-// transpile.ts (entry point)
-if (process.argv.includes("--check")) {
+// index.ts (entry point)
+if (args.includes("init")) {
+  const { initProject } = await import("./lib/init.js");
+  await initProject();
+  process.exit(0);
+}
+
+if (args.includes("--check")) {
   const { checkProject } = await import("./lib/check.js");
   const ok = await checkProject();
   process.exit(ok ? 0 : 1);
 }
 
-watchFiles();
-
-if (!BascikConfig.isBuild) {
-  await createSelfSignedCert();
-  const { serveHttp2 } = await import("./lib/http2.js");
-  serveHttp2();
-}
+await import("./transpile.js");
 ```
 
-The dynamic `import()` calls for `check.js` and `http2.js` are intentional — they avoid loading those modules when not needed (`--check` exits immediately after analysis; `--build` never starts the server).
+`transpile.ts` handles the normal dev and build flow: it calls `watchFiles()`, generates a self-signed TLS certificate in dev mode, and starts the HTTP/2 development server.
+
+The dynamic `import()` calls are intentional — they avoid loading modules when not needed (`init` and `--check` exit before reaching `transpile.ts`; `--build` never starts the server).
 
 ## Library Modules
 
@@ -1219,7 +1217,9 @@ All logic lives in `pkg/src/lib/`. Each file has a single, well-defined responsi
 | `styles.ts` | All CSS transformations: element selector conversion, class prefixing, `@keyframes` / `@layer` / container scoping, custom property prefixing, CSS deduplication. |
 | `names.ts` | Generates unique instance IDs (`getUniqueId`) and hashes long scoped names to short hex strings (`obfuscateAttributeName` via SHAKE-256) when obfuscation is enabled. |
 | `build-scripts.ts` | Executes `<script data-bascik-build>` blocks as Node.js ESM modules at transpile time and replaces the tag with the script's stdout output. |
+| `init.ts` | Bootstraps a new Bascik project via `bascik init`. Creates `src/pages/index.html`, `src/components/`, and `bascik.config.js`, and patches `package.json` with `"type": "module"` and dev/build scripts. |
 | `check.ts` | Static analysis for `bascik --check`. Scans all pages and components for unresolved custom tags (errors) and unused component files (warnings). Exits with code 1 when errors are found so it can gate CI pipelines. |
+| `sitemap.ts` | Generates `dist/sitemap.xml` and `dist/robots.txt` at the end of a build when `siteUrl` is configured and `generate.sitemap` / `generate.robots` are enabled (both default to `true`). |
 | `watch.ts` | Sets up chokidar watchers for pages, components, and static assets. Triggers full or selective re-transpilation on file events. |
 | `http2.ts` | The development HTTP/2 server on `https://localhost:8443`. Serves transpiled pages from the memory store, static assets from disk, and the live-reload SSE endpoint. |
 | `mem.ts` | In-memory page store. Stores brotli-compressed page buffers keyed by HTTP path, and maintains a reverse index mapping each component name to the set of pages that use it. |
@@ -1237,25 +1237,28 @@ All logic lives in `pkg/src/lib/`. Each file has a single, well-defined responsi
 The data flow at a high level:
 
 ```text
-transpile.ts
-  ├── config.ts ← userConfig.ts ← bascik.config.js
+index.ts
+  ├── (init only)
+  │     └── init.ts
   ├── (--check only)
   │     └── check.ts ← components.ts, file-system.ts
-  ├── watch.ts
-  │     └── processing.ts
-  │           ├── components.ts ← file-system.ts
-  │           ├── javascript.ts
-  │           │     ├── styles.ts
-  │           │     └── names.ts
-  │           ├── styles.ts
-  │           ├── build-scripts.ts
-  │           ├── worker-pool.ts → page-worker.ts
-  │           │     └── (transpilePage — no side effects)
-  │           ├── mem.ts ← paths.ts
-  │           └── events.ts
-  └── (dev only)
-        ├── pki.ts
-        └── http2.ts ← mem.ts, events.ts, paths.ts, mime.ts
+  └── transpile.ts
+        ├── config.ts ← userConfig.ts ← bascik.config.js
+        ├── watch.ts
+        │     └── processing.ts
+        │           ├── components.ts ← file-system.ts
+        │           ├── javascript.ts
+        │           │     ├── styles.ts
+        │           │     └── names.ts
+        │           ├── styles.ts
+        │           ├── build-scripts.ts
+        │           ├── worker-pool.ts → page-worker.ts
+        │           │     └── (transpilePage — no side effects)
+        │           ├── mem.ts ← paths.ts
+        │           └── events.ts
+        └── (dev only)
+              ├── pki.ts
+              └── http2.ts ← mem.ts, events.ts, paths.ts, mime.ts
 ```
 
 ## Key Design Decisions
@@ -1400,7 +1403,8 @@ The monorepo is split into two top-level folders:
 bascik/
   pkg/          ← the @bascik/bascik npm package
     src/
-      transpile.ts    ← CLI entry point
+      index.ts        ← CLI entry point
+      transpile.ts    ← dev/build startup (called by index.ts)
       lib/            ← all library modules
   docs/         ← this documentation site (a Bascik project itself)
 ```
@@ -3108,6 +3112,252 @@ title: Home
 </html>
 ```
 
+# Migrating from Hugo
+
+Hugo and Bascik are both build-time static site generators that produce plain HTML with no client-side framework runtime. The main conceptual shift is that Hugo uses Go template syntax in `.html` layout files, while Bascik uses plain HTML component files composed by tag name. Partials become component files, base template blocks become slot-based layout components, and Go template logic becomes Node.js build scripts.
+
+## Layouts and Partials → HTML Component Files
+
+Hugo organizes templates under `layouts/` with partials in `layouts/partials/`. In Bascik, every reusable piece of markup is a plain `.html` file under `src/components/`, identified by its hyphenated folder name.
+
+```text
+Before (Hugo)                After (Bascik)
+layouts/                     src/components/
+  _default/                    site-nav/
+    baseof.html                  site-nav.html
+    single.html                site-footer/
+    list.html                    site-footer.html
+  partials/                    site-layout/
+    nav.html                     site-layout.html
+    footer.html                  post-card/
+  shortcodes/                    post-card.html
+    callout.html               src/pages/
+content/                         index.html
+  posts/                         about.html
+    my-post.md                   posts/
+static/                            my-post.html
+  css/
+    main.css
+```
+
+## `{{ partial }}` → Bascik Component Tags
+
+A Hugo `{{ partial "nav.html" . }}` call becomes a self-contained Bascik component tag. The hyphenated folder name is the tag name.
+
+```html
+<!-- layouts/partials/nav.html (Hugo — before) -->
+<nav class="nav">
+  <a href="/">Home</a>
+  <a href="/about">About</a>
+  <a href="/blog">Blog</a>
+</nav>
+
+<!-- Used in a layout with: -->
+{{ partial "nav.html" . }}
+```
+
+```html
+<!-- src/components/site-nav/site-nav.html (Bascik — after) -->
+<nav class="nav">
+  <a href="/">Home</a>
+  <a href="/about">About</a>
+  <a href="/blog">Blog</a>
+</nav>
+
+<!-- Used in a page with: -->
+<site-nav></site-nav>
+```
+
+## Base Templates → Slot-based Layout Components
+
+Hugo's `baseof.html` with `{{ block "main" . }}` / `{{ define "main" }}` maps to a Bascik layout component that uses `data-bascik-slot` for the page body. Named blocks become named slots.
+
+```html
+<!-- layouts/_default/baseof.html (Hugo — before) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>{{ .Title }} — Acme</title>
+  {{ partial "head-extra.html" . }}
+</head>
+<body>
+  {{ partial "nav.html" . }}
+  <main>{{ block "main" . }}{{ end }}</main>
+  {{ partial "footer.html" . }}
+</body>
+</html>
+
+<!-- layouts/_default/single.html (Hugo — before) -->
+{{ define "main" }}
+  <article>
+    <h1>{{ .Title }}</h1>
+    {{ .Content }}
+  </article>
+{{ end }}
+```
+
+```html
+<!-- src/components/site-layout/site-layout.html (Bascik — after) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title data-bascik-prop-title></title>
+</head>
+<body>
+  <site-nav></site-nav>
+  <main><div data-bascik-slot></div></main>
+  <site-footer></site-footer>
+</body>
+</html>
+
+<!-- src/pages/posts/my-post.html (Bascik — after) -->
+<site-layout data-bascik-prop-title="My Post — Acme">
+  <article>
+    <h1>My Post</h1>
+    <p>Post body goes here.</p>
+  </article>
+</site-layout>
+```
+
+## Template Variables → data-bascik-prop-*
+
+Hugo's `{{ .Title }}` and `{{ .Params.description }}` pull values from front matter at build time. Bascik uses `data-bascik-prop-*` attributes — the value is set on the component tag at the usage site, and the attribute (with no value) marks the receiver element inside the component.
+
+```html
+<!-- layouts/partials/post-card.html (Hugo — before) -->
+<div class="post-card">
+  <h3>{{ .Title }}</h3>
+  <p>{{ .Params.description }}</p>
+  <a href="{{ .RelPermalink }}">Read more</a>
+</div>
+```
+
+```html
+<!-- src/components/post-card/post-card.html (Bascik — after) -->
+<div class="post-card">
+  <h3 data-bascik-prop-title></h3>
+  <p data-bascik-prop-description></p>
+  <a data-bascik-prop-href>Read more</a>
+</div>
+
+<!-- Usage -->
+<post-card
+  data-bascik-prop-title="My Post"
+  data-bascik-prop-description="A short summary."
+  data-bascik-prop-href="/posts/my-post"
+></post-card>
+```
+
+> **Text only:** Bascik props carry plain text strings. For rich HTML content — such as a post body rendered from Markdown — use a slot instead of a prop.
+
+## `{{ range }}` Loops → `<script data-bascik-build>`
+
+Hugo's `{{ range .Pages }}` iterates over content at build time. The Bascik equivalent is a `<script data-bascik-build>` block that reads files with Node.js and prints HTML to stdout.
+
+```html
+<!-- layouts/_default/list.html (Hugo — before) -->
+{{ define "main" }}
+<ul class="post-list">
+  {{ range .Pages }}
+  <li>
+    <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+    <span>{{ .Date.Format "2006-01-02" }}</span>
+  </li>
+  {{ end }}
+</ul>
+{{ end }}
+```
+
+```html
+<!-- src/pages/blog.html (Bascik — after) -->
+<ul class="post-list">
+  <script data-bascik-build>
+    import { readdir, readFile } from 'node:fs/promises';
+    import matter from 'gray-matter';
+    const files = (await readdir('./content/posts')).filter(f => f.endsWith('.md'));
+    const posts = await Promise.all(files.map(async f => {
+      const { data } = matter(await readFile(`./content/posts/${f}`, 'utf8'));
+      const slug = f.replace('.md', '');
+      return { slug, title: data.title, date: data.date };
+    }));
+    posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+    console.log(posts.map(p =>
+      `<li><a href="/posts/${p.slug}">${p.title}</a><span>${p.date}</span></li>`
+    ).join('\n'));
+  </script>
+</ul>
+```
+
+> **No Hugo data layer:** Bascik has no equivalent of Hugo's data directory or content type system. Read Markdown and JSON files directly with Node.js `fs` and a parser such as `gray-matter`.
+
+## Shortcodes → Components
+
+Hugo shortcodes (`{{< callout >}}text{{< /callout >}}`) are reusable template fragments. In Bascik, they become component files. For shortcodes that wrap content, use `data-bascik-slot`.
+
+```html
+<!-- layouts/shortcodes/callout.html (Hugo — before) -->
+<div class="callout">{{ .Inner }}</div>
+
+<!-- Used in Markdown with: -->
+{{< callout >}}This is a tip.{{< /callout >}}
+```
+
+```html
+<!-- src/components/my-callout/my-callout.html (Bascik — after) -->
+<div class="callout">
+  <div data-bascik-slot></div>
+</div>
+
+<!-- Used in a page with: -->
+<my-callout><p>This is a tip.</p></my-callout>
+```
+
+## SCSS / Sass → Plain CSS
+
+Hugo ships a built-in asset pipeline with SCSS/Sass support via `resources.ToCSS`. Bascik does not include a CSS preprocessor — write plain CSS in the paired `.css` file alongside each component. Bascik's scoping engine handles selector scoping automatically, so there is rarely a need for nesting or variables beyond what native CSS custom properties and `:is()` provide.
+
+```text
+Before (Hugo)                After (Bascik)
+assets/
+  scss/                      src/components/
+    _vars.scss                 site-nav/
+    nav.scss                     site-nav.html
+    footer.scss                  site-nav.css   ← plain CSS, auto-scoped
+                               site-footer/
+                                 site-footer.html
+                                 site-footer.css
+```
+
+## Front Matter Data → Build Scripts or Inline HTML
+
+Hugo reads YAML/TOML front matter from content files and makes it available in templates as `.Params`. In Bascik, individual pages are HTML files — front matter has no direct runtime equivalent. For pages generated from Markdown (a blog, for example), read the front matter with `gray-matter` inside a `<script data-bascik-build>` block and inline the values into the HTML.
+
+```yaml
+# content/posts/my-post.md (Hugo — before)
+---
+title: My Post
+description: A short summary.
+date: 2024-03-15
+---
+Post body here.
+```
+
+```html
+<!-- src/pages/posts/my-post.html (Bascik — after) -->
+<script data-bascik-build>
+  import { readFile } from 'node:fs/promises';
+  import matter from 'gray-matter';
+  import { marked } from 'marked';
+  const src = await readFile('./content/posts/my-post.md', 'utf8');
+  const { data, content } = matter(src);
+  console.log(`
+    <h1>${data.title}</h1>
+    <p class="description">${data.description}</p>
+    ${await marked.parse(content)}
+  `);
+</script>
+```
+
 # Migrating from Next.js
 
 Next.js and Bascik share file-based routing, but Next.js is a full-stack React framework while Bascik is a build-time HTML assembler. The migration is largely about removing framework abstractions: replace JSX pages with HTML files, replace data-fetching functions with build scripts, and replace special Next.js components with their standard HTML equivalents.
@@ -3691,19 +3941,7 @@ The migration path is the same regardless of source framework:
 | Component state / hooks | Vanilla JS in a `<script>` tag (auto-scoped per instance) |
 | Data fetching at build time | Not built-in — pre-generate the HTML in a build script and include it in the page |
 
-## When Bascik Is and Is Not the Right Tool
-
-Bascik is the right tool for sites where most pages are static documents with occasional interactivity: marketing sites, documentation portals, blogs, portfolios, company homepages.
-
-Bascik is likely not the right tool if your site has:
-
-- Per-user dynamic data that changes without a page reload (dashboards, feeds)
-- Complex client-side state shared across many components
-- Optimistic UI updates or real-time collaboration features
-
-Even for sites that do include interactive sections, Bascik can handle the static shell and static pages while you add targeted vanilla JS (or a small island of framework code) only where interactivity is genuinely needed.
-
-> Choose a migration guide: [React](/migrate/from-react) · [Next.js](/migrate/from-next) · [Eleventy](/migrate/from-eleventy) · [Astro](/migrate/from-astro)
+> Choose a migration guide: [React](/migrate/from-react) · [Next.js](/migrate/from-next) · [Eleventy](/migrate/from-eleventy) · [Astro](/migrate/from-astro) · [Hugo](/migrate/from-hugo)
 
 # Bascik
 
@@ -5450,6 +5688,24 @@ Read a Markdown file and output the HTML:
 ```
 
 The output replaces the script tag in the compiled HTML — no client-side JavaScript runs.
+
+<!-- demo:source-md -->
+```md
+## A practical heading
+
+Markdown stays comfortable for authors, while the published page stays **plain HTML**.
+
+> Add an editorial treatment with ordinary CSS.
+```
+
+<!-- demo:output-html -->
+```html
+<h2>A practical heading</h2>
+<p>Markdown stays comfortable for authors, while the published page stays <strong>plain HTML</strong>.</p>
+<blockquote>
+<p>Add an editorial treatment with ordinary CSS.</p>
+</blockquote>
+```
 
 ## Styling Rendered Markdown
 

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`directory.watch` changes no longer use stale component build-script output** — `selectivelyProcessPagesForWatchPath` now invalidates the component list cache before fetching it, so changes to watched files (e.g. a shared nav data file) cause component build scripts to re-run and pick up the latest content.
+
 ### Added
 
 - **CSS `anchor-name` / `@position-try` scoping** — `anchor-name: --name` declarations are now scoped per component. Matching `position-anchor: --name` references and `@position-try --name { }` at-rules in the same CSS file are updated to match, preventing anchor name collisions between components. Anchor names use the `--bascik__<comp>__anchor__<name>` prefix, independent from CSS custom properties.

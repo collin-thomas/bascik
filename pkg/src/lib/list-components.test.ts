@@ -39,7 +39,7 @@ vi.mock("node:fs/promises", () => ({
   readFile: vi.fn(),
 }));
 
-import { listComponents, minifyHtml } from "./components.js";
+import { listComponents, minifyHtml, invalidateComponentListCache } from "./components.js";
 import { deepReadDirFlat } from "./file-system.js";
 import { executeBuildScripts } from "./build-scripts.js";
 import { readFile } from "node:fs/promises";
@@ -50,6 +50,7 @@ const mockReadFile = readFile as ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  invalidateComponentListCache();
   // Default: executeBuildScripts is a pass-through (no build scripts in HTML)
   mockExecuteBuildScripts.mockImplementation(async (html: string) => html);
   // Default: no CSS file exists alongside the component

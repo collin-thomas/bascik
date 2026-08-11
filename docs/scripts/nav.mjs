@@ -40,6 +40,7 @@ export const NAV = [
     { href: '/migrate/from-next', label: 'From Next.js' },
     { href: '/migrate/from-eleventy', label: 'From Eleventy' },
     { href: '/migrate/from-astro', label: 'From Astro' },
+    { href: '/migrate/from-hugo', label: 'From Hugo' },
   ]},
   { section: 'Internals', pages: [
     { href: '/develop', label: 'Internals Overview' },

@@ -10,7 +10,8 @@ The monorepo is split into two top-level folders:
 bascik/
   pkg/          ← the @bascik/bascik npm package
     src/
-      transpile.ts    ← CLI entry point
+      index.ts        ← CLI entry point
+      transpile.ts    ← dev/build startup (called by index.ts)
       lib/            ← all library modules
   docs/         ← this documentation site (a Bascik project itself)
 ```

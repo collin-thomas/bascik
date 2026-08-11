@@ -9,6 +9,8 @@
   <style>
     .markdown-preview-body {
       padding: 22px 24px 24px;
+      background: #fff;
+      border-radius: 6px;
       color: #25282d;
       font: 1rem/1.7 Georgia, serif;
     }
@@ -76,7 +78,20 @@
           <div data-bascik-slot="source-usage">
             <code-block data-bascik-prop-lang="md">
               <script data-bascik-build>
-                console.log(`## A practical heading\n\nMarkdown stays comfortable for\nauthors, while the published page\nstays **plain HTML**.\n\n> Add an editorial treatment with\n> ordinary CSS.`);
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/using-markdown.md', 'source-md'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/using-markdown.md', 'output-html'));
               </script>
             </code-block>
           </div>

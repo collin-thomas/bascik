@@ -24,6 +24,24 @@ Read a Markdown file and output the HTML:
 
 The output replaces the script tag in the compiled HTML — no client-side JavaScript runs.
 
+<!-- demo:source-md -->
+```md
+## A practical heading
+
+Markdown stays comfortable for authors, while the published page stays **plain HTML**.
+
+> Add an editorial treatment with ordinary CSS.
+```
+
+<!-- demo:output-html -->
+```html
+<h2>A practical heading</h2>
+<p>Markdown stays comfortable for authors, while the published page stays <strong>plain HTML</strong>.</p>
+<blockquote>
+<p>Add an editorial treatment with ordinary CSS.</p>
+</blockquote>
+```
+
 ## Styling Rendered Markdown
 
 A Markdown parser returns ordinary HTML such as `<h2>`, `<p>`, `<ul>`, `<blockquote>`, and `<pre>`. There is no separate Markdown styling system: once Bascik injects that HTML, the browser applies CSS through the normal cascade.

@@ -31,16 +31,4 @@ The migration path is the same regardless of source framework:
 | Component state / hooks | Vanilla JS in a `<script>` tag (auto-scoped per instance) |
 | Data fetching at build time | Not built-in — pre-generate the HTML in a build script and include it in the page |
 
-## When Bascik Is and Is Not the Right Tool
-
-Bascik is the right tool for sites where most pages are static documents with occasional interactivity: marketing sites, documentation portals, blogs, portfolios, company homepages.
-
-Bascik is likely not the right tool if your site has:
-
-- Per-user dynamic data that changes without a page reload (dashboards, feeds)
-- Complex client-side state shared across many components
-- Optimistic UI updates or real-time collaboration features
-
-Even for sites that do include interactive sections, Bascik can handle the static shell and static pages while you add targeted vanilla JS (or a small island of framework code) only where interactivity is genuinely needed.
-
-> Choose a migration guide: [React](/migrate/from-react) · [Next.js](/migrate/from-next) · [Eleventy](/migrate/from-eleventy) · [Astro](/migrate/from-astro)
+> Choose a migration guide: [React](/migrate/from-react) · [Next.js](/migrate/from-next) · [Eleventy](/migrate/from-eleventy) · [Astro](/migrate/from-astro) · [Hugo](/migrate/from-hugo)

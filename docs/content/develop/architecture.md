@@ -4,30 +4,28 @@ Bascik is a Node.js CLI tool written in TypeScript. Its source lives entirely in
 
 ## Entry Point
 
-`pkg/src/transpile.ts` is the CLI entry point, declared as the `bascik` bin in `package.json`. It does three things:
-
-1. Calls `watchFiles()` — starts chokidar file watchers that kick off transpilation whenever a page or component changes.
-2. In dev mode, generates a self-signed TLS certificate if one does not already exist.
-3. In dev mode, imports and starts the HTTP/2 development server.
+`pkg/src/index.ts` is the CLI entry point, declared as the `bascik` bin in `package.json`. It dispatches based on the CLI arguments:
 
 ```ts
-// transpile.ts (entry point)
-if (process.argv.includes("--check")) {
+// index.ts (entry point)
+if (args.includes("init")) {
+  const { initProject } = await import("./lib/init.js");
+  await initProject();
+  process.exit(0);
+}
+
+if (args.includes("--check")) {
   const { checkProject } = await import("./lib/check.js");
   const ok = await checkProject();
   process.exit(ok ? 0 : 1);
 }
 
-watchFiles();
-
-if (!BascikConfig.isBuild) {
-  await createSelfSignedCert();
-  const { serveHttp2 } = await import("./lib/http2.js");
-  serveHttp2();
-}
+await import("./transpile.js");
 ```
 
-The dynamic `import()` calls for `check.js` and `http2.js` are intentional — they avoid loading those modules when not needed (`--check` exits immediately after analysis; `--build` never starts the server).
+`transpile.ts` handles the normal dev and build flow: it calls `watchFiles()`, generates a self-signed TLS certificate in dev mode, and starts the HTTP/2 development server.
+
+The dynamic `import()` calls are intentional — they avoid loading modules when not needed (`init` and `--check` exit before reaching `transpile.ts`; `--build` never starts the server).
 
 ## Library Modules
 
@@ -43,7 +41,9 @@ All logic lives in `pkg/src/lib/`. Each file has a single, well-defined responsi
 | `styles.ts` | All CSS transformations: element selector conversion, class prefixing, `@keyframes` / `@layer` / container scoping, custom property prefixing, CSS deduplication. |
 | `names.ts` | Generates unique instance IDs (`getUniqueId`) and hashes long scoped names to short hex strings (`obfuscateAttributeName` via SHAKE-256) when obfuscation is enabled. |
 | `build-scripts.ts` | Executes `<script data-bascik-build>` blocks as Node.js ESM modules at transpile time and replaces the tag with the script's stdout output. |
+| `init.ts` | Bootstraps a new Bascik project via `bascik init`. Creates `src/pages/index.html`, `src/components/`, and `bascik.config.js`, and patches `package.json` with `"type": "module"` and dev/build scripts. |
 | `check.ts` | Static analysis for `bascik --check`. Scans all pages and components for unresolved custom tags (errors) and unused component files (warnings). Exits with code 1 when errors are found so it can gate CI pipelines. |
+| `sitemap.ts` | Generates `dist/sitemap.xml` and `dist/robots.txt` at the end of a build when `siteUrl` is configured and `generate.sitemap` / `generate.robots` are enabled (both default to `true`). |
 | `watch.ts` | Sets up chokidar watchers for pages, components, and static assets. Triggers full or selective re-transpilation on file events. |
 | `http2.ts` | The development HTTP/2 server on `https://localhost:8443`. Serves transpiled pages from the memory store, static assets from disk, and the live-reload SSE endpoint. |
 | `mem.ts` | In-memory page store. Stores brotli-compressed page buffers keyed by HTTP path, and maintains a reverse index mapping each component name to the set of pages that use it. |
@@ -61,25 +61,28 @@ All logic lives in `pkg/src/lib/`. Each file has a single, well-defined responsi
 The data flow at a high level:
 
 ```text
-transpile.ts
-  ├── config.ts ← userConfig.ts ← bascik.config.js
+index.ts
+  ├── (init only)
+  │     └── init.ts
   ├── (--check only)
   │     └── check.ts ← components.ts, file-system.ts
-  ├── watch.ts
-  │     └── processing.ts
-  │           ├── components.ts ← file-system.ts
-  │           ├── javascript.ts
-  │           │     ├── styles.ts
-  │           │     └── names.ts
-  │           ├── styles.ts
-  │           ├── build-scripts.ts
-  │           ├── worker-pool.ts → page-worker.ts
-  │           │     └── (transpilePage — no side effects)
-  │           ├── mem.ts ← paths.ts
-  │           └── events.ts
-  └── (dev only)
-        ├── pki.ts
-        └── http2.ts ← mem.ts, events.ts, paths.ts, mime.ts
+  └── transpile.ts
+        ├── config.ts ← userConfig.ts ← bascik.config.js
+        ├── watch.ts
+        │     └── processing.ts
+        │           ├── components.ts ← file-system.ts
+        │           ├── javascript.ts
+        │           │     ├── styles.ts
+        │           │     └── names.ts
+        │           ├── styles.ts
+        │           ├── build-scripts.ts
+        │           ├── worker-pool.ts → page-worker.ts
+        │           │     └── (transpilePage — no side effects)
+        │           ├── mem.ts ← paths.ts
+        │           └── events.ts
+        └── (dev only)
+              ├── pki.ts
+              └── http2.ts ← mem.ts, events.ts, paths.ts, mime.ts
 ```
 
 ## Key Design Decisions

@@ -30,7 +30,7 @@
   function highlight(src, lang) {
     if (lang === 'html') return hlHtml(src);
     if (lang === 'css') return hlCss(src);
-    if (lang === 'js' || lang === 'javascript' || lang === 'ts' || lang === 'typescript') return hlJs(src);
+    if (lang === 'js' || lang === 'javascript' || lang === 'ts' || lang === 'typescript' || lang === 'jsx' || lang === 'tsx') return hlJs(src);
     if (lang === 'sh' || lang === 'bash' || lang === 'shell') return hlSh(src);
     if (lang === 'json') return hlJs(src);
     return null;
