@@ -69,7 +69,7 @@ const loadDistIntoMemory = async (): Promise<void> => {
       // e.g. dist/about.html        → pages/about.html        → HTTP /about
       //      dist/blog/post.html    → pages/blog/post.html    → HTTP /blog/post
       //      dist/index.html        → pages/index.html        → HTTP /
-      const distRelative = absPath.slice(distDir.length); // e.g. /about.html
+      const distRelative = absPath.slice(distDir.length).replace(/\\/g, "/"); // normalize Windows separators
       const relativePagePath = `pages${distRelative}`;
 
       const content = (await readFile(absPath)).toString();

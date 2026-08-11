@@ -428,7 +428,8 @@ Tag a `<script>` block with `data-bascik-server` to run it **at request time** o
 ```html
 <script data-bascik-server>
   const req = JSON.parse(process.env.BASCIK_REQUEST);
-  const name = req.headers['x-display-name'] ?? 'Guest';
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const name = esc(req.headers['x-display-name'] ?? 'Guest');
   console.log(`<p>Welcome, ${name}!</p>`);
 </script>
 ```

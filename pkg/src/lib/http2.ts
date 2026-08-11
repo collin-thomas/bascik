@@ -65,17 +65,27 @@ export const serveHttp2 = async () => {
   const distDir = resolve(process.cwd(), "dist");
   let origin = "";
 
+  const usingCustomCerts = !!(BascikConfig.serve?.keyFile || BascikConfig.serve?.certFile);
   const keyPath = resolve(process.cwd(), BascikConfig.serve?.keyFile ?? "bascik-privkey.pem");
   const certPath = resolve(process.cwd(), BascikConfig.serve?.certFile ?? "bascik-cert.pem");
 
   // Auto-generate certs if they don't exist yet.
   // mkcert produces a CA-trusted cert (no browser warning).
   // openssl is the self-signed fallback (browser will warn).
+  // Custom certificate paths must already exist — Bascik will not overwrite them.
   const certsPresent = await Promise.all([access(keyPath), access(certPath)])
     .then(() => true)
     .catch(() => false);
 
   if (!certsPresent) {
+    if (usingCustomCerts) {
+      throw new Error(
+        "Custom TLS certificate files are configured but could not be found.\n" +
+        `  keyFile:  ${keyPath}\n` +
+        `  certFile: ${certPath}\n` +
+        "Ensure both files exist before starting the server.",
+      );
+    }
     // Augment PATH so mkcert is found even when launched from VS Code or
     // other environments that don't source the user's shell profile.
     const env = {
@@ -203,11 +213,16 @@ export const serveHttp2 = async () => {
           return stream.end();
         }
 
+        // Parse the request pathname once so routing decisions are never
+        // confused by a query string (e.g. /style.css?v=1 or /search?email=a@b.com).
+        const qIdx = req.path.indexOf("?");
+        const pathname = qIdx === -1 ? req.path : req.path.slice(0, qIdx);
+
         // ── Static asset (has extension, not .html) ──────────────────────────
-        const ext = extname(req.path || "");
+        const ext = extname(pathname);
         if (ext && !ext.match(/^\.htm.*$/)) {
           // Path traversal guard: resolved path must stay inside dist/
-          const safePath = req.path.slice(1); // strip leading /
+          const safePath = pathname.slice(1); // strip leading /
           const fullPath = resolve(distDir, safePath);
           if (!fullPath.startsWith(distDir + sep)) {
             responseStatus = 400;
@@ -228,7 +243,7 @@ export const serveHttp2 = async () => {
           }
 
           const etag = makeStatEtag(fileStat.mtimeMs, fileStat.size);
-          if (headers["if-none-match"] === etag) {
+          if (BascikConfig.cacheHttp !== false && headers["if-none-match"] === etag) {
             responseStatus = 304;
             stream.respond({ ":status": 304, etag, ...SECURITY_HEADERS });
             stream.end();
@@ -238,12 +253,14 @@ export const serveHttp2 = async () => {
           const staticHeaders: Record<string, string | number> = {
             "content-type": MIME_MAP.get(ext) ?? (MIME_MAP.get("octet-stream") as string),
             "content-length": fileStat.size,
-            "etag": etag,
             ":status": 200,
             ...SECURITY_HEADERS,
           };
           if (BascikConfig.cacheHttp !== false) {
+            staticHeaders["etag"] = etag;
             staticHeaders["cache-control"] = "public, max-age=3600";
+          } else {
+            staticHeaders["cache-control"] = "no-store";
           }
 
           if (isHead) {
@@ -272,14 +289,14 @@ export const serveHttp2 = async () => {
         }
 
         // ── Reject dot-paths that are not file extensions (e.g. /img.dir/dog) ─
-        if (req.path.split(".").length > 1) {
+        if (pathname.split(".").length > 1) {
           responseStatus = 404;
           stream.respond({ ":status": 404, ...SECURITY_HEADERS });
           return stream.end();
         }
 
         // ── Live-reload SSE ──────────────────────────────────────────────────
-        if (req.path === "/bascik-live-reload") {
+        if (pathname === "/bascik-live-reload") {
           // Disable in production serve mode.
           if (BascikConfig.isServe) {
             responseStatus = 404;
@@ -323,10 +340,7 @@ export const serveHttp2 = async () => {
 
         // ── In-memory page lookup ────────────────────────────────────────────
         const reqUrl = `${origin}${req.path}`;
-
-        // Strip query string so /page?foo=bar resolves to /page in the store.
-        const pageLookupPath = req.path.split("?")[0];
-        const page = mem.getPage(pageLookupPath);
+        const page = mem.getPage(pathname);
 
         if (!page) {
           responseStatus = 404;
@@ -358,12 +372,10 @@ export const serveHttp2 = async () => {
         }
 
         // ── Pages with server scripts: generated fresh each request ──────────
+        // Server-script output is personalized per-request; always prevent caching.
         if (page.hasServerScripts) {
-          const rawUrl = req.path;
-          const qIdx = rawUrl.indexOf("?");
-          const pathname = qIdx === -1 ? rawUrl : rawUrl.slice(0, qIdx);
           const searchParams = Object.fromEntries(
-            new URLSearchParams(qIdx === -1 ? "" : rawUrl.slice(qIdx + 1)),
+            new URLSearchParams(qIdx === -1 ? "" : req.path.slice(qIdx + 1)),
           );
           const requestHeaders: Record<string, string> = {};
           for (const [k, v] of Object.entries(headers)) {
@@ -377,6 +389,7 @@ export const serveHttp2 = async () => {
             searchParams,
           });
           const htmlBuf = Buffer.from(html);
+          responseHeaders["cache-control"] = "private, no-store";
           responseHeaders["content-length"] = htmlBuf.byteLength;
           stream.respond(responseHeaders);
           return stream.end(isHead ? undefined : htmlBuf);

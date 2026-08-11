@@ -49,7 +49,7 @@ Bascik increments the port automatically if the preferred port is already in use
 
 ## Production hardening
 
-`bascik --serve` automatically applies several hardening measures that are not active in the dev server.
+The Bascik HTTP server applies several hardening measures. Most of these are active in both the dev server (`bascik`) and the production server (`bascik --serve`); rate limiting is the only protection that is production-only.
 
 ### Security response headers
 
@@ -62,7 +62,7 @@ Every response includes these headers:
 | `referrer-policy` | `strict-origin-when-cross-origin` |
 | `permissions-policy` | `interest-cohort=()` |
 
-These are sent on HTML pages, static assets, and error responses. If you are terminating TLS at a proxy and want to add `Strict-Transport-Security`, add it there rather than in Bascik — the proxy already knows the scheme of the outer connection.
+These are sent on HTML pages, static assets, and error responses in both dev and production. If you are terminating TLS at a proxy and want to add `Strict-Transport-Security`, add it there rather than in Bascik — the proxy already knows the scheme of the outer connection.
 
 ### Rate limiting
 
@@ -70,11 +70,11 @@ In `--serve` mode the server enforces a per-IP request limit of **500 requests p
 
 ### Graceful shutdown
 
-The server listens for `SIGTERM` and `SIGINT`. On either signal it stops accepting new connections and waits for in-flight requests to finish, then exits cleanly. If the drain takes longer than 10 seconds, the process force-exits. This means `systemd` stop, `docker stop`, and Kubernetes pod eviction all wait for requests to complete before the process ends.
+The server listens for `SIGTERM` and `SIGINT` in both dev and production. On either signal it stops accepting new connections and waits for in-flight requests to finish, then exits cleanly. If the drain takes longer than 10 seconds, the process force-exits. This means `systemd` stop, `docker stop`, and Kubernetes pod eviction all wait for requests to complete before the process ends.
 
 ### Path traversal protection
 
-Static asset URLs (requests with a file extension) are validated so the resolved path always stays inside the `dist/` directory. Requests that would escape it — via `/../` sequences or similar — receive `400 Bad Request` before any file I/O occurs.
+Static asset URLs (requests with a file extension) are validated so the resolved path always stays inside the `dist/` directory. Requests that would escape it — via `/../` sequences or similar — receive `400 Bad Request` before any file I/O occurs. This applies in both dev and production.
 
 ## Server scripts — `data-bascik-server`
 
@@ -83,7 +83,8 @@ Tag a `<script>` block with `data-bascik-server` to run it at **request time** o
 ```html
 <script data-bascik-server>
   const req = JSON.parse(process.env.BASCIK_REQUEST);
-  const name = req.headers['x-display-name'] ?? 'Guest';
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const name = esc(req.headers['x-display-name'] ?? 'Guest');
   console.log(`<p>Welcome, ${name}!</p>`);
 </script>
 ```
@@ -305,7 +306,7 @@ npm install pg
 </script>
 ```
 
-> **Connection pooling.** Creating a new `pg.Pool` on every request opens a connection each time. In production, move the pool into a shared module and import it across your server scripts — see [Shared scripts](/build-scripts) for the import pattern.
+> **Connection pooling.** Each `data-bascik-server` block runs in a fresh Node.js child process that exits after producing its output, so in-process pools cannot be shared across requests. For production Postgres workloads, use an external connection pooler such as [PgBouncer](https://www.pgbouncer.org/) and open a single connection per script invocation (rather than a pool), or switch to a protocol that amortises connection cost per-query (e.g. a REST API backed by a pooled service).
 
 ### Paginating query results
 

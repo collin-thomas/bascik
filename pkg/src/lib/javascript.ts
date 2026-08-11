@@ -482,7 +482,7 @@ export const namespaceScriptTags = (
     /(<script\b[^>]*>)([\s\S]*?)(<\/script>)/gi,
     (match, open, code, close) => {
       // Server scripts run in Node.js at request time — never wrap in browser IIFE
-      if (/\bdata-bascik-server\b/.test(open)) return match;
+      if (/\bdata-bascik-server\b/i.test(open)) return match;
       // Check for type attribute
       const typeMatch = open.match(/type\s*=\s*["']?([^"'>\s]+)["']?/i);
       if (typeMatch && typeMatch[1].toLowerCase() !== "text/javascript") {

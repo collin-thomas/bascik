@@ -16,8 +16,6 @@ if (args.includes("--check")) {
 }
 
 if (args.includes("--serve")) {
-  const { createSelfSignedCert } = await import("./lib/pki.js");
-  await createSelfSignedCert();
   const { serveProduction } = await import("./lib/serve.js");
   await serveProduction();
 } else {

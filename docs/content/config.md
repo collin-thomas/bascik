@@ -159,7 +159,7 @@ Set `cacheHttp: false` explicitly when running `--serve` behind a CDN that manag
 
 ### `serve`
 
-Configure the production HTTP/2 server started by `bascik --serve`. Has no effect during `bascik --build` or `bascik` (dev mode).
+Configure the HTTP/2 server started by `bascik --serve` and `bascik` (dev mode). `port`, `hostname`, `keyFile`, and `certFile` are read in both modes. `bascik --build` does not start a server and ignores this block.
 
 ```js
 serve: {

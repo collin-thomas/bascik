@@ -47,6 +47,7 @@
 import { execFile } from "node:child_process";
 import { writeFile, unlink, mkdir } from "node:fs/promises";
 import { join } from "node:path";
+import os from "node:os";
 
 /** Request context passed to every `data-bascik-server` script. */
 export interface ServerRequest {
@@ -64,15 +65,29 @@ export interface ServerRequest {
 }
 
 // Match <script data-bascik-server …> … </script> (captures inner content).
+// The attribute section uses an alternation that consumes either a complete
+// double-quoted value, a single-quoted value, or any non-quote, non->
+// character — this prevents a match when "data-bascik-server" appears only
+// inside an attribute value such as title="run data-bascik-server later".
 // Flag 'g' is required for matchAll; lastIndex is reset manually before each use.
 const SERVER_SCRIPT_RE =
-  /<script\b[^>]*\sdata-bascik-server\b[^>]*>([\s\S]*?)<\/script>/gi;
+  /<script\b(?:[^>"']|"[^"]*"|'[^']*')*\sdata-bascik-server\b(?:[^>"']|"[^"]*"|'[^']*')*>([\s\S]*?)<\/script>/gi;
 
 /** Return `true` if `html` contains at least one `data-bascik-server` block. */
 export const htmlHasServerScripts = (html: string): boolean => {
   SERVER_SCRIPT_RE.lastIndex = 0;
   return SERVER_SCRIPT_RE.test(html);
 };
+
+/** Default execution timeout per server-script child process (ms). */
+const SCRIPT_TIMEOUT_MS = 30_000;
+
+/**
+ * Maximum number of server-script child processes that may run concurrently
+ * per request.  Prevents a single page with many server blocks from spawning
+ * an unbounded number of child processes at once.
+ */
+const MAX_CONCURRENT_SCRIPTS = Math.max(4, os.availableParallelism?.() ?? os.cpus().length);
 
 // Manual promise wrapper keeps the same shape as the one in build-scripts.ts
 // so tests can mock execFile with a plain vi.fn() without simulating
@@ -87,6 +102,7 @@ const runModule = (
       [path],
       {
         cwd: process.cwd(),
+        timeout: SCRIPT_TIMEOUT_MS,
         env: {
           ...process.env,
           BASCIK_REQUEST: JSON.stringify(request),
@@ -117,32 +133,38 @@ export const executeServerScripts = async (
   const tempDir = join(process.cwd(), "node_modules", ".cache", "bascik");
   await mkdir(tempDir, { recursive: true });
 
-  const outputs = await Promise.all(
-    matches.map(async (match) => {
-      const [fullTag, scriptContent] = match;
-      const tmpPath = join(
-        tempDir,
-        `server-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
-      );
-      try {
-        await writeFile(tmpPath, scriptContent.trim(), "utf8");
-        const { stdout, stderr } = await runModule(tmpPath, request);
-        if (stderr) process.stderr.write(stderr);
-        return { fullTag, output: stdout };
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        console.warn(
-          `[bascik] server script error at "${request.path}":\n${msg}`,
+  // Run at most MAX_CONCURRENT_SCRIPTS child processes at a time.
+  const results: Array<{ fullTag: string; output: string }> = [];
+  for (let i = 0; i < matches.length; i += MAX_CONCURRENT_SCRIPTS) {
+    const batch = matches.slice(i, i + MAX_CONCURRENT_SCRIPTS);
+    const batchResults = await Promise.all(
+      batch.map(async (match) => {
+        const [fullTag, scriptContent] = match;
+        const tmpPath = join(
+          tempDir,
+          `server-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
         );
-        return { fullTag, output: "" };
-      } finally {
-        await unlink(tmpPath).catch(() => { });
-      }
-    }),
-  );
+        try {
+          await writeFile(tmpPath, scriptContent.trim(), "utf8");
+          const { stdout, stderr } = await runModule(tmpPath, request);
+          if (stderr) process.stderr.write(stderr);
+          return { fullTag, output: stdout };
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.warn(
+            `[bascik] server script error at "${request.path}":\n${msg}`,
+          );
+          return { fullTag, output: "" };
+        } finally {
+          await unlink(tmpPath).catch(() => { });
+        }
+      }),
+    );
+    results.push(...batchResults);
+  }
 
   let result = html;
-  for (const { fullTag, output } of outputs) {
+  for (const { fullTag, output } of results) {
     result = result.replace(fullTag, output);
   }
   return result;

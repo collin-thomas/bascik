@@ -534,6 +534,8 @@ describe("serveHttp2 – ETag and conditional GET", () => {
   });
 
   it("sets an ETag header on static asset responses", async () => {
+    const { BascikConfig } = await import("./config.js");
+    (BascikConfig as any).cacheHttp = true;
     const fakeFileStream = { on: vi.fn().mockReturnThis(), pipe: vi.fn() };
     mockCreateReadStream.mockReturnValue(fakeFileStream);
     const handler = getStreamHandler()!;
@@ -544,9 +546,12 @@ describe("serveHttp2 – ETag and conditional GET", () => {
     expect(stream.respond).toHaveBeenCalledWith(
       expect.objectContaining({ etag: expect.stringMatching(/^W\/"[0-9a-z]+-[0-9a-z]+"$/) }),
     );
+    (BascikConfig as any).cacheHttp = false;
   });
 
   it("returns 304 for a static asset when If-None-Match matches", async () => {
+    const { BascikConfig } = await import("./config.js");
+    (BascikConfig as any).cacheHttp = true;
     // Stat returns deterministic values so the ETag is predictable
     const mtimeMs = 1_705_000_000_000;
     const size = 1_024;
@@ -569,6 +574,7 @@ describe("serveHttp2 – ETag and conditional GET", () => {
       expect.objectContaining({ ":status": 304 }),
     );
     expect(stream2.end).toHaveBeenCalledWith();
+    (BascikConfig as any).cacheHttp = false;
   });
 });
 
