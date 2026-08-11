@@ -571,9 +571,47 @@ export const minifyJs = (js: string): string => {
       continue;
     }
 
-    // Potential comment
-    if (ch === "/" && i + 1 < len) {
-      if (js[i + 1] === "*") {
+    // Potential comment, division, or regex literal — all start with "/".
+    if (ch === "/") {
+      const next = js[i + 1];
+
+      // A regex literal can only appear where an *expression* is expected —
+      // i.e. the previous significant token is not an identifier, number,
+      // string-ending quote, `)`, `]`, or `}`.  Division, by contrast, always
+      // follows a value.  Use that to disambiguate `/` before deciding whether
+      // `//` or `/*` starts a comment.
+      const prevSignificant = codeAccum.replace(/\s+$/, "").slice(-1);
+      // `//` and `/*` can never open a regex literal — only a lone `/` can.
+      const couldBeRegex =
+        next !== "/" && next !== "*" && !/[\w)\]}"'`$]/.test(prevSignificant);
+
+      if (couldBeRegex) {
+        // Try to read a regex literal: /pattern/flags, honouring escapes and
+        // character classes so `/` inside `[/]` or after `\` doesn't end it.
+        let j = i + 1;
+        let inClass = false;
+        let closed = false;
+        while (j < len) {
+          const c = js[j];
+          if (c === "\\") { j += 2; continue; }
+          if (c === "[") inClass = true;
+          else if (c === "]") inClass = false;
+          else if (c === "/" && !inClass) { closed = true; j++; break; }
+          else if (c === "\n") break; // unterminated — not a regex
+          j++;
+        }
+        if (closed) {
+          // Consume flags
+          while (j < len && /[a-z]/i.test(js[j])) j++;
+          flushCode();
+          segments.push({ literal: true, text: js.slice(i, j) });
+          i = j;
+          continue;
+        }
+        // Not a valid regex — fall through and treat as division/operators.
+      }
+
+      if (next === "*") {
         // Block comment: skip to */
         i += 2;
         while (i + 1 < len && !(js[i] === "*" && js[i + 1] === "/")) i++;
@@ -582,7 +620,7 @@ export const minifyJs = (js: string): string => {
         if (codeAccum.length > 0 && !/\s$/.test(codeAccum)) codeAccum += " ";
         continue;
       }
-      if (js[i + 1] === "/") {
+      if (next === "/") {
         // Line comment: skip to end of line (the newline itself is kept)
         i += 2;
         while (i < len && js[i] !== "\n") i++;
