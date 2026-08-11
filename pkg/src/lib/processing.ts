@@ -68,6 +68,7 @@ import {
 } from "./file-system.js";
 import {
   listComponents,
+  invalidateComponentListCache,
   replaceTag,
   getFirstComponent,
   getTag,
@@ -427,6 +428,7 @@ export const selectivelyProcessPagesForWatchPath = async (changedPath: string): 
 };
 
 export const selectivelyProcessPages = async (path: string): Promise<void> => {
+  invalidateComponentListCache();
   const relativePath = getRelativePath(path, "components");
   const match = relativePath.match(/^components[\/](?<componentName>(\w|-)+)/);
   const componentName = match?.groups?.componentName;
