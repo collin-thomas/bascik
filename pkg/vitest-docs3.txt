@@ -1,0 +1,18 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/home/runner/work/bascik/bascik/pkg[39m
+
+[90mstdout[2m | src/lib/audit-docs3.test.ts[2m > [22m[2mdocs-vs-code batch 3 — dedup:false + el selectors[2m > [22m[2mD3-1: deduplicateCss FALSE — element selectors scoped per-instance? and class injection
+[22m[39mD3-1 css: ".bascik__my-comp__test1234__el__p { color: red; }"
+D3-1 html: "<p class=\"bascik__my-comp__test1234__el__p\">hi</p>"
+
+[90mstdout[2m | src/lib/audit-docs3.test.ts[2m > [22m[2mdocs-vs-code batch 3 — dedup:false + el selectors[2m > [22m[2mD3-2: dedup FALSE — two instances produce DIFFERENT element classes but same-scope CSS collision?
+[22m[39mD3-2 A css: ".bascik__my-comp__AAAA__el__p { color: red; }" html: "<p class=\"bascik__my-comp__AAAA__el__p\">hi</p>"
+D3-2 B css: ".bascik__my-comp__BBBB__el__p { color: red; }" html: "<p class=\"bascik__my-comp__BBBB__el__p\">hi</p>"
+
+ [32m✓[39m src/lib/audit-docs3.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m   Start at [22m 16:30:17
+[2m   Duration [22m 206ms[2m (transform 65ms, setup 0ms, import 87ms, tests 5ms, environment 0ms)[22m
+
