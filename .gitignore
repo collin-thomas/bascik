@@ -69,3 +69,5 @@ docs/dist
 pkg/dist
 pkg/e2e/dist
 create/dist
+pkg/test-results
+test-results

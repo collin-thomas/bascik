@@ -1,0 +1,20 @@
+@counter-style thumbs {
+  system: cyclic;
+  symbols: "\2714";
+  suffix: " ";
+}
+
+.wrapper {
+  padding: 16px;
+  border: 1px solid #444;
+  display: inline-block;
+}
+
+.custom-list {
+  list-style: thumbs;
+  padding-left: 24px;
+}
+
+.item {
+  padding: 4px 0;
+}

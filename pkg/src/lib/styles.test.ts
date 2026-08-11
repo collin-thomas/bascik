@@ -11,6 +11,9 @@ import {
   scopeCssCustomProperties,
   scopeLayerNames,
   scopeContainerNames,
+  scopeViewTransitionNames,
+  scopeCounterStyleNames,
+  scopeAnchorNames,
   scopeInlineStyleTags,
   convertCssIdSelectorsToClasses,
   addIdClassesInHtml,
@@ -243,6 +246,36 @@ describe("scopeCssCustomProperties", () => {
   it("does not affect properties from other components", () => {
     // A property defined elsewhere (not in this component's CSS) should not be touched
     const css = ".el { color: var(--external-var); }";
+    expect(scopeCssCustomProperties(css, "my-comp__x1")).toBe(css);
+  });
+});
+
+describe("scopeCssCustomProperties – @property declarations", () => {
+  it("scopes an @property declaration name", () => {
+    const css = "@property --brand { syntax: '<color>'; inherits: false; initial-value: #d3ff8d; }";
+    const result = scopeCssCustomProperties(css, "my-comp__x1");
+    expect(result).toContain("@property --bascik__my-comp__x1__brand");
+    expect(result).not.toContain("@property --brand");
+  });
+
+  it("scopes @property and matching var() usage together", () => {
+    const css = "@property --accent { syntax: '<color>'; inherits: false; initial-value: red; } .el { color: var(--accent); }";
+    const result = scopeCssCustomProperties(css, "my-comp__x1");
+    expect(result).toContain("@property --bascik__my-comp__x1__accent");
+    expect(result).toContain("var(--bascik__my-comp__x1__accent)");
+  });
+
+  it("scopes @property when both declaration and element-level usage exist", () => {
+    const css = "@property --size { syntax: '<length>'; inherits: false; initial-value: 0px; } :root { --size: 16px; } .el { padding: var(--size); }";
+    const result = scopeCssCustomProperties(css, "comp__x1");
+    expect(result).toContain("@property --bascik__comp__x1__size");
+    expect(result).toContain("--bascik__comp__x1__size: 16px");
+    expect(result).toContain("var(--bascik__comp__x1__size)");
+  });
+
+  it("does not scope @property from another component", () => {
+    // No @property or --name: in this CSS — nothing to scope
+    const css = ".el { color: var(--external-prop); }";
     expect(scopeCssCustomProperties(css, "my-comp__x1")).toBe(css);
   });
 });
@@ -852,6 +885,68 @@ describe("scopeInlineStyleTags – #id in inline styles", () => {
   });
 });
 
+// ─── @starting-style scoping ────────────────────────────────────────────────
+
+describe("convertCssElementSelectorsToClasses – @starting-style", () => {
+  it("converts element selector inside standalone @starting-style block", () => {
+    const css = "@starting-style {\n  p { opacity: 0; }\n}";
+    const { css: result, elementsConvertedClasses } =
+      convertCssElementSelectorsToClasses(css, "my-comp");
+    expect(elementsConvertedClasses).toContain("p");
+    expect(result).toContain(".bascik__my-comp__el__p");
+  });
+});
+
+describe("scopeInlineStyleTags – @starting-style", () => {
+  it("scopes class names inside @starting-style block", () => {
+    const html =
+      '<style>@starting-style { .box { opacity: 0; } }</style><div class="box"></div>';
+    const { html: result } = scopeInlineStyleTags(html, "my-comp");
+    expect(result).toContain(".bascik__my-comp__box");
+    expect(result).not.toContain("@starting-style { .box");
+  });
+
+  it("scopes element selectors inside @starting-style block", () => {
+    const html =
+      "<style>@starting-style { p { opacity: 0; } }</style><p>text</p>";
+    const { html: result, elementsConvertedClasses } = scopeInlineStyleTags(
+      html,
+      "my-comp",
+    );
+    expect(elementsConvertedClasses).toContain("p");
+    expect(result).toContain(".bascik__my-comp__el__p");
+  });
+
+  it("scopes class names nested inside a rule + @starting-style", () => {
+    const html =
+      '<style>.foo { @starting-style { opacity: 0; transform: translateY(-8px); } }</style><div class="foo"></div>';
+    const { html: result } = scopeInlineStyleTags(html, "my-comp");
+    expect(result).toContain(".bascik__my-comp__foo");
+  });
+});
+
+describe("scopeInlineStyleTags – :nth-child(of .selector)", () => {
+  it("scopes class name in :nth-child(An+B of .class) argument", () => {
+    const html = '<style>li:nth-child(2n+1 of .highlighted) { color: red; }</style><li class="highlighted">x</li>';
+    const { html: result } = scopeInlineStyleTags(html, "my-comp");
+    expect(result).toContain(":nth-child(2n+1 of .bascik__my-comp__highlighted)");
+    expect(result).not.toContain(":nth-child(2n+1 of .highlighted)");
+  });
+
+  it("scopes class name in :nth-last-child(An+B of .class) argument", () => {
+    const html = '<style>li:nth-last-child(3 of .item) { font-weight: bold; }</style><li class="item">x</li>';
+    const { html: result } = scopeInlineStyleTags(html, "my-comp");
+    expect(result).toContain(":nth-last-child(3 of .bascik__my-comp__item)");
+  });
+
+  it("scopes multiple classes in :nth-child(odd of .a.b) compound selector", () => {
+    const html = '<style>li:nth-child(odd of .card.featured) { border: 1px solid; }</style>';
+    const { html: result } = scopeInlineStyleTags(html, "my-comp");
+    expect(result).toContain(".bascik__my-comp__card");
+    expect(result).toContain(".bascik__my-comp__featured");
+  });
+});
+
 describe("minifyCss", () => {
   it("strips block comments", () => {
     expect(minifyCss("/* a comment */\n.foo { color: red; }")).not.toContain("/* a comment */");
@@ -895,5 +990,184 @@ describe("minifyCss", () => {
     const input = "@media (max-width: 768px) { .a { display: none; } }";
     const result = minifyCss(input);
     expect(result).toBe("@media (max-width:768px){.a{display:none;}}");
+  });
+});
+
+// ─── scopeViewTransitionNames ─────────────────────────────────────────────────
+
+describe("scopeViewTransitionNames", () => {
+  it("scopes a view-transition-name declaration", () => {
+    const css = ".el { view-transition-name: my-card; }";
+    const result = scopeViewTransitionNames(css, "my-comp");
+    expect(result).toContain("bascik__my-comp__vtn__my-card");
+    expect(result).not.toContain("view-transition-name: my-card");
+  });
+
+  it("scopes ::view-transition-old pseudo-element reference", () => {
+    const css =
+      ".el { view-transition-name: hero; }\n::view-transition-old(hero) { animation: none; }";
+    const result = scopeViewTransitionNames(css, "my-comp");
+    const scoped = "bascik__my-comp__vtn__hero";
+    expect(result).toContain(`::view-transition-old(${scoped})`);
+    expect(result).not.toContain("::view-transition-old(hero)");
+  });
+
+  it("scopes ::view-transition-new pseudo-element reference", () => {
+    const css =
+      ".el { view-transition-name: slide; }\n::view-transition-new(slide) { animation: fade 0.3s; }";
+    const result = scopeViewTransitionNames(css, "my-comp");
+    expect(result).toContain(
+      "::view-transition-new(bascik__my-comp__vtn__slide)",
+    );
+  });
+
+  it("scopes ::view-transition-group pseudo-element reference", () => {
+    const css =
+      ".el { view-transition-name: box; }\n::view-transition-group(box) { }";
+    const result = scopeViewTransitionNames(css, "my-comp");
+    expect(result).toContain(
+      "::view-transition-group(bascik__my-comp__vtn__box)",
+    );
+  });
+
+  it("does not scope the keyword 'none'", () => {
+    const css = ".el { view-transition-name: none; }";
+    expect(scopeViewTransitionNames(css, "my-comp")).toBe(css);
+  });
+
+  it("does not scope the keyword 'auto'", () => {
+    const css = ".el { view-transition-name: auto; }";
+    expect(scopeViewTransitionNames(css, "my-comp")).toBe(css);
+  });
+
+  it("does not scope names not declared in this CSS", () => {
+    const css = "::view-transition-old(external) { animation: none; }";
+    expect(scopeViewTransitionNames(css, "my-comp")).toBe(css);
+  });
+
+  it("scopes multiple view-transition-name declarations independently", () => {
+    const css =
+      ".a { view-transition-name: card; }\n.b { view-transition-name: hero; }\n::view-transition-old(card) { }\n::view-transition-old(hero) { }";
+    const result = scopeViewTransitionNames(css, "comp");
+    expect(result).toContain("bascik__comp__vtn__card");
+    expect(result).toContain("bascik__comp__vtn__hero");
+  });
+
+  it("returns css unchanged when no view-transition-name is declared", () => {
+    const css = ".el { color: red; }";
+    expect(scopeViewTransitionNames(css, "my-comp")).toBe(css);
+  });
+});
+
+// ─── scopeCounterStyleNames ───────────────────────────────────────────────────
+
+describe("scopeCounterStyleNames", () => {
+  it("scopes an @counter-style declaration name", () => {
+    const css = "@counter-style thumbs { system: cyclic; symbols: '\\1F44D'; suffix: ' '; }";
+    const result = scopeCounterStyleNames(css, "my-comp");
+    expect(result).toContain("@counter-style bascik__my-comp__counter__thumbs");
+    expect(result).not.toContain("@counter-style thumbs");
+  });
+
+  it("scopes a list-style reference to the counter name", () => {
+    const css = "@counter-style steps { system: fixed; }\nul { list-style: steps; }";
+    const result = scopeCounterStyleNames(css, "my-comp");
+    expect(result).toContain("list-style: bascik__my-comp__counter__steps");
+    expect(result).not.toContain("list-style: steps");
+  });
+
+  it("scopes a list-style-type reference", () => {
+    const css = "@counter-style stars { system: cyclic; }\nol { list-style-type: stars; }";
+    const result = scopeCounterStyleNames(css, "my-comp");
+    expect(result).toContain("list-style-type: bascik__my-comp__counter__stars");
+  });
+
+  it("scopes the counter() function second argument", () => {
+    const css = "@counter-style roman { system: additive; }\n.el::before { content: counter(section, roman); }";
+    const result = scopeCounterStyleNames(css, "my-comp");
+    expect(result).toContain(`counter(section, bascik__my-comp__counter__roman)`);
+    expect(result).not.toContain("counter(section, roman)");
+  });
+
+  it("scopes the counters() function third argument", () => {
+    const css = "@counter-style fancy { system: cyclic; }\n.el::before { content: counters(section, '.', fancy); }";
+    const result = scopeCounterStyleNames(css, "my-comp");
+    expect(result).toContain(`counters(section, '.', bascik__my-comp__counter__fancy)`);
+  });
+
+  it("does not scope built-in counter styles not declared with @counter-style", () => {
+    const css = "ul { list-style: disc; }";
+    expect(scopeCounterStyleNames(css, "my-comp")).toBe(css);
+  });
+
+  it("scopes multiple @counter-style names independently", () => {
+    const css = "@counter-style alpha { }\n@counter-style beta { }\nul { list-style: alpha; }\nol { list-style: beta; }";
+    const result = scopeCounterStyleNames(css, "comp");
+    expect(result).toContain("bascik__comp__counter__alpha");
+    expect(result).toContain("bascik__comp__counter__beta");
+  });
+
+  it("returns css unchanged when no @counter-style is declared", () => {
+    const css = ".el { color: red; }";
+    expect(scopeCounterStyleNames(css, "my-comp")).toBe(css);
+  });
+});
+
+// ─── scopeAnchorNames ─────────────────────────────────────────────────────────
+
+describe("scopeAnchorNames", () => {
+  it("scopes an anchor-name declaration", () => {
+    const css = ".anchor { anchor-name: --my-anchor; }";
+    const result = scopeAnchorNames(css, "my-comp");
+    expect(result).toContain("anchor-name: --bascik__my-comp__anchor__my-anchor");
+    expect(result).not.toContain("anchor-name: --my-anchor");
+  });
+
+  it("scopes position-anchor reference to match the declared anchor-name", () => {
+    const css = ".anchor { anchor-name: --btn-anchor; }\n.tooltip { position-anchor: --btn-anchor; }";
+    const result = scopeAnchorNames(css, "my-comp");
+    expect(result).toContain("position-anchor: --bascik__my-comp__anchor__btn-anchor");
+    expect(result).not.toContain("position-anchor: --btn-anchor");
+  });
+
+  it("scopes @position-try at-rule name to match the declared anchor-name", () => {
+    const css = ".anchor { anchor-name: --pop; }\n@position-try --pop { top: anchor(bottom); }";
+    const result = scopeAnchorNames(css, "my-comp");
+    expect(result).toContain("@position-try --bascik__my-comp__anchor__pop");
+    expect(result).not.toContain("@position-try --pop");
+  });
+
+  it("scopes all three: anchor-name, position-anchor, @position-try", () => {
+    const css = ".anchor { anchor-name: --foo; }\n.pos { position-anchor: --foo; }\n@position-try --foo { top: anchor(bottom); }";
+    const result = scopeAnchorNames(css, "comp");
+    const scoped = "bascik__comp__anchor__foo";
+    expect(result).toContain(`anchor-name: --${scoped}`);
+    expect(result).toContain(`position-anchor: --${scoped}`);
+    expect(result).toContain(`@position-try --${scoped}`);
+  });
+
+  it("does not scope position-anchor that references an undeclared anchor", () => {
+    const css = ".tooltip { position-anchor: --external-anchor; }";
+    expect(scopeAnchorNames(css, "my-comp")).toBe(css);
+  });
+
+  it("does not affect CSS custom properties with the same name", () => {
+    const css = ".el { --my-prop: 16px; padding: var(--my-prop); anchor-name: --my-anchor; }";
+    const result = scopeAnchorNames(css, "comp");
+    expect(result).toContain("--my-prop: 16px");
+    expect(result).toContain("var(--my-prop)");
+    expect(result).toContain("--bascik__comp__anchor__my-anchor");
+  });
+
+  it("scopes multiple anchor names independently", () => {
+    const css = ".a { anchor-name: --alpha; }\n.b { anchor-name: --beta; }\n.c { position-anchor: --alpha; }\n.d { position-anchor: --beta; }";
+    const result = scopeAnchorNames(css, "comp");
+    expect(result).toContain("bascik__comp__anchor__alpha");
+    expect(result).toContain("bascik__comp__anchor__beta");
+  });
+
+  it("returns css unchanged when no anchor-name is declared", () => {
+    const css = ".el { color: red; }";
+    expect(scopeAnchorNames(css, "my-comp")).toBe(css);
   });
 });

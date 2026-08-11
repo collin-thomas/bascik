@@ -1,0 +1,18 @@
+@property --brand-color {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: rgb(100, 200, 100);
+}
+
+.box {
+  --brand-color: rgb(74, 222, 128);
+  background-color: var(--brand-color);
+  padding: 16px;
+  border: 1px solid #444;
+  display: inline-block;
+}
+
+.label {
+  color: #000;
+  margin: 0;
+}

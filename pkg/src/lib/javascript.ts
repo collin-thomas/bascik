@@ -84,6 +84,9 @@ import {
   scopeCssCustomProperties,
   scopeLayerNames,
   scopeContainerNames,
+  scopeViewTransitionNames,
+  scopeCounterStyleNames,
+  scopeAnchorNames,
   scopeInlineStyleTags,
 } from "./styles.js";
 import type { BascikComponent } from "./types.js";
@@ -421,6 +424,24 @@ export const prefixElementAttribute = (
 
       // Scope @container names
       component.cssFileContent = scopeContainerNames(
+        component.cssFileContent,
+        scopeKey,
+      );
+
+      // Scope view-transition-name values
+      component.cssFileContent = scopeViewTransitionNames(
+        component.cssFileContent,
+        scopeKey,
+      );
+
+      // Scope @counter-style names
+      component.cssFileContent = scopeCounterStyleNames(
+        component.cssFileContent,
+        scopeKey,
+      );
+
+      // Scope anchor-name / @position-try identifiers
+      component.cssFileContent = scopeAnchorNames(
         component.cssFileContent,
         scopeKey,
       );

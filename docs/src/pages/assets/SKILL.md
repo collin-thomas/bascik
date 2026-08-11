@@ -108,12 +108,12 @@ CSS custom properties declared in the file are also scoped. `var(--prop, fallbac
 ```
 
 ### CSS Scoping Limitations (not yet supported)
-* `@property` — registered custom property names are not scoped; declare in a shared global stylesheet
-* `@starting-style` — class/element selectors inside the block are not scoped; wrap rules in a class anchor as a workaround
-* `@counter-style` — custom counter names and their references in `list-style`, `counter()`, `counters()` are not scoped
-* `view-transition-name` — property values are not scoped; use globally unique names manually
-* `anchor-name` / `@position-try` — anchor names and fallback option identifiers are not scoped; use globally unique names manually
-* `:nth-child(An+B of .selector)` — class names in the `of <selector>` filter argument are not scoped
+* `@property` — `@property --name { }` declaration names are scoped along with any matching `--name:` declarations and `var(--name)` references in the same component
+* `@starting-style` — class names and element selectors inside `@starting-style` blocks are scoped by the same passes that handle other at-rules; both standalone `@starting-style { .foo { } }` and nested `.foo { @starting-style { } }` forms work
+* `@counter-style` — `@counter-style name { }` declaration names are scoped; references in `list-style`, `list-style-type`, `counter(counter, name)`, and `counters(counter, sep, name)` in the same CSS file are updated to match
+* `view-transition-name` — ✓ values are scoped per component (`bascik__<comp>__vtn__<name>`); matching `::view-transition-old/new/group/image-pair()` pseudo-element references in the same file are updated; `none` and `auto` are not scoped
+* `anchor-name` / `@position-try` — `anchor-name: --name` declarations are scoped per component; matching `position-anchor: --name` references and `@position-try --name { }` at-rules in the same CSS file are updated to match; only anchors declared in the component's own CSS are scoped
+* `:nth-child(An+B of .selector)` — class names in the `of <selector>` argument are scoped (same global `(?<=\.)` pass as `:is()`, `:where()`, `:has()`); works for `:nth-child` and `:nth-last-child`
 * `@font-face` — passed through untouched; declare in a shared stylesheet to avoid duplicate injections
 * `@import` — not followed; include CSS directly in the component file instead
 
