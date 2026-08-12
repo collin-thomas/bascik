@@ -2122,7 +2122,7 @@ The spelling comes from my maternal grandmother's maiden name. So the name is un
 
 ## Isn't BASIC already a programming language?
 
-Yes — the classic one from the 1960s. I used it on an old Texas Instruments calculator. But enough time has passed. It can take on new meaning.
+Yes. In fact some of my earliest exposure to programming was to TI-Basic on my friends  calculator. BASIC is an old programming language and enough time has passed. It can take on new meaning.
 
 ## What is Bascik?
 

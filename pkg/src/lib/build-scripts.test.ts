@@ -276,4 +276,11 @@ describe("executeBuildScripts", () => {
     const result = await executeBuildScripts(html);
     expect(result).toBe("price: $& and $1");
   });
+
+  it("strips ANSI color escape codes from script stdout before injecting HTML", async () => {
+    resolveWith("\u001B[33m2026\u001B[39m Built with Bascik");
+    const html = "<span>&copy; <script data-bascik-build>console.log(1)</script></span>";
+    const result = await executeBuildScripts(html);
+    expect(result).toBe("<span>&copy; 2026 Built with Bascik</span>");
+  });
 });

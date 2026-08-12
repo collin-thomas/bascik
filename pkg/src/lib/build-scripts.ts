@@ -80,7 +80,12 @@ const runModule = async (path: string): Promise<{ stdout: string; stderr: string
       [path],
       {
         cwd: process.cwd(),
-        env: { ...process.env, BASCIK_BUILD: BascikConfig.isBuild ? "1" : "0" },
+        env: {
+          ...process.env,
+          BASCIK_BUILD: BascikConfig.isBuild ? "1" : "0",
+          FORCE_COLOR: "0",
+          NO_COLOR: "1",
+        },
         timeout: BUILD_SCRIPT_TIMEOUT,
         killSignal: "SIGTERM",
       },
@@ -107,6 +112,13 @@ const BUILD_SCRIPT_RE = new RegExp(
   String.raw`<script\b(?:\s+${ATTR})*\s+${FLAG}(?:\s+${ATTR})*\s*>([\s\S]*?)<\/script>`,
   "gi",
 );
+
+// Strip ANSI terminal color sequences so build-time HTML injection never leaks
+// Netlify/CI color escapes (e.g. FORCE_COLOR=1) into the final page markup.
+const stripAnsiEscapeCodes = (value: string): string =>
+  value.replace(/\u001B\[[0-9;?]*[ -/]*[@-~]/g, "")
+    .replace(/\u001B\][^\u0007\u001B]*(?:\u0007|\u001B\\)/g, "")
+    .replace(/\u001B[@-Z\\-_]/g, "");
 
 /** Per-build-script execution timeout (ms). Keeps a hung script from hanging the build forever. */
 const BUILD_SCRIPT_TIMEOUT = 60_000;
@@ -141,7 +153,7 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
       await writeFile(tmpPath, scriptContent.trim(), "utf8");
       const { stdout, stderr } = await runModule(tmpPath);
       if (stderr) process.stderr.write(stderr);
-      return { fullTag, index, output: stdout };
+      return { fullTag, index, output: stripAnsiEscapeCodes(stdout) };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       let errorMsg = `[bascik] build script error`;

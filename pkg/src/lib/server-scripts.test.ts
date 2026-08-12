@@ -177,6 +177,13 @@ describe("executeServerScripts", () => {
     expect(opts.cwd).toBe(process.cwd());
   });
 
+  it("strips ANSI color codes from server-script output before injecting HTML", async () => {
+    resolveWith("\u001B[33m2026\u001B[39m Built with Bascik");
+    const html = "<span>&copy; <script data-bascik-server>console.log(1)</script></span>";
+    const result = await executeServerScripts(html, baseRequest);
+    expect(result).toBe("<span>&copy; 2026 Built with Bascik</span>");
+  });
+
   it("processes multiple server scripts in parallel", async () => {
     mockExecFile
       .mockImplementationOnce(
