@@ -49,7 +49,9 @@
       const target = id ? document.getElementById(id) : null;
       if (target) target.scrollIntoView({ block: 'start' });
 
-      Promise.resolve(navigator.clipboard && navigator.clipboard.writeText(location.href))
+      if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') return;
+
+      navigator.clipboard.writeText(location.href)
         .then(function () {
           a.classList.add('copied');
           setTimeout(function () { a.classList.remove('copied'); }, 1500);
