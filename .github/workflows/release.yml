@@ -1,7 +1,7 @@
 name: Release
 
-# pkg:    git tag v0.2.0 && git push --tags
-# create: git tag create-v0.1.0 && git push --tags
+# pkg:    git tag v1.0.0 && git push --tags
+# create: git tag create-v1.0.0 && git push --tags
 on:
   push:
     tags:
