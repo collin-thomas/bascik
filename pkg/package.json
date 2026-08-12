@@ -7,13 +7,14 @@
   "author": "Collin Thomas",
   "type": "module",
   "files": [
+    "bin/",
     "dist/",
     "src/",
     "README.md",
     "CHANGELOG.md"
   ],
   "bin": {
-    "bascik": "dist/index.js"
+    "bascik": "bin/bascik.js"
   },
   "engines": {
     "node": ">=24.17.0"

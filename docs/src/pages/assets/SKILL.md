@@ -35,7 +35,7 @@ bascik/
   docs/         ← the docs site and internal developer guide
 ```
 
-The `create/` folder is intentionally separate from `pkg/`. The root repo uses Yarn workspaces for contributor work, but the generated app is meant to behave like a normal Node project. That is why the scaffold asks for a project name, scaffolds a starter site, and then runs `npm install` and `npm run dev` in the new project.
+The `create/` folder is intentionally separate from `pkg/`. Contributor work in this monorepo uses Yarn with the single root `yarn.lock`, while generated projects intentionally use npm and receive their own `package-lock.json`. That split keeps contributor workflows Yarn-only while preserving the standard npm onboarding flow for generated apps.
 
 The generator in `create/src/index.ts` validates input, then calls `create/src/scaffold.ts` to write the project files. The generated app is not coupled to the monorepo layout. It just uses the published `@bascik/bascik` package and then runs as a normal Bascik site.
 

@@ -61,63 +61,34 @@ The scaffold runs `npm install` and `npm run dev` so users do not need Yarn to g
 
 ## Modifying the scaffold
 
-All generated file content is defined as string constants in `scaffold.ts`. To change what a new project looks like, edit the relevant constant there. After any change, rebuild before testing:
+All generated file content is defined as string constants in `scaffold.ts`. To change what a new project looks like, edit the relevant constant there.
+
+Contributor commands:
 
 ```sh
-cd create
-npm run build
+yarn workspace create-bascik build
+yarn workspace create-bascik test
+node index.js my-site -y
 ```
-
-The `npm link` symlink points at the `create/` directory, so a fresh `dist/` is picked up immediately without relinking.
 
 ## Tests
 
-The scaffold is fully unit-tested. Run the tests from the `create/` directory:
-
-```sh
-cd create
-npm test
-```
+The scaffold is fully unit-tested.
 
 Tests mock `fs/promises` and verify that every expected file is written with the right content. If you add or rename a generated file, add a corresponding test case in `scaffold.test.ts`.
 
+## Lockfiles and package managers
+
+Contributors use Yarn at the monorepo root with a single `yarn.lock`.
+
+Generated projects intentionally use npm, and each generated project gets its own `package-lock.json`.
+
 ## Testing create app locally
 
-### 1. Install the repo
+Use `node index.js my-site -y` from the create package flow above.
 
-From the repo root:
-
-```sh
-yarn install
-```
-
-### 2. Link the local scaffold
-
-```sh
-cd create && npm install && npm link && cd ..
-```
-
-### 3. Create a test site
-
-```sh
-npx create-bascik my-site -y
-```
-
-The `-y` flag skips both prompts. The npm install will print a 404 error for `@bascik/bascik` (not on npm yet), but the dev server starts anyway — the workspace `node_modules` symlink resolves the package. Command+Click the URL to open it in a browser.
+The `-y` flag skips both prompts. Command+Click the URL to open it in a browser.
 
 ```text
 Server running at https://localhost:8443
 ```
-
-## Cleanup after local testing
-
-Once you are done, unlink to return to the normal published package flow.
-
-From the repo root:
-
-```sh
-cd create
-npm unlink
-```
-
-If you are still actively iterating on the generator, leaving it linked is fine.
