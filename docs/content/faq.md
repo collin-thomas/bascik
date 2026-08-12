@@ -18,7 +18,7 @@ Bascik is a build tool for HTML components. You write reusable components in pla
 
 By default the output is fully static and can be hosted anywhere. If you need per-request dynamic content, the [production server](/server) lets you run server-side scripts that inject into specific sections of a page at request time, while everything else stays static.
 
-For a deeper look: [Components](/components), [Scoped CSS](/scoped-styles), [Scoped JavaScript](/scoped-javascript), [Getting Started](/getting-started).
+For a deeper look: [Getting Started](/getting-started), [Scoped CSS](/scoped-styles), [Scoped JavaScript](/scoped-javascript), [Migration Overview](/migrate).
 
 ## Who made Bascik?
 
