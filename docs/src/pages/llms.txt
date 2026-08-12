@@ -2114,6 +2114,16 @@ When `obfuscateAttributeNames` is enabled (the default for builds), each full sc
 
 Answers to common questions about Bascik.
 
+## How do you pronounce Bascik? Where does the name come from?
+
+Just like "basic." The idea is basic, the implementation is basic in theory, and the usage is basic. It felt like the right word.
+
+The spelling comes from my maternal grandmother's maiden name. So the name is unique and means something personal.
+
+## Isn't BASIC already a programming language?
+
+Yes — the classic one from the 1960s. I used it on an old Texas Instruments calculator. But enough time has passed. It can take on new meaning.
+
 ## What is Bascik?
 
 Bascik is a build tool for HTML components. You write reusable components in plain HTML, CSS, and JavaScript. At build time, Bascik resolves your custom tags to their component source, scopes CSS and JavaScript so they never collide across instances, and outputs a directory of plain HTML files. Zero JavaScript is added to your pages — every script in the output was written by you.
