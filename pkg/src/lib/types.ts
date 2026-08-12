@@ -77,7 +77,6 @@ export interface BascikConfigOptions {
   minifyScripts: boolean | ((code: string) => string | Promise<string>);
   obfuscateAttributeNames: boolean;
   cacheHttp: boolean;
-  verboseLogging: boolean;
   /**
    * Tag names whose inner content is left untouched by the scoping pipeline.
    * Attribute values, element-selector class injection, and JS selector
@@ -143,6 +142,38 @@ export interface BascikConfigOptions {
   isBuild?: boolean;
   isServe?: boolean;
   /**
+   * Development server logging controls. These are separate from the normal
+   * `console.warn`/`console.error` diagnostics and only affect the high-traffic
+   * "transpiled/copied/deleted" status lines that can get noisy during active
+   * development.
+   *
+   * @example
+   * export const bascikConfig = {
+   *   devServer: {
+   *     logging: {
+   *       level: 'debug',
+   *       copies: true,
+   *       deletes: true,
+   *       transpiles: true,
+   *     },
+   *   },
+   * };
+   */
+  devServer?: {
+    logging?: {
+      /** `silent` | `error` | `warn` | `info` | `debug` */
+      level?: "silent" | "error" | "warn" | "info" | "debug";
+      /** Log HTTP requests served by the dev server. Defaults to `true`. */
+      requests?: boolean;
+      /** Log static-file copies into `dist/`. Defaults to `true`. */
+      copies?: boolean;
+      /** Log deletions from `dist/`. Defaults to `true`. */
+      deletes?: boolean;
+      /** Log page transpile events. Defaults to `true`. */
+      transpiles?: boolean;
+    };
+  };
+  /**
    * HTTP server configuration used in both dev and production (`bascik --serve`) modes.
    *
    * @example
@@ -153,6 +184,7 @@ export interface BascikConfigOptions {
    *     hostname: '0.0.0.0',
    *     keyFile: '/etc/ssl/private/site.key',
    *     certFile: '/etc/ssl/certs/site.crt',
+   *     logging: { level: 'warn', requests: false },
    *   },
    * };
    */
@@ -175,6 +207,12 @@ export interface BascikConfigOptions {
      * Defaults to `30000` (30 s).
      */
     scriptTimeout?: number;
+    logging?: {
+      /** `silent` | `error` | `warn` | `info` | `debug` */
+      level?: "silent" | "error" | "warn" | "info" | "debug";
+      /** Log HTTP requests served by the production server. Defaults to `true`. */
+      requests?: boolean;
+    };
   };
 }
 

@@ -30,6 +30,7 @@ export const NAV = [
   ]},
   { section: 'Reference', pages: [
     { href: '/compatibility', label: 'Scoping Compatibility' },
+    { href: '/faq', label: 'FAQ' },
     { href: '/copilot-skill', label: 'AI Skill' },
   ]},
   { section: 'Recipes', pages: [

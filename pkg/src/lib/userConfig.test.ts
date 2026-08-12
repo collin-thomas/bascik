@@ -46,7 +46,7 @@ describe("loadUserConfig", () => {
 
   it("returns empty config (with a warning) when the file does not exist", async () => {
     const { loadUserConfig } = await import("./userConfig.js");
-    vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => { });
     const { bascikConfig } = await loadUserConfig("/nonexistent/bascik.config.js");
     expect(bascikConfig).toEqual({});
     expect(console.warn).toHaveBeenCalledWith(
@@ -66,8 +66,8 @@ describe("loadUserConfig", () => {
     // importUserConfig must convert to a file URL — importing a bare absolute
     // path fails with ERR_UNSUPPORTED_ESM_URL_SCHEME on Windows.
     const { importUserConfig } = await import("./userConfig.js");
-    const p = await writeConfig(`export const bascikConfig = { verboseLogging: true };`);
+    const p = await writeConfig(`export const bascikConfig = { cacheHttp: true };`);
     const mod = await importUserConfig(p);
-    expect(mod.bascikConfig).toEqual({ verboseLogging: true });
+    expect(mod.bascikConfig).toEqual({ cacheHttp: true });
   });
 });

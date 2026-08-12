@@ -1,4 +1,5 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
+import { EventEmitter } from "node:events";
 import {
   deepReadDir,
   deepReadDirFlat,
@@ -24,12 +25,43 @@ vi.mock("./config.js", () => ({
       components: "components",
     },
     minifyStyles: false,
+    devServer: {
+      logging: {
+        level: "info",
+        requests: true,
+        copies: true,
+        deletes: true,
+        transpiles: true,
+      },
+    },
+  },
+  shouldLog: (configuredLevel: string | undefined, eventLevel = "info") => {
+    const levels = ["silent", "error", "warn", "info", "debug"] as const;
+    return (levels.indexOf((configuredLevel ?? "info") as any) >= levels.indexOf(eventLevel as any));
   },
 }));
 
 vi.mock("./styles.js", () => ({
   minifyCss: vi.fn((css: string) => css.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s+/g, " ").replace(/\s*([{}:;,])\s*/g, "$1").trim()),
 }));
+
+vi.mock("node:fs", () => {
+  return {
+    createReadStream: vi.fn((filePath: string) => {
+      const stream = new EventEmitter() as EventEmitter & {
+        on: EventEmitter["on"];
+      };
+      const content = filePath.includes("dist")
+        ? "body { color: blue; }"
+        : "body { color: red; }";
+      queueMicrotask(() => {
+        stream.emit("data", Buffer.from(content));
+        stream.emit("end");
+      });
+      return stream;
+    }),
+  };
+});
 
 vi.mock("node:fs/promises", () => {
   return {
@@ -56,6 +88,10 @@ vi.mock("node:fs/promises", () => {
 });
 
 vi.spyOn(console, "log");
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 describe("deepReadDir", () => {
   it("Reads path", async () => {
@@ -118,18 +154,30 @@ describe("getDistPagePath", () => {
 });
 
 describe("deleteDistFile", () => {
-  it("test", async () => {
-    const pagePath = '"./test.js"';
+  it("logs relative Bascik paths for page deletions", async () => {
+    const pagePath = "/workspace/project/pages/about.html";
     await deleteDistFile(pagePath);
-    expect(console.log).toHaveBeenCalledWith(`deleted file: ${pagePath}`);
+    expect(console.log).toHaveBeenCalledWith("deleted file: pages/about.html");
   });
 });
 
 describe("deleteDistDir", () => {
-  it("test", async () => {
-    const dirPath = '"./dir"';
+  it("logs relative Bascik paths for directory deletions", async () => {
+    const dirPath = "/workspace/project/pages/assets";
     await deleteDistDir(dirPath);
-    expect(console.log).toHaveBeenCalledWith(`deleted dir: ${dirPath}`);
+    expect(console.log).toHaveBeenCalledWith("deleted dir: pages/assets");
+  });
+});
+
+describe("copyReplicatePath", () => {
+  it("logs relative Bascik paths for copied files", async () => {
+    vi.mocked(readFile)
+      .mockResolvedValueOnce("body { color: red; }" as any)
+      .mockRejectedValueOnce(new Error("ENOENT"));
+
+    await copyReplicatePath("/workspace/project/pages/css/styles.css", "dist");
+
+    expect(console.log).toHaveBeenCalledWith("copied:", "pages/css/styles.css");
   });
 });
 

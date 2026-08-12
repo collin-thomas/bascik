@@ -43,10 +43,10 @@ Place default content inside the slot marker. It renders when the usage site pas
 ```
 
 ```html
-<!-- No inner content — fallback renders -->
+<!-- No inner content - fallback renders -->
 <my-card></my-card>
 
-<!-- Inner content provided — overrides fallback -->
+<!-- Inner content provided - overrides fallback -->
 <my-card><p>Custom content.</p></my-card>
 ```
 

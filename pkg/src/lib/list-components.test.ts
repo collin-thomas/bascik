@@ -15,7 +15,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("./config.js", () => ({
   BascikConfig: {
     directory: { components: "src/components" },
-    verboseLogging: false,
     obfuscateAttributeNames: false,
     deduplicateCss: true,
     minifyStyles: false,
@@ -182,5 +181,80 @@ describe("listComponents – build script execution order", () => {
     // Each component's content in its own container
     expect(result["my-header"].fileContent).toContain("<header");
     expect(result["my-footer"].fileContent).toContain("<footer");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// listComponents – component name normalization
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("listComponents – component name case normalization", () => {
+  it("normalizes an uppercase filename to a lowercase key", async () => {
+    mockDeepReadDirFlat.mockResolvedValue(["src/components/My-Card.html"]);
+    mockReadFile.mockResolvedValue(Buffer.from("<div>card</div>"));
+
+    const result = await listComponents();
+
+    expect(result["my-card"]).toBeDefined();
+    expect(result["My-Card"]).toBeUndefined();
+  });
+
+  it("normalizes a mixed-case filename to a lowercase key", async () => {
+    mockDeepReadDirFlat.mockResolvedValue(["src/components/SiteNav.html"]);
+    mockReadFile.mockResolvedValue(Buffer.from("<nav>nav</nav>"));
+
+    const result = await listComponents();
+
+    expect(result["sitenav"]).toBeDefined();
+    expect(result["SiteNav"]).toBeUndefined();
+  });
+
+  it("last component wins when two filenames differ only in case", async () => {
+    mockDeepReadDirFlat.mockResolvedValue([
+      "src/components/my-card.html",
+      "src/components/My-Card.html",
+    ]);
+    mockReadFile
+      .mockResolvedValueOnce(Buffer.from("<div>lowercase</div>"))
+      .mockResolvedValueOnce(Buffer.from("<div>uppercase</div>"));
+
+    const result = await listComponents();
+
+    expect(result["my-card"]).toBeDefined();
+    // Only one entry for my-card (not two)
+    expect(Object.keys(result).filter((k) => k === "my-card")).toHaveLength(1);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// listComponents – native HTML element name warning
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("listComponents – native HTML element name warning", () => {
+  it("logs a warning when a component name matches a native HTML element", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+    mockDeepReadDirFlat.mockResolvedValue(["src/components/nav.html"]);
+    mockReadFile.mockResolvedValue(Buffer.from("<nav>hello</nav>"));
+
+    await listComponents();
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('"nav"'),
+    );
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("native HTML element"),
+    );
+    warnSpy.mockRestore();
+  });
+
+  it("does not warn for hyphenated component names", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+    mockDeepReadDirFlat.mockResolvedValue(["src/components/my-nav.html"]);
+    mockReadFile.mockResolvedValue(Buffer.from("<nav>hello</nav>"));
+
+    await listComponents();
+
+    expect(warnSpy).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
   });
 });

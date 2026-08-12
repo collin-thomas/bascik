@@ -6,7 +6,7 @@ This file contains the **complete, centralized documentation and development ski
 
 ## 1. What Bascik Is & Does
 
-> Bascik is a build-time static site generator that turns reusable HTML component files into plain HTML pages. It adds zero JavaScript to the output. You write HTML, CSS, and JavaScript; Bascik scopes and assembles them.
+> Bascik is a build tool for HTML components. It scopes and assembles reusable HTML component files into plain HTML pages at build time. It adds zero JavaScript to the output. You write HTML, CSS, and JavaScript; Bascik scopes and assembles them.
 
 * **Resolves custom HTML tags** (e.g. `<my-nav></my-nav>`) to their component source HTML at build time.
 * **Scopes CSS class names, element selectors, `@keyframes`, and CSS custom properties** per component so they never collide.
@@ -320,7 +320,7 @@ Non-`data-bascik-*` attributes on a usage tag are merged onto the component's ro
 </nav>
 ```
 
-Inherited class names are not scoped, they are treated as global page-level classes.
+Inherited class names are not scoped, they are treated as global page-level classes. To disable inheritance: `inheritAttributes: false` in `bascik.config.js`.
 
 ### Self-Closing Tags
 ```html
@@ -472,17 +472,29 @@ export const bascikConfig = {
   inlineStyles: false, // false | true | ['src/pages/css/styles.css']
   obfuscateAttributeNames: true, // hash class/id names to short hex strings
   cacheHttp: false, // dev default; automatically true in --serve mode
-  verboseLogging: false,
   siteUrl: 'https://example.com',
   generate: {
     sitemap: true, // write dist/sitemap.xml
     robots: true,  // write dist/robots.txt
+  },
+  devServer: {
+    logging: {
+      level: 'info',    // silent | error | warn | info | debug
+      requests: true,
+      copies: true,
+      deletes: true,
+      transpiles: true,
+    },
   },
   serve: {
     port: 8443,           // default
     hostname: 'localhost', // use '0.0.0.0' to bind all interfaces (containers/proxies)
     keyFile: '/etc/ssl/site.key',  // optional: provide your own TLS cert
     certFile: '/etc/ssl/site.crt', // optional: provide your own TLS cert
+    logging: {
+      level: 'info',    // silent | error | warn | info | debug
+      requests: true,
+    },
   },
 };
 
@@ -504,7 +516,7 @@ src/
 ```
 
 ### Custom 404 & 500 Pages
-* **404 Page (`src/pages/404.html`):** If you create a `404.html` file in your pages directory, Bascik's built-in development server will automatically serve it as a fallback for any non-existent routes with a `404` status code. When you build for production (`bascik --build`), this is compiled to `dist/404.html` which is recognized by standard static hosts (GitHub Pages, Vercel, Netlify).
+* **404 Page (`src/pages/404.html`):** If you create a `404.html` file in your pages directory, the dev server and `bascik --serve` automatically serve it as a fallback for any non-existent routes with a `404` status code. When you build for production (`bascik --build`), this is compiled to `dist/404.html` which is recognized by standard static hosts (GitHub Pages, Vercel, Netlify).
 * **500 Page Support:** If the server encounters runtime compilation errors, it responds with a proper `500` error block to prevent server crashes.
 
 ---
@@ -529,7 +541,7 @@ Install dependencies now? (Y/n)
 Start the dev server after install? (Y/n)
 ```
 
-Select Y for both and you're live at **https://localhost:8443:** no further commands needed. If you select N, the remaining steps are printed at the end.
+Select Y for both and you're live at **https://localhost:8443** with no further commands needed. If you select N, the remaining steps are printed at the end.
 
 ### Adding to an Existing Project
 
@@ -860,3 +872,17 @@ When generating code, pages, or components for a Bascik project, the following c
 6. **Dynamic Toggles:** Use `data-` attributes for runtime state that changes via JavaScript (e.g. `data-state="open"`). Scoped class names are assigned at build time and cannot be reliably looked up by JS string manipulation *unless* you utilize a scoping helper (Section 5).
 7. **Text Props:** Props accept text only. For rich HTML content, use slots.
 8. **Script Modules:** `<script type="module">` scripts are not wrapped in an IIFE, but their selectors are still rewritten.
+
+---
+
+## 15. FAQ
+
+**Who made Bascik?** Collin Thomas.
+
+**Why was Bascik created?** To build the fastest possible websites and dashboards with components, using only foundational languages (HTML, CSS, JavaScript) — no abstraction layer, no tool to learn, no JavaScript at runtime as a bottleneck.
+
+**What happens if a component file is named after a native HTML element (e.g. `nav.html`)?**
+Bascik logs a warning and still loads the component, but it will replace every occurrence of that element in pages with the component content, almost certainly breaking the site. Always use a hyphenated component name (e.g. `site-nav.html`).
+
+**What happens with uppercase letters in a component filename (e.g. `My-Card.html`)?**
+Component names are normalized to lowercase at load time. `My-Card.html` registers as `my-card` and is referenced as `<my-card>`. If two files differ only in case, the last one loaded wins. Convention: always use lowercase, hyphenated filenames.

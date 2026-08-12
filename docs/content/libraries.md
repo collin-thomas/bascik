@@ -11,7 +11,7 @@ Add a `<script src>` tag to your page's `<head>` or to a shared head component. 
 <head>
   <title>My Site</title>
   <link rel="stylesheet" href="/css/styles.css" />
-  <!-- petite-vue from CDN — passed through unchanged by Bascik -->
+  <!-- petite-vue from CDN - passed through unchanged by Bascik -->
   <script src="https://unpkg.com/petite-vue" defer init></script>
 </head>
 ```
@@ -82,7 +82,7 @@ Each instance of this component has its own isolated state. Place it on a page a
 // Load petite-vue once via CDN in the page <head>:
 // <script src="https://unpkg.com/petite-vue" defer init></script>
 //
-// No per-component JavaScript is needed — petite-vue
+// No per-component JavaScript is needed - petite-vue
 // auto-mounts every element with a v-scope attribute.
 ```
 
@@ -145,7 +145,7 @@ petite-vue's `v-for` and `v-model` work as expected. Filter a list in real time 
 For state that needs to be shared between separate components, define it in a plain JavaScript module and import it in a `data-bascik-build` script or a regular `<script type="module">`:
 
 ```js
-// src/pages/store.js — imported by components that share state
+// src/pages/store.js - imported by components that share state
 import { reactive } from 'https://unpkg.com/petite-vue?module';
 export const store = reactive({ cart: [] });
 ```

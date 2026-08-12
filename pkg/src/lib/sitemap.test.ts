@@ -11,7 +11,6 @@ vi.mock("./config.js", () => ({
     siteUrl: "https://example.com",
     directory: { pages: "/project/src/pages", components: "/project/src/components" },
     isBuild: true,
-    verboseLogging: false,
   },
 }));
 

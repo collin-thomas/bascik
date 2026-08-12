@@ -1,6 +1,6 @@
 # Migrating from Hugo
 
-Hugo and Bascik are both build-time static site generators that produce plain HTML with no client-side framework runtime. The main conceptual shift is that Hugo uses Go template syntax in `.html` layout files, while Bascik uses plain HTML component files composed by tag name. Partials become component files, base template blocks become slot-based layout components, and Go template logic becomes Node.js build scripts.
+Hugo is a static site generator; Bascik is a build tool for HTML components. Both produce plain HTML with no client-side framework runtime. The main conceptual shift is that Hugo uses Go template syntax in `.html` layout files, while Bascik uses plain HTML component files composed by tag name. Partials become component files, base template blocks become slot-based layout components, and Go template logic becomes Node.js build scripts.
 
 ## Layouts and Partials → HTML Component Files
 
@@ -31,7 +31,7 @@ static/                            my-post.html
 A Hugo `{{ partial "nav.html" . }}` call becomes a self-contained Bascik component tag. The hyphenated folder name is the tag name.
 
 ```html
-<!-- layouts/partials/nav.html (Hugo — before) -->
+<!-- layouts/partials/nav.html (Hugo - before) -->
 <nav class="nav">
   <a href="/">Home</a>
   <a href="/about">About</a>
@@ -43,7 +43,7 @@ A Hugo `{{ partial "nav.html" . }}` call becomes a self-contained Bascik compone
 ```
 
 ```html
-<!-- src/components/site-nav/site-nav.html (Bascik — after) -->
+<!-- src/components/site-nav/site-nav.html (Bascik - after) -->
 <nav class="nav">
   <a href="/">Home</a>
   <a href="/about">About</a>
@@ -59,11 +59,11 @@ A Hugo `{{ partial "nav.html" . }}` call becomes a self-contained Bascik compone
 Hugo's `baseof.html` with `{{ block "main" . }}` / `{{ define "main" }}` maps to a Bascik layout component that uses `data-bascik-slot` for the page body. Named blocks become named slots.
 
 ```html
-<!-- layouts/_default/baseof.html (Hugo — before) -->
+<!-- layouts/_default/baseof.html (Hugo - before) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>{{ .Title }} — Acme</title>
+  <title>{{ .Title }} - Acme</title>
   {{ partial "head-extra.html" . }}
 </head>
 <body>
@@ -73,7 +73,7 @@ Hugo's `baseof.html` with `{{ block "main" . }}` / `{{ define "main" }}` maps to
 </body>
 </html>
 
-<!-- layouts/_default/single.html (Hugo — before) -->
+<!-- layouts/_default/single.html (Hugo - before) -->
 {{ define "main" }}
   <article>
     <h1>{{ .Title }}</h1>
@@ -83,7 +83,7 @@ Hugo's `baseof.html` with `{{ block "main" . }}` / `{{ define "main" }}` maps to
 ```
 
 ```html
-<!-- src/components/site-layout/site-layout.html (Bascik — after) -->
+<!-- src/components/site-layout/site-layout.html (Bascik - after) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -96,8 +96,8 @@ Hugo's `baseof.html` with `{{ block "main" . }}` / `{{ define "main" }}` maps to
 </body>
 </html>
 
-<!-- src/pages/posts/my-post.html (Bascik — after) -->
-<site-layout data-bascik-prop-title="My Post — Acme">
+<!-- src/pages/posts/my-post.html (Bascik - after) -->
+<site-layout data-bascik-prop-title="My Post - Acme">
   <article>
     <h1>My Post</h1>
     <p>Post body goes here.</p>
@@ -110,7 +110,7 @@ Hugo's `baseof.html` with `{{ block "main" . }}` / `{{ define "main" }}` maps to
 Hugo's `{{ .Title }}` and `{{ .Params.description }}` pull values from front matter at build time. Bascik uses `data-bascik-prop-*` attributes, the value is set on the component tag at the usage site, and the attribute (with no value) marks the receiver element inside the component.
 
 ```html
-<!-- layouts/partials/post-card.html (Hugo — before) -->
+<!-- layouts/partials/post-card.html (Hugo - before) -->
 <div class="post-card">
   <h3>{{ .Title }}</h3>
   <p>{{ .Params.description }}</p>
@@ -119,7 +119,7 @@ Hugo's `{{ .Title }}` and `{{ .Params.description }}` pull values from front mat
 ```
 
 ```html
-<!-- src/components/post-card/post-card.html (Bascik — after) -->
+<!-- src/components/post-card/post-card.html (Bascik - after) -->
 <div class="post-card">
   <h3 data-bascik-prop-title></h3>
   <p data-bascik-prop-description></p>
@@ -141,7 +141,7 @@ Hugo's `{{ .Title }}` and `{{ .Params.description }}` pull values from front mat
 Hugo's `{{ range .Pages }}` iterates over content at build time. The Bascik equivalent is a `<script data-bascik-build>` block that reads files with Node.js and prints HTML to stdout.
 
 ```html
-<!-- layouts/_default/list.html (Hugo — before) -->
+<!-- layouts/_default/list.html (Hugo - before) -->
 {{ define "main" }}
 <ul class="post-list">
   {{ range .Pages }}
@@ -155,7 +155,7 @@ Hugo's `{{ range .Pages }}` iterates over content at build time. The Bascik equi
 ```
 
 ```html
-<!-- src/pages/blog.html (Bascik — after) -->
+<!-- src/pages/blog.html (Bascik - after) -->
 <ul class="post-list">
   <script data-bascik-build>
     import { readdir, readFile } from 'node:fs/promises';
@@ -181,7 +181,7 @@ Hugo's `{{ range .Pages }}` iterates over content at build time. The Bascik equi
 Hugo shortcodes (`{{< callout >}}text{{< /callout >}}`) are reusable template fragments. In Bascik, they become component files. For shortcodes that wrap content, use `data-bascik-slot`.
 
 ```html
-<!-- layouts/shortcodes/callout.html (Hugo — before) -->
+<!-- layouts/shortcodes/callout.html (Hugo - before) -->
 <div class="callout">{{ .Inner }}</div>
 
 <!-- Used in Markdown with: -->
@@ -189,7 +189,7 @@ Hugo shortcodes (`{{< callout >}}text{{< /callout >}}`) are reusable template fr
 ```
 
 ```html
-<!-- src/components/my-callout/my-callout.html (Bascik — after) -->
+<!-- src/components/my-callout/my-callout.html (Bascik - after) -->
 <div class="callout">
   <div data-bascik-slot></div>
 </div>
@@ -219,7 +219,7 @@ assets/
 Hugo reads YAML/TOML front matter from content files and makes it available in templates as `.Params`. In Bascik, individual pages are HTML files, front matter has no direct runtime equivalent. For pages generated from Markdown (a blog, for example), read the front matter with `gray-matter` inside a `<script data-bascik-build>` block and inline the values into the HTML.
 
 ```yaml
-# content/posts/my-post.md (Hugo — before)
+# content/posts/my-post.md (Hugo - before)
 ---
 title: My Post
 description: A short summary.
@@ -229,7 +229,7 @@ Post body here.
 ```
 
 ```html
-<!-- src/pages/posts/my-post.html (Bascik — after) -->
+<!-- src/pages/posts/my-post.html (Bascik - after) -->
 <script data-bascik-build>
   import { readFile } from 'node:fs/promises';
   import matter from 'gray-matter';

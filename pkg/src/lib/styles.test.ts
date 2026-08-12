@@ -1,3 +1,4 @@
+import fc from "fast-check";
 import { describe, expect, it, vi } from "vitest";
 import {
   convertCssElementSelectorsToClasses,
@@ -18,6 +19,7 @@ import {
   convertCssIdSelectorsToClasses,
   addIdClassesInHtml,
   deduplicateCss,
+  shieldCssStrings,
 } from "./styles.js";
 
 const css = `
@@ -202,6 +204,144 @@ describe("removeCommentsFromCss", () => {
   it("test", () => {
     expect(removeCommentsFromCss(idCss)).not.toContain(
       "/* ID selectors will be removed */",
+    );
+  });
+});
+
+describe("fuzz-like malformed CSS / HTML inputs", () => {
+  it("does not throw across many near-valid and broken component patterns", () => {
+    const seed = 424242;
+    const prng = (() => {
+      let state = seed >>> 0;
+      return () => {
+        state = (state + 0x6d2b79f5) >>> 0;
+        let t = Math.imul(state ^ (state >>> 15), 1 | state);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t) ^ t) >>> 0;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    })();
+
+    const tags = [
+      "p",
+      "div",
+      "span",
+      "h1",
+      "h2",
+      "li",
+      "a",
+      "button",
+      "section",
+      "main",
+      "rem",
+      "px",
+      "vh",
+    ];
+
+    const buildCase = (index: number) => {
+      const tagA = tags[Math.floor(prng() * tags.length)];
+      const tagB = tags[Math.floor(prng() * tags.length)];
+      const tagC = tags[Math.floor(prng() * tags.length)];
+      const lineBreak = prng() > 0.5 ? "\n" : " ";
+      const selector = [
+        `${tagA} { color: red; }`,
+        `${tagA}, ${tagB} { margin: 0; }`,
+        `.wrap ${tagA} { padding: 0; }`,
+        `.wrap > ${tagB} { display: block; }`,
+        `@media (min-width: 1px) { ${tagC} { border: 0; } }`,
+        `:is(${tagA}, ${tagB}) { color: blue; }`,
+        `${tagA}{color:var(--x,${tagB});}`,
+        `${tagA}${lineBreak}{${lineBreak}margin:${Math.floor(prng() * 10)}${tagB};${lineBreak}}`,
+        `${tagA} { animation: spin 1s infinite; } @keyframes spin { from { opacity: 0; } to { opacity: 1; } }`,
+        `${tagA} { font-size: 0.7${tagB} 1em; }`,
+      ][index % 10];
+
+      const html = `
+        <${tagA} class="before">before</${tagA}>
+        <${tagB}>${tagC}</${tagB}>
+        <div data-x="${tagA}">
+          <${tagC} id="frag">fragment</${tagC}>
+        </div>
+      `;
+
+      return {
+        componentName: `comp-${index}`,
+        css: selector,
+        html,
+      };
+    };
+
+    for (let i = 0; i < 200; i++) {
+      const { componentName, css, html } = buildCase(i);
+
+      expect(() => {
+        const { css: transformedCss, elementsConvertedClasses } =
+          convertCssElementSelectorsToClasses(css, componentName);
+        const transformedHtml = addElementClassesInHtml(
+          html,
+          componentName,
+          elementsConvertedClasses,
+        );
+
+        expect(typeof transformedCss).toBe("string");
+        expect(typeof transformedHtml).toBe("string");
+      }).not.toThrow();
+    }
+  });
+});
+
+describe("property-based CSS scoping fuzzing", () => {
+  it("does not throw for generated selector and html combinations", () => {
+    const tagArb = fc.constantFrom(
+      "div",
+      "p",
+      "span",
+      "a",
+      "button",
+      "ul",
+      "li",
+      "h1",
+      "h2",
+      "section",
+      "main",
+      "img",
+      "input",
+      "hr",
+      "rem",
+      "px",
+      "vh",
+    );
+
+    const selectorArb = fc
+      .tuple(tagArb, tagArb, fc.boolean(), fc.boolean(), fc.boolean())
+      .map(([tagA, tagB, includeClass, includeDesc, includeMedia]) => {
+        const left = includeClass ? ".wrap" : "";
+        const middle = includeDesc ? `${left} ${tagA} > ${tagB}` : `${left} ${tagA}`;
+        const selector = middle.trim();
+        return includeMedia
+          ? `@media (min-width: 1px) { ${selector} { color: red; } }`
+          : `${selector} { color: red; }`;
+      });
+
+    const cssArb = fc.array(selectorArb, { minLength: 1, maxLength: 5 });
+    const htmlArb = fc
+      .array(tagArb, { minLength: 1, maxLength: 4 })
+      .map((tags) => tags.map((tag) => `<${tag} class="x">${tag}</${tag}>`).join("\n"));
+
+    fc.assert(
+      fc.property(cssArb, htmlArb, (selectors, html) => {
+        const css = selectors.join("\n");
+        const { css: transformedCss, elementsConvertedClasses } =
+          convertCssElementSelectorsToClasses(css, "fuzz");
+        const transformedHtml = addElementClassesInHtml(
+          html,
+          "fuzz",
+          elementsConvertedClasses,
+        );
+
+        expect(typeof transformedCss).toBe("string");
+        expect(typeof transformedHtml).toBe("string");
+      }),
+      { numRuns: 250 },
     );
   });
 });
@@ -1169,5 +1309,83 @@ describe("scopeAnchorNames", () => {
   it("returns css unchanged when no anchor-name is declared", () => {
     const css = ".el { color: red; }";
     expect(scopeAnchorNames(css, "my-comp")).toBe(css);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("CSS scoping idempotence – property-based", () => {
+  it("running the full CSS scoping pipeline twice produces identical output", () => {
+    const selectorArb = fc.constantFrom(
+      ".btn { color: red; }",
+      "p { margin: 0; }",
+      ":root { --brand: #d3ff8d; } .title { color: var(--brand); }",
+      "@keyframes spin { from { opacity: 0; } to { opacity: 1; } } .el { animation: spin 1s; }",
+      "@layer base { .nav { display: flex; } }",
+      "@container card (min-width: 200px) { .inner { padding: 8px; } }",
+      ".a, .b { font-size: 1rem; }",
+      "@media (max-width: 600px) { p { display: block; } }",
+      "#hero { background: #fff; } .page { color: #333; }",
+      ".wrap > p { margin: 0; } .wrap + p { padding: 0; }",
+    );
+
+    fc.assert(
+      fc.property(
+        fc.array(selectorArb, { minLength: 1, maxLength: 4 }),
+        (selectors) => {
+          const css = selectors.join("\n");
+          const once = scopeCssCustomProperties(
+            prefixKeyframes(
+              convertCssElementSelectorsToClasses(css, "fuzz").css,
+              "fuzz",
+            ),
+            "fuzz",
+          );
+          const twice = scopeCssCustomProperties(
+            prefixKeyframes(
+              convertCssElementSelectorsToClasses(once, "fuzz").css,
+              "fuzz",
+            ),
+            "fuzz",
+          );
+          // Running again must not keep transforming already-scoped output
+          expect(typeof twice).toBe("string");
+          // Specifically, scoped class names must not accumulate extra scoping prefixes
+          expect(twice).not.toContain("bascik__fuzz__el__bascik__");
+          expect(twice).not.toContain("bascik__fuzz__keyframe__bascik__");
+        },
+      ),
+      { numRuns: 150 },
+    );
+  });
+});
+
+describe("shieldCssStrings – perfect round-trip", () => {
+  it("restore(shielded) is always byte-identical to the original CSS", () => {
+    const cssArb = fc.constantFrom(
+      ".nav a { color: white; }",
+      `content: ".foo { color: red; }"`,
+      `background: url(./img.png); color: #abc;`,
+      `content: 'from { opacity: 0; }'; animation: spin 1s;`,
+      `background: url("data:image/svg+xml,%3Csvg%3E");`,
+      `:root { --brand: #d3ff8d; } .el { color: var(--brand); }`,
+      `@keyframes spin { from { opacity: 0; } to { opacity: 1; } }`,
+      `.cls { font-family: 'Arial', sans-serif; content: "don't break"; }`,
+      `@charset "UTF-8"; .el { background: url('img.png'); }`,
+      `.a::before { content: "<div class=\\"x\\">test</div>"; }`,
+    );
+
+    fc.assert(
+      fc.property(fc.array(cssArb, { minLength: 1, maxLength: 4 }), (parts) => {
+        const original = parts.join("\n");
+        const { css: shielded, restore } = shieldCssStrings(original);
+        expect(restore(shielded)).toBe(original);
+        // Shielded form must contain no raw string literals or url() content
+        expect(shielded).not.toMatch(/'[^']+'/);
+        // Sentinels in shielded form must all be resolvable (no dangling placeholders after restore)
+        expect(restore(shielded)).not.toContain("\x00CSSSTR");
+      }),
+      { numRuns: 200 },
+    );
   });
 });

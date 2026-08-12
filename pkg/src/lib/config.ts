@@ -55,17 +55,41 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild" | "isServe"> = {
   minifyScripts: false,
   obfuscateAttributeNames: false,
   cacheHttp: false,
-  verboseLogging: false,
   generate: {
     sitemap: true,
     robots: true,
   },
   inlineStyles: false,
   useWorkers: false,
+  devServer: {
+    logging: {
+      level: "info",
+      requests: true,
+      copies: true,
+      deletes: true,
+      transpiles: true,
+    },
+  },
   serve: {
     port: 8443,
     hostname: "localhost",
+    logging: {
+      level: "info",
+      requests: true,
+    },
   },
+};
+
+export const LOG_LEVELS = ["silent", "error", "warn", "info", "debug"] as const;
+export type LogLevel = (typeof LOG_LEVELS)[number];
+
+export const shouldLog = (
+  configuredLevel: LogLevel | undefined,
+  eventLevel: LogLevel = "info",
+  defaultLevel: LogLevel = "info",
+): boolean => {
+  const resolvedLevel = configuredLevel ?? defaultLevel;
+  return LOG_LEVELS.indexOf(resolvedLevel) >= LOG_LEVELS.indexOf(eventLevel);
 };
 
 /**
@@ -135,10 +159,23 @@ export const initBascikConfig = (
       ...(userConfig.generate ?? {}),
       ...(isBuild ? (buildOverride.generate ?? {}) : {}),
     },
+    devServer: {
+      ...defaultConfig.devServer,
+      ...(userConfig.devServer ?? {}),
+      logging: {
+        ...defaultConfig.devServer?.logging,
+        ...(userConfig.devServer?.logging ?? {}),
+      },
+    },
     serve: {
       ...defaultConfig.serve,
       ...(userConfig.serve ?? {}),
       ...(isBuild ? (buildOverride.serve ?? {}) : {}),
+      logging: {
+        ...defaultConfig.serve?.logging,
+        ...((userConfig.serve ?? {}).logging ?? {}),
+        ...(((isBuild ? (buildOverride.serve ?? {}) : {}).logging) ?? {}),
+      },
     },
     isBuild,
     isServe,

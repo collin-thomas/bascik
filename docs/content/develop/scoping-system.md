@@ -65,7 +65,7 @@ p { margin: 0; }
 ```
 
 ```html
-<!-- Scoped HTML — class injected onto every <p> in the component -->
+<!-- Scoped HTML - class injected onto every <p> in the component -->
 <p class="bascik__site-nav__el__p">Content</p>
 ```
 

@@ -2,7 +2,7 @@
   "name": "@bascik/bascik",
   "description": "A Web Framework",
   "version": "0.1.0",
-  "license": "Elastic-2.0",
+  "license": "SEE LICENSE IN LICENSE",
   "homepage": "https://bascik.dev",
   "author": "Collin Thomas",
   "type": "module",
@@ -25,6 +25,7 @@
     "@playwright/test": "^1.62.0",
     "@types/node": "^24.0.0",
     "@vitest/coverage-v8": "^4.1.10",
+    "fast-check": "^4.9.0",
     "typescript": "^7.0.2",
     "vite": "^8.1.5",
     "vitest": "^4.1.10"

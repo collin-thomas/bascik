@@ -136,6 +136,7 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
 }
 .step-body h3 { margin: 0 0 6px; }
 .step-body p  { margin: 0; }
+.step-body     { flex: 1; min-width: 0; }
 
 /* ── Prose code-block spacing ── */
 .prose-codeblock {

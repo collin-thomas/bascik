@@ -50,7 +50,19 @@ bascik          # dev: transpile, start HTTPS dev server, watch
 bascik --build  # production: transpile to dist/ only
 bascik --serve  # production server: serve a pre-built dist/ with HTTP/2
 bascik --check  # static analysis: validate pages and components without building
+bascik --build --log [path]  # optional build log; defaults to .bascik/build.log
 ```
+
+## Build logs
+
+Use `--log` when you want a captured copy of the build output for debugging or CI investigation. The default path is `.bascik/build.log`, and you can override it with any custom path:
+
+```sh
+bascik --build --log
+bascik --build --log ./logs/build.log
+```
+
+The terminal output still stays as the primary log, and the file is an optional diagnostic artifact. If you do not pass `--log`, Bascik does not create a build log file.
 
 ## Starting the dev server
 
@@ -131,8 +143,14 @@ ReferenceError: marked is not defined
 Unknown component tag:
 
 ```terminal
-[bascik] Unresolved component tag in "pages/about.html": <my-mistyped> — no matching component file found. Run `bascik --check` for a full report.
+[bascik] Unresolved component tag in "pages/about.html": <my-mistyped> - no matching component file found. Run `bascik --check` for a full report.
 ```
+
+## Custom 404 Page
+
+Create a `404.html` file in your pages directory (e.g. `src/pages/404.html`) and the dev server will automatically serve it as a fallback for any non-existent route with a `404` status code.
+
+When you build for production (`bascik --build`), this file is compiled to `dist/404.html`, which is the standard location recognized by most static hosting providers (GitHub Pages, Netlify, Vercel, Cloudflare Pages) to serve custom 404 pages.
 
 ## Static analysis with `bascik --check`
 
@@ -151,7 +169,7 @@ It reports:
 Example output:
 
 ```terminal
-[bascik check] ✓ 8 pages and 12 components checked — no errors
+[bascik check] ✓ 8 pages and 12 components checked - no errors
 ```
 
 `bascik --check` exits with code `1` when errors are found, which makes it suitable for CI:

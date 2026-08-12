@@ -17,7 +17,6 @@ vi.mock("../src/lib/config.ts", () => ({
     scopeScriptBlocks: true,
     scopeAttribute: { class: true, id: true, name: true },
     obfuscateAttributeNames: false,
-    verboseLogging: false,
     isBuild: true,
     minifyStyles: true,
   },
