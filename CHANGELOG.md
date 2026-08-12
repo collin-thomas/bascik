@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Descendant element selectors after a class** (`Pass 4`) — `.card p {}`, `.list > li {}`, `.article > h2 {}` are now fully scoped. The element name is converted to a scoped class and injected onto matching HTML elements. This applies to any element selector preceded by a scoped class name with an optional combinator (`>`, `+`, `~`, or space). Bare element–element combinators (`div p {}`) still require a class anchor on the left side.
 - `inheritAttributes` config option — attribute inheritance can now be disabled explicitly while remaining enabled by default.
 - `useWorkers` config option — transpile pages across a pool of CPU-core worker threads instead of sequentially on the main thread. Defaults to `false`; recommended for larger sites or CPU-heavy per-page work, since worker startup has a fixed cost that isn't worth paying on small sites. Component list and global inline styles are pre-computed once and shared across all workers via `workerData`.
+- `devServer.logging` and `serve.logging` config — control file-copy/transpile/delete chatter in dev mode and request logging in prod mode via a shared log-level model (`silent`/`error`/`warn`/`info`/`debug`), with per-event toggles for copies, deletes, transpiles, and requests.
 - The dev server now serves pages from memory as soon as they are transpiled, without waiting on disk writes — disk output is skipped entirely in dev mode and only happens during `--build`.
 
 ### Fixed

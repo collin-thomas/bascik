@@ -176,9 +176,15 @@ export const bascikConfig = {
     hostname: 'localhost',  // default; use '0.0.0.0' to bind all interfaces
     keyFile: 'bascik-privkey.pem',  // default; path to your TLS private key
     certFile: 'bascik-cert.pem',    // default; path to your TLS certificate
+    logging: {
+      level: 'info',   // silent | error | warn | info | debug
+      requests: true,  // log each request line
+    },
   },
 };
 ```
+
+The `serve.logging.level` setting controls the request log threshold, and `requests: false` disables the per-request `GET / ...` lines without suppressing warnings or errors.
 
 Bascik increments the port automatically if the preferred port is already in use.
 

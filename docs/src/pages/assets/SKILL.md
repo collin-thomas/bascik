@@ -478,11 +478,24 @@ export const bascikConfig = {
     sitemap: true, // write dist/sitemap.xml
     robots: true,  // write dist/robots.txt
   },
+  devServer: {
+    logging: {
+      level: 'info',    // silent | error | warn | info | debug
+      requests: true,
+      copies: true,
+      deletes: true,
+      transpiles: true,
+    },
+  },
   serve: {
     port: 8443,           // default
     hostname: 'localhost', // use '0.0.0.0' to bind all interfaces (containers/proxies)
     keyFile: '/etc/ssl/site.key',  // optional: provide your own TLS cert
     certFile: '/etc/ssl/site.crt', // optional: provide your own TLS cert
+    logging: {
+      level: 'info',    // silent | error | warn | info | debug
+      requests: true,
+    },
   },
 };
 

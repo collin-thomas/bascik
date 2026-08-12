@@ -40,6 +40,16 @@ export const bascikConfig = {
   },
 
   useWorkers: false,
+
+  devServer: {
+    logging: {
+      level: 'info',      // silent | error | warn | info | debug
+      requests: true,
+      copies: true,
+      deletes: true,
+      transpiles: true,
+    },
+  },
 };
 
 export const buildOverrideConfig = {
@@ -157,6 +167,24 @@ When `true`, HTML pages receive an `ETag` header and the server returns `304 Not
 
 Set `cacheHttp: false` explicitly when running `--serve` behind a CDN that manages its own caching.
 
+### `devServer`
+
+Control the noise level of the development server's status output. The `level` field applies to all dev-server status events; individual toggles let you silence only the logs you do not want.
+
+```js
+devServer: {
+  logging: {
+    level: 'info',      // silent | error | warn | info | debug
+    requests: true,     // log each page request as 'serving: ...'
+    copies: true,       // log each static file copied into dist/
+    deletes: true,      // log each dist/ file or dir deleted
+    transpiles: true,   // log each page transpile
+  },
+}
+```
+
+Use `level: 'warn'` or `level: 'silent'` to suppress the high-volume status lines when you are focused on application logic rather than build output.
+
 ### `serve`
 
 Configure the HTTP/2 server started by `bascik --serve` and `bascik` (dev mode). `port`, `hostname`, `keyFile`, and `certFile` are read in both modes. `bascik --build` does not start a server and ignores this block.
@@ -167,6 +195,10 @@ serve: {
   hostname: 'localhost',   // default; set '0.0.0.0' to bind all interfaces
   keyFile: 'bascik-privkey.pem',  // path to TLS private key
   certFile: 'bascik-cert.pem',    // path to TLS certificate
+  logging: {
+    level: 'info',        // silent | error | warn | info | debug
+    requests: true,       // log each request as 'GET / ... 200 17ms'
+  },
 }
 ```
 

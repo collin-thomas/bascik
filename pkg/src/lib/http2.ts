@@ -8,7 +8,7 @@ import { createHash } from "node:crypto";
 import http2 from "node:http2";
 import type { ServerHttp2Stream, IncomingHttpHeaders } from "node:http2";
 import { mem } from "./mem.js";
-import { BascikConfig } from "./config.js";
+import { BascikConfig, shouldLog } from "./config.js";
 import { eventEmitter } from "./events.js";
 import { getHttpPath } from "./paths.js";
 import { MIME_MAP } from "./mime.js";
@@ -176,6 +176,9 @@ export const serveHttp2 = async () => {
 
       const logAccess = () => {
         if (responseStatus === 0) return;
+        const logging = BascikConfig.serve?.logging ?? { level: "info", requests: true };
+        if (logging.requests === false) return;
+        if (!shouldLog(logging.level ?? "info", "info")) return;
         const elapsed = Date.now() - startMs;
         const method = headers[":method"] ?? "-";
         const path = headers[":path"] ?? "-";
@@ -371,7 +374,10 @@ export const serveHttp2 = async () => {
           return stream.end("Not Found");
         }
 
-        console.log(`serving: ${reqUrl}`);
+        const devLogging = BascikConfig.devServer?.logging ?? { level: "info", requests: true };
+        if (devLogging.requests !== false && shouldLog(devLogging.level ?? "info", "info")) {
+          console.log(`serving: ${reqUrl}`);
+        }
 
         // A page is the 404 page only when its resolved HTTP path is exactly
         // /404 — `pages/blog/404.html` (a page *about* 404s) must not match.

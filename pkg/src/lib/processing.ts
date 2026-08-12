@@ -85,7 +85,7 @@ import { namespaceScriptTags, prefixElementAttribute, minifyJs } from "./javascr
 import { deduplicateCss, minifyCss } from "./styles.js";
 import { executeBuildScripts } from "./build-scripts.js";
 import { getUniqueId } from "./names.js";
-import { BascikConfig } from "./config.js";
+import { BascikConfig, shouldLog } from "./config.js";
 import { mem } from "./mem.js";
 import { eventEmitter } from "./events.js";
 import { generateSitemapFiles } from "./sitemap.js";
@@ -331,10 +331,10 @@ export const recursivelyTranspile = (
       const tag = partial.name ? `<${partial.name}>` : "(unknown)";
       console.error(
         `[bascik] Transpilation aborted in "${filePath ?? "unknown file"}": ` +
-          `component expansion exceeded safety limits (${substitutions} substitutions). ` +
-          `This usually means a component recursively includes itself (e.g. ${tag} ` +
-          `contains its own tag, directly or through another component). ` +
-          `Recursive components are not supported — restructure to terminate the recursion.`,
+        `component expansion exceeded safety limits (${substitutions} substitutions). ` +
+        `This usually means a component recursively includes itself (e.g. ${tag} ` +
+        `contains its own tag, directly or through another component). ` +
+        `Recursive components are not supported — restructure to terminate the recursion.`,
       );
       const cleanedHtml = transpiledHtmlBody
         .replace(/<!--bascik-source-file:[\s\S]*?-->/g, "")
@@ -710,7 +710,12 @@ export const transpilePage = async (
     }
   }
 
-  console.log(`transpiled: ${relativePagePath}`);
+  if (BascikConfig.devServer?.logging?.transpiles !== false) {
+    const configLevel = BascikConfig.devServer?.logging?.level ?? "info";
+    if (shouldLog(configLevel, "info")) {
+      console.log(`transpiled: ${relativePagePath}`);
+    }
+  }
 
   return {
     relativePagePath,

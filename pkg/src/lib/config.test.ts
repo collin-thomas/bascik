@@ -50,6 +50,19 @@ describe("defaultConfig", () => {
     expect(defaultConfig.verboseLogging).toBe(false);
   });
 
+  it("has default devServer logging options", () => {
+    expect(defaultConfig.devServer?.logging?.level).toBe("info");
+    expect(defaultConfig.devServer?.logging?.requests).toBe(true);
+    expect(defaultConfig.devServer?.logging?.copies).toBe(true);
+    expect(defaultConfig.devServer?.logging?.deletes).toBe(true);
+    expect(defaultConfig.devServer?.logging?.transpiles).toBe(true);
+  });
+
+  it("has default serve logging options", () => {
+    expect(defaultConfig.serve?.logging?.level).toBe("info");
+    expect(defaultConfig.serve?.logging?.requests).toBe(true);
+  });
+
   it("has deduplicateCss: true", () => {
     expect(defaultConfig.deduplicateCss).toBe(true);
   });
@@ -99,6 +112,7 @@ describe("BascikConfig", () => {
     expect(BascikConfig).toHaveProperty("cacheHttp");
     expect(BascikConfig).toHaveProperty("verboseLogging");
     expect(BascikConfig).toHaveProperty("deduplicateCss");
+    expect(BascikConfig).toHaveProperty("devServer");
     expect(BascikConfig).toHaveProperty("isBuild");
   });
 
@@ -231,8 +245,21 @@ describe("buildOverrideConfig.serve merge", () => {
     expect(cfg.serve?.port).toBe(9000);
   });
 
+  it("merges devServer logging config from user config", () => {
+    const { BascikConfig: cfg } = initBascikConfig({
+      devServer: { logging: { level: "debug", requests: false, copies: false, transpiles: false } },
+    });
+    expect(cfg.devServer?.logging?.level).toBe("debug");
+    expect(cfg.devServer?.logging?.requests).toBe(false);
+    expect(cfg.devServer?.logging?.copies).toBe(false);
+    expect(cfg.devServer?.logging?.transpiles).toBe(false);
+    expect(cfg.devServer?.logging?.deletes).toBe(true);
+  });
+
   it("falls back to the default serve config when nothing overrides it", () => {
     expect(BascikConfig.serve?.port).toBe(8443);
     expect(BascikConfig.serve?.hostname).toBe("localhost");
+    expect(BascikConfig.serve?.logging?.level).toBe("info");
+    expect(BascikConfig.serve?.logging?.requests).toBe(true);
   });
 });

@@ -24,6 +24,19 @@ vi.mock("./config.js", () => ({
       components: "components",
     },
     minifyStyles: false,
+    devServer: {
+      logging: {
+        level: "info",
+        requests: true,
+        copies: true,
+        deletes: true,
+        transpiles: true,
+      },
+    },
+  },
+  shouldLog: (configuredLevel: string | undefined, eventLevel = "info") => {
+    const levels = ["silent", "error", "warn", "info", "debug"] as const;
+    return (levels.indexOf((configuredLevel ?? "info") as any) >= levels.indexOf(eventLevel as any));
   },
 }));
 
