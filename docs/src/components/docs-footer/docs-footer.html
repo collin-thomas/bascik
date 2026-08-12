@@ -37,11 +37,26 @@
 <script>
   document.querySelectorAll('h2 .anchor-link').forEach(function (a) {
     a.addEventListener('click', function (e) {
+      // Preserve standard link behaviors (new tab/window, context menu, etc.)
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
       e.preventDefault();
-      history.replaceState(null, '', a.getAttribute('href'));
-      navigator.clipboard.writeText(location.href);
-      a.classList.add('copied');
-      setTimeout(function () { a.classList.remove('copied'); }, 1500);
+
+      const href = a.getAttribute('href') || '';
+      history.replaceState(null, '', href);
+
+      const id = href.startsWith('#') ? href.slice(1) : '';
+      const target = id ? document.getElementById(id) : null;
+      if (target) target.scrollIntoView({ block: 'start' });
+
+      Promise.resolve(navigator.clipboard && navigator.clipboard.writeText(location.href))
+        .then(function () {
+          a.classList.add('copied');
+          setTimeout(function () { a.classList.remove('copied'); }, 1500);
+        })
+        .catch(function () {
+          // Clipboard may be unavailable (permissions / non-secure context)
+        });
     });
   });
 </script>
