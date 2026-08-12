@@ -82,8 +82,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `useWorkers` now defaults to `false` (sequential main-thread transpilation). Worker startup has a fixed cost — each worker independently loads the transpiler's module graph before processing its first page — which outweighs the parallelism benefit on small sites or sites whose slow parts are I/O-bound (e.g. `<script data-bascik-build>` blocks), rather than CPU-bound.
 - `minifyStyles`, `minifyScripts`, and `obfuscateAttributeNames` now default to `false` in dev and `true` only during `bascik --build` (previously they were `true` even in dev, contradicting the docs which describe them as production defaults). `buildOverrideConfig.serve` is now merged during builds, and the resolved `BascikConfig` is recursively frozen.
 
-## [0.1.0] - 2026-07-25
-
 ### Added
 
 **Components**
@@ -148,5 +146,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unused `data-bascik-prop-*` marker attributes are stripped from the output even when no prop value is passed.
 - `listPages()` uses `BascikConfig.directory.pages` instead of a hardcoded path.
 
-[Unreleased]: https://github.com/collin-thomas/bascik/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/collin-thomas/bascik/releases/tag/v0.1.0
+[Unreleased]: https://github.com/collin-thomas/bascik/commits/main

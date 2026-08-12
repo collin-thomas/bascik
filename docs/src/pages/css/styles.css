@@ -368,10 +368,10 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
   display: inline-flex;
   align-items: center;
   line-height: 1;
-  transition: filter .15s;
+  transition: opacity .15s;
 }
 
-.dfooter-logo:hover { filter: brightness(1.12); opacity: 1; }
+.dfooter-logo:hover { opacity: 0.8; }
 
 .dfooter-desc {
   font-size: 0.82rem;

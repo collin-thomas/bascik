@@ -1,7 +1,6 @@
 # Bascik
 
 [![CI](https://github.com/collin-thomas/bascik/actions/workflows/ci.yml/badge.svg)](https://github.com/collin-thomas/bascik/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/collin-thomas/bascik/branch/main/graph/badge.svg)](https://codecov.io/gh/collin-thomas/bascik)
 [![npm version](https://badge.fury.io/js/%40bascik%2Fbascik.svg)](https://www.npmjs.com/package/@bascik/bascik)
 [![License: ELv2](https://img.shields.io/badge/License-ELv2-blue.svg)](https://www.elastic.co/licensing/elastic-license)
 
