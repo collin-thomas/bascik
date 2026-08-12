@@ -986,7 +986,9 @@ describe("injectProps – does not hang on unbalanced markup", () => {
 
   it("returns quickly when the marker element has no closing tag", () => {
     // Marker <span> is opened but `</span>` never appears before the string
-    // ends; the marker is stripped and the inner content is left untouched.
+    // ends.  injectProps only rewrites balanced marker elements, so here the
+    // value is intentionally NOT injected; the leftover valueless marker is
+    // stripped by the trailing cleanup pass, leaving the inner content intact.
     const rest = '<div class="y">"quoted"</div>'.repeat(500);
     const template = '<span data-bascik-prop-lang>' + rest;
     expect(injectProps(template, { lang: "js" })).toBe("<span>" + rest);
