@@ -1,8 +1,9 @@
 # Bascik
 
 [![CI](https://github.com/collin-thomas/bascik/actions/workflows/ci.yml/badge.svg)](https://github.com/collin-thomas/bascik/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/collin-thomas/bascik/branch/main/graph/badge.svg)](https://codecov.io/gh/collin-thomas/bascik)
 [![npm version](https://badge.fury.io/js/%40bascik%2Fbascik.svg)](https://www.npmjs.com/package/@bascik/bascik)
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![License: ELv2](https://img.shields.io/badge/License-ELv2-blue.svg)](https://www.elastic.co/licensing/elastic-license)
 
 Bascik is a static site generator (SSG) that lets you write reusable HTML components. It is **not** a JavaScript framework — you write plain HTML, CSS, and JavaScript.
 

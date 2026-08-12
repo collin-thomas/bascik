@@ -507,8 +507,7 @@
       <div class="container">
         <p class="section-label">How it works</p>
         <h2 class="section-heading">You write the HTML. Bascik scopes it.</h2>
-        <p class="section-sub">Name a file — it becomes the tag. Add slots for content. CSS scopes itself at build
-          time. No config, no imports, no framework.</p>
+        <p class="section-sub">Create a file with your component name. Add your HTML, CSS, and JavaScript. Reference that tag in any page or component with no imports or configuration needed.</p>
 
         <div class="how-split">
           <!-- Code panel with tabs -->
@@ -594,8 +593,7 @@
         <p class="section-label">Demo</p>
         <h2 class="section-heading">One component. Two isolated instances.</h2>
         <p class="section-sub">Bascik scopes CSS class names and DOM selectors at build time. Each component instance
-          gets
-          its own namespace — no runtime, no Shadow DOM.</p>
+          gets its own namespace with no runtime and no Shadow DOM.</p>
 
         <div class="demo-layout">
           <!-- Code panel -->
@@ -636,9 +634,10 @@
 }</code></pre>
             </div>
             <div class="demo-pane" data-pane="js" hidden>
-              <pre><code><span class="hl-comment">// Selectors are rewritten at build time.
-// Each instance stays isolated — no IDs
-// or class names shared across instances.</span>
+              <pre><code><span class="hl-comment">// Notice: this is plain JavaScript. No framework APIs,
+// no special syntax. Write it normally and Bascik
+// scopes the selectors at build time so each instance
+// stays fully isolated.</span>
 const count = document.getElementById(<span class="hl-val">'count'</span>);
 const dec   = document.querySelector(<span class="hl-val">'.ctr-dec'</span>);
 const inc   = document.querySelector(<span class="hl-val">'.ctr-inc'</span>);
@@ -720,7 +719,7 @@ inc.addEventListener(<span class="hl-val">'click'</span>, () => {
           <div class="pillar">
             <p class="pillar-label">Standard HTML</p>
             <h3>Nothing new to learn</h3>
-            <p>No JSX, no template syntax, no special compiler directives. Write the HTML you already know — Bascik does
+            <p>No JSX, no template syntax, no special compiler directives. Write the HTML you already know. Bascik does
               the assembly.</p>
           </div>
         </div>

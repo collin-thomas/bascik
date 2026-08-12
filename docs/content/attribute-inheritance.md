@@ -1,18 +1,6 @@
 # Attribute Inheritance
 
-Any attribute on a component usage tag that is not a Bascik-specific attribute (`data-bascik-*`) is automatically merged onto the component's root element. This is analogous to Vue's “fallthrough attributes”.
-
-## Configuring It
-
-Attribute inheritance is configurable and enabled by default:
-
-```js
-export const bascikConfig = {
-  inheritAttributes: true,
-};
-```
-
-Set it to `false` when you want every component root to be controlled only by the component template.
+Any attribute on a component usage tag that is not a Bascik-specific attribute (`data-bascik-*`) is automatically merged onto the component's root element. This is analogous to Vue's "fallthrough attributes".
 
 ## How It Works
 
@@ -110,6 +98,16 @@ The `featured` class is a global class that you define in your page-level styles
 > **Self-closing syntax works too:** Attribute inheritance works with both paired and self-closing usage syntax: `<my-icon class="large" aria-hidden="true" />`
 
 > **MDN reference.** Bascik forwards standard HTML attributes instead of inventing a new API. Use [MDN's HTML attribute reference](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes) as the primary guide for what each inherited attribute means.
+
+## Disabling It
+
+Attribute inheritance is enabled by default. Set `inheritAttributes: false` in `bascik.config.js` when you want every component root to be controlled only by its own template:
+
+```js
+export const bascikConfig = {
+  inheritAttributes: false,
+};
+```
 
 ## Interactive Demo
 

@@ -40,11 +40,16 @@
           <div class="step-body">
             <h3>Create the component file</h3>
             <p>The file name becomes the tag name.</p>
-            <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/components/site-nav.html">&lt;nav
-              class="nav"&gt;
-              &lt;a href="/"&gt;Home&lt;/a&gt;
-              &lt;a href="/about"&gt;About&lt;/a&gt;
-              &lt;/nav&gt;</code-block>
+            <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/components/site-nav.html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(
+                  pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+                );
+                console.log(await extractDemoBlock('./content/getting-started.md', 'component-html'));
+              </script>
+            </code-block>
           </div>
         </div>
 
@@ -53,14 +58,16 @@
           <div class="step-body">
             <h3>Reference it in a page</h3>
             <p>No imports or registration. Just use the tag.</p>
-            <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/pages/index.html">&lt;!DOCTYPE html&gt;
-              &lt;html&gt;
-              &lt;head&gt;&lt;title&gt;Home&lt;/title&gt;&lt;/head&gt;
-              &lt;body&gt;
-              &lt;site-nav&gt;&lt;/site-nav&gt;
-              &lt;h1&gt;Hello world&lt;/h1&gt;
-              &lt;/body&gt;
-              &lt;/html&gt;</code-block>
+            <code-block data-bascik-prop-lang="html" data-bascik-prop-file="src/pages/index.html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(
+                  pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+                );
+                console.log(await extractDemoBlock('./content/getting-started.md', 'page-html'));
+              </script>
+            </code-block>
           </div>
         </div>
 

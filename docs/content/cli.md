@@ -134,6 +134,12 @@ Unknown component tag:
 [bascik] Unresolved component tag in "pages/about.html": <my-mistyped> — no matching component file found. Run `bascik --check` for a full report.
 ```
 
+## Custom 404 page
+
+Create a `404.html` file in your pages directory (e.g. `src/pages/404.html`) and the dev server will automatically serve it as a fallback for any non-existent route with a `404` status code.
+
+When you build for production (`bascik --build`), this file is compiled to `dist/404.html`, which is the standard location recognized by most static hosting providers (GitHub Pages, Netlify, Vercel, Cloudflare Pages) to serve custom 404 pages.
+
 ## Static analysis with `bascik --check`
 
 Run `bascik --check` from your project root to validate all pages and component files without starting the dev server or writing any output files:
