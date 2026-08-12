@@ -194,12 +194,16 @@ export const listComponents = async (): Promise<ComponentList> => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Matches an attribute value as a double-quoted string, a single-quoted
- * string, or a run of non-`>` characters (unquoted value / bare attribute).
- * Used to scan open tags without stopping at a `>` that appears inside a
- * quoted attribute value, e.g. `<my-comp title="a > b">`.
+ * Matches a run of attribute text inside an opening tag, stopping at the
+ * first unquoted `>`.  The alternation is unambiguous: a character is either
+ * a quote (starting a quoted value) or a non-quote, non-`>` character, so the
+ * regex engine never has to explore overlapping parses.  The previous form,
+ * `(?:"[^"]*"|'[^']*'|[^>])*`, let `[^>]` also match quote characters, which
+ * made the parser ambiguous and caused catastrophic (exponential) backtracking
+ * whenever the surrounding pattern could not match — e.g. a `data-bascik-prop-*`
+ * marker with no balancing close tag would hang the build.
  */
-const ATTR_VALUE = `(?:"[^"]*"|'[^']*'|[^>])*`;
+const ATTR_VALUE = `(?:[^>"']|"[^"]*"|'[^']*')*`;
 
 /**
  * Find the first `<tagName ...>` opening tag in `htmlString` and return its

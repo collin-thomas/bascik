@@ -966,6 +966,45 @@ describe("injectProps – quote-aware scanning", () => {
   });
 });
 
+// Regression: the quote-aware ATTR_VALUE scan previously used
+// `(?:"[^"]*"|'[^']*'|[^>])*`, whose ambiguous alternation (`[^>]` also
+// matches quote characters) backtracked exponentially when the rest of the
+// pattern could not match.  A component whose prop-marker element had no
+// balancing close tag (e.g. the marker's `<span>` was consumed but the
+// closing `</span>` never followed in the scanned string) would hang the
+// build for minutes.  These tests must complete in milliseconds.
+describe("injectProps – does not hang on unbalanced markup", () => {
+  it("returns quickly when a balanced marker is followed by a long unclosed tag", () => {
+    // The balanced <span> is injected; the trailing unclosed <div class="…">
+    // (no `>`) must not send the regex into exponential backtracking.
+    const template =
+      '<span data-bascik-prop-lang>x</span><div class="' + "a".repeat(4000) + '">';
+    expect(injectProps(template, { lang: "js" })).toBe(
+      '<span>js</span><div class="' + "a".repeat(4000) + '">',
+    );
+  });
+
+  it("returns quickly when the marker element has no closing tag", () => {
+    // Marker <span> is opened but `</span>` never appears before the string
+    // ends; the marker is stripped and the inner content is left untouched.
+    const rest = '<div class="y">"quoted"</div>'.repeat(500);
+    const template = '<span data-bascik-prop-lang>' + rest;
+    expect(injectProps(template, { lang: "js" })).toBe("<span>" + rest);
+  });
+
+  it("returns quickly when no element carries the marker", () => {
+    const template = "<p>static</p>" + '<div class="x">"quoted"</div>'.repeat(500);
+    expect(injectProps(template, { title: "Hi" })).toBe(template);
+  });
+});
+
+describe("extractInheritableAttributes – does not hang on unbalanced markup", () => {
+  it("returns quickly when the opening tag is never closed", () => {
+    const content = "<div " + 'a="b" '.repeat(5000); // no `>` anywhere
+    expect(extractInheritableAttributes(content)).toEqual({});
+  });
+});
+
 describe("recursivelyTranspile – complex regression", () => {
   it("finds a component even if it has newlines in the tag", () => {
     const html = `
