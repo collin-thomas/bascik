@@ -29,7 +29,7 @@ export const createSelfSignedCert = async () => {
             $cert = New-SelfSignedCertificate -DnsName 'localhost' -CertStoreLocation Cert:\\CurrentUser\\My -KeyExportPolicy Exportable -NotAfter (Get-Date).AddYears(100) -TextExtension @('2.5.29.17={text}DNS=localhost,IP=127.0.0.1'); \
           }; \
           $pwd = ConvertTo-SecureString -String '' -Force -AsPlainText; \
-          Export-PfxCertificate -Cert $cert -FilePath '${pfxPath}'****** \
+          Export-PfxCertificate -Cert $cert -FilePath '${pfxPath}' -Password $pwd; \
         "`
       );
 

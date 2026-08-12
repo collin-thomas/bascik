@@ -198,6 +198,15 @@ describe("removeIdSelectors", () => {
   it("test", () => {
     expect(removeIdSelectors(idCss)).not.toContain("[id]");
   });
+
+  it("does not terminate early on a brace inside a string literal", () => {
+    const input =
+      '[id] { content: "end}end"; color: red; }\n.normal { color: blue; }';
+    const result = removeIdSelectors(input);
+    expect(result).not.toContain("[id]");
+    expect(result).not.toContain("end}end");
+    expect(result).toContain(".normal { color: blue; }");
+  });
 });
 
 describe("removeCommentsFromCss", () => {

@@ -515,7 +515,13 @@ const parseNamedSlots = (
   innerContent: string,
 ): Array<{ slotName: string; startIndex: number; endIndex: number; content: string }> => {
   const results: Array<{ slotName: string; startIndex: number; endIndex: number; content: string }> = [];
-  const openTagRe = /<(\w+(?:-\w+)*)\s+data-bascik-slot="([^"]+)"[^>]*>/gi;
+  // Quote-aware attribute scan (ATTR_VALUE) so the marker may appear after
+  // other attributes, and `data-bascik-slot` inside a quoted attribute value
+  // never false-positives.
+  const openTagRe = new RegExp(
+    `<(\\w+(?:-\\w+)*)(?=[\\s>])(?:${ATTR_VALUE}?)\\s+data-bascik-slot="([^"]+)"(?:${ATTR_VALUE})>`,
+    "gi",
+  );
   let match: RegExpExecArray | null;
   while ((match = openTagRe.exec(innerContent)) !== null) {
     const [fullOpen, tagName, slotName] = match;
@@ -589,15 +595,58 @@ export const replaceNamedSlots = (
   fileContent: string,
   slots: Record<string, string>,
 ): string => {
-  return fileContent.replace(
-    new RegExp(
-      `<(\\w+(?:-\\w+)*)\\s+data-bascik-slot="([^"]+)"[^>]*>([\\s\\S]*?)<\\/\\1>`,
-      "gi",
-    ),
+  // Scan wrappers with the same depth-aware parser used for extraction so
+  // nested same-tag elements inside a placeholder's fallback content are
+  // handled correctly, then replace right-to-left to preserve indices.
+  const wrappers = parseNamedSlots(fileContent);
+  let result = fileContent;
+  for (let i = wrappers.length - 1; i >= 0; i--) {
+    const { slotName, startIndex, endIndex, content } = wrappers[i];
     // Use the element's own inner content as fallback when the slot is not provided
-    (_match: string, _tag: string, slotName: string, innerFallback: string) =>
-      slotName in slots ? slots[slotName] : innerFallback,
+    const replacement = slotName in slots ? slots[slotName] : content;
+    result = result.slice(0, startIndex) + replacement + result.slice(endIndex);
+  }
+  return result;
+};
+
+/**
+ * In a component template, replace valueless `data-bascik-slot` default slot
+ * marker elements with `defaultSlotContent`.  When no content is provided the
+ * marker element's own inner content is kept as fallback.
+ *
+ * Depth-aware: nested same-tag elements inside the marker's fallback content
+ * are balanced correctly, and other attributes may precede the marker.
+ */
+export const replaceDefaultSlots = (
+  fileContent: string,
+  defaultSlotContent: string,
+): string => {
+  const openTagRe = new RegExp(
+    `<(\\w+(?:-\\w+)*)(?=[\\s>])(?:${ATTR_VALUE}?)\\s+data-bascik-slot(?!\\s*=)(?:${ATTR_VALUE})>`,
+    "gi",
   );
+  const wrappers: Array<{ startIndex: number; endIndex: number; content: string }> = [];
+  let match: RegExpExecArray | null;
+  while ((match = openTagRe.exec(fileContent)) !== null) {
+    const [fullOpen, tagName] = match;
+    const contentStart = match.index + fullOpen.length;
+    const closeIndex = findMatchingClose(fileContent, tagName, contentStart);
+    if (closeIndex === -1) continue;
+    const endIndex = closeIndex + `</${tagName}>`.length;
+    wrappers.push({
+      startIndex: match.index,
+      endIndex,
+      content: fileContent.slice(contentStart, closeIndex),
+    });
+    openTagRe.lastIndex = endIndex;
+  }
+  let result = fileContent;
+  for (let i = wrappers.length - 1; i >= 0; i--) {
+    const { startIndex, endIndex, content } = wrappers[i];
+    const replacement = defaultSlotContent || content;
+    result = result.slice(0, startIndex) + replacement + result.slice(endIndex);
+  }
+  return result;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -653,10 +702,15 @@ export const mergeAttributesOntoRoot = (
       let attrStr = existing || "";
       for (const [name, value] of Object.entries(attrs)) {
         if (name === "class" && value) {
-          if (attrStr.includes('class="')) {
+          if (/class="/.test(attrStr)) {
             attrStr = attrStr.replace(
               /class="([^"]*)"/,
               (_, cls) => `class="${cls} ${value}"`,
+            );
+          } else if (/class='/.test(attrStr)) {
+            attrStr = attrStr.replace(
+              /class='([^']*)'/,
+              (_, cls) => `class='${cls} ${value}'`,
             );
           } else {
             attrStr += ` class="${value}"`;

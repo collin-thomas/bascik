@@ -240,3 +240,20 @@ describe("copyReplicatePath – CSS minification", () => {
     expect(copyFile).not.toHaveBeenCalled();
   });
 });
+
+describe("getRelativePath — Windows separators", () => {
+  it("matches when the configured directory uses backslashes", async () => {
+    const { getRelativePath } = await import("./file-system.js");
+    const original = BascikConfig.directory.pages;
+    // Simulate a Windows `resolve()` result with backslash separators while
+    // the watcher hands us a forward-slash path.
+    (BascikConfig.directory as any).pages = "C:\\proj\\src\\pages";
+    try {
+      expect(getRelativePath("C:/proj/src/pages/404.html", "pages")).toBe(
+        "pages/404.html",
+      );
+    } finally {
+      (BascikConfig.directory as any).pages = original;
+    }
+  });
+});

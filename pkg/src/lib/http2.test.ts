@@ -311,6 +311,31 @@ describe("serveHttp2 – stream handler", () => {
     openCall?.[1]?.();
     expect(fakeFileStream.pipe).toHaveBeenCalledWith(stream);
   });
+
+  it("treats uppercase .HTML extensions like lowercase (no static-file lookup)", async () => {
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/index.HTML", "GET"));
+    // Must follow the same route as /index.html — rejected as a dot-path,
+    // never stat()'d on disk as a static asset.
+    expect(mockStat).not.toHaveBeenCalled();
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({ ":status": 404 }),
+    );
+  });
+
+  it("resolves the MIME type for uppercase static asset extensions", async () => {
+    const fakeFileStream = { on: vi.fn().mockReturnThis(), pipe: vi.fn() };
+    mockCreateReadStream.mockReturnValue(fakeFileStream);
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/STYLE.CSS", "HEAD"));
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({
+        "content-type": expect.stringContaining("text/css"),
+      }),
+    );
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
