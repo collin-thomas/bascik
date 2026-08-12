@@ -114,12 +114,6 @@ function _transformMd(md, { skipFirstHeading = false, stripDemoBlocks = false, n
   }
 
   let html = marked(md);
-  // Add id attributes to h2 headings and wrap text in a copyable anchor link.
-  html = html.replace(/<h2>(.*?)<\/h2>/g, (_, text) => {
-    const slug = text.replace(/<[^>]+>/g, '').toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
-    return `<h2 id="${slug}"><a class="anchor-link" href="#${slug}">${text}</a></h2>`;
-  });
-
   // Optionally strip the first heading (h1–h6)
   if (skipFirstHeading) {
     html = html.replace(/^<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>\n?/, '');
@@ -139,6 +133,12 @@ function _transformMd(md, { skipFirstHeading = false, stripDemoBlocks = false, n
       }
     }
   }
+
+  // Add id attributes to h2 headings and wrap text in a copyable anchor link.
+  html = html.replace(/<h2>(.*?)<\/h2>/g, (_, text) => {
+    const slug = text.replace(/<[^>]+>/g, '').toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+    return `<h2 id="${slug}"><a class="anchor-link" href="#${slug}">${text}</a></h2>`;
+  });
 
   // Convert <pre><code class="language-X"> → <code-block data-bascik-prop-lang="X">
   // marked already HTML-escapes code content, so it passes safely into the component slot.
