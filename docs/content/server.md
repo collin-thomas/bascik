@@ -228,7 +228,7 @@ In `--serve` mode the server enforces a per-IP request limit of **500 requests p
 
 ### Graceful shutdown
 
-The server listens for `SIGTERM` and `SIGINT` in both dev and production. On either signal it stops accepting new connections and waits for in-flight requests to finish, then exits cleanly. If the drain takes longer than 10 seconds, the process force-exits. This means `systemd` stop, `docker stop`, and Kubernetes pod eviction all wait for requests to complete before the process ends.
+The server listens for `SIGTERM` and `SIGINT` in both dev and production. On either signal it stops accepting new connections, destroys all open HTTP/2 sessions (including any live-reload SSE connections in dev), and exits once in-flight requests finish. If draining takes longer than 10 seconds, the process force-exits. This means `systemd` stop, `docker stop`, and Kubernetes pod eviction all wait for requests to complete before the process ends.
 
 ### Path traversal protection
 

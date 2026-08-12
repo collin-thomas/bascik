@@ -51,5 +51,6 @@ export const NAV = [
     { href: '/develop/scoping-system', label: 'Scoping System' },
     { href: '/develop/dev-server', label: 'Dev Server' },
     { href: '/develop/testing', label: 'Testing' },
+    { href: '/develop/create-app', label: 'Create App' },
   ]},
 ];

@@ -168,6 +168,12 @@ export const serveHttp2 = async () => {
     console.error("Stream error:", error);
   };
 
+  const openSessions = new Set<http2.ServerHttp2Session>();
+  server.on("session", (session: http2.ServerHttp2Session) => {
+    openSessions.add(session);
+    session.once("close", () => openSessions.delete(session));
+  });
+
   server.on(
     "stream",
     async (stream: ServerHttp2Stream, headers: IncomingHttpHeaders) => {
@@ -176,7 +182,9 @@ export const serveHttp2 = async () => {
 
       const logAccess = () => {
         if (responseStatus === 0) return;
-        const logging = BascikConfig.serve?.logging ?? { level: "info", requests: true };
+        const logging = BascikConfig.isServe
+          ? (BascikConfig.serve?.logging ?? { level: "info", requests: true })
+          : (BascikConfig.devServer?.logging ?? { level: "info", requests: true });
         if (logging.requests === false) return;
         if (!shouldLog(logging.level ?? "info", "info")) return;
         const elapsed = Date.now() - startMs;
@@ -374,11 +382,6 @@ export const serveHttp2 = async () => {
           return stream.end("Not Found");
         }
 
-        const devLogging = BascikConfig.devServer?.logging ?? { level: "info", requests: true };
-        if (devLogging.requests !== false && shouldLog(devLogging.level ?? "info", "info")) {
-          console.log(`serving: ${reqUrl}`);
-        }
-
         // A page is the 404 page only when its resolved HTTP path is exactly
         // /404 — `pages/blog/404.html` (a page *about* 404s) must not match.
         const is404Page = getHttpPath(page.relativePagePath) === "/404";
@@ -468,7 +471,6 @@ export const serveHttp2 = async () => {
       server.listen(p, hostname, () => {
         server.removeListener("error", errorHandler);
         origin = `https://${hostname}:${p}`;
-        console.log(`Server running at ${origin}`);
         resolve();
       });
     };
@@ -486,7 +488,12 @@ export const serveHttp2 = async () => {
       if (err) console.error("Error closing server:", err);
       process.exit(0);
     });
-    // Force exit if open sessions haven't drained within 10 s.
+    // Destroy open sessions (including the SSE live-reload connection) so
+    // server.close() is not held open waiting for long-lived streams.
+    for (const session of openSessions) {
+      session.destroy();
+    }
+    // Force exit if sessions haven't drained within 10 s.
     setTimeout(() => {
       console.error("Graceful shutdown timeout — forcing exit");
       process.exit(1);
@@ -495,4 +502,6 @@ export const serveHttp2 = async () => {
   process.setMaxListeners(process.getMaxListeners() + 2);
   process.once("SIGTERM", () => gracefulShutdown("SIGTERM"));
   process.once("SIGINT", () => gracefulShutdown("SIGINT"));
+
+  return origin;
 };

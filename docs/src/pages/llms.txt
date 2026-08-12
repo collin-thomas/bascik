@@ -1310,9 +1310,9 @@ if (args.includes("--check")) {
 await import("./transpile.js");
 ```
 
-`transpile.ts` handles the normal dev and build flow: it calls `watchFiles()`, generates a self-signed TLS certificate in dev mode, and starts the HTTP/2 development server.
+`transpile.ts` handles the normal dev and build flow. In build mode it awaits `watchFiles()` and exits. In dev mode it starts TLS cert generation (`pki.ts`) and the HTTP/2 server (`http2.ts`) concurrently with `watchFiles()`, so the server is already bound to its port by the time transpilation finishes. `serveHttp2()` returns the origin URL; `transpile.ts` prints `Server running at …` immediately after the transpilation summary line.
 
-The dynamic `import()` calls are intentional, they avoid loading modules when not needed (`init` and `--check` exit before reaching `transpile.ts`; `--build` never starts the server).
+The dynamic `import()` calls are intentional: they avoid loading modules when not needed (`init` and `--check` exit before reaching `transpile.ts`; `--build` never starts the server).
 
 ## Library Modules
 
@@ -1367,7 +1367,7 @@ index.ts
         │           │     └── (transpilePage - no side effects)
         │           ├── mem.ts ← paths.ts
         │           └── events.ts
-        └── (dev only)
+        └── (dev only, concurrent with watch.ts)
               ├── pki.ts
               └── http2.ts ← mem.ts, events.ts, paths.ts, mime.ts
 ```
@@ -1400,6 +1400,136 @@ Spinning up the pool has a fixed cost, each worker loads the transpiler's module
 
 In dev mode, `pageProcessing()` writes the transpiled HTML to the in-memory store and emits the `"transpiled"` event before writing anything to disk. The HTTP/2 server can serve the updated page immediately. Disk writes are skipped entirely in dev, `dist/` is only written during `--build`.
 
+# Create App
+
+The `create/` folder is a small standalone package that scaffolds a fresh Bascik project. It is separate from the main package because it is meant to be run as a user-facing CLI, not as a workspace dependency.
+
+## Why it is separate
+
+The repo root uses Yarn workspaces. The package code lives in `pkg/`, while the scaffold lives in `create/` and is installed like a normal Node tool.
+
+That split keeps the monorepo dev flow simple and keeps the generated project familiar for normal users.
+
+## Code structure
+
+The package has two source files with distinct responsibilities:
+
+- `create/src/scaffold.ts` — pure data and file-writing logic. All generated file content lives here as exported string constants and functions. No I/O beyond `fs/promises`. This is what the tests cover.
+- `create/src/index.ts` — the CLI entry point. Handles prompts, the `-y` flag, and spawns `npm install` / `npm run dev`. Not unit-tested.
+
+Keeping them split means you can test every generated file without invoking the CLI or touching the filesystem.
+
+## What the CLI generates
+
+Running `npx create-bascik <name>` writes this structure:
+
+```text
+<name>/
+  package.json
+  bascik.config.js
+  .gitignore
+  src/
+    pages/
+      index.html
+      about.html
+      contact.html
+      404.html
+      css/
+        styles.css
+    components/
+      site-meta/
+        site-meta.html
+      site-header/
+        site-header.html
+        site-header.css
+      site-footer/
+        site-footer.html
+        site-footer.css
+      feat-card/
+        feat-card.html
+        feat-card.css
+      my-counter/
+        my-counter.html
+        my-counter.css
+```
+
+The `feat-card` component demonstrates named slots. The `my-counter` component demonstrates scoped JS with two independent instances on the home page.
+
+After scaffolding, the CLI offers to run `npm install` and `npm run dev`. Both prompts can be skipped with `-y`.
+
+## Why the generated app uses npm
+
+The scaffold runs `npm install` and `npm run dev` so users do not need Yarn to get started. The repo itself uses Yarn workspaces for contributor work, but the generated site is designed to feel like a regular app from a standard Node CLI.
+
+## Modifying the scaffold
+
+All generated file content is defined as string constants in `scaffold.ts`. To change what a new project looks like, edit the relevant constant there. After any change, rebuild before testing:
+
+```sh
+cd create
+npm run build
+```
+
+The `npm link` symlink points at the `create/` directory, so a fresh `dist/` is picked up immediately without relinking.
+
+## Tests
+
+The scaffold is fully unit-tested. Run the tests from the `create/` directory:
+
+```sh
+cd create
+npm test
+```
+
+Tests mock `fs/promises` and verify that every expected file is written with the right content. If you add or rename a generated file, add a corresponding test case in `scaffold.test.ts`.
+
+## Lockfiles and package managers
+
+Contributors use Yarn at the monorepo root with a single `yarn.lock`.
+
+Generated projects intentionally use npm, and each generated project gets its own `package-lock.json`.
+
+## Testing create app locally
+
+### 1. Install the repo
+
+From the repo root:
+
+```sh
+yarn install
+```
+
+### 2. Link the local scaffold
+
+```sh
+cd create && npm install && npm link && cd ..
+```
+
+### 3. Create a test site
+
+```sh
+npx create-bascik my-site -y
+```
+
+The `-y` flag skips both prompts. The npm install will print a 404 error for `@bascik/bascik` (not on npm yet), but the dev server starts anyway — the workspace `node_modules` symlink resolves the package. Command+Click the URL to open it in a browser.
+
+```text
+Server running at https://localhost:8443
+```
+
+## Cleanup after local testing
+
+Once you are done, unlink to return to the normal published package flow.
+
+From the repo root:
+
+```sh
+cd create
+npm unlink
+```
+
+If you are still actively iterating on the generator, leaving it linked is fine.
+
 # Dev Server
 
 Bascik's development server is a TLS-enabled HTTP/2 server built on Node.js built-ins. It serves transpiled pages from an in-memory store, static assets from disk, and broadcasts live-reload events via Server-Sent Events.
@@ -1428,6 +1558,8 @@ Because the cert is self-signed, browsers will show a security warning on first 
 
 ## The HTTP/2 Server (`http2.ts`)
 
+The server starts binding its port concurrently with page transpilation. `serveHttp2()` returns the origin URL once the port is bound; `transpile.ts` prints `Server running at …` immediately after the transpilation summary line, with no gap between them.
+
 The server listens on `https://localhost:8443` and handles all requests on a single `"stream"` event handler. Only `GET` requests are accepted; all other methods receive a `405 Method Not Allowed` response.
 
 ### Request routing
@@ -1441,6 +1573,10 @@ Requests are dispatched in this order:
 ### Error handling
 
 Stream-level errors (client disconnects, runtime bugs per page) are caught by an `onError` helper that responds with `404` for missing files or `500` for other errors, then closes the stream. Server-level errors (TLS config, binding failures) are caught by `server.on("error")`.
+
+### Graceful shutdown
+
+The server registers `process.once` handlers for `SIGTERM` and `SIGINT`. On either signal it calls `server.close()` to stop accepting new connections, then immediately destroys all tracked HTTP/2 sessions. Destroying sessions closes the live-reload SSE stream (which would otherwise hold the process open indefinitely), so the process exits cleanly as soon as in-flight requests finish. A 10-second safety timeout force-exits if anything still hasn’t drained.
 
 ## In-Memory Page Store (`mem.ts`)
 
@@ -1556,6 +1692,7 @@ After any `pkg/src/` change, rebuild the package and the docs server will pick i
 ## Internals Sub-pages
 
 - [Architecture](/develop/architecture), module map, responsibilities, and how the files relate to one another.
+- [Create App](/develop/create-app), how the standalone scaffolding CLI is structured and why the generated app uses npm.
 - [Transpilation Pipeline](/develop/transpilation-pipeline), the two-phase page and component pipeline that turns source HTML into deployable output.
 - [Scoping System](/develop/scoping-system), how IDs, class names, CSS, and JavaScript references are namespaced per component instance.
 - [Dev Server](/develop/dev-server), the HTTP/2 server, TLS certificate generation, memory store, live reload, and watch system.
@@ -2126,11 +2263,11 @@ Yes. In fact some of my earliest exposure to programming was to TI-Basic on my f
 
 ## What is Bascik?
 
-Bascik is a build tool for HTML components. You write reusable components in plain HTML, CSS, and JavaScript. At build time, Bascik resolves your custom tags to their component source, scopes CSS and JavaScript so they never collide across instances, and outputs a directory of plain HTML files. Zero JavaScript is added to your pages — every script in the output was written by you.
+Bascik is a build tool for HTML components. You write reusable components in plain HTML, CSS, and JavaScript. At build time, Bascik resolves your custom tags to their component source, scopes CSS and JavaScript so they never collide across instances, and outputs a directory of plain HTML files. Zero JavaScript is added to your pages, every script in the output was written by you.
 
 By default the output is fully static and can be hosted anywhere. If you need per-request dynamic content, the [production server](/server) lets you run server-side scripts that inject into specific sections of a page at request time, while everything else stays static.
 
-For a deeper look: [Components](/components), [Scoped CSS](/scoped-styles), [Scoped JavaScript](/scoped-javascript), [Getting Started](/getting-started).
+For a deeper look: [Getting Started](/getting-started), [Scoped CSS](/scoped-styles), [Scoped JavaScript](/scoped-javascript), [Migration Overview](/migrate).
 
 ## Who made Bascik?
 
@@ -2144,7 +2281,7 @@ Components have always been a JavaScript thing. Web Components tried to make it 
 
 It seems like a big undertaking but the web standards are so well defined that you have an obtainable target. It'll just take some effort. So that's what I did.
 
-Then I saw the rise of AI-assisted coding and thought, this tool I've been building is going to be perfect for that. Tooling exists for humans to use. AI doesn't need React, humans need React. Giving AI a tool that doesn't impose its own rules and just lets you write the fundamental web languages is going to be great for both humans and AI-assisted coding.
+Then I saw the rise of AI-assisted coding and thought, this tool I've been building is going to be perfect for that. Our tooling primarily exists for humans to use, to make tasks easier. But when the tools start to get in the way, giving an LLM a tool that doesn't impose its own rules and just lets you write the fundamental web languages is going to be great for both developers and AI-assisted coding.
 
 ## What happens if I name a component after a native HTML element?
 
@@ -2225,18 +2362,15 @@ Bascik requires Node.js v24+. Get up and running in under five minutes.
 
 ## Quick Start
 
-The fastest way to start a new Bascik project:
+The fastest way to start a new Bascik project — no prompts, just a running site:
 
 ```sh
-npm create bascik@latest
+npm create bascik@latest my-site -y
 ```
 
-Enter a project name when prompted (or press Enter for `bascik-app`). The tool then asks two questions:
+That scaffolds the project, installs dependencies, and starts the dev server in one shot. You're live at **https://localhost:8443**.
 
-- **Install dependencies now?:** select Y to run `npm install` immediately
-- **Start the dev server after install?:** select Y to launch the dev server right away
-
-Select Y for both and you're live at **https://localhost:8443** with no further commands needed.
+Pass a different name to use it as both the directory name and the site title. If you omit the name, the tool prompts for one (defaulting to `bascik-app`). Drop `-y` to step through the install and dev server prompts manually.
 
 `npm create bascik@latest` scaffolds a complete starter site: pages, components, global CSS, `bascik.config.js`, and a `.gitignore`. If you prefer to set everything up manually, see [Manual Setup](#manual-setup) below.
 
@@ -5748,7 +5882,7 @@ In `--serve` mode the server enforces a per-IP request limit of **500 requests p
 
 ### Graceful shutdown
 
-The server listens for `SIGTERM` and `SIGINT` in both dev and production. On either signal it stops accepting new connections and waits for in-flight requests to finish, then exits cleanly. If the drain takes longer than 10 seconds, the process force-exits. This means `systemd` stop, `docker stop`, and Kubernetes pod eviction all wait for requests to complete before the process ends.
+The server listens for `SIGTERM` and `SIGINT` in both dev and production. On either signal it stops accepting new connections, destroys all open HTTP/2 sessions (including any live-reload SSE connections in dev), and exits once in-flight requests finish. If draining takes longer than 10 seconds, the process force-exits. This means `systemd` stop, `docker stop`, and Kubernetes pod eviction all wait for requests to complete before the process ends.
 
 ### Path traversal protection
 

@@ -9,8 +9,8 @@
  * Usage (from docs/):
  *   node scripts/generate-llms-txt.mjs
  *
- * Or via npm script:
- *   npm run generate:llms
+ * Or via yarn workspace script:
+ *   yarn --cwd docs generate:llms
  */
 
 import { readdir, readFile, writeFile } from 'node:fs/promises';

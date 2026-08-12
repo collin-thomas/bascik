@@ -24,6 +24,23 @@ This file contains the **complete, centralized documentation and development ski
 * Build instructions such as `data-bascik-slot`, `data-bascik-prop-*`, and `data-bascik-build` use HTML's standards-valid `data-*` extension mechanism.
 * Bascik consumes those instructions at build time. They are not runtime directives that require a client library to interpret them.
 
+### Repository Layout and the Create App
+
+The repo is split into three top-level folders:
+
+```text
+bascik/
+  pkg/          ← the @bascik/bascik npm package
+  create/       ← the standalone generator used by `npm create bascik@latest`
+  docs/         ← the docs site and internal developer guide
+```
+
+The `create/` folder is intentionally separate from `pkg/`. Contributor work in this monorepo uses Yarn with the single root `yarn.lock`, while generated projects intentionally use npm and receive their own `package-lock.json`. That split keeps contributor workflows Yarn-only while preserving the standard npm onboarding flow for generated apps.
+
+The generator in `create/src/index.ts` validates input, then calls `create/src/scaffold.ts` to write the project files. The generated app is not coupled to the monorepo layout. It just uses the published `@bascik/bascik` package and then runs as a normal Bascik site.
+
+For local contributor testing of the generator itself, rebuild from `create/`, link it with `npm link`, and invoke it via `npx create-bascik ...`; that remains the working flow for exercising the local scaffold end-to-end.
+
 ---
 
 ## 2. Component Format
@@ -525,23 +542,19 @@ src/
 
 ### Creating a New Project
 
-The recommended way to start a new Bascik project:
+The zero-friction way to start a new Bascik project:
 
 ```sh
-npm create bascik@latest
-# or: npm create bascik@latest my-project
+npm create bascik@latest my-site -y
 ```
 
-This scaffolds a complete starter site (pages, components, global CSS, `bascik.config.js`, `.gitignore`) and then prompts interactively:
+This scaffolds the project, installs dependencies, and starts the dev server in one shot. You're live at **https://localhost:8443**. Pass a different name to use it as both the directory name and the site title. Omit the name to be prompted for one (defaulting to `bascik-app`). Drop `-y` to step through the install and dev server prompts manually.
+
+The scaffold creates a complete starter site: pages, components, global CSS, `bascik.config.js`, and a `.gitignore`. When the dev server stops, the CLI prints a reminder:
 
 ```
-✓ Scaffolded my-project/
-
-Install dependencies now? (Y/n)
-Start the dev server after install? (Y/n)
+To start again:  cd my-site && npm run dev
 ```
-
-Select Y for both and you're live at **https://localhost:8443** with no further commands needed. If you select N, the remaining steps are printed at the end.
 
 ### Adding to an Existing Project
 
@@ -591,7 +604,7 @@ TLS certs are generated automatically (mkcert if available, openssl fallback) wh
 **Production hardening (automatic in `--serve`):**
 * **Security headers:** every response includes `x-content-type-options: nosniff`, `x-frame-options: SAMEORIGIN`, `referrer-policy: strict-origin-when-cross-origin`, `permissions-policy: interest-cohort=()`.
 * **Rate limiting:** 500 requests per 10 seconds per IP. Clients over the limit get `429 Too Many Requests` with `Retry-After`. Not active in the dev server. When behind a reverse proxy the limit applies to the proxy's IP; use the proxy's own rate limiting for per-client control.
-* **Graceful shutdown:** SIGTERM and SIGINT stop accepting connections and drain in-flight requests before exiting. Force-exits after 10 seconds if sessions haven't drained.
+* **Graceful shutdown:** SIGTERM and SIGINT stop accepting connections, destroy all open HTTP/2 sessions (including the live-reload SSE connection), and drain in-flight requests before exiting. Force-exits after 10 seconds if anything hasn't drained.
 * **Path traversal protection:** static asset URLs are validated against `dist/`; requests that escape with `/../` sequences get `400 Bad Request`.
 
 **Deployment:** Bascik's server always uses TLS; there is no cleartext HTTP mode. Platforms that terminate TLS at the edge and send cleartext to the container (Cloud Run default, most PaaS) need end-to-end TLS enabled so HTTPS reaches the container. Key patterns:
@@ -608,7 +621,7 @@ When using a reverse proxy, forward `X-Real-IP` and any auth headers so `data-ba
 Bascik's CLI is designed to provide clean, minimal, and informative terminal output.
 
 #### 1. Starting the Dev Server
-When you start the dev server, Bascik automatically generates local SSL/TLS certificates for its built-in HTTP/2 server, transpiles all pages inside your pages directory, stores each page in memory, then starts the server. Pages are served from memory with no disk I/O is required at request time in dev mode.
+When you start the dev server, Bascik starts TLS cert generation and the HTTP/2 server concurrently with page transpilation so the server is already bound to its port by the time the last page finishes. The `Server running at` line prints immediately after the transpilation summary with no gap between them. Pages are served from memory with no disk I/O at request time in dev mode.
 
 ```terminal
 transpiled: pages/getting-started.html
@@ -635,11 +648,11 @@ While the dev server is active, Bascik watches your file system and incrementall
   ```
 * **Static Assets:** Replicating any non-HTML static assets (like custom CSS, JS files, or images) from pages directly into the output directory:
   ```terminal
-  copied: /Users/collin/github/bascik/docs/src/pages/css/custom.css
+  copied: pages/css/custom.css
   ```
 * **Deleting Pages:** Removing a page from your pages directory automatically cleans up its compiled output counterpart to prevent dead files:
   ```terminal
-  deleted file: /Users/collin/github/bascik/docs/src/pages/old-page.html
+  deleted file: pages/old-page.html
   ```
 
 #### 3. Transpilation & Build Errors

@@ -87,10 +87,8 @@ describe("PACKAGE_JSON", () => {
 });
 
 describe("BASCIK_CONFIG", () => {
-  it("exports bascikConfig with default directories", () => {
-    expect(BASCIK_CONFIG).toContain("export const bascikConfig");
-    expect(BASCIK_CONFIG).toContain("src/pages");
-    expect(BASCIK_CONFIG).toContain("src/components");
+  it("contains a link to the docs", () => {
+    expect(BASCIK_CONFIG).toContain("bascik.dev/configuration");
   });
 });
 

@@ -34,3 +34,38 @@
     </div>
   </div>
 </footer>
+<script>
+  document.querySelectorAll('h2 .anchor-link').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      // Preserve standard link behaviors (new tab/window, context menu, etc.)
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+      e.preventDefault();
+
+      const href = a.getAttribute('href') || '';
+      history.replaceState(null, '', href);
+
+      const id = href.startsWith('#') ? href.slice(1) : '';
+      const target = id ? document.getElementById(id) : null;
+      if (target) {
+        const offset = parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue('--anchor-scroll-offset')
+        ) || 0;
+        const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - offset);
+        const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+        window.scrollTo({ top: top, behavior: behavior });
+      }
+
+      if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') return;
+
+      navigator.clipboard.writeText(location.href)
+        .then(function () {
+          a.classList.add('copied');
+          setTimeout(function () { a.classList.remove('copied'); }, 1500);
+        })
+        .catch(function () {
+          // Clipboard may be unavailable (permissions / non-secure context)
+        });
+    });
+  });
+</script>
