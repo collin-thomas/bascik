@@ -131,7 +131,7 @@ ReferenceError: marked is not defined
 Unknown component tag:
 
 ```terminal
-[bascik] Unresolved component tag in "pages/about.html": <my-mistyped> — no matching component file found. Run `bascik --check` for a full report.
+[bascik] Unresolved component tag in "pages/about.html": <my-mistyped> - no matching component file found. Run `bascik --check` for a full report.
 ```
 
 ## Custom 404 Page
@@ -157,7 +157,7 @@ It reports:
 Example output:
 
 ```terminal
-[bascik check] ✓ 8 pages and 12 components checked — no errors
+[bascik check] ✓ 8 pages and 12 components checked - no errors
 ```
 
 `bascik --check` exits with code `1` when errors are found, which makes it suitable for CI:

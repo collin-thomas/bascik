@@ -27,7 +27,7 @@ HTMX is well-suited to applications that need dynamic server-driven updates with
 Bascik produces plain HTML. HTMX ships a JavaScript runtime. These are different tools aimed at different problems. For pages that genuinely need server-driven interactivity, you can use HTMX alongside Bascik: Bascik handles component organization at build time, and HTMX handles server communication at runtime.
 
 ```html
-<!-- Bascik component that includes HTMX attributes — fully compatible -->
+<!-- Bascik component that includes HTMX attributes - fully compatible -->
 <button hx-get="/api/items" hx-target="#list" hx-swap="innerHTML">
   Load items
 </button>

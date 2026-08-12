@@ -50,7 +50,7 @@ Bascik gives each instance a unique ID prefix so the two script copies never int
   btn.addEventListener("click", () => { ... });
 })();</script>
 
-<!-- second instance — different instanceId, fully independent -->
+<!-- second instance - different instanceId, fully independent -->
 <span id="bascik__my-toggle__c3d4__status">Ready</span>
 <button id="bascik__my-toggle__c3d4__toggle-btn">Toggle</button>
 <script>(function() {
@@ -68,7 +68,7 @@ Because class names are shared across all instances of the same component (for C
 **Use `id` + `getElementById` instead:**
 
 ```html
-<!-- ❌ Broken for multiple instances — querySelector returns first instance's button -->
+<!-- ❌ Broken for multiple instances - querySelector returns first instance's button -->
 <button class="my-btn">Click</button>
 <script>
   document.querySelector('.my-btn').addEventListener('click', () => { … });
@@ -76,7 +76,7 @@ Because class names are shared across all instances of the same component (for C
 ```
 
 ```html
-<!-- ✅ Correct — id is scoped per instance -->
+<!-- ✅ Correct - id is scoped per instance -->
 <button id="my-btn" class="my-btn">Click</button>
 <script>
   document.getElementById('my-btn').addEventListener('click', () => { … });
@@ -94,7 +94,7 @@ If a class is only toggled at runtime (`classList.toggle("is-open")`) but doesn'
 **Fix: declare the class on a hidden element in the template so the compiler sees it:**
 
 ```html
-<!-- scoping helper — keeps runtime classes registered at compile time -->
+<!-- scoping helper - keeps runtime classes registered at compile time -->
 <div class="is-open is-active" style="display:none"></div>
 ```
 

@@ -77,7 +77,7 @@ index.ts
         │           ├── styles.ts
         │           ├── build-scripts.ts
         │           ├── worker-pool.ts → page-worker.ts
-        │           │     └── (transpilePage — no side effects)
+        │           │     └── (transpilePage - no side effects)
         │           ├── mem.ts ← paths.ts
         │           └── events.ts
         └── (dev only)

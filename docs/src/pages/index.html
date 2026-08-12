@@ -5,7 +5,7 @@
   <docs-head></docs-head>
   <meta name="description"
     content="Bascik is a build tool for HTML components with automatic scoped CSS and JS. No runtime. No framework." />
-  <title>Bascik — HTML components. Zero runtime.</title>
+  <title>Bascik - HTML components. Zero runtime.</title>
   <link rel="prefetch" href="/why-bascik" />
   <link rel="prefetch" href="/getting-started" />
   <style>
@@ -211,25 +211,6 @@
       font-weight: 600;
       color: var(--accent);
       text-decoration: none;
-    }
-
-    .how-result-scoped {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin: 0;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .how-result-scoped code {
-      font-size: 0.7rem;
-      color: var(--accent);
-      background: var(--accent-dim);
-      border: 1px solid rgba(211, 255, 141, 0.15);
-      padding: 2px 6px;
-      border-radius: 4px;
     }
 
     .how-result-card[data-active] {
@@ -507,7 +488,8 @@
       <div class="container">
         <p class="section-label">How it works</p>
         <h2 class="section-heading">You write the HTML. Bascik scopes it.</h2>
-        <p class="section-sub">Create a file with your component name. Add your HTML, CSS, and JavaScript. Reference that tag in any page or component with no imports or configuration needed.</p>
+        <p class="section-sub">Create a file with your component name. Add your HTML, CSS, and JavaScript. Reference
+          that tag in any page or component with no imports or configuration needed.</p>
 
         <div class="how-split">
           <!-- Code panel with tabs -->
@@ -543,7 +525,7 @@
   <span class="hl-tag">&lt;h3&gt;</span>My Card<span class="hl-tag">&lt;/h3&gt;</span>
   <span class="hl-tag">&lt;p&gt;</span>Any HTML goes inside as slot content.<span class="hl-tag">&lt;/p&gt;</span>
 <span class="hl-tag">&lt;/my-card&gt;</span></code></pre>
-            <pre class="how-src-pane" id="how-output" hidden><code><span class="hl-comment">&lt;!-- dist/index.html — CSS classes and JS selectors scoped --&gt;</span>
+            <pre class="how-src-pane" id="how-output" hidden><code><span class="hl-comment">&lt;!-- dist/index.html - CSS classes and JS selectors scoped --&gt;</span>
 <span class="hl-tag">&lt;style&gt;</span>
   .<span class="hl-scoped">bascik__my-card__card</span> {
     padding: 26px 28px;
@@ -579,9 +561,6 @@
               <h3>My Card</h3>
               <p>Any HTML goes inside as slot content. Click to toggle state.</p>
             </div>
-            <p class="how-result-scoped">
-              CSS and JS scoped to <code>.bascik__my-card__*</code> — zero collisions, zero runtime.
-            </p>
           </div>
         </div>
       </div>
@@ -604,7 +583,7 @@
               <button class="demo-tab-btn" data-tab="js">JS</button>
             </div>
             <div class="demo-pane" data-pane="html">
-              <pre><code><span class="hl-comment">&lt;!-- src/components/demo-counter.html — component template --&gt;</span>
+              <pre><code><span class="hl-comment">&lt;!-- src/components/demo-counter.html - component template --&gt;</span>
 <span class="hl-tag">&lt;div</span> <span class="hl-attr">class</span>=<span class="hl-val">"ctr"</span><span class="hl-tag">&gt;</span>
   <span class="hl-tag">&lt;span</span> <span class="hl-attr">class</span>=<span class="hl-val">"ctr-label"</span>
          <span class="hl-attr">data-bascik-prop-label</span><span class="hl-tag">&gt;&lt;/span&gt;</span>
@@ -615,12 +594,12 @@
   <span class="hl-tag">&lt;/div&gt;</span>
 <span class="hl-tag">&lt;/div&gt;</span>
 
-<span class="hl-comment">&lt;!-- src/pages/index.html — usage --&gt;</span>
+<span class="hl-comment">&lt;!-- src/pages/index.html - usage --&gt;</span>
 <span class="hl-tag">&lt;demo-counter</span> <span class="hl-attr">data-bascik-prop-label</span>=<span class="hl-val">"Instance A"</span><span class="hl-tag">&gt;&lt;/demo-counter&gt;</span>
 <span class="hl-tag">&lt;demo-counter</span> <span class="hl-attr">data-bascik-prop-label</span>=<span class="hl-val">"Instance B"</span><span class="hl-tag">&gt;&lt;/demo-counter&gt;</span></code></pre>
             </div>
             <div class="demo-pane" data-pane="css" hidden>
-              <pre><code><span class="hl-comment">/* Auto-scoped — class names become:
+              <pre><code><span class="hl-comment">/* Auto-scoped - class names become:
    .bascik__demo-counter__ctr { ... } */</span>
 .ctr { display: flex; flex-direction: column;
        align-items: center; gap: 16px; }
@@ -666,12 +645,12 @@ inc.addEventListener(<span class="hl-val">'click'</span>, () => {
       </div>
     </section>
     <script>
-      // How it works — live card toggle
+      // How it works - live card toggle
       document.getElementById('how-demo-card').addEventListener('click', () => {
         document.getElementById('how-demo-card').toggleAttribute('data-active');
       });
 
-      // How it works — tab switcher
+      // How it works - tab switcher
       document.querySelectorAll('.how-code-tab').forEach(btn => {
         btn.addEventListener('click', () => {
           document.querySelectorAll('.how-code-tab').forEach(b => b.classList.remove('active'));
@@ -681,7 +660,7 @@ inc.addEventListener(<span class="hl-val">'click'</span>, () => {
         });
       });
 
-      // Live demo — tab switcher
+      // Live demo - tab switcher
       document.querySelectorAll('.demo-tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const bar = btn.closest('.demo-tabs-bar');
@@ -699,7 +678,7 @@ inc.addEventListener(<span class="hl-val">'click'</span>, () => {
       <div class="container">
         <p class="section-label">Philosophy</p>
         <h2 class="section-heading">Use what already exists.</h2>
-        <p class="section-sub">The principle behind every decision Bascik makes — no inventions, no abstractions you
+        <p class="section-sub">The principle behind every decision Bascik makes: no inventions, no abstractions you
           have
           to learn.</p>
 
@@ -759,9 +738,9 @@ inc.addEventListener(<span class="hl-val">'click'</span>, () => {
           <a href="/props" class="card" style="text-decoration:none">
             <p class="section-label">Props</p>
             <h3 style="margin-bottom:6px">Component Props</h3>
-            <p style="margin:0;font-size:0.875rem">Inject text values via <code>data-bascik-prop-*</code> attributes —
-              no
-              runtime, no special syntax.</p>
+            <p style="margin:0;font-size:0.875rem">Inject text values via <code>data-bascik-prop-*</code> attributes,
+              with no
+              runtime and no special syntax.</p>
           </a>
           <a href="/build-scripts" class="card" style="text-decoration:none">
             <p class="section-label">Build</p>

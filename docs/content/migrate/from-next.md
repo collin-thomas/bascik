@@ -24,7 +24,7 @@ pages/                           src/pages/
 Next.js App Router uses `layout.tsx` files to wrap pages in shared UI. In Bascik, the `<html>`, `<head>`, and `<body>` tags live in each page file. Repeated structure goes into components.
 
 ```jsx
-// app/layout.tsx (Next.js — before)
+// app/layout.tsx (Next.js - before)
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -39,11 +39,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 ```
 
 ```html
-<!-- src/pages/about.html (Bascik — after) -->
+<!-- src/pages/about.html (Bascik - after) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>About — Acme</title>
+  <title>About - Acme</title>
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
@@ -73,7 +73,7 @@ If many pages share the same outer shell, extract it into a layout component tha
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>About — Acme</title>
+  <title>About - Acme</title>
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
@@ -92,7 +92,7 @@ If many pages share the same outer shell, extract it into a layout component tha
 `getStaticProps` fetches or reads data at build time and injects it as props. In Bascik, use a `<script data-bascik-build>` block. The script runs as a Node.js ESM module at build time; its stdout is injected into the page in place of the tag. Top-level `import` and top-level `await` are supported.
 
 ```jsx
-// pages/products.js (Next.js — before)
+// pages/products.js (Next.js - before)
 export async function getStaticProps() {
   const res = await fetch('https://api.example.com/products');
   const products = await res.json();
@@ -103,7 +103,7 @@ export default function Products({ products }) {
   return (
     <ul>
       {products.map(p => (
-        <li key={p.id}>{p.name} — ${p.price}</li>
+        <li key={p.id}>{p.name} - ${p.price}</li>
       ))}
     </ul>
   );
@@ -111,13 +111,13 @@ export default function Products({ products }) {
 ```
 
 ```html
-<!-- src/pages/products.html (Bascik — after) -->
+<!-- src/pages/products.html (Bascik - after) -->
 <ul>
   <script data-bascik-build>
     const res = await fetch('https://api.example.com/products');
     const products = await res.json();
     const items = products
-      .map(p => `<li>${p.name} — $${p.price}</li>`)
+      .map(p => `<li>${p.name} - $${p.price}</li>`)
       .join('\n');
     console.log(items);
   </script>
@@ -152,7 +152,7 @@ for (const file of posts.filter(f => f.endsWith('.md'))) {
   await writeFile(`./src/pages/blog/${slug}.html`, `
 <!DOCTYPE html>
 <html lang="en">
-<head><title>${slug} — Blog</title></head>
+<head><title>${slug} - Blog</title></head>
 <body>
   <site-nav></site-nav>
   <main>${body}</main>
@@ -185,14 +185,14 @@ Replace `<Link href="...">` with a standard `<a href="...">`. There is no client
 Replace the `<Head>` component from `next/head` with regular `<title>` and `<meta>` tags in each page's `<head>` element.
 
 ```jsx
-// pages/about.js (Next.js — before)
+// pages/about.js (Next.js - before)
 import Head from 'next/head';
 
 export default function About() {
   return (
     <>
       <Head>
-        <title>About — Acme</title>
+        <title>About - Acme</title>
         <meta name="description" content="About Acme Corp." />
       </Head>
       <h1>About</h1>
@@ -202,13 +202,13 @@ export default function About() {
 ```
 
 ```html
-<!-- src/pages/about.html (Bascik — after) -->
+<!-- src/pages/about.html (Bascik - after) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>About — Acme</title>
+  <title>About - Acme</title>
   <meta name="description" content="About Acme Corp." />
   <link rel="stylesheet" href="/css/styles.css" />
 </head>

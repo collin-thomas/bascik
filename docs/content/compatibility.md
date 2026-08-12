@@ -118,7 +118,7 @@ The unsupported JS patterns above all involve **dynamic attribute manipulation**
 The recommended pattern is to query scoped elements by a single `id` or single-class selector first, store the reference, then use the reference for all further DOM operations:
 
 ```html
-<!-- source — works correctly -->
+<!-- source - works correctly -->
 <div id="panel" class="card"></div>
 <script>
   const panel = document.getElementById("panel"); // ← rewritten by Bascik
@@ -134,7 +134,7 @@ Class names are scoped to the **component type**, not to individual instances. T
 To operate only on the current instance's elements, query by **id** (which includes a per-instance hash) and traverse from the returned element:
 
 ```javascript
-// In component — gets only THIS instance's panel:
+// In component - gets only THIS instance's panel:
 const panel = document.getElementById("panel"); // rewritten with instance hash
 ```
 

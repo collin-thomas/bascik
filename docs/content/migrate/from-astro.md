@@ -25,7 +25,7 @@ src/                        src/components/
 Astro's frontmatter block (`---`) runs on the server at build time. The direct equivalent in Bascik is `<script data-bascik-build>`. The script runs as a Node.js ESM module at build time; its stdout is injected into the page in place of the tag. Top-level `import` and top-level `await` are supported.
 
 ```astro
-<!-- src/pages/blog.astro (Astro — before) -->
+<!-- src/pages/blog.astro (Astro - before) -->
 ---
 import { getCollection } from 'astro:content';
 const posts = await getCollection('blog');
@@ -39,7 +39,7 @@ const posts = await getCollection('blog');
 ```
 
 ```html
-<!-- src/pages/blog.html (Bascik — after) -->
+<!-- src/pages/blog.html (Bascik - after) -->
 <ul>
   <script data-bascik-build>
     import { readdir, readFile } from 'node:fs/promises';
@@ -62,7 +62,7 @@ const posts = await getCollection('blog');
 Astro's typed `Astro.props` becomes Bascik's `data-bascik-prop-*` attribute system. Add the attribute (with no value) on the receiver element inside the component, then supply the text value on the component tag at the usage site.
 
 ```astro
-<!-- src/components/Card.astro (Astro — before) -->
+<!-- src/components/Card.astro (Astro - before) -->
 ---
 interface Props {
   title: string;
@@ -81,7 +81,7 @@ const { title, description } = Astro.props;
 ```
 
 ```html
-<!-- src/components/my-card/my-card.html (Bascik — after) -->
+<!-- src/components/my-card/my-card.html (Bascik - after) -->
 <div class="card">
   <h3 data-bascik-prop-title></h3>
   <p data-bascik-prop-description></p>
@@ -101,7 +101,7 @@ const { title, description } = Astro.props;
 Astro's default `<slot />` maps to a Bascik element with the `data-bascik-slot` attribute. Fallback content goes inside that element, equivalent to Astro's `<slot>Fallback</slot>`.
 
 ```astro
-<!-- src/components/Section.astro (Astro — before) -->
+<!-- src/components/Section.astro (Astro - before) -->
 <section class="section">
   <slot />
 </section>
@@ -111,7 +111,7 @@ Astro's default `<slot />` maps to a Bascik element with the `data-bascik-slot` 
 ```
 
 ```html
-<!-- src/components/my-section/my-section.html (Bascik — after) -->
+<!-- src/components/my-section/my-section.html (Bascik - after) -->
 <section class="section">
   <div data-bascik-slot></div>
 </section>
@@ -125,7 +125,7 @@ Astro's default `<slot />` maps to a Bascik element with the `data-bascik-slot` 
 Astro's `<slot name="header" />` maps to a receiver element with `data-bascik-slot="header"` inside the component. Pass content from the usage site by adding `data-bascik-slot="header"` on the element you want to inject.
 
 ```astro
-<!-- src/components/PageLayout.astro (Astro — before) -->
+<!-- src/components/PageLayout.astro (Astro - before) -->
 <div class="layout">
   <header><slot name="header" /></header>
   <main><slot /></main>
@@ -141,7 +141,7 @@ Astro's `<slot name="header" />` maps to a receiver element with `data-bascik-sl
 ```
 
 ```html
-<!-- src/components/page-layout/page-layout.html (Bascik — after) -->
+<!-- src/components/page-layout/page-layout.html (Bascik - after) -->
 <div class="layout">
   <header><div data-bascik-slot="header"></div></header>
   <main><div data-bascik-slot></div></main>
@@ -161,7 +161,7 @@ Astro's `<slot name="header" />` maps to a receiver element with `data-bascik-sl
 Astro scopes `<style>` blocks inside `.astro` files to that component. Bascik's equivalent is a paired `.css` file in the same directory as the component HTML. Remove the `<style>` block from the component file and paste its contents into the `.css` file. Class names, element selectors, and `@keyframes` are scoped automatically at build time with no changes to selectors needed.
 
 ```astro
-<!-- SiteNav.astro (Astro — before) -->
+<!-- SiteNav.astro (Astro - before) -->
 <nav class="nav">
   <a href="/" class="logo">Acme</a>
 </nav>
@@ -173,7 +173,7 @@ Astro scopes `<style>` blocks inside `.astro` files to that component. Bascik's 
 ```
 
 ```html
-<!-- src/components/site-nav/site-nav.html (Bascik — after) -->
+<!-- src/components/site-nav/site-nav.html (Bascik - after) -->
 <nav class="nav">
   <a href="/" class="logo">Acme</a>
 </nav>
@@ -190,7 +190,7 @@ Astro scopes `<style>` blocks inside `.astro` files to that component. Bascik's 
 Astro's Content Collections provide a typed, validated interface to Markdown and MDX files. In Bascik, read the same source files directly from the filesystem in a build script using Node.js `fs` and a Markdown/front-matter parser.
 
 ```astro
-<!-- src/pages/blog/[slug].astro (Astro — before) -->
+<!-- src/pages/blog/[slug].astro (Astro - before) -->
 ---
 import { getCollection, getEntry } from 'astro:content';
 
@@ -276,7 +276,7 @@ const apiUrl = import.meta.env.API_URL;
 Astro supports `.mdx` files as pages with embedded component usage. Bascik has no native MDX support. Convert MDX pages by processing the Markdown content with a build script and adding any interactive sections as plain Bascik components around the generated HTML.
 
 ```mdx
-<!-- src/content/blog/intro.mdx (Astro — before) -->
+<!-- src/content/blog/intro.mdx (Astro - before) -->
 ---
 title: Introduction
 ---
@@ -291,7 +291,7 @@ Welcome to our docs.
 ```
 
 ```html
-<!-- src/pages/blog/intro.html (Bascik — after) -->
+<!-- src/pages/blog/intro.html (Bascik - after) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>

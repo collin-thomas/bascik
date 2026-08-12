@@ -44,7 +44,7 @@ Every server script receives `process.env.BASCIK_REQUEST`, a JSON string with fo
   const page = parseInt(searchParams.page ?? '1', 10);
   const sessionId = headers['cookie']?.match(/session=([^;]+)/)?.[1];
 
-  console.log(`<p>Page ${page} — session: ${sessionId ?? 'none'}</p>`);
+  console.log(`<p>Page ${page} - session: ${sessionId ?? 'none'}</p>`);
 </script>
 ```
 
@@ -106,7 +106,7 @@ The script's working directory is your project root (`process.cwd()`), so relati
   const { headers, searchParams } = JSON.parse(process.env.BASCIK_REQUEST);
   const user = headers['x-display-name'] ?? 'Guest';
   const tab = searchParams.tab ?? 'overview';
-  console.log(`<p>Hello ${user} — tab: ${tab}</p>`);
+  console.log(`<p>Hello ${user} - tab: ${tab}</p>`);
 </script>
 ```
 
@@ -254,7 +254,7 @@ Bascik's server always uses TLS, there is no plaintext HTTP mode. Most cloud pla
 Build a two-stage image: the first stage transpiles the site, the second stage installs only what is needed to run the server.
 
 ```dockerfile
-# Stage 1 — build
+# Stage 1 - build
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package*.json ./
@@ -262,7 +262,7 @@ RUN npm ci
 COPY . .
 RUN npx bascik --build
 
-# Stage 2 — serve
+# Stage 2 - serve
 FROM node:22-alpine
 WORKDIR /app
 COPY package*.json ./

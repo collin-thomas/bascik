@@ -14,7 +14,7 @@ When Bascik transpiles a component, it reads the usage tag, extracts any inherit
   data-testid="main-nav">
 </site-nav>
 
-<!-- site-nav.html — component template -->
+<!-- site-nav.html - component template -->
 <nav class="nav">
   <a href="/">Home</a>
 </nav>
@@ -73,7 +73,7 @@ Common use cases:
 
 <!-- compiled-output -->
 ```html
-<!-- compiled output — id forwarded from usage tag -->
+<!-- compiled output - id forwarded from usage tag -->
 <div class="bascik__brand-logo__logo-wrap" id="footer-logo">
   <img src="/img/logo.svg" alt="Brand logo" />
 </div>

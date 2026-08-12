@@ -270,11 +270,11 @@ import { bench, describe } from "vitest";
 import { recursivelyTranspile } from "../src/lib/processing.ts";
 
 describe("recursivelyTranspile", () => {
-  bench("simple page — one component", () => {
+  bench("simple page - one component", () => {
     recursivelyTranspile(simpleHtml, componentList);
   });
 
-  bench("complex page — nested components", () => {
+  bench("complex page - nested components", () => {
     recursivelyTranspile(complexHtml, componentList);
   });
 });
