@@ -34,3 +34,14 @@
     </div>
   </div>
 </footer>
+<script>
+  document.querySelectorAll('h2 .anchor-link').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      history.replaceState(null, '', a.getAttribute('href'));
+      navigator.clipboard.writeText(location.href);
+      a.classList.add('copied');
+      setTimeout(function () { a.classList.remove('copied'); }, 1500);
+    });
+  });
+</script>

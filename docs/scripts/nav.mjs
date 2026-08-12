@@ -47,10 +47,10 @@ export const NAV = [
   { section: 'Internals', pages: [
     { href: '/develop', label: 'Internals Overview' },
     { href: '/develop/architecture', label: 'Architecture' },
-    { href: '/develop/create-app', label: 'Create App' },
     { href: '/develop/transpilation-pipeline', label: 'Transpilation Pipeline' },
     { href: '/develop/scoping-system', label: 'Scoping System' },
     { href: '/develop/dev-server', label: 'Dev Server' },
     { href: '/develop/testing', label: 'Testing' },
+    { href: '/develop/create-app', label: 'Create App' },
   ]},
 ];

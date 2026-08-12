@@ -20,21 +20,12 @@
       <main class="docs-content">
         <p class="section-label">Internals</p>
         <script data-bascik-build>
-          import { readFile } from 'node:fs/promises';
-          import { marked } from 'marked';
-
-          marked.use({
-            renderer: {
-              code({ text, lang }) {
-                const encoded = text.replace(/\n( *)/g, (_, s) => '&#10;' + s.replace(/ /g, '&#32;'));
-                const attr = lang ? ` data-bascik-prop-lang="${lang}"` : '';
-                return `<code-block${attr}>${encoded}</code-block>`;
-              }
-            }
-          });
-
-          const md = await readFile('./content/develop/testing.md', 'utf8');
-          console.log(marked(md));
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMd } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMd('./content/develop/testing.md'));
         </script>
         <script data-bascik-build>
           import { join } from 'node:path';

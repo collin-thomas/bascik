@@ -2,10 +2,17 @@ import { createSelfSignedCert } from "./lib/pki.js";
 import { BascikConfig } from "./lib/config.js";
 import { watchFiles } from "./lib/watch.js";
 
-await watchFiles();
+if (BascikConfig.isBuild) {
+  await watchFiles();
+} else {
+  // Start server setup in parallel with transpilation — server binds its port
+  // while pages are being processed. The URL is printed immediately after the
+  // transpilation summary so both lines appear back-to-back.
+  const serverReady = Promise.all([
+    createSelfSignedCert(),
+    import("./lib/http2.js"),
+  ]).then(([, { serveHttp2 }]) => serveHttp2());
 
-if (!BascikConfig.isBuild) {
-  await createSelfSignedCert();
-  const { serveHttp2 } = await import("./lib/http2.js");
-  serveHttp2();
+  await watchFiles();
+  console.log(`Server running at ${await serverReady}`);
 }

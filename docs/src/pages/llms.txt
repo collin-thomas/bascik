@@ -1310,9 +1310,9 @@ if (args.includes("--check")) {
 await import("./transpile.js");
 ```
 
-`transpile.ts` handles the normal dev and build flow: it calls `watchFiles()`, generates a self-signed TLS certificate in dev mode, and starts the HTTP/2 development server.
+`transpile.ts` handles the normal dev and build flow. In build mode it awaits `watchFiles()` and exits. In dev mode it starts TLS cert generation (`pki.ts`) and the HTTP/2 server (`http2.ts`) concurrently with `watchFiles()`, so the server is already bound to its port by the time transpilation finishes. `serveHttp2()` returns the origin URL; `transpile.ts` prints `Server running at …` immediately after the transpilation summary line.
 
-The dynamic `import()` calls are intentional, they avoid loading modules when not needed (`init` and `--check` exit before reaching `transpile.ts`; `--build` never starts the server).
+The dynamic `import()` calls are intentional: they avoid loading modules when not needed (`init` and `--check` exit before reaching `transpile.ts`; `--build` never starts the server).
 
 ## Library Modules
 
@@ -1367,7 +1367,7 @@ index.ts
         │           │     └── (transpilePage - no side effects)
         │           ├── mem.ts ← paths.ts
         │           └── events.ts
-        └── (dev only)
+        └── (dev only, concurrent with watch.ts)
               ├── pki.ts
               └── http2.ts ← mem.ts, events.ts, paths.ts, mime.ts
 ```
@@ -1483,17 +1483,23 @@ npm test
 
 Tests mock `fs/promises` and verify that every expected file is written with the right content. If you add or rename a generated file, add a corresponding test case in `scaffold.test.ts`.
 
-## Local repo flow
+## Testing create app locally
 
-If you want to test the generator from this repo, the flow is:
+### 1. Install the repo
+
+From the repo root:
 
 ```sh
-cd bascik/create
-npm install
-npm link
+yarn install
 ```
 
-Then from the repo root:
+### 2. Link the local scaffold
+
+```sh
+cd create && npm install && npm link && cd ..
+```
+
+### 3. Create a test site
 
 ```sh
 npx create-bascik my-site -y
@@ -1509,8 +1515,10 @@ Server running at https://localhost:8443
 
 Once you are done, unlink to return to the normal published package flow.
 
+From the repo root:
+
 ```sh
-cd bascik/create
+cd create
 npm unlink
 ```
 
@@ -1544,6 +1552,8 @@ Because the cert is self-signed, browsers will show a security warning on first 
 
 ## The HTTP/2 Server (`http2.ts`)
 
+The server starts binding its port concurrently with page transpilation. `serveHttp2()` returns the origin URL once the port is bound; `transpile.ts` prints `Server running at …` immediately after the transpilation summary line, with no gap between them.
+
 The server listens on `https://localhost:8443` and handles all requests on a single `"stream"` event handler. Only `GET` requests are accepted; all other methods receive a `405 Method Not Allowed` response.
 
 ### Request routing
@@ -1557,6 +1567,10 @@ Requests are dispatched in this order:
 ### Error handling
 
 Stream-level errors (client disconnects, runtime bugs per page) are caught by an `onError` helper that responds with `404` for missing files or `500` for other errors, then closes the stream. Server-level errors (TLS config, binding failures) are caught by `server.on("error")`.
+
+### Graceful shutdown
+
+The server registers `process.once` handlers for `SIGTERM` and `SIGINT`. On either signal it calls `server.close()` to stop accepting new connections, then immediately destroys all tracked HTTP/2 sessions. Destroying sessions closes the live-reload SSE stream (which would otherwise hold the process open indefinitely), so the process exits cleanly as soon as in-flight requests finish. A 10-second safety timeout force-exits if anything still hasn’t drained.
 
 ## In-Memory Page Store (`mem.ts`)
 
@@ -5862,7 +5876,7 @@ In `--serve` mode the server enforces a per-IP request limit of **500 requests p
 
 ### Graceful shutdown
 
-The server listens for `SIGTERM` and `SIGINT` in both dev and production. On either signal it stops accepting new connections and waits for in-flight requests to finish, then exits cleanly. If the drain takes longer than 10 seconds, the process force-exits. This means `systemd` stop, `docker stop`, and Kubernetes pod eviction all wait for requests to complete before the process ends.
+The server listens for `SIGTERM` and `SIGINT` in both dev and production. On either signal it stops accepting new connections, destroys all open HTTP/2 sessions (including any live-reload SSE connections in dev), and exits once in-flight requests finish. If draining takes longer than 10 seconds, the process force-exits. This means `systemd` stop, `docker stop`, and Kubernetes pod eviction all wait for requests to complete before the process ends.
 
 ### Path traversal protection
 

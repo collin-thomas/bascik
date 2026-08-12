@@ -803,6 +803,26 @@ describe("serveHttp2 – graceful shutdown", () => {
     expect(mockServer.close).toHaveBeenCalled();
     mockExit.mockRestore();
   });
+
+  it("destroys open sessions on SIGINT so long-lived SSE streams do not block shutdown", async () => {
+    await serveHttp2();
+
+    const [, sessionHandler] = mockServer.on.mock.calls.find(
+      (c: any[]) => c[0] === "session",
+    ) as [string, (session: { destroy: ReturnType<typeof vi.fn>; once: ReturnType<typeof vi.fn> }) => void];
+
+    const mockSession = { destroy: vi.fn(), once: vi.fn() };
+    sessionHandler(mockSession);
+
+    const [, sigIntHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
+      (c: any[]) => c[0] === "SIGINT",
+    ) as [string, () => void];
+
+    const mockExit = vi.spyOn(process, "exit").mockImplementation((_code?: string | number | null) => undefined as never);
+    sigIntHandler();
+    expect(mockSession.destroy).toHaveBeenCalled();
+    mockExit.mockRestore();
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -81,17 +81,23 @@ npm test
 
 Tests mock `fs/promises` and verify that every expected file is written with the right content. If you add or rename a generated file, add a corresponding test case in `scaffold.test.ts`.
 
-## Local repo flow
+## Testing create app locally
 
-If you want to test the generator from this repo, the flow is:
+### 1. Install the repo
+
+From the repo root:
 
 ```sh
-cd bascik/create
-npm install
-npm link
+yarn install
 ```
 
-Then from the repo root:
+### 2. Link the local scaffold
+
+```sh
+cd create && npm install && npm link && cd ..
+```
+
+### 3. Create a test site
 
 ```sh
 npx create-bascik my-site -y
@@ -107,8 +113,10 @@ Server running at https://localhost:8443
 
 Once you are done, unlink to return to the normal published package flow.
 
+From the repo root:
+
 ```sh
-cd bascik/create
+cd create
 npm unlink
 ```
 

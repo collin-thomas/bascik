@@ -112,7 +112,13 @@ function _transformMd(md, { skipFirstHeading = false, stripDemoBlocks = false, n
   if (stripDemoBlocks) {
     md = md.replace(/<!--\s*demo:[\w-]+\s*-->\n```[\w-]*\n[\s\S]*?\n```/g, '').trim();
   }
+
   let html = marked(md);
+  // Add id attributes to h2 headings and wrap text in a copyable anchor link.
+  html = html.replace(/<h2>(.*?)<\/h2>/g, (_, text) => {
+    const slug = text.replace(/<[^>]+>/g, '').toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+    return `<h2 id="${slug}"><a class="anchor-link" href="#${slug}">${text}</a></h2>`;
+  });
 
   // Optionally strip the first heading (h1–h6)
   if (skipFirstHeading) {
