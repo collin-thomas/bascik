@@ -877,6 +877,10 @@ When generating code, pages, or components for a Bascik project, the following c
 
 ## 15. FAQ
 
+**How do you pronounce Bascik? Where does the name come from?** Just like "basic." The idea is basic, the implementation is basic in theory, and the usage is basic. The spelling comes from the author's maternal grandmother's maiden name — so it's unique and means something personal.
+
+**Isn't BASIC already a programming language?** Yes — the classic one from the 1960s. Used it on an old Texas Instruments calculator. Enough time has passed; it can take on new meaning.
+
 **Who made Bascik?** Collin Thomas.
 
 **Why was Bascik created?** To build the fastest possible websites and dashboards with components, using only foundational languages (HTML, CSS, JavaScript) — no abstraction layer, no tool to learn, no JavaScript at runtime as a bottleneck.
