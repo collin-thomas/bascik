@@ -41,6 +41,7 @@ h2 { font-size: 1.5rem; margin: 48px 0 12px; border-top: 1px solid var(--border)
 h2 .anchor-link { color: inherit; text-decoration: none; }
 h2 .anchor-link::after { content: ' #'; opacity: 0; color: var(--text-muted); font-weight: 400; transition: opacity .15s; }
 h2:hover .anchor-link::after { opacity: 1; }
+h2:focus-within .anchor-link::after { opacity: 1; }
 h2 .anchor-link.copied::after { content: ' ✓'; opacity: 1; color: var(--accent); }
 h2:first-of-type { border-top: none; padding-top: 0; margin-top: 32px; }
 h3 { font-size: 1.05rem; margin: 28px 0 8px; }
