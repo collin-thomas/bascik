@@ -1,5 +1,7 @@
 # Closed Beta Setup
 
+Requires Node.js **v24.17.0 or later**. Run `node -v` to check.
+
 ## 1. Install the repo
 
 Once you've cloned this repo, cd into it and install the dependencies.
