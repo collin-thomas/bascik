@@ -66,7 +66,6 @@ Run `bascik init` in your project directory to scaffold the starter files and fo
   }
 }
 
-
 <!-- demo:component-html -->
 ```html
 <nav class="nav">

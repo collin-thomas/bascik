@@ -510,7 +510,7 @@ Unknown component tag:
 [bascik] Unresolved component tag in "pages/about.html": <my-mistyped> — no matching component file found. Run `bascik --check` for a full report.
 ```
 
-## Custom 404 page
+## Custom 404 Page
 
 Create a `404.html` file in your pages directory (e.g. `src/pages/404.html`) and the dev server will automatically serve it as a fallback for any non-existent route with a `404` status code.
 
@@ -2275,7 +2275,6 @@ Run `bascik init` in your project directory to scaffold the starter files and fo
     "build": "bascik --build"
   }
 }
-
 
 <!-- demo:component-html -->
 ```html
