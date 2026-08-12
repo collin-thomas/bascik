@@ -27,12 +27,11 @@
   display: inline-flex;
   align-items: center;
   line-height: 1;
-  transition: filter .15s;
+  transition: opacity .15s;
 }
 
 .dnav-logo:hover {
-  filter: brightness(1.12);
-  opacity: 1;
+  opacity: 0.8;
 }
 
 /* Desktop: links wrapper always visible */
