@@ -73,6 +73,13 @@ export interface ServerRequest {
 const SERVER_SCRIPT_RE =
   /<script\b(?:[^>"']|"[^"]*"|'[^']*')*\sdata-bascik-server\b(?:[^>"']|"[^"]*"|'[^']*')*>([\s\S]*?)<\/script>/gi;
 
+// Strip ANSI terminal color sequences so server-side HTML injection never leaks
+// terminal formatting from CI or Netlify build environments into the page output.
+const stripAnsiEscapeCodes = (value: string): string =>
+  value.replace(/\u001B\[[0-9;?]*[ -/]*[@-~]/g, "")
+    .replace(/\u001B\][^\u0007\u001B]*(?:\u0007|\u001B\\)/g, "")
+    .replace(/\u001B[@-Z\\-_]/g, "");
+
 /** Return `true` if `html` contains at least one `data-bascik-server` block. */
 export const htmlHasServerScripts = (html: string): boolean => {
   SERVER_SCRIPT_RE.lastIndex = 0;
@@ -108,6 +115,8 @@ const runModule = (
         env: {
           ...process.env,
           BASCIK_REQUEST: JSON.stringify(request),
+          FORCE_COLOR: "0",
+          NO_COLOR: "1",
         },
       },
       (err, stdout, stderr) => {
@@ -155,7 +164,7 @@ export const executeServerScripts = async (
           await writeFile(tmpPath, scriptContent.trim(), "utf8");
           const { stdout, stderr } = await runModule(tmpPath, request, timeoutMs);
           if (stderr) process.stderr.write(stderr);
-          return { fullTag, output: stdout };
+          return { fullTag, output: stripAnsiEscapeCodes(stdout) };
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           console.warn(

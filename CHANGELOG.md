@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **ANSI escape codes leaking from build/server scripts** — HTML-generating child processes now disable color output and strip terminal escape sequences before injection, preventing Netlify/CI environments from corrupting rendered footer text with `\u001b[33m` / `\u001b[39m` sequences.
 - **Windows self-signed cert generation** — the PowerShell `Export-PfxCertificate` command was missing its password parameter (corrupted by a prior redaction), so dev-server certificate generation failed on Windows.
 - **Uppercase static-asset extensions** — request extensions are now lowercased before routing and MIME lookup, so `/STYLE.CSS` serves with `text/css` and `.HTML` paths route the same as `.html` instead of being treated as unknown static files.
 - **Slot markers with preceding attributes** — `data-bascik-slot` (default and named) is now matched even when other attributes come before it (e.g. `<div class="card-body" data-bascik-slot>`), using a quote-aware scan so marker text inside attribute values never false-positives.
