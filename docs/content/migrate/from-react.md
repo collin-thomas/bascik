@@ -25,7 +25,7 @@ src/components/              src/components/
 A Bascik component is a plain HTML file. There are no imports, no function declarations, and no JSX. The file name (minus the extension) is the tag name.
 
 ```jsx
-// SiteNav.jsx (React — before)
+// SiteNav.jsx (React - before)
 import styles from './SiteNav.module.css';
 
 export function SiteNav() {
@@ -38,7 +38,7 @@ export function SiteNav() {
 ```
 
 ```html
-<!-- src/components/site-nav/site-nav.html (Bascik — after) -->
+<!-- src/components/site-nav/site-nav.html (Bascik - after) -->
 <nav class="nav">
   <a href="/" class="logo">Acme</a>
 </nav>
@@ -51,7 +51,7 @@ No import statement is needed to use this component. Bascik resolves `<site-nav>
 React's `children` prop maps to Bascik's default slot. Add `data-bascik-slot` (no value) to any element inside the component where child content should appear. Fallback content goes inside that element and renders when the component is invoked with no children.
 
 ```jsx
-// Card.jsx (React — before)
+// Card.jsx (React - before)
 export function Card({ children }) {
   return <div className="card">{children}</div>;
 }
@@ -61,7 +61,7 @@ export function Card({ children }) {
 ```
 
 ```html
-<!-- src/components/card/card.html (Bascik — after) -->
+<!-- src/components/card/card.html (Bascik - after) -->
 <div class="card">
   <div data-bascik-slot>No content provided.</div>
 </div>
@@ -75,7 +75,7 @@ export function Card({ children }) {
 React's named render props and compound component slot patterns map to Bascik's `data-bascik-slot="name"` attribute. Place a receiver element with `data-bascik-slot="name"` inside the component, then pass the content from the usage site using the same attribute.
 
 ```jsx
-// PageLayout.jsx (React — before)
+// PageLayout.jsx (React - before)
 export function PageLayout({ header, children }) {
   return (
     <div className="layout">
@@ -92,7 +92,7 @@ export function PageLayout({ header, children }) {
 ```
 
 ```html
-<!-- src/components/page-layout/page-layout.html (Bascik — after) -->
+<!-- src/components/page-layout/page-layout.html (Bascik - after) -->
 <div class="layout">
   <header><div data-bascik-slot="header"></div></header>
   <main><div data-bascik-slot></div></main>
@@ -110,7 +110,7 @@ export function PageLayout({ header, children }) {
 React string props become `data-bascik-prop-*` attributes. Add the attribute (with no value) to the element inside the component that should receive the text, then supply the value at the usage site.
 
 ```jsx
-// AlertBox.jsx (React — before)
+// AlertBox.jsx (React - before)
 export function AlertBox({ title, message }) {
   return (
     <div className="alert">
@@ -124,7 +124,7 @@ export function AlertBox({ title, message }) {
 ```
 
 ```html
-<!-- src/components/alert-box/alert-box.html (Bascik — after) -->
+<!-- src/components/alert-box/alert-box.html (Bascik - after) -->
 <div class="alert">
   <strong data-bascik-prop-title></strong>
   <p data-bascik-prop-message></p>
@@ -144,7 +144,7 @@ export function AlertBox({ title, message }) {
 `useState`, `useEffect`, and event handlers become plain JavaScript in a `<script>` tag inside the component. Bascik automatically scopes `id` values and class names referenced in the script, so multiple instances of the component on the same page work independently.
 
 ```jsx
-// Counter.jsx (React — before)
+// Counter.jsx (React - before)
 import { useState } from 'react';
 
 export function Counter() {
@@ -159,7 +159,7 @@ export function Counter() {
 ```
 
 ```html
-<!-- src/components/my-counter/my-counter.html (Bascik — after) -->
+<!-- src/components/my-counter/my-counter.html (Bascik - after) -->
 <div>
   <span id="count">0</span>
   <button id="btn">+</button>
@@ -254,7 +254,7 @@ Data fetched at component mount time in React becomes a `<script data-bascik-bui
 A realistic nav with a logo slot, link items, and a mobile menu toggle button.
 
 ```jsx
-// SiteNav.jsx (React — before)
+// SiteNav.jsx (React - before)
 import { useState } from 'react';
 import styles from './SiteNav.module.css';
 
@@ -279,7 +279,7 @@ export function SiteNav({ logo, children }) {
 ```
 
 ```html
-<!-- src/components/site-nav/site-nav.html (Bascik — after) -->
+<!-- src/components/site-nav/site-nav.html (Bascik - after) -->
 <nav class="nav">
   <div class="logo"><div data-bascik-slot="logo"></div></div>
   <button class="toggle" id="toggle" aria-expanded="false">Menu</button>

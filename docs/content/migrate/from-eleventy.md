@@ -25,7 +25,7 @@ src/                        src/components/
 An Eleventy `{% include 'nav.njk' %}` becomes a self-contained Bascik component tag. The file name (hyphenated, without extension) is the tag name.
 
 ```njk
-{# src/_includes/nav.njk (Eleventy — before) #}
+{# src/_includes/nav.njk (Eleventy - before) #}
 <nav class="nav">
   <a href="/">Home</a>
   <a href="/about">About</a>
@@ -37,7 +37,7 @@ An Eleventy `{% include 'nav.njk' %}` becomes a self-contained Bascik component 
 ```
 
 ```html
-<!-- src/components/site-nav/site-nav.html (Bascik — after) -->
+<!-- src/components/site-nav/site-nav.html (Bascik - after) -->
 <nav class="nav">
   <a href="/">Home</a>
   <a href="/about">About</a>
@@ -53,11 +53,11 @@ An Eleventy `{% include 'nav.njk' %}` becomes a self-contained Bascik component 
 Eleventy's `{% extends 'base.njk' %}` and `{% block content %}` pattern maps to a Bascik layout component that uses `data-bascik-slot` for the page content area and named slots for additional regions like the page title.
 
 ```njk
-{# src/_includes/base.njk (Eleventy — before) #}
+{# src/_includes/base.njk (Eleventy - before) #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>{{ title }} — Acme</title>
+  <title>{{ title }} - Acme</title>
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
@@ -69,7 +69,7 @@ Eleventy's `{% extends 'base.njk' %}` and `{% block content %}` pattern maps to 
 ```
 
 ```njk
-{# src/about.njk (Eleventy — before) #}
+{# src/about.njk (Eleventy - before) #}
 ---
 title: About
 ---
@@ -83,7 +83,7 @@ title: About
 In Bascik, the layout component wraps only the repeated inner structure. The `<html>`, `<head>`, and `<body>` live in the page file.
 
 ```html
-<!-- src/components/site-layout/site-layout.html (Bascik — after) -->
+<!-- src/components/site-layout/site-layout.html (Bascik - after) -->
 <site-nav></site-nav>
 <main class="content">
   <div data-bascik-slot></div>
@@ -92,11 +92,11 @@ In Bascik, the layout component wraps only the repeated inner structure. The `<h
 ```
 
 ```html
-<!-- src/pages/about.html (Bascik — after) -->
+<!-- src/pages/about.html (Bascik - after) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>About — Acme</title>
+  <title>About - Acme</title>
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
@@ -113,7 +113,7 @@ In Bascik, the layout component wraps only the repeated inner structure. The `<h
 Eleventy front matter (YAML between `---` delimiters) injects variables into the template. Bascik has no front matter. Values that differ per page are either written directly into the HTML or supplied via `data-bascik-prop-*` props. Use a `<script data-bascik-build>` block when you want to read values from an external data file at build time.
 
 ```njk
-{# src/about.njk (Eleventy — before) #}
+{# src/about.njk (Eleventy - before) #}
 ---
 title: About
 description: Learn about Acme Corp.
@@ -123,11 +123,11 @@ description: Learn about Acme Corp.
 ```
 
 ```html
-<!-- src/pages/about.html (Bascik — after) -->
+<!-- src/pages/about.html (Bascik - after) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>About — Acme</title>
+  <title>About - Acme</title>
   <meta name="description" content="Learn about Acme Corp." />
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
@@ -146,7 +146,7 @@ For many pages sharing a data-driven title pattern, extract the title into a `da
 Eleventy's Collections API reads a directory of Markdown files and makes them available as a sorted array in templates. In Bascik, use a `<script data-bascik-build>` block that reads the same directory and outputs a list of HTML links directly into the page.
 
 ```njk
-{# src/blog/index.njk (Eleventy — before) #}
+{# src/blog/index.njk (Eleventy - before) #}
 <ul>
   {%- for post in collections.post | reverse -%}
   <li>
@@ -158,7 +158,7 @@ Eleventy's Collections API reads a directory of Markdown files and makes them av
 ```
 
 ```html
-<!-- src/pages/blog/index.html (Bascik — after) -->
+<!-- src/pages/blog/index.html (Bascik - after) -->
 <ul>
   <script data-bascik-build>
     import { readdir, readFile } from 'node:fs/promises';
@@ -206,7 +206,7 @@ Many Eleventy plugins exist to scope CSS, handle image optimization, or add synt
 ## Before and After: Blog Index Page
 
 ```njk
-{# src/index.njk (Eleventy — before) #}
+{# src/index.njk (Eleventy - before) #}
 ---
 layout: base.njk
 title: Home
@@ -227,11 +227,11 @@ title: Home
 ```
 
 ```html
-<!-- src/pages/index.html (Bascik — after) -->
+<!-- src/pages/index.html (Bascik - after) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Home — Acme Blog</title>
+  <title>Home - Acme Blog</title>
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>

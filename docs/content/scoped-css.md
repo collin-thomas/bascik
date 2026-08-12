@@ -27,7 +27,7 @@ src/components/
 Every class name in the `.css` file is prefixed with a unique instance ID. The corresponding HTML attributes are updated to match.
 
 ```css
-/* site-nav.css — source */
+/* site-nav.css - source */
 .navigation ul { list-style-type: none; }
 .navigation ul li a { padding: 8px; }
 ```
@@ -44,7 +44,7 @@ Every class name in the `.css` file is prefixed with a unique instance ID. The c
 Bare element selectors like `p {}` or `h2 {}` are converted to generated class selectors and injected onto matching elements inside the component.
 
 ```css
-/* my-comp.css — source */
+/* my-comp.css - source */
 p { color: #d3ff8d; }
 h2 { font-size: 2rem; }
 ```
@@ -103,7 +103,7 @@ Keyframe names are also prefixed so animations from different components never c
 CSS `#id` selectors are converted to scoped class selectors, and the generated class is injected onto the matching element in the HTML. This means `#btn {}` in a component is fully isolated, the same ID name in another component or on the page produces a completely different selector.
 
 ```css
-/* my-comp.css — source */
+/* my-comp.css - source */
 #submit-btn { background: #d3ff8d; }
 ```
 
@@ -194,7 +194,7 @@ Avoid this anti-pattern:
 </div>
 
 <script>
-  // ✗ finds the FIRST .wrapper on the page — wrong for instance 2+
+  // ✗ finds the FIRST .wrapper on the page - wrong for instance 2+
   const root = document.querySelector('.wrapper');
 </script>
 ```

@@ -160,7 +160,7 @@ Bascik also helps with one of the easy-to-miss SEO assets: once `siteUrl` is set
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Unique, descriptive title for every page -->
-  <title>Getting Started — Bascik Docs</title>
+  <title>Getting Started - Bascik Docs</title>
 
   <!-- Description shown in search results (150–160 chars) -->
   <meta name="description" content="Install Bascik and build your first reusable HTML component in under five minutes." />
@@ -169,7 +169,7 @@ Bascik also helps with one of the easy-to-miss SEO assets: once `siteUrl` is set
   <link rel="canonical" href="https://yourdomain.com/getting-started" />
 
   <!-- Open Graph: controls how the page looks when shared -->
-  <meta property="og:title" content="Getting Started — Bascik Docs" />
+  <meta property="og:title" content="Getting Started - Bascik Docs" />
   <meta property="og:description" content="Install Bascik and build your first reusable HTML component." />
   <meta property="og:image" content="https://yourdomain.com/og/getting-started.jpg" />
   <meta property="og:url" content="https://yourdomain.com/getting-started" />
@@ -177,7 +177,7 @@ Bascik also helps with one of the easy-to-miss SEO assets: once `siteUrl` is set
 
   <!-- Twitter / X card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Getting Started — Bascik Docs" />
+  <meta name="twitter:title" content="Getting Started - Bascik Docs" />
   <meta name="twitter:description" content="Install Bascik and build your first reusable HTML component." />
   <meta name="twitter:image" content="https://yourdomain.com/og/getting-started.jpg" />
 </head>
@@ -421,7 +421,7 @@ McMaster-Carr's pages paint instantly because the CSS needed for the above-the-f
     nav a { color: inherit; text-decoration: none; }
   </style>
 
-  <!-- Full stylesheet loaded asynchronously — does not block first paint -->
+  <!-- Full stylesheet loaded asynchronously - does not block first paint -->
   <link rel="preload" as="style" href="/css/styles.css"
         onload="this.onload=null;this.rel='stylesheet'" />
   <noscript><link rel="stylesheet" href="/css/styles.css" /></noscript>
@@ -538,7 +538,7 @@ The same pattern works for mobile navigation drawers. Wrap the nav links in `<de
   .nav-details > .nav-links { display: flex; } /* override UA hidden state */
 }
 
-/* Mobile: show links when open — pure CSS, no event listeners */
+/* Mobile: show links when open - pure CSS, no event listeners */
 @media (max-width: 768px) {
   .nav-links { display: none; }
   .nav-details[open] > .nav-links { display: flex; flex-direction: column; }
@@ -549,7 +549,7 @@ The same pattern works for mobile navigation drawers. Wrap the nav links in `<de
   .nav-details[open] .hamburger-icon::after  { top: 0; transform: rotate(-45deg); }
 }
 
-/* Lock body scroll when the overlay is open — still no JS */
+/* Lock body scroll when the overlay is open - still no JS */
 body:has(.nav-details[open]) {
   overflow: hidden;
 }
@@ -612,12 +612,12 @@ Here is a complete `<head>` combining every technique on this page. Copy it as a
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Page Title — Site Name</title>
+  <title>Page Title - Site Name</title>
   <meta name="description" content="One or two sentences describing this specific page." />
   <link rel="canonical" href="https://yourdomain.com/page-path" />
 
   <!-- Open Graph -->
-  <meta property="og:title" content="Page Title — Site Name" />
+  <meta property="og:title" content="Page Title - Site Name" />
   <meta property="og:description" content="One or two sentences describing this specific page." />
   <meta property="og:image" content="https://yourdomain.com/og/page-path.jpg" />
   <meta property="og:url" content="https://yourdomain.com/page-path" />

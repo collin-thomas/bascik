@@ -320,7 +320,7 @@ Non-`data-bascik-*` attributes on a usage tag are merged onto the component's ro
 </nav>
 ```
 
-Inherited class names are not scoped, they are treated as global page-level classes.
+Inherited class names are not scoped, they are treated as global page-level classes. To disable inheritance: `inheritAttributes: false` in `bascik.config.js`.
 
 ### Self-Closing Tags
 ```html
@@ -517,7 +517,7 @@ src/
 ```
 
 ### Custom 404 & 500 Pages
-* **404 Page (`src/pages/404.html`):** If you create a `404.html` file in your pages directory, Bascik's built-in development server will automatically serve it as a fallback for any non-existent routes with a `404` status code. When you build for production (`bascik --build`), this is compiled to `dist/404.html` which is recognized by standard static hosts (GitHub Pages, Vercel, Netlify).
+* **404 Page (`src/pages/404.html`):** If you create a `404.html` file in your pages directory, the dev server and `bascik --serve` automatically serve it as a fallback for any non-existent routes with a `404` status code. When you build for production (`bascik --build`), this is compiled to `dist/404.html` which is recognized by standard static hosts (GitHub Pages, Vercel, Netlify).
 * **500 Page Support:** If the server encounters runtime compilation errors, it responds with a proper `500` error block to prevent server crashes.
 
 ---
@@ -542,7 +542,7 @@ Install dependencies now? (Y/n)
 Start the dev server after install? (Y/n)
 ```
 
-Select Y for both and you're live at **https://localhost:8443:** no further commands needed. If you select N, the remaining steps are printed at the end.
+Select Y for both and you're live at **https://localhost:8443** with no further commands needed. If you select N, the remaining steps are printed at the end.
 
 ### Adding to an Existing Project
 
