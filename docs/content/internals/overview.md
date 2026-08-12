@@ -51,9 +51,9 @@ After any `pkg/src/` change, rebuild the package and the docs server will pick i
 
 ## Internals Sub-pages
 
-- [Architecture](/develop/architecture), module map, responsibilities, and how the files relate to one another.
-- [Create App](/develop/create-app), how the standalone scaffolding CLI is structured and why the generated app uses npm.
-- [Transpilation Pipeline](/develop/transpilation-pipeline), the two-phase page and component pipeline that turns source HTML into deployable output.
-- [Scoping System](/develop/scoping-system), how IDs, class names, CSS, and JavaScript references are namespaced per component instance.
-- [Dev Server](/develop/dev-server), the HTTP/2 server, TLS certificate generation, memory store, live reload, and watch system.
-- [Testing](/develop/testing), running tests, coverage, writing new tests, and the benchmarking suite.
+- [Architecture](/internals/architecture), module map, responsibilities, and how the files relate to one another.
+- [Create App](/internals/create-app), how the standalone scaffolding CLI is structured and why the generated app uses npm.
+- [Transpilation Pipeline](/internals/transpilation-pipeline), the two-phase page and component pipeline that turns source HTML into deployable output.
+- [Scoping System](/internals/scoping-system), how IDs, class names, CSS, and JavaScript references are namespaced per component instance.
+- [Dev Server](/internals/dev-server), the HTTP/2 server, TLS certificate generation, memory store, live reload, and watch system.
+- [Testing](/internals/testing), running tests, coverage, writing new tests, and the benchmarking suite.

@@ -1236,54 +1236,216 @@ export const buildOverrideConfig = {
 7. Props accept text only. For rich HTML content, use slots.
 8. `<script type="module">` scripts are not wrapped in an IIFE but their selectors are still rewritten.
 
-# AI Skill
+# FAQ
 
-Download the Bascik skill file and attach it to GitHub Copilot, Cursor, Claude, or any AI assistant that supports instruction files, so it understands Bascik's component model, scoping rules, and conventions out of the box.
+Answers to common questions about Bascik.
 
-The Bascik skill file (`SKILL.md`) teaches any AI assistant, GitHub Copilot, Cursor, Claude, or others that support instruction files, the full details of how Bascik works: its component model, scoping system, config options, CLI, and conventions.
+## How do you pronounce Bascik? Where does the name come from?
 
-Add it once, and your AI assistant can accurately answer questions about Bascik, generate correct components, and help debug scoping issues without needing to look anything up.
+Just like "basic." The idea is basic, the implementation is basic in theory, and the usage is basic. It felt like the right word.
 
-## Download
+The spelling comes from my maternal grandmother's maiden name. So the name is unique and means something personal.
 
-The skill file is served from this site:
+## Isn't BASIC already a programming language?
+
+Yes. In fact some of my earliest exposure to programming was to TI-Basic on my friends  calculator. BASIC is an old programming language and enough time has passed. It can take on new meaning.
+
+## What is Bascik?
+
+Bascik is a build tool for HTML components. You write reusable components in plain HTML, CSS, and JavaScript. At build time, Bascik resolves your custom tags to their component source, scopes CSS and JavaScript so they never collide across instances, and outputs a directory of plain HTML files. Zero JavaScript is added to your pages, every script in the output was written by you.
+
+By default the output is fully static and can be hosted anywhere. If you need per-request dynamic content, the [production server](/server) lets you run server-side scripts that inject into specific sections of a page at request time, while everything else stays static.
+
+For a deeper look: [Getting Started](/getting-started), [Scoped CSS](/scoped-styles), [Scoped JavaScript](/scoped-javascript), [Migration Overview](/migrate).
+
+## Who made Bascik?
+
+Bascik was created by [Collin Thomas](https://github.com/collin-thomas).
+
+## Why did you build Bascik?
+
+I wanted the fastest websites and dashboards but I needed components. I just wanted to use the foundational languages and not have some abstraction layer, and I didn't want to have to learn a tool, and I didn't want JavaScript at runtime as a bottleneck.
+
+Components have always been a JavaScript thing. Web Components tried to make it native but it's still JavaScript, and there's always Shadow DOM or virtual DOM involved. We don't need any of that. You can write HTML, CSS, and JavaScript and use it in multiple places on a site, you just need to copy it and scope it. That's really all it is, just a bunch of regex to make it happen.
+
+It seems like a big undertaking but the web standards are so well defined that you have an obtainable target. It'll just take some effort. So that's what I did.
+
+Then I saw the rise of AI-assisted coding and thought, this tool I've been building is going to be perfect for that. Our tooling primarily exists for humans to use, to make tasks easier. But when the tools start to get in the way, giving an LLM a tool that doesn't impose its own rules and just lets you write the fundamental web languages is going to be great for both developers and AI-assisted coding.
+
+## What happens if I name a component after a native HTML element?
+
+If you create a file like `nav.html` or `div.html`, Bascik will print a warning in the terminal when starting the dev server or running a build, and still load it:
 
 ```text
-https://bascik.dev/assets/SKILL.md
+warning: Component "nav" has the same name as a native HTML element.
+This may cause unexpected behaviour, consider a hyphenated name like "my-nav".
 ```
 
-## Adding it to GitHub Copilot (VS Code)
+The component will conflict with every occurrence of that element in your pages. All your `<nav>` tags would be replaced by the component content, most likely breaking your site entirely.
 
-Save the file somewhere in your project (e.g. `.github/bascik-skill.md`) then reference it in your `.github/copilot-instructions.md`:
+Always use a hyphenated name for components, for example `site-nav.html` instead of `nav.html`. This follows the HTML custom element convention: a hyphen in the tag name is how browsers (and Bascik) distinguish a component from a built-in element.
 
-```markdown
-<!-- .github/copilot-instructions.md -->
-See @.github/bascik-skill.md for the complete Bascik reference.
+## What happens if I use uppercase letters in a component filename?
+
+Component names are normalized to lowercase when loaded. `My-Card.html` registers as `my-card` and is used as `<my-card>` in pages.
+
+If you have two files that differ only in case (for example `my-card.html` and `My-Card.html`), they both map to the same `my-card` component key and the last one loaded wins. Avoid this situation by using consistent lowercase filenames.
+
+> **Convention.** Use lowercase, hyphenated filenames for all components: `site-nav.html`, `feature-card.html`, `alert-box.html`. This matches the HTML custom element convention and avoids any case-collision surprises.
+
+## Can I use Bascik with JavaScript libraries like Alpine.js or HTMX?
+
+Yes. Bascik's output is plain HTML. Any library that works with HTML works with Bascik. Drop a `<script>` tag in and it loads like it always has. See the [JavaScript Libraries](/libraries) page for examples.
+
+## Does Bascik add any JavaScript to my pages?
+
+No. Bascik is a build-time tool. The output is plain HTML, CSS, and exactly the JavaScript you wrote. No runtime script is injected into your pages.
+
+## Do I need to restart the dev server when I add a new component?
+
+No. The dev server watches the components directory. Drop a new `.html` (or paired `.css`) file in and all pages that use that tag are automatically re-transpiled and reloaded. No restart required.
+
+## Can Bascik components be nested?
+
+Yes. Components can use other components inside their markup. Bascik resolves nested components recursively at build time.
+
+## What does Bascik output?
+
+A directory of plain `.html` files (and your assets). No client-side JavaScript framework, no special server required. Any static host (Netlify, Vercel, GitHub Pages, Cloudflare Pages, S3, or a plain Nginx server) can serve it.
+
+## Folder Structure
+
+```
+src/
+  pages/       ← one .html file per route (plus CSS, images, etc.)
+  components/  ← component .html (+ optional .css) files
 ```
 
-Or attach it directly in a Copilot Chat conversation using the **Attach Context** button and selecting the file.
+### Custom 404 Page
 
-## Adding it to Cursor
+If you create a `404.html` file in your pages directory (e.g. `src/pages/404.html`), Bascik's built-in development server will automatically serve it as a fallback for any non-existent routes with a `404` status code.
 
-Place the file at `.cursor/rules/bascik.md` in your project root. Cursor picks it up automatically as a project rule.
+When you build your site for production (`bascik --build`), this file is compiled to `dist/404.html`, which is the standard location recognized by most static hosting providers (such as GitHub Pages, Netlify, Vercel, and Cloudflare Pages) to serve custom 404 pages.
 
-## Adding it to Claude (claude.md)
+## What to Read Next
 
-Paste the contents into your `claude.md` file, or reference the file path in your project instructions.
+Once your first page is running, the next docs pages map cleanly to the next questions people usually have:
 
-## What's inside
+- **[CLI / Command Line](/cli):** command output, watch behavior, `--check`, and production preview commands
+- **[Configuration](/configuration):** every `bascik.config.js` option in one place
+- **[Scoped Styles](/scoped-styles):** how paired `.css` files and inline `<style>` tags are isolated per component
 
-The skill covers:
+### A Small First Habit
 
-- Component authoring, slots, and props
-- Scoped CSS and scoped JavaScript rules and constraints
-- Build scripts (`data-bascik-build`)
-- Configuration options (`bascik.config.js`)
-- CLI commands and workflow
-- The scoping compatibility table
-- Folder structure and naming conventions
+Open the compiled file in `dist/` after your first build. It is the fastest way to verify what Bascik actually emitted:
 
-> **Keeping it current.** `SKILL.md` is regenerated from the same Markdown source files that power this docs site. When the docs update, so does the skill file.
+- component tags should be replaced with plain HTML
+- scoped class names should be present where component CSS applies
+- build-script output should already be inlined into the page
+
+When you need the detailed terminal output for dev mode, build mode, static checks, or file watching, use the [CLI page](/cli). Keeping that output reference in one place makes the Getting Started guide easier to skim.
+
+# Getting Started
+
+Bascik requires Node.js v24+. Get up and running in under five minutes.
+
+## Quick Start
+
+The fastest way to start a new Bascik project — no prompts, just a running site:
+
+```sh
+npm create bascik@latest my-site -y
+```
+
+That scaffolds the project, installs dependencies, and starts the dev server in one shot. You're live at **https://localhost:8443**.
+
+Pass a different name to use it as both the directory name and the site title. If you omit the name, the tool prompts for one (defaulting to `bascik-app`). Drop `-y` to step through the install and dev server prompts manually.
+
+`npm create bascik@latest` scaffolds a complete starter site: pages, components, global CSS, `bascik.config.js`, and a `.gitignore`. If you prefer to set everything up manually, see [Manual Setup](#manual-setup) below.
+
+## Starting the Dev Server
+
+Run `npm run dev` (or `yarn dev`) to start the development server. Bascik serves your site over HTTP/2 at **https://localhost:8443** by default (the port auto-increments if 8443 is busy). It transpiles your pages, watches for changes, and live-reloads the browser on every save.
+
+SSL certificates are generated automatically on first run. Install [mkcert](https://github.com/FiloSottile/mkcert) for a trusted cert with no browser warning:
+
+```sh
+# macOS
+brew install mkcert
+mkcert -install   # only needed once per machine
+```
+
+After running `mkcert -install`, restart the dev server. See the [CLI page](/cli) for more details on SSL certificate setup and browser-specific gotchas.
+
+## Folder Structure
+
+Bascik looks for two directories by default. Both can be overridden in [bascik.config.js](/configuration).
+
+```text
+src/
+  components/  ← component .html and .css files
+  pages/       ← one .html file per route
+```
+
+## Manual Setup
+
+**For an existing project**, install Bascik with your preferred package manager:
+
+```sh
+npm install @bascik/bascik
+# or
+yarn add @bascik/bascik
+# or
+pnpm add @bascik/bascik
+```
+
+Run `bascik init` in your project directory to scaffold the starter files and folder structure automatically. If you prefer to wire things up yourself, add the following to your `package.json`:
+
+```json
+{
+  "type": "module",
+  "scripts": {
+    "dev": "bascik",
+    "build": "bascik --build"
+  }
+}
+
+<!-- demo:component-html -->
+```html
+<nav class="nav">
+  <a href="/">Home</a>
+  <a href="/about">About</a>
+</nav>
+```
+
+<!-- demo:page-html -->
+```html
+<!DOCTYPE html>
+<html>
+<head><title>Home</title></head>
+<body>
+  <site-nav></site-nav>
+  <h1>Hello world</h1>
+</body>
+</html>
+```
+
+## Head Components
+
+Components work inside `<head>`:
+
+```html
+<!-- src/components/site-meta.html -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="My site" />
+```
+
+```html
+<head>
+  <title>Home</title>
+  <site-meta></site-meta>
+</head>
+```
 
 # Architecture
 
@@ -1691,12 +1853,12 @@ After any `pkg/src/` change, rebuild the package and the docs server will pick i
 
 ## Internals Sub-pages
 
-- [Architecture](/develop/architecture), module map, responsibilities, and how the files relate to one another.
-- [Create App](/develop/create-app), how the standalone scaffolding CLI is structured and why the generated app uses npm.
-- [Transpilation Pipeline](/develop/transpilation-pipeline), the two-phase page and component pipeline that turns source HTML into deployable output.
-- [Scoping System](/develop/scoping-system), how IDs, class names, CSS, and JavaScript references are namespaced per component instance.
-- [Dev Server](/develop/dev-server), the HTTP/2 server, TLS certificate generation, memory store, live reload, and watch system.
-- [Testing](/develop/testing), running tests, coverage, writing new tests, and the benchmarking suite.
+- [Architecture](/internals/architecture), module map, responsibilities, and how the files relate to one another.
+- [Create App](/internals/create-app), how the standalone scaffolding CLI is structured and why the generated app uses npm.
+- [Transpilation Pipeline](/internals/transpilation-pipeline), the two-phase page and component pipeline that turns source HTML into deployable output.
+- [Scoping System](/internals/scoping-system), how IDs, class names, CSS, and JavaScript references are namespaced per component instance.
+- [Dev Server](/internals/dev-server), the HTTP/2 server, TLS certificate generation, memory store, live reload, and watch system.
+- [Testing](/internals/testing), running tests, coverage, writing new tests, and the benchmarking suite.
 
 # Scoping System
 
@@ -2245,218 +2407,7 @@ bascik__my-nav__a1b2c3d4__search-input
 bascik__my-nav__toggle-btn
 ```
 
-When `obfuscateAttributeNames` is enabled (the default for builds), each full scoped name is hashed to a short hex string using SHAKE-256 before being written to the output, e.g. `ba1c2d3e4f`. See [Scoping System](/develop/scoping-system) for full details.
-
-# FAQ
-
-Answers to common questions about Bascik.
-
-## How do you pronounce Bascik? Where does the name come from?
-
-Just like "basic." The idea is basic, the implementation is basic in theory, and the usage is basic. It felt like the right word.
-
-The spelling comes from my maternal grandmother's maiden name. So the name is unique and means something personal.
-
-## Isn't BASIC already a programming language?
-
-Yes. In fact some of my earliest exposure to programming was to TI-Basic on my friends  calculator. BASIC is an old programming language and enough time has passed. It can take on new meaning.
-
-## What is Bascik?
-
-Bascik is a build tool for HTML components. You write reusable components in plain HTML, CSS, and JavaScript. At build time, Bascik resolves your custom tags to their component source, scopes CSS and JavaScript so they never collide across instances, and outputs a directory of plain HTML files. Zero JavaScript is added to your pages, every script in the output was written by you.
-
-By default the output is fully static and can be hosted anywhere. If you need per-request dynamic content, the [production server](/server) lets you run server-side scripts that inject into specific sections of a page at request time, while everything else stays static.
-
-For a deeper look: [Getting Started](/getting-started), [Scoped CSS](/scoped-styles), [Scoped JavaScript](/scoped-javascript), [Migration Overview](/migrate).
-
-## Who made Bascik?
-
-Bascik was created by [Collin Thomas](https://github.com/collin-thomas).
-
-## Why did you build Bascik?
-
-I wanted the fastest websites and dashboards but I needed components. I just wanted to use the foundational languages and not have some abstraction layer, and I didn't want to have to learn a tool, and I didn't want JavaScript at runtime as a bottleneck.
-
-Components have always been a JavaScript thing. Web Components tried to make it native but it's still JavaScript, and there's always Shadow DOM or virtual DOM involved. We don't need any of that. You can write HTML, CSS, and JavaScript and use it in multiple places on a site, you just need to copy it and scope it. That's really all it is, just a bunch of regex to make it happen.
-
-It seems like a big undertaking but the web standards are so well defined that you have an obtainable target. It'll just take some effort. So that's what I did.
-
-Then I saw the rise of AI-assisted coding and thought, this tool I've been building is going to be perfect for that. Our tooling primarily exists for humans to use, to make tasks easier. But when the tools start to get in the way, giving an LLM a tool that doesn't impose its own rules and just lets you write the fundamental web languages is going to be great for both developers and AI-assisted coding.
-
-## What happens if I name a component after a native HTML element?
-
-If you create a file like `nav.html` or `div.html`, Bascik will print a warning in the terminal when starting the dev server or running a build, and still load it:
-
-```text
-warning: Component "nav" has the same name as a native HTML element.
-This may cause unexpected behaviour, consider a hyphenated name like "my-nav".
-```
-
-The component will conflict with every occurrence of that element in your pages. All your `<nav>` tags would be replaced by the component content, most likely breaking your site entirely.
-
-Always use a hyphenated name for components, for example `site-nav.html` instead of `nav.html`. This follows the HTML custom element convention: a hyphen in the tag name is how browsers (and Bascik) distinguish a component from a built-in element.
-
-## What happens if I use uppercase letters in a component filename?
-
-Component names are normalized to lowercase when loaded. `My-Card.html` registers as `my-card` and is used as `<my-card>` in pages.
-
-If you have two files that differ only in case (for example `my-card.html` and `My-Card.html`), they both map to the same `my-card` component key and the last one loaded wins. Avoid this situation by using consistent lowercase filenames.
-
-> **Convention.** Use lowercase, hyphenated filenames for all components: `site-nav.html`, `feature-card.html`, `alert-box.html`. This matches the HTML custom element convention and avoids any case-collision surprises.
-
-## Can I use Bascik with JavaScript libraries like Alpine.js or HTMX?
-
-Yes. Bascik's output is plain HTML. Any library that works with HTML works with Bascik. Drop a `<script>` tag in and it loads like it always has. See the [JavaScript Libraries](/libraries) page for examples.
-
-## Does Bascik add any JavaScript to my pages?
-
-No. Bascik is a build-time tool. The output is plain HTML, CSS, and exactly the JavaScript you wrote. No runtime script is injected into your pages.
-
-## Do I need to restart the dev server when I add a new component?
-
-No. The dev server watches the components directory. Drop a new `.html` (or paired `.css`) file in and all pages that use that tag are automatically re-transpiled and reloaded. No restart required.
-
-## Can Bascik components be nested?
-
-Yes. Components can use other components inside their markup. Bascik resolves nested components recursively at build time.
-
-## What does Bascik output?
-
-A directory of plain `.html` files (and your assets). No client-side JavaScript framework, no special server required. Any static host (Netlify, Vercel, GitHub Pages, Cloudflare Pages, S3, or a plain Nginx server) can serve it.
-
-## Folder Structure
-
-```
-src/
-  pages/       ← one .html file per route (plus CSS, images, etc.)
-  components/  ← component .html (+ optional .css) files
-```
-
-### Custom 404 Page
-
-If you create a `404.html` file in your pages directory (e.g. `src/pages/404.html`), Bascik's built-in development server will automatically serve it as a fallback for any non-existent routes with a `404` status code.
-
-When you build your site for production (`bascik --build`), this file is compiled to `dist/404.html`, which is the standard location recognized by most static hosting providers (such as GitHub Pages, Netlify, Vercel, and Cloudflare Pages) to serve custom 404 pages.
-
-## What to Read Next
-
-Once your first page is running, the next docs pages map cleanly to the next questions people usually have:
-
-- **[CLI / Command Line](/cli):** command output, watch behavior, `--check`, and production preview commands
-- **[Configuration](/configuration):** every `bascik.config.js` option in one place
-- **[Scoped Styles](/scoped-styles):** how paired `.css` files and inline `<style>` tags are isolated per component
-
-### A Small First Habit
-
-Open the compiled file in `dist/` after your first build. It is the fastest way to verify what Bascik actually emitted:
-
-- component tags should be replaced with plain HTML
-- scoped class names should be present where component CSS applies
-- build-script output should already be inlined into the page
-
-When you need the detailed terminal output for dev mode, build mode, static checks, or file watching, use the [CLI page](/cli). Keeping that output reference in one place makes the Getting Started guide easier to skim.
-
-# Getting Started
-
-Bascik requires Node.js v24+. Get up and running in under five minutes.
-
-## Quick Start
-
-The fastest way to start a new Bascik project — no prompts, just a running site:
-
-```sh
-npm create bascik@latest my-site -y
-```
-
-That scaffolds the project, installs dependencies, and starts the dev server in one shot. You're live at **https://localhost:8443**.
-
-Pass a different name to use it as both the directory name and the site title. If you omit the name, the tool prompts for one (defaulting to `bascik-app`). Drop `-y` to step through the install and dev server prompts manually.
-
-`npm create bascik@latest` scaffolds a complete starter site: pages, components, global CSS, `bascik.config.js`, and a `.gitignore`. If you prefer to set everything up manually, see [Manual Setup](#manual-setup) below.
-
-## Starting the Dev Server
-
-Run `npm run dev` (or `yarn dev`) to start the development server. Bascik serves your site over HTTP/2 at **https://localhost:8443** by default (the port auto-increments if 8443 is busy). It transpiles your pages, watches for changes, and live-reloads the browser on every save.
-
-SSL certificates are generated automatically on first run. Install [mkcert](https://github.com/FiloSottile/mkcert) for a trusted cert with no browser warning:
-
-```sh
-# macOS
-brew install mkcert
-mkcert -install   # only needed once per machine
-```
-
-After running `mkcert -install`, restart the dev server. See the [CLI page](/cli) for more details on SSL certificate setup and browser-specific gotchas.
-
-## Folder Structure
-
-Bascik looks for two directories by default. Both can be overridden in [bascik.config.js](/configuration).
-
-```text
-src/
-  components/  ← component .html and .css files
-  pages/       ← one .html file per route
-```
-
-## Manual Setup
-
-**For an existing project**, install Bascik with your preferred package manager:
-
-```sh
-npm install @bascik/bascik
-# or
-yarn add @bascik/bascik
-# or
-pnpm add @bascik/bascik
-```
-
-Run `bascik init` in your project directory to scaffold the starter files and folder structure automatically. If you prefer to wire things up yourself, add the following to your `package.json`:
-
-```json
-{
-  "type": "module",
-  "scripts": {
-    "dev": "bascik",
-    "build": "bascik --build"
-  }
-}
-
-<!-- demo:component-html -->
-```html
-<nav class="nav">
-  <a href="/">Home</a>
-  <a href="/about">About</a>
-</nav>
-```
-
-<!-- demo:page-html -->
-```html
-<!DOCTYPE html>
-<html>
-<head><title>Home</title></head>
-<body>
-  <site-nav></site-nav>
-  <h1>Hello world</h1>
-</body>
-</html>
-```
-
-## Head Components
-
-Components work inside `<head>`:
-
-```html
-<!-- src/components/site-meta.html -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="description" content="My site" />
-```
-
-```html
-<head>
-  <title>Home</title>
-  <site-meta></site-meta>
-</head>
-```
+When `obfuscateAttributeNames` is enabled (the default for builds), each full scoped name is hashed to a short hex string using SHAKE-256 before being written to the output, e.g. `ba1c2d3e4f`. See [Scoping System](/internals/scoping-system) for full details.
 
 # JavaScript Libraries
 
@@ -2809,6 +2760,55 @@ One thing to be aware of: if a library dynamically sets a class or ID value at r
   font-family: var(--font-mono);
 }
 ```
+
+# AI Skill
+
+Download the Bascik skill file and attach it to GitHub Copilot, Cursor, Claude, or any AI assistant that supports instruction files, so it understands Bascik's component model, scoping rules, and conventions out of the box.
+
+The Bascik skill file (`SKILL.md`) teaches any AI assistant, GitHub Copilot, Cursor, Claude, or others that support instruction files, the full details of how Bascik works: its component model, scoping system, config options, CLI, and conventions.
+
+Add it once, and your AI assistant can accurately answer questions about Bascik, generate correct components, and help debug scoping issues without needing to look anything up.
+
+## Download
+
+The skill file is served from this site:
+
+```text
+https://bascik.dev/assets/SKILL.md
+```
+
+## Adding it to GitHub Copilot (VS Code)
+
+Save the file somewhere in your project (e.g. `.github/bascik-skill.md`) then reference it in your `.github/copilot-instructions.md`:
+
+```markdown
+<!-- .github/copilot-instructions.md -->
+See @.github/bascik-skill.md for the complete Bascik reference.
+```
+
+Or attach it directly in a Copilot Chat conversation using the **Attach Context** button and selecting the file.
+
+## Adding it to Cursor
+
+Place the file at `.cursor/rules/bascik.md` in your project root. Cursor picks it up automatically as a project rule.
+
+## Adding it to Claude (claude.md)
+
+Paste the contents into your `claude.md` file, or reference the file path in your project instructions.
+
+## What's inside
+
+The skill covers:
+
+- Component authoring, slots, and props
+- Scoped CSS and scoped JavaScript rules and constraints
+- Build scripts (`data-bascik-build`)
+- Configuration options (`bascik.config.js`)
+- CLI commands and workflow
+- The scoping compatibility table
+- Folder structure and naming conventions
+
+> **Keeping it current.** `SKILL.md` is regenerated from the same Markdown source files that power this docs site. When the docs update, so does the skill file.
 
 # Migrating from Astro
 

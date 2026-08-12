@@ -31,7 +31,7 @@ export const NAV = [
   { section: 'Reference', pages: [
     { href: '/compatibility', label: 'Scoping Compatibility' },
     { href: '/faq', label: 'FAQ' },
-    { href: '/copilot-skill', label: 'AI Skill' },
+    { href: '/llm-skill', label: 'AI Skill' },
   ]},
   { section: 'Recipes', pages: [
     { href: '/using-markdown', label: 'Using Markdown' },
@@ -45,12 +45,12 @@ export const NAV = [
     { href: '/migrate/from-hugo', label: 'From Hugo' },
   ]},
   { section: 'Internals', pages: [
-    { href: '/develop', label: 'Internals Overview' },
-    { href: '/develop/architecture', label: 'Architecture' },
-    { href: '/develop/transpilation-pipeline', label: 'Transpilation Pipeline' },
-    { href: '/develop/scoping-system', label: 'Scoping System' },
-    { href: '/develop/dev-server', label: 'Dev Server' },
-    { href: '/develop/testing', label: 'Testing' },
-    { href: '/develop/create-app', label: 'Create App' },
+    { href: '/internals', label: 'Internals Overview' },
+    { href: '/internals/architecture', label: 'Architecture' },
+    { href: '/internals/transpilation-pipeline', label: 'Transpilation Pipeline' },
+    { href: '/internals/scoping-system', label: 'Scoping System' },
+    { href: '/internals/dev-server', label: 'Dev Server' },
+    { href: '/internals/testing', label: 'Testing' },
+    { href: '/internals/create-app', label: 'Create App' },
   ]},
 ];

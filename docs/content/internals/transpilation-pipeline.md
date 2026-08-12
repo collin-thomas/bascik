@@ -86,4 +86,4 @@ bascik__my-nav__a1b2c3d4__search-input
 bascik__my-nav__toggle-btn
 ```
 
-When `obfuscateAttributeNames` is enabled (the default for builds), each full scoped name is hashed to a short hex string using SHAKE-256 before being written to the output, e.g. `ba1c2d3e4f`. See [Scoping System](/develop/scoping-system) for full details.
+When `obfuscateAttributeNames` is enabled (the default for builds), each full scoped name is hashed to a short hex string using SHAKE-256 before being written to the output, e.g. `ba1c2d3e4f`. See [Scoping System](/internals/scoping-system) for full details.

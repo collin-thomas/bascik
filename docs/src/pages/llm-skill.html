@@ -19,7 +19,7 @@
       <main class="docs-content">
         <p class="section-label">Reference</p>
 
-        <!-- Content rendered from docs/content/copilot-skill.md at build time.
+        <!-- Content rendered from docs/content/llm-skill.md at build time.
              To update page content, edit the MD file - not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
@@ -27,7 +27,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/copilot-skill.md'));
+          console.log(await renderMd('./content/llm-skill.md'));
         </script>
 
       </main>

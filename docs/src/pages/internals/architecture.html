@@ -4,8 +4,8 @@
 <head>
   <docs-head></docs-head>
   <meta name="description"
-    content="Bascik uses Vitest for unit tests, coverage, and benchmarks. All test files live alongside the source files they exercise." />
-  <title>Testing - Bascik Developer Guide</title>
+    content="Bascik is a Node.js CLI written in TypeScript. This page maps every module in pkg/src/ to its responsibility in the build pipeline." />
+  <title>Architecture - Bascik Developer Guide</title>
 </head>
 
 <body>
@@ -25,13 +25,13 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/develop/testing.md'));
+          console.log(await renderMd('./content/internals/architecture.md'));
         </script>
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
           const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
-          console.log(renderPagination('/develop/testing'));
+          console.log(renderPagination('/internals/architecture'));
         </script>
 
       </main>
