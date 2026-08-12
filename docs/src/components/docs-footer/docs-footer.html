@@ -47,7 +47,14 @@
 
       const id = href.startsWith('#') ? href.slice(1) : '';
       const target = id ? document.getElementById(id) : null;
-      if (target) target.scrollIntoView({ block: 'start' });
+      if (target) {
+        const offset = parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue('--anchor-scroll-offset')
+        ) || 0;
+        const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - offset);
+        const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+        window.scrollTo({ top: top, behavior: behavior });
+      }
 
       if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') return;
 
