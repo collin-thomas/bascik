@@ -10,9 +10,12 @@ import { minifyJs } from "./javascript.js";
 /** Resolve an absolute path to a `parentDir/...` relative path, normalising separators. */
 export const getRelativePath = (path: string, parentDir: string): string => {
   const normalizedPath = path.replace(/\\/g, "/");
-  const parentPath = parentDir === "pages"
+  // Normalise the configured directory too — on Windows `resolve()` produces
+  // backslash separators which would never match the chokidar-style path.
+  const parentPath = (parentDir === "pages"
     ? BascikConfig.directory.pages
-    : BascikConfig.directory.components;
+    : BascikConfig.directory.components
+  ).replace(/\\/g, "/");
 
   const suffix = normalizedPath.includes(`${parentPath}/`)
     ? normalizedPath.split(`${parentPath}/`)[1]
@@ -26,17 +29,19 @@ export const getRelativePath = (path: string, parentDir: string): string => {
 
 const displayRelativePath = (path: string): string => {
   const normalized = path.replace(/\\/g, "/");
+  const pagesDir = BascikConfig.directory.pages.replace(/\\/g, "/");
+  const componentsDir = BascikConfig.directory.components.replace(/\\/g, "/");
 
-  if (normalized.includes(`/${BascikConfig.directory.pages}/`)) {
-    return `pages/${normalized.split(`/${BascikConfig.directory.pages}/`)[1]}`;
+  if (normalized.includes(`/${pagesDir}/`)) {
+    return `pages/${normalized.split(`/${pagesDir}/`)[1]}`;
   }
-  if (normalized.startsWith(`${BascikConfig.directory.pages}/`)) {
+  if (normalized.startsWith(`${pagesDir}/`)) {
     return normalized;
   }
-  if (normalized.includes(`/${BascikConfig.directory.components}/`)) {
-    return `components/${normalized.split(`/${BascikConfig.directory.components}/`)[1]}`;
+  if (normalized.includes(`/${componentsDir}/`)) {
+    return `components/${normalized.split(`/${componentsDir}/`)[1]}`;
   }
-  if (normalized.startsWith(`${BascikConfig.directory.components}/`)) {
+  if (normalized.startsWith(`${componentsDir}/`)) {
     return normalized;
   }
 
@@ -182,9 +187,11 @@ export const getDistPagePath = (pagePath: string): string => {
  */
 const toDistPath = (srcPath: string): string => {
   // Absolute path (from chokidar) → pages/…-relative, then swap the prefix.
-  const rel = srcPath.startsWith(BascikConfig.directory.pages)
+  const normalizedSrc = srcPath.replace(/\\/g, "/");
+  const pagesDir = BascikConfig.directory.pages.replace(/\\/g, "/");
+  const rel = normalizedSrc.startsWith(pagesDir)
     ? getRelativePath(srcPath, "pages")
-    : srcPath.replace(/\\/g, "/");
+    : normalizedSrc;
   // rel is like "pages/css/x.css" — swap the leading "pages/" for "dist/".
   return rel.replace(/^pages[\/]/, "dist/");
 };

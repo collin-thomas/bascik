@@ -78,6 +78,7 @@ import {
   extractNamedSlotContent,
   extractDefaultSlotContent,
   replaceNamedSlots,
+  replaceDefaultSlots,
   extractInheritableAttributes,
   mergeAttributesOntoRoot,
 } from "./components.js";
@@ -385,10 +386,9 @@ export const recursivelyTranspile = (
 
       // Replace <element data-bascik-slot> default slot markers.
       // Named slots were already handled above by replaceNamedSlots.
-      let transpiledTag = component.fileContent.replace(
-        /<(\w+(?:-\w+)*)\s+data-bascik-slot(?!\s*=)((?:\s[^>]*)?)>([\s\S]*?)<\/\1>/gi,
-        (_match, _tag, _extraAttrs, innerFallback) =>
-          defaultSlotContent || innerFallback,
+      let transpiledTag = replaceDefaultSlots(
+        component.fileContent,
+        defaultSlotContent,
       );
 
       currentStage = "attribute inheritance";

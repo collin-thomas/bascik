@@ -224,7 +224,7 @@ export const serveHttp2 = async () => {
         const pathname = qIdx === -1 ? req.path : req.path.slice(0, qIdx);
 
         // ── Static asset (has extension, not .html) ──────────────────────────
-        const ext = extname(pathname);
+        const ext = extname(pathname).toLowerCase();
         if (ext && !ext.match(/^\.htm.*$/)) {
           // Path traversal guard: resolved path must stay inside dist/
           const safePath = pathname.slice(1); // strip leading /

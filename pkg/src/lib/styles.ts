@@ -204,7 +204,10 @@ export const removeIdSelectors = (css: string): string => {
   // Strips the [id] / [id="…"] attribute-selector form which cannot be
   // reliably scoped without DOM wrapping.  The hash form (#foo) is now
   // handled by convertCssIdSelectorsToClasses.
-  return css.replace(/\[id\b[^\]]*\].*?{[\s\S]*?}/gim, "");
+  // Shield string literals first so a `}` inside a quoted value (e.g.
+  // content: "x}y") can't terminate the rule match early.
+  const { css: shielded, restore } = shieldCssStrings(css);
+  return restore(shielded.replace(/\[id\b[^\]]*\].*?{[\s\S]*?}/gim, ""));
 };
 
 // ─── CSS #id Selector → Class Conversion ─────────────────────────────────────
