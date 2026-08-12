@@ -33,6 +33,7 @@ const KNOWN_FLAGS = new Set([
   "-h",
   "--version",
   "-v",
+  "--log",
 ]);
 
 /** Positional subcommands the CLI understands. */
@@ -77,6 +78,7 @@ Options:
   --build         Transpile all pages to dist/ (production build)
   --serve         Serve the dist/ folder over HTTP/2 (production preview)
   --check         Validate the project (pages, components, config)
+  --log [path]    Write build output to a log file (default: .bascik/build.log)
   -h, --help      Show this help text
   -v, --version   Show the installed Bascik version
 `;

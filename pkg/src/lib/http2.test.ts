@@ -41,6 +41,7 @@ vi.mock("./mem.js", () => ({
 }));
 
 vi.mock("./config.js", () => ({
+  shouldLog: vi.fn(() => true),
   BascikConfig: {
     cacheHttp: false,
     isServe: false,

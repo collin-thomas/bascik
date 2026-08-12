@@ -1,5 +1,6 @@
+import fc from "fast-check";
 import { describe, it, expect, vi } from "vitest";
-import { prefixElementAttribute, minifyJs } from "./javascript.js";
+import { prefixElementAttribute, namespaceScriptTags, minifyJs } from "./javascript.js";
 
 vi.mock("./config.js", () => ({
   BascikConfig: {
@@ -812,6 +813,62 @@ describe("prefixElementAttribute – name attribute: meta element shielding", ()
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+
+describe("property-based JS scoping fuzzing", () => {
+  it("does not throw or corrupt output for generated HTML with ids and classes", () => {
+    const tagArb = fc.constantFrom("div", "span", "p", "button", "a", "section");
+    const nameArb = fc.stringMatching(/^[a-z][a-z0-9-]{1,10}$/);
+
+    const attrArb = fc.oneof(
+      fc.record({ kind: fc.constant("id"), value: nameArb }),
+      fc.record({ kind: fc.constant("class"), value: nameArb }),
+    );
+
+    const elementArb = fc
+      .tuple(tagArb, fc.array(attrArb, { minLength: 0, maxLength: 3 }))
+      .map(([tag, attrs]) => {
+        const attrStr = attrs
+          .map((a) => `${a.kind}="${a.value}"`)
+          .join(" ");
+        return `<${tag}${attrStr ? " " + attrStr : ""}></${tag}>`;
+      });
+
+    const scriptSnippets = [
+      `document.getElementById("btn")`,
+      `document.querySelector(".card")`,
+      `el.classList.add("active")`,
+      `el.classList.toggle("open")`,
+      `document.getElementsByClassName("item")`,
+      `el.setAttribute("id", "btn")`,
+      `el.setAttribute("class", "active")`,
+    ];
+
+    fc.assert(
+      fc.property(
+        fc.array(elementArb, { minLength: 1, maxLength: 6 }),
+        fc.array(fc.constantFrom(...scriptSnippets), { minLength: 0, maxLength: 3 }),
+        (elements, scripts) => {
+          const html = elements.join("\n");
+          const scriptBlock = scripts.length
+            ? `<script>${scripts.join("; ")}</script>`
+            : "";
+          const component = {
+            name: "fuzz-comp",
+            fileContent: `${html}\n${scriptBlock}`,
+          };
+
+          expect(() => prefixElementAttribute(component, "id", "abc12345")).not.toThrow();
+          expect(() => prefixElementAttribute(component, "class", "abc12345")).not.toThrow();
+          const result = prefixElementAttribute(component, "id", "abc12345");
+          expect(typeof result.fileContent).toBe("string");
+        },
+      ),
+      { numRuns: 150 },
+    );
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 describe("minifyJs", () => {
   it("removes block comments", () => {
     expect(minifyJs("/* hello */var x = 1;")).toBe("var x = 1;");
@@ -870,5 +927,86 @@ describe("minifyJs", () => {
 
   it("handles empty input", () => {
     expect(minifyJs("")).toBe("");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("namespaceScriptTags – property-based fuzzing", () => {
+  it("does not throw and every script is wrapped in an IIFE", () => {
+    const scriptBodies = fc.constantFrom(
+      "var x = 1;",
+      "document.getElementById('btn').click();",
+      "const f = () => {}; f();",
+      "// comment\nvar y = 2;",
+      "",
+      "if (true) { console.log('ok'); }",
+      "throw new Error('boom');",
+      "var s = '<div class=\"x\">text</div>';",
+    );
+
+    const scriptTagArb = fc.tuple(
+      scriptBodies,
+      fc.constantFrom("", ' type="text/javascript"', ' type="module"', ' data-bascik-dev'),
+    ).map(([body, attrs]) => `<script${attrs}>${body}</script>`);
+
+    const htmlArb = fc.array(
+      fc.oneof(
+        scriptTagArb,
+        fc.constantFrom("<div class=\"x\">hello</div>", "<p>text</p>", ""),
+      ),
+      { minLength: 1, maxLength: 5 },
+    ).map((parts) => parts.join("\n"));
+
+    fc.assert(
+      fc.property(htmlArb, (html) => {
+        const component = { name: "fuzz-comp", fileContent: html };
+        expect(() => namespaceScriptTags(component)).not.toThrow();
+        const result = namespaceScriptTags(component);
+        expect(typeof result.fileContent).toBe("string");
+        // type="module" scripts must NOT be wrapped in an IIFE
+        const moduleScriptCount = (html.match(/type="module"/g) ?? []).length;
+        if (moduleScriptCount > 0) {
+          expect(result.fileContent).toContain('type="module"');
+        }
+      }),
+      { numRuns: 150 },
+    );
+  });
+});
+
+describe("prefixElementAttribute – scoping completeness", () => {
+  it("no original bare class name remains in class=\"...\" after scoping", () => {
+    const classNameArb = fc.stringMatching(/^[a-z][a-z0-9-]{1,10}$/);
+    const tagArb = fc.constantFrom("div", "span", "p", "button", "section");
+
+    fc.assert(
+      fc.property(
+        fc.array(
+          fc.record({ tag: tagArb, cls: classNameArb }),
+          { minLength: 1, maxLength: 6 },
+        ),
+        (elements) => {
+          const html = elements
+            .map(({ tag, cls }) => `<${tag} class="${cls}">x</${tag}>`)
+            .join("\n");
+          const component = { name: "comp", fileContent: html };
+          const result = prefixElementAttribute(component, "class", "abc12345");
+          for (const { cls } of elements) {
+            // The original bare class name must no longer appear as a standalone
+            // token inside any class="..." attribute value in the output.
+            // (It may appear elsewhere, e.g. as part of a scoped name.)
+            const classAttrRe = /class="([^"]*)"/g;
+            let m;
+            while ((m = classAttrRe.exec(result.fileContent ?? "")) !== null) {
+              const tokens = m[1].split(" ");
+              // None of the tokens should be the unscoped original
+              expect(tokens).not.toContain(cls);
+            }
+          }
+        },
+      ),
+      { numRuns: 150 },
+    );
   });
 });

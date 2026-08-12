@@ -83,63 +83,7 @@ Each fixture page renders two or more instances of the component under test so i
 
 ## Test Files
 
-There are 50 Playwright test files, each paired with a fixture page:
-
-```text
-pkg/e2e/tests/
-  css-scoping.test.ts          ← class/element-type CSS scoping, instance isolation
-  css-advanced.test.ts         ← :is(), :where(), :not() with scoped selectors
-  css-combinators.test.ts      ← descendant, child, sibling combinators
-  css-complex-selectors.test.ts
-  css-has.test.ts              ← :has() with scoped inner selectors
-  css-layers.test.ts           ← @layer ordering and scoping
-  css-pseudo.test.ts           ← :hover, :focus, :nth-child, etc.
-  css-supports.test.ts         ← @supports blocks
-  css-transitions.test.ts      ← transition/animation with scoped classes
-  css-grid.test.ts             ← grid/flex layout properties pass through
-  css-dedup.test.ts            ← duplicate CSS rule deduplication
-  css-vars-multi.test.ts       ← CSS custom properties across instances
-  css-anchor.test.ts           ← CSS anchor positioning
-  css-at-property.test.ts      ← @property at-rule scoping
-  css-counter-style.test.ts    ← @counter-style scoping
-  css-nth-child-of.test.ts     ← :nth-child(n of .class) syntax
-  css-starting-style.test.ts   ← @starting-style blocks
-  css-view-transition.test.ts  ← CSS view transition names
-  font-face.test.ts            ← @font-face is not scoped
-  root-vars.test.ts            ← :root variables hoist correctly
-  nested-vars.test.ts          ← nested CSS variable references
-  runtime-vars.test.ts         ← CSS variable changes at runtime
-  inline-style.test.ts         ← inline style attributes pass through
-  nesting.test.ts              ← native CSS nesting (&)
-  new-selectors.test.ts        ← newer pseudo-classes
-
-  slots.test.ts                ← default and named slots, fallback content
-  slot-component.test.ts       ← component used inside a slot
-  props.test.ts                ← data-bascik-prop-* substitution
-  attr-inheritance.test.ts     ← attribute pass-through
-  attr-props.test.ts           ← combined attribute + prop patterns
-
-  script-isolation.test.ts     ← scoped JS: per-instance vs shared selectors
-  js-attr-api.test.ts          ← scoped id/class/name in JS attribute access
-  js-advanced.test.ts          ← complex scoped JS patterns
-  js-limitations.test.ts       ← innerHTML / insertAdjacentHTML behaviour
-  async-js.test.ts             ← scoped queries inside async callbacks
-  dom-querying.test.ts         ← querySelector, getElementById with scoped names
-  dynamic-dom.test.ts          ← dynamically added elements
-  id-mutation.test.ts          ← runtime id changes
-  classlist.test.ts            ← classList.add/remove with scoped names
-  classname-multi.test.ts      ← elements with multiple scoped classes
-  form-scoping.test.ts         ← name attribute scoping on form elements
-  observers.test.ts            ← MutationObserver, IntersectionObserver
-  event-delegation.test.ts     ← event bubbling through scoped trees
-  window-events.test.ts        ← window-level event listeners
-  anim-events.test.ts          ← animationstart/end events
-  cross-component-isolation.test.ts ← styles from one component don't bleed into another
-  deep-nesting.test.ts         ← components nested several levels deep
-  no-css.test.ts               ← components with no CSS file
-  svg.test.ts                  ← SVG elements inside components
-  head-components.test.ts      ← components rendered into <head>
-```
+Each test file is paired with a fixture page. See the full list on [GitHub](https://github.com/collin-thomas/bascik/tree/main/pkg/e2e/tests).
 
 ## Writing a New E2E Test
 
@@ -199,30 +143,7 @@ Coverage is collected via V8 and written to `pkg/coverage/`. The CI script uses 
 
 ## Test Files
 
-Each library module has a paired test file:
-
-```text
-pkg/src/lib/
-  components.ts / components.test.ts       ← tag detection, slot/prop/attr logic
-  components.ts / list-components.test.ts  ← listComponents ordering vs build scripts
-  javascript.ts / javascript.test.ts       ← attribute scoping, script namespacing
-  styles.ts / styles.test.ts              ← CSS transforms, deduplication
-  names.ts / names.test.ts               ← unique ID generation, obfuscation hashing
-  build-scripts.ts / build-scripts.test.ts ← data-bascik-build execution
-  processing.ts / processing.test.ts      ← end-to-end transpilation pipeline
-  config.ts / config.test.ts             ← config loading and merging
-  userConfig.ts / userConfig.test.ts     ← user config file resolution
-  init.ts / init.test.ts                 ← bascik init scaffolding
-  sitemap.ts / sitemap.test.ts           ← sitemap.xml and robots.txt generation
-  file-system.ts / file-system.test.ts   ← filesystem helpers
-  paths.ts / paths.test.ts              ← path ↔ HTTP URL conversion
-  mem.ts / mem.test.ts                  ← memory store
-  mime.ts / mime.test.ts               ← MIME map
-  events.ts / events.test.ts           ← EventEmitter singleton
-  http2.ts / http2.test.ts             ← HTTP/2 server
-  pki.ts / pki.test.ts                ← TLS cert generation
-  watch.ts / watch.test.ts             ← chokidar file watchers
-```
+Each library module has a paired test file. See the full list on [GitHub](https://github.com/collin-thomas/bascik/tree/main/pkg/src/lib).
 
 ## Writing Tests
 
@@ -236,7 +157,6 @@ vi.mock("../config.ts", () => ({
     scopeScriptBlocks: true,
     scopeAttribute: { class: true, id: true, name: true },
     obfuscateAttributeNames: false,
-    verboseLogging: false,
     isBuild: false,
     minifyStyles: false,
   },

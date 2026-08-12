@@ -1,6 +1,6 @@
 # Migrating from Eleventy
 
-Eleventy and Bascik are both build-time static site generators with no client-side framework runtime. The main conceptual shift is that Bascik uses its own component format, plain HTML files resolved by tag name, instead of Nunjucks, Liquid, or Handlebars templates. Front matter and template inheritance map to build scripts and slot-based layout components.
+Eleventy is a static site generator; Bascik is a build tool for HTML components. Both produce plain HTML with no client-side framework runtime. The main conceptual shift is that Bascik uses its own component format, plain HTML files resolved by tag name, instead of Nunjucks, Liquid, or Handlebars templates. Front matter and template inheritance map to build scripts and slot-based layout components.
 
 ## Template Languages → HTML Component Files
 

@@ -1024,3 +1024,133 @@ describe("recursivelyTranspile – complex regression", () => {
     expect(result.content).toBeDefined();
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Property-based fuzzing
+// ─────────────────────────────────────────────────────────────────────────────
+
+import fc from "fast-check";
+
+describe("getTag / getFirstComponent / replaceTag – property-based fuzzing", () => {
+  const compNameArb = fc.constantFrom(
+    "my-card",
+    "site-nav",
+    "feature-row",
+    "alert-box",
+    "user-profile",
+  );
+
+  const innerContentArb = fc.constantFrom(
+    "",
+    "<p>hello</p>",
+    "<span id=\"x\">hi</span>",
+    "<div class=\"wrap\"><p>nested</p></div>",
+    "<!-- comment -->",
+    "<br /><img src=\"x.png\" />",
+    "<p>line 1</p>\n<p>line 2</p>",
+    "<p data-bascik-slot>fallback</p>",
+  );
+
+  const attrArb = fc.constantFrom(
+    "",
+    ' class="highlight"',
+    ' id="main"',
+    ' data-bascik-prop-title="Hello"',
+    ' class="a b" id="root"',
+  );
+
+  it("getTag does not throw on generated HTML and does not return sentinels", () => {
+    fc.assert(
+      fc.property(compNameArb, innerContentArb, attrArb, (name, inner, attrs) => {
+        const html = `<${name}${attrs}>${inner}</${name}>`;
+        expect(() => getTag(html, name)).not.toThrow();
+        const result = getTag(html, name);
+        expect(typeof (result.content ?? "")).toBe("string");
+        expect(result.content ?? "").not.toContain("\x00");
+      }),
+      { numRuns: 150 },
+    );
+  });
+
+  it("replaceTag does not throw and output contains replacement", () => {
+    fc.assert(
+      fc.property(compNameArb, innerContentArb, attrArb, (name, inner, attrs) => {
+        const original = `<${name}${attrs}>${inner}</${name}>`;
+        const replacement = `<div>replaced</div>`;
+        expect(() => replaceTag(original, name, replacement)).not.toThrow();
+        const result = replaceTag(original, name, replacement);
+        expect(result).toContain("replaced");
+        expect(result).not.toContain(`<${name}`);
+      }),
+      { numRuns: 150 },
+    );
+  });
+
+  it("getFirstComponent returns the known component name or an empty object", () => {
+    fc.assert(
+      fc.property(compNameArb, innerContentArb, attrArb, (name, inner, attrs) => {
+        const html = `<section><${name}${attrs}>${inner}</${name}></section>`;
+        const componentList: ComponentList = {
+          [name]: { fileName: `components/${name}.html`, fileContent: `<div>${inner}</div>` },
+        };
+        expect(() => getFirstComponent(html, componentList)).not.toThrow();
+        const result = getFirstComponent(html, componentList);
+        if (result.name) expect(result.name).toBe(name);
+      }),
+      { numRuns: 150 },
+    );
+  });
+
+  it("replaceTag with $-containing replacement does not throw or lose content", () => {
+    // Regression target: String.replace treats $1, $& etc as capture-group refs.
+    fc.assert(
+      fc.property(compNameArb, fc.constantFrom("$1", "$&", "$'", "$$", "$`"), (name, dollarStr) => {
+        const original = `<${name}>inner</${name}>`;
+        const replacement = `<p>${dollarStr}</p>`;
+        expect(() => replaceTag(original, name, replacement)).not.toThrow();
+        const result = replaceTag(original, name, replacement);
+        expect(result).toContain(dollarStr);
+      }),
+      { numRuns: 50 },
+    );
+  });
+});
+
+describe("injectProps – adversarial prop values", () => {
+  it("does not throw and prop values with special chars are injected verbatim", () => {
+    const propValueArb = fc.constantFrom(
+      "Hello world",
+      "It's a test",
+      "<em>bold</em>",
+      "$1 and $& and $'",
+      "100% done",
+      "A \u003e B",
+      "line1\nline2",
+      "",
+      "bascik__comp__x",
+      "data-bascik-prop-title",
+    );
+
+    const templateArb = fc.constantFrom(
+      '<strong data-bascik-prop-label></strong>',
+      '<p data-bascik-prop-label>fallback</p>',
+      '<span data-bascik-prop-label="default"></span>',
+      '<div class="wrap"><em data-bascik-prop-label></em></div>',
+    );
+
+    fc.assert(
+      fc.property(propValueArb, templateArb, (value, template) => {
+        expect(() => injectProps(template, { label: value })).not.toThrow();
+        const result = injectProps(template, { label: value });
+        expect(typeof result).toBe("string");
+        // The injected value must appear verbatim in the output
+        if (value.length > 0) {
+          expect(result).toContain(value);
+        }
+        // No prop markers should remain for a prop that was provided
+        expect(result).not.toMatch(/data-bascik-prop-label(?=[>\s])/);
+      }),
+      { numRuns: 100 },
+    );
+  });
+});

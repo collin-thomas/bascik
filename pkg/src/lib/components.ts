@@ -145,7 +145,7 @@ export const listComponents = async (): Promise<ComponentList> => {
       // Name the file name without the extension.
       // Name is used in all the mappings components
       try {
-        const componentName = fileName.replace(/^.*[\\/]/, "").split(".")[0];
+        const componentName = fileName.replace(/^.*[\\/]/, "").split(".")[0].toLowerCase();
         if (NATIVE_HTML_ELEMENTS.has(componentName)) {
           console.warn(
             `warning: Component "${componentName}" has the same name as a native HTML element. ` +
@@ -170,10 +170,7 @@ export const listComponents = async (): Promise<ComponentList> => {
         }
         return component;
       } catch (e) {
-        console.warn(
-          `warning: Failed to process ${fileName}`,
-          ...(BascikConfig.verboseLogging ? [{ cause: e }] : []),
-        );
+        console.warn(`warning: Failed to process ${fileName}`, e);
         return {};
       }
     }),

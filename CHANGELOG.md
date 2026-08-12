@@ -7,8 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`from`/`to` inside `@keyframes` no longer treated as element selectors** — CSS `from { }` and `to { }` keyframe percentage selectors were being converted to scoped element-selector classes (e.g. `.bascik__comp__el__from`), producing malformed keyframe CSS. Both keywords are now in the reserved list alongside CSS unit keywords.
+- **`prefixKeyframes` no longer double-scopes on second pass** — if a keyframe name was already scoped (starts with `bascik__`), a second run of the scoping pipeline would prefix it a second time. It is now skipped.
+
 ### Added
 
+- **Component filename case normalization** — component names are now lowercased when loaded from disk, so `My-Card.html` registers as `my-card` and is used as `<my-card>`. Previously, an uppercase filename would silently never resolve because the lookup was always lowercased but the stored key was not.
+- **FAQ docs page** — new `/faq` page covering who made Bascik, why it was built, and common edge-case questions (native element name collisions, uppercase filenames).
 - **`data-bascik-server` script blocks** — a new script tag variant that executes at request time on the server instead of at build time. Use it to personalize pages with per-user data (session info, database queries, etc.). The script body receives `process.env.BASCIK_REQUEST` (JSON with `{ path, method, headers, searchParams }`). `data-bascik-server` blocks are preserved through `--build` and executed fresh on every request — they are never cached and are completely separate from `data-bascik-build`.
 - **Production server — `bascik --serve`** — new CLI flag that starts the HTTP/2 server against a pre-built `dist/` directory. Run `bascik --build` first, then `bascik --serve` to serve in production. `data-bascik-server` scripts execute per-request in both dev and production modes.
 - **`serve` config block** — new `bascik.config.js` option to configure the HTTP server: `port` (default `8443`), `hostname` (default `"localhost"`, set to `"0.0.0.0"` to bind all interfaces), `keyFile`, and `certFile` for providing your own TLS certificates.
@@ -23,7 +30,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `inheritAttributes` config option — attribute inheritance can now be disabled explicitly while remaining enabled by default.
 - `useWorkers` config option — transpile pages across a pool of CPU-core worker threads instead of sequentially on the main thread. Defaults to `false`; recommended for larger sites or CPU-heavy per-page work, since worker startup has a fixed cost that isn't worth paying on small sites. Component list and global inline styles are pre-computed once and shared across all workers via `workerData`.
 - `devServer.logging` and `serve.logging` config — control file-copy/transpile/delete chatter in dev mode and request logging in prod mode via a shared log-level model (`silent`/`error`/`warn`/`info`/`debug`), with per-event toggles for copies, deletes, transpiles, and requests.
+- CLI build logging via `--log [path]` — optional file capture of build output. When omitted, no build log is written; when used, Bascik stores output in `.bascik/build.log` by default unless a custom path is provided.
 - The dev server now serves pages from memory as soon as they are transpiled, without waiting on disk writes — disk output is skipped entirely in dev mode and only happens during `--build`.
+
+### Changed
+
+- Removed the stale `verboseLogging` config option. Console details are now handled by the CLI build log (`--log`) and the explicit log-level settings in `devServer.logging` / `serve.logging`.
 
 ### Fixed
 
@@ -104,7 +116,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `directory.pages` / `directory.components` — configure source directories.
 - `obfuscateAttributeNames` — short hash-based class names in production builds.
-- `verboseLogging` — toggles `{cause}` detail in `console.warn/error`.
+- `--log [path]` — optional build log capture for diagnostics; defaults to `.bascik/build.log` when enabled.
 - `deduplicateCss` — deduplicate component styles per page.
 - `minifyStyles` — enable/disable built-in CSS minification.
 - `minifyScripts` — enable/disable built-in JS minification, or supply a custom minifier function.

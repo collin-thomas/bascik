@@ -38,6 +38,16 @@ describe("resolveCliAction", () => {
     expect(resolveCliAction(["--build"])).toEqual({ action: "build" });
   });
 
+  it("accepts --log alongside --build", () => {
+    expect(resolveCliAction(["--build", "--log"])).toEqual({ action: "build" });
+  });
+
+  it("accepts --log with a custom path", () => {
+    expect(resolveCliAction(["--build", "--log", "./logs/build.log"])).toEqual({
+      action: "build",
+    });
+  });
+
   it("returns error with the offending flag for a single unknown flag", () => {
     expect(resolveCliAction(["--frobnicate"])).toEqual({
       action: "error",

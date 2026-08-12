@@ -195,6 +195,6 @@ For per-request server-side rendering, see [Server scripts](/server).
 <div class="bascik__feature-card__fcard">
   <p class="bascik__feature-card__fcard-label">Build Time</p>
   <h3 class="bascik__feature-card__fcard-title">Generated from Markdown</h3>
-  <p class="bascik__feature-card__fcard-desc">Bascik is a minimalist static site generator...</p>
+  <p class="bascik__feature-card__fcard-desc">Bascik is a build tool for HTML components...</p>
 </div>
 ```

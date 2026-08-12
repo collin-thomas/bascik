@@ -5,7 +5,7 @@
 [![npm version](https://badge.fury.io/js/%40bascik%2Fbascik.svg)](https://www.npmjs.com/package/@bascik/bascik)
 [![License: ELv2](https://img.shields.io/badge/License-ELv2-blue.svg)](https://www.elastic.co/licensing/elastic-license)
 
-Bascik is a static site generator (SSG) that lets you write reusable HTML components. It is **not** a JavaScript framework — you write plain HTML, CSS, and JavaScript.
+Bascik is a build tool for HTML components. It is **not** a JavaScript framework — you write plain HTML, CSS, and JavaScript.
 
 Bascik acts as a build-time find-and-replace: it resolves custom HTML tags to their component source, scopes CSS and JavaScript per component instance, and writes a `dist/` directory of plain HTML files. **Zero JavaScript is added to your pages.** Every script in the output was written by you.
 
@@ -108,7 +108,6 @@ export const bascikConfig = {
   inlineStyles: false, // false | true | ['src/pages/css/styles.css']
   obfuscateAttributeNames: true, // hash class/id names to short hex strings
   cacheHttp: false, // HTTP cache headers on dev server responses
-  verboseLogging: false, // include {cause} in console.warn/error
 };
 
 // Options applied only during `bascik --build`, merged over bascikConfig

@@ -46,10 +46,6 @@ describe("defaultConfig", () => {
     expect(defaultConfig.cacheHttp).toBe(false);
   });
 
-  it("has verboseLogging: false", () => {
-    expect(defaultConfig.verboseLogging).toBe(false);
-  });
-
   it("has default devServer logging options", () => {
     expect(defaultConfig.devServer?.logging?.level).toBe("info");
     expect(defaultConfig.devServer?.logging?.requests).toBe(true);
@@ -110,7 +106,6 @@ describe("BascikConfig", () => {
     expect(BascikConfig).toHaveProperty("minifyStyles");
     expect(BascikConfig).toHaveProperty("obfuscateAttributeNames");
     expect(BascikConfig).toHaveProperty("cacheHttp");
-    expect(BascikConfig).toHaveProperty("verboseLogging");
     expect(BascikConfig).toHaveProperty("deduplicateCss");
     expect(BascikConfig).toHaveProperty("devServer");
     expect(BascikConfig).toHaveProperty("isBuild");

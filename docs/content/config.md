@@ -31,7 +31,6 @@ export const bascikConfig = {
   obfuscateAttributeNames: true,
 
   cacheHttp: false,  // true by default in --serve mode
-  verboseLogging: false,
 
   siteUrl: 'https://example.com',
   generate: {
@@ -167,6 +166,17 @@ When `true`, HTML pages receive an `ETag` header and the server returns `304 Not
 
 Set `cacheHttp: false` explicitly when running `--serve` behind a CDN that manages its own caching.
 
+### Build logs
+
+Bascik can write a copy of the build output to a file when you enable it from the CLI. This is meant for debugging and CI diagnosis, not as a normal project artifact.
+
+```sh
+bascik --build --log
+bascik --build --log ./logs/build.log
+```
+
+The default path is `.bascik/build.log`. If you omit `--log`, Bascik does not create a file automatically. Terminal output remains the primary source of build diagnostics.
+
 ### `devServer`
 
 Control the noise level of the development server's status output. The `level` field applies to all dev-server status events; individual toggles let you silence only the logs you do not want.
@@ -203,14 +213,6 @@ serve: {
 ```
 
 See [Production Server](/server) for the full guide.
-
-### `verboseLogging`
-
-Include the `{ cause }` detail object in `console.warn` and `console.error` calls. Useful for debugging component processing errors.
-
-```js
-verboseLogging: false // default
-```
 
 ### `siteUrl`
 

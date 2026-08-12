@@ -25,9 +25,45 @@ const readVersion = async (): Promise<string> => {
   return "unknown";
 };
 
+const resolveBuildLogPath = (args: string[]): string | undefined => {
+  const logIndex = args.indexOf("--log");
+  if (logIndex === -1) return undefined;
+  const nextArg = args[logIndex + 1];
+  return nextArg && !nextArg.startsWith("-") ? nextArg : ".bascik/build.log";
+};
+
 const main = async (): Promise<void> => {
   const args = process.argv.slice(2);
   const decision = resolveCliAction(args);
+  const buildLogPath = resolveBuildLogPath(args);
+
+  if (decision.action === "build" && buildLogPath) {
+    const { mkdir, appendFile } = await import("node:fs/promises");
+    const { dirname, resolve } = await import("node:path");
+    const { format } = await import("node:util");
+
+    const absoluteLogPath = resolve(process.cwd(), buildLogPath);
+    await mkdir(dirname(absoluteLogPath), { recursive: true });
+    process.env.BASCIK_BUILD_LOG = absoluteLogPath;
+
+    const original = {
+      log: console.log.bind(console),
+      warn: console.warn.bind(console),
+      error: console.error.bind(console),
+    };
+
+    const tee = (method: keyof typeof original, target: (...args: unknown[]) => void) => {
+      return (...args: unknown[]) => {
+        target(...args);
+        appendFile(absoluteLogPath, `${format(...args)}\n`, "utf8").catch(() => { });
+      };
+    };
+
+    console.log = tee("log", original.log) as typeof console.log;
+    console.warn = tee("warn", original.warn) as typeof console.warn;
+    console.error = tee("error", original.error) as typeof console.error;
+    console.log(`[bascik] build log: ${absoluteLogPath}`);
+  }
 
   switch (decision.action) {
     case "help":

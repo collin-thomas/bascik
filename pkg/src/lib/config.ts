@@ -55,7 +55,6 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild" | "isServe"> = {
   minifyScripts: false,
   obfuscateAttributeNames: false,
   cacheHttp: false,
-  verboseLogging: false,
   generate: {
     sitemap: true,
     robots: true,

@@ -137,10 +137,7 @@ export const deepReadDir = async (dirPath: string): Promise<any[]> => {
       }),
     );
   } catch (error) {
-    console.error(
-      `Failed to read directory ${dirPath}`,
-      ...(BascikConfig.verboseLogging ? [{ cause: error }] : []),
-    );
+    console.error(`Failed to read directory ${dirPath}`, error);
     return [];
   }
 };

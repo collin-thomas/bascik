@@ -50,7 +50,19 @@ bascik          # dev: transpile, start HTTPS dev server, watch
 bascik --build  # production: transpile to dist/ only
 bascik --serve  # production server: serve a pre-built dist/ with HTTP/2
 bascik --check  # static analysis: validate pages and components without building
+bascik --build --log [path]  # optional build log; defaults to .bascik/build.log
 ```
+
+## Build logs
+
+Use `--log` when you want a captured copy of the build output for debugging or CI investigation. The default path is `.bascik/build.log`, and you can override it with any custom path:
+
+```sh
+bascik --build --log
+bascik --build --log ./logs/build.log
+```
+
+The terminal output still stays as the primary log, and the file is an optional diagnostic artifact. If you do not pass `--log`, Bascik does not create a build log file.
 
 ## Starting the dev server
 

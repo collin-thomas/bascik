@@ -6,6 +6,8 @@ import type { BascikComponent } from "./types.js";
 // error (e.g. breaking `0.7rem 1em` across two lines) can place a unit
 // keyword at column 0 where the element-selector regex would otherwise
 // match it and produce a garbled scoped class name.
+// Also includes CSS @keyframes pseudo-selectors (`from`, `to`) which are
+// never HTML element names and must not be converted to scoped classes.
 const CSS_UNIT_KEYWORDS = new Set([
   // Relative length
   "rem", "ex", "rex", "cap", "rcap", "ch", "rch", "ic", "ric", "lh", "rlh",
@@ -26,6 +28,8 @@ const CSS_UNIT_KEYWORDS = new Set([
   "hz", "khz",
   // Resolution
   "dpi", "dpcm", "dppx",
+  // CSS @keyframes pseudo-selectors — not HTML elements
+  "from", "to",
 ]);
 
 export const convertCssElementSelectorsToClasses = (
@@ -177,6 +181,9 @@ export const prefixKeyframes = (css: string, componentName: string): string => {
   if (!Array.isArray(keyframeNames)) return css;
   let result = css;
   for (const name of keyframeNames) {
+    // Skip names that are already scoped — prevents double-scoping when the
+    // pipeline runs more than once on the same CSS.
+    if (name.startsWith("bascik__")) continue;
     const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const scoped = obfuscateAttributeName(
       `bascik__${componentName}__keyframe__${name}`,

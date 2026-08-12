@@ -77,7 +77,6 @@ export interface BascikConfigOptions {
   minifyScripts: boolean | ((code: string) => string | Promise<string>);
   obfuscateAttributeNames: boolean;
   cacheHttp: boolean;
-  verboseLogging: boolean;
   /**
    * Tag names whose inner content is left untouched by the scoping pipeline.
    * Attribute values, element-selector class injection, and JS selector

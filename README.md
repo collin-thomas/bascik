@@ -1,6 +1,6 @@
 # Bascik
 
-A static site generator that lets you write reusable HTML components. No JavaScript framework — plain HTML, CSS, and JavaScript, compiled at build time. Zero JavaScript added to your pages.
+A build tool for HTML components. No JavaScript framework — plain HTML, CSS, and JavaScript, compiled at build time. Zero JavaScript added to your pages.
 
 **Documentation:** [bascik.dev](https://bascik.dev)  
 **Package:** [`@bascik/bascik`](https://www.npmjs.com/package/@bascik/bascik)
