@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 
 // userConfig is mocked so config.ts can be imported without top-level await
 vi.mock("./userConfig.js", () => ({
@@ -6,7 +6,7 @@ vi.mock("./userConfig.js", () => ({
   buildOverrideConfig: {},
 }));
 
-import { defaultConfig, BascikConfig } from "./config.js";
+import { defaultConfig, BascikConfig, initBascikConfig } from "./config.js";
 
 describe("defaultConfig", () => {
   it("has scopeScriptBlocks: true", () => {
@@ -30,16 +30,16 @@ describe("defaultConfig", () => {
     expect(defaultConfig.directory.watch).toEqual([]);
   });
 
-  it("has minifyStyles: true", () => {
-    expect(defaultConfig.minifyStyles).toBe(true);
+  it("has minifyStyles: false (dev default — production default comes from buildDefaultConfig)", () => {
+    expect(defaultConfig.minifyStyles).toBe(false);
   });
 
-  it("has minifyScripts: true", () => {
-    expect(defaultConfig.minifyScripts).toBe(true);
+  it("has minifyScripts: false (dev default — production default comes from buildDefaultConfig)", () => {
+    expect(defaultConfig.minifyScripts).toBe(false);
   });
 
-  it("has obfuscateAttributeNames: true", () => {
-    expect(defaultConfig.obfuscateAttributeNames).toBe(true);
+  it("has obfuscateAttributeNames: false (dev default — production default comes from buildDefaultConfig)", () => {
+    expect(defaultConfig.obfuscateAttributeNames).toBe(false);
   });
 
   it("has cacheHttp: false", () => {
@@ -54,7 +54,7 @@ describe("defaultConfig", () => {
     expect(defaultConfig.deduplicateCss).toBe(true);
   });
 
-  it("has skipTranspilingElementContents: [\"code\"]", () => {
+  it('has skipTranspilingElementContents: ["code"]', () => {
     expect(defaultConfig.skipTranspilingElementContents).toEqual(["code"]);
   });
 
@@ -70,6 +70,23 @@ describe("defaultConfig", () => {
 describe("BascikConfig", () => {
   it("is frozen (immutable)", () => {
     expect(Object.isFrozen(BascikConfig)).toBe(true);
+  });
+
+  it("deep-freezes nested config objects", () => {
+    expect(Object.isFrozen(BascikConfig.directory)).toBe(true);
+    expect(Object.isFrozen(BascikConfig.scopeAttribute)).toBe(true);
+    expect(Object.isFrozen(BascikConfig.generate)).toBe(true);
+    expect(Object.isFrozen(BascikConfig.serve)).toBe(true);
+    expect(Object.isFrozen(BascikConfig.directory.watch)).toBe(true);
+    expect(Object.isFrozen(BascikConfig.skipTranspilingElementContents)).toBe(
+      true,
+    );
+  });
+
+  it("throws when mutating a nested config key in strict mode", () => {
+    expect(() => {
+      (BascikConfig.directory as Record<string, unknown>).pages = "other";
+    }).toThrow(TypeError);
   });
 
   it("contains all default keys", () => {
@@ -121,5 +138,101 @@ describe("BascikConfig.isBuild", () => {
     const mod = await import("./config.js");
     expect(mod.BascikConfig.isBuild).toBe(true);
     process.argv = original;
+  });
+});
+
+describe("dev vs build defaults", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  it("keeps minify/obfuscate off in dev mode", () => {
+    const { BascikConfig: cfg } = initBascikConfig({}, {}, { isBuild: false });
+    expect(cfg.minifyStyles).toBe(false);
+    expect(cfg.minifyScripts).toBe(false);
+    expect(cfg.obfuscateAttributeNames).toBe(false);
+  });
+
+  it("turns minify/obfuscate on by default for --build", () => {
+    const { BascikConfig: cfg } = initBascikConfig({}, {}, { isBuild: true });
+    expect(cfg.minifyStyles).toBe(true);
+    expect(cfg.minifyScripts).toBe(true);
+    expect(cfg.obfuscateAttributeNames).toBe(true);
+  });
+
+  it("applies build defaults through the singleton when BASCIK_BUILD=1", async () => {
+    vi.stubEnv("BASCIK_BUILD", "1");
+    vi.resetModules();
+    const mod = await import("./config.js");
+    expect(mod.BascikConfig.isBuild).toBe(true);
+    expect(mod.BascikConfig.minifyStyles).toBe(true);
+    expect(mod.BascikConfig.obfuscateAttributeNames).toBe(true);
+  });
+
+  it("exposes buildDefaultConfig with the production defaults", async () => {
+    const { buildDefaultConfig } = await import("./config.js");
+    expect(buildDefaultConfig.minifyStyles).toBe(true);
+    expect(buildDefaultConfig.minifyScripts).toBe(true);
+    expect(buildDefaultConfig.obfuscateAttributeNames).toBe(true);
+  });
+});
+
+describe("user config overrides", () => {
+  it("lets userConfig win over build defaults", () => {
+    const { BascikConfig: cfg } = initBascikConfig(
+      { minifyStyles: false, obfuscateAttributeNames: false },
+      {},
+      { isBuild: true },
+    );
+    expect(cfg.minifyStyles).toBe(false);
+    expect(cfg.obfuscateAttributeNames).toBe(false);
+    // Untouched build default still applies.
+    expect(cfg.minifyScripts).toBe(true);
+  });
+
+  it("lets buildOverrideConfig win over userConfig during --build", () => {
+    const { BascikConfig: cfg } = initBascikConfig(
+      { minifyStyles: false },
+      { minifyStyles: true },
+      { isBuild: true },
+    );
+    expect(cfg.minifyStyles).toBe(true);
+  });
+
+  it("ignores buildOverrideConfig in dev mode", () => {
+    const { BascikConfig: cfg } = initBascikConfig(
+      { minifyStyles: false },
+      { minifyStyles: true },
+      { isBuild: false },
+    );
+    expect(cfg.minifyStyles).toBe(false);
+  });
+});
+
+describe("buildOverrideConfig.serve merge", () => {
+  it("merges buildOverrideConfig.serve over user serve config during --build", () => {
+    const { BascikConfig: cfg } = initBascikConfig(
+      { serve: { port: 9000, hostname: "example.test" } },
+      { serve: { port: 443 } },
+      { isBuild: true },
+    );
+    expect(cfg.serve?.port).toBe(443);
+    // Keys not overridden by the build config keep the user value.
+    expect(cfg.serve?.hostname).toBe("example.test");
+  });
+
+  it("does not apply buildOverrideConfig.serve in dev mode", () => {
+    const { BascikConfig: cfg } = initBascikConfig(
+      { serve: { port: 9000 } },
+      { serve: { port: 443 } },
+      { isBuild: false },
+    );
+    expect(cfg.serve?.port).toBe(9000);
+  });
+
+  it("falls back to the default serve config when nothing overrides it", () => {
+    expect(BascikConfig.serve?.port).toBe(8443);
+    expect(BascikConfig.serve?.hostname).toBe("localhost");
   });
 });

@@ -193,23 +193,69 @@ export const listComponents = async (): Promise<ComponentList> => {
 // HTML tag manipulation
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Matches a run of attribute text inside an opening tag, stopping at the
+ * first unquoted `>`.  The alternation is unambiguous: a character is either
+ * a quote (starting a quoted value) or a non-quote, non-`>` character, so the
+ * regex engine never has to explore overlapping parses.  The previous form,
+ * `(?:"[^"]*"|'[^']*'|[^>])*`, let `[^>]` also match quote characters, which
+ * made the parser ambiguous and caused catastrophic (exponential) backtracking
+ * whenever the surrounding pattern could not match — e.g. a `data-bascik-prop-*`
+ * marker with no balancing close tag would hang the build.
+ */
+const ATTR_VALUE = `(?:[^>"']|"[^"]*"|'[^']*')*`;
+
+/**
+ * Find the first `<tagName ...>` opening tag in `htmlString` and return its
+ * full text plus start/end indices.  The attribute scan is quote-aware so a
+ * `>` inside a quoted attribute value does not end the tag early.
+ */
+const findOpenTag = (
+  htmlString: string,
+  tagName: string,
+): { openTag: string; start: number; end: number } | null => {
+  const tn = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const openTagRegexp = new RegExp(`<${tn}(?:${ATTR_VALUE})>`, "i");
+  const openTagMatch = openTagRegexp.exec(htmlString);
+  if (!openTagMatch) return null;
+  return {
+    openTag: openTagMatch[0],
+    start: openTagMatch.index,
+    end: openTagMatch.index + openTagMatch[0].length,
+  };
+};
+
 export const replaceTag = (
   htmlString: string,
   tagName: string,
   transpiledTag: string,
 ): string => {
   // Try paired tags first: <tagName ...>...</tagName>
-  const pairedRegexp = new RegExp(
-    `(?<content><${tagName}[^>]*>(?<innerContent>([\\s\\S]*?))<\/${tagName}>)`,
-    "i",
-  );
-  if (pairedRegexp.test(htmlString)) {
-    // Use a replacement function so that `$` characters in transpiledTag (e.g.
-    // SQL positional parameters like $1, $2 in slot content) are never
-    // interpreted as back-references, which would cause infinite expansion loops.
-    return htmlString.replace(pairedRegexp, () => transpiledTag);
+  // Use findMatchingClose (a depth counter) instead of a lazy regex so nested
+  // same-name elements pair with the correct (balanced) closing tag, e.g.
+  // <my-list>...<my-list></my-list>...</my-list>.
+  const openTag = findOpenTag(htmlString, tagName);
+  if (openTag && !/\/\s*>$/.test(openTag.openTag)) {
+    const closeIndex = findMatchingClose(htmlString, tagName, openTag.end);
+    if (closeIndex !== -1) {
+      const closeTagRegexp = new RegExp(`^<\\/${tagName}\\s*>`, "i");
+      const closeTagMatch = closeTagRegexp.exec(htmlString.slice(closeIndex));
+      if (closeTagMatch) {
+        // Splice by index so that `$` characters in transpiledTag (e.g.
+        // SQL positional parameters like $1, $2 in slot content) are never
+        // interpreted as back-references, which would cause infinite
+        // expansion loops.
+        const endIndex = closeIndex + closeTagMatch[0].length;
+        return (
+          htmlString.slice(0, openTag.start) +
+          transpiledTag +
+          htmlString.slice(endIndex)
+        );
+      }
+    }
   }
   // Fall back to self-closing: <tagName ... /> or <tagName/>
+  // Use a replacement function for the same `$`-safety reason.
   const selfClosingRegexp = new RegExp(`<${tagName}(\\s[^>]*)?\\/?>`, "i");
   return htmlString.replace(selfClosingRegexp, () => transpiledTag);
 };
@@ -262,19 +308,27 @@ export const getTag = (
   componentList?: ComponentList,
 ): Partial<BascikComponent> => {
   // Try paired tags: <tagName ...>content</tagName>
-  // Using [\s\S] instead of . to match newlines
-  const pairedPattern = new RegExp(
-    `<${tagName}[\\s\\S]*?>([\\s\\S]*?)<\\/${tagName}>`,
-    "i",
-  );
-  const pairedMatch = htmlString.match(pairedPattern);
-  if (pairedMatch) {
-    const returnObj = {
-      content: pairedMatch[0],
-      innerContent: pairedMatch[1],
-    };
-    if (!componentList) return returnObj;
-    return { ...returnObj, ...componentList[tagName.toLowerCase()] };
+  // Use findMatchingClose (a depth counter) instead of a lazy regex so nested
+  // same-name elements pair with the correct (balanced) closing tag, e.g.
+  // <my-list>...<my-list></my-list>...</my-list>.
+  const openTag = findOpenTag(htmlString, tagName);
+  if (openTag && !/\/\s*>$/.test(openTag.openTag)) {
+    const closeIndex = findMatchingClose(htmlString, tagName, openTag.end);
+    if (closeIndex !== -1) {
+      const closeTagRegexp = new RegExp(`^<\\/${tagName}\\s*>`, "i");
+      const closeTagMatch = closeTagRegexp.exec(htmlString.slice(closeIndex));
+      if (closeTagMatch) {
+        const returnObj = {
+          content: htmlString.slice(
+            openTag.start,
+            closeIndex + closeTagMatch[0].length,
+          ),
+          innerContent: htmlString.slice(openTag.end, closeIndex),
+        };
+        if (!componentList) return returnObj;
+        return { ...returnObj, ...componentList[tagName.toLowerCase()] };
+      }
+    }
   }
 
   // Try self-closing: <tagName ... /> or <tagName/>
@@ -356,10 +410,12 @@ export const extractProps = (
 ): Record<string, string> => {
   const props: Record<string, string> = {};
   if (!componentContent) return props;
-  const regexp = /data-bascik-prop-([\w-]+)="([^"]*)"/gi;
+  // Accept both double-quoted and single-quoted prop values,
+  // e.g. data-bascik-prop-title="Hi" or data-bascik-prop-title='Hi'.
+  const regexp = /data-bascik-prop-([\w-]+)=("[^"]*"|'[^']*')/gi;
   let match;
   while ((match = regexp.exec(componentContent)) !== null) {
-    props[match[1]] = match[2];
+    props[match[1]] = match[2].slice(1, -1);
   }
   return props;
 };
@@ -384,16 +440,19 @@ export const injectProps = (
   let result = fileContent;
   Object.entries(props).forEach(([propName, propValue]) => {
     const attrName = `data-bascik-prop-${propName}`;
-    // Match: <tagName [attrsBefore] data-bascik-prop-name [attrsAfter]>...</tagName>
+    // Match: <tagName [attrsBefore] data-bascik-prop-name[=value] [attrsAfter]>...</tagName>
+    // The attr scans are quote-aware so a `>` inside a quoted attribute value
+    // (e.g. title="a > b") does not end the opening tag early.
     result = result.replace(
       new RegExp(
-        `<(\\w+(?:-\\w+)*)([^>]*?)\\s+${attrName}([^>]*)>(.*?)<\\/\\1>`,
+        `<(\\w+(?:-\\w+)*?)(${ATTR_VALUE}?)\\s+${attrName}(?:=("[^"]*"|'[^']*'))?(${ATTR_VALUE})>([\\s\\S]*?)<\\/\\1>`,
         "gi",
       ),
       (
         _match: string,
         tagName: string,
         attrsBefore: string,
+        _markerValue: string | undefined,
         attrsAfter: string,
         _oldContent: string,
       ) => `<${tagName}${attrsBefore}${attrsAfter}>${propValue}</${tagName}>`,
@@ -560,14 +619,20 @@ export const extractInheritableAttributes = (
 ): Record<string, string> => {
   if (!componentContent) return {};
   const attrs: Record<string, string> = {};
-  // Grab just the opening tag text (up to the first > or />)
-  const openTagMatch = componentContent.match(/^<[\w-]+([\s\S]*?)(?:\s*\/?>)/);
+  // Grab just the opening tag text (up to the first > or />).
+  // The attribute scan is quote-aware so a `>` inside a quoted attribute value
+  // (e.g. title="a > b") does not end the opening tag early.
+  const openTagMatch = componentContent.match(
+    new RegExp(`^<[\\w-]+(${ATTR_VALUE})(?:\\s*\\/?>)`),
+  );
   if (!openTagMatch || !openTagMatch[1]) return attrs;
   const attrStr = openTagMatch[1];
-  const attrRegex = /\s+([\w:-]+)(?:="([^"]*)")?/g;
+  // Accept both double-quoted and single-quoted attribute values.
+  const attrRegex = /\s+([\w:-]+)(?:=("[^"]*"|'[^']*'))?/g;
   let match;
   while ((match = attrRegex.exec(attrStr)) !== null) {
-    const [, name, value = ""] = match;
+    const [, name, rawValue] = match;
+    const value = rawValue === undefined ? "" : rawValue.slice(1, -1);
     if (!name.startsWith("data-bascik-")) {
       attrs[name] = value;
     }

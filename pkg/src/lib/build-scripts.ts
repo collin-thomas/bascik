@@ -81,6 +81,8 @@ const runModule = async (path: string): Promise<{ stdout: string; stderr: string
       {
         cwd: process.cwd(),
         env: { ...process.env, BASCIK_BUILD: BascikConfig.isBuild ? "1" : "0" },
+        timeout: BUILD_SCRIPT_TIMEOUT,
+        killSignal: "SIGTERM",
       },
       (err, stdout, stderr) => {
         sem.release();
@@ -91,9 +93,23 @@ const runModule = async (path: string): Promise<{ stdout: string; stderr: string
   });
 };
 
-// Match <script data-bascik-build …> … </script> (captures inner content)
-const BUILD_SCRIPT_RE =
-  /<script\b[^>]*\sdata-bascik-build\b[^>]*>([\s\S]*?)<\/script>/gi;
+// Quote-aware open-tag scanning.  An attribute is a bare name with an
+// optional `="..."`/`='...'`/`=bare` value; `>` inside a quoted value must
+// not terminate the open tag, and `data-bascik-build` must be an actual
+// attribute name — never a substring of another attribute's value.
+const BARE_TOKEN = String.raw`[^\s"'=<>\`]+`;
+const ATTR_VALUE = String.raw`(?:"[^"]*"|'[^']*'|${BARE_TOKEN})`;
+const ATTR = String.raw`${BARE_TOKEN}(?:\s*=\s*${ATTR_VALUE})?`;
+const FLAG = String.raw`data-bascik-build(?:\s*=\s*${ATTR_VALUE})?`;
+
+// Match <script data-bascik-build …> … </script> (captures inner content).
+const BUILD_SCRIPT_RE = new RegExp(
+  String.raw`<script\b(?:\s+${ATTR})*\s+${FLAG}(?:\s+${ATTR})*\s*>([\s\S]*?)<\/script>`,
+  "gi",
+);
+
+/** Per-build-script execution timeout (ms). Keeps a hung script from hanging the build forever. */
+const BUILD_SCRIPT_TIMEOUT = 60_000;
 
 /**
  * Find every `<script data-bascik-build>` block in `html`, execute each as a
@@ -116,6 +132,7 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
   // child processes are alive at once based on available system memory.
   const outputs = await Promise.all(matches.map(async (match) => {
     const [fullTag, scriptContent] = match;
+    const index = match.index ?? 0;
     const tmpPath = join(
       tempDir,
       `build-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
@@ -124,31 +141,28 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
       await writeFile(tmpPath, scriptContent.trim(), "utf8");
       const { stdout, stderr } = await runModule(tmpPath);
       if (stderr) process.stderr.write(stderr);
-      return { fullTag, output: stdout };
+      return { fullTag, index, output: stdout };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       let errorMsg = `[bascik] build script error`;
       if (filePath) {
-        const index = html.indexOf(fullTag);
-        if (index !== -1) {
-          const prefix = html.slice(0, index);
-          const lines = prefix.split(/\r?\n/);
-          errorMsg += ` in "${getRelativePath(filePath, "pages")}" at (line ${lines.length}, column ${lines[lines.length - 1].length + 1})`;
-        } else {
-          errorMsg += ` in "${getRelativePath(filePath, "pages")}"`;
-        }
+        const prefix = html.slice(0, index);
+        const lines = prefix.split(/\r?\n/);
+        errorMsg += ` in "${getRelativePath(filePath, "pages")}" at (line ${lines.length}, column ${lines[lines.length - 1].length + 1})`;
       }
       console.warn(`${errorMsg}:\n${msg}`);
-      return { fullTag, output: "" };
+      return { fullTag, index, output: "" };
     } finally {
       await unlink(tmpPath).catch(() => { });
     }
   }));
 
-  for (const { fullTag, output } of outputs) {
-    // Use a function replacement so that `$` characters in `output` (e.g.
-    // `$&`, `$1` from code examples) are never interpreted as special patterns.
-    result = result.replace(fullTag, () => output);
+  // Splice each script's output in at its own match index, from right to left
+  // so earlier indices stay valid. Index splicing is inherently safe against
+  // `$`-style replacement patterns and against duplicate identical tags.
+  outputs.sort((a, b) => b.index - a.index);
+  for (const { fullTag, index, output } of outputs) {
+    result = result.slice(0, index) + output + result.slice(index + fullTag.length);
   }
 
   return result;

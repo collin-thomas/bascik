@@ -298,6 +298,16 @@ export const findActiveSourceFile = (
   return stack[stack.length - 1] || fallback;
 };
 
+// Guards against infinite expansion: a component that (transitively) contains
+// itself would otherwise loop forever, doubling the HTML string each pass until
+// the process runs out of memory.  Two independent tripwires:
+//   1. MAX_SUBSTITUTIONS — hard cap on total component substitutions per call.
+//   2. MAX_OUTPUT_BYTES  — hard cap on the growing HTML string.
+// Both are far beyond any legitimate page (a page with 10 000 component
+// instances or 50 MB of markup), so they only fire on runaway recursion.
+const MAX_SUBSTITUTIONS = 10_000;
+const MAX_OUTPUT_BYTES = 50 * 1024 * 1024;
+
 export const recursivelyTranspile = (
   transpiledHtmlBody: string,
   componentList: ComponentList,
@@ -311,7 +321,26 @@ export const recursivelyTranspile = (
   // Iterative implementation — avoids keeping O(N) copies of the growing HTML
   // string simultaneously on the call stack (each recursive frame held its own
   // copy, leading to multi-GB heap usage on pages with many component instances).
+  let substitutions = 0;
   while (true) {
+    if (
+      substitutions >= MAX_SUBSTITUTIONS ||
+      transpiledHtmlBody.length > MAX_OUTPUT_BYTES
+    ) {
+      const partial = getFirstComponent(transpiledHtmlBody, componentList);
+      const tag = partial.name ? `<${partial.name}>` : "(unknown)";
+      console.error(
+        `[bascik] Transpilation aborted in "${filePath ?? "unknown file"}": ` +
+          `component expansion exceeded safety limits (${substitutions} substitutions). ` +
+          `This usually means a component recursively includes itself (e.g. ${tag} ` +
+          `contains its own tag, directly or through another component). ` +
+          `Recursive components are not supported — restructure to terminate the recursion.`,
+      );
+      const cleanedHtml = transpiledHtmlBody
+        .replace(/<!--bascik-source-file:[\s\S]*?-->/g, "")
+        .replace(/<!--bascik-source-file-end:[\s\S]*?-->/g, "");
+      return { transpiledHtmlBody: cleanedHtml, usedComponents };
+    }
     const partial = getFirstComponent(transpiledHtmlBody, componentList);
     if (!partial.name) {
       const cleanedHtml = transpiledHtmlBody
@@ -379,6 +408,7 @@ export const recursivelyTranspile = (
         transpiledTag,
       );
       usedComponents.push(component);
+      substitutions++;
     } catch (error) {
       const activeSourceFile = findActiveSourceFile(
         transpiledHtmlBody,
@@ -398,7 +428,17 @@ export const recursivelyTranspile = (
         errorMsg += `\n  Defined in component template: "${getDisplayPath(component.fileName)}"`;
       }
       console.error(`${errorMsg}\n  Error: ${error instanceof Error ? error.stack || error.message : String(error)}`);
-      transpiledHtmlBody = transpiledHtmlBody.replace(component.content || "", "");
+      if (component.content) {
+        transpiledHtmlBody = transpiledHtmlBody.replace(component.content, "");
+        substitutions++;
+      } else {
+        // No content to strip — replacing would be a no-op and the while(true)
+        // loop would spin on the same tag forever.  Bail out instead.
+        const cleanedHtml = transpiledHtmlBody
+          .replace(/<!--bascik-source-file:[\s\S]*?-->/g, "")
+          .replace(/<!--bascik-source-file-end:[\s\S]*?-->/g, "");
+        return { transpiledHtmlBody: cleanedHtml, usedComponents };
+      }
     }
   }
 };
@@ -465,8 +505,13 @@ export const processAllPages = async (options?: { useWorkers?: boolean }) => {
       poolSize,
       { componentList, globalStylesHtml },
     );
-    results = await Promise.all(pageList.map((path) => pool.run(path)));
-    pool.terminate();
+    try {
+      results = await Promise.all(pageList.map((path) => pool.run(path)));
+    } finally {
+      // Always terminate — otherwise a rejected job leaves worker threads
+      // alive and the CLI hangs on exit instead of reporting the failure.
+      await pool.terminate();
+    }
   } else {
     // Concurrent — child process concurrency is capped at the semaphore in runModule.
     results = await Promise.all(
@@ -628,12 +673,22 @@ export const transpilePage = async (
     transpiledHead = await minifyScriptTagsInHtml(transpiledHead, jsMinifier);
   }
 
-  // Puts our processed markup back between the <body></body> tags
+  // Puts our processed markup back between the <body></body> tags.
+  // The open tag is matched with attributes (`<body[^>]*>`) and preserved
+  // verbatim — `<body class="dark">` or `<head data-x>` must not silently
+  // drop the processed content (which is what a bare-<body>-only replace did).
   let distHtml = htmlWithBuildOutput
     // Use function replacements so that $1, $2, $& etc. in transpiledHtmlBody/Head
-    // are never interpreted as back-reference patterns.
-    .replace(/<body>([\s\S]*?)<\/body>/i, () => `<body>${transpiledHtmlBody}</body>`)
-    .replace(/<head>([\s\S]*?)<\/head>/i, () => `<head>${transpiledHead}</head>`);
+    // are never interpreted as back-reference patterns.  The open tags are matched
+    // with attributes (`<body[^>]*>`) so e.g. `<body class="dark">` is preserved.
+    .replace(
+      /(<body[^>]*>)[\s\S]*?(<\/body>)/i,
+      (_m, open, close) => `${open}${transpiledHtmlBody}${close}`,
+    )
+    .replace(
+      /(<head[^>]*>)[\s\S]*?(<\/head>)/i,
+      (_m, open, close) => `${open}${transpiledHead}${close}`,
+    );
 
   const allUsedComponents = [...usedComponents, ...headUsedComponents];
 

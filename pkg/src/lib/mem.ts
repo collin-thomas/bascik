@@ -86,6 +86,14 @@ class MemoryStore {
     return this.#files.get(httpPath) || this.#files.get("/404");
   }
 
+  /**
+   * Exact lookup only — no 404 fallback.  Lets the HTTP layer try path
+   * normalizations (`/blog` vs `/blog/`) before falling back to the 404 page.
+   */
+  getPageExact(httpPath: string): StoredPage | undefined {
+    return this.#files.get(httpPath);
+  }
+
   removePage(absolutePagePath: string): void {
     const relativePagePath = getRelativePath(absolutePagePath, "pages");
     const httpPath = getHttpPath(relativePagePath);

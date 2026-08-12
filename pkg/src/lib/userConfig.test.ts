@@ -1,76 +1,73 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { resolve } from "node:path";
+import { mkdtemp, writeFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NOTE: userConfig.ts uses top-level await and a dynamic import().
-// We use vi.doMock() (non-hoisted) + vi.resetModules() + dynamic import in
-// each test to get a fresh module with controlled behaviour.
+// userConfig.ts loads via loadUserConfig() using a real dynamic import of a
+// file:// URL.  We exercise it with real temp config files — mocking a file://
+// specifier is unreliable, and a real file round-trip is the honest test.
 // ─────────────────────────────────────────────────────────────────────────────
 
-afterEach(() => {
-  vi.resetModules();
-  vi.restoreAllMocks();
+let dirs: string[] = [];
+
+afterEach(async () => {
+  await Promise.all(dirs.map((d) => rm(d, { recursive: true, force: true })));
+  dirs = [];
 });
 
-describe("userConfig – no bascik.config.js", () => {
-  it("exports empty bascikConfig when the file does not exist", async () => {
-    vi.doMock("node:fs/promises", () => ({
-      access: vi
-        .fn()
-        .mockRejectedValue(
-          Object.assign(new Error("ENOENT"), { code: "ENOENT" }),
-        ),
-    }));
-    vi.spyOn(console, "warn").mockImplementation(() => {});
-    const mod = await import("./userConfig.js");
-    expect(mod.bascikConfig).toEqual({});
-  });
+const writeConfig = async (contents: string): Promise<string> => {
+  const dir = await mkdtemp(join(tmpdir(), "bascik-cfg-"));
+  dirs.push(dir);
+  const p = join(dir, "bascik.config.js");
+  await writeFile(p, contents, "utf8");
+  return p;
+};
 
-  it("exports empty buildOverrideConfig when the file does not exist", async () => {
-    vi.doMock("node:fs/promises", () => ({
-      access: vi
-        .fn()
-        .mockRejectedValue(
-          Object.assign(new Error("ENOENT"), { code: "ENOENT" }),
-        ),
-    }));
-    vi.spyOn(console, "warn").mockImplementation(() => {});
-    vi.resetModules();
-    const mod = await import("./userConfig.js");
-    expect(mod.buildOverrideConfig).toEqual({});
-  });
-});
-
-describe("userConfig – bascik.config.js exists", () => {
+describe("loadUserConfig", () => {
   it("loads bascikConfig and buildOverrideConfig from the file", async () => {
-    const configPath = resolve(process.cwd(), "bascik.config.js");
-
-    vi.doMock("node:fs/promises", () => ({
-      access: vi.fn().mockResolvedValue(undefined),
-    }));
-    vi.doMock(configPath, () => ({
-      bascikConfig: { scopeScriptBlocks: false },
-      buildOverrideConfig: { minifyStyles: false },
-    }));
-
-    vi.resetModules();
-    const mod = await import("./userConfig.js");
-    expect(mod.bascikConfig).toEqual({ scopeScriptBlocks: false });
-    expect(mod.buildOverrideConfig).toEqual({ minifyStyles: false });
+    const { loadUserConfig } = await import("./userConfig.js");
+    const p = await writeConfig(
+      `export const bascikConfig = { scopeScriptBlocks: false };
+       export const buildOverrideConfig = { minifyStyles: false };`,
+    );
+    const { bascikConfig, buildOverrideConfig } = await loadUserConfig(p);
+    expect(bascikConfig).toEqual({ scopeScriptBlocks: false });
+    expect(buildOverrideConfig).toEqual({ minifyStyles: false });
   });
 
   it("defaults missing exports to empty objects", async () => {
-    const configPath = resolve(process.cwd(), "bascik.config.js");
+    const { loadUserConfig } = await import("./userConfig.js");
+    const p = await writeConfig(`export const somethingElse = 1;`);
+    const { bascikConfig, buildOverrideConfig } = await loadUserConfig(p);
+    expect(bascikConfig).toEqual({});
+    expect(buildOverrideConfig).toEqual({});
+  });
 
-    vi.doMock("node:fs/promises", () => ({
-      access: vi.fn().mockResolvedValue(undefined),
-    }));
-    // Config file exists but exports nothing
-    vi.doMock(configPath, () => ({}));
+  it("returns empty config (with a warning) when the file does not exist", async () => {
+    const { loadUserConfig } = await import("./userConfig.js");
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { bascikConfig } = await loadUserConfig("/nonexistent/bascik.config.js");
+    expect(bascikConfig).toEqual({});
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining("No bascik.config.js found"),
+    );
+  });
 
-    vi.resetModules();
-    const mod = await import("./userConfig.js");
-    expect(mod.bascikConfig).toEqual({});
-    expect(mod.buildOverrideConfig).toEqual({});
+  it("throws (not process.exit) when the config file fails to load", async () => {
+    const { loadUserConfig } = await import("./userConfig.js");
+    const p = await writeConfig(`this is not valid javascript {{{`);
+    await expect(loadUserConfig(p)).rejects.toThrow(
+      /Failed to load bascik\.config\.js/,
+    );
+  });
+
+  it("imports via a file:// URL (Windows-safe)", async () => {
+    // importUserConfig must convert to a file URL — importing a bare absolute
+    // path fails with ERR_UNSUPPORTED_ESM_URL_SCHEME on Windows.
+    const { importUserConfig } = await import("./userConfig.js");
+    const p = await writeConfig(`export const bascikConfig = { verboseLogging: true };`);
+    const mod = await importUserConfig(p);
+    expect(mod.bascikConfig).toEqual({ verboseLogging: true });
   });
 });

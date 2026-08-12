@@ -149,18 +149,13 @@ describe("createSelfSignedCert – Windows cert generation", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("createSelfSignedCert – exec failure", () => {
-  it("logs an error and calls process.exit(1) when exec fails", async () => {
+  it("throws (rather than process.exit) when exec fails", async () => {
     mockAccess.mockRejectedValue(new Error("ENOENT"));
     makeExecFail("openssl error");
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    const exitSpy = vi
-      .spyOn(process, "exit")
-      .mockImplementation((() => {}) as any);
-    await createSelfSignedCert();
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining("Failed to generate"),
-      expect.any(Error),
+    // Must throw so callers can handle it — process.exit() in a library
+    // would kill worker threads and embedders without a chance to recover.
+    await expect(createSelfSignedCert()).rejects.toThrow(
+      /Failed to generate self-signed certificate/,
     );
-    expect(exitSpy).toHaveBeenCalledWith(1);
   });
 });

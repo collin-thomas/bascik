@@ -8,6 +8,16 @@
  *  - Component files that are never referenced anywhere (warnings)
  *
  * Exits with code 1 when errors are found so it can gate CI pipelines.
+ *
+ * Build-script usage
+ * ──────────────────
+ * `<script data-bascik-build>` blocks can generate component usage at build
+ * time.  Running arbitrary build scripts during `--check` would be unsafe and
+ * slow, so instead a file that contains any build script is treated as
+ * *potentially generating* any component: its build-script presence marks
+ * every known component as "used" (unused is a warning, not an error, so this
+ * only suppresses false-positive warnings).  Unknown-tag *errors* are still
+ * reported for the file's static markup.
  */
 
 import { readFile } from "node:fs/promises";
@@ -17,12 +27,47 @@ import { BascikConfig } from "./config.js";
 import type { ComponentList } from "./types.js";
 
 /**
+ * Strip the inner content of elements that can legitimately contain raw,
+ * non-markup text — `script`, `style`, `textarea`, plus whatever the user
+ * configured in `skipTranspilingElementContents` (defaults to `["code"]`).
+ *
+ * Without this, literal example text inside such elements (e.g. `<my-tag>`
+ * inside a `<script>` demo string) produces false-positive "unknown component"
+ * errors.
+ */
+const stripElementContents = (html: string): string => {
+  const extra = (BascikConfig.skipTranspilingElementContents ?? [])
+    .map((t) => String(t).replace(/[^a-zA-Z0-9-]/g, ""))
+    .filter(Boolean);
+  const protectedTags = ["script", "style", "textarea", ...extra];
+  if (protectedTags.length === 0) return html;
+  // Content is matched non-greedily up to the element's own close tag; the
+  // loop repeats to handle nesting (e.g. <code>…<code>…</code>…</code>).
+  // Leftover closing tags from nesting are harmless — extractCustomTags only
+  // scans for opening tags.
+  const re = new RegExp(
+    `<(${protectedTags.join("|")})(\\s[^>]*)?>[\\s\\S]*?</\\1>`,
+    "gi",
+  );
+  let prev: string;
+  let out = html;
+  // Repeat to handle nesting (e.g. <code>…<code>…</code>…</code>).
+  do {
+    prev = out;
+    out = out.replace(re, "<$1$2></$1>");
+  } while (out !== prev);
+  return out;
+};
+
+/**
  * Extract all hyphenated tag names from an HTML string.
- * HTML comments are stripped first to avoid false positives.
+ * HTML comments and the inner content of raw-text elements (script, style,
+ * textarea, and `skipTranspilingElementContents`) are stripped first to avoid
+ * false positives.
  */
 export const extractCustomTags = (html: string): Set<string> => {
   // Strip HTML comments so we don't match tags inside <!-- ... -->
-  const stripped = html.replace(/<!--[\s\S]*?-->/g, "");
+  const stripped = stripElementContents(html.replace(/<!--[\s\S]*?-->/g, ""));
   const tags = new Set<string>();
   const re = /<([a-z][a-z0-9]*(?:-[a-z0-9]+)+)[\s\/>]/gi;
   let m: RegExpExecArray | null;
@@ -46,6 +91,14 @@ const toDisplay = (filePath: string): string => {
   }
   return filePath;
 };
+
+/**
+ * Quick static check for `<script data-bascik-build>` presence.
+ * Quote-aware enough for detection purposes: looks for the flag as an actual
+ * attribute name on a `<script>` open tag.
+ */
+const containsBuildScript = (html: string): boolean =>
+  /<script\b(?:[^\s"'=<>`]+|"[^"]*"|'[^']*')*\sdata-bascik-build\b/i.test(html);
 
 /**
  * Run the static check and print results to stdout/stderr.
@@ -74,15 +127,27 @@ export const checkProject = async (): Promise<boolean> => {
     allFilePaths.map(async (filePath) => {
       try {
         const html = await readFile(filePath, "utf8");
-        return { filePath, tags: extractCustomTags(html) };
+        return {
+          filePath,
+          tags: extractCustomTags(html),
+          hasBuildScript: containsBuildScript(html),
+        };
       } catch {
-        return { filePath, tags: new Set<string>() };
+        return { filePath, tags: new Set<string>(), hasBuildScript: false };
       }
     }),
   );
 
   let hasErrors = false;
   const usedComponents = new Set<string>();
+
+  // Build scripts can generate component usage at build time.  We never run
+  // build scripts during `--check` (arbitrary code execution), so a file that
+  // contains one conservatively marks every known component as "used" — this
+  // only suppresses false-positive *unused warnings*, never errors.
+  if (scanResults.some((r) => r.hasBuildScript)) {
+    for (const c of knownComponents) usedComponents.add(c);
+  }
 
   for (const { filePath, tags } of scanResults) {
     const unknown: string[] = [];

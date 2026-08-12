@@ -37,7 +37,7 @@ vi.mock("node:fs", () => ({
 }));
 
 vi.mock("./mem.js", () => ({
-  mem: { getPage: vi.fn() },
+  mem: { getPage: vi.fn(), getPageExact: vi.fn() },
 }));
 
 vi.mock("./config.js", () => ({
@@ -56,7 +56,11 @@ vi.mock("./events.js", () => ({
 }));
 
 vi.mock("./paths.js", () => ({
-  getHttpPath: vi.fn((p: string) => p),
+  // Faithful port of the real getHttpPath so is404Page logic is genuinely
+  // exercised: pages/404.html → /404, pages/blog/index.html → /blog/.
+  getHttpPath: vi.fn((p: string) =>
+    p.replace(/^pages/, "").replace(/\.html$/, "").replace(/\/index$/, "/")
+  ),
 }));
 
 vi.mock("./mime.js", () => ({
@@ -74,7 +78,7 @@ import { mem } from "./mem.js";
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 
-const mockMem = mem as unknown as { getPage: ReturnType<typeof vi.fn> };
+const mockMem = mem as unknown as { getPage: ReturnType<typeof vi.fn>; getPageExact: ReturnType<typeof vi.fn> };
 const mockCreateReadStream = createReadStream as unknown as ReturnType<typeof vi.fn>;
 const mockStat = stat as unknown as ReturnType<typeof vi.fn>;
 
@@ -83,6 +87,8 @@ const mockStat = stat as unknown as ReturnType<typeof vi.fn>;
 beforeEach(() => {
   vi.clearAllMocks();
   _rateLimiter.clear();
+  // No exact-match pages by default — http2 falls back to mem.getPage (mocked per-test).
+  mockMem.getPageExact.mockReturnValue(undefined);
 });
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

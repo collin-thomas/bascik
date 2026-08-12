@@ -147,9 +147,24 @@ export const getDistPagePath = (pagePath: string): string => {
   return pathParts.join("/");
 };
 
+/**
+ * Resolve a source path (absolute or `pages/…`-relative) to its `dist/…`
+ * counterpart.  Centralised so every caller — page removal, asset unlink,
+ * asset unlinkDir — resolves the same way regardless of whether the watcher
+ * handed us an absolute or relative path.
+ */
+const toDistPath = (srcPath: string): string => {
+  // Absolute path (from chokidar) → pages/…-relative, then swap the prefix.
+  const rel = srcPath.startsWith(BascikConfig.directory.pages)
+    ? getRelativePath(srcPath, "pages")
+    : srcPath.replace(/\\/g, "/");
+  // rel is like "pages/css/x.css" — swap the leading "pages/" for "dist/".
+  return rel.replace(/^pages[\/]/, "dist/");
+};
+
 export const deleteDistFile = async (pagePath: string): Promise<void> => {
   try {
-    const distPagePath = getDistPagePath(pagePath);
+    const distPagePath = toDistPath(pagePath);
     await rm(distPagePath);
     console.log(`deleted file: ${pagePath}`);
   } catch (error) {
@@ -162,7 +177,7 @@ export const deleteDistFile = async (pagePath: string): Promise<void> => {
 
 export const deleteDistDir = async (dirPath: string): Promise<void> => {
   try {
-    const distDirPath = dirPath.replace("pages", "dist");
+    const distDirPath = toDistPath(dirPath);
     // recursive means delete directory
     // force means delete the file inside
     await rm(distDirPath, { recursive: true, force: true });

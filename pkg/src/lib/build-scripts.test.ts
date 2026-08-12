@@ -179,4 +179,101 @@ describe("executeBuildScripts", () => {
     const opts = mockExecFile.mock.calls[0][2] as { env?: Record<string, string> };
     expect(opts.env?.BASCIK_BUILD).toBe("1");
   });
+
+  it("passes a timeout to execFile so hung scripts don't hang the build", async () => {
+    resolveWith("");
+    await executeBuildScripts("<script data-bascik-build>x</script>");
+    const opts = mockExecFile.mock.calls[0][2] as {
+      timeout?: number;
+      killSignal?: string;
+    };
+    expect(opts.timeout).toBeGreaterThan(0);
+    expect(opts.killSignal).toBeTruthy();
+  });
+
+  it("handles a timeout kill gracefully: warns and removes the tag", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+    mockExecFile.mockImplementation(
+      (
+        _cmd: unknown,
+        _args: unknown,
+        _opts: unknown,
+        cb: (err: Error & { killed?: boolean; signal?: string }) => void,
+      ) => {
+        // Simulate what execFile does on timeout: callback with a killed error
+        cb(Object.assign(new Error("Command timed out"), {
+          killed: true,
+          signal: "SIGTERM",
+        }));
+      },
+    );
+    const html =
+      "<p>before</p><script data-bascik-build>while(true){}</script><p>after</p>";
+    const result = await executeBuildScripts(html);
+    expect(result).toContain("<p>before</p>");
+    expect(result).toContain("<p>after</p>");
+    expect(result).not.toContain("data-bascik-build");
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
+  it("matches a script tag when an attribute value contains `>`", async () => {
+    resolveWith("<p>generated</p>");
+    const html =
+      '<script data-bascik-build data-x="a>b">gen()</script>';
+    const result = await executeBuildScripts(html);
+    expect(mockExecFile).toHaveBeenCalledTimes(1);
+    expect(result).toBe("<p>generated</p>");
+  });
+
+  it("does NOT execute when data-bascik-build only appears inside an attribute value", async () => {
+    const html =
+      '<script data-desc="data-bascik-build">console.log("hi")</script>';
+    const result = await executeBuildScripts(html);
+    expect(mockExecFile).not.toHaveBeenCalled();
+    expect(result).toBe(html);
+  });
+
+  it("does NOT execute when data-bascik-build appears inside a single-quoted attribute value", async () => {
+    const html =
+      "<script data-desc='data-bascik-build'>console.log('hi')</script>";
+    const result = await executeBuildScripts(html);
+    expect(mockExecFile).not.toHaveBeenCalled();
+    expect(result).toBe(html);
+  });
+
+  it("replaces two identical build-script blocks each with their own output", async () => {
+    mockExecFile
+      .mockImplementationOnce(
+        (
+          _cmd: unknown,
+          _args: unknown,
+          _opts: unknown,
+          cb: (err: null, stdout: string, stderr: string) => void,
+        ) => {
+          cb(null, "<p>first</p>", "");
+        },
+      )
+      .mockImplementationOnce(
+        (
+          _cmd: unknown,
+          _args: unknown,
+          _opts: unknown,
+          cb: (err: null, stdout: string, stderr: string) => void,
+        ) => {
+          cb(null, "<p>second</p>", "");
+        },
+      );
+
+    const tag = "<script data-bascik-build>same()</script>";
+    const result = await executeBuildScripts(`<div>${tag}</div><div>${tag}</div>`);
+    expect(result).toBe("<div><p>first</p></div><div><p>second</p></div>");
+  });
+
+  it("handles `$` patterns in output safely with index splicing", async () => {
+    resolveWith("price: $& and $1");
+    const html = "<script data-bascik-build>x</script>";
+    const result = await executeBuildScripts(html);
+    expect(result).toBe("price: $& and $1");
+  });
 });
