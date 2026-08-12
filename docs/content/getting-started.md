@@ -4,18 +4,15 @@ Bascik requires Node.js v24+. Get up and running in under five minutes.
 
 ## Quick Start
 
-The fastest way to start a new Bascik project:
+The fastest way to start a new Bascik project — no prompts, just a running site:
 
 ```sh
-npm create bascik@latest
+npm create bascik@latest my-site -y
 ```
 
-Enter a project name when prompted (or press Enter for `bascik-app`). The tool then asks two questions:
+That scaffolds the project, installs dependencies, and starts the dev server in one shot. You're live at **https://localhost:8443**.
 
-- **Install dependencies now?:** select Y to run `npm install` immediately
-- **Start the dev server after install?:** select Y to launch the dev server right away
-
-Select Y for both and you're live at **https://localhost:8443** with no further commands needed.
+Pass a different name to use it as both the directory name and the site title. If you omit the name, the tool prompts for one (defaulting to `bascik-app`). Drop `-y` to step through the install and dev server prompts manually.
 
 `npm create bascik@latest` scaffolds a complete starter site: pages, components, global CSS, `bascik.config.js`, and a `.gitignore`. If you prefer to set everything up manually, see [Manual Setup](#manual-setup) below.
 

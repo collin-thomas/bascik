@@ -8,26 +8,78 @@ The repo root uses Yarn workspaces. The package code lives in `pkg/`, while the 
 
 That split keeps the monorepo dev flow simple and keeps the generated project familiar for normal users.
 
-## What the CLI does
+## Code structure
 
-The generator in `create/src/index.ts` asks for a project name, validates it, and then calls the project scaffold in `create/src/scaffold.ts`.
+The package has two source files with distinct responsibilities:
 
-It writes a standard starter project with:
+- `create/src/scaffold.ts` — pure data and file-writing logic. All generated file content lives here as exported string constants and functions. No I/O beyond `fs/promises`. This is what the tests cover.
+- `create/src/index.ts` — the CLI entry point. Handles prompts, the `-y` flag, and spawns `npm install` / `npm run dev`. Not unit-tested.
 
-- `package.json`
-- `bascik.config.js`
-- `.gitignore`
-- `src/pages/`
-- `src/components/`
-- base global CSS and starter HTML
+Keeping them split means you can test every generated file without invoking the CLI or touching the filesystem.
 
-Then it offers to install dependencies and start the dev server.
+## What the CLI generates
+
+Running `npx create-bascik <name>` writes this structure:
+
+```text
+<name>/
+  package.json
+  bascik.config.js
+  .gitignore
+  src/
+    pages/
+      index.html
+      about.html
+      contact.html
+      404.html
+      css/
+        styles.css
+    components/
+      site-meta/
+        site-meta.html
+      site-header/
+        site-header.html
+        site-header.css
+      site-footer/
+        site-footer.html
+        site-footer.css
+      feat-card/
+        feat-card.html
+        feat-card.css
+      my-counter/
+        my-counter.html
+        my-counter.css
+```
+
+The `feat-card` component demonstrates named slots. The `my-counter` component demonstrates scoped JS with two independent instances on the home page.
+
+After scaffolding, the CLI offers to run `npm install` and `npm run dev`. Both prompts can be skipped with `-y`.
 
 ## Why the generated app uses npm
 
-The generated app is a normal Node project. The scaffold runs `npm install` and `npm run dev` after creation so users do not need Yarn to get started.
+The scaffold runs `npm install` and `npm run dev` so users do not need Yarn to get started. The repo itself uses Yarn workspaces for contributor work, but the generated site is designed to feel like a regular app from a standard Node CLI.
 
-This is intentional. The repo itself uses Yarn workspaces for contributor work, but the generated site is designed to feel like a regular app created with a standard Node CLI.
+## Modifying the scaffold
+
+All generated file content is defined as string constants in `scaffold.ts`. To change what a new project looks like, edit the relevant constant there. After any change, rebuild before testing:
+
+```sh
+cd create
+npm run build
+```
+
+The `npm link` symlink points at the `create/` directory, so a fresh `dist/` is picked up immediately without relinking.
+
+## Tests
+
+The scaffold is fully unit-tested. Run the tests from the `create/` directory:
+
+```sh
+cd create
+npm test
+```
+
+Tests mock `fs/promises` and verify that every expected file is written with the right content. If you add or rename a generated file, add a corresponding test case in `scaffold.test.ts`.
 
 ## Local repo flow
 
@@ -37,27 +89,27 @@ If you want to test the generator from this repo, the flow is:
 cd bascik/create
 npm install
 npm link
-
-mkdir my-project && cd my-project
-npx create-bascik my-project
 ```
 
-Then the new app starts with:
+Then from the repo root:
 
 ```sh
-npm install
-npm run dev
+npx create-bascik my-site -y
 ```
 
-The generated app is still a normal Bascik project after that. It does not depend on the repo workspace layout.
+The `-y` flag skips both prompts. The npm install will print a 404 error for `@bascik/bascik` (not on npm yet), but the dev server starts anyway — the workspace `node_modules` symlink resolves the package. Command+Click the URL to open it in a browser.
+
+```text
+Server running at https://localhost:8443
+```
 
 ## Cleanup after local testing
 
-`npm link` is useful while you are actively testing the local CLI. Once you are done, unlink it to return to the normal published package flow and keep your machine clean.
+Once you are done, unlink to return to the normal published package flow.
 
 ```sh
 cd bascik/create
 npm unlink
 ```
 
-This is a good cleanup step after a beta or after local validation is complete. If you are still actively iterating on the generator, leaving it linked is fine.
+If you are still actively iterating on the generator, leaving it linked is fine.

@@ -176,7 +176,9 @@ export const serveHttp2 = async () => {
 
       const logAccess = () => {
         if (responseStatus === 0) return;
-        const logging = BascikConfig.serve?.logging ?? { level: "info", requests: true };
+        const logging = BascikConfig.isServe
+          ? (BascikConfig.serve?.logging ?? { level: "info", requests: true })
+          : (BascikConfig.devServer?.logging ?? { level: "info", requests: true });
         if (logging.requests === false) return;
         if (!shouldLog(logging.level ?? "info", "info")) return;
         const elapsed = Date.now() - startMs;
@@ -372,11 +374,6 @@ export const serveHttp2 = async () => {
           responseStatus = 404;
           stream.respond({ ":status": 404, ...SECURITY_HEADERS });
           return stream.end("Not Found");
-        }
-
-        const devLogging = BascikConfig.devServer?.logging ?? { level: "info", requests: true };
-        if (devLogging.requests !== false && shouldLog(devLogging.level ?? "info", "info")) {
-          console.log(`serving: ${reqUrl}`);
         }
 
         // A page is the 404 page only when its resolved HTTP path is exactly

@@ -1,10 +1,10 @@
 # Closed Beta Setup
 
-## 1. Download the repo
+## 1. Install the repo
+
+Once you've cloned this repo, cd into it and install the dependencies.
 
 ```sh
-git clone <repo-url>
-cd bascik
 yarn install
 ```
 
@@ -18,27 +18,20 @@ npm link
 
 ## 3. Create your own site
 
+The `-y` flag skips both prompts. The npm install will print a 404 error for `@bascik/bascik` (not on npm yet), but the dev server will still start because the workspace `node_modules` resolves the package.
+
 ```sh
 cd ..
-mkdir my-site && cd my-site
-npx create-bascik my-site
+npx create-bascik my-site -y
 ```
 
-## 4. Run the site
-
-```sh
-cd my-site
-npm install
-npm run dev
-```
-
-Open the URL it prints, usually:
+Command+Click the URL to open the site.
 
 ```text
-https://localhost:8443
+Server running at https://localhost:8443
 ```
 
-## 5. Clean up after testing
+## Clean up after testing
 
 Run from the `bascik/create` directory.
 

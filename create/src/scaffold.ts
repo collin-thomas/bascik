@@ -28,20 +28,8 @@ export const PACKAGE_JSON = (name: string): string =>
     2,
   ) + "\n";
 
-export const BASCIK_CONFIG = `// Bascik works without this file — defaults are src/pages and src/components.
-// Uncomment bascikConfig below to customise directories or other options.
+export const BASCIK_CONFIG = `// Bascik works out of the box — no config required.
 // Full reference: https://bascik.dev/configuration
-//
-// export const bascikConfig = {
-//   directory: { pages: 'src/pages', components: 'src/components' },
-// };
-
-// Applied only during \`bascik --build\`, merged over bascikConfig.
-export const buildOverrideConfig = {
-  minifyStyles: true,
-  minifyScripts: true,
-  obfuscateAttributeNames: true,
-};
 `;
 
 export const GITIGNORE = `node_modules/
@@ -229,6 +217,8 @@ export const SITE_HEADER_CSS = `.header {
   border-bottom: 1px solid var(--border);
 }
 
+.container { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
+
 .nav {
   display: flex;
   align-items: center;
@@ -326,6 +316,8 @@ export const SITE_FOOTER_CSS = `.footer {
   border-top: 1px solid var(--border);
   padding: 28px 0;
 }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
 
 .footer-inner {
   display: flex;
@@ -433,6 +425,19 @@ export const MY_COUNTER_CSS = `.counter {
   min-width: 2ch;
   text-align: center;
   color: var(--accent);
+}
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 22px; border: none; border-radius: var(--r-sm);
+  font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  text-decoration: none; transition: filter .15s, opacity .15s; line-height: 1;
+}
+.btn-primary { background: var(--accent); color: #18191b; }
+.btn-ghost   { background: transparent; color: var(--text); border: 1px solid var(--border); }
+@media (hover: hover) {
+  .btn-primary:hover { filter: brightness(0.88); opacity: 1; }
+  .btn-ghost:hover   { border-color: var(--accent); color: var(--accent); opacity: 1; }
 }
 `;
 

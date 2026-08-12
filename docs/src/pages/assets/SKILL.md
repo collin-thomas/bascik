@@ -540,23 +540,19 @@ src/
 
 ### Creating a New Project
 
-The recommended way to start a new Bascik project:
+The zero-friction way to start a new Bascik project:
 
 ```sh
-npm create bascik@latest
-# or: npm create bascik@latest my-project
+npm create bascik@latest my-site -y
 ```
 
-This scaffolds a complete starter site (pages, components, global CSS, `bascik.config.js`, `.gitignore`) and then prompts interactively:
+This scaffolds the project, installs dependencies, and starts the dev server in one shot. You're live at **https://localhost:8443**. Pass a different name to use it as both the directory name and the site title. Omit the name to be prompted for one (defaulting to `bascik-app`). Drop `-y` to step through the install and dev server prompts manually.
+
+The scaffold creates a complete starter site: pages, components, global CSS, `bascik.config.js`, and a `.gitignore`. When the dev server stops, the CLI prints a reminder:
 
 ```
-✓ Scaffolded my-project/
-
-Install dependencies now? (Y/n)
-Start the dev server after install? (Y/n)
+To start again:  cd my-site && npm run dev
 ```
-
-Select Y for both and you're live at **https://localhost:8443** with no further commands needed. If you select N, the remaining steps are printed at the end.
 
 ### Adding to an Existing Project
 

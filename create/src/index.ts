@@ -4,7 +4,9 @@ import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { scaffold, validateProjectName } from "./scaffold.js";
 
-const nameArg = process.argv[2];
+const args = process.argv.slice(2);
+const yesFlag = args.includes("-y") || args.includes("--yes");
+const nameArg = args.find((a) => !a.startsWith("-"));
 
 const rl = createInterface({ input: process.stdin, output: process.stdout });
 
@@ -28,11 +30,15 @@ console.log(`\nCreating Bascik project "${projectName}"…\n`);
 await scaffold(projectName);
 console.log(`✓ Scaffolded ${projectName}/\n`);
 
-const installAnswer = await rl.question("Install dependencies now? (Y/n) ");
-const shouldInstall = installAnswer.trim().toLowerCase() !== "n";
+let shouldInstall: boolean;
+let shouldDev: boolean;
 
-let shouldDev = false;
-if (shouldInstall) {
+if (yesFlag) {
+  shouldInstall = true;
+  shouldDev = true;
+} else {
+  const installAnswer = await rl.question("Install dependencies now? (Y/n) ");
+  shouldInstall = installAnswer.trim().toLowerCase() !== "n";
   const devAnswer = await rl.question("Start the dev server after install? (Y/n) ");
   shouldDev = devAnswer.trim().toLowerCase() !== "n";
 }
@@ -49,6 +55,7 @@ if (shouldInstall) {
 if (shouldDev) {
   console.log("\nStarting dev server…\n");
   spawnSync("npm", ["run", "dev"], { cwd: projectDir, stdio: "inherit", shell: true });
+  console.log(`\nTo start again:  cd ${projectName} && npm run dev\n`);
 } else {
   console.log("\nNext steps:\n");
   if (!shouldInstall) console.log(`  cd ${projectName}`);
