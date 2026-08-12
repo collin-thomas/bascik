@@ -24,6 +24,21 @@ This file contains the **complete, centralized documentation and development ski
 * Build instructions such as `data-bascik-slot`, `data-bascik-prop-*`, and `data-bascik-build` use HTML's standards-valid `data-*` extension mechanism.
 * Bascik consumes those instructions at build time. They are not runtime directives that require a client library to interpret them.
 
+### Repository Layout and the Create App
+
+The repo is split into three top-level folders:
+
+```text
+bascik/
+  pkg/          ← the @bascik/bascik npm package
+  create/       ← the standalone generator used by `npm create bascik@latest`
+  docs/         ← the docs site and internal developer guide
+```
+
+The `create/` folder is intentionally separate from `pkg/`. The root repo uses Yarn workspaces for contributor work, but the generated app is meant to behave like a normal Node project. That is why the scaffold asks for a project name, scaffolds a starter site, and then runs `npm install` and `npm run dev` in the new project.
+
+The generator in `create/src/index.ts` validates input, then calls `create/src/scaffold.ts` to write the project files. The generated app is not coupled to the monorepo layout. It just uses the published `@bascik/bascik` package and then runs as a normal Bascik site.
+
 ---
 
 ## 2. Component Format
@@ -635,11 +650,11 @@ While the dev server is active, Bascik watches your file system and incrementall
   ```
 * **Static Assets:** Replicating any non-HTML static assets (like custom CSS, JS files, or images) from pages directly into the output directory:
   ```terminal
-  copied: /Users/collin/github/bascik/docs/src/pages/css/custom.css
+  copied: pages/css/custom.css
   ```
 * **Deleting Pages:** Removing a page from your pages directory automatically cleans up its compiled output counterpart to prevent dead files:
   ```terminal
-  deleted file: /Users/collin/github/bascik/docs/src/pages/old-page.html
+  deleted file: pages/old-page.html
   ```
 
 #### 3. Transpilation & Build Errors

@@ -14,7 +14,7 @@ Yes. In fact some of my earliest exposure to programming was to TI-Basic on my f
 
 ## What is Bascik?
 
-Bascik is a build tool for HTML components. You write reusable components in plain HTML, CSS, and JavaScript. At build time, Bascik resolves your custom tags to their component source, scopes CSS and JavaScript so they never collide across instances, and outputs a directory of plain HTML files. Zero JavaScript is added to your pages — every script in the output was written by you.
+Bascik is a build tool for HTML components. You write reusable components in plain HTML, CSS, and JavaScript. At build time, Bascik resolves your custom tags to their component source, scopes CSS and JavaScript so they never collide across instances, and outputs a directory of plain HTML files. Zero JavaScript is added to your pages, every script in the output was written by you.
 
 By default the output is fully static and can be hosted anywhere. If you need per-request dynamic content, the [production server](/server) lets you run server-side scripts that inject into specific sections of a page at request time, while everything else stays static.
 
@@ -32,7 +32,7 @@ Components have always been a JavaScript thing. Web Components tried to make it 
 
 It seems like a big undertaking but the web standards are so well defined that you have an obtainable target. It'll just take some effort. So that's what I did.
 
-Then I saw the rise of AI-assisted coding and thought, this tool I've been building is going to be perfect for that. Tooling exists for humans to use. AI doesn't need React, humans need React. Giving AI a tool that doesn't impose its own rules and just lets you write the fundamental web languages is going to be great for both humans and AI-assisted coding.
+Then I saw the rise of AI-assisted coding and thought, this tool I've been building is going to be perfect for that. Our tooling primarily exists for humans to use, to make tasks easier. But when the tools start to get in the way, giving an LLM a tool that doesn't impose its own rules and just lets you write the fundamental web languages is going to be great for both developers and AI-assisted coding.
 
 ## What happens if I name a component after a native HTML element?
 
