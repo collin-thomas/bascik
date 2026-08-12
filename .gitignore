@@ -65,6 +65,8 @@ typings/
 # macos
 .DS_Store
 
+/package-lock.json
+
 docs/dist
 pkg/dist
 pkg/e2e/dist
