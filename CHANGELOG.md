@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Windows self-signed cert generation** — the PowerShell `Export-PfxCertificate` command was missing its password parameter (corrupted by a prior redaction), so dev-server certificate generation failed on Windows.
+- **Uppercase static-asset extensions** — request extensions are now lowercased before routing and MIME lookup, so `/STYLE.CSS` serves with `text/css` and `.HTML` paths route the same as `.html` instead of being treated as unknown static files.
+- **Slot markers with preceding attributes** — `data-bascik-slot` (default and named) is now matched even when other attributes come before it (e.g. `<div class="card-body" data-bascik-slot>`), using a quote-aware scan so marker text inside attribute values never false-positives.
+- **Nested same-tag slot fallback content** — default and named slot replacement is now depth-aware. Previously a fallback like `<div data-bascik-slot><div>…</div></div>` closed at the first `</div>`, leaving a stray close tag in the output.
+- **Attribute inheritance onto single-quoted `class`** — merging an inherited `class` onto a root element whose class attribute uses single quotes no longer produces a duplicate `class` attribute.
+- **`[id]` selector removal with braces in strings** — `removeIdSelectors` now shields CSS string literals first, so a `}` inside `content: "…"` can no longer truncate the rule match and corrupt the surrounding CSS.
+- **Windows path separators in file-system comparisons** — configured `directory.pages`/`directory.components` paths (backslashes from `resolve()` on Windows) are now normalized before comparison against watcher-supplied forward-slash paths, fixing asset copy, dist-path mapping, deletion, and display paths on Windows.
 - **`from`/`to` inside `@keyframes` no longer treated as element selectors** — CSS `from { }` and `to { }` keyframe percentage selectors were being converted to scoped element-selector classes (e.g. `.bascik__comp__el__from`), producing malformed keyframe CSS. Both keywords are now in the reserved list alongside CSS unit keywords.
 - **`prefixKeyframes` no longer double-scopes on second pass** — if a keyframe name was already scoped (starts with `bascik__`), a second run of the scoping pipeline would prefix it a second time. It is now skipped.
 

@@ -16,6 +16,7 @@ import {
   injectProps,
   extractNamedSlotContent,
   replaceNamedSlots,
+  replaceDefaultSlots,
   extractDefaultSlotContent,
   extractInheritableAttributes,
   mergeAttributesOntoRoot,
@@ -504,6 +505,20 @@ describe("extractNamedSlotContent", () => {
       y: "<span>y</span>",
     });
   });
+
+  it("extracts a slot whose marker is preceded by other attributes", () => {
+    const inner =
+      '<div id="header-slot" data-bascik-slot="header"><h1>Custom Header</h1></div>';
+    expect(extractNamedSlotContent(inner)).toEqual({
+      header: "<h1>Custom Header</h1>",
+    });
+  });
+
+  it("ignores the marker text inside a quoted attribute value", () => {
+    const inner =
+      "<p title='see data-bascik-slot=\"fake\" usage'>text</p>";
+    expect(extractNamedSlotContent(inner)).toEqual({});
+  });
 });
 
 describe("replaceNamedSlots", () => {
@@ -530,6 +545,69 @@ describe("replaceNamedSlots", () => {
     const result = replaceNamedSlots(template, slots);
     expect(result).toContain("<div data-bascik-slot></div>");
     expect(result).toContain("<p>sidebar</p>");
+  });
+
+  it("matches a marker preceded by other attributes", () => {
+    const template =
+      '<footer><div id="nav-slot" data-bascik-slot="navigation"><p>Default nav</p></div></footer>';
+    expect(
+      replaceNamedSlots(template, { navigation: "<nav>Menu</nav>" }),
+    ).toBe("<footer><nav>Menu</nav></footer>");
+  });
+
+  it("keeps fallback content containing nested same-tag elements intact", () => {
+    const template =
+      '<section><div data-bascik-slot="x"><div>fallback</div></div></section>';
+    expect(replaceNamedSlots(template, {})).toBe(
+      "<section><div>fallback</div></section>",
+    );
+  });
+
+  it("replaces a placeholder whose fallback has nested same-tag elements", () => {
+    const template =
+      '<section><div data-bascik-slot="x"><div>fallback</div></div></section>';
+    expect(replaceNamedSlots(template, { x: "<p>filled</p>" })).toBe(
+      "<section><p>filled</p></section>",
+    );
+  });
+});
+
+describe("replaceDefaultSlots", () => {
+  it("replaces a default slot marker with provided content", () => {
+    const template = "<div><div data-bascik-slot></div></div>";
+    expect(replaceDefaultSlots(template, "<p>content</p>")).toBe(
+      "<div><p>content</p></div>",
+    );
+  });
+
+  it("keeps fallback content when no content is provided", () => {
+    const template = "<div><div data-bascik-slot><p>fallback</p></div></div>";
+    expect(replaceDefaultSlots(template, "")).toBe("<div><p>fallback</p></div>");
+  });
+
+  it("matches a marker preceded by other attributes", () => {
+    const template =
+      '<div><div class="card-body" data-bascik-slot><p>fallback</p></div></div>';
+    expect(replaceDefaultSlots(template, "<p>custom</p>")).toBe(
+      "<div><p>custom</p></div>",
+    );
+  });
+
+  it("balances nested same-tag elements inside the fallback", () => {
+    const template =
+      "<section><div data-bascik-slot><div>fallback</div></div></section>";
+    expect(replaceDefaultSlots(template, "<p>filled</p>")).toBe(
+      "<section><p>filled</p></section>",
+    );
+    expect(replaceDefaultSlots(template, "")).toBe(
+      "<section><div>fallback</div></section>",
+    );
+  });
+
+  it("does not touch named slot markers", () => {
+    const template =
+      '<div><span data-bascik-slot="side"><p>side fallback</p></span></div>';
+    expect(replaceDefaultSlots(template, "<p>content</p>")).toBe(template);
   });
 });
 
@@ -658,6 +736,14 @@ describe("mergeAttributesOntoRoot", () => {
     const html = '<nav class="scoped-nav"><a>link</a></nav>';
     const result = mergeAttributesOntoRoot(html, { class: "sticky" });
     expect(result).toContain('class="scoped-nav sticky"');
+  });
+
+  it("appends a class to a single-quoted existing class attribute", () => {
+    const html = "<nav class='scoped-nav'><a>link</a></nav>";
+    const result = mergeAttributesOntoRoot(html, { class: "sticky" });
+    expect(result).toContain("class='scoped-nav sticky'");
+    // Must not produce a duplicate class attribute
+    expect(result.match(/class=/g)).toHaveLength(1);
   });
 
   it("adds class attribute to root element that has none", () => {

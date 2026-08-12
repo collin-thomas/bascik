@@ -80,10 +80,11 @@ export const extractCustomTags = (html: string): Set<string> => {
 /** Return a human-readable relative path for a file. */
 const toDisplay = (filePath: string): string => {
   try {
-    if (filePath.includes(BascikConfig.directory.pages)) {
+    const normalized = filePath.replace(/\\/g, "/");
+    if (normalized.includes(BascikConfig.directory.pages.replace(/\\/g, "/"))) {
       return getRelativePath(filePath, "pages");
     }
-    if (filePath.includes(BascikConfig.directory.components)) {
+    if (normalized.includes(BascikConfig.directory.components.replace(/\\/g, "/"))) {
       return getRelativePath(filePath, "components");
     }
   } catch {
