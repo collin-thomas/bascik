@@ -174,9 +174,18 @@ code {
 
 // ─── Components ───────────────────────────────────────────────────────────────
 
-/** Head component — charset, viewport, CSS link. */
+export const FAVICON_SVG = `<svg viewBox="0 0 32 32" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+  <polygon points="9,2 30,2 23,30 2,30" fill="#d3ff8d" />
+  <rect x="15" y="9" width="2" height="14" rx="1" fill="#0e0f10">
+    <animate attributeName="opacity" values="0.9;0.9;0;0" keyTimes="0;0.49;0.5;1" dur="1.1s" repeatCount="indefinite" />
+  </rect>
+</svg>
+`;
+
+/** Head component — charset, viewport, favicon, CSS link. */
 export const SITE_META_HTML = `<meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
 <link rel="stylesheet" href="/css/styles.css" />
 `;
 
@@ -603,6 +612,7 @@ export async function scaffold(
 
   // Create all directories up front
   await Promise.all([
+    mkdir(join(root, "src", "pages", "assets"), { recursive: true }),
     mkdir(join(root, "src", "pages", "css"), { recursive: true }),
     mkdir(join(root, "src", "components", "site-meta"), { recursive: true }),
     mkdir(join(root, "src", "components", "site-header"), { recursive: true }),
@@ -616,6 +626,9 @@ export async function scaffold(
     writeFile(join(root, "package.json"), PACKAGE_JSON(projectName), "utf8"),
     writeFile(join(root, "bascik.config.js"), BASCIK_CONFIG, "utf8"),
     writeFile(join(root, ".gitignore"), GITIGNORE, "utf8"),
+
+    // Assets
+    writeFile(join(root, "src", "pages", "assets", "favicon.svg"), FAVICON_SVG, "utf8"),
 
     // Global CSS
     writeFile(join(root, "src", "pages", "css", "styles.css"), STYLES_CSS, "utf8"),

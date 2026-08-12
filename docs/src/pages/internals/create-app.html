@@ -4,8 +4,8 @@
 <head>
   <docs-head></docs-head>
   <meta name="description"
-    content="Bascik transforms source HTML into deployable HTML by replacing every component tag with its resolved, scoped content." />
-  <title>Transpilation Pipeline - Bascik Developer Guide</title>
+    content="How the create-bascik scaffold works, why it uses npm, and how to test the generator locally from the repo." />
+  <title>Create App - Bascik Developer Guide</title>
 </head>
 
 <body>
@@ -25,13 +25,13 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/develop/transpilation-pipeline.md'));
+          console.log(await renderMd('./content/internals/create-app.md'));
         </script>
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
           const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
-          console.log(renderPagination('/develop/transpilation-pipeline'));
+          console.log(renderPagination('/internals/create-app'));
         </script>
 
       </main>

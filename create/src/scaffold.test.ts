@@ -275,6 +275,7 @@ describe("scaffold", () => {
   it("creates all component and page directories", async () => {
     await scaffold("my-app", "/tmp");
     const dirs = mockMkdir.mock.calls.map((c) => String(c[0]));
+    expect(dirs.some((d) => d.includes("src/pages/assets"))).toBe(true);
     expect(dirs.some((d) => d.includes("src/pages/css"))).toBe(true);
     expect(dirs.some((d) => d.includes("site-header"))).toBe(true);
     expect(dirs.some((d) => d.includes("site-footer"))).toBe(true);
@@ -282,9 +283,9 @@ describe("scaffold", () => {
     expect(dirs.some((d) => d.includes("site-meta"))).toBe(true);
   });
 
-  it("writes all 17 expected files", async () => {
+  it("writes all 18 expected files", async () => {
     await scaffold("my-app", "/tmp");
-    expect(mockWriteFile.mock.calls.length).toBe(17);
+    expect(mockWriteFile.mock.calls.length).toBe(18);
   });
 
   it("writes root config files", async () => {
@@ -317,6 +318,13 @@ describe("scaffold", () => {
   it("writes styles.css", async () => {
     await scaffold("my-app", "/tmp");
     expect(writtenTo("styles.css")).toBeDefined();
+  });
+
+  it("writes favicon.svg into assets", async () => {
+    await scaffold("my-app", "/tmp");
+    const faviconPath = allWrittenPaths().find((p) => p.endsWith("favicon.svg"));
+    expect(faviconPath).toBeDefined();
+    expect(faviconPath).toContain("assets");
   });
 
   it("scopes everything under targetDir/projectName", async () => {

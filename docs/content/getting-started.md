@@ -62,6 +62,7 @@ Run `bascik init` in your project directory to scaffold the starter files and fo
     "build": "bascik --build"
   }
 }
+```
 
 <!-- demo:component-html -->
 ```html
