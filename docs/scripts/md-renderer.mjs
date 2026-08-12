@@ -82,7 +82,7 @@ export async function renderMd(filePath, { skipFirstHeading = false, stripDemoBl
  * @param {object} [range]
  * @param {string} [range.from] - Start from this heading text (inclusive). Omit to start from file beginning.
  * @param {string} [range.to]   - Stop before this heading text (exclusive). Omit to go to end of file.
- * @param {object} [options]    - Same options as renderMd, except heading normalisation is off by default.
+ * @param {object} [options]    - Same options as renderMd.
  */
 export async function renderMdRange(filePath, { from, to } = {}, options = {}) {
   let md = await readFile(filePath, 'utf8');
@@ -96,8 +96,7 @@ export async function renderMdRange(filePath, { from, to } = {}, options = {}) {
     if (idx !== -1) md = md.slice(0, idx);
   }
 
-  // Heading-level normalisation is only meaningful for full-document renders.
-  return _transformMd(md, { normalizeHeadings: false, ...options });
+  return _transformMd(md, options);
 }
 
 function _headingIndex(md, headingText) {
@@ -108,7 +107,7 @@ function _headingIndex(md, headingText) {
   return m[1] === '' ? m.index : m.index + 1;
 }
 
-function _transformMd(md, { skipFirstHeading = false, stripDemoBlocks = false, normalizeHeadings = true } = {}) {
+function _transformMd(md, { skipFirstHeading = false, stripDemoBlocks = false } = {}) {
   if (stripDemoBlocks) {
     md = md.replace(/<!--\s*demo:[\w-]+\s*-->\n```[\w-]*\n[\s\S]*?\n```/g, '').trim();
   }
@@ -117,21 +116,6 @@ function _transformMd(md, { skipFirstHeading = false, stripDemoBlocks = false, n
   // Optionally strip the first heading (h1–h6)
   if (skipFirstHeading) {
     html = html.replace(/^<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>\n?/, '');
-  }
-
-  // Normalize heading levels so the minimum rendered heading is h2.
-  // Disabled for mid-document slices (renderMdRange) where levels are already correct.
-  if (normalizeHeadings) {
-    const levels = [];
-    html.replace(/<h([1-6])[^>]*>/g, (_, n) => { levels.push(+n); });
-    if (levels.length > 0) {
-      const shift = Math.min(...levels) - 2;
-      if (shift > 0) {
-        html = html.replace(/<(\/?)h([1-6])([^>]*)>/g, (_, slash, n, attrs) =>
-          `<${slash}h${Math.min(+n - shift, 6)}${attrs}>`
-        );
-      }
-    }
   }
 
   // Add id attributes to h2 headings and wrap text in a copyable anchor link.
