@@ -7,7 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Open-page priority transpilation** — when a file change triggers a full re-transpile of all pages (e.g. a file in `directory.watch` changed), pages with an active SSE live-reload connection are transpiled first. Those pages emit `"transpiled"` before the rest of the batch, so the browser reload fires as soon as the visible page is ready without waiting for all other pages to finish. `MemoryStore` now tracks open pages via `trackOpenPage` / `untrackOpenPage`, called by the HTTP/2 server when SSE connections open and close. `partitionByOpenPages` in `processing.ts` splits any page list into open and rest batches.
+- **`yarn workspace @bascik/bascik update-coverage`** — new script that runs the full test suite with coverage and copies the summary JSON to `pkg/test-coverage.json`. The docs build reads this file to show current line, function, and branch coverage on the Testing internals page without requiring an external service.
+- **BSAL-1.0 license page** — the Bascik Source Available License 1.0 is now published at `https://bascik.dev/license` and linked from the docs footer. All three `LICENSE` files include `URL: https://bascik.dev/license` at the top. `pkg/package.json` and `create/package.json` have a `prepack` script that copies the root `LICENSE` into each package before publishing.
+- **`NOTICE.md`** — third-party attribution file crediting chokidar (MIT, Paul Miller / Elan Shanker).
+
 ### Fixed
+
+- **SSE live-reload missing when `Referer` header is absent** — the `eventHandler` for `/bascik-live-reload` bailed early when `headers.referer` was missing (e.g. Safari, privacy extensions, `Referrer-Policy: no-referrer`), silently swallowing every `"transpiled"` event and causing the browser to never reload. The handler now reloads unconditionally when no referer is present, and only applies path-matching when a referer is available.
+- **SSE live-reload lost after dev server restart** — the injected live-reload script closed the `EventSource` permanently on `onerror` and printed a console warning instead of reconnecting. After a server restart, the browser required a manual page refresh to resume live reload. The script now retries the connection every 1.5 seconds after an error, and reloads the page once when it successfully reconnects so the browser picks up any build changes that occurred while the server was down. `window.onbeforeunload` (overwritable property) replaced with `addEventListener('beforeunload')`.
+
+### Changed
+
+- **License replaced: ELv2 → BSAL-1.0** — Elastic License 2.0 replaced with the Bascik Source Available License 1.0. Key differences: the hosted-service restriction is narrowed to specifically prohibit "hosted or managed build/transpilation service" rather than the ELv2 "managed service" framing; the SaaS-oriented "license key" clause is removed; redistribution of modified copies is now permitted as long as no fee is charged for the software itself.
 
 - **Yarn workspace CLI linking on fresh installs** — the `bascik` bin now points to a tracked launcher, allowing Yarn to create the executable link before `pkg/dist/` is built.
 - **ANSI escape codes leaking from build/server scripts** — HTML-generating child processes now disable color output and strip terminal escape sequences before injection, preventing Netlify/CI environments from corrupting rendered footer text with `\u001b[33m` / `\u001b[39m` sequences.

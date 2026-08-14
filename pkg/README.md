@@ -2,7 +2,10 @@
 
 [![CI](https://github.com/collin-thomas/bascik/actions/workflows/ci.yml/badge.svg)](https://github.com/collin-thomas/bascik/actions/workflows/ci.yml)
 [![npm version](https://badge.fury.io/js/%40bascik%2Fbascik.svg)](https://www.npmjs.com/package/@bascik/bascik)
-[![License: ELv2](https://img.shields.io/badge/License-ELv2-blue.svg)](https://www.elastic.co/licensing/elastic-license)
+[![License: BSAL-1.0](https://img.shields.io/badge/License-BSAL--1.0-blue.svg)](https://bascik.dev/license)
+[![Lines](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fcollin-thomas%2Fbascik%2Fmain%2Fpkg%2Ftest-coverage.json&query=%24.total.lines.pct&label=lines&suffix=%25&color=brightgreen)](https://github.com/collin-thomas/bascik/blob/main/pkg/test-coverage.json)
+[![Functions](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fcollin-thomas%2Fbascik%2Fmain%2Fpkg%2Ftest-coverage.json&query=%24.total.functions.pct&label=functions&suffix=%25&color=brightgreen)](https://github.com/collin-thomas/bascik/blob/main/pkg/test-coverage.json)
+[![Branches](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fcollin-thomas%2Fbascik%2Fmain%2Fpkg%2Ftest-coverage.json&query=%24.total.branches.pct&label=branches&suffix=%25&color=blue)](https://github.com/collin-thomas/bascik/blob/main/pkg/test-coverage.json)
 
 Bascik is a build tool for HTML components. It is **not** a JavaScript framework — you write plain HTML, CSS, and JavaScript.
 

@@ -1,6 +1,6 @@
 import fc from "fast-check";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { recursivelyTranspile, pageProcessing, selectivelyProcessPagesForWatchPath } from "./processing.js";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { recursivelyTranspile, pageProcessing, selectivelyProcessPagesForWatchPath, partitionByOpenPages } from "./processing.js";
 import { BascikConfig } from "./config.js";
 
 // Disable all scoping so tests produce predictable, readable HTML
@@ -55,6 +55,9 @@ vi.mock("./mem.js", () => ({
   mem: {
     storePage: vi.fn(),
     pagesThisComponentIsUsedOn: vi.fn(() => []),
+    openPages: [] as string[],
+    trackOpenPage: vi.fn(),
+    untrackOpenPage: vi.fn(),
   },
 }));
 
@@ -747,5 +750,113 @@ describe("selectivelyProcessPagesForWatchPath", () => {
     await selectivelyProcessPagesForWatchPath("scripts/nav.mjs");
     const { eventEmitter } = await import("./events.js");
     expect(eventEmitter.emit).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// G: partitionByOpenPages
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("partitionByOpenPages", () => {
+  beforeEach(() => {
+    // Reset openPages to empty between tests
+    (mem as any).openPages = [];
+  });
+
+  it("returns all pages in rest when no pages are open", () => {
+    const pages = ["src/pages/about.html", "src/pages/faq.html"];
+    const [open, rest] = partitionByOpenPages(pages);
+    expect(open).toEqual([]);
+    expect(rest).toEqual(pages);
+  });
+
+  it("moves the open page to the front partition", () => {
+    (mem as any).openPages = ["/about"];
+    const pages = ["src/pages/index.html", "src/pages/about.html", "src/pages/faq.html"];
+    const [open, rest] = partitionByOpenPages(pages);
+    expect(open).toEqual(["src/pages/about.html"]);
+    expect(rest).toContain("src/pages/index.html");
+    expect(rest).toContain("src/pages/faq.html");
+    expect(rest).not.toContain("src/pages/about.html");
+  });
+
+  it("handles multiple open pages", () => {
+    (mem as any).openPages = ["/about", "/faq"];
+    const pages = ["src/pages/index.html", "src/pages/about.html", "src/pages/faq.html"];
+    const [open, rest] = partitionByOpenPages(pages);
+    expect(open).toHaveLength(2);
+    expect(open).toContain("src/pages/about.html");
+    expect(open).toContain("src/pages/faq.html");
+    expect(rest).toEqual(["src/pages/index.html"]);
+  });
+
+  it("returns empty open partition if open pages are not in the page list", () => {
+    (mem as any).openPages = ["/nonexistent"];
+    const pages = ["src/pages/about.html"];
+    const [open, rest] = partitionByOpenPages(pages);
+    expect(open).toEqual([]);
+    expect(rest).toEqual(pages);
+  });
+
+  it("handles an empty page list", () => {
+    (mem as any).openPages = ["/about"];
+    const [open, rest] = partitionByOpenPages([]);
+    expect(open).toEqual([]);
+    expect(rest).toEqual([]);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// H: live-reload script injection
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("pageProcessing – live-reload script injection", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (BascikConfig as Record<string, unknown>).inlineStyles = false;
+    (BascikConfig as Record<string, unknown>).minifyStyles = false;
+    (BascikConfig as Record<string, unknown>).isBuild = false;
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(PAGE_HTML);
+  });
+
+  afterEach(() => {
+    (BascikConfig as Record<string, unknown>).isBuild = false;
+  });
+
+  it("injects the live-reload script in dev mode", async () => {
+    await pageProcessing(PAGE_PATH, {});
+    const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(pageContent).toContain("/bascik-live-reload");
+  });
+
+  it("does not inject the live-reload script in build mode", async () => {
+    (BascikConfig as Record<string, unknown>).isBuild = true;
+    const { writeFile } = await import("node:fs/promises");
+    await pageProcessing(PAGE_PATH, {});
+    const writtenContent = (writeFile as ReturnType<typeof vi.fn>).mock.calls[0]?.[1] as string;
+    expect(writtenContent).not.toContain("/bascik-live-reload");
+  });
+
+  it("includes reconnection logic (regression: onerror used to close without retrying)", async () => {
+    await pageProcessing(PAGE_PATH, {});
+    const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    // setTimeout reconnect must be present
+    expect(pageContent).toContain("setTimeout(connect");
+    // wasConnected flag must be present for reload-on-reconnect logic
+    expect(pageContent).toContain("wasConnected");
+  });
+
+  it("does not contain the old broken onerror that only warned and never reconnected", async () => {
+    await pageProcessing(PAGE_PATH, {});
+    const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(pageContent).not.toContain("Connection Lost");
+    expect(pageContent).not.toContain("console.warn");
+  });
+
+  it("uses addEventListener for beforeunload instead of window.onbeforeunload", async () => {
+    await pageProcessing(PAGE_PATH, {});
+    const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(pageContent).toContain("addEventListener('beforeunload'");
+    expect(pageContent).not.toContain("window.onbeforeunload");
   });
 });

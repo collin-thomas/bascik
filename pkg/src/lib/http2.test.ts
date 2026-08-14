@@ -37,7 +37,7 @@ vi.mock("node:fs", () => ({
 }));
 
 vi.mock("./mem.js", () => ({
-  mem: { getPage: vi.fn(), getPageExact: vi.fn() },
+  mem: { getPage: vi.fn(), getPageExact: vi.fn(), trackOpenPage: vi.fn(), untrackOpenPage: vi.fn() },
 }));
 
 vi.mock("./config.js", () => ({
@@ -78,8 +78,14 @@ import { serveHttp2, _rateLimiter } from "./http2.js";
 import { mem } from "./mem.js";
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
+import { eventEmitter } from "./events.js";
 
-const mockMem = mem as unknown as { getPage: ReturnType<typeof vi.fn>; getPageExact: ReturnType<typeof vi.fn> };
+const mockMem = mem as unknown as {
+  getPage: ReturnType<typeof vi.fn>;
+  getPageExact: ReturnType<typeof vi.fn>;
+  trackOpenPage: ReturnType<typeof vi.fn>;
+  untrackOpenPage: ReturnType<typeof vi.fn>;
+};
 const mockCreateReadStream = createReadStream as unknown as ReturnType<typeof vi.fn>;
 const mockStat = stat as unknown as ReturnType<typeof vi.fn>;
 
@@ -908,6 +914,111 @@ describe("serveHttp2 – cert generation", () => {
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining("mkcert not found or failed"),
     );
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SSE live-reload
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("serveHttp2 – SSE live-reload (/bascik-live-reload)", () => {
+  const mockEventEmitter = eventEmitter as unknown as {
+    on: ReturnType<typeof vi.fn>;
+    removeListener: ReturnType<typeof vi.fn>;
+  };
+
+  beforeEach(async () => {
+    await serveHttp2();
+  });
+
+  /** Fires the registered "transpiled" event listener for /bascik-live-reload. */
+  const fireTranspiled = (relativePagePath: string) => {
+    const [, handler] = mockEventEmitter.on.mock.calls.find(
+      (c: any[]) => c[0] === "transpiled",
+    ) as [string, (arg: { relativePagePath: string }) => void];
+    handler({ relativePagePath });
+  };
+
+  it("responds with content-type text/event-stream and sends a connected message", async () => {
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/bascik-live-reload"));
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({ "content-type": "text/event-stream" }),
+    );
+    expect(stream.write).toHaveBeenCalledWith("data: connected\n\n");
+  });
+
+  it("sends reload when Referer header is absent (regression: was silently dropped)", async () => {
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    // No referer header — simulates Safari, privacy extensions, or no-referrer policy.
+    await handler(stream, makeHeaders("/bascik-live-reload", "GET", "", undefined));
+    fireTranspiled("pages/about.html");
+    expect(stream.write).toHaveBeenCalledWith("data: reload\n\n");
+  });
+
+  it("sends reload when Referer matches the transpiled page", async () => {
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/bascik-live-reload", "GET", "", "https://localhost:8443/about"));
+    fireTranspiled("pages/about.html");
+    expect(stream.write).toHaveBeenCalledWith("data: reload\n\n");
+  });
+
+  it("does not send reload when Referer is a different page than the one transpiled", async () => {
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/bascik-live-reload", "GET", "", "https://localhost:8443/getting-started"));
+    fireTranspiled("pages/about.html");
+    const reloadCalls = stream.write.mock.calls.filter((c: any[]) => c[0] === "data: reload\n\n");
+    expect(reloadCalls).toHaveLength(0);
+  });
+
+  it("removes event listeners when the SSE stream closes", async () => {
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/bascik-live-reload"));
+    // Trigger the stream close callback registered by the handler.
+    const closeCallback = stream.on.mock.calls.find((c: any[]) => c[0] === "close")?.[1] as () => void;
+    closeCallback?.();
+    expect(mockEventEmitter.removeListener).toHaveBeenCalledWith("transpiled", expect.any(Function));
+    expect(mockEventEmitter.removeListener).toHaveBeenCalledWith("asset-changed", expect.any(Function));
+  });
+
+  it("calls mem.trackOpenPage with the referer pathname when a connection opens", async () => {
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/bascik-live-reload", "GET", "", "https://localhost:8443/faq"));
+    expect(mockMem.trackOpenPage).toHaveBeenCalledWith("/faq");
+  });
+
+  it("calls mem.untrackOpenPage when the SSE stream closes", async () => {
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/bascik-live-reload", "GET", "", "https://localhost:8443/faq"));
+    const closeCallback = stream.on.mock.calls.find((c: any[]) => c[0] === "close")?.[1] as () => void;
+    closeCallback?.();
+    expect(mockMem.untrackOpenPage).toHaveBeenCalledWith("/faq");
+  });
+
+  it("does not call mem.trackOpenPage when there is no Referer header", async () => {
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/bascik-live-reload", "GET", "", undefined));
+    expect(mockMem.trackOpenPage).not.toHaveBeenCalled();
+  });
+
+  it("responds 404 in --serve mode (SSE only runs in dev)", async () => {
+    const { BascikConfig } = await import("./config.js");
+    (BascikConfig as any).isServe = true;
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/bascik-live-reload"));
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({ ":status": 404 }),
+    );
+    (BascikConfig as any).isServe = false;
   });
 });
 

@@ -11,8 +11,8 @@ A build tool for HTML components. No JavaScript framework — plain HTML, CSS, a
 
 | Directory   | Purpose                                                                            |
 | ----------- | ---------------------------------------------------------------------------------- |
-| `pkg/`      | The `@bascik/bascik` npm package — source, tests, benchmarks                      |
-| `create/`   | The `create-bascik` scaffolding CLI — `npm create bascik@latest`                  |
+| `pkg/`      | The `@bascik/bascik` npm package — source, tests, benchmarks — see [pkg/README.md](pkg/README.md) |
+| `create/`   | The `create-bascik` scaffolding CLI — `npm create bascik@latest` — see [create/README.md](create/README.md) |
 | `docs/`     | Documentation site at [bascik.dev](https://bascik.dev) — built with Bascik itself |
 
 ---
@@ -48,8 +48,3 @@ After any `pkg/src/` change, rebuild the package and the docs server will pick i
 ```sh
 yarn --cwd docs build
 ```
-
-
----
-
-See [pkg/README.md](pkg/README.md) for tests, publishing steps, and internals documentation.

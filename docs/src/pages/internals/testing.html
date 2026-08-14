@@ -27,6 +27,28 @@
           );
           console.log(await renderMd('./content/internals/testing.md'));
         </script>
+
+        <script data-bascik-build>
+          import { readFile } from 'node:fs/promises';
+          import { join } from 'node:path';
+          try {
+            const raw = await readFile(join(process.cwd(), '../pkg/test-coverage.json'), 'utf8');
+            const { total } = JSON.parse(raw);
+            const fmt = (n) => n.toFixed(1) + '%';
+            console.log(`
+              <div class="callout">
+                <p><strong>Unit test coverage (last run):</strong>
+                  Lines&nbsp;${fmt(total.lines.pct)} &nbsp;·&nbsp;
+                  Functions&nbsp;${fmt(total.functions.pct)} &nbsp;·&nbsp;
+                  Branches&nbsp;${fmt(total.branches.pct)}
+                  &nbsp;<span style="opacity:.55;font-size:.8em">— regenerate with <code>yarn workspace @bascik/bascik update-coverage</code></span>
+                </p>
+              </div>
+            `);
+          } catch {
+            // coverage file not present; skip silently
+          }
+        </script>
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';

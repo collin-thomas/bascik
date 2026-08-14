@@ -174,3 +174,19 @@ yarn --cwd docs bascik --build
 ```
 
 Then inspect the relevant `docs/dist/` output to confirm the pkg change has the intended effect.
+
+## Tests and Coverage
+
+**When adding, removing, or significantly changing tests in `pkg/src/`:**
+
+- The testing docs (`docs/content/internals/testing.md`) describe the test approach, not an enumerated list of files — the "Test Files" section links to GitHub which is always current. You only need to update the prose if the testing *patterns* change (e.g. a new mock strategy, a new test runner, new helpers).
+- The coverage numbers shown on the testing page are read from `pkg/test-coverage.json` at docs build time. After adding tests, regenerate it:
+  ```sh
+  yarn workspace @bascik/bascik update-coverage
+  ```
+  Then commit `pkg/test-coverage.json` alongside the test changes so the docs show current numbers.
+
+**When changing `pkg/src/lib/dev-server.md` (or adding to the live-reload / SSE / watch system):**
+Update `docs/content/internals/dev-server.md` to reflect the change. This page is the source of truth for how the dev server and watch system work.
+
+**General principle:** the three files that must stay in sync are `llms.txt`, `SKILL.md`, and the relevant `docs/content/internals/*.md`. The copilot-instructions file is the enforcement mechanism — add notes here when a new sync relationship is created.

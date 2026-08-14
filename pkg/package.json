@@ -36,6 +36,7 @@
     "test": "vitest",
     "test:ci": "vitest run --coverage.enabled --coverage.reporter='text-summary'",
     "test:coverage": "vitest run --coverage.enabled",
+    "update-coverage": "vitest run --coverage.enabled && cp coverage/coverage-summary.json test-coverage.json",
     "bench": "vitest bench",
     "typecheck": "node_modules/.bin/tsc --noEmit",
     "e2e": "node_modules/.bin/playwright test --config e2e/playwright.config.ts"
