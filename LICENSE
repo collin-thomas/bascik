@@ -12,14 +12,13 @@ license.
 Subject to the terms below, the licensor grants you a non-exclusive, worldwide,
 royalty-free license to:
 
-1. Use the software as a build tool to develop, build, test, and deploy your
-   own websites, applications, and other projects, including for commercial
+1. Use the software as a build tool to develop, build, test, deploy, and host
+   your own websites, applications, and other projects, including for commercial
    purposes.
 
 2. Copy the software for the purposes expressly permitted by this license.
 
-3. Modify the software solely for your own personal or internal organizational
-   use, provided that modified versions are not distributed to third parties.
+3. Modify the software for your own personal, internal, or public use.
 
 ## Restrictions
 
@@ -30,21 +29,19 @@ Without the licensor's prior written permission, you may not:
    framework, or development tool — whether standalone, bundled, or as a feature
    of a larger product.
 
-2. Distribute, publish, or otherwise make available to third parties any version
-   of the software that has been modified, forked, or adapted from the original.
+2. Offer the software itself as a hosted or managed build service, transpilation
+   service, or development tool service, where third parties access the
+   software's core functionality remotely without running it themselves.
 
-3. Offer the software's functionality to third parties through a hosted, managed,
-   or cloud-based service where the primary value derives from the software.
-
-4. Remove, alter, or obscure any copyright, trademark, or license notice in the
+3. Remove, alter, or obscure any copyright, trademark, or license notice in the
    software or its documentation.
 
-5. Sublicense the software or grant any third party rights beyond those expressly
+4. Sublicense the software or grant any third party rights beyond those expressly
    set out in this license.
 
 ## Permitted Redistribution
 
-You may distribute unmodified copies of the software, provided that:
+You may distribute copies of the software, modified or unmodified, provided that:
 
 - This license and all copyright notices are included with each copy.
 - You do not charge a fee for the software itself (separate from reasonable
