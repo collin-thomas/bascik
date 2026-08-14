@@ -33,6 +33,7 @@
   },
   "scripts": {
     "build": "node_modules/.bin/tsc -p tsconfig.build.json",
+    "prepack": "cp ../LICENSE LICENSE",
     "test": "vitest",
     "test:ci": "vitest run --coverage.enabled --coverage.reporter='text-summary'",
     "test:coverage": "vitest run --coverage.enabled",

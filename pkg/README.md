@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/collin-thomas/bascik/actions/workflows/ci.yml/badge.svg)](https://github.com/collin-thomas/bascik/actions/workflows/ci.yml)
 [![npm version](https://badge.fury.io/js/%40bascik%2Fbascik.svg)](https://www.npmjs.com/package/@bascik/bascik)
-[![License: BSAL-1.0](https://img.shields.io/badge/License-BSAL--1.0-blue.svg)](https://github.com/collin-thomas/bascik/blob/main/LICENSE)
+[![License: BSAL-1.0](https://img.shields.io/badge/License-BSAL--1.0-blue.svg)](https://bascik.dev/license)
 
 Bascik is a build tool for HTML components. It is **not** a JavaScript framework — you write plain HTML, CSS, and JavaScript.
 

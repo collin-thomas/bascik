@@ -32,6 +32,7 @@ export const NAV = [
     { href: '/compatibility', label: 'Scoping Compatibility' },
     { href: '/faq', label: 'FAQ' },
     { href: '/llm-skill', label: 'AI Skill' },
+    { href: '/license', label: 'License (BSAL-1.0)' },
   ]},
   { section: 'Recipes', pages: [
     { href: '/using-markdown', label: 'Using Markdown' },

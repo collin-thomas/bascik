@@ -174,3 +174,18 @@ yarn --cwd docs bascik --build
 ```
 
 Then inspect the relevant `docs/dist/` output to confirm the pkg change has the intended effect.
+
+## License Source of Truth
+
+The license lives in **three places** that must stay in sync:
+
+- `docs/content/license.md` — the web-formatted version rendered at `https://bascik.dev/license`
+- `LICENSE` (repo root) — plain-text version; **required** for GitHub license detection and as the `prepack` source
+- `pkg/LICENSE` and `create/LICENSE` — copies for the npm tarballs; synced automatically on publish via the `prepack` script in each `package.json`
+
+**When updating the license terms:**
+1. Edit `docs/content/license.md` (the human-readable web version)
+2. Mirror those changes to the root `LICENSE` (same terms, plain-text format)
+3. Run `cp LICENSE pkg/LICENSE && cp LICENSE create/LICENSE` to sync the package copies immediately
+
+Do **not** delete the root `LICENSE` — GitHub reads it for repo-level license detection. Do not edit `pkg/LICENSE` or `create/LICENSE` directly; they are derived files.

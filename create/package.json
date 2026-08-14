@@ -25,6 +25,7 @@
   },
   "scripts": {
     "build": "node_modules/.bin/tsc -p tsconfig.build.json",
+    "prepack": "cp ../LICENSE LICENSE",
     "test": "vitest",
     "test:ci": "vitest run",
     "typecheck": "node_modules/.bin/tsc --noEmit"

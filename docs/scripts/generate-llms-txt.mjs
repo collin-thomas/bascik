@@ -37,7 +37,12 @@ async function collectMdFiles(dir) {
   return files;
 }
 
-const mdFiles = await collectMdFiles(contentDir);
+/** Files to exclude from llms.txt (legal/meta content that isn't useful to LLMs). */
+const EXCLUDE = new Set(['license.md']);
+
+const mdFiles = (await collectMdFiles(contentDir)).filter(
+  f => !EXCLUDE.has(f.split('/').pop())
+);
 
 const sections = await Promise.all(
   mdFiles.map(f => readFile(f, 'utf8'))
