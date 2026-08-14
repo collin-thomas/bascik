@@ -223,7 +223,7 @@ Hugo reads YAML/TOML front matter from content files and makes it available in t
 ---
 title: My Post
 description: A short summary.
-date: 2024-03-15
+date: 2026-07-05
 ---
 Post body here.
 ```

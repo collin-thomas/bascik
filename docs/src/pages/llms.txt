@@ -2949,7 +2949,7 @@ Astro's `<slot name="header" />` maps to a receiver element with `data-bascik-sl
 <PageLayout>
   <h1 slot="header">Page Title</h1>
   <p>Main content.</p>
-  <p slot="footer">© 2025 Acme</p>
+  <p slot="footer">© 2026 Acme</p>
 </PageLayout>
 ```
 
@@ -2965,7 +2965,7 @@ Astro's `<slot name="header" />` maps to a receiver element with `data-bascik-sl
 <page-layout>
   <p>Main content.</p>
   <div data-bascik-slot="header"><h1>Page Title</h1></div>
-  <div data-bascik-slot="footer"><p>© 2025 Acme</p></div>
+  <div data-bascik-slot="footer"><p>© 2026 Acme</p></div>
 </page-layout>
 ```
 
@@ -3621,7 +3621,7 @@ Hugo reads YAML/TOML front matter from content files and makes it available in t
 ---
 title: My Post
 description: A short summary.
-date: 2024-03-15
+date: 2026-07-05
 ---
 Post body here.
 ```
@@ -6566,7 +6566,7 @@ npm install gray-matter marked
 ```md
 ---
 title: My First Post
-date: 2025-01-15
+date: 2026-07-05
 tags: [css, performance]
 ---
 
