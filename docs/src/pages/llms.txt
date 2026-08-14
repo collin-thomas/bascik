@@ -1743,12 +1743,22 @@ The server registers `process.once` handlers for `SIGTERM` and `SIGINT`. On eith
 
 ## In-Memory Page Store (`mem.ts`)
 
-The `MemoryStore` class holds two maps:
+The `MemoryStore` class holds two maps and one set:
 
 - `#files`: maps HTTP paths (e.g. `/getting-started`) to `StoredPage` objects containing the raw buffer, a brotli-compressed buffer, and the set of component names used on that page.
 - `#components`: an inverted index mapping each component name to the `Set<string>` of absolute page file paths that use it.
+- `#openPages`: the set of HTTP paths that currently have an active SSE live-reload connection (i.e. a browser tab is open on that page).
 
 This inverted index powers selective re-transpilation. When a component file changes, `selectivelyProcessPages` looks up exactly which pages need rebuilding without scanning every page in the project.
+
+### Open-page priority
+
+When a file change triggers a full re-transpile of all pages (e.g. a file in `directory.watch` changed), Bascik uses the `#openPages` set to sort the page list so currently-open pages are transpiled first. Those pages emit the `"transpiled"` event before the rest of the batch, which means the browser live-reload fires as soon as the visible page is ready rather than waiting for all pages to finish.
+
+The tracking lifecycle:
+1. An SSE connection opens at `/bascik-live-reload` — the server parses the `Referer` header and calls `mem.trackOpenPage(path)`.
+2. The SSE stream closes (tab navigates away, browser closes) — the server calls `mem.untrackOpenPage(path)`.
+3. `partitionByOpenPages` in `processing.ts` splits any page list into `[openPages, rest]` and the caller awaits open pages first.
 
 ### Brotli compression
 
