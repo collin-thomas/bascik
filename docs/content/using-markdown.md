@@ -201,7 +201,7 @@ npm install gray-matter marked
 ```md
 ---
 title: My First Post
-date: 2025-01-15
+date: 2026-07-05
 tags: [css, performance]
 ---
 

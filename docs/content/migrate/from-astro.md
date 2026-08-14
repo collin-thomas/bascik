@@ -136,7 +136,7 @@ Astro's `<slot name="header" />` maps to a receiver element with `data-bascik-sl
 <PageLayout>
   <h1 slot="header">Page Title</h1>
   <p>Main content.</p>
-  <p slot="footer">© 2025 Acme</p>
+  <p slot="footer">© 2026 Acme</p>
 </PageLayout>
 ```
 
@@ -152,7 +152,7 @@ Astro's `<slot name="header" />` maps to a receiver element with `data-bascik-sl
 <page-layout>
   <p>Main content.</p>
   <div data-bascik-slot="header"><h1>Page Title</h1></div>
-  <div data-bascik-slot="footer"><p>© 2025 Acme</p></div>
+  <div data-bascik-slot="footer"><p>© 2026 Acme</p></div>
 </page-layout>
 ```
 
