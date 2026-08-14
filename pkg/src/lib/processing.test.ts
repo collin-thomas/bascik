@@ -859,4 +859,39 @@ describe("pageProcessing – live-reload script injection", () => {
     expect(pageContent).toContain("addEventListener('beforeunload'");
     expect(pageContent).not.toContain("window.onbeforeunload");
   });
+
+  it("does not set wasConnected in onopen (regression: caused infinite reload loop on first connection)", async () => {
+    await pageProcessing(PAGE_PATH, {});
+    const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    // onopen must NOT assign wasConnected — that caused every page load to
+    // see wasConnected=true before data:connected arrived, triggering reload immediately.
+    expect(pageContent).not.toContain("onopen");
+  });
+
+  it("sets wasConnected only after the connected message check (not before)", async () => {
+    await pageProcessing(PAGE_PATH, {});
+    const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    // The pattern 'if (wasConnected)' must appear BEFORE 'wasConnected = true' in the source.
+    // If the assignment came first, the first connection would always trigger a reload.
+    const checkIdx = pageContent.indexOf("if (wasConnected)");
+    const assignIdx = pageContent.indexOf("wasConnected = true");
+    expect(checkIdx).toBeGreaterThan(-1);
+    expect(assignIdx).toBeGreaterThan(-1);
+    expect(checkIdx).toBeLessThan(assignIdx);
+  });
+
+  it("reload on reconnect is gated inside the connected branch (not at top level)", async () => {
+    await pageProcessing(PAGE_PATH, {});
+    const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    // Extract the onmessage handler body from the script.
+    // The reload triggered by 'connected' must be nested inside 'if (wasConnected)'
+    // so it cannot fire on the very first message received.
+    const connectedIdx = pageContent.indexOf("e.data === 'connected'");
+    const reloadInConnectedIdx = pageContent.indexOf("window.location.reload()", connectedIdx);
+    const assignAfterCheckIdx = pageContent.indexOf("wasConnected = true", connectedIdx);
+    // reload must come before the wasConnected assignment (it's in the if-branch above it)
+    expect(connectedIdx).toBeGreaterThan(-1);
+    expect(reloadInConnectedIdx).toBeGreaterThan(connectedIdx);
+    expect(assignAfterCheckIdx).toBeGreaterThan(reloadInConnectedIdx);
+  });
 });

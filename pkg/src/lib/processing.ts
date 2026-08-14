@@ -138,13 +138,15 @@ const liveReloadScript = `
     var source;
     function connect() {
       source = new EventSource("/bascik-live-reload");
-      source.onopen = function() { wasConnected = true; };
       source.onmessage = function(e) {
         if (e.data === 'reload') {
           window.location.reload();
-        } else if (e.data === 'connected' && wasConnected) {
-          // Server restarted — reload to pick up fresh build output.
-          window.location.reload();
+        } else if (e.data === 'connected') {
+          if (wasConnected) {
+            // Server restarted — reload to pick up fresh build output.
+            window.location.reload();
+          }
+          wasConnected = true;
         }
       };
       source.onerror = function() {
