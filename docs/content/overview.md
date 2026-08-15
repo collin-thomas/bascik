@@ -25,25 +25,15 @@ Create a file. The file name is the tag name. HTML, CSS, and JavaScript live tog
 <!-- src/components/my-card.html -->
 <style>
   .card {
-    padding: 26px 28px;
+    padding: 24px 28px;
     border: 1px solid #3a3d40;
+    border-top: 3px solid #d3ff8d;
     border-radius: 10px;
-
-    &.active {
-      border-color: #d3ff8d;
-      h3 { color: #d3ff8d; }
-    }
   }
 </style>
-<div class="card" id="card">
+<article class="card">
   <div data-bascik-slot></div>
-</div>
-<script>
-  const card = document.getElementById('card');
-  card.addEventListener('click', () => {
-    card.classList.toggle('active');
-  });
-</script>
+</article>
 ```
 
 Reference the tag in any page. No imports, no registration, no configuration.
@@ -61,31 +51,19 @@ At build time Bascik inlines the component and scopes every class name and DOM s
 
 <!-- demo:home-card-output -->
 ```html
-<!-- dist/index.html - CSS classes and JS selectors scoped -->
+<!-- dist/index.html -->
 <style>
   .bascik__my-card__card {
-    padding: 26px 28px;
+    padding: 24px 28px;
     border: 1px solid #3a3d40;
+    border-top: 3px solid #d3ff8d;
     border-radius: 10px;
-
-    &.bascik__my-card__active {
-      border-color: #d3ff8d;
-      h3 { color: #d3ff8d; }
-    }
   }
 </style>
-<div class="bascik__my-card__card" id="bascik__my-card__a1b__card">
+<article class="bascik__my-card__card">
   <h3>My Card</h3>
   <p>Any HTML goes inside as slot content.</p>
-</div>
-<script>
-  (function () {
-    const card = document.getElementById('bascik__my-card__a1b__card');
-    card.addEventListener('click', () => {
-      card.classList.toggle('bascik__my-card__active');
-    });
-  })();
-</script>
+</article>
 ```
 
 ## Example: Two Isolated Instances
@@ -122,7 +100,7 @@ The same component used twice on one page. Each instance gets its own namespace,
 .ctr-count {
   font-size: 2.4rem;
   font-weight: 700;
-  color: var(--accent);
+  color: #d3ff8d;
 }
 .ctr-dec, .ctr-inc {
   width: 40px;

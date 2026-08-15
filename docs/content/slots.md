@@ -23,7 +23,7 @@ Place default content inside the marker and it renders whenever the component ta
 .simple-slot-card {
   min-height: 9rem;
   padding: 20px;
-  border: 1px solid var(--border);
+  border: 1px solid #3a3d40;
 }
 ```
 
@@ -123,9 +123,9 @@ This example uses two named slots (`eyebrow` and `actions`) plus the default slo
 ```css
 .slot-panel {
   width: min(100%, 34rem);
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
+  background: #242628;
+  border: 1px solid #3a3d40;
+  border-radius: 10px;
   padding: 24px;
 }
 
@@ -142,7 +142,7 @@ This example uses two named slots (`eyebrow` and `actions`) plus the default slo
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: #d3ff8d;
 }
 
 .slot-panel-title {
@@ -153,13 +153,13 @@ This example uses two named slots (`eyebrow` and `actions`) plus the default slo
 .slot-panel-actions {
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid #3a3d40;
 }
 
 .slot-panel-actions a {
   display: inline-flex;
   font-weight: 600;
-  color: var(--accent);
+  color: #d3ff8d;
   text-decoration: none;
 }
 ```

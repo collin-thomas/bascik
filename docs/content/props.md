@@ -24,8 +24,8 @@ Set `data-bascik-prop-{name}="value"` on the component tag. The value is injecte
 ```css
 .alert-box {
   padding: 20px;
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
+  border: 1px solid #3a3d40;
+  border-left: 3px solid #d3ff8d;
 }
 ```
 

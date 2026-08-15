@@ -88,9 +88,9 @@ This example forwards a class, an ID, an accessibility label, and a testing hook
 ```css
 .inherit-card {
   width: min(100%, 34rem);
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
+  background: #242628;
+  border: 1px solid #3a3d40;
+  border-radius: 10px;
   padding: 24px;
 }
 
@@ -100,7 +100,7 @@ This example forwards a class, an ID, an accessibility label, and a testing hook
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: #d3ff8d;
 }
 
 .inherit-card-title {
@@ -110,7 +110,7 @@ This example forwards a class, an ID, an accessibility label, and a testing hook
 
 .inherit-card-body {
   margin: 0;
-  color: var(--text-muted);
+  color: #8d929e;
 }
 ```
 

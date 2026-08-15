@@ -68,20 +68,44 @@
             <hello-card></hello-card>
           </div>
           <div data-bascik-slot="source-usage">
-            <code-block data-bascik-prop-lang="html"><script data-bascik-build>
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                 console.log(await extractDemoBlock('./content/components.md', 'source-usage-hello'));
-              </script></code-block>
+              </script>
+            </code-block>
           </div>
           <div data-bascik-slot="source-html">
-            <code-block data-bascik-prop-lang="html"><script data-bascik-build>
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                 console.log(await extractDemoBlock('./content/components.md', 'source-html-hello'));
-              </script></code-block>
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/components.md', 'output-html-hello'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-css">
+            <code-block data-bascik-prop-lang="css">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/components.md', 'output-css-hello'));
+              </script>
+            </code-block>
           </div>
         </component-demo>
 
@@ -100,20 +124,44 @@
             <comp-badge></comp-badge>
           </div>
           <div data-bascik-slot="source-usage">
-            <code-block data-bascik-prop-lang="html"><script data-bascik-build>
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                 console.log(await extractDemoBlock('./content/components.md', 'source-usage-badge'));
-              </script></code-block>
+              </script>
+            </code-block>
           </div>
           <div data-bascik-slot="source-html">
-            <code-block data-bascik-prop-lang="html"><script data-bascik-build>
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                 console.log(await extractDemoBlock('./content/components.md', 'source-html-badge'));
-              </script></code-block>
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/components.md', 'output-html-badge'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-css">
+            <code-block data-bascik-prop-lang="css">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/components.md', 'output-css-badge'));
+              </script>
+            </code-block>
           </div>
         </component-demo>
 
@@ -132,28 +180,54 @@
             <comp-toggle></comp-toggle>
           </div>
           <div data-bascik-slot="source-usage">
-            <code-block data-bascik-prop-lang="html"><script data-bascik-build>
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                 console.log(await extractDemoBlock('./content/components.md', 'source-usage-toggle'));
-              </script></code-block>
+              </script>
+            </code-block>
           </div>
           <div data-bascik-slot="source-html">
-            <code-block data-bascik-prop-lang="html"><script data-bascik-build>
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                 console.log(await extractDemoBlock('./content/components.md', 'source-html-toggle'));
-              </script></code-block>
+              </script>
+            </code-block>
           </div>
           <div data-bascik-slot="source-js">
-            <code-block data-bascik-prop-lang="js"><script data-bascik-build>
+            <code-block data-bascik-prop-lang="js">
+              <script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                 console.log(await extractDemoBlock('./content/components.md', 'source-js-toggle'));
-              </script></code-block>
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/components.md', 'output-html-toggle'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-css">
+            <code-block data-bascik-prop-lang="css">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/components.md', 'output-css-toggle'));
+              </script>
+            </code-block>
           </div>
         </component-demo>
 
@@ -172,20 +246,44 @@
             <comp-alert></comp-alert>
           </div>
           <div data-bascik-slot="source-usage">
-            <code-block data-bascik-prop-lang="html"><script data-bascik-build>
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                 console.log(await extractDemoBlock('./content/components.md', 'source-usage-alert'));
-              </script></code-block>
+              </script>
+            </code-block>
           </div>
           <div data-bascik-slot="source-html">
-            <code-block data-bascik-prop-lang="html"><script data-bascik-build>
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                 console.log(await extractDemoBlock('./content/components.md', 'source-html-alert'));
-              </script></code-block>
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/components.md', 'output-html-alert'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-css">
+            <code-block data-bascik-prop-lang="css">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/components.md', 'output-css-alert'));
+              </script>
+            </code-block>
           </div>
         </component-demo>
 
@@ -206,28 +304,54 @@
             </feature-card>
           </div>
           <div data-bascik-slot="source-usage">
-            <code-block data-bascik-prop-lang="html"><script data-bascik-build>
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                 console.log(await extractDemoBlock('./content/components.md', 'source-usage-card'));
-              </script></code-block>
+              </script>
+            </code-block>
           </div>
           <div data-bascik-slot="source-html">
-            <code-block data-bascik-prop-lang="html"><script data-bascik-build>
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                 console.log(await extractDemoBlock('./content/components.md', 'source-html-card'));
-              </script></code-block>
+              </script>
+            </code-block>
           </div>
           <div data-bascik-slot="source-css">
-            <code-block data-bascik-prop-lang="css"><script data-bascik-build>
+            <code-block data-bascik-prop-lang="css">
+              <script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                 console.log(await extractDemoBlock('./content/components.md', 'source-css-card'));
-              </script></code-block>
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/components.md', 'output-html-card'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-css">
+            <code-block data-bascik-prop-lang="css">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/components.md', 'output-css-card'));
+              </script>
+            </code-block>
           </div>
         </component-demo>
 

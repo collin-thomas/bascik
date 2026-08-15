@@ -71,7 +71,7 @@ The toggle below registers `is-open` on a hidden element, then safely applies th
 ```css
 .state-toggle-panel { opacity: 0.55; }
 .state-toggle-panel.is-open {
-  border-color: var(--accent);
+  border-color: #d3ff8d;
   opacity: 1;
 }
 ```
@@ -193,40 +193,40 @@ The scoping format:
 <!-- demo:source-css -->
 ```css
 .ctr {
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
+  background: #242628;
+  border: 1px solid #3a3d40;
+  border-radius: 10px;
   padding: 24px 20px;
   transition: border-color .2s;
 }
-.ctr:hover { border-color: var(--border-hover); }
+.ctr:hover { border-color: rgba(211,255,141,0.35); }
 .ctr-label {
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .1em;
-  color: var(--text-muted);
+  color: #8d929e;
 }
 .ctr-count {
-  font-family: var(--mono);
+  font-family: monospace;
   font-size: 2.4rem;
   font-weight: 700;
-  color: var(--accent);
+  color: #d3ff8d;
   line-height: 1;
 }
 .ctr-dec, .ctr-inc {
   width: 40px; height: 40px;
-  border-radius: var(--r-sm);
+  border-radius: 6px;
   font-size: 1.1rem;
   cursor: pointer;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
+  border: 1px solid #3a3d40;
+  background: #1e2022;
+  color: #f0f1f2;
 }
 .ctr-inc {
-  background: var(--accent-dim);
+  background: rgba(211,255,141,0.12);
   border-color: rgba(211,255,141,0.3);
-  color: var(--accent);
+  color: #d3ff8d;
   font-weight: 700;
 }
 ```
@@ -259,17 +259,17 @@ inc.addEventListener('click', () => { n++; count.textContent = n; });
 <!-- demo:output-css -->
 ```css
 .bascik__demo-counter__ctr {
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
+  background: #242628;
+  border: 1px solid #3a3d40;
+  border-radius: 10px;
   padding: 24px 20px;
   transition: border-color .2s;
 }
 .bascik__demo-counter__ctr-count {
-  font-family: var(--mono);
+  font-family: monospace;
   font-size: 2.4rem;
   font-weight: 700;
-  color: var(--accent);
+  color: #d3ff8d;
 }
 /* class names are shared across all instances of demo-counter */
 ```
