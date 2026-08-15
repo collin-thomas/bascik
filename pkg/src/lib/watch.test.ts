@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ─── Hoisted mock factories ───────────────────────────────────────────────────
 
@@ -40,6 +40,7 @@ vi.mock("./processing.js", () => ({
   processAllPages: vi.fn(),
   removePage: vi.fn(),
   selectivelyProcessPages: vi.fn(),
+  selectivelyProcessPagesForWatchPath: vi.fn(),
 }));
 
 vi.mock("./file-system.js", () => ({
@@ -78,12 +79,14 @@ import {
   processAllPages,
   removePage,
   selectivelyProcessPages,
+  selectivelyProcessPagesForWatchPath,
 } from "./processing.js";
 import {
   copyReplicatePath,
   deleteDistDir,
   deleteDistFile,
 } from "./file-system.js";
+import { BascikConfig } from "./config.js";
 import { eventEmitter } from "./events.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -241,5 +244,220 @@ describe("watchFiles – component watcher (watcher 2)", () => {
     expect(selectivelyProcessPages).toHaveBeenCalledWith(
       "/path/to/old-comp.html",
     );
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HTML page watcher (watcher 1) – unlinkDir handler
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("watchFiles – html page watcher (watcher 1) unlinkDir", () => {
+  beforeEach(async () => {
+    await watchFiles();
+  });
+
+  it("calls deleteDistDir on 'unlinkDir'", () => {
+    const handler = getHandler(1, "unlinkDir");
+    handler?.("/path/to/dir");
+    expect(deleteDistDir).toHaveBeenCalledWith("/path/to/dir");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ignored predicates
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("watchFiles – ignored predicates", () => {
+  beforeEach(async () => {
+    await watchFiles();
+  });
+
+  it("watcher 0: returns false for a file with a known extension", () => {
+    const ignored = mockWatch.mock.calls[0][1].ignored as (
+      p: string,
+      s?: { isFile: () => boolean },
+    ) => boolean;
+    expect(ignored("/path/to/style.css", { isFile: () => true })).toBe(false);
+  });
+
+  it("watcher 0: returns true for a file with an unknown extension", () => {
+    const ignored = mockWatch.mock.calls[0][1].ignored as (
+      p: string,
+      s?: { isFile: () => boolean },
+    ) => boolean;
+    expect(ignored("/path/to/file.txt", { isFile: () => true })).toBe(true);
+  });
+
+  it("watcher 0: returns false when stats is undefined", () => {
+    const ignored = mockWatch.mock.calls[0][1].ignored as (
+      p: string,
+      s?: { isFile: () => boolean },
+    ) => boolean;
+    expect(ignored("/path/to/file.txt", undefined)).toBe(false);
+  });
+
+  it("watcher 1: returns false for an .html file", () => {
+    const ignored = mockWatch.mock.calls[1][1].ignored as (
+      p: string,
+      s?: { isFile: () => boolean },
+    ) => boolean;
+    expect(ignored("/path/to/page.html", { isFile: () => true })).toBe(false);
+  });
+
+  it("watcher 1: returns true for a non-.html file (covers line 51)", () => {
+    const ignored = mockWatch.mock.calls[1][1].ignored as (
+      p: string,
+      s?: { isFile: () => boolean },
+    ) => boolean;
+    expect(ignored("/path/to/script.js", { isFile: () => true })).toBe(true);
+  });
+
+  it("watcher 1: returns false when stats is undefined", () => {
+    const ignored = mockWatch.mock.calls[1][1].ignored as (
+      p: string,
+      s?: { isFile: () => boolean },
+    ) => boolean;
+    expect(ignored("/path/to/script.js", undefined)).toBe(false);
+  });
+
+  it("watcher 2: returns false for an .html file", () => {
+    const ignored = mockWatch.mock.calls[2][1].ignored as (
+      p: string,
+      s?: { isFile: () => boolean },
+    ) => boolean;
+    expect(ignored("/path/to/comp.html", { isFile: () => true })).toBe(false);
+  });
+
+  it("watcher 2: returns false for a .css file", () => {
+    const ignored = mockWatch.mock.calls[2][1].ignored as (
+      p: string,
+      s?: { isFile: () => boolean },
+    ) => boolean;
+    expect(ignored("/path/to/comp.css", { isFile: () => true })).toBe(false);
+  });
+
+  it("watcher 2: returns true for a non-.html/.css file (covers line 73)", () => {
+    const ignored = mockWatch.mock.calls[2][1].ignored as (
+      p: string,
+      s?: { isFile: () => boolean },
+    ) => boolean;
+    expect(ignored("/path/to/script.ts", { isFile: () => true })).toBe(true);
+  });
+
+  it("watcher 2: returns false when stats is undefined", () => {
+    const ignored = mockWatch.mock.calls[2][1].ignored as (
+      p: string,
+      s?: { isFile: () => boolean },
+    ) => boolean;
+    expect(ignored("/path/to/script.ts", undefined)).toBe(false);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// add before ready (initialScanDone = false)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("watchFiles – add before ready (initialScanDone = false)", () => {
+  it("does NOT call pageProcessing when initialScanDone is false", async () => {
+    const captured: Record<string, (...args: any[]) => any> = {};
+    const deferredWatcher = {
+      on: vi.fn(function (this: any, event: string, handler: any) {
+        captured[event] = handler;
+        return this;
+      }),
+    };
+    const simpleWatcher = {
+      on: vi.fn(function (this: any) {
+        return this;
+      }),
+    };
+
+    // call 0 (asset watcher): simple pass-through; call 1 (pages html watcher): deferred ready
+    mockWatch
+      .mockImplementationOnce(() => simpleWatcher)
+      .mockImplementationOnce(() => deferredWatcher);
+
+    const watchPromise = watchFiles();
+
+    // ready has not fired yet — initialScanDone is still false
+    captured["add"]?.("/new-page.html");
+    expect(pageProcessing).not.toHaveBeenCalled();
+
+    // unblock watchFiles by firing ready
+    await captured["ready"]?.();
+    await watchPromise;
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// isBuild = true branches
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("watchFiles – isBuild = true", () => {
+  beforeEach(() => {
+    (BascikConfig as any).isBuild = true;
+  });
+
+  afterEach(() => {
+    (BascikConfig as any).isBuild = false;
+  });
+
+  it("does NOT emit asset-changed on change when isBuild is true", async () => {
+    await watchFiles();
+    const handler = getHandler(0, "change");
+    await handler?.("/path/to/style.css");
+    expect(eventEmitter.emit).not.toHaveBeenCalled();
+  });
+
+  it("does not create the extra watch watcher even when watch paths are set", async () => {
+    (BascikConfig as any).directory.watch = ["/extra/path"];
+    await watchFiles();
+    expect(mockWatch).toHaveBeenCalledTimes(3);
+    (BascikConfig as any).directory.watch = [];
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Extra watch paths watcher (watcher 3, dev-only)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("watchFiles – extra watch paths (watcher 3)", () => {
+  beforeEach(async () => {
+    (BascikConfig as any).directory.watch = ["/extra/watch/path"];
+    await watchFiles();
+  });
+
+  afterEach(() => {
+    (BascikConfig as any).directory.watch = [];
+  });
+
+  it("creates a fourth watcher when watch paths are set", () => {
+    expect(mockWatch).toHaveBeenCalledTimes(4);
+  });
+
+  it("watches BascikConfig.directory.watch paths", () => {
+    expect(mockWatch.mock.calls[3][0]).toEqual(["/extra/watch/path"]);
+  });
+
+  it("calls selectivelyProcessPagesForWatchPath on 'add'", async () => {
+    const handler = getHandler(3, "add");
+    await handler?.("/extra/watch/path/new.ts");
+    expect(selectivelyProcessPagesForWatchPath).toHaveBeenCalledWith(
+      "/extra/watch/path/new.ts",
+    );
+  });
+
+  it("calls selectivelyProcessPagesForWatchPath on 'change'", async () => {
+    const handler = getHandler(3, "change");
+    await handler?.("/extra/watch/path/changed.ts");
+    expect(selectivelyProcessPagesForWatchPath).toHaveBeenCalledWith(
+      "/extra/watch/path/changed.ts",
+    );
+  });
+
+  it("calls processAllPages on 'unlink'", async () => {
+    const handler = getHandler(3, "unlink");
+    await handler?.();
+    expect(processAllPages).toHaveBeenCalled();
   });
 });

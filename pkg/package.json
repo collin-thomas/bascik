@@ -26,6 +26,7 @@
     "@playwright/test": "^1.62.0",
     "@types/node": "^24.0.0",
     "@vitest/coverage-v8": "^4.1.10",
+    "c8": "^12.0.0",
     "fast-check": "^4.9.0",
     "typescript": "^7.0.2",
     "vite": "^8.1.5",
@@ -38,6 +39,7 @@
     "test:ci": "vitest run --coverage.enabled --coverage.reporter='text-summary'",
     "test:coverage": "vitest run --coverage.enabled",
     "update-coverage": "vitest run --coverage.enabled && cp coverage/coverage-summary.json test-coverage.json",
+    "update-e2e-coverage": "mkdir -p coverage/e2e coverage/e2e-report && cd e2e && NODE_V8_COVERAGE=../coverage/e2e node ../dist/index.js --build && cd .. && ../node_modules/.bin/c8 report --temp-directory coverage/e2e -r json-summary -o coverage/e2e-report && cp coverage/e2e-report/coverage-summary.json e2e-test-coverage.json",
     "bench": "vitest bench",
     "typecheck": "node_modules/.bin/tsc --noEmit",
     "e2e": "node_modules/.bin/playwright test --config e2e/playwright.config.ts"

@@ -180,11 +180,12 @@ Then inspect the relevant `docs/dist/` output to confirm the pkg change has the 
 **When adding, removing, or significantly changing tests in `pkg/src/`:**
 
 - The testing docs (`docs/content/internals/testing.md`) describe the test approach, not an enumerated list of files — the "Test Files" section links to GitHub which is always current. You only need to update the prose if the testing *patterns* change (e.g. a new mock strategy, a new test runner, new helpers).
-- The coverage numbers shown on the testing page are read from `pkg/test-coverage.json` at docs build time. After adding tests, regenerate it:
+- The coverage numbers shown on the testing page are read from `pkg/test-coverage.json` (unit tests) and `pkg/e2e-test-coverage.json` (E2E build-step coverage) at docs build time. After adding tests, regenerate both:
   ```sh
-  yarn workspace @bascik/bascik update-coverage
+  yarn workspace @bascik/bascik update-coverage        # unit tests
+  yarn workspace @bascik/bascik update-e2e-coverage    # E2E (requires built dist/)
   ```
-  Then commit `pkg/test-coverage.json` alongside the test changes so the docs show current numbers.
+  Then commit both JSON files alongside the test changes.
 
 **When changing `pkg/src/lib/dev-server.md` (or adding to the live-reload / SSE / watch system):**
 Update `docs/content/internals/dev-server.md` to reflect the change. This page is the source of truth for how the dev server and watch system work.
