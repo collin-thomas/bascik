@@ -85,22 +85,39 @@
     color: var(--text-muted);
     background: none;
     border: none;
-    border-bottom: 2px solid transparent;
     cursor: pointer;
     touch-action: manipulation;
-    transition: all 0.2s;
+    position: relative;
+    isolation: isolate;
+    transition: color 0.2s;
+  }
+
+  .demo-tab::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    clip-path: polygon(7px 0%, 100% 0%, calc(100% - 7px) 100%, 0% 100%);
+    z-index: -1;
+    transition: background .2s;
   }
 
   @media (hover: hover) {
     .demo-tab:hover {
       color: var(--text);
     }
+
+    .demo-tab:hover:not(.active)::before {
+      background: var(--elevated);
+    }
   }
 
   .demo-tab.active {
-    color: var(--accent-fg);
-    border-bottom-color: var(--accent);
+    color: #18191b;
     font-weight: 600;
+  }
+
+  .demo-tab.active::before {
+    background: var(--accent);
   }
 
   .demo-meta {
@@ -140,19 +157,35 @@
     font-family: var(--font-mono);
     font-size: 0.75rem;
     background: transparent;
-    border: 1px solid transparent;
-    border-radius: 4px;
+    border: none;
+    position: relative;
+    isolation: isolate;
     cursor: pointer;
+  }
+
+  .demo-language-tab::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+    z-index: -1;
+    transition: background .15s;
   }
 
   .demo-language-tab:hover {
     color: var(--text);
   }
 
+  .demo-language-tab:hover:not(.active)::before {
+    background: var(--elevated);
+  }
+
   .demo-language-tab.active {
-    color: var(--text);
-    background: var(--bg);
-    border-color: var(--border);
+    color: #18191b;
+  }
+
+  .demo-language-tab.active::before {
+    background: var(--accent);
   }
 
   .demo-language-pane {
