@@ -1,5 +1,5 @@
 /**
- * render-nav.mjs — Build-time pagination generator.
+ * render-nav.ts — Build-time pagination generator.
  *
  * Usage in a page's `<script data-bascik-build>` block:
  *
@@ -7,13 +7,13 @@
  *     import { join } from 'node:path';
  *     import { pathToFileURL } from 'node:url';
  *     const { renderPagination } = await import(
- *       pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href
+ *       pathToFileURL(join(process.cwd(), 'scripts/render-nav.ts')).href
  *     );
  *     console.log(renderPagination('/getting-started'));
  *   </script>
  *
  * Nav, sidebar, and footer are bascik components — see src/components/.
- * Page order comes from nav.mjs (the single source of truth).
+ * Page order comes from nav.ts (the single source of truth).
  */
 
 import { NAV } from './nav.ts';

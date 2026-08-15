@@ -8,7 +8,7 @@
  *   import { join } from 'node:path';
  *   import { pathToFileURL } from 'node:url';
  *   const { openGraph } = await import(
- *     pathToFileURL(join(process.cwd(), 'scripts/open-graph.mjs')).href
+ *     pathToFileURL(join(process.cwd(), 'scripts/open-graph.ts')).href
  *   );
  *   console.log(await openGraph());
  */

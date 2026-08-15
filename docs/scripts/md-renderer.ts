@@ -1,5 +1,5 @@
 /**
- * md-renderer.mjs
+ * md-renderer.ts
  *
  * Renders a Markdown file to HTML for use inside a Bascik docs page.
  * Import this from a `data-bascik-build` script block in a page:
@@ -8,7 +8,7 @@
  *     import { join } from 'node:path';
  *     import { pathToFileURL } from 'node:url';
  *     const { renderMd } = await import(
- *       pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+ *       pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
  *     );
  *     console.log(await renderMd('./content/16-performance.md'));
  *   </script>

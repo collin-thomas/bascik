@@ -1,7 +1,7 @@
 /**
- * nav.mjs — Single source of truth for docs navigation order.
+ * nav.ts — Single source of truth for docs navigation order.
  *
- * Imported by render-nav.mjs at build time. To add, remove, or reorder
+ * Imported by render-nav.ts at build time. To add, remove, or reorder
  * pages, edit this file only — sidebar, pagination, and the top nav all
  * derive from it automatically.
  */
