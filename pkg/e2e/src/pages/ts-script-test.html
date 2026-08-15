@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TypeScript Test</title>
+</head>
+
+<body>
+  <p id="static-before">static-before</p>
+
+  <!-- TypeScript build script — types stripped before Node executes it -->
+  <script data-bascik-build data-bascik-ts>
+    interface Item { id: string; label: string }
+    const item: Item = { id: 'ts-build-result', label: 'ts-build-ok' };
+    console.log(`<p id="${item.id}">${item.label}</p>`);
+  </script>
+
+  <!-- Two instances — TS component scripts must stay per-instance independent -->
+  <ts-counter></ts-counter>
+  <ts-counter></ts-counter>
+
+  <!-- Page-level TypeScript client script -->
+  <p id="page-ts-result">pending</p>
+  <script data-bascik-ts>
+    const target = document.getElementById('page-ts-result') as HTMLParagraphElement;
+    const value: string = 'page-ts-ok';
+    target.textContent = value;
+  </script>
+
+  <p id="static-after">static-after</p>
+</body>
+
+</html>

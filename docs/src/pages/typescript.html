@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <docs-head></docs-head>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { canonical } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/canonical.mjs')).href
+    );
+    console.log(await canonical());
+  </script>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { openGraph } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/open-graph.mjs')).href
+    );
+    console.log(await openGraph());
+  </script>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { breadcrumbLd } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/breadcrumb-ld.mjs')).href
+    );
+    console.log(await breadcrumbLd());
+  </script>
+  <meta name="description"
+    content="Write TypeScript in Bascik projects with the data-bascik-ts attribute — client, build-time, and server scripts, plus bascik.config.ts. No bundler, no compile step." />
+  <title>TypeScript - Bascik Docs</title>
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+      <docs-sidebar></docs-sidebar>
+
+      <main class="docs-content">
+        <p class="section-label">Feature</p>
+
+        <!-- Content rendered from docs/content/typescript.md at build time.
+             To update page content, edit the MD file - not this file. -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMd } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMd('./content/typescript.md'));
+        </script>
+
+        <div class="callout">
+          <p><strong>Next:</strong> See <a href="/scoped-javascript">Scoped JavaScript</a> for the scoping rules that
+            apply to compiled client scripts, and <a href="/build-scripts">Build Scripts</a> for everything
+            <code>data-bascik-build</code> can do.
+          </p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+
+</body>
+
+</html>

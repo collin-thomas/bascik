@@ -1,0 +1,22 @@
+<div class="ts-wrapper">
+  <p id="count">0</p>
+  <button id="inc" type="button">+1</button>
+  <p id="typed">pending</p>
+</div>
+<script data-bascik-ts>
+  interface CounterState { value: number }
+  const state: CounterState = { value: 0 };
+  const count = document.getElementById('count') as HTMLParagraphElement;
+  const inc = document.getElementById('inc') as HTMLButtonElement;
+  const typed = document.getElementById('typed') as HTMLParagraphElement;
+
+  inc.addEventListener('click', (): void => {
+    state.value += 1;
+    count.textContent = String(state.value);
+  });
+
+  // Generics + satisfies + as-cast — all erasable TS syntax.
+  const first = <T,>(items: T[]): T => items[0];
+  const label = { text: 'typed-ok' } satisfies { text: string };
+  typed.textContent = first([label.text]);
+</script>

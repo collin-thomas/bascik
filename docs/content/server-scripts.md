@@ -123,4 +123,26 @@ npm install pg
 </script>
 ```
 
+## TypeScript server scripts
+
+Add `data-bascik-ts` to write a server script in TypeScript — types are stripped before Node executes it:
+
+```html
+<script data-bascik-server data-bascik-ts>
+  interface BascikRequest {
+    path: string;
+    method: string;
+    headers: Record<string, string>;
+    searchParams: Record<string, string>;
+  }
+  const req: BascikRequest = JSON.parse(process.env.BASCIK_REQUEST!);
+  const safePath = req.path.replace(/[&<>"]/g, (c: string): string =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!,
+  );
+  console.log(`<p>You requested ${safePath}</p>`);
+</script>
+```
+
+See [TypeScript](/typescript) for the full guide, including shared `.ts` helper files.
+
 > **Next:** See the [Production Server](/server) page for the full `data-bascik-server` API, rules, and server configuration.

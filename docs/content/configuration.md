@@ -1,6 +1,6 @@
 # Configuration
 
-Create a `bascik.config.js` file in your project root to override any default settings.
+Create a `bascik.config.js` file in your project root to override any default settings. Prefer TypeScript? Name it `bascik.config.ts` instead — Bascik falls back to the `.ts` file when no `.js` config exists, and Node runs it natively. See [TypeScript](/typescript).
 
 ## Full Example
 

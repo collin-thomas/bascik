@@ -360,6 +360,24 @@ export const bascikConfig = {
 };
 ```
 
+### TypeScript Component Scripts (`data-bascik-ts`)
+
+Add the `data-bascik-ts` attribute to any `<script>` tag to write it in TypeScript. Bascik strips the type annotations at build time (erasure-only, via Node's built-in `stripTypeScriptTypes`) and removes the attribute; the resulting plain JavaScript then flows through the normal scoping pipeline (id/name/class rewriting, IIFE wrapping). Nothing TypeScript-related ships to the browser.
+
+```html
+<button id="inc" type="button">+1</button>
+<script data-bascik-ts>
+  const inc = document.getElementById('inc') as HTMLButtonElement;
+  let n: number = 0;
+  inc.addEventListener('click', (): void => { n += 1; });
+</script>
+```
+
+* Erasable syntax only: annotations, interfaces, type aliases, generics, `as` casts, `satisfies`. Constructs requiring code generation (`enum`, `namespace` with runtime code, parameter properties, legacy decorators) are unsupported — Bascik warns and removes the block.
+* Also composes with Node-executed scripts: `<script data-bascik-build data-bascik-ts>` and `<script data-bascik-server data-bascik-ts>` have types stripped just before Node runs them.
+* Build scripts can import project-local `.ts` helper files (e.g. `scripts/helpers.ts`) — Node ≥ 24 strips their types on import.
+* `bascik.config.ts` is supported as a fallback when no `bascik.config.js` exists.
+
 ---
 
 ## 5. Dynamic Runtime Class Scoping
@@ -518,6 +536,7 @@ Components work inside `<head>` to organize metadata:
 * Use `console.log()` or `process.stdout.write()` to output HTML.
 * Build scripts run before component resolution, so their output can contain component tags.
 * On error, the script tag is replaced with an empty string and a warning is logged.
+* Add `data-bascik-ts` to write the build script in TypeScript — types are stripped before Node executes it.
 * **Hard error:** combining `data-bascik-build` and `data-bascik-server` on the same tag throws and aborts the build. A script runs at build time or at request time — not both.
 
 ### Build Script Output Cache
@@ -625,11 +644,14 @@ Rules:
 * `data-bascik-server` blocks are preserved through `bascik --build` and executed at request time when served with `bascik --serve` or the dev server.
 * They are NOT executed during `bascik --build` itself.
 * Scripts are NOT wrapped in an IIFE (they are Node.js code, not browser JS).
+* Add `data-bascik-ts` to write the server script in TypeScript — types are stripped before Node executes it.
 * On error, a warning is logged and the tag is replaced with an empty string.
 
 ---
 
 ## 9. Configuration (`bascik.config.js`)
+
+`bascik.config.ts` also works — Bascik falls back to the `.ts` file when no `.js` config exists, and Node imports it natively.
 
 ```js
 export const bascikConfig = {

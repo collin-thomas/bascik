@@ -30,6 +30,21 @@ If a build script throws, Bascik logs a warning and replaces the script tag with
 
 One case that does hard-fail and abort the build: putting both `data-bascik-build` and `data-bascik-server` on the same `<script>` tag. That combination is never valid — a script runs at build time or at request time, not both. Bascik throws an error with the file name and line number. The VS Code extension also flags it as an error before you build.
 
+## Writing Build Scripts in TypeScript
+
+Add `data-bascik-ts` alongside `data-bascik-build` to write the script in TypeScript. Type annotations are stripped before execution — everything else (imports, top-level `await`, the output cache) works identically:
+
+```html
+<script data-bascik-build data-bascik-ts>
+  import { readFile } from 'node:fs/promises';
+  interface NavItem { href: string; label: string }
+  const items: NavItem[] = JSON.parse(await readFile('./content/nav.json', 'utf8'));
+  console.log(items.map((i) => `<a href="${i.href}">${i.label}</a>`).join('\n'));
+</script>
+```
+
+See [TypeScript](/typescript) for the full guide.
+
 ## Example: Reading a Markdown File
 
 A common pattern is converting Markdown content to HTML at build time:

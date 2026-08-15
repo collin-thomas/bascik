@@ -29,6 +29,8 @@ Tag a `<script>` block with `data-bascik-server` to run it at **request time** o
 
 This lets you personalize pages per visitor, reading session cookies, querying a database, or rendering content based on query parameters, without a full server framework.
 
+> **TypeScript works too.** Add `data-bascik-ts` alongside `data-bascik-server` to write the script in TypeScript — types are stripped before Node executes it. See [TypeScript](/typescript).
+
 ### Request context
 
 Every server script receives `process.env.BASCIK_REQUEST`, a JSON string with four fields:

@@ -208,6 +208,21 @@ If a build script throws, Bascik logs a warning and replaces the script tag with
 
 One case that does hard-fail and abort the build: putting both `data-bascik-build` and `data-bascik-server` on the same `<script>` tag. That combination is never valid — a script runs at build time or at request time, not both. Bascik throws an error with the file name and line number. The VS Code extension also flags it as an error before you build.
 
+## Writing Build Scripts in TypeScript
+
+Add `data-bascik-ts` alongside `data-bascik-build` to write the script in TypeScript. Type annotations are stripped before execution — everything else (imports, top-level `await`, the output cache) works identically:
+
+```html
+<script data-bascik-build data-bascik-ts>
+  import { readFile } from 'node:fs/promises';
+  interface NavItem { href: string; label: string }
+  const items: NavItem[] = JSON.parse(await readFile('./content/nav.json', 'utf8'));
+  console.log(items.map((i) => `<a href="${i.href}">${i.label}</a>`).join('\n'));
+</script>
+```
+
+See [TypeScript](/typescript) for the full guide.
+
 ## Example: Reading a Markdown File
 
 A common pattern is converting Markdown content to HTML at build time:
@@ -745,6 +760,7 @@ Bascik rewrites DOM selector references inside component `<script>` tags to matc
 | `<script type="module">`                                 | ✓     | Not wrapped in an IIFE (modules are already isolated by spec). DOM selector references still rewritten.                                                                                                                                                     |
 | `<script type="application/json">` (and any non-JS type) | ✓     | Left completely untouched.                                                                                                                                                                                                                                  |
 | `<script data-bascik-build>`                             | ✓     | Executed at **transpile time** as a Node.js ESM module. The script's stdout is injected in place of the tag. Runs in both dev and build modes. Use `console.log()` / `process.stdout.write()` to output HTML. Top-level `import` and `await` are supported. |
+| `<script data-bascik-ts>`                                | ✓     | TypeScript component/page script. Types are stripped at build time (erasure-only, via Node's `stripTypeScriptTypes`); the resulting JS is scoped and IIFE-wrapped normally. Also composes with `data-bascik-build` / `data-bascik-server` (stripped before Node execution). Enums, namespaces, and other non-erasable TS syntax are unsupported. |
 | Literal component tags inside `<script>`, `<style>`, or `<textarea>` | ✓     | Treated as text, never resolved into components. Safe to mention tags like `<my-card>` in JSON-LD strings, inline scripts, or code examples.                                                                                                              |
 
 ### DOM Selector Rewriting
@@ -1016,7 +1032,7 @@ Bascik derives the tag name from the `.html` filename, not the folder. `feature-
 
 # Configuration
 
-Create a `bascik.config.js` file in your project root to override any default settings.
+Create a `bascik.config.js` file in your project root to override any default settings. Prefer TypeScript? Name it `bascik.config.ts` instead — Bascik falls back to the `.ts` file when no `.js` config exists, and Node runs it natively. See [TypeScript](/typescript).
 
 ## Full Example
 
@@ -2616,16 +2632,17 @@ On startup (and whenever a component is added), the watch system calls `processA
 
 The page phase prepares the source HTML document and orchestrates the component phase:
 
-1. **Execute build scripts.** Any `<script data-bascik-build>` blocks are run as Node.js ESM modules. Their stdout replaces the script tag. The result can contain component tags, these will be resolved in step 4. Output is cached on disk so unchanged scripts skip the child-process spawn on subsequent builds — see [Build Script Output Cache](#build-script-output-cache) below.
-2. **Extract body and head.** The inner content of `<body>` and `<head>` are extracted separately so component injection can happen in both zones independently.
-3. **Obtain component list.** On the multi-page startup path (`processAllPages`), the list is pre-computed once and passed in. On a single-page re-transpilation, it is loaded from `src/components/` at this point.
-4. **Run component phase.** `recursivelyTranspile` is called on both the body and head HTML strings. Each call returns a `TranspileResult` containing the resolved HTML and the list of components that were used.
-5. **Collect and deduplicate CSS.** All CSS from used components is gathered. Since multiple instances of the same component share identical scoped class names, `deduplicateCss` emits a single `<style>` block regardless of how many times a component appears on the page. Any global stylesheets configured via `inlineStyles` are also injected into `<head>` at this stage.
-6. **Inject live-reload script.** In dev mode only, a small `<script>` that opens a Server-Sent Events connection to `/bascik-live-reload` is appended to the body.
-7. **Minify.** HTML comments are stripped and excess whitespace is collapsed via `minifyHtml`. This runs *after* component resolution so that whitespace-sensitive content inside resolved components (e.g. `<pre>` blocks from `<code-block>`) is preserved intact.
-8. **Reassemble HTML.** The resolved body and head are placed back into the original HTML document structure.
-9. **Write output.** In build mode, the finished HTML is written to `dist/`. In dev mode, no disk write occurs, the result is stored in the in-memory page store so the HTTP/2 server can serve it instantly.
-10. **Emit transpiled event.** `eventEmitter.emit("transpiled")` triggers live-reload for any connected browser.
+1. **Execute build scripts.** Any `<script data-bascik-build>` blocks are run as Node.js ESM modules. Their stdout replaces the script tag. The result can contain component tags, these will be resolved in step 5. Output is cached on disk so unchanged scripts skip the child-process spawn on subsequent builds — see [Build Script Output Cache](#build-script-output-cache) below.
+2. **Strip inline TypeScript.** Any client `<script data-bascik-ts>` blocks (page-level here; component-level blocks are stripped when the component list is loaded) have their type annotations erased via Node's built-in `stripTypeScriptTypes`, and the attribute is removed, so the rest of the pipeline only ever sees plain JavaScript. `data-bascik-build` / `data-bascik-server` scripts are skipped — their types are stripped just before Node executes them.
+3. **Extract body and head.** The inner content of `<body>` and `<head>` are extracted separately so component injection can happen in both zones independently.
+4. **Obtain component list.** On the multi-page startup path (`processAllPages`), the list is pre-computed once and passed in. On a single-page re-transpilation, it is loaded from `src/components/` at this point.
+5. **Run component phase.** `recursivelyTranspile` is called on both the body and head HTML strings. Each call returns a `TranspileResult` containing the resolved HTML and the list of components that were used.
+6. **Collect and deduplicate CSS.** All CSS from used components is gathered. Since multiple instances of the same component share identical scoped class names, `deduplicateCss` emits a single `<style>` block regardless of how many times a component appears on the page. Any global stylesheets configured via `inlineStyles` are also injected into `<head>` at this stage.
+7. **Inject live-reload script.** In dev mode only, a small `<script>` that opens a Server-Sent Events connection to `/bascik-live-reload` is appended to the body.
+8. **Minify.** HTML comments are stripped and excess whitespace is collapsed via `minifyHtml`. This runs *after* component resolution so that whitespace-sensitive content inside resolved components (e.g. `<pre>` blocks from `<code-block>`) is preserved intact.
+9. **Reassemble HTML.** The resolved body and head are placed back into the original HTML document structure.
+10. **Write output.** In build mode, the finished HTML is written to `dist/`. In dev mode, no disk write occurs, the result is stored in the in-memory page store so the HTTP/2 server can serve it instantly.
+11. **Emit transpiled event.** `eventEmitter.emit("transpiled")` triggers live-reload for any connected browser.
 
 ## Build Script Output Cache
 
@@ -4771,6 +4788,20 @@ Additional rewritten forms include `element.closest()`, `element.matches()`, `el
 
 > **Component tags work too.** Build script output is processed in the component resolution step, so its output can contain Bascik component tags.
 
+## TypeScript Component Scripts
+
+Add `data-bascik-ts` to a component `<script>` tag to write it in TypeScript. Types are stripped at build time and the resulting JavaScript flows through the exact same scoping pipeline — `getElementById` rewriting, IIFE wrapping, all of it:
+
+```html
+<button id="inc" type="button">+1</button>
+<script data-bascik-ts>
+  const inc = document.getElementById('inc') as HTMLButtonElement;
+  inc.addEventListener('click', (): void => { /* … */ });
+</script>
+```
+
+See [TypeScript](/typescript) for the full guide, including build scripts, server scripts, and `bascik.config.ts`.
+
 ## Non-JavaScript Script Types
 
 Script tags with a `type` other than `text/javascript` are left completely untouched, no IIFE, no scoping:
@@ -5347,6 +5378,28 @@ npm install pg
 </script>
 ```
 
+## TypeScript server scripts
+
+Add `data-bascik-ts` to write a server script in TypeScript — types are stripped before Node executes it:
+
+```html
+<script data-bascik-server data-bascik-ts>
+  interface BascikRequest {
+    path: string;
+    method: string;
+    headers: Record<string, string>;
+    searchParams: Record<string, string>;
+  }
+  const req: BascikRequest = JSON.parse(process.env.BASCIK_REQUEST!);
+  const safePath = req.path.replace(/[&<>"]/g, (c: string): string =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!,
+  );
+  console.log(`<p>You requested ${safePath}</p>`);
+</script>
+```
+
+See [TypeScript](/typescript) for the full guide, including shared `.ts` helper files.
+
 > **Next:** See the [Production Server](/server) page for the full `data-bascik-server` API, rules, and server configuration.
 
 # Production Server
@@ -5379,6 +5432,8 @@ Tag a `<script>` block with `data-bascik-server` to run it at **request time** o
 ```
 
 This lets you personalize pages per visitor, reading session cookies, querying a database, or rendering content based on query parameters, without a full server framework.
+
+> **TypeScript works too.** Add `data-bascik-ts` alongside `data-bascik-server` to write the script in TypeScript — types are stripped before Node executes it. See [TypeScript](/typescript).
 
 ### Request context
 
@@ -8413,6 +8468,202 @@ The `docs-search.html` component inlines them via the build-time pattern above. 
 ```sh
 yarn workspace bascik-docs test
 ```
+
+# TypeScript
+
+Bascik is written in TypeScript, and projects built with Bascik can be written in TypeScript too. Add `data-bascik-ts` to any `<script>` tag — client, build-time, or server — and Bascik handles the rest. No bundler, no compile step, no configuration.
+
+## How It Works
+
+Bascik requires Node.js 24+, which runs TypeScript natively by stripping type annotations. That splits TypeScript support into two halves:
+
+- **Scripts that run in Node.js** (`data-bascik-build` and `data-bascik-server`) need no compilation at all. Bascik strips the type annotations from the script body just before handing it to Node — the same erasure-only semantics as Node running a `.ts` file directly.
+- **Scripts that run in the browser** (plain `<script>` tags in components and pages) are transformed at build time. Bascik strips the types using Node's built-in `stripTypeScriptTypes` API, then the resulting JavaScript flows through the normal scoping pipeline — `id`/`name`/`class` rewriting, IIFE wrapping — exactly like a hand-written JS block. The browser only ever receives plain JavaScript.
+
+Type stripping is erasure-only: annotations are replaced in place, so line numbers never shift and there is zero runtime cost. Nothing TypeScript-related ships to the browser.
+
+## Client Scripts
+
+Add `data-bascik-ts` to a component or page `<script>` tag:
+
+```html
+<!-- src/components/ts-counter.html -->
+<div class="counter">
+  <p id="count">0</p>
+  <button id="inc" type="button">+1</button>
+</div>
+<script data-bascik-ts>
+  const count = document.getElementById('count') as HTMLParagraphElement;
+  const inc = document.getElementById('inc') as HTMLButtonElement;
+  let n: number = 0;
+  inc.addEventListener('click', (): void => {
+    n += 1;
+    count.textContent = String(n);
+  });
+</script>
+```
+
+The compiled output is plain, scoped JavaScript — the `data-bascik-ts` attribute is removed, the types are gone, and every `getElementById` string is rewritten to the instance's unique id:
+
+```html
+<script>(function() {
+  const count = document.getElementById('bascik__ts-counter__a1b2__count') ;
+  const inc = document.getElementById('bascik__ts-counter__a1b2__inc') ;
+  let n = 0;
+  inc.addEventListener('click', () => {
+    n += 1;
+    count.textContent = String(n);
+  });
+})();</script>
+```
+
+All the scoping rules from [Scoped JavaScript](/scoped-javascript) apply unchanged: use `id` + `getElementById` for per-instance elements, register runtime-only classes in the template HTML, and so on.
+
+> **Erasable syntax only.** Client scripts support the same TypeScript subset as Node's native type stripping: annotations, interfaces, type aliases, generics, `as` casts, `satisfies`. Constructs that require code generation — `enum`, `namespace` with runtime code, parameter properties, legacy decorators — are not supported. If a script uses one, Bascik logs a warning naming the file and removes the block from the output rather than shipping raw TypeScript to the browser.
+
+## Build Scripts
+
+Add `data-bascik-ts` to a [build-time script](/build-scripts) and write TypeScript directly:
+
+```html
+<script data-bascik-build data-bascik-ts>
+  interface Post { title: string; excerpt: string }
+  const res = await fetch('https://api.example.com/posts/latest');
+  const { title, excerpt } = (await res.json()) as Post;
+  console.log(`<h2>${title}</h2><p>${excerpt}</p>`);
+</script>
+```
+
+Everything else works exactly like a JavaScript build script: top-level `import` and `await`, paths relative to the project root, `console.log()` for output, and the build-script disk cache.
+
+## Server Scripts
+
+The same `data-bascik-ts` attribute works on [server scripts](/server), which run in Node.js on every request:
+
+```html
+<script data-bascik-server data-bascik-ts>
+  interface BascikRequest {
+    path: string;
+    method: string;
+    headers: Record<string, string>;
+    searchParams: Record<string, string>;
+  }
+  const req: BascikRequest = JSON.parse(process.env.BASCIK_REQUEST!);
+  const name = req.headers['x-display-name'] ?? 'Guest';
+  console.log(`<p>Welcome, ${name}</p>`);
+</script>
+```
+
+## bascik.config.ts
+
+The project config file can be TypeScript too. Bascik looks for `bascik.config.js` first, then falls back to `bascik.config.ts` — Node imports it natively:
+
+```ts
+// bascik.config.ts
+interface BascikUserConfig {
+  siteUrl?: string;
+  minifyStyles?: boolean;
+  minifyScripts?: boolean;
+}
+
+export const bascikConfig: BascikUserConfig = {
+  siteUrl: 'https://example.com',
+};
+
+export const buildOverrideConfig: BascikUserConfig = {
+  minifyStyles: true,
+  minifyScripts: true,
+};
+```
+
+## Recipe: Shared TypeScript Helpers
+
+Build scripts can import project-local `.ts` files directly — Node strips their types on import. Keep shared logic in `scripts/` and import it with the standard `pathToFileURL` pattern:
+
+```ts
+// scripts/greet.ts
+export interface Greeting { name: string }
+export const greet = (g: Greeting): string => `<p>Hello, ${g.name}</p>`;
+```
+
+```html
+<script data-bascik-build data-bascik-ts>
+  import { join } from 'node:path';
+  import { pathToFileURL } from 'node:url';
+  const { greet } = await import(
+    pathToFileURL(join(process.cwd(), 'scripts/greet.ts')).href
+  );
+  console.log(greet({ name: 'Bascik' }));
+</script>
+```
+
+Files under `scripts/` and `content/` referenced by string literal are tracked by the build-script cache, so editing `greet.ts` invalidates the cached output automatically.
+
+## Recipe: Typed Build-time Data
+
+Parse a JSON data file at build time and let TypeScript check the render code:
+
+```html
+<script data-bascik-build data-bascik-ts>
+  import { readFile } from 'node:fs/promises';
+
+  interface NavItem { href: string; label: string }
+  const items: NavItem[] = JSON.parse(
+    await readFile('./content/nav.json', 'utf8'),
+  );
+  const links = items
+    .map((item) => `<li><a href="${item.href}">${item.label}</a></li>`)
+    .join('\n');
+  console.log(`<ul>\n${links}\n</ul>`);
+</script>
+```
+
+## Recipe: Typed DOM Access in Components
+
+`as` casts and narrow types keep component scripts honest without any runtime cost:
+
+```html
+<form>
+  <input id="email" name="email" type="email" required />
+  <button id="submit" type="submit">Subscribe</button>
+  <p id="feedback" hidden></p>
+</form>
+<script data-bascik-ts>
+  const form = document.getElementById('email')!.closest('form') as HTMLFormElement;
+  const email = document.getElementById('email') as HTMLInputElement;
+  const feedback = document.getElementById('feedback') as HTMLParagraphElement;
+
+  form.addEventListener('submit', (event: SubmitEvent): void => {
+    event.preventDefault();
+    feedback.textContent = `Subscribed ${email.value}`;
+    feedback.hidden = false;
+  });
+</script>
+```
+
+## Editor Type Checking
+
+Bascik strips types — it does not type-check. For red squiggles and `tsc --noEmit` verification of your `scripts/` helpers, add a minimal `tsconfig.json` to your project:
+
+```json
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "noEmit": true,
+    "strict": true
+  },
+  "include": ["scripts", "bascik.config.ts"]
+}
+```
+
+The `erasableSyntaxOnly` flag makes `tsc` reject the constructs that Node's type stripping cannot run (enums, namespaces, parameter properties), so anything that type-checks is guaranteed to execute.
+
+> **Inline scripts and editors.** TypeScript inside HTML `<script data-bascik-ts>` blocks isn't type-checked by `tsc` (it only sees `.ts` files). Keep complex logic in `scripts/*.ts` helpers where the compiler can verify it, and keep inline blocks thin.
 
 # Bascik vs Frameworks
 

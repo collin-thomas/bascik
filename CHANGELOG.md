@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **TypeScript support via `data-bascik-ts`** — add the `data-bascik-ts` attribute to any `<script>` tag to write it in TypeScript. Client component/page scripts have their types stripped at build time (erasure-only, via Node's built-in `stripTypeScriptTypes`) and then flow through the normal scoping pipeline; `data-bascik-build` and `data-bascik-server` scripts are stripped just before Node executes them. Non-erasable TS syntax (enums, namespaces, parameter properties) is rejected with a warning.
+- **`bascik.config.ts` support** — Bascik now falls back to `bascik.config.ts` when no `bascik.config.js` exists; Node ≥ 24 imports the TypeScript config natively.
+
 ### Fixed
 
 - **Component tags inside `<script>`/`<style>`/`<textarea>` content are no longer resolved** — literal tag text such as `<my-card>` inside a JSON-LD string, inline script, style comment, or textarea was expanded into the full component markup, injecting a stray `</script>` that corrupted the page head and crashed build-time script minification. Tag detection, replacement, and open/close pairing now mask raw-text element content (mirroring the unresolved-tag warning scanner), so such text is treated as text.

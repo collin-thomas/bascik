@@ -147,6 +147,20 @@ Additional rewritten forms include `element.closest()`, `element.matches()`, `el
 
 > **Component tags work too.** Build script output is processed in the component resolution step, so its output can contain Bascik component tags.
 
+## TypeScript Component Scripts
+
+Add `data-bascik-ts` to a component `<script>` tag to write it in TypeScript. Types are stripped at build time and the resulting JavaScript flows through the exact same scoping pipeline — `getElementById` rewriting, IIFE wrapping, all of it:
+
+```html
+<button id="inc" type="button">+1</button>
+<script data-bascik-ts>
+  const inc = document.getElementById('inc') as HTMLButtonElement;
+  inc.addEventListener('click', (): void => { /* … */ });
+</script>
+```
+
+See [TypeScript](/typescript) for the full guide, including build scripts, server scripts, and `bascik.config.ts`.
+
 ## Non-JavaScript Script Types
 
 Script tags with a `type` other than `text/javascript` are left completely untouched, no IIFE, no scoping:

@@ -21,16 +21,17 @@ On startup (and whenever a component is added), the watch system calls `processA
 
 The page phase prepares the source HTML document and orchestrates the component phase:
 
-1. **Execute build scripts.** Any `<script data-bascik-build>` blocks are run as Node.js ESM modules. Their stdout replaces the script tag. The result can contain component tags, these will be resolved in step 4. Output is cached on disk so unchanged scripts skip the child-process spawn on subsequent builds — see [Build Script Output Cache](#build-script-output-cache) below.
-2. **Extract body and head.** The inner content of `<body>` and `<head>` are extracted separately so component injection can happen in both zones independently.
-3. **Obtain component list.** On the multi-page startup path (`processAllPages`), the list is pre-computed once and passed in. On a single-page re-transpilation, it is loaded from `src/components/` at this point.
-4. **Run component phase.** `recursivelyTranspile` is called on both the body and head HTML strings. Each call returns a `TranspileResult` containing the resolved HTML and the list of components that were used.
-5. **Collect and deduplicate CSS.** All CSS from used components is gathered. Since multiple instances of the same component share identical scoped class names, `deduplicateCss` emits a single `<style>` block regardless of how many times a component appears on the page. Any global stylesheets configured via `inlineStyles` are also injected into `<head>` at this stage.
-6. **Inject live-reload script.** In dev mode only, a small `<script>` that opens a Server-Sent Events connection to `/bascik-live-reload` is appended to the body.
-7. **Minify.** HTML comments are stripped and excess whitespace is collapsed via `minifyHtml`. This runs *after* component resolution so that whitespace-sensitive content inside resolved components (e.g. `<pre>` blocks from `<code-block>`) is preserved intact.
-8. **Reassemble HTML.** The resolved body and head are placed back into the original HTML document structure.
-9. **Write output.** In build mode, the finished HTML is written to `dist/`. In dev mode, no disk write occurs, the result is stored in the in-memory page store so the HTTP/2 server can serve it instantly.
-10. **Emit transpiled event.** `eventEmitter.emit("transpiled")` triggers live-reload for any connected browser.
+1. **Execute build scripts.** Any `<script data-bascik-build>` blocks are run as Node.js ESM modules. Their stdout replaces the script tag. The result can contain component tags, these will be resolved in step 5. Output is cached on disk so unchanged scripts skip the child-process spawn on subsequent builds — see [Build Script Output Cache](#build-script-output-cache) below.
+2. **Strip inline TypeScript.** Any client `<script data-bascik-ts>` blocks (page-level here; component-level blocks are stripped when the component list is loaded) have their type annotations erased via Node's built-in `stripTypeScriptTypes`, and the attribute is removed, so the rest of the pipeline only ever sees plain JavaScript. `data-bascik-build` / `data-bascik-server` scripts are skipped — their types are stripped just before Node executes them.
+3. **Extract body and head.** The inner content of `<body>` and `<head>` are extracted separately so component injection can happen in both zones independently.
+4. **Obtain component list.** On the multi-page startup path (`processAllPages`), the list is pre-computed once and passed in. On a single-page re-transpilation, it is loaded from `src/components/` at this point.
+5. **Run component phase.** `recursivelyTranspile` is called on both the body and head HTML strings. Each call returns a `TranspileResult` containing the resolved HTML and the list of components that were used.
+6. **Collect and deduplicate CSS.** All CSS from used components is gathered. Since multiple instances of the same component share identical scoped class names, `deduplicateCss` emits a single `<style>` block regardless of how many times a component appears on the page. Any global stylesheets configured via `inlineStyles` are also injected into `<head>` at this stage.
+7. **Inject live-reload script.** In dev mode only, a small `<script>` that opens a Server-Sent Events connection to `/bascik-live-reload` is appended to the body.
+8. **Minify.** HTML comments are stripped and excess whitespace is collapsed via `minifyHtml`. This runs *after* component resolution so that whitespace-sensitive content inside resolved components (e.g. `<pre>` blocks from `<code-block>`) is preserved intact.
+9. **Reassemble HTML.** The resolved body and head are placed back into the original HTML document structure.
+10. **Write output.** In build mode, the finished HTML is written to `dist/`. In dev mode, no disk write occurs, the result is stored in the in-memory page store so the HTTP/2 server can serve it instantly.
+11. **Emit transpiled event.** `eventEmitter.emit("transpiled")` triggers live-reload for any connected browser.
 
 ## Build Script Output Cache
 
