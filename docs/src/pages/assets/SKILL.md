@@ -362,7 +362,7 @@ export const bascikConfig = {
 
 ### TypeScript Component Scripts (`data-bascik-ts`)
 
-Add the `data-bascik-ts` attribute to any `<script>` tag to write it in TypeScript. Bascik strips the type annotations at build time (erasure-only, via Node's built-in `stripTypeScriptTypes`) and removes the attribute; the resulting plain JavaScript then flows through the normal scoping pipeline (id/name/class rewriting, IIFE wrapping). Nothing TypeScript-related ships to the browser.
+Add the `data-bascik-ts` attribute to any inline `<script>` tag to write it in TypeScript. Bascik strips the type annotations at build time (erasure-only, via Node's built-in `stripTypeScriptTypes`) and removes the attribute; the resulting plain JavaScript then flows through the normal scoping pipeline (id/name/class rewriting, IIFE wrapping). Nothing TypeScript-related ships to the browser.
 
 ```html
 <button id="inc" type="button">+1</button>

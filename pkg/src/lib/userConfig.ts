@@ -1,4 +1,4 @@
-import { access } from "node:fs/promises";
+import * as fs from "node:fs/promises";
 import { basename, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { BascikConfigOptions } from "./types.js";
@@ -9,6 +9,12 @@ export interface UserConfigModule {
   bascikConfig?: UserConfig;
   buildOverrideConfig?: UserConfig;
 }
+
+const isErrnoCode = (err: unknown, code: string): boolean =>
+  typeof err === "object" &&
+  err !== null &&
+  "code" in err &&
+  (err as NodeJS.ErrnoException).code === code;
 
 /**
  * Import a user config module.  Node ESM requires a file:// URL for absolute
@@ -28,17 +34,21 @@ export const loadUserConfig = async (
 ): Promise<{ bascikConfig: UserConfig; buildOverrideConfig: UserConfig }> => {
   const configName = basename(configPath);
   try {
-    await access(configPath);
+    try {
+      await fs.access(configPath);
+    } catch (err) {
+      if (isErrnoCode(err, "ENOENT")) {
+        console.warn("[bascik] No bascik.config.js or bascik.config.ts found. Using defaults.");
+        return { bascikConfig: {}, buildOverrideConfig: {} };
+      }
+      throw err;
+    }
     const mod = await importUserConfig(configPath);
     return {
       bascikConfig: mod.bascikConfig ?? {},
       buildOverrideConfig: mod.buildOverrideConfig ?? {},
     };
   } catch (err) {
-    if ((err as NodeJS.ErrnoException)?.code === "ENOENT") {
-      console.warn("[bascik] No bascik.config.js or bascik.config.ts found. Using defaults.");
-      return { bascikConfig: {}, buildOverrideConfig: {} };
-    }
     // A config file that exists but fails to load is fatal — throw (rather
     // than process.exit) so the CLI can surface the error and library
     // consumers (worker threads) don't nuke the whole process.
@@ -58,14 +68,18 @@ export const loadUserConfig = async (
 export const resolveUserConfigPath = async (): Promise<string> => {
   const jsPath = resolve(process.cwd(), "bascik.config.js");
   try {
-    await access(jsPath);
+    await fs.access(jsPath);
     return jsPath;
-  } catch { /* fall through to .ts */ }
+  } catch (err) {
+    if (!isErrnoCode(err, "ENOENT")) throw err;
+  }
   const tsPath = resolve(process.cwd(), "bascik.config.ts");
   try {
-    await access(tsPath);
+    await fs.access(tsPath);
     return tsPath;
-  } catch { /* neither exists — default to .js for the warning path */ }
+  } catch (err) {
+    if (!isErrnoCode(err, "ENOENT")) throw err;
+  }
   return jsPath;
 };
 

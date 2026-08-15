@@ -14,6 +14,8 @@ let dirs: string[] = [];
 afterEach(async () => {
   await Promise.all(dirs.map((d) => rm(d, { recursive: true, force: true })));
   dirs = [];
+  vi.doUnmock("node:fs/promises");
+  vi.resetModules();
 });
 
 const writeConfig = async (contents: string): Promise<string> => {
@@ -62,6 +64,25 @@ describe("loadUserConfig", () => {
     );
   });
 
+  it("does not treat non-ENOENT access failures as a missing config", async () => {
+    vi.doMock("node:fs/promises", async (importActual) => {
+      const actual = await importActual<typeof import("node:fs/promises")>();
+      return {
+        ...actual,
+        access: vi.fn(async (path: Parameters<typeof actual.access>[0]) => {
+          if (String(path) === "/restricted/bascik.config.js") {
+            throw Object.assign(new Error("permission denied"), { code: "EACCES" });
+          }
+          return actual.access(path);
+        }),
+      };
+    });
+    const { loadUserConfig } = await import("./userConfig.js");
+    await expect(loadUserConfig("/restricted/bascik.config.js")).rejects.toThrow(
+      /Failed to load bascik\.config\.js: permission denied/,
+    );
+  });
+
   it("imports via a file:// URL (Windows-safe)", async () => {
     // importUserConfig must convert to a file URL — importing a bare absolute
     // path fails with ERR_UNSUPPORTED_ESM_URL_SCHEME on Windows.
@@ -106,6 +127,24 @@ describe("resolveUserConfigPath", () => {
     const { resolveUserConfigPath } = await import("./userConfig.js");
     await inTempCwd(async () => {
       expect(await resolveUserConfigPath()).toMatch(/bascik\.config\.js$/);
+    });
+  });
+
+  it("rethrows non-ENOENT access failures while resolving the preferred config", async () => {
+    await inTempCwd(async (dir) => {
+      vi.doMock("node:fs/promises", async (importActual) => {
+        const actual = await importActual<typeof import("node:fs/promises")>();
+        return {
+          ...actual,
+          access: vi.fn(async (path: Parameters<typeof actual.access>[0]) => {
+            if (String(path) === join(dir, "bascik.config.js")) {
+              throw Object.assign(new Error("permission denied"), { code: "EACCES" });
+            }
+            return actual.access(path);
+          }),
+        };
+      });
+      await expect(import("./userConfig.js")).rejects.toThrow("permission denied");
     });
   });
 });

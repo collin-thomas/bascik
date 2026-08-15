@@ -141,7 +141,7 @@ const BUILD_SCRIPT_TIMEOUT = 60_000;
 // skip the Node.js child-process spawn entirely for unchanged scripts.
 
 // Bump to invalidate all existing disk cache entries (e.g. when key composition changes).
-export const SCRIPT_CACHE_VERSION = 2;
+export const SCRIPT_CACHE_VERSION = 3;
 
 // Extract relative paths the script depends on from quoted string literals:
 //   './content/foo.md'  or  'scripts/md-renderer.mjs'
@@ -157,6 +157,7 @@ export const extractScriptDeps = (script: string): string[] => {
 
 const computeScriptCacheKey = async (
   script: string,
+  isTypeScript: boolean,
   isBuild: boolean,
   filePath: string,
   siteUrl: string,
@@ -164,6 +165,7 @@ const computeScriptCacheKey = async (
   const hash = createHash("sha256");
   hash.update(String(SCRIPT_CACHE_VERSION));
   hash.update(script);
+  hash.update(isTypeScript ? "ts" : "js");
   hash.update(isBuild ? "1" : "0");
   hash.update(filePath);   // BASCIK_PAGE_FILE — varies per page
   hash.update(siteUrl);    // BASCIK_SITE_URL  — can affect script output
@@ -246,8 +248,15 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
     const useCache = BascikConfig.buildScriptCache !== false;
     const pageFile = filePath ?? "";
     const siteUrl = BascikConfig.siteUrl ?? "";
+    const isTypeScript = isTypeScriptOpenTag(openTag);
     const cacheKey = useCache
-      ? await computeScriptCacheKey(trimmedScript, BascikConfig.isBuild ?? false, pageFile, siteUrl)
+      ? await computeScriptCacheKey(
+        trimmedScript,
+        isTypeScript,
+        BascikConfig.isBuild ?? false,
+        pageFile,
+        siteUrl,
+      )
       : null;
     if (cacheKey !== null) {
       const cached = await readScriptCache(cacheDir, cacheKey);
@@ -264,7 +273,7 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
       // data-bascik-ts scripts have their type annotations stripped before
       // execution (Node refuses to type-strip files under node_modules,
       // where the temp dir lives — so Bascik strips in-process instead).
-      const executable = isTypeScriptOpenTag(openTag)
+      const executable = isTypeScript
         ? stripTypes(trimmedScript)
         : trimmedScript;
       await writeFile(tmpPath, executable, "utf8");

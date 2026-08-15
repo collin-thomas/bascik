@@ -118,6 +118,19 @@ describe("transpileInlineTypeScript", () => {
     expect(out).toContain("<p>hi</p>");
   });
 
+  it("ignores script-looking text inside style and textarea raw-text elements", () => {
+    const html =
+      "<style><script data-bascik-ts>const fake: number = 1;</script></style>" +
+      "<textarea><script data-bascik-ts>const fake: number = 2;</script></textarea>" +
+      "<script data-bascik-ts>const real: number = 3;</script>";
+    const out = transpileInlineTypeScript(html);
+    expect(out).toContain("<style><script data-bascik-ts>const fake: number = 1;</script></style>");
+    expect(out).toContain("<textarea><script data-bascik-ts>const fake: number = 2;</script></textarea>");
+    expect(out).toContain("<script>const real");
+    expect(out).toContain("= 3;</script>");
+    expect(out).not.toContain("const real: number");
+  });
+
   it("warns and removes the block on unsupported TS syntax (enum)", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => { });
     const html = "<div><script data-bascik-ts>enum E { A, B }</script></div>";

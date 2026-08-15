@@ -83,6 +83,19 @@ export const stripTypes = (source: string): string =>
 const SCRIPT_BLOCK_RE =
   /(<script\b(?:[^>"']|"[^"]*"|'[^']*')*>)([\s\S]*?)(<\/script\s*>)/gi;
 
+// Same raw-text masking convention used elsewhere in the repo: preserve string
+// length by blanking raw-text element content with spaces before scanning for
+// real markup.
+const RAW_TEXT_CONTENT_RE =
+  /(<(style|textarea)\b(?:[^>"']|"[^"]*"|'[^']*')*>)([\s\S]*?)(<\/\2\s*>)/gi;
+
+const maskRawTextContent = (html: string): string =>
+  html.replace(
+    RAW_TEXT_CONTENT_RE,
+    (_match, open: string, _tag: string, content: string, close: string) =>
+      `${open}${" ".repeat(content.length)}${close}`,
+  );
+
 /**
  * Find every client-side `<script data-bascik-ts>` block in `html`, strip the
  * type annotations, and drop the `data-bascik-ts` attribute so the browser
@@ -101,14 +114,27 @@ export const transpileInlineTypeScript = (
   filePath?: string,
 ): string => {
   if (!/data-bascik-ts/i.test(html)) return html;
-  return html.replace(SCRIPT_BLOCK_RE, (match, open: string, code: string, close: string) => {
-    if (!isTypeScriptOpenTag(open)) return match;
+  const maskedHtml = maskRawTextContent(html);
+  const matches = [...maskedHtml.matchAll(SCRIPT_BLOCK_RE)];
+  if (matches.length === 0) return html;
+
+  let result = html;
+  const outputs = matches.map((match) => {
+    const [fullTag, open, _maskedCode, close] = match;
+    const index = match.index ?? 0;
+    const originalTag = html.slice(index, index + fullTag.length);
+    const originalOpen = html.slice(index, index + open.length);
+    const originalCode = html.slice(index + open.length, index + fullTag.length - close.length);
+    const originalClose = html.slice(index + fullTag.length - close.length, index + fullTag.length);
+    if (!isTypeScriptOpenTag(originalOpen)) return { fullTag: originalTag, index, output: originalTag };
     // Node-executed scripts keep their TS source — Node runs it natively.
-    if (hasFlagAttr(open, QUOTED_OR_NODE_FLAG_RE)) return match;
+    if (hasFlagAttr(originalOpen, QUOTED_OR_NODE_FLAG_RE)) {
+      return { fullTag: originalTag, index, output: originalTag };
+    }
     try {
-      const js = stripTypes(code);
-      const cleanedOpen = removeTsFlag(open);
-      return `${cleanedOpen}${js}${close}`;
+      const js = stripTypes(originalCode);
+      const cleanedOpen = removeTsFlag(originalOpen);
+      return { fullTag: originalTag, index, output: `${cleanedOpen}${js}${originalClose}` };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       const where = filePath ? ` in "${filePath}"` : "";
@@ -118,7 +144,13 @@ export const transpileInlineTypeScript = (
         `Note that enums, namespaces, and other TS syntax requiring code ` +
         `generation are not supported in client scripts.`,
       );
-      return "";
+      return { fullTag: originalTag, index, output: "" };
     }
   });
+
+  outputs.sort((a, b) => b.index - a.index);
+  for (const { fullTag, index, output } of outputs) {
+    result = result.slice(0, index) + output + result.slice(index + fullTag.length);
+  }
+  return result;
 };

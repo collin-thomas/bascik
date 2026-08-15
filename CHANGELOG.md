@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **TypeScript script edge cases** — inline TypeScript scanning now ignores script-looking text inside `<style>` and `<textarea>`, build-script cache keys distinguish TypeScript-vs-JavaScript execution mode for identical bodies, and `bascik.config.ts` fallback only treats `ENOENT` as “config not found” instead of swallowing other file-access errors.
+
 - **Component tags inside `<script>`/`<style>`/`<textarea>` content are no longer resolved** — literal tag text such as `<my-card>` inside a JSON-LD string, inline script, style comment, or textarea was expanded into the full component markup, injecting a stray `</script>` that corrupted the page head and crashed build-time script minification. Tag detection, replacement, and open/close pairing now mask raw-text element content (mirroring the unresolved-tag warning scanner), so such text is treated as text.
 
 - **Class names used only in JS are now discovered and scoped** — the JS scoping pass previously only rewrote class references for names that appeared in HTML `class=` attributes. Dynamically-managed classes (e.g. modifier classes added via `classList.add()`, or classes passed to `querySelector`, `className =`, or `setAttribute("class", …)`) were scoped in CSS but left unscoped in JS, so the two never matched. The fix scans `<script>` blocks for all class-referencing JS patterns (`classList.*`, `querySelector`-family, `className` assignments, `setAttribute("class", …)`) and adds any newly-discovered class names to the scope map before the JS rewrite pass runs.

@@ -495,6 +495,25 @@ describe("build-script output cache", () => {
     expect(mockExecFile).not.toHaveBeenCalled();
   });
 
+  it("does not share cached output between JS and TypeScript modes for the same body", async () => {
+    resolveWith("<p>ts-mode</p>");
+    const tsTag = "<script data-bascik-build data-bascik-ts>const n: number = 1; console.log(n)</script>";
+    const jsTag = "<script data-bascik-build>const n: number = 1; console.log(n)</script>";
+
+    await executeBuildScripts(tsTag);
+    expect(mockExecFile).toHaveBeenCalledTimes(1);
+
+    mockExecFile.mockClear();
+    mockReadFile.mockClear();
+    mockWriteFile.mockClear();
+    mockReadFile.mockRejectedValue(new Error("ENOENT"));
+    resolveWith("<p>js-mode</p>");
+
+    const result = await executeBuildScripts(jsTag);
+    expect(result).toBe("<p>js-mode</p>");
+    expect(mockExecFile).toHaveBeenCalledTimes(1);
+  });
+
   it("different filePath produces a different cache key so page-specific scripts (canonical, OG) are not reused across pages", async () => {
     resolveWith("<link rel='canonical' href='/a'>");
     // Same script content, different filePath — must produce different keys,

@@ -8471,7 +8471,7 @@ yarn workspace bascik-docs test
 
 # TypeScript
 
-Bascik is written in TypeScript, and projects built with Bascik can be written in TypeScript too. Add `data-bascik-ts` to any `<script>` tag — client, build-time, or server — and Bascik handles the rest. No bundler, no compile step, no configuration.
+Bascik is written in TypeScript, and projects built with Bascik can be written in TypeScript too. Add `data-bascik-ts` to any inline `<script>` tag — client, build-time, or server — and Bascik handles the rest. No bundler, no compile step, no configuration.
 
 ## How It Works
 
@@ -8549,7 +8549,13 @@ The same `data-bascik-ts` attribute works on [server scripts](/server), which ru
     searchParams: Record<string, string>;
   }
   const req: BascikRequest = JSON.parse(process.env.BASCIK_REQUEST!);
-  const name = req.headers['x-display-name'] ?? 'Guest';
+  const escapeHtml = (value: string): string =>
+    value.replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+  const name = escapeHtml(req.headers['x-display-name'] ?? 'Guest');
   console.log(`<p>Welcome, ${name}</p>`);
 </script>
 ```
