@@ -137,9 +137,9 @@ This example forwards a class, an ID, an accessibility label, and a testing hook
 ```css
 .inherit-card {
   width: min(100%, 34rem);
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
+  background: #242628;
+  border: 1px solid #3a3d40;
+  border-radius: 10px;
   padding: 24px;
 }
 
@@ -149,7 +149,7 @@ This example forwards a class, an ID, an accessibility label, and a testing hook
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: #d3ff8d;
 }
 
 .inherit-card-title {
@@ -159,7 +159,7 @@ This example forwards a class, an ID, an accessibility label, and a testing hook
 
 .inherit-card-body {
   margin: 0;
-  color: var(--text-muted);
+  color: #8d929e;
 }
 ```
 
@@ -842,6 +842,25 @@ The simplest component is just markup. No CSS, no JavaScript required.
 </article>
 ```
 
+> **Styles omitted for clarity.** This demo component includes a companion `.css` file that styles the card. The CSS is not shown in the source view so the demo stays focused on the HTML structure.
+
+<!-- demo:output-html-hello -->
+```html
+<article class="bascik__hello-card__hello-card">
+  <p class="bascik__hello-card__hello-card-kicker">One file. One tag.</p>
+  <h3 class="bascik__hello-card__hello-card-title">Plain HTML, ready to reuse.</h3>
+  <p class="bascik__hello-card__hello-card-body">Bascik replaces the custom tag at build time and ships the finished markup.</p>
+</article>
+```
+
+<!-- demo:output-css-hello -->
+```css
+.bascik__hello-card__hello-card { ... }
+.bascik__hello-card__hello-card-kicker { ... }
+.bascik__hello-card__hello-card-title { ... }
+.bascik__hello-card__hello-card-body { ... }
+```
+
 Components can appear in other components too. If `site-layout.html` uses `<page-footer></page-footer>`, every page that uses `<site-layout>` gets the footer automatically.
 
 ## HTML with CSS
@@ -881,6 +900,20 @@ Add a `<style>` block to style the component inline. Bascik scopes the CSS to th
 </span>
 ```
 
+<!-- demo:output-html-badge -->
+```html
+<span class="bascik__comp-badge__badge">
+  <span class="bascik__comp-badge__badge-dot"></span>
+  All systems operational
+</span>
+```
+
+<!-- demo:output-css-badge -->
+```css
+.bascik__comp-badge__badge { ... }
+.bascik__comp-badge__badge-dot { ... }
+```
+
 > **More on the next page.** [Scoped Styles](/scoped-styles) covers exactly how class names and selectors are namespaced and what CSS patterns are supported.
 
 ## HTML with JavaScript
@@ -894,7 +927,7 @@ Add a `<script>` block for interactive behavior. Use `id` on any element you nee
 
 <!-- demo:source-html-toggle -->
 ```html
-<div>
+<div class="toggle-wrap">
   <p>Bascik assembles components at build time and ships plain HTML files with no framework runtime.</p>
   <div id="detail" hidden>
     <p>No JavaScript is added to the page. Every script in the output was written by you.</p>
@@ -913,7 +946,37 @@ btn.addEventListener('click', () => {
 });
 ```
 
-> **More on that page.** [Scoped JavaScript](/scoped-javascript) explains how Bascik rewrites selectors so multiple instances of the same component on the same page stay fully independent.
+> **Styles omitted for clarity.** This demo component includes a companion `.css` file that styles the card. The CSS is not shown in the source view so the demo stays focused on the JavaScript.
+
+<!-- demo:output-html-toggle -->
+```html
+<div class="bascik__comp-toggle__toggle-wrap">
+  <p class="bascik__comp-toggle__el__p">Bascik assembles components at build time and ships plain HTML files with no framework runtime.</p>
+  <div id="bascik__comp-toggle__a1b__detail" hidden>
+    <p class="bascik__comp-toggle__el__p">No JavaScript is added to the page. Every script in the output was written by you.</p>
+  </div>
+  <button class="bascik__comp-toggle__el__button" id="bascik__comp-toggle__a1b__btn" type="button">Read more</button>
+</div>
+<script>
+  (function(){
+  const btn = document.getElementById('bascik__comp-toggle__a1b__btn');
+  const detail = document.getElementById('bascik__comp-toggle__a1b__detail');
+  btn.addEventListener('click', () => {
+    detail.hidden = !detail.hidden;
+    btn.textContent = detail.hidden ? 'Read more' : 'Show less';
+  });
+  })();
+</script>
+```
+
+<!-- demo:output-css-toggle -->
+```css
+.bascik__comp-toggle__toggle-wrap { ... }
+.bascik__comp-toggle__toggle-wrap .bascik__comp-toggle__el__p { ... }
+.bascik__comp-toggle__toggle-wrap .bascik__comp-toggle__el__button { ... }
+```
+
+> **See also.** [Scoped JavaScript](/scoped-javascript) explains how Bascik rewrites selectors so multiple instances of the same component on the same page stay fully independent.
 
 ## HTML, CSS, and JavaScript Together
 
@@ -963,6 +1026,28 @@ All three can live in a single file. A `<style>` block, the markup, and a `<scri
 </script>
 ```
 
+<!-- demo:output-html-alert -->
+```html
+<div class="bascik__comp-alert__alert" id="bascik__comp-alert__a1b__alert">
+  <p class="bascik__comp-alert__alert-body">Scheduled maintenance Sunday, 2am–4am UTC.</p>
+  <button id="bascik__comp-alert__a1b__close" class="bascik__comp-alert__alert-close" aria-label="Dismiss">×</button>
+</div>
+<script>
+  (function(){
+  document.getElementById('bascik__comp-alert__a1b__close').addEventListener('click', () => {
+    document.getElementById('bascik__comp-alert__a1b__alert').hidden = true;
+  });
+  })();
+</script>
+```
+
+<!-- demo:output-css-alert -->
+```css
+.bascik__comp-alert__alert { ... }
+.bascik__comp-alert__alert-body { ... }
+.bascik__comp-alert__alert-close { ... }
+```
+
 ## Separate CSS Files
 
 As a component grows, moving the CSS into its own file keeps things readable. Create a `.css` file with the same base name alongside the `.html` file. Both approaches are fully equivalent — Bascik applies the same scoping either way.
@@ -987,18 +1072,34 @@ As a component grows, moving the CSS into its own file keeps things readable. Cr
 ```css
 .fcard {
   padding: 24px;
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
+  background: #242628;
+  border: 1px solid #3a3d40;
+  border-radius: 10px;
 
-  h3 { color: var(--text); }
-  p  { font-size: 0.875rem; color: var(--text-muted); }
+  h3 { color: #f0f1f2; }
+  p  { font-size: 0.875rem; color: #8d929e; }
 
   &:hover {
-    border-color: var(--border-hover);
-    box-shadow: 0 0 0 1px var(--accent-dim);
+    border-color: rgba(211,255,141,0.35);
+    box-shadow: 0 0 0 1px rgba(211,255,141,0.12);
   }
 }
+```
+
+<!-- demo:output-html-card -->
+```html
+<div class="bascik__feature-card__fcard">
+  <h3>Build-time Components</h3>
+  <p>Bascik resolves tags and ships plain HTML.</p>
+</div>
+```
+
+<!-- demo:output-css-card -->
+```css
+.bascik__feature-card__fcard { ... }
+.bascik__feature-card__fcard h3 { ... }
+.bascik__feature-card__fcard p { ... }
+.bascik__feature-card__fcard:hover { ... }
 ```
 
 ## Subfolder Layout
@@ -2926,7 +3027,7 @@ Each instance of this component has its own isolated state. Place it on a page a
 }
 
 .bascik__my-counter__count-value {
-  font-family: var(--font-mono);
+  font-family: monospace;
   font-size: 1.5rem;
   min-width: 2ch;
   text-align: center;
@@ -3143,25 +3244,22 @@ One thing to be aware of: if a library dynamically sets a class or ID value at r
   cursor: pointer;
   font-family: inherit;
   font-size: 0.95rem;
-  color: var(--text);
+  color: #f0f1f2;
   transition: color 0.15s, border-color 0.15s;
 }
 
 .tab[data-state="on"] {
-  border-bottom-color: var(--accent);
-  color: var(--accent);
+  border-bottom-color: #d3ff8d;
+  color: #d3ff8d;
   font-weight: 600;
 }
 
 .status {
   margin: 12px 0 0;
   font-size: 0.8rem;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
+  color: #8d929e;
+  font-family: monospace;
 }
-```
-
-<!-- demo:state-output-html -->
 ```html
 <!-- .tab and .status are scoped; attribute selector is untouched -->
 <div v-scope="{ active: false }">
@@ -3182,22 +3280,22 @@ One thing to be aware of: if a library dynamically sets a class or ID value at r
   cursor: pointer;
   font-family: inherit;
   font-size: 0.95rem;
-  color: var(--text);
+  color: #f0f1f2;
   transition: color 0.15s, border-color 0.15s;
 }
 
 /* .tab scoped to .bascik__state-tab__tab; [data-state="on"] passes through unchanged */
 .bascik__state-tab__tab[data-state="on"] {
-  border-bottom-color: var(--accent);
-  color: var(--accent);
+  border-bottom-color: #d3ff8d;
+  color: #d3ff8d;
   font-weight: 600;
 }
 
 .bascik__state-tab__status {
   margin: 12px 0 0;
   font-size: 0.8rem;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
+  color: #8d929e;
+  font-family: monospace;
 }
 ```
 
@@ -3593,25 +3691,15 @@ Create a file. The file name is the tag name. HTML, CSS, and JavaScript live tog
 <!-- src/components/my-card.html -->
 <style>
   .card {
-    padding: 26px 28px;
+    padding: 24px 28px;
     border: 1px solid #3a3d40;
+    border-top: 3px solid #d3ff8d;
     border-radius: 10px;
-
-    &.active {
-      border-color: #d3ff8d;
-      h3 { color: #d3ff8d; }
-    }
   }
 </style>
-<div class="card" id="card">
+<article class="card">
   <div data-bascik-slot></div>
-</div>
-<script>
-  const card = document.getElementById('card');
-  card.addEventListener('click', () => {
-    card.classList.toggle('active');
-  });
-</script>
+</article>
 ```
 
 Reference the tag in any page. No imports, no registration, no configuration.
@@ -3629,31 +3717,19 @@ At build time Bascik inlines the component and scopes every class name and DOM s
 
 <!-- demo:home-card-output -->
 ```html
-<!-- dist/index.html - CSS classes and JS selectors scoped -->
+<!-- dist/index.html -->
 <style>
   .bascik__my-card__card {
-    padding: 26px 28px;
+    padding: 24px 28px;
     border: 1px solid #3a3d40;
+    border-top: 3px solid #d3ff8d;
     border-radius: 10px;
-
-    &.bascik__my-card__active {
-      border-color: #d3ff8d;
-      h3 { color: #d3ff8d; }
-    }
   }
 </style>
-<div class="bascik__my-card__card" id="bascik__my-card__a1b__card">
+<article class="bascik__my-card__card">
   <h3>My Card</h3>
   <p>Any HTML goes inside as slot content.</p>
-</div>
-<script>
-  (function () {
-    const card = document.getElementById('bascik__my-card__a1b__card');
-    card.addEventListener('click', () => {
-      card.classList.toggle('bascik__my-card__active');
-    });
-  })();
-</script>
+</article>
 ```
 
 ## Example: Two Isolated Instances
@@ -3690,7 +3766,7 @@ The same component used twice on one page. Each instance gets its own namespace,
 .ctr-count {
   font-size: 2.4rem;
   font-weight: 700;
-  color: var(--accent);
+  color: #d3ff8d;
 }
 .ctr-dec, .ctr-inc {
   width: 40px;
@@ -3945,7 +4021,7 @@ A **skip link** is one of the highest-value, lowest-effort accessibility improve
   top: -100%;
   left: 0;
   padding: 8px 16px;
-  background: var(--accent);
+  background: #d3ff8d;
   color: #000;
   font-weight: 600;
   z-index: 9999;
@@ -4395,8 +4471,8 @@ Set `data-bascik-prop-{name}="value"` on the component tag. The value is injecte
 ```css
 .alert-box {
   padding: 20px;
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
+  border: 1px solid #3a3d40;
+  border-left: 3px solid #d3ff8d;
 }
 ```
 
@@ -4668,6 +4744,8 @@ The extension is generated from the compatibility rules in [Scoping Compatibilit
 - Warns on JavaScript patterns that cannot be rewritten reliably at build time.
 - Points authors toward the supported patterns documented in the compatibility guide.
 
+The extension does **not** warn on class names that only appear in JavaScript and never in a `class="…"` HTML attribute. Those classes are automatically discovered and scoped by the build pipeline. A `classList.toggle('active')` call is fully supported even if `active` never appears in the component template.
+
 ## Install locally
 
 From the repo root:
@@ -4737,7 +4815,15 @@ const panel = document.getElementById("panel");
 panel.id = "other";
 ```
 
-This warns because runtime property assignment to `id` is not rewritten by the build pipeline. Prefer querying the scoped element once and operating on the returned reference instead.
+This warns because runtime property assignment to `id` is not rewritten by the build pipeline. Prefer querying the scoped element once and operating on its reference instead.
+
+Class-only operations are not flagged, even when the class only appears in JavaScript:
+
+```js
+// No warning — JS-only class names are automatically discovered and scoped
+el.classList.toggle('active');
+el.classList.replace('loading', 'ready');
+```
 
 ## Recommended pattern
 
@@ -4827,7 +4913,7 @@ The toggle below registers `is-open` on a hidden element, then safely applies th
 ```css
 .state-toggle-panel { opacity: 0.55; }
 .state-toggle-panel.is-open {
-  border-color: var(--accent);
+  border-color: #d3ff8d;
   opacity: 1;
 }
 ```
@@ -4977,40 +5063,40 @@ The scoping format:
 <!-- demo:source-css -->
 ```css
 .ctr {
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
+  background: #242628;
+  border: 1px solid #3a3d40;
+  border-radius: 10px;
   padding: 24px 20px;
   transition: border-color .2s;
 }
-.ctr:hover { border-color: var(--border-hover); }
+.ctr:hover { border-color: rgba(211,255,141,0.35); }
 .ctr-label {
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .1em;
-  color: var(--text-muted);
+  color: #8d929e;
 }
 .ctr-count {
-  font-family: var(--mono);
+  font-family: monospace;
   font-size: 2.4rem;
   font-weight: 700;
-  color: var(--accent);
+  color: #d3ff8d;
   line-height: 1;
 }
 .ctr-dec, .ctr-inc {
   width: 40px; height: 40px;
-  border-radius: var(--r-sm);
+  border-radius: 6px;
   font-size: 1.1rem;
   cursor: pointer;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
+  border: 1px solid #3a3d40;
+  background: #1e2022;
+  color: #f0f1f2;
 }
 .ctr-inc {
-  background: var(--accent-dim);
+  background: rgba(211,255,141,0.12);
   border-color: rgba(211,255,141,0.3);
-  color: var(--accent);
+  color: #d3ff8d;
   font-weight: 700;
 }
 ```
@@ -5043,17 +5129,17 @@ inc.addEventListener('click', () => { n++; count.textContent = n; });
 <!-- demo:output-css -->
 ```css
 .bascik__demo-counter__ctr {
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
+  background: #242628;
+  border: 1px solid #3a3d40;
+  border-radius: 10px;
   padding: 24px 20px;
   transition: border-color .2s;
 }
 .bascik__demo-counter__ctr-count {
-  font-family: var(--mono);
+  font-family: monospace;
   font-size: 2.4rem;
   font-weight: 700;
-  color: var(--accent);
+  color: #d3ff8d;
 }
 /* class names are shared across all instances of demo-counter */
 ```
@@ -5131,7 +5217,7 @@ This component combines a class, an ID selector, bare `h3` and `p` selectors, a 
 <!-- demo:scope-lab-css -->
 ```css
 .scope-lab {
-  --signal-color: var(--accent);
+  --signal-color: #d3ff8d;
   display: flex;
   gap: 16px;
 }
@@ -5145,8 +5231,8 @@ This component combines a class, an ID selector, bare `h3` and `p` selectors, a 
   outline: 3px solid color-mix(in srgb, var(--signal-color) 22%, transparent);
 }
 
-h3 { color: var(--text); }
-p { color: var(--text-muted); }
+h3 { color: #f0f1f2; }
+p { color: #8d929e; }
 
 @keyframes scope-pulse {
   50% { opacity: 0.35; transform: scale(0.72); }
@@ -5172,7 +5258,7 @@ p { color: var(--text-muted); }
 <!-- demo:scope-lab-output-css -->
 ```css
 .bascik__scope-lab__scope-lab {
-  --bascik__scope-lab__signal-color: var(--accent);
+  --bascik__scope-lab__signal-color: #d3ff8d;
 }
 
 .bascik__scope-lab__scope-lab-pulse {
@@ -5184,8 +5270,8 @@ p { color: var(--text-muted); }
   outline: 3px solid color-mix(in srgb, var(--bascik__scope-lab__signal-color) 22%, transparent);
 }
 
-.bascik__scope-lab__el__h3 { color: var(--text); }
-.bascik__scope-lab__el__p { color: var(--text-muted); }
+.bascik__scope-lab__el__h3 { color: #f0f1f2; }
+.bascik__scope-lab__el__p { color: #8d929e; }
 
 @media (max-width: 600px) {
   .bascik__scope-lab__scope-lab { align-items: flex-start; }
@@ -5233,6 +5319,51 @@ The lab styles `#signal`. Output → CSS shows its generated class selector; Out
 The lab declares `--signal-color` and uses it for the animated indicator. Its Output CSS shows both the scoped declaration and rewritten `var()` reference.
 
 > **Only locally-declared properties are scoped.** If a component uses `var(--global-var)` but doesn't declare `--global-var` in its own CSS, that reference is left untouched so it still resolves from a global stylesheet.
+
+### Using global design tokens in a component
+
+Define your design tokens once in a global stylesheet, then consume them inside any component. Because the component never declares those properties locally, Bascik leaves the `var()` references as-is and they resolve from the global stylesheet at render time.
+
+```css
+/* src/styles.css — design tokens, linked in every page <head> */
+:root {
+  --brand:     #d3ff8d;
+  --card-bg:   #1e2022;
+  --text-muted: #8d929e;
+}
+```
+
+```html
+<!-- src/components/brand-card.html -->
+<style>
+  .card {
+    padding: 24px 28px;
+    background: var(--card-bg);    /* global — Bascik leaves untouched */
+    border-top: 3px solid var(--brand);
+    border-radius: 10px;
+  }
+  .card-label {
+    color: var(--text-muted);
+  }
+</style>
+<div class="card">
+  <p class="card-label" data-bascik-prop-label></p>
+  <div data-bascik-slot></div>
+</div>
+```
+
+```css
+/* dist/ output — class names scoped, var() refs preserved */
+.bascik__brand-card__card {
+  padding: 24px 28px;
+  background: var(--card-bg);
+  border-top: 3px solid var(--brand);
+  border-radius: 10px;
+}
+.bascik__brand-card__card-label {
+  color: var(--text-muted);
+}
+```
 
 ## Toggling Scoping
 
@@ -5917,7 +6048,7 @@ Place default content inside the marker and it renders whenever the component ta
 .simple-slot-card {
   min-height: 9rem;
   padding: 20px;
-  border: 1px solid var(--border);
+  border: 1px solid #3a3d40;
 }
 ```
 
@@ -6017,9 +6148,9 @@ This example uses two named slots (`eyebrow` and `actions`) plus the default slo
 ```css
 .slot-panel {
   width: min(100%, 34rem);
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
+  background: #242628;
+  border: 1px solid #3a3d40;
+  border-radius: 10px;
   padding: 24px;
 }
 
@@ -6036,7 +6167,7 @@ This example uses two named slots (`eyebrow` and `actions`) plus the default slo
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: #d3ff8d;
 }
 
 .slot-panel-title {
@@ -6047,13 +6178,13 @@ This example uses two named slots (`eyebrow` and `actions`) plus the default slo
 .slot-panel-actions {
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid #3a3d40;
 }
 
 .slot-panel-actions a {
   display: inline-flex;
   font-weight: 600;
-  color: var(--accent);
+  color: #d3ff8d;
   text-decoration: none;
 }
 ```
@@ -8532,9 +8663,9 @@ Create one HTML file, then use its filename as a tag anywhere, with no registrat
 ```css
 .hello-card {
   padding: 24px;
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-top: 3px solid var(--accent);
+  background: #242628;
+  border: 1px solid #3a3d40;
+  border-top: 3px solid #d3ff8d;
 }
 ```
 
@@ -8553,9 +8684,9 @@ Create one HTML file, then use its filename as a tag anywhere, with no registrat
 ```css
 .bascik__hello-card__hello-card {
   padding: 24px;
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-top: 3px solid var(--accent);
+  background: #242628;
+  border: 1px solid #3a3d40;
+  border-top: 3px solid #d3ff8d;
 }
 ```
 

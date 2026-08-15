@@ -11,6 +11,8 @@ The extension is generated from the compatibility rules in [Scoping Compatibilit
 - Warns on JavaScript patterns that cannot be rewritten reliably at build time.
 - Points authors toward the supported patterns documented in the compatibility guide.
 
+The extension does **not** warn on class names that only appear in JavaScript and never in a `class="…"` HTML attribute. Those classes are automatically discovered and scoped by the build pipeline. A `classList.toggle('active')` call is fully supported even if `active` never appears in the component template.
+
 ## Install locally
 
 From the repo root:
@@ -80,7 +82,15 @@ const panel = document.getElementById("panel");
 panel.id = "other";
 ```
 
-This warns because runtime property assignment to `id` is not rewritten by the build pipeline. Prefer querying the scoped element once and operating on the returned reference instead.
+This warns because runtime property assignment to `id` is not rewritten by the build pipeline. Prefer querying the scoped element once and operating on its reference instead.
+
+Class-only operations are not flagged, even when the class only appears in JavaScript:
+
+```js
+// No warning — JS-only class names are automatically discovered and scoped
+el.classList.toggle('active');
+el.classList.replace('loading', 'ready');
+```
 
 ## Recommended pattern
 

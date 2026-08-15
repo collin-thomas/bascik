@@ -373,12 +373,6 @@
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 26px 28px;
-      transition: border-color .2s, box-shadow .2s;
-    }
-
-    .how-result-card:hover {
-      border-color: var(--border-hover);
-      box-shadow: 0 0 0 1px var(--accent-dim);
     }
 
     .how-result-card h3 {
@@ -401,19 +395,6 @@
       text-decoration: none;
     }
 
-    .how-result-card.active {
-      background: rgba(211, 255, 141, 0.07);
-      border-color: rgba(211, 255, 141, 0.5);
-      box-shadow: 0 0 0 1px rgba(211, 255, 141, 0.25), 0 0 20px rgba(211, 255, 141, 0.08);
-    }
-
-    .how-result-card.active h3 {
-      color: var(--accent);
-    }
-
-    #how-demo-card {
-      cursor: pointer;
-    }
 
     /* ── Pillars ── */
     .pillars-grid {
@@ -507,8 +488,12 @@
 
     .demo-instances {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       gap: 12px;
+    }
+
+    .demo-instances>* {
+      flex: 1;
     }
 
     /* ── Install CTA ── */
@@ -618,28 +603,34 @@
               <button class="tab-btn how-code-tab" data-how="output">dist/index.html</button>
             </tab-bar>
             <div class="how-src-pane" id="how-component">
-              <code-block data-bascik-prop-lang="html"><script data-bascik-build>
+              <code-block data-bascik-prop-lang="html">
+                <script data-bascik-build>
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
                   const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
                   console.log(await extractDemoBlock('./content/overview.md', 'home-card-component'));
-                </script></code-block>
+                </script>
+              </code-block>
             </div>
             <div class="how-src-pane" id="how-usage" hidden>
-              <code-block data-bascik-prop-lang="html"><script data-bascik-build>
+              <code-block data-bascik-prop-lang="html">
+                <script data-bascik-build>
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
                   const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
                   console.log(await extractDemoBlock('./content/overview.md', 'home-card-usage'));
-                </script></code-block>
+                </script>
+              </code-block>
             </div>
             <div class="how-src-pane" id="how-output" hidden>
-              <code-block data-bascik-prop-lang="html"><script data-bascik-build>
+              <code-block data-bascik-prop-lang="html">
+                <script data-bascik-build>
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
                   const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
                   console.log(await extractDemoBlock('./content/overview.md', 'home-card-output'));
-                </script></code-block>
+                </script>
+              </code-block>
             </div>
           </div>
 
@@ -651,7 +642,7 @@
             </p>
             <div class="how-result-card" id="how-demo-card">
               <h3>My Card</h3>
-              <p>Any HTML goes inside as slot content. Click to toggle state.</p>
+              <p>Any HTML goes inside as slot content.</p>
             </div>
           </div>
         </div>
@@ -675,28 +666,34 @@
               <button class="tab-btn demo-tab-btn" data-tab="js">JS</button>
             </tab-bar>
             <div class="demo-pane" data-pane="html">
-              <code-block data-bascik-prop-lang="html"><script data-bascik-build>
+              <code-block data-bascik-prop-lang="html">
+                <script data-bascik-build>
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
                   const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
                   console.log(await extractDemoBlock('./content/overview.md', 'home-counter-html'));
-                </script></code-block>
+                </script>
+              </code-block>
             </div>
             <div class="demo-pane" data-pane="css" hidden>
-              <code-block data-bascik-prop-lang="css"><script data-bascik-build>
+              <code-block data-bascik-prop-lang="css">
+                <script data-bascik-build>
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
                   const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
                   console.log(await extractDemoBlock('./content/overview.md', 'home-counter-css'));
-                </script></code-block>
+                </script>
+              </code-block>
             </div>
             <div class="demo-pane" data-pane="js" hidden>
-              <code-block data-bascik-prop-lang="js"><script data-bascik-build>
+              <code-block data-bascik-prop-lang="js">
+                <script data-bascik-build>
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
                   const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
                   console.log(await extractDemoBlock('./content/overview.md', 'home-counter-js'));
-                </script></code-block>
+                </script>
+              </code-block>
             </div>
           </div>
 
@@ -715,11 +712,6 @@
       </div>
     </section>
     <script>
-      // How it works - live card toggle
-      document.getElementById('how-demo-card').addEventListener('click', () => {
-        document.getElementById('how-demo-card').classList.toggle('active');
-      });
-
       // How it works - tab switcher
       document.querySelectorAll('.how-code-tab').forEach(btn => {
         btn.addEventListener('click', () => {
