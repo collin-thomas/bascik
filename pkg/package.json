@@ -19,6 +19,9 @@
   "engines": {
     "node": ">=24.17.0"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "chokidar": "^5.0.0"
   },
@@ -39,7 +42,7 @@
     "test:ci": "vitest run --coverage.enabled --coverage.reporter='text-summary'",
     "test:coverage": "vitest run --coverage.enabled",
     "update-coverage": "vitest run --coverage.enabled && cp coverage/coverage-summary.json test-coverage.json",
-    "update-e2e-coverage": "mkdir -p coverage/e2e coverage/e2e-report && cd e2e && NODE_V8_COVERAGE=../coverage/e2e node ../dist/index.js --build && cd .. && ../node_modules/.bin/c8 report --temp-directory coverage/e2e -r json-summary -o coverage/e2e-report && cp coverage/e2e-report/coverage-summary.json e2e-test-coverage.json",
+    "update-e2e-coverage": "node bin/update-e2e-coverage.mjs",
     "bench": "vitest bench",
     "typecheck": "node_modules/.bin/tsc --noEmit",
     "e2e": "node_modules/.bin/playwright test --config e2e/playwright.config.ts"

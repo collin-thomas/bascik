@@ -5,8 +5,11 @@
  * Separated from the CLI entry so it can be unit-tested without I/O.
  */
 
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const SKILL_MD_PATH = fileURLToPath(new URL("../assets/SKILL.md", import.meta.url));
 
 // ─── Root files ───────────────────────────────────────────────────────────────
 
@@ -612,6 +615,8 @@ export async function scaffold(
 
   // Create all directories up front
   await Promise.all([
+    mkdir(join(root, ".github", "skills", "bascik"), { recursive: true }),
+    mkdir(join(root, ".claude", "skills", "bascik"), { recursive: true }),
     mkdir(join(root, "src", "pages", "assets"), { recursive: true }),
     mkdir(join(root, "src", "pages", "css"), { recursive: true }),
     mkdir(join(root, "src", "components", "site-meta"), { recursive: true }),
@@ -621,11 +626,15 @@ export async function scaffold(
     mkdir(join(root, "src", "components", "my-counter"), { recursive: true }),
   ]);
 
+  const skillMd = await readFile(SKILL_MD_PATH, "utf8");
+
   await Promise.all([
     // Root
     writeFile(join(root, "package.json"), PACKAGE_JSON(projectName), "utf8"),
     writeFile(join(root, "bascik.config.js"), BASCIK_CONFIG, "utf8"),
     writeFile(join(root, ".gitignore"), GITIGNORE, "utf8"),
+    writeFile(join(root, ".github", "skills", "bascik", "SKILL.md"), skillMd, "utf8"),
+    writeFile(join(root, ".claude", "skills", "bascik", "SKILL.md"), skillMd, "utf8"),
 
     // Assets
     writeFile(join(root, "src", "pages", "assets", "favicon.svg"), FAVICON_SVG, "utf8"),

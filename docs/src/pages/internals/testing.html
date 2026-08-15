@@ -29,7 +29,7 @@
             const fmt = (n) => n.toFixed(1) + '%';
             const bar = (n) => {
               const pct = Math.round(n);
-              const color = pct >= 90 ? '#6abf69' : pct >= 75 ? '#c8a84b' : '#c06060';
+              const color = pct >= 80 ? '#6abf69' : pct >= 50 ? '#c8a84b' : '#c06060';
               return `<span style="display:inline-block;width:${pct}px;height:8px;background:${color};border-radius:2px;vertical-align:middle;margin-right:6px"></span>`;
             };
             console.log(`
@@ -85,12 +85,12 @@
             const fmt = (n) => n.toFixed(1) + '%';
             const bar = (n) => {
               const pct = Math.round(n);
-              const color = pct >= 90 ? '#6abf69' : pct >= 75 ? '#c8a84b' : '#c06060';
+              const color = pct >= 80 ? '#6abf69' : pct >= 50 ? '#c8a84b' : '#c06060';
               return `<span style="display:inline-block;width:${pct}px;height:8px;background:${color};border-radius:2px;vertical-align:middle;margin-right:6px"></span>`;
             };
             console.log(`
               <h2 style="margin-top:2.5rem">E2E Coverage (Playwright + V8)</h2>
-              <p style="color:var(--text-muted);font-size:.92rem;margin-bottom:1rem">Coverage captured while the CLI builds the 52-page E2E fixture site. Exercises the full transpilation pipeline end-to-end including the CLI entry point, startup, and worker threads that unit tests cannot reach.</p>
+              <p style="color:var(--text-muted);font-size:.92rem;margin-bottom:1rem">Coverage captured while the CLI builds the 55-page E2E fixture site. Exercises the full transpilation pipeline end-to-end including the CLI entry point, startup, and worker threads that unit tests cannot reach.</p>
               <table style="width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:.9rem">
                 <thead>
                   <tr style="text-align:left;border-bottom:1px solid var(--border)">

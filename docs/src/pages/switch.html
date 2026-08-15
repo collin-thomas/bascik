@@ -4,8 +4,8 @@
 <head>
   <docs-head></docs-head>
   <meta name="description"
-    content="Download the Bascik skill file and attach it to GitHub Copilot, Cursor, Claude, or any AI tool that supports custom instructions." />
-  <title>AI Skill - Bascik Docs</title>
+    content="Moving an existing site to Bascik is mostly a mechanical transformation: extract repeated HTML into components and update your build." />
+  <title>Switch to Bascik - Bascik Docs</title>
 </head>
 
 <body>
@@ -14,12 +14,12 @@
 
   <div class="container">
     <div class="docs-layout">
+
       <docs-sidebar></docs-sidebar>
 
       <main class="docs-content">
-        <p class="section-label">Reference</p>
-
-        <!-- Content rendered from docs/content/llm-skill.md at build time.
+        <p class="section-label">Switch</p>
+        <!-- Content rendered from docs/content/switch.md at build time.
              To update page content, edit the MD file - not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
@@ -27,7 +27,14 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/llm-skill.md'));
+          console.log(await renderMd('./content/switch.md'));
+        </script>
+
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/switch'));
         </script>
 
       </main>
@@ -35,7 +42,6 @@
   </div>
 
   <docs-footer></docs-footer>
-
 </body>
 
 </html>

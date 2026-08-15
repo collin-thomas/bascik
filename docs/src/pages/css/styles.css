@@ -158,43 +158,6 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
   margin-bottom: 24px;
 }
 
-/* ── Compiled-output collapsible ── */
-.compiled-output {
-  margin-bottom: 24px;
-}
-
-.compiled-output summary {
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.8rem;
-  font-family: var(--mono);
-  color: var(--text-muted);
-  padding: 4px 0;
-  margin-bottom: 8px;
-  user-select: none;
-  list-style: none;
-}
-
-.compiled-output summary::before {
-  content: '▶';
-  font-size: 0.6rem;
-  transition: transform .15s;
-}
-
-.compiled-output[open] summary::before {
-  transform: rotate(90deg);
-}
-
-.compiled-output summary:hover {
-  color: var(--text);
-}
-
-.compiled-output .prose-codeblock {
-  margin-bottom: 0;
-}
-
 /* ── Tables ── */
 .docs-content table {
   width: 100%; border-collapse: collapse;
@@ -327,6 +290,8 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
   /* Skip noisy or internal links */
   a[href^="#"]::after,
   a[href^="javascript:"]::after { content: none; }
+  /* Strip URL from logo link */
+  a[aria-label="Bascik home"]::after { content: none; }
 
   /* Code */
   pre, code-block {

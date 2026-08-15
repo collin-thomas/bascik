@@ -19,7 +19,10 @@ const { mockServer, mockCreateSecureServer } = vi.hoisted(() => {
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
 vi.mock("node:http2", () => ({
-  default: { createSecureServer: mockCreateSecureServer },
+  default: {
+    createSecureServer: mockCreateSecureServer,
+    constants: { NGHTTP2_INTERNAL_ERROR: 2 },
+  },
 }));
 
 vi.mock("node:fs/promises", () => ({
@@ -54,6 +57,11 @@ vi.mock("./events.js", () => ({
     on: vi.fn(),
     removeListener: vi.fn(),
   },
+}));
+
+vi.mock("./server-scripts.js", () => ({
+  executeServerScripts: vi.fn(async (html: string) => html),
+  DEFAULT_SCRIPT_TIMEOUT_MS: 5000,
 }));
 
 vi.mock("./paths.js", () => ({
@@ -1022,4 +1030,355 @@ describe("serveHttp2 – SSE live-reload (/bascik-live-reload)", () => {
   });
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// onError helper – header/end error paths
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("serveHttp2 – onError: stream already has headers sent", () => {
+  beforeEach(async () => {
+    await serveHttp2();
+  });
+
+  it("skips respond() when headersSent is true (headers already sent before exception)", async () => {
+    const page = makePage({ content: Buffer.from("<html>Hi</html>") });
+    mockMem.getPage.mockReturnValue(page);
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    // First respond() call sets headersSent=true; stream.end() then throws,
+    // causing the outer catch to invoke onError(), which must not call respond() again.
+    stream.respond.mockImplementationOnce(() => {
+      (stream as any).headersSent = true;
+    });
+    stream.end.mockImplementationOnce(() => { throw new Error("stream destroyed"); });
+    await handler(stream, makeHeaders("/about", "GET"));
+    // Only one respond() call (the page response); onError() must not add a second.
+    expect(stream.respond).toHaveBeenCalledTimes(1);
+  });
+
+  it("responds 500 when stat throws a non-ENOENT error", async () => {
+    const handler = getStreamHandler()!;
+    mockStat.mockRejectedValueOnce(Object.assign(new Error("EPERM"), { code: "EPERM" }));
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/style.css", "GET"));
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({ ":status": 500 }),
+    );
+    expect(stream.end).toHaveBeenCalledWith("Internal Server Error");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// fileStream error paths
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("serveHttp2 – fileStream error handling", () => {
+  beforeEach(async () => {
+    await serveHttp2();
+  });
+
+  it("does nothing when fileStream emits an error after the stream is destroyed", async () => {
+    const fakeFileStream = { on: vi.fn().mockReturnThis(), pipe: vi.fn() };
+    mockCreateReadStream.mockReturnValue(fakeFileStream);
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    (stream as any).destroyed = true;
+
+    await handler(stream, makeHeaders("/style.css", "GET"));
+    const errorCb = fakeFileStream.on.mock.calls.find((c: any[]) => c[0] === "error")?.[1] as (err: Error) => void;
+    // Must not throw even if the stream is already destroyed
+    expect(() => errorCb?.(new Error("read error"))).not.toThrow();
+    // respond() must not be called on a destroyed stream
+    expect(stream.respond).not.toHaveBeenCalled();
+  });
+
+  it("closes stream via NGHTTP2_INTERNAL_ERROR when error occurs after headers sent", async () => {
+    const mockClose = vi.fn();
+    const fakeFileStream = { on: vi.fn().mockReturnThis(), pipe: vi.fn() };
+    mockCreateReadStream.mockReturnValue(fakeFileStream);
+    const handler = getStreamHandler()!;
+    const stream = { ...makeStream(), close: mockClose, destroyed: false };
+
+    await handler(stream, makeHeaders("/style.css", "GET"));
+
+    // Simulate the "open" event so headers are sent, then simulate an error.
+    const openCb = fakeFileStream.on.mock.calls.find((c: any[]) => c[0] === "open")?.[1] as () => void;
+    openCb?.(); // This calls stream.respond() → headers sent
+    (stream as any).headersSent = true;
+
+    const errorCb = fakeFileStream.on.mock.calls.find((c: any[]) => c[0] === "error")?.[1] as (err: Error) => void;
+    errorCb?.(new Error("pipe error"));
+    expect(mockClose).toHaveBeenCalled();
+  });
+
+  it("responds 404 when ENOENT error occurs before headers are sent", async () => {
+    const fakeFileStream = { on: vi.fn().mockReturnThis(), pipe: vi.fn() };
+    mockCreateReadStream.mockReturnValue(fakeFileStream);
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+
+    await handler(stream, makeHeaders("/style.css", "GET"));
+    const errorCb = fakeFileStream.on.mock.calls.find((c: any[]) => c[0] === "error")?.[1] as (err: NodeJS.ErrnoException) => void;
+    errorCb?.(Object.assign(new Error("not found"), { code: "ENOENT" }));
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({ ":status": 404 }),
+    );
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// logAccess – various skip conditions
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("serveHttp2 – logAccess skip conditions", () => {
+  let consoleSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(async () => {
+    consoleSpy = vi.spyOn(console, "log").mockImplementation(() => { });
+    await serveHttp2();
+  });
+
+  afterEach(() => {
+    consoleSpy.mockRestore();
+  });
+
+  it("does not log access for the live-reload SSE path", async () => {
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/bascik-live-reload"));
+    const accessLines = consoleSpy.mock.calls.filter(
+      (c) => String(c[0]).includes("bascik-live-reload"),
+    );
+    expect(accessLines).toHaveLength(0);
+  });
+
+  it("logs access for ordinary page requests (logging.requests defaults to true)", async () => {
+    const { BascikConfig } = await import("./config.js");
+    (BascikConfig as any).devServer = { logging: { level: "info", requests: true } };
+    mockMem.getPage.mockReturnValue(makePage());
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/about", "GET"));
+    const accessLines = consoleSpy.mock.calls.filter((c) =>
+      String(c[0]).includes("GET") && String(c[0]).includes("/about"),
+    );
+    expect(accessLines.length).toBeGreaterThan(0);
+  });
+
+  it("skips logging when logging.requests is false", async () => {
+    const { BascikConfig } = await import("./config.js");
+    (BascikConfig as any).devServer = { logging: { level: "info", requests: false } };
+    mockMem.getPage.mockReturnValue(makePage());
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/about", "GET"));
+    const accessLines = consoleSpy.mock.calls.filter((c) =>
+      String(c[0]).includes("GET") && String(c[0]).includes("/about"),
+    );
+    expect(accessLines).toHaveLength(0);
+    (BascikConfig as any).devServer = { logging: { level: "info", requests: true } };
+  });
+
+  it("uses serve.logging config when isServe is true", async () => {
+    const { BascikConfig } = await import("./config.js");
+    (BascikConfig as any).isServe = true;
+    (BascikConfig as any).serve = { logging: { level: "info", requests: true } };
+    mockMem.getPage.mockReturnValue(makePage());
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/about", "GET"));
+    const accessLines = consoleSpy.mock.calls.filter((c) =>
+      String(c[0]).includes("GET"),
+    );
+    expect(accessLines.length).toBeGreaterThan(0);
+    (BascikConfig as any).isServe = false;
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Query-string stripping and trailing-slash page lookup
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("serveHttp2 – query string and trailing-slash routing", () => {
+  beforeEach(async () => {
+    await serveHttp2();
+  });
+
+  it("strips query string before looking up a page (path?q=1 → path)", async () => {
+    const page = makePage({ relativePagePath: "pages/about.html" });
+    mockMem.getPageExact.mockImplementation((p: string) =>
+      p === "/about" ? page : undefined,
+    );
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/about?ref=nav", "GET"));
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({ ":status": 200 }),
+    );
+  });
+
+  it("looks up trailing-slash variant when exact path has no match", async () => {
+    const page = makePage({ relativePagePath: "pages/blog/index.html" });
+    // Exact match for "/blog" fails, but "/blog/" succeeds
+    mockMem.getPageExact.mockImplementation((p: string) =>
+      p === "/blog/" ? page : undefined,
+    );
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/blog", "GET"));
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({ ":status": 200 }),
+    );
+  });
+
+  it("looks up path without trailing slash when trailing-slash path has no match", async () => {
+    const page = makePage({ relativePagePath: "pages/about.html" });
+    mockMem.getPageExact.mockImplementation((p: string) =>
+      p === "/about" ? page : undefined,
+    );
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/about/", "GET"));
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({ ":status": 200 }),
+    );
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Static asset cache-control when cacheHttp is enabled
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("serveHttp2 – static asset cache-control (cacheHttp=true)", () => {
+  beforeEach(async () => {
+    const { BascikConfig } = await import("./config.js");
+    (BascikConfig as any).cacheHttp = true;
+    await serveHttp2();
+  });
+
+  afterEach(async () => {
+    const { BascikConfig } = await import("./config.js");
+    (BascikConfig as any).cacheHttp = false;
+  });
+
+  it("adds cache-control public + etag for static assets when cacheHttp is true", async () => {
+    const fakeFileStream = { on: vi.fn().mockReturnThis(), pipe: vi.fn() };
+    mockCreateReadStream.mockReturnValue(fakeFileStream);
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/style.css", "GET"));
+    const openCb = fakeFileStream.on.mock.calls.find((c: any[]) => c[0] === "open")?.[1] as () => void;
+    openCb?.();
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({
+        "cache-control": expect.stringContaining("public"),
+        "etag": expect.any(String),
+      }),
+    );
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Port-in-use: non-EADDRINUSE error causes rejection
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("serveHttp2 – port bind: non-EADDRINUSE error rejects", () => {
+  afterEach(() => {
+    mockServer.listen.mockImplementation(
+      (_port: number, _hostname: string, cb?: () => void) => { cb?.(); },
+    );
+  });
+
+  it("rejects the promise when the server emits a non-EADDRINUSE error on listen", async () => {
+    mockServer.listen.mockImplementation(
+      (_port: number, _hostname: string, _cb?: () => void) => {
+        const [, errorHandler] = mockServer.once.mock.calls.at(-1) as [
+          string,
+          (err: NodeJS.ErrnoException) => void,
+        ];
+        const err = Object.assign(new Error("EACCES"), { code: "EACCES" });
+        errorHandler(err);
+      },
+    );
+    await expect(serveHttp2()).rejects.toThrow("EACCES");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Server scripts: hasServerScripts=true path
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("serveHttp2 – server-scripts execution", () => {
+  beforeEach(async () => {
+    await serveHttp2();
+  });
+
+  it("calls executeServerScripts and serves the result for pages with hasServerScripts=true", async () => {
+    const { executeServerScripts } = await import("./server-scripts.js");
+    const mockExecute = executeServerScripts as ReturnType<typeof vi.fn>;
+    mockExecute.mockResolvedValueOnce("<p>Hello World</p>");
+
+    const page = makePage({
+      hasServerScripts: true,
+      content: Buffer.from("<p>Hello {{name}}</p>"),
+    });
+    mockMem.getPage.mockReturnValue(page);
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/greeting", "GET"));
+    expect(mockExecute).toHaveBeenCalled();
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({ "cache-control": "private, no-store" }),
+    );
+  });
+
+  it("passes query params, path, and request headers to executeServerScripts", async () => {
+    const { executeServerScripts } = await import("./server-scripts.js");
+    const mockExecute = executeServerScripts as ReturnType<typeof vi.fn>;
+    mockExecute.mockResolvedValueOnce("<p>ok</p>");
+
+    const page = makePage({ hasServerScripts: true, content: Buffer.from("ok") });
+    mockMem.getPage.mockReturnValue(page);
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/greeting?color=blue", "GET", "", undefined, { "x-test": "val" }));
+    const [, ctx] = mockExecute.mock.calls[0] as [string, { path: string; searchParams: Record<string, string>; headers: Record<string, string> }];
+    expect(ctx.path).toBe("/greeting");
+    expect(ctx.searchParams).toMatchObject({ color: "blue" });
+    expect(ctx.headers).toMatchObject({ "x-test": "val" });
+  });
+
+  it("returns HEAD with no body for server-script pages", async () => {
+    const { executeServerScripts } = await import("./server-scripts.js");
+    const mockExecute = executeServerScripts as ReturnType<typeof vi.fn>;
+    mockExecute.mockResolvedValueOnce("<html>ok</html>");
+
+    const page = makePage({ hasServerScripts: true, content: Buffer.from("ok") });
+    mockMem.getPage.mockReturnValue(page);
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/greeting", "HEAD"));
+    expect(stream.end).toHaveBeenCalledWith(undefined);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Custom cert configuration error
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("serveHttp2 – custom cert config error", () => {
+  it("throws when custom cert files are configured but missing", async () => {
+    const { BascikConfig } = await import("./config.js");
+    (BascikConfig as any).serve = {
+      ...BascikConfig.serve,
+      certFile: "custom-cert.pem",
+      keyFile: "custom-key.pem",
+    };
+    const { access } = await import("node:fs/promises");
+    (access as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("ENOENT"));
+
+    await expect(serveHttp2()).rejects.toThrow("Custom TLS certificate files");
+    (BascikConfig as any).serve = { port: 8443, hostname: "localhost" };
+    (access as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+  });
+});
 

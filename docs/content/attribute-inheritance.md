@@ -6,42 +6,13 @@ Any attribute on a component usage tag that is not a Bascik-specific attribute (
 
 When Bascik transpiles a component, it reads the usage tag, extracts any inheritable attributes, and merges them onto the first element of the compiled output. The component template and the usage attributes are combined, classes are appended, all other attributes are forwarded:
 
-```html
-<!-- usage in your page HTML -->
-<site-nav
-  class="sticky"
-  aria-label="main navigation"
-  data-testid="main-nav">
-</site-nav>
-
-<!-- site-nav.html - component template -->
-<nav class="nav">
-  <a href="/">Home</a>
-</nav>
-```
-
-<!-- compiled-output -->
-```html
-<!-- compiled output -->
-<nav
-  class="bascik__site-nav__nav sticky"
-  aria-label="main navigation"
-  data-testid="main-nav">
-  <a href="/">Home</a>
-</nav>
-```
+The demo above shows the usage tag and component template separately under Source, then combines them under Output → HTML.
 
 ## Class Merging
 
 When the root element already has a scoped `class`, the inherited class is **appended** rather than replacing it.
 
-```html
-<!-- root element has scoped class -->
-<nav class="bascik__site-nav__nav">...</nav>
-
-<!-- after merging class="sticky" -->
-<nav class="bascik__site-nav__nav sticky">...</nav>
-```
+In the demo output, the scoped `inherit-card` class and usage-site `featured-card` class both remain on the root `<article>`.
 
 ## What Gets Inherited
 
@@ -58,26 +29,7 @@ Common use cases:
 
 `id` is treated like any other inheritable attribute **unless the component root already has its own `id`**.
 
-```html
-<!-- usage -->
-<brand-logo id="footer-logo"></brand-logo>
-```
-
-<!-- compiled-output -->
-```html
-<!-- template root has no id -->
-<div class="bascik__brand-logo__logo-wrap">
-  <img src="/img/logo.svg" alt="Brand logo" />
-</div>
-```
-
-<!-- compiled-output -->
-```html
-<!-- compiled output - id forwarded from usage tag -->
-<div class="bascik__brand-logo__logo-wrap" id="footer-logo">
-  <img src="/img/logo.svg" alt="Brand logo" />
-</div>
-```
+The demo passes `id="featured-inheritance"` to a template root with no ID; Output → HTML shows it forwarded unchanged.
 
 If the template root already defines an `id`, Bascik keeps the template's root `id` and does not overwrite it with the usage-site `id`. That prevents root-level collisions while still letting you anchor page-level CSS or JavaScript to a component root that does not already declare one.
 
@@ -97,7 +49,7 @@ The `featured` class is a global class that you define in your page-level styles
 
 > **Self-closing syntax works too:** Attribute inheritance works with both paired and self-closing usage syntax: `<my-icon class="large" aria-hidden="true" />`
 
-> **MDN reference.** Bascik forwards standard HTML attributes instead of inventing a new API. Use [MDN's HTML attribute reference](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes) as the primary guide for what each inherited attribute means.
+**MDN reference.** Bascik forwards standard HTML attributes instead of inventing a new API. Use [MDN's HTML attribute reference](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes) as the primary guide for what each inherited attribute means.
 
 ## Disabling It
 
@@ -109,14 +61,15 @@ export const bascikConfig = {
 };
 ```
 
-## Interactive Demo
+## See it in action
 
-The demo below forwards a class, an accessibility label, and a testing hook onto the component root.
+This example forwards a class, an ID, an accessibility label, and a testing hook onto the component root.
 
 <!-- demo:source-usage -->
 ```html
 <inherit-demo-card
   class="featured-card"
+  id="featured-inheritance"
   aria-label="Featured inheritance demo"
   data-testid="inherit-demo">
 </inherit-demo-card>
@@ -165,6 +118,7 @@ The demo below forwards a class, an accessibility label, and a testing hook onto
 ```html
 <article
   class="bascik__inherit-demo-card__inherit-card featured-card"
+  id="featured-inheritance"
   aria-label="Featured inheritance demo"
   data-testid="inherit-demo">
   <p class="bascik__inherit-demo-card__inherit-card-kicker">Template root</p>

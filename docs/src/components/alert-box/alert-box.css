@@ -1,0 +1,20 @@
+.alert-box {
+  width: min(100%, 30rem);
+  padding: 20px;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+}
+
+.alert-box-title {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.alert-box-message {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}

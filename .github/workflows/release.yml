@@ -13,6 +13,9 @@ jobs:
     name: Publish @bascik/bascik to npm
     if: startsWith(github.ref_name, 'v')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +41,7 @@ jobs:
 
       - name: Publish to npm
         working-directory: pkg
-        run: npm publish --access public
+        run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -46,6 +49,9 @@ jobs:
     name: Publish create-bascik to npm
     if: startsWith(github.ref_name, 'create-v')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -71,6 +77,6 @@ jobs:
 
       - name: Publish to npm
         working-directory: create
-        run: npm publish --access public
+        run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

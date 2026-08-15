@@ -1426,3 +1426,57 @@ describe("transpilePage – minifyScripts branch coverage", () => {
     expect(result!.distHtml).toContain("<p>no scripts</p>");
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// W: transpilePage – auto-fetches componentList when not provided
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("transpilePage – auto-fetches componentList", () => {
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    (BascikConfig as Record<string, unknown>).inlineStyles = false;
+    (BascikConfig as Record<string, unknown>).isBuild = false;
+    (BascikConfig as Record<string, unknown>).minifyScripts = false;
+    const componentsModule = await import("./components.js");
+    vi.spyOn(componentsModule, "listComponents").mockResolvedValue({});
+  });
+
+  afterEach(() => {
+    (BascikConfig as Record<string, unknown>).isBuild = false;
+  });
+
+  it("calls listComponents internally when no componentList is passed", async () => {
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(PAGE_HTML);
+    const componentsModule = await import("./components.js");
+    const result = await transpilePage(PAGE_PATH /* no componentList arg */);
+    expect(componentsModule.listComponents).toHaveBeenCalled();
+    expect(result).not.toBeNull();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// X: recursivelyTranspile – non-Error thrown in error path
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("recursivelyTranspile – non-Error thrown in component processing", () => {
+  it("stringifies a non-Error rejection in the error log", async () => {
+    const componentsModule = await import("./components.js");
+    // Temporarily make injectProps throw a plain string (not an Error instance)
+    vi.spyOn(componentsModule, "injectProps").mockImplementationOnce(() => {
+      throw "string-error-not-an-Error-object";
+    });
+
+    const componentList = {
+      "my-str-err": {
+        fileName: "components/my-str-err.html",
+        fileContent: "<div>hello</div>",
+      },
+    };
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    recursivelyTranspile("<my-str-err></my-str-err>", componentList);
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining("string-error-not-an-Error-object"),
+    );
+    errorSpy.mockRestore();
+  });
+});

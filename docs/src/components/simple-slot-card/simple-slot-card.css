@@ -1,0 +1,26 @@
+.simple-slot-card {
+  width: min(100%, 24rem);
+  min-height: 9rem;
+  padding: 20px;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.simple-slot-label {
+  margin: 0 0 12px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.simple-slot-card > :last-child {
+  margin-bottom: 0;
+  color: var(--text);
+}
+
+.simple-slot-fallback {
+  color: var(--text-muted);
+}

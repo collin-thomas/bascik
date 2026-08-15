@@ -2,39 +2,47 @@
 
 Props let you pass text values into a component template at usage time using `data-bascik-prop-*` attributes.
 
-Props in Bascik borrow the same basic idea as props in React: pass values into a reusable component from the usage site. In Bascik, the mechanism is plain HTML via `data-bascik-prop-*` attributes.
+## Define and pass props
 
-## Defining Props in a Template
+Props in Bascik borrow the same basic idea as props in React: pass values into a reusable component from the usage site. In Bascik, the mechanism is plain HTML via `data-bascik-prop-*` attributes.
 
 Add a `data-bascik-prop-{name}` attribute (no value) to any element in the component template. The element's inner content will be replaced with the prop value at build time.
 
-```html
-<!-- alert-box.html -->
-<div class="alert">
-  <strong data-bascik-prop-title></strong>
-  <p data-bascik-prop-message></p>
-</div>
-```
-
-## Passing Props at Usage
-
 Set `data-bascik-prop-{name}="value"` on the component tag. The value is injected into the matching template element.
 
+<!-- demo:basic-props-html -->
 ```html
-<!-- src/pages/index.html -->
+<aside class="alert-box">
+  <strong class="alert-box-title" data-bascik-prop-title>Notice</strong>
+  <p class="alert-box-message" data-bascik-prop-message>
+    Props replace this text at build time.
+  </p>
+</aside>
+```
+
+<!-- demo:basic-props-css -->
+```css
+.alert-box {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+}
+```
+
+<!-- demo:basic-props-usage -->
+```html
 <alert-box
   data-bascik-prop-title="Success"
   data-bascik-prop-message="Your changes have been saved.">
 </alert-box>
 ```
 
-Output:
-
+<!-- demo:basic-props-output-html -->
 ```html
-<div class="alert">
-  <strong>Success</strong>
-  <p>Your changes have been saved.</p>
-</div>
+<aside class="bascik__alert-box__alert-box">
+  <strong class="bascik__alert-box__alert-box-title">Success</strong>
+  <p class="bascik__alert-box__alert-box-message">Your changes have been saved.</p>
+</aside>
 ```
 
 ## Props with Existing Attributes
@@ -89,11 +97,11 @@ A common pattern is a card component with a configurable label, title, and descr
 </feature-card>
 ```
 
-## Interactive Demo
+## See it in action
 
-The demo below passes values directly into the `feature-card` component via `data-bascik-prop-*` attributes.
+This example passes values directly into the `feature-card` component via `data-bascik-prop-*` attributes.
 
-<!-- demo:code -->
+<!-- demo:source-usage -->
 ```html
 <feature-card
   data-bascik-prop-label="Interactive"
@@ -102,7 +110,7 @@ The demo below passes values directly into the `feature-card` component via `dat
 </feature-card>
 ```
 
-<!-- demo:output -->
+<!-- demo:output-html -->
 ```html
 <div class="bascik__feature-card__fcard">
   <p class="bascik__feature-card__fcard-label">Interactive</p>

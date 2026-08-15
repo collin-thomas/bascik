@@ -1,4 +1,4 @@
-# AI Skill
+# Agent Skill
 
 Download the Bascik skill file and attach it to GitHub Copilot, Cursor, Claude, or any AI assistant that supports instruction files, so it understands Bascik's component model, scoping rules, and conventions out of the box.
 

@@ -1,4 +1,4 @@
-# Migrating from Hugo
+# Switch from Hugo
 
 Hugo is a static site generator; Bascik is a build tool for HTML components. Both produce plain HTML with no client-side framework runtime. The main conceptual shift is that Hugo uses Go template syntax in `.html` layout files, while Bascik uses plain HTML component files composed by tag name. Partials become component files, base template blocks become slot-based layout components, and Go template logic becomes Node.js build scripts.
 

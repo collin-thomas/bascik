@@ -25,7 +25,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/internals/overview.md'));
+          console.log(await renderMd('./content/internals.md'));
         </script>
         <script data-bascik-build>
           import { join } from 'node:path';

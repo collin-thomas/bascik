@@ -2,64 +2,23 @@
 
 Write `<script>` tags directly in your component HTML. Bascik automatically rewrites selector strings to match each instance's unique identifiers. Multiple instances of the same component on the same page stay completely independent.
 
-> **Key rule.** Use `id` attributes to identify elements you need to control in JS, and `getElementById` to find them. Bascik scopes each instance's `id` values uniquely, so every call returns exactly the right element.
+## See it in action
+
+These two counters are independent. Change either count and the other stays put.
 
 ## Writing Component Scripts
 
+> **Key rule.** Use `id` attributes to identify elements you need to control in JS, and `getElementById` to find them. Bascik scopes each instance's `id` values uniquely, so every call returns exactly the right element.
+
 A component script looks like ordinary JavaScript. Declare `id` on any element you need to reference, then use `getElementById`. Bascik rewrites the strings at build time:
 
-```html
-<span id="status">Ready</span>
-<button id="toggle-btn">Toggle</button>
-
-<script>
-  const status = document.getElementById('status');
-  const btn    = document.getElementById('toggle-btn');
-  let on = false;
-
-  btn.addEventListener('click', () => {
-    on = !on;
-    status.textContent = on ? 'On' : 'Off';
-    status.style.color = on ? 'var(--accent)' : '';
-  });
-</script>
-```
-
-You don't write or deal with the generated names. Bascik handles the rewriting at build time and each use of the component gets its own independent copy.
+Open Source → JS in the counter demo to see ordinary event listeners and `getElementById` calls. Output → JS shows the rewritten selectors and instance wrapper that Bascik generates.
 
 ## Multiple Instances
 
 Place the same component on a page more than once and each instance runs independently with no extra work needed:
 
-```html
-<my-toggle></my-toggle>
-<my-toggle></my-toggle>
-```
-
-Bascik gives each instance a unique ID prefix so the two script copies never interfere with each other.
-
-<!-- compiled-output -->
-```html
-<!-- first instance -->
-<span id="bascik__my-toggle__a1b2__status">Ready</span>
-<button id="bascik__my-toggle__a1b2__toggle-btn">Toggle</button>
-<script>(function() {
-  const status = document.getElementById("bascik__my-toggle__a1b2__status");
-  const btn    = document.getElementById("bascik__my-toggle__a1b2__toggle-btn");
-  let on = false;
-  btn.addEventListener("click", () => { ... });
-})();</script>
-
-<!-- second instance - different instanceId, fully independent -->
-<span id="bascik__my-toggle__c3d4__status">Ready</span>
-<button id="bascik__my-toggle__c3d4__toggle-btn">Toggle</button>
-<script>(function() {
-  const status = document.getElementById("bascik__my-toggle__c3d4__status");
-  const btn    = document.getElementById("bascik__my-toggle__c3d4__toggle-btn");
-  let on = false;
-  btn.addEventListener("click", () => { ... });
-})();</script>
-```
+The two counters at the top of this page are the same component. Change either count, then inspect Output → HTML and Output → JS to compare their unique instance IDs.
 
 ## Pitfall: Class-Based DOM Lookups
 
@@ -91,11 +50,65 @@ The `class` attribute can still coexist on the same element for styling, just ad
 
 If a class is only toggled at runtime (`classList.toggle("is-open")`) but doesn't appear on any element in the template HTML, Bascik's compiler won't register it. The CSS side obfuscates the name but the JS side doesn't, causing a silent mismatch at runtime.
 
-**Fix: declare the class on a hidden element in the template so the compiler sees it:**
+The toggle below registers `is-open` on a hidden element, then safely applies that scoped class at runtime.
 
+<!-- demo:runtime-class-usage -->
 ```html
-<!-- scoping helper - keeps runtime classes registered at compile time -->
-<div class="is-open is-active" style="display:none"></div>
+<state-toggle></state-toggle>
+```
+
+<!-- demo:runtime-class-html -->
+```html
+<section class="state-toggle">
+  <div class="is-open" hidden></div>
+  <p id="status">Panel closed</p>
+  <button id="toggle" type="button">Toggle panel</button>
+  <div class="state-toggle-panel" id="panel">Only this component instance changes.</div>
+</section>
+```
+
+<!-- demo:runtime-class-css -->
+```css
+.state-toggle-panel { opacity: 0.55; }
+.state-toggle-panel.is-open {
+  border-color: var(--accent);
+  opacity: 1;
+}
+```
+
+<!-- demo:runtime-class-js -->
+```js
+const status = document.getElementById('status');
+const toggle = document.getElementById('toggle');
+const panel = document.getElementById('panel');
+
+toggle.addEventListener('click', () => {
+  const isOpen = panel.classList.toggle('is-open');
+  status.textContent = isOpen ? 'Panel open' : 'Panel closed';
+});
+```
+
+<!-- demo:runtime-class-output-html -->
+```html
+<section class="bascik__state-toggle__state-toggle">
+  <div class="bascik__state-toggle__is-open" hidden></div>
+  <p id="bascik__state-toggle__a1b2__status">Panel closed</p>
+  <button id="bascik__state-toggle__a1b2__toggle" type="button">Toggle panel</button>
+  <div class="bascik__state-toggle__state-toggle-panel"
+       id="bascik__state-toggle__a1b2__panel">Only this component instance changes.</div>
+</section>
+```
+
+<!-- demo:runtime-class-output-js -->
+```js
+const status = document.getElementById('bascik__state-toggle__a1b2__status');
+const toggle = document.getElementById('bascik__state-toggle__a1b2__toggle');
+const panel = document.getElementById('bascik__state-toggle__a1b2__panel');
+
+toggle.addEventListener('click', () => {
+  const isOpen = panel.classList.toggle('bascik__state-toggle__is-open');
+  status.textContent = isOpen ? 'Panel open' : 'Panel closed';
+});
 ```
 
 ## Supported Selectors
@@ -150,27 +163,14 @@ Script tags with a `type` other than `text/javascript` are left completely untou
 
 Every component `<script>` is wrapped in an IIFE to prevent variable leaks, and every selector string that references a scoped attribute is rewritten to match:
 
-<!-- compiled-output -->
-```html
-<!-- source -->
-<button id="my-btn">Click</button>
-<script>
-  document.getElementById('my-btn').addEventListener('click', () => alert('hi'));
-</script>
-
-<!-- compiled -->
-<button id="bascik__my-comp__a1b2__my-btn">Click</button>
-<script>
-(function() {
-  document.getElementById("bascik__my-comp__a1b2__my-btn")
-    .addEventListener("click", () => alert("hi"));
-})();
-</script>
-```
+The counter demo's Output tabs show the complete compiled HTML, CSS, and JavaScript together. The runtime-class demo adds a focused view of `classList.toggle()` rewriting.
 
 The scoping format:
+
 - `class` → `bascik__<componentName>__<originalName>` (shared across all instances)
 - `id` / `name` → `bascik__<componentName>__<instanceId>__<originalName>` (unique per instance)
+
+> **Under the hood.** Read the [Scoping System internals](/internals/scoping-system) for the compiler passes, attribute maps, selector rewriting, and CSS deduplication that produce this output.
 
 <!-- demo:source-usage -->
 ```html

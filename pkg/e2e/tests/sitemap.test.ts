@@ -33,6 +33,20 @@ test.describe('sitemap.xml', () => {
     expect(text).toContain('/scope-test');
   });
 
+  test('maps index.html at the root to /', async ({ request }) => {
+    const resp = await request.get('/sitemap.xml');
+    const text = await resp.text();
+    // Root index.html → / (not /index)
+    expect(text).toContain('<loc>http://localhost:4200/</loc>');
+    expect(text).not.toContain('/index</loc>');
+  });
+
+  test('maps pages/nested/index.html to /nested (strip trailing /index)', async ({ request }) => {
+    const resp = await request.get('/sitemap.xml');
+    const text = await resp.text();
+    expect(text).toContain('<loc>http://localhost:4200/nested</loc>');
+  });
+
   test('does not include the 404 page', async ({ request }) => {
     const resp = await request.get('/sitemap.xml');
     const text = await resp.text();

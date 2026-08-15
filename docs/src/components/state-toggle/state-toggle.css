@@ -1,0 +1,49 @@
+.state-toggle {
+  width: min(100%, 30rem);
+  padding: 20px;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.state-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.state-toggle-row p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.state-toggle-row button {
+  padding: 8px 12px;
+  color: var(--bg);
+  font: inherit;
+  font-weight: 700;
+  background: var(--accent);
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.state-toggle-panel {
+  margin-top: 16px;
+  padding: 16px;
+  color: var(--text-muted);
+  background: var(--bg-muted);
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  opacity: 0.55;
+  transform: translateY(2px);
+  transition: opacity 160ms, transform 160ms, border-color 160ms;
+}
+
+.state-toggle-panel.is-open {
+  color: var(--text);
+  border-color: var(--accent);
+  opacity: 1;
+  transform: translateY(0);
+}

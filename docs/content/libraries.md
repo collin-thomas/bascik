@@ -2,6 +2,10 @@
 
 Bascik does not add any JavaScript to your pages. However, you are free to include any JavaScript library you want. CDN-delivered libraries, bundled scripts, and lightweight reactivity tools all work alongside Bascik without any special configuration.
 
+## See it in action
+
+Change either counter below to see petite-vue add independent state to two instances of the same Bascik component.
+
 ## How to Include a Library
 
 Add a `<script src>` tag to your page's `<head>` or to a shared head component. Bascik passes external script tags through completely unchanged, only inline `<script>` blocks with component-scoped selectors are rewritten.
@@ -123,6 +127,20 @@ Each instance of this component has its own isolated state. Place it on a page a
 
 petite-vue's `v-for` and `v-model` work as expected. Filter a list in real time without writing any manual DOM manipulation.
 
+<!-- demo:filter-usage -->
+```html
+<script src="https://unpkg.com/petite-vue" defer init></script>
+
+<div v-scope="{ query: '', items: ['Astro', 'Eleventy', 'Next.js'] }">
+  <input type="search" v-model="query" placeholder="Filter frameworks…" />
+  <ul>
+    <li v-for="item in items.filter(i => i.toLowerCase().includes(query.toLowerCase()))">
+      {{ item }}
+    </li>
+  </ul>
+</div>
+```
+
 <!-- demo:filter-html -->
 ```html
 <div v-scope="{
@@ -166,6 +184,16 @@ export const store = reactive({ cart: [] });
 
 [Alpine.js](https://alpinejs.dev) is another lightweight option for adding reactive behavior. It uses `x-data` for state, `@click` / `x-on` for events, and `x-show` / `x-bind` for DOM updates, all declaratively in the HTML.
 
+<!-- demo:alpine-usage -->
+```html
+<script src="https://unpkg.com/alpinejs" defer></script>
+
+<div x-data="{ open: false }">
+  <button @click="open = !open">Toggle details</button>
+  <p x-show="open">Here is the hidden content.</p>
+</div>
+```
+
 <!-- demo:alpine-html -->
 ```html
 <!-- src/components/disclosure.html -->
@@ -208,6 +236,14 @@ Then include Tailwind via CDN in your head component or page `<head>`. The CDN s
 ```
 
 With class scoping turned off, Tailwind utility classes work normally inside any component.
+
+<!-- demo:tailwind-usage -->
+```html
+<feature-card
+  data-bascik-prop-title="Zero Runtime"
+  data-bascik-prop-body="Bascik outputs plain HTML with no client-side overhead.">
+</feature-card>
+```
 
 <!-- demo:tailwind-html -->
 ```html
@@ -269,6 +305,11 @@ Bascik places no restrictions on which libraries you use. A few common patterns:
 One thing to be aware of: if a library dynamically sets a class or ID value at runtime (e.g. `:class="activeClass"` where `activeClass` is a JavaScript variable), that value is a runtime string and will *not* correspond to a Bascik-scoped class name. Use `data-*` attributes for runtime-toggled state and target them with CSS attribute selectors instead. Bascik scopes the class name at build time, but the `[data-state="on"]` part is a plain attribute selector that survives scoping unchanged, so the CSS correctly matches the attribute value the library sets at runtime.
 
 > **Alpine.js equivalent.** Use `x-bind:data-state="open ? 'on' : 'off'"`: syntax differs but the principle is identical across petite-vue, Alpine, and any attribute-binding library.
+
+<!-- demo:state-usage -->
+```html
+<state-tab></state-tab>
+```
 
 <!-- demo:state-html -->
 ```html

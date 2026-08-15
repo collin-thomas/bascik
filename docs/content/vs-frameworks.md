@@ -43,6 +43,24 @@ Bascik's component model lives entirely at build time. There is no runtime equiv
 
 For sites that need selective reactivity on specific components, petite-vue (~5 KB) is a better fit than full Vue. See the [JavaScript Libraries](/libraries) page for examples.
 
+## Next.js
+
+Next.js is a React meta-framework that adds routing, server-side rendering, static site generation, and a full bundling pipeline on top of React. For applications that need those things, it is a reasonable choice.
+
+For content sites, Bascik competes with Next.js directly. This is part of why Bascik exists.
+
+In a competitive SEO environment, the difference between a page that ships zero JavaScript and one that ships 80+ KB of React runtime and hydration overhead is measurable. Google's Core Web Vitals (LCP, INP, CLS) are directly affected by JavaScript that blocks rendering or delays interaction readiness. Next.js makes it difficult to audit what is actually sent to the browser, and its conventions pull projects toward client-side patterns over time, even for pages that were always static.
+
+If you know the output you want, you should be able to produce it directly. A build tool that makes it hard to ship a clean HTML page for a high-traffic content page is working against you.
+
+**Where Bascik competes with Next.js:**
+
+- Static marketing pages, landing pages, and content sites where React's runtime adds nothing
+- SEO-critical pages where JavaScript weight and hydration delay affect rankings
+- Projects where you want full transparency over what reaches the browser
+
+For applications that genuinely need React's component model, client-side routing, or API routes, Next.js is still the right tool. The honest framing is Bascik for pages that do not need a JavaScript framework, and Next.js for applications that do.
+
 ## Alpine.js
 
 [Alpine.js](https://alpinejs.dev) (~16 KB) occupies similar territory to HTMX: a declarative attribute-based system for adding behavior to HTML. Alpine uses `x-data` for state, `x-bind` / `@click` / `x-show` for DOM interactions.
@@ -62,6 +80,7 @@ If your site is primarily content-driven and you want a full publishing pipeline
 | Tool | Runtime shipped | Components or API to learn | Attribute / source syntax | Requires server |
 | --- | ---: | --- | --- | --- |
 | **Bascik** | None | Only the components you create, plus slots and props | Standards-valid `data-bascik-*` attributes, consumed at build time | No |
+| **Next.js** | 80–100+ KB (React + hydration) | React component model, routing, and Next.js conventions | JSX, React hooks, Next.js file conventions | No (SSG) / Yes (SSR) |
 | **HTMX** | ~14 KB | Request, target, swap, trigger, and history concepts | `hx-*` custom attributes interpreted at runtime | Usually |
 | **Alpine.js** | ~16 KB | Alpine state and directive model | `x-*` and `@*` directives interpreted at runtime | No |
 | **petite-vue** | ~5 KB | Vue reactivity and directive model | `v-*` and `@*` directives interpreted at runtime | No |
@@ -70,6 +89,6 @@ If your site is primarily content-driven and you want a full publishing pipeline
 
 The browser can parse Bascik's source without needing to understand a new runtime language: custom tags are valid custom-element-shaped HTML names, and build instructions use the web platform's `data-*` convention. Bascik resolves both before deployment. By contrast, runtime directives such as `hx-get`, `x-data`, and `v-scope` only gain behavior after their library's JavaScript loads.
 
-Bascik does not compete with any of these tools for what they are good at. It fills the gap they leave open: component organization without a runtime. You can use Bascik as the build layer and any of the above as the interactivity layer, they compose cleanly.
+Bascik does compete with Next.js for content sites, landing pages, and SEO-critical pages where the React runtime is overhead rather than a feature. For everything else, these tools are not rivals. Bascik fills the gap they leave open: component organization without a runtime. You can use Bascik as the build layer and any of the above as the interactivity layer, and they compose cleanly.
 
 > **Combining tools.** A common pattern is Bascik for layout components (nav, footer, hero sections) and HTMX or Alpine for specific interactive elements. Each tool does what it is best at, and neither one intrudes on the other's domain.

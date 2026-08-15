@@ -2,6 +2,10 @@
 
 Bascik does not ship a Markdown pipeline, but build-time scripts are Node.js, so any Markdown library works. This page shows common patterns using `marked`, `gray-matter`, `markdown-it`, and the `unified` / `remark` ecosystem.
 
+## See it in action
+
+The same Markdown source appears as plain HTML in the preview and compiled output.
+
 ## marked
 
 [marked](https://marked.js.org) is a fast, zero-dependency Markdown parser. Install it once and import it in any build script.

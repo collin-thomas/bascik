@@ -4,8 +4,8 @@
 <head>
   <docs-head></docs-head>
   <meta name="description"
-    content="Hugo is a static site generator; Bascik is a build tool for HTML components. Learn how to migrate a Hugo project to Bascik." />
-  <title>Migrating from Hugo - Bascik Docs</title>
+    content="Eleventy is a static site generator; Bascik is a build tool for HTML components. Learn how to switch an Eleventy project to Bascik." />
+  <title>Switch from Eleventy - Bascik Docs</title>
 </head>
 
 <body>
@@ -18,9 +18,9 @@
       <docs-sidebar></docs-sidebar>
 
       <main class="docs-content">
-        <p class="section-label">Migration</p>
+        <p class="section-label">Switch</p>
 
-        <!-- Content rendered from docs/content/migrate/from-hugo.md at build time.
+        <!-- Content rendered from docs/content/switch/from-eleventy.md at build time.
              To update page content, edit the MD file - not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
@@ -28,14 +28,14 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/migrate/from-hugo.md'));
+          console.log(await renderMd('./content/switch/from-eleventy.md'));
         </script>
 
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
           const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
-          console.log(renderPagination('/migrate/from-hugo'));
+          console.log(renderPagination('/switch/from-eleventy'));
         </script>
 
       </main>

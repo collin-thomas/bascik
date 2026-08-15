@@ -31,18 +31,15 @@ export const NAV = [
   { section: 'Reference', pages: [
     { href: '/compatibility', label: 'Scoping Compatibility' },
     { href: '/faq', label: 'FAQ' },
-    { href: '/llm-skill', label: 'AI Skill' },
+    { href: '/agent-skill', label: 'Agent Skill' },
   ]},
-  { section: 'Recipes', pages: [
-    { href: '/using-markdown', label: 'Using Markdown' },
-  ]},
-  { section: 'Migration', pages: [
-    { href: '/migrate', label: 'Migration Overview' },
-    { href: '/migrate/from-react', label: 'From React' },
-    { href: '/migrate/from-next', label: 'From Next.js' },
-    { href: '/migrate/from-eleventy', label: 'From Eleventy' },
-    { href: '/migrate/from-astro', label: 'From Astro' },
-    { href: '/migrate/from-hugo', label: 'From Hugo' },
+  { section: 'Switch to Bascik', pages: [
+    { href: '/switch', label: 'Overview' },
+    { href: '/switch/from-react', label: 'From React' },
+    { href: '/switch/from-next', label: 'From Next.js' },
+    { href: '/switch/from-eleventy', label: 'From Eleventy' },
+    { href: '/switch/from-astro', label: 'From Astro' },
+    { href: '/switch/from-hugo', label: 'From Hugo' },
   ]},
   { section: 'Internals', pages: [
     { href: '/internals', label: 'Internals Overview' },
@@ -52,5 +49,9 @@ export const NAV = [
     { href: '/internals/dev-server', label: 'Dev Server' },
     { href: '/internals/testing', label: 'Testing' },
     { href: '/internals/create-app', label: 'Create App' },
+    { href: '/internals/ci-cd', label: 'CI / CD' },
+  ]},
+  { section: 'Recipes', pages: [
+    { href: '/using-markdown', label: 'Using Markdown' },
   ]},
 ];

@@ -1,10 +1,10 @@
-# Migration Guides
+# Switch to Bascik
 
 Moving an existing site to Bascik is mostly a mechanical transformation: extract repeated markup into component files, replace runtime framework logic with build-time equivalents, and let Bascik handle scoping. LLMs can do most of this automatically given the right context.
 
-## How Migration Works
+## How to Switch
 
-The migration path is the same regardless of source framework:
+The process is the same regardless of source framework:
 
 1. **Identify components:** find repeated markup patterns (navigation, footer, cards, buttons).
 2. **Extract to component files:** create a `.html` file per component in `src/components/`.
@@ -14,7 +14,7 @@ The migration path is the same regardless of source framework:
 6. **Replace client-side routing with static pages:** one `.html` file per route in `src/pages/`.
 7. **Keep genuinely interactive JS:** event listeners, fetch calls, animations stay as plain `<script>` tags. Remove React-specific hooks and state management.
 
-> **For AI-assisted migration:** Give the LLM the source files plus the `llms.txt` at the root of this repo. The file contains a complete reference of Bascik's component format, scoping rules, and constraints, enough for most LLMs to perform the transformation without needing to look up anything else.
+> **Using AI to switch:** Give the LLM the source files plus the `llms.txt` at the root of this repo. The file contains a complete reference of Bascik's component format, scoping rules, and constraints, enough for most LLMs to perform the transformation without needing to look up anything else.
 
 ## What Maps to What
 
@@ -31,4 +31,4 @@ The migration path is the same regardless of source framework:
 | Component state / hooks | Vanilla JS in a `<script>` tag (auto-scoped per instance) |
 | Data fetching at build time | Not built-in, pre-generate the HTML in a build script and include it in the page |
 
-> Choose a migration guide: [React](/migrate/from-react) · [Next.js](/migrate/from-next) · [Eleventy](/migrate/from-eleventy) · [Astro](/migrate/from-astro) · [Hugo](/migrate/from-hugo)
+> Choose where you are coming from: [React](/switch/from-react) · [Next.js](/switch/from-next) · [Eleventy](/switch/from-eleventy) · [Astro](/switch/from-astro) · [Hugo](/switch/from-hugo)
