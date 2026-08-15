@@ -3,6 +3,7 @@ import { getComponentCss } from "./styles.js";
 import { deepReadDirFlat } from "./file-system.js";
 import { BascikConfig } from "./config.js";
 import { executeBuildScripts } from "./build-scripts.js";
+import { transpileInlineTypeScript } from "./typescript.js";
 import type { BascikComponent, ComponentList } from "./types.js";
 
 // Warn if a component name shadows a native HTML element
@@ -159,7 +160,10 @@ export const listComponents = async (): Promise<ComponentList> => {
         // Run build scripts before minification so that generated content
         // stays in its original position (minifyHtml moves <script> tags).
         const rawContent = fileContent.toString();
-        const resolvedContent = await executeBuildScripts(rawContent, fileName);
+        const builtContent = await executeBuildScripts(rawContent, fileName);
+        // Strip types from client <script lang="ts"> blocks so the scoping
+        // pipeline (and the browser) only ever sees plain JavaScript.
+        const resolvedContent = transpileInlineTypeScript(builtContent, fileName);
         const component: BascikComponent = {
           name: componentName,
           fileName,

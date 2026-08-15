@@ -50,7 +50,7 @@ describe("loadUserConfig", () => {
     const { bascikConfig } = await loadUserConfig("/nonexistent/bascik.config.js");
     expect(bascikConfig).toEqual({});
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining("No bascik.config.js found"),
+      expect.stringContaining("No bascik.config.js or bascik.config.ts found"),
     );
   });
 
@@ -69,5 +69,43 @@ describe("loadUserConfig", () => {
     const p = await writeConfig(`export const bascikConfig = { cacheHttp: true };`);
     const mod = await importUserConfig(p);
     expect(mod.bascikConfig).toEqual({ cacheHttp: true });
+  });
+});
+
+describe("resolveUserConfigPath", () => {
+  const inTempCwd = async (fn: (dir: string) => Promise<void>): Promise<void> => {
+    const dir = await mkdtemp(join(tmpdir(), "bascik-cfg-"));
+    dirs.push(dir);
+    const prevCwd = process.cwd();
+    process.chdir(dir);
+    try {
+      await fn(dir);
+    } finally {
+      process.chdir(prevCwd);
+    }
+  };
+
+  it("prefers bascik.config.js when both .js and .ts exist", async () => {
+    const { resolveUserConfigPath } = await import("./userConfig.js");
+    await inTempCwd(async (dir) => {
+      await writeFile(join(dir, "bascik.config.js"), "export const bascikConfig = {};", "utf8");
+      await writeFile(join(dir, "bascik.config.ts"), "export const bascikConfig = {};", "utf8");
+      expect(await resolveUserConfigPath()).toMatch(/bascik\.config\.js$/);
+    });
+  });
+
+  it("falls back to bascik.config.ts when no .js config exists", async () => {
+    const { resolveUserConfigPath } = await import("./userConfig.js");
+    await inTempCwd(async (dir) => {
+      await writeFile(join(dir, "bascik.config.ts"), "export const bascikConfig = {};", "utf8");
+      expect(await resolveUserConfigPath()).toMatch(/bascik\.config\.ts$/);
+    });
+  });
+
+  it("returns the .js path when neither config exists (warning path)", async () => {
+    const { resolveUserConfigPath } = await import("./userConfig.js");
+    await inTempCwd(async () => {
+      expect(await resolveUserConfigPath()).toMatch(/bascik\.config\.js$/);
+    });
   });
 });

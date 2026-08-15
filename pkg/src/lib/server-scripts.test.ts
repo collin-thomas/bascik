@@ -123,6 +123,18 @@ describe("executeServerScripts", () => {
     );
   });
 
+  it("strips types from lang=\"ts\" scripts before writing the temp file", async () => {
+    resolveWith("");
+    await executeServerScripts(
+      `<script data-bascik-server lang="ts">const n: number = 1;\nconsole.log(n);</script>`,
+      baseRequest,
+    );
+    const [tmpPath, written] = (writeFile as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(tmpPath).toMatch(/\.mjs$/);
+    expect(written).not.toContain(": number");
+    expect(written).toContain("console.log(n);");
+  });
+
   it("writes temp scripts inside the project tree so ESM can resolve node_modules", async () => {
     resolveWith("");
     await executeServerScripts("<script data-bascik-server>x</script>", baseRequest);

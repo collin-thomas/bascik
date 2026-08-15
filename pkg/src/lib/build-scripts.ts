@@ -25,7 +25,10 @@
  * Rules
  * ──────────────────────────────────────────────────────────────────────────────
  * - The script is written to a temporary `.mjs` file and executed with the
- *   same Node.js binary that is running Bascik.
+ *   same Node.js binary that is running Bascik.  With `lang="ts"` on the tag,
+ *   the TypeScript type annotations are stripped first (erasure-only — the
+ *   same semantics as Node ≥ 24 running a `.ts` file natively), so build
+ *   scripts can be written in TypeScript.
  * - Top-level `import` statements and top-level `await` are supported.
  * - The script's working directory is the project root (`process.cwd()`).
  * - Use `console.log()` or `process.stdout.write()` to output the HTML to
@@ -44,6 +47,7 @@ import { readFile, writeFile, unlink, mkdir } from "node:fs/promises";
 import { freemem, totalmem } from "node:os";
 import { join, resolve } from "node:path";
 import { getRelativePath } from "./file-system.js";
+import { isTypeScriptOpenTag, stripTypes } from "./typescript.js";
 import { BascikConfig } from "./config.js";
 
 // Limits concurrent child-process spawns based on available memory.
@@ -257,7 +261,13 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
       `build-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
     );
     try {
-      await writeFile(tmpPath, trimmedScript, "utf8");
+      // lang="ts" scripts have their type annotations stripped before
+      // execution (Node refuses to type-strip files under node_modules,
+      // where the temp dir lives — so Bascik strips in-process instead).
+      const executable = isTypeScriptOpenTag(openTag)
+        ? stripTypes(trimmedScript)
+        : trimmedScript;
+      await writeFile(tmpPath, executable, "utf8");
       const { stdout, stderr } = await runModule(tmpPath, {
         BASCIK_PAGE_FILE: filePath ?? "",
         BASCIK_SITE_URL: BascikConfig.siteUrl ?? "",

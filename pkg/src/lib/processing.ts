@@ -86,6 +86,7 @@ import {
 import { namespaceScriptTags, prefixElementAttribute, minifyJs } from "./javascript.js";
 import { deduplicateCss, minifyCss } from "./styles.js";
 import { executeBuildScripts } from "./build-scripts.js";
+import { transpileInlineTypeScript } from "./typescript.js";
 import { getUniqueId } from "./names.js";
 import { BascikConfig, shouldLog } from "./config.js";
 import { mem } from "./mem.js";
@@ -615,7 +616,11 @@ export const transpilePage = async (
   // Execute <script data-bascik-build> blocks first so that the generated HTML
   // can contain component tags, which will be resolved below.
   const rawHtml = (await readFile(pagePath)).toString();
-  const htmlWithBuildOutput = await executeBuildScripts(rawHtml, pagePath);
+  const builtHtml = await executeBuildScripts(rawHtml, pagePath);
+  // Strip types from page-level client <script lang="ts"> blocks so the rest
+  // of the pipeline (scoping, minification, browser) sees plain JavaScript.
+  // Node-executed scripts (data-bascik-build/server) are left untouched.
+  const htmlWithBuildOutput = transpileInlineTypeScript(builtHtml, pagePath);
 
   // Do NOT minify before component resolution. Minification runs after transpilation
   // so that whitespace-sensitive content (e.g. code inside resolved <pre> blocks

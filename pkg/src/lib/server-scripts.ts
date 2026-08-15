@@ -24,7 +24,10 @@
  * Rules
  * ─────────────────────────────────────────────────────────────────────────────
  * - The script body is written to a temp `.mjs` file and run with the same
- *   Node.js binary that is running Bascik.
+ *   Node.js binary that is running Bascik.  With `lang="ts"` on the tag, the
+ *   TypeScript type annotations are stripped first (erasure-only — the same
+ *   semantics as Node ≥ 24 running a `.ts` file natively), so server scripts
+ *   can be written in TypeScript.
  * - Top-level `import` statements and top-level `await` are both supported.
  * - `process.env.BASCIK_REQUEST` contains JSON with four keys:
  *     `{ path, method, headers, searchParams }`
@@ -48,6 +51,7 @@ import { execFile } from "node:child_process";
 import { writeFile, unlink, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import os from "node:os";
+import { isTypeScriptOpenTag, stripTypes } from "./typescript.js";
 
 /** Request context passed to every `data-bascik-server` script. */
 export interface ServerRequest {
@@ -156,12 +160,23 @@ export const executeServerScripts = async (
     const batchResults = await Promise.all(
       batch.map(async (match) => {
         const [fullTag, scriptContent] = match;
+        // The open tag is everything before the captured content + close tag.
+        const openTag = fullTag.slice(
+          0,
+          fullTag.length - scriptContent.length - "</script>".length,
+        );
         const tmpPath = join(
           tempDir,
           `server-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
         );
         try {
-          await writeFile(tmpPath, scriptContent.trim(), "utf8");
+          // lang="ts" scripts have their type annotations stripped before
+          // execution (Node refuses to type-strip files under node_modules,
+          // where the temp dir lives — so Bascik strips in-process instead).
+          const executable = isTypeScriptOpenTag(openTag)
+            ? stripTypes(scriptContent.trim())
+            : scriptContent.trim();
+          await writeFile(tmpPath, executable, "utf8");
           const { stdout, stderr } = await runModule(tmpPath, request, timeoutMs);
           if (stderr) process.stderr.write(stderr);
           return { fullTag, output: stripAnsiEscapeCodes(stdout) };
