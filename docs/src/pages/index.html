@@ -588,87 +588,34 @@
               <button class="tab-btn how-code-tab" data-how="output">dist/index.html</button>
             </tab-bar>
             <div class="how-src-pane" id="how-component">
-              <code-block data-bascik-prop-lang="html">&lt;!-- src/components/my-card.html --&gt;
-                &lt;style&gt;
-                .card {
-                padding: 26px 28px;
-                background: #242628;
-                border: 1px solid rgba(255,255,255,0.07);
-                border-radius: 10px;
-
-                h3 { margin: 0 0 8px; color: #f0f1f2; }
-                p { margin: 0; color: #8d929e; }
-
-                &amp;:hover {
-                border-color: rgba(211,255,141,0.35);
-                box-shadow: 0 0 0 1px rgba(211,255,141,0.12);
-                }
-
-                &amp;.active {
-                background: rgba(211,255,141,0.07);
-                border-color: rgba(211,255,141,0.5);
-                box-shadow: 0 0 0 1px rgba(211,255,141,0.25), 0 0 20px rgba(211,255,141,0.08);
-
-                h3 { color: #d3ff8d; }
-                }
-                }
-                &lt;/style&gt;
-                &lt;div class="card" id="card"&gt;
-                &lt;div data-bascik-slot&gt;&lt;/div&gt;
-                &lt;/div&gt;
-                &lt;script&gt;
-                const card = document.getElementById('card');
-                card.addEventListener('click', () =&gt; {
-                card.classList.toggle('active');
-                });
-                &lt;/script&gt;</code-block>
+              <code-block data-bascik-prop-lang="html">
+                <script data-bascik-build>
+                  import { join } from 'node:path';
+                  import { pathToFileURL } from 'node:url';
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  console.log(await extractDemoBlock('./content/overview.md', 'home-card-component'));
+                </script>
+              </code-block>
             </div>
             <div class="how-src-pane" id="how-usage" hidden>
-              <code-block data-bascik-prop-lang="html">&lt;!-- src/pages/index.html --&gt;
-                &lt;my-card&gt;
-                &lt;h3&gt;My Card&lt;/h3&gt;
-                &lt;p&gt;Any HTML goes inside as slot content.&lt;/p&gt;
-                &lt;/my-card&gt;</code-block>
+              <code-block data-bascik-prop-lang="html">
+                <script data-bascik-build>
+                  import { join } from 'node:path';
+                  import { pathToFileURL } from 'node:url';
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  console.log(await extractDemoBlock('./content/overview.md', 'home-card-usage'));
+                </script>
+              </code-block>
             </div>
             <div class="how-src-pane" id="how-output" hidden>
-              <code-block data-bascik-prop-lang="html">&lt;!-- dist/index.html - CSS classes and JS selectors scoped
-                --&gt;
-                &lt;style&gt;
-                .bascik__my-card__card {
-                padding: 26px 28px;
-                background: #242628;
-                border: 1px solid rgba(255,255,255,0.07);
-                border-radius: 10px;
-
-                h3 { margin: 0 0 8px; color: #f0f1f2; }
-                p { margin: 0; color: #8d929e; }
-
-                &amp;:hover {
-                border-color: rgba(211,255,141,0.35);
-                box-shadow: 0 0 0 1px rgba(211,255,141,0.12);
-                }
-
-                &amp;.bascik__my-card__active {
-                background: rgba(211,255,141,0.07);
-                border-color: rgba(211,255,141,0.5);
-                box-shadow: 0 0 0 1px rgba(211,255,141,0.25), 0 0 20px rgba(211,255,141,0.08);
-
-                h3 { color: #d3ff8d; }
-                }
-                }
-                &lt;/style&gt;
-                &lt;div class="bascik__my-card__card" id="bascik__my-card__a1b__card"&gt;
-                &lt;h3&gt;My Card&lt;/h3&gt;
-                &lt;p&gt;Any HTML goes inside as slot content.&lt;/p&gt;
-                &lt;/div&gt;
-                &lt;script&gt;
-                (function(){
-                const card = document.getElementById('bascik__my-card__a1b__card');
-                card.addEventListener('click', () =&gt; {
-                card.classList.toggle('bascik__my-card__active');
-                });
-                })();
-                &lt;/script&gt;</code-block>
+              <code-block data-bascik-prop-lang="html">
+                <script data-bascik-build>
+                  import { join } from 'node:path';
+                  import { pathToFileURL } from 'node:url';
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  console.log(await extractDemoBlock('./content/overview.md', 'home-card-output'));
+                </script>
+              </code-block>
             </div>
           </div>
 
@@ -704,51 +651,34 @@
               <button class="tab-btn demo-tab-btn" data-tab="js">JS</button>
             </tab-bar>
             <div class="demo-pane" data-pane="html">
-              <code-block data-bascik-prop-lang="html">&lt;!-- src/components/demo-counter.html - component template
-                --&gt;
-                &lt;div class="ctr"&gt;
-                &lt;span class="ctr-label"
-                data-bascik-prop-label&gt;&lt;/span&gt;
-                &lt;span class="ctr-count" id="count"&gt;0&lt;/span&gt;
-                &lt;div class="ctr-btns"&gt;
-                &lt;button class="ctr-dec"&gt;−&lt;/button&gt;
-                &lt;button class="ctr-inc"&gt;+&lt;/button&gt;
-                &lt;/div&gt;
-                &lt;/div&gt;
-
-                &lt;!-- src/pages/index.html - usage --&gt;
-                &lt;demo-counter data-bascik-prop-label="Instance A"&gt;&lt;/demo-counter&gt;
-                &lt;demo-counter data-bascik-prop-label="Instance B"&gt;&lt;/demo-counter&gt;</code-block>
+              <code-block data-bascik-prop-lang="html">
+                <script data-bascik-build>
+                  import { join } from 'node:path';
+                  import { pathToFileURL } from 'node:url';
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  console.log(await extractDemoBlock('./content/overview.md', 'home-counter-html'));
+                </script>
+              </code-block>
             </div>
             <div class="demo-pane" data-pane="css" hidden>
-              <code-block data-bascik-prop-lang="css">/* Auto-scoped - class names become:
-                .bascik__demo-counter__ctr { ... } */
-                .ctr { display: flex; flex-direction: column;
-                align-items: center; gap: 16px; }
-                .ctr-count {
-                font-size: 2.4rem; font-weight: 700;
-                color: var(--accent);
-                }
-                .ctr-dec, .ctr-inc {
-                width: 40px; height: 40px;
-                border-radius: 6px; cursor: pointer;
-                }</code-block>
+              <code-block data-bascik-prop-lang="css">
+                <script data-bascik-build>
+                  import { join } from 'node:path';
+                  import { pathToFileURL } from 'node:url';
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  console.log(await extractDemoBlock('./content/overview.md', 'home-counter-css'));
+                </script>
+              </code-block>
             </div>
             <div class="demo-pane" data-pane="js" hidden>
-              <code-block data-bascik-prop-lang="js">// Notice: this is plain JavaScript. No framework APIs,
-                // no special syntax. Write it normally and Bascik
-                // scopes the selectors at build time so each instance
-                // stays fully isolated.
-                const count = document.getElementById('count');
-                const dec = document.querySelector('.ctr-dec');
-                const inc = document.querySelector('.ctr-inc');
-                let n = 0;
-                dec.addEventListener('click', () => {
-                n--; count.textContent = n;
-                });
-                inc.addEventListener('click', () => {
-                n++; count.textContent = n;
-                });</code-block>
+              <code-block data-bascik-prop-lang="js">
+                <script data-bascik-build>
+                  import { join } from 'node:path';
+                  import { pathToFileURL } from 'node:url';
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  console.log(await extractDemoBlock('./content/overview.md', 'home-counter-js'));
+                </script>
+              </code-block>
             </div>
           </div>
 

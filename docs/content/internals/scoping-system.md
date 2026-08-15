@@ -183,6 +183,25 @@ el.className += " bascik__site-nav__is-open";
 el.setAttribute("class", "bascik__site-nav__toggle-btn");
 ```
 
+### JS-only class discovery
+
+The CSS pass scopes every class name it finds in the `.css` file regardless of whether that class appears in the HTML template. Without a corresponding discovery pass, class names used only in JavaScript (never in a `class="…"` attribute) would be scoped in CSS but left unscoped in JS, making them permanently out of sync.
+
+To fix this, after the HTML attribute pass builds the initial class scope map, a second scan over every `<script>` block extracts class name string literals from all class-referencing JS patterns and adds any new names to the scope map before the JS rewrite runs:
+
+- `classList.add / remove / toggle / contains / replace` — every quoted argument
+- `querySelector / querySelectorAll / closest / matches` — every `.className` token in the selector string
+- `el.className = "…"` and `el.className += "…"` — every space-separated token
+- `el.setAttribute("class", "…")` — every space-separated token
+
+This means modifier classes like `btn--active` that are only ever toggled dynamically still get scoped correctly in both CSS and JS without any special annotation:
+
+```js
+// Works — btn--active is discovered from the classList.add call
+// and scoped in both CSS and JS even though it never appears in class="…"
+el.classList.add("btn--active");
+```
+
 ### Name selectors
 
 ```js

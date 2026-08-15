@@ -102,17 +102,17 @@
   display: none;
 }
 
-.cblock-copy[data-cblock-done] {
+.cblock-copy--done {
   opacity: 1;
   border-color: var(--accent);
   color: var(--accent);
 }
 
-.cblock-copy[data-cblock-done] .cblock-copy-icon {
+.cblock-copy--done .cblock-copy-icon {
   display: none;
 }
 
-.cblock-copy[data-cblock-done] .cblock-check-icon {
+.cblock-copy--done .cblock-check-icon {
   display: block;
   color: var(--accent);
   animation: cblock-check-pop 0.25s ease-out both;

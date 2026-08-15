@@ -24,6 +24,64 @@ This file contains the **complete, centralized documentation and development ski
 * It does not add any JavaScript to pages. Every script in the output was written by you.
 * It does not require Web Components, Shadow DOM, or any browser-specific API.
 
+### End-to-End Example: Input → Output
+
+One component file, its usage, and the scoped build output:
+
+```html
+<!-- src/components/my-card.html -->
+<style>
+  .card {
+    padding: 26px 28px;
+    border-radius: 10px;
+    &.active { border-color: rgba(211, 255, 141, 0.5); }
+  }
+</style>
+<div class="card" id="card">
+  <div data-bascik-slot></div>
+</div>
+<script>
+  const card = document.getElementById('card');
+  card.addEventListener('click', () => {
+    card.classList.toggle('active');
+  });
+</script>
+```
+
+```html
+<!-- src/pages/index.html -->
+<my-card>
+  <h3>My Card</h3>
+  <p>Any HTML goes inside as slot content.</p>
+</my-card>
+```
+
+```html
+<!-- dist/index.html - classes and selectors scoped, script wrapped in IIFE -->
+<style>
+  .bascik__my-card__card {
+    padding: 26px 28px;
+    border-radius: 10px;
+    &.bascik__my-card__active { border-color: rgba(211, 255, 141, 0.5); }
+  }
+</style>
+<div class="bascik__my-card__card" id="bascik__my-card__a1b__card">
+  <h3>My Card</h3>
+  <p>Any HTML goes inside as slot content.</p>
+</div>
+<script>
+  (function () {
+    const card = document.getElementById('bascik__my-card__a1b__card');
+    card.addEventListener('click', () => {
+      card.classList.toggle('bascik__my-card__active');
+    });
+  })();
+</script>
+```
+
+Because IDs are scoped per instance, the same component can appear multiple times on one page and each instance's JS stays fully isolated. Plain `getElementById` / `querySelector` calls just work.
+
+
 ### How Bascik Positions Against Other Tools
 * **Directly competes with Next.js** for content sites, landing pages, and SEO-critical pages. Next.js ships 80–100+ KB of React runtime and hydration overhead even for pages with no client-side state; Bascik ships zero. In competitive SEO keyword spaces, that difference is measurable in Core Web Vitals (LCP, INP, CLS).
 * **Closest surface resemblance to Svelte:** Both use single-file components with scoped styles. The difference is that Svelte compiles to a JavaScript runtime for reactive DOM management; Bascik compiles to plain HTML with no runtime added.
@@ -302,23 +360,27 @@ export const bascikConfig = {
 
 ---
 
-## 5. Dynamic Runtime Class Scoping (CRITICAL BUG & PATTERN)
+## 5. Dynamic Runtime Class Scoping
 
-### The Problem
-If you have a class or ID name that is **only toggled or added dynamically at runtime** by JavaScript (for example, with `.classList.toggle("is-open")` or `.classList.add("is-active")`) but **does not exist on any HTML tag inside the template at compile time**, Bascik's HTML compiler will not discover or register it.
+Class names used only in JavaScript (never in a `class="…"` HTML attribute) are automatically discovered and scoped. Bascik scans every `<script>` block for class-referencing JS patterns and adds any new class names to the scope map before the rewrite pass runs. You do not need any special workaround or scoping-helper element.
 
-This causes a compilation mismatch:
-* The **CSS parser** *will* obfuscate the class name inside your stylesheet.
-* The **JS parser** *will not* obfuscate the class name inside your scripts because it was never registered in the HTML pass.
-* At runtime, your script will toggle `"is-open"`, but the CSS will be listening for the obfuscated `.bf5a887ac3134` class, causing interactive elements like menus or modals to fail silently.
-
-### The Solution: Scoping Helpers
-Always declare any dynamic classes or IDs inside a hidden scoping helper element inside your HTML template. This forces Bascik's HTML parser to register and synchronize the names during compilation:
+**Patterns covered by JS-only class discovery:**
+* `classList.add/remove/toggle/contains/replace` arguments
+* `.className` tokens in `querySelector`, `querySelectorAll`, `closest`, `matches` selector strings
+* `el.className = "…"` and `el.className += "…"` space-separated tokens
+* `el.setAttribute("class", "…")` string literal values
 
 ```html
-<!-- Scoping helper for dynamic runtime classes -->
-<div class="is-open is-active" style="display: none;"></div>
+<!-- ✅ Works — btn--active is discovered from the classList.add call -->
+<!-- and scoped in both CSS and JS automatically -->
+<button class="btn"></button>
+<script>
+  const btn = document.getElementById('btn');
+  btn.addEventListener('click', () => btn.classList.add('btn--active'));
+</script>
 ```
+
+The only exception is `innerHTML` / `insertAdjacentHTML` HTML string scanning, which still only recognises class names that also appear in the HTML template.
 
 ---
 
@@ -1081,6 +1143,7 @@ When generating code, pages, or components for a Bascik project, the following c
 6. **Dynamic Toggles:** Use `data-` attributes for runtime state that changes via JavaScript (e.g. `data-state="open"`). Scoped class names are assigned at build time and cannot be reliably looked up by JS string manipulation *unless* you utilize a scoping helper (Section 5).
 7. **Text Props:** Props accept text only. For rich HTML content, use slots.
 8. **Script Modules:** `<script type="module">` scripts are not wrapped in an IIFE, but their selectors are still rewritten.
+9. **Literal Tag Text Is Safe:** Component tag text inside `<script>`, `<style>`, or `<textarea>` content (e.g. `<my-card>` in a JSON-LD string or code example) is treated as text and never resolved into a component.
 
 ---
 

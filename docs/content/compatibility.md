@@ -87,6 +87,7 @@ Bascik rewrites DOM selector references inside component `<script>` tags to matc
 | `<script type="module">`                                 | ✓     | Not wrapped in an IIFE (modules are already isolated by spec). DOM selector references still rewritten.                                                                                                                                                     |
 | `<script type="application/json">` (and any non-JS type) | ✓     | Left completely untouched.                                                                                                                                                                                                                                  |
 | `<script data-bascik-build>`                             | ✓     | Executed at **transpile time** as a Node.js ESM module. The script's stdout is injected in place of the tag. Runs in both dev and build modes. Use `console.log()` / `process.stdout.write()` to output HTML. Top-level `import` and `await` are supported. |
+| Literal component tags inside `<script>`, `<style>`, or `<textarea>` | ✓     | Treated as text, never resolved into components. Safe to mention tags like `<my-card>` in JSON-LD strings, inline scripts, or code examples.                                                                                                              |
 
 ### DOM Selector Rewriting
 
@@ -107,13 +108,13 @@ Bascik rewrites DOM selector references inside component `<script>` tags to matc
 | `element.classList.remove`                    | `el.classList.remove("my-cls")`      | `class`          | ✓     | Single and multi-argument forms.                                                              |
 | `element.classList.toggle`                    | `el.classList.toggle("my-cls")`      | `class`          | ✓     | The optional boolean second argument is passed through unchanged.                             |
 | `element.classList.contains`                  | `el.classList.contains("my-cls")`    | `class`          | ✓     |                                                                                                |
-| `element.classList.replace`                   | `el.classList.replace("old", "new")` | `class`          | ✓     | Both the old-token and new-token arguments are rewritten if they match a scoped class name.  |
+| `element.classList.replace`                   | `el.classList.replace("old", "new")` | `class`          | ✓     | Both the old-token and new-token arguments are always rewritten, including class names that only appear in the JS call and never in a `class=` HTML attribute. |
 | Compound `querySelector` / `querySelectorAll` | `querySelector(".foo .bar")`         | `class` / `id`   | ✓     | Space-separated and combinator-separated (`>`, `+`, `~`) tokens are each rewritten. Adjacent-class compound `.foo.bar` only rewrites the leading token.                         |
 | `element.className` setter                    | `el.className = "my-cls"`            | `class`          | ✓     | Single-class and space-separated multi-class assignments (`= "…"` and `+= "…"`) are rewritten. Template literals (e.g. `` `box ${state}` ``) are **not** rewritten, see limitations below. Reading `el.className` is unchanged. |
 | `element.setAttribute("class", …)`            | `el.setAttribute("class", "my-cls")` | `class`          | ✓     | String literal values are rewritten.                                                                                                                                            |
 | `element.setAttribute("id", …)`               | `el.setAttribute("id", "my-id")`     | `id`             | ✓     | String literal values are rewritten.                                                                                                                                            |
 | `element.setAttribute("name", …)`             | `el.setAttribute("name", "my-name")` | `name`           | ✓     | String literal values for known `name` attributes are rewritten to the per-instance scoped name.                                                                                |
-| `innerHTML` / `insertAdjacentHTML` strings    | `el.innerHTML = '<div class="box">'` | `class`          | ✓     | Known class names in HTML string literals are rewritten. Only class names that appear as static `class="…"` attributes in the component template are eligible.                  |
+| `innerHTML` / `insertAdjacentHTML` strings    | `el.innerHTML = '<div class="box">'` | `class`          | ✓     | Known class names in HTML string literals are rewritten. Only class names that appear as static `class="…"` attributes in the component template are eligible (HTML string scanning does not use JS-only class discovery). |
 | `element.removeAttribute`                     | `el.removeAttribute("class")`        |                  | ✕     | Attribute names (not values) are passed with no rewriting needed or applied.                                                                                                       |
 | `element.hasAttribute`                        | `el.hasAttribute("id")`              |                  | ✕     | Same as `removeAttribute`: attribute name, not value.                                                                                                                          |
 | `element.toggleAttribute`                     | `el.toggleAttribute("hidden")`       |                  | ✕     | Boolean attribute name only with no value to rewrite.                                                                                                                              |
@@ -125,6 +126,12 @@ Bascik rewrites DOM selector references inside component `<script>` tags to matc
 ### Notes on Gaps
 
 The unsupported JS patterns above all involve **dynamic attribute manipulation** where static analysis cannot safely identify which component's attribute is being referenced from a string literal.
+
+### JS-only class discovery
+
+Class names that only appear in JavaScript (never in a `class="…"` HTML attribute) are automatically discovered and added to the scope map before the JS rewrite runs. This covers all class-referencing patterns: `classList.*` arguments, `.className` tokens in `querySelector` / `querySelectorAll` / `closest` / `matches` selector strings, `el.className = "…"` assignments, and `el.setAttribute("class", "…")` values. CSS-only classes (only in the `.css` file, never in HTML or JS) are scoped in CSS only, which is fine since nothing in JS needs to reference them.
+
+The exception is `innerHTML` / `insertAdjacentHTML` string scanning, which only recognises classes that appear in the HTML template.
 
 The recommended pattern is to query scoped elements by a single `id` or single-class selector first, store the reference, then use the reference for all further DOM operations:
 
