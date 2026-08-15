@@ -20,6 +20,7 @@ const BOOT_PAGE_HTML = Buffer.from(`<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Building site\u2026</title>
 <style>
 body{display:flex;align-items:center;justify-content:center;height:100vh;margin:0;
