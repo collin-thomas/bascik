@@ -15,21 +15,27 @@
  *   );
  *   console.log(await canonical());
  */
-export async function canonical() {
+export async function canonical(routeOverride) {
   const siteUrl = (process.env.BASCIK_SITE_URL ?? '').replace(/\/$/, '');
   const pageFile = process.env.BASCIK_PAGE_FILE ?? '';
   const pagesDir = process.env.BASCIK_PAGES_DIR ?? '';
 
   if (!siteUrl || !pageFile || !pagesDir) return '';
 
+  if (routeOverride) {
+    const normalizedOverride = routeOverride.startsWith('/') ? routeOverride : `/${routeOverride}`;
+    return `<link rel="canonical" href="${siteUrl}${normalizedOverride}" />`;
+  }
+
   const relPath = pageFile.startsWith(pagesDir)
-    ? pageFile.slice(pagesDir.length).replace(/^[\\/]/, '')
+    ? pageFile.slice(pagesDir.length).replace(/^[\\/]/, '').replace(/\\/g, '/')
     : '';
 
   if (!relPath) return '';
 
   const withoutExt = relPath.replace(/\.html$/, '');
-  const urlPath = withoutExt === 'index' ? '/' : `/${withoutExt}`;
+  const routePath = withoutExt === 'index' ? '' : withoutExt.replace(/\/index$/, '/');
+  const urlPath = routePath ? `/${routePath}` : '/';
 
   return `<link rel="canonical" href="${siteUrl}${urlPath}" />`;
 }

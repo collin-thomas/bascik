@@ -152,6 +152,8 @@ CSS custom properties declared in the file are also scoped. `var(--prop, fallbac
 * `:nth-child(An+B of .selector)`: class names in the `of <selector>` argument are scoped (same global `(?<=\.)` pass as `:is()`, `:where()`, `:has()`); works for `:nth-child` and `:nth-last-child`
 * `@font-face`: passed through untouched; declare in a shared stylesheet to avoid duplicate injections
 * `@import`: not followed; include CSS directly in the component file instead
+* Standalone attribute selectors (for example `[data-state]`) are not scoped and can leak globally; anchor them with a scoped class like `.card[data-state]`
+* Element names inside `:is()`, `:where()`, and `:has()` are not converted; use class selectors inside those pseudo-classes
 
 ---
 
@@ -203,6 +205,7 @@ DOM selectors in component scripts are rewritten to match scoped names:
 * `el.id = "value"`: property setter not rewritten; use `getElementById` then work from the reference
 * `el.style.setProperty("--my-var", value)`: runtime CSS custom property names are not rewritten; the scoped var name (e.g. `--bascik__comp__my-var`) is different from the source name
 * Template literals: `` el.className = `box ${state}` ``, not rewritten; use `classList.add/remove` instead
+* Template-literal replacement arguments in `classList.replace(oldName, \`${dynamic}\`)` are not rewritten safely; prefer `classList.add/remove/toggle` with static class names
 * `querySelector("[name='username']")`: attribute-selector form for `name`; use `getElementsByName` instead
 
 ### Scoping Model

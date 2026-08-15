@@ -2,15 +2,15 @@
   {
     "id": "css-attribute-selector",
     "kind": "css",
-    "pattern": "\\[[A-Za-z0-9_-]+(?:\\s*(?:[~|^$*]?=\\s*(?:\"[^\"]*\"|'[^']*'|[^\\]\"'\\s]+))?)?\\]",
-    "flags": "g",
-    "message": "Bascik does not scope attribute selectors reliably. Use a class or id selector instead.",
-    "suggestion": "Prefer a class-based selector such as .card or an id found via getElementById()."
+    "pattern": "(^|,)\\s*\\[[A-Za-z0-9_-]+(?:\\s*(?:[~|^$*]?=\\s*(?:\"[^\"]*\"|'[^']*'|[^\\]\"'\\s]+))?)?\\]",
+    "flags": "gm",
+    "message": "Standalone attribute selectors are not scoped by Bascik and may leak globally.",
+    "suggestion": "Anchor the selector with a scoped class (for example .card[data-state]) or switch to a class-only selector."
   },
   {
     "id": "css-is-element-names",
     "kind": "css",
-    "pattern": ":is\\s*\\((?:[^)]*\\b(?:p|div|span|section|article|main|header|footer|aside|nav|ul|ol|li|a|button|input|textarea|select|form|img|svg|path|h[1-6])\\b[^)]*)\\)",
+    "pattern": ":(?:is|where|has)\\s*\\((?:[^)]*\\b(?:p|div|span|section|article|main|header|footer|aside|nav|ul|ol|li|a|button|input|textarea|select|form|img|svg|path|h[1-6])\\b[^)]*)\\)",
     "flags": "gi",
     "message": "Element names inside :is(), :where(), or :has() are not converted by Bascik.",
     "suggestion": "Use a class selector inside the pseudo-class instead of bare element names."
@@ -42,7 +42,7 @@
   {
     "id": "js-template-classname",
     "kind": "js",
-    "pattern": "(?:className|classList\\.replace)\\s*=\\s*`[^`]*\\$\\{[^}]+\\}[^`]*`|(?:className\\s*=\\s*[\"'][^\"']*\\$\\{[^}]+\\}[^\"']*[\"'])",
+    "pattern": "className\\s*=\\s*`[^`]*\\$\\{[^}]+\\}[^`]*`|classList\\.replace\\s*\\(\\s*[^,]+,\\s*`[^`]*\\$\\{[^}]+\\}[^`]*`\\s*\\)",
     "flags": "g",
     "message": "Template-literal class names are not rewritten safely at build time.",
     "suggestion": "Use classList.add(), classList.remove(), or a static string instead."

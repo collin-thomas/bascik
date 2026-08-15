@@ -7,10 +7,10 @@
  *
  * Usage inside a <script data-bascik-build> block:
  *
- *   const { breadcrumb } = await import(
- *     pathToFileURL(join(process.cwd(), 'scripts/breadcrumb.mjs')).href
+ *   const { breadcrumbLd } = await import(
+ *     pathToFileURL(join(process.cwd(), 'scripts/breadcrumb-ld.mjs')).href
  *   );
- *   console.log(await breadcrumb());
+ *   console.log(await breadcrumbLd());
  */
 import { readFile } from 'node:fs/promises';
 
@@ -32,7 +32,7 @@ export async function breadcrumbLd() {
   if (!siteUrl || !pageFile || !pagesDir) return '';
 
   const relPath = pageFile.startsWith(pagesDir)
-    ? pageFile.slice(pagesDir.length).replace(/^[\\/]/, '')
+    ? pageFile.slice(pagesDir.length).replace(/^[\\/]/, '').replace(/\\/g, '/')
     : '';
 
   const parts = relPath.replace(/\.html$/, '').split('/');

@@ -33,8 +33,16 @@
       <docs-sidebar></docs-sidebar>
 
       <main class="docs-content">
-        <h1>Search</h1>
-        <p>Use the search box above to find anything in the docs. You can also press <kbd>⌘K</kbd> from any page.</p>
+        <!-- Content rendered from docs/content/search.md at build time.
+             To update page content, edit the MD file — not this file. -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMd } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMd('./content/search.md'));
+        </script>
       </main>
     </div>
   </div>

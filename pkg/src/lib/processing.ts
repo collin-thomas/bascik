@@ -763,13 +763,12 @@ export const transpilePage = async (
   };
 };
 
-export const removePage = (absolutePagePath: string): void => {
+export const removePage = async (absolutePagePath: string): Promise<void> => {
   const relativePagePath = getRelativePath(absolutePagePath, "pages");
 
   // Memory
   if (!BascikConfig.isBuild) {
     mem.removePage(absolutePagePath);
   }
-  // File system is async, do not await
-  deleteDistFile(relativePagePath);
+  await deleteDistFile(relativePagePath);
 };

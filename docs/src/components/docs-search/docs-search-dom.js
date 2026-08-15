@@ -5,12 +5,14 @@ var input = document.querySelector('.search-input');
 var list = document.querySelector('.search-results');
 var empty = document.querySelector('.search-empty');
 var hint = document.querySelector('.search-hint');
+var lastFocused = null;
 
 // Portal to <body> so position:fixed escapes the nav's backdrop-filter stacking context
 document.body.appendChild(overlay);
 var index = null;
 
 function open() {
+  lastFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   overlay.hidden = false;
   btn.setAttribute('aria-expanded', 'true');
   document.body.style.overflow = 'hidden';
@@ -26,6 +28,12 @@ function close() {
   list.innerHTML = '';
   empty.hidden = true;
   hint.hidden = false;
+  if (lastFocused && typeof lastFocused.focus === 'function') {
+    lastFocused.focus();
+  } else {
+    btn.focus();
+  }
+  lastFocused = null;
 }
 
 async function loadIndex() {
@@ -73,6 +81,24 @@ document.addEventListener('keydown', function (e) {
   var isMod = e.metaKey || e.ctrlKey;
   if (isMod && e.key === 'k') { e.preventDefault(); overlay.hidden ? open() : close(); return; }
   if (e.key === 'Escape' && !overlay.hidden) { close(); return; }
+  if (!overlay.hidden && e.key === 'Tab') {
+    var focusables = Array.from(overlay.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )).filter(function (el) { return !el.hidden; });
+    if (!focusables.length) { e.preventDefault(); input.focus(); return; }
+    var first = focusables[0];
+    var last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+      return;
+    }
+    if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+      return;
+    }
+  }
   if (!overlay.hidden && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
     e.preventDefault();
     var links = Array.from(list.querySelectorAll('.sr-link'));

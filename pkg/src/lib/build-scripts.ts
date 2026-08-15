@@ -41,7 +41,7 @@
 import { execFile } from "node:child_process";
 import { writeFile, unlink, mkdir } from "node:fs/promises";
 import { freemem, totalmem } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { getRelativePath } from "./file-system.js";
 import { BascikConfig } from "./config.js";
 
@@ -107,11 +107,17 @@ const BARE_TOKEN = String.raw`[^\s"'=<>\`]+`;
 const ATTR_VALUE = String.raw`(?:"[^"]*"|'[^']*'|${BARE_TOKEN})`;
 const ATTR = String.raw`${BARE_TOKEN}(?:\s*=\s*${ATTR_VALUE})?`;
 const FLAG = String.raw`data-bascik-build(?:\s*=\s*${ATTR_VALUE})?`;
+const SERVER_FLAG = String.raw`data-bascik-server(?:\s*=\s*${ATTR_VALUE})?`;
 
 // Match <script data-bascik-build …> … </script> (captures inner content).
 const BUILD_SCRIPT_RE = new RegExp(
   String.raw`<script\b(?:\s+${ATTR})*\s+${FLAG}(?:\s+${ATTR})*\s*>([\s\S]*?)<\/script>`,
   "gi",
+);
+
+const BUILD_SERVER_CONFLICT_RE = new RegExp(
+  String.raw`<script\b(?:\s+${ATTR})*\s+${SERVER_FLAG}(?:\s+${ATTR})*\s*>`,
+  "i",
 );
 
 // Strip ANSI terminal color sequences so build-time HTML injection never leaks
@@ -150,7 +156,7 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
     // Hard-fail if the same tag has both data-bascik-build and data-bascik-server.
     // The opening tag is everything before the captured content and closing tag.
     const openTag = fullTag.slice(0, fullTag.length - scriptContent.length - "</script>".length);
-    if (/\bdata-bascik-server\b/i.test(openTag)) {
+    if (BUILD_SERVER_CONFLICT_RE.test(openTag)) {
       let errorMsg = `[bascik] error: <script> tag has both data-bascik-build and data-bascik-server`;
       if (filePath) {
         const prefix = html.slice(0, index);
@@ -169,7 +175,7 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
       const { stdout, stderr } = await runModule(tmpPath, {
         BASCIK_PAGE_FILE: filePath ?? "",
         BASCIK_SITE_URL: BascikConfig.siteUrl ?? "",
-        BASCIK_PAGES_DIR: BascikConfig.directory.pages,
+        BASCIK_PAGES_DIR: resolve(process.cwd(), BascikConfig.directory.pages),
       });
       if (stderr) process.stderr.write(stderr);
       return { fullTag, index, output: stripAnsiEscapeCodes(stdout) };

@@ -21,6 +21,9 @@ function slugify(text) {
 
 function stripMd(text) {
   return text
+    .replace(/<!--[\s\S]*?-->/g, '')              // HTML comments
+    .replace(/<!--/g, '')                         // unterminated comment starts
+    .replace(/-->/g, '')                          // stray comment ends
     .replace(/```[\s\S]*?```/gm, '')              // fenced code blocks
     .replace(/`([^`\n]+)`/g, '$1')                // inline code
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')      // links

@@ -47,7 +47,7 @@ export const watchFiles = async () => {
 
   // Transpile pages as they change
   let initialScanDone = false;
-  await new Promise<void>((resolve) => {
+  await new Promise<void>((resolve, reject) => {
     chokidar
       .watch([BascikConfig.directory.pages], {
         // only watch html files
@@ -61,12 +61,11 @@ export const watchFiles = async () => {
         if (initialScanDone) pageProcessing(path).catch(onWatchError);
       })
       .on("change", (path) => pageProcessing(path).catch(onWatchError))
-      .on("unlink", (path: string, _stats?: Stats) => removePage(path))
+      .on("unlink", (path: string, _stats?: Stats) => removePage(path).catch(onWatchError))
       .on("unlinkDir", (path: string, _stats?: Stats) => deleteDistDir(path).catch(onWatchError))
-      .on("ready", async () => {
+      .on("ready", () => {
         initialScanDone = true;
-        await processAllPages();
-        resolve();
+        processAllPages().then(() => resolve()).catch(reject);
       });
   });
 

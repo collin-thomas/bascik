@@ -104,6 +104,7 @@ const mockStat = stat as unknown as ReturnType<typeof vi.fn>;
 beforeEach(() => {
   vi.clearAllMocks();
   _rateLimiter.clear();
+  mockMem.isBooting = false;
   // No exact-match pages by default — http2 falls back to mem.getPage (mocked per-test).
   mockMem.getPageExact.mockReturnValue(undefined);
 });
@@ -1527,6 +1528,14 @@ describe("serveHttp2 – SSE boot-done event", () => {
     expect(stream.write).toHaveBeenCalledWith("data: reload\n\n");
   });
 
+  it("immediately reloads boot-page SSE clients when boot is already complete", async () => {
+    mockMem.isBooting = false;
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/bascik-live-reload?boot=1"));
+    expect(stream.write).toHaveBeenCalledWith("data: reload\n\n");
+  });
+
   it("removes the boot-done listener when the SSE stream closes", async () => {
     const handler = getStreamHandler()!;
     const stream = makeStream();
@@ -1616,4 +1625,3 @@ describe("serveHttp2 – onError suppresses ERR_HTTP2_INVALID_STREAM", () => {
     expect(consoleSpy).not.toHaveBeenCalled();
   });
 });
-

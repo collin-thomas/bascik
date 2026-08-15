@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Watcher startup now fails fast on initial transpile errors** — the pages watcher now routes the initial `processAllPages()` promise through the startup `reject` path and catches `removePage()` unlink failures, so build/watch startup no longer hangs or emits unhandled rejections when file operations fail.
+- **Build-script attribute conflict detection is now quote-aware** — `data-bascik-server` is now detected only as a real `<script>` attribute (not as text inside another attribute value) when enforcing the `data-bascik-build`/`data-bascik-server` conflict error.
+- **Boot-page live-reload no longer misses one-shot `boot-done`** — boot-page SSE connections now identify themselves and immediately receive a reload when boot has already completed, preventing indefinite spinner pages when the event was emitted before the listener attached.
+
 - **False "unresolved component" warning for tags inside `<script>`/`<style>`** — the post-transpilation unresolved-tag scanner now strips the content of `<script>`, `<style>`, and `<textarea>` elements before scanning, so literal text like `<my-card>` inside a JSON-LD block (or any other raw-text element) no longer produces a spurious warning.
 
 - **CSS comment with apostrophe drops following rules** — `removeCommentsFromCss` used `shieldCssStrings` as a pre-pass, but apostrophes inside `/* ... */` comments (e.g. `/* the logo's angle */`) were misread as string delimiters, shielding everything up to the next `'` in the source and preventing comment removal. The function now uses a single-pass alternation regex that correctly prioritises string literals over comment detection so apostrophes inside comments are never mistaken for string starts.

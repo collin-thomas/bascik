@@ -44,10 +44,11 @@ export async function openGraph() {
   const description = extractDescription(html);
 
   const relPath = pageFile.startsWith(pagesDir)
-    ? pageFile.slice(pagesDir.length).replace(/^[\\/]/, '')
+    ? pageFile.slice(pagesDir.length).replace(/^[\\/]/, '').replace(/\\/g, '/')
     : '';
   const withoutExt = relPath.replace(/\.html$/, '');
-  const urlPath = withoutExt === 'index' ? '/' : `/${withoutExt}`;
+  const routePath = withoutExt === 'index' ? '' : withoutExt.replace(/\/index$/, '/');
+  const urlPath = routePath ? `/${routePath}` : '/';
   const url = `${siteUrl}${urlPath}`;
 
   const tags = [

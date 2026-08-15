@@ -104,21 +104,82 @@ function createDiagnosticsForDocument(document) {
         return [];
     }
     const text = document.getText();
-    const kinds = languageId === 'css' ? ['css'] : languageId === 'html' ? ['css', 'js'] : ['js'];
-    const lines = text.split(/\r?\n/);
     const diagnostics = [];
-    for (const kind of kinds) {
-        const matches = (0, rules_1.matchCompatibilityRules)(text, kind);
-        for (const rule of matches) {
-            const lineIndex = lines.findIndex((lineText) => new RegExp(rule.regex.source, rule.regex.flags).test(lineText));
-            if (lineIndex === -1)
+    const addCompatibilityDiagnostics = (sourceText, kind, offset) => {
+        for (const rule of (0, rules_1.matchCompatibilityRules)(sourceText, kind)) {
+            const flags = rule.regex.flags.includes('g') ? rule.regex.flags : `${rule.regex.flags}g`;
+            const regex = new RegExp(rule.regex.source, flags);
+            const match = regex.exec(sourceText);
+            if (!match || typeof match.index !== 'number')
                 continue;
-            const start = new vscode.Position(lineIndex, 0);
-            const end = new vscode.Position(lineIndex, Math.min(lines[lineIndex]?.length ?? 0, 200));
+            const start = document.positionAt(offset + match.index);
+            const end = document.positionAt(offset + match.index + Math.max(match[0].length, 1));
             const diag = new vscode.Diagnostic(new vscode.Range(start, end), `${rule.message} ${rule.suggestion}`, vscode.DiagnosticSeverity.Warning);
             diag.source = 'bascik';
             diagnostics.push(diag);
         }
+    };
+    const parseScriptOpenTagAttributes = (openTag) => {
+        const attrs = new Map();
+        const insideTag = openTag
+            .replace(/^<script\b/i, '')
+            .replace(/>$/, '');
+        const attrRe = /([^\s"'=<>`/]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/gi;
+        let match;
+        while ((match = attrRe.exec(insideTag)) !== null) {
+            const name = match[1]?.toLowerCase();
+            if (!name)
+                continue;
+            const value = match[2] ?? match[3] ?? match[4];
+            attrs.set(name, value === undefined ? true : value);
+        }
+        return attrs;
+    };
+    const isJavaScriptScriptTag = (openTag) => {
+        const attrs = parseScriptOpenTagAttributes(openTag);
+        const typeValue = attrs.get('type');
+        if (!typeValue || typeValue === true)
+            return true;
+        const normalized = String(typeValue).trim().toLowerCase();
+        return normalized === 'module'
+            || normalized === 'text/javascript'
+            || normalized === 'application/javascript'
+            || normalized === 'text/ecmascript'
+            || normalized === 'application/ecmascript';
+    };
+    const scriptBlockRe = /(<script\b(?:[^>"']|"[^"]*"|'[^']*')*>)([\s\S]*?)<\/script\s*>/gi;
+    const styleBlockRe = /(<style\b(?:[^>"']|"[^"]*"|'[^']*')*>)([\s\S]*?)<\/style\s*>/gi;
+    if (languageId === 'html') {
+        let scriptMatch;
+        while ((scriptMatch = scriptBlockRe.exec(text)) !== null) {
+            const openTag = scriptMatch[1];
+            const scriptBody = scriptMatch[2] ?? '';
+            const scriptBodyOffset = (scriptMatch.index ?? 0) + openTag.length;
+            const attrs = parseScriptOpenTagAttributes(openTag);
+            if (attrs.has('data-bascik-build') && attrs.has('data-bascik-server')) {
+                const start = document.positionAt(scriptMatch.index ?? 0);
+                const end = document.positionAt((scriptMatch.index ?? 0) + openTag.length);
+                const diag = new vscode.Diagnostic(new vscode.Range(start, end), 'data-bascik-build and data-bascik-server cannot both appear on the same <script> tag. Remove one — a script runs at build time or at request time, not both.', vscode.DiagnosticSeverity.Error);
+                diag.source = 'bascik';
+                diagnostics.push(diag);
+            }
+            if (isJavaScriptScriptTag(openTag)) {
+                addCompatibilityDiagnostics(scriptBody, 'js', scriptBodyOffset);
+            }
+        }
+        let styleMatch;
+        while ((styleMatch = styleBlockRe.exec(text)) !== null) {
+            const openTag = styleMatch[1];
+            const styleBody = styleMatch[2] ?? '';
+            const styleBodyOffset = (styleMatch.index ?? 0) + openTag.length;
+            addCompatibilityDiagnostics(styleBody, 'css', styleBodyOffset);
+        }
+    }
+    else if (languageId === 'css') {
+        addCompatibilityDiagnostics(text, 'css', 0);
+    }
+    else {
+        addCompatibilityDiagnostics(text, 'js', 0);
     }
     return diagnostics;
 }

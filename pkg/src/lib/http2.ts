@@ -38,7 +38,7 @@ p{margin:0;font-size:.875rem;opacity:.5}
 </div>
 <script>
 (function(){
-  var es=new EventSource('/bascik-live-reload');
+  var es=new EventSource('/bascik-live-reload?boot=1');
   es.onmessage=function(e){if(e.data==='reload')location.reload()};
   es.onerror=function(){es.close();setTimeout(function(){location.reload()},1000)};
 })();
@@ -359,6 +359,8 @@ export const serveHttp2 = async () => {
             return stream.end();
           }
 
+          const isBootReloadConnection = new URL(req.path, origin).searchParams.get("boot") === "1";
+
           responseStatus = 200;
           stream.respond({
             "content-type": "text/event-stream",
@@ -401,6 +403,10 @@ export const serveHttp2 = async () => {
           eventEmitter.on("transpiled", eventHandler);
           eventEmitter.on("asset-changed", assetChangedHandler);
           eventEmitter.on("boot-done", bootDoneHandler);
+
+          if (isBootReloadConnection && !mem.isBooting && !stream.destroyed) {
+            stream.write(`data: reload\n\n`);
+          }
 
           stream.on("close", () => {
             if (openPagePath) mem.untrackOpenPage(openPagePath);

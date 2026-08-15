@@ -85,18 +85,16 @@ function createDiagnosticsForDocument(document: vscode.TextDocument): vscode.Dia
   }
 
   const text = document.getText();
-  const kinds: Array<'css' | 'js'> = languageId === 'css' ? ['css'] : languageId === 'html' ? ['css', 'js'] : ['js'];
-  const lines = text.split(/\r?\n/);
-
   const diagnostics: vscode.Diagnostic[] = [];
 
-  for (const kind of kinds) {
-    const matches = matchCompatibilityRules(text, kind);
-    for (const rule of matches) {
-      const lineIndex = lines.findIndex((lineText) => new RegExp(rule.regex.source, rule.regex.flags).test(lineText));
-      if (lineIndex === -1) continue;
-      const start = new vscode.Position(lineIndex, 0);
-      const end = new vscode.Position(lineIndex, Math.min(lines[lineIndex]?.length ?? 0, 200));
+  const addCompatibilityDiagnostics = (sourceText: string, kind: 'css' | 'js', offset: number) => {
+    for (const rule of matchCompatibilityRules(sourceText, kind)) {
+      const flags = rule.regex.flags.includes('g') ? rule.regex.flags : `${rule.regex.flags}g`;
+      const regex = new RegExp(rule.regex.source, flags);
+      const match = regex.exec(sourceText);
+      if (!match || typeof match.index !== 'number') continue;
+      const start = document.positionAt(offset + match.index);
+      const end = document.positionAt(offset + match.index + Math.max(match[0].length, 1));
       const diag = new vscode.Diagnostic(
         new vscode.Range(start, end),
         `${rule.message} ${rule.suggestion}`,
@@ -105,29 +103,73 @@ function createDiagnosticsForDocument(document: vscode.TextDocument): vscode.Dia
       diag.source = 'bascik';
       diagnostics.push(diag);
     }
-  }
+  };
 
-  // Flag <script> tags with both data-bascik-build and data-bascik-server.
-  if (languageId === 'html') {
-    // Lookaheads handle either attribute ordering without needing two passes.
-    const conflictRe = /<script\b(?=[^>]*\bdata-bascik-build\b)(?=[^>]*\bdata-bascik-server\b)[^>]*>/gi;
-    let m: RegExpExecArray | null;
-    while ((m = conflictRe.exec(text)) !== null) {
-      const before = text.slice(0, m.index);
-      const lineNum = (before.match(/\n/g) ?? []).length;
-      const colNum = m.index - before.lastIndexOf('\n') - 1;
-      const lineText = lines[lineNum] ?? '';
-      const diag = new vscode.Diagnostic(
-        new vscode.Range(
-          new vscode.Position(lineNum, colNum),
-          new vscode.Position(lineNum, Math.min(colNum + m[0].length, lineText.length)),
-        ),
-        'data-bascik-build and data-bascik-server cannot both appear on the same <script> tag. Remove one — a script runs at build time or at request time, not both.',
-        vscode.DiagnosticSeverity.Error,
-      );
-      diag.source = 'bascik';
-      diagnostics.push(diag);
+  const parseScriptOpenTagAttributes = (openTag: string): Map<string, string | true> => {
+    const attrs = new Map<string, string | true>();
+    const insideTag = openTag
+      .replace(/^<script\b/i, '')
+      .replace(/>$/, '');
+    const attrRe = /([^\s"'=<>`/]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/gi;
+    let match: RegExpExecArray | null;
+    while ((match = attrRe.exec(insideTag)) !== null) {
+      const name = match[1]?.toLowerCase();
+      if (!name) continue;
+      const value = match[2] ?? match[3] ?? match[4];
+      attrs.set(name, value === undefined ? true : value);
     }
+    return attrs;
+  };
+
+  const isJavaScriptScriptTag = (openTag: string): boolean => {
+    const attrs = parseScriptOpenTagAttributes(openTag);
+    const typeValue = attrs.get('type');
+    if (!typeValue || typeValue === true) return true;
+    const normalized = String(typeValue).trim().toLowerCase();
+    return normalized === 'module'
+      || normalized === 'text/javascript'
+      || normalized === 'application/javascript'
+      || normalized === 'text/ecmascript'
+      || normalized === 'application/ecmascript';
+  };
+
+  const scriptBlockRe = /(<script\b(?:[^>"']|"[^"]*"|'[^']*')*>)([\s\S]*?)<\/script\s*>/gi;
+  const styleBlockRe = /(<style\b(?:[^>"']|"[^"]*"|'[^']*')*>)([\s\S]*?)<\/style\s*>/gi;
+
+  if (languageId === 'html') {
+    let scriptMatch: RegExpExecArray | null;
+    while ((scriptMatch = scriptBlockRe.exec(text)) !== null) {
+      const openTag = scriptMatch[1];
+      const scriptBody = scriptMatch[2] ?? '';
+      const scriptBodyOffset = (scriptMatch.index ?? 0) + openTag.length;
+      const attrs = parseScriptOpenTagAttributes(openTag);
+      if (attrs.has('data-bascik-build') && attrs.has('data-bascik-server')) {
+        const start = document.positionAt(scriptMatch.index ?? 0);
+        const end = document.positionAt((scriptMatch.index ?? 0) + openTag.length);
+        const diag = new vscode.Diagnostic(
+          new vscode.Range(start, end),
+          'data-bascik-build and data-bascik-server cannot both appear on the same <script> tag. Remove one — a script runs at build time or at request time, not both.',
+          vscode.DiagnosticSeverity.Error,
+        );
+        diag.source = 'bascik';
+        diagnostics.push(diag);
+      }
+      if (isJavaScriptScriptTag(openTag)) {
+        addCompatibilityDiagnostics(scriptBody, 'js', scriptBodyOffset);
+      }
+    }
+
+    let styleMatch: RegExpExecArray | null;
+    while ((styleMatch = styleBlockRe.exec(text)) !== null) {
+      const openTag = styleMatch[1];
+      const styleBody = styleMatch[2] ?? '';
+      const styleBodyOffset = (styleMatch.index ?? 0) + openTag.length;
+      addCompatibilityDiagnostics(styleBody, 'css', styleBodyOffset);
+    }
+  } else if (languageId === 'css') {
+    addCompatibilityDiagnostics(text, 'css', 0);
+  } else {
+    addCompatibilityDiagnostics(text, 'js', 0);
   }
 
   return diagnostics;

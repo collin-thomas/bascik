@@ -183,6 +183,18 @@ describe("executeBuildScripts", () => {
     expect(opts.env?.BASCIK_BUILD).toBe("1");
   });
 
+  it("passes page-context env vars to child process", async () => {
+    resolveWith("");
+    await executeBuildScripts(
+      "<script data-bascik-build>x</script>",
+      "/abs/project/src/pages/guides/intro.html",
+    );
+    const opts = mockExecFile.mock.calls[0][2] as { env?: Record<string, string> };
+    expect(opts.env?.BASCIK_PAGE_FILE).toBe("/abs/project/src/pages/guides/intro.html");
+    expect(opts.env?.BASCIK_SITE_URL).toBe("");
+    expect(opts.env?.BASCIK_PAGES_DIR).toBe(`${process.cwd()}/src/pages`);
+  });
+
   it("passes a timeout to execFile so hung scripts don't hang the build", async () => {
     resolveWith("");
     await executeBuildScripts("<script data-bascik-build>x</script>");
@@ -338,5 +350,12 @@ describe("executeBuildScripts", () => {
     ).rejects.toThrow(
       expect.objectContaining({ message: expect.stringMatching(/my-page\.html.*line 2/) }),
     );
+  });
+
+  it("does not treat quoted data-bascik-server text as a conflicting attribute", async () => {
+    resolveWith("<p>ok</p>");
+    const html = '<script data-note="data-bascik-server" data-bascik-build>x</script>';
+    const result = await executeBuildScripts(html);
+    expect(result).toBe("<p>ok</p>");
   });
 });
