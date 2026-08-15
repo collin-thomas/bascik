@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Component tags inside `<script>`/`<style>`/`<textarea>` content are no longer resolved** — literal tag text such as `<my-card>` inside a JSON-LD string, inline script, style comment, or textarea was expanded into the full component markup, injecting a stray `</script>` that corrupted the page head and crashed build-time script minification. Tag detection, replacement, and open/close pairing now mask raw-text element content (mirroring the unresolved-tag warning scanner), so such text is treated as text.
+
+- **Class names used only in JS are now discovered and scoped** — the JS scoping pass previously only rewrote class references for names that appeared in HTML `class=` attributes. Dynamically-managed classes (e.g. modifier classes added via `classList.add()`, or classes passed to `querySelector`, `className =`, or `setAttribute("class", …)`) were scoped in CSS but left unscoped in JS, so the two never matched. The fix scans `<script>` blocks for all class-referencing JS patterns (`classList.*`, `querySelector`-family, `className` assignments, `setAttribute("class", …)`) and adds any newly-discovered class names to the scope map before the JS rewrite pass runs.
+
 - **Watcher startup now fails fast on initial transpile errors** — the pages watcher now routes the initial `processAllPages()` promise through the startup `reject` path and catches `removePage()` unlink failures, so build/watch startup no longer hangs or emits unhandled rejections when file operations fail.
 - **Build-script attribute conflict detection is now quote-aware** — `data-bascik-server` is now detected only as a real `<script>` attribute (not as text inside another attribute value) when enforcing the `data-bascik-build`/`data-bascik-server` conflict error.
 - **Boot-page live-reload no longer misses one-shot `boot-done`** — boot-page SSE connections now identify themselves and immediately receive a reload when boot has already completed, preventing indefinite spinner pages when the event was emitted before the listener attached.

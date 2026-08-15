@@ -18,6 +18,7 @@ export const NAV = [
     { href: '/configuration', label: 'Configuration' },
   ]},
   { section: 'Features', pages: [
+    { href: '/components', label: 'Components' },
     { href: '/scoped-styles', label: 'Scoped Styles' },
     { href: '/scoped-javascript', label: 'Scoped JavaScript' },
     { href: '/slots', label: 'Slots' },

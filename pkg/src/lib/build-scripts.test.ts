@@ -411,7 +411,7 @@ describe("build-script output cache", () => {
     resolveWith("<p>result</p>");
     await executeBuildScripts("<script data-bascik-build>nodeps()</script>");
     const jsonCall = mockWriteFile.mock.calls.find(
-      ([path]: [string]) => path.endsWith(".json"),
+      ([path]) => String(path).endsWith(".json"),
     );
     expect(jsonCall).toBeDefined();
     const [, content] = jsonCall as [string, string];
@@ -424,7 +424,7 @@ describe("build-script output cache", () => {
     rejectWith("syntax error");
     await executeBuildScripts("<script data-bascik-build>bad()</script>");
     const jsonCall = mockWriteFile.mock.calls.find(
-      ([path]: [string]) => path.endsWith(".json"),
+      ([path]) => String(path).endsWith(".json"),
     );
     expect(jsonCall).toBeUndefined();
   });
@@ -508,7 +508,7 @@ describe("build-script output cache", () => {
     // Both pages must have spawned their own child process.
     expect(mockExecFile).toHaveBeenCalledTimes(1);
     // And the cache write path for both must use a .json file (different keys, so two distinct writes).
-    const jsonWrites = mockWriteFile.mock.calls.filter(([p]: [string]) => p.endsWith(".json"));
+    const jsonWrites = mockWriteFile.mock.calls.filter(([p]) => String(p).endsWith(".json"));
     expect(jsonWrites.length).toBe(1);
   });
 
@@ -520,7 +520,7 @@ describe("build-script output cache", () => {
     );
     expect(result).toBe("<p>no-cache</p>");
     expect(mockExecFile).toHaveBeenCalledTimes(1);
-    const jsonWrites = mockWriteFile.mock.calls.filter(([p]: [string]) => p.endsWith(".json"));
+    const jsonWrites = mockWriteFile.mock.calls.filter(([p]) => String(p).endsWith(".json"));
     expect(jsonWrites.length).toBe(0);
     (BascikConfig as Record<string, unknown>).buildScriptCache = true;
   });

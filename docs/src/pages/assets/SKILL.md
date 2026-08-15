@@ -24,6 +24,66 @@ This file contains the **complete, centralized documentation and development ski
 * It does not add any JavaScript to pages. Every script in the output was written by you.
 * It does not require Web Components, Shadow DOM, or any browser-specific API.
 
+### End-to-End Example: Input → Output
+
+One component file, its usage, and the scoped build output:
+
+```html
+<!-- src/components/my-card.html -->
+<style>
+  .card {
+    padding: 26px 28px;
+    border: 1px solid #3a3d40;
+    border-radius: 10px;
+    &.active { border-color: #d3ff8d; }
+  }
+</style>
+<div class="card" id="card">
+  <div data-bascik-slot></div>
+</div>
+<script>
+  const card = document.getElementById('card');
+  card.addEventListener('click', () => {
+    card.classList.toggle('active');
+  });
+</script>
+```
+
+```html
+<!-- src/pages/index.html -->
+<my-card>
+  <h3>My Card</h3>
+  <p>Any HTML goes inside as slot content.</p>
+</my-card>
+```
+
+```html
+<!-- dist/index.html - classes and selectors scoped, script wrapped in IIFE -->
+<style>
+  .bascik__my-card__card {
+    padding: 26px 28px;
+    border: 1px solid #3a3d40;
+    border-radius: 10px;
+    &.bascik__my-card__active { border-color: #d3ff8d; }
+  }
+</style>
+<div class="bascik__my-card__card" id="bascik__my-card__a1b__card">
+  <h3>My Card</h3>
+  <p>Any HTML goes inside as slot content.</p>
+</div>
+<script>
+  (function () {
+    const card = document.getElementById('bascik__my-card__a1b__card');
+    card.addEventListener('click', () => {
+      card.classList.toggle('bascik__my-card__active');
+    });
+  })();
+</script>
+```
+
+Because IDs are scoped per instance, the same component can appear multiple times on one page and each instance's JS stays fully isolated. Plain `getElementById` / `querySelector` calls just work.
+
+
 ### How Bascik Positions Against Other Tools
 * **Directly competes with Next.js** for content sites, landing pages, and SEO-critical pages. Next.js ships 80–100+ KB of React runtime and hydration overhead even for pages with no client-side state; Bascik ships zero. In competitive SEO keyword spaces, that difference is measurable in Core Web Vitals (LCP, INP, CLS).
 * **Closest surface resemblance to Svelte:** Both use single-file components with scoped styles. The difference is that Svelte compiles to a JavaScript runtime for reactive DOM management; Bascik compiles to plain HTML with no runtime added.
@@ -62,19 +122,72 @@ For local contributor testing of the generator itself, rebuild from `create/`, l
 
 A component is one `.html` file inside `src/components/`. Its tag name is derived from the file name.
 
+**HTML-only component:**
 ```html
-<!-- src/components/site-nav.html -->
-<nav class="nav">
-  <a href="/">Home</a>
-  <a href="/about">About</a>
-</nav>
+<!-- src/components/page-footer.html -->
+<footer>
+  <p>© 2025 My Site. All rights reserved.</p>
+</footer>
+```
+
+**HTML with inline CSS:**
+```html
+<!-- src/components/promo-banner.html -->
+<style>
+  .banner { padding: 1rem 1.5rem; background: #e8f4fd; border-left: 4px solid #3b82f6; }
+</style>
+<aside class="banner">…</aside>
+```
+
+**HTML with inline JavaScript** (use `id` + `getElementById` for per-instance targeting):
+```html
+<!-- src/components/scroll-top.html -->
+<button id="btn" type="button">Back to top</button>
+<script>
+  document.getElementById('btn').addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+</script>
+```
+
+**All three in one file** (HTML + `<style>` + `<script>`):
+```html
+<!-- src/components/alert-box.html -->
+<style>
+  .alert { display: flex; align-items: center; gap: 0.75rem; padding: 1rem; border: 1px solid #f59e0b; border-radius: 6px; background: #fffbeb; }
+  .alert-close { margin-left: auto; background: none; border: none; cursor: pointer; }
+</style>
+<div class="alert" id="alert">
+  <span>Maintenance on Sunday, 2am–4am UTC.</span>
+  <button id="close" class="alert-close" aria-label="Dismiss">×</button>
+</div>
+<script>
+  document.getElementById('close').addEventListener('click', () => {
+    document.getElementById('alert').hidden = true;
+  });
+</script>
 ```
 
 Use it in any page or other component:
 ```html
-<site-nav></site-nav>
+<alert-box></alert-box>
 ```
 *Self-closing tags are also supported:* `<site-nav />` or `<site-nav class="top" />`
+
+**Separate CSS file** — pair a `.css` file with the same base name:
+```
+src/components/
+  alert-box.html
+  alert-box.css   ← scoped to alert-box
+```
+
+**Subfolder layout** (same tag name regardless of folder):
+```
+src/components/
+  alert-box/
+    alert-box.html
+    alert-box.css
+```
 
 **No restart needed.** The dev server watches the components directory. Drop a new `.html` (or paired `.css`) file in and all pages that use that tag are automatically re-transpiled and reloaded with no server restart required.
 
@@ -249,23 +362,27 @@ export const bascikConfig = {
 
 ---
 
-## 5. Dynamic Runtime Class Scoping (CRITICAL BUG & PATTERN)
+## 5. Dynamic Runtime Class Scoping
 
-### The Problem
-If you have a class or ID name that is **only toggled or added dynamically at runtime** by JavaScript (for example, with `.classList.toggle("is-open")` or `.classList.add("is-active")`) but **does not exist on any HTML tag inside the template at compile time**, Bascik's HTML compiler will not discover or register it.
+Class names used only in JavaScript (never in a `class="…"` HTML attribute) are automatically discovered and scoped. Bascik scans every `<script>` block for class-referencing JS patterns and adds any new class names to the scope map before the rewrite pass runs. You do not need any special workaround or scoping-helper element.
 
-This causes a compilation mismatch:
-* The **CSS parser** *will* obfuscate the class name inside your stylesheet.
-* The **JS parser** *will not* obfuscate the class name inside your scripts because it was never registered in the HTML pass.
-* At runtime, your script will toggle `"is-open"`, but the CSS will be listening for the obfuscated `.bf5a887ac3134` class, causing interactive elements like menus or modals to fail silently.
-
-### The Solution: Scoping Helpers
-Always declare any dynamic classes or IDs inside a hidden scoping helper element inside your HTML template. This forces Bascik's HTML parser to register and synchronize the names during compilation:
+**Patterns covered by JS-only class discovery:**
+* `classList.add/remove/toggle/contains/replace` arguments
+* `.className` tokens in `querySelector`, `querySelectorAll`, `closest`, `matches` selector strings
+* `el.className = "…"` and `el.className += "…"` space-separated tokens
+* `el.setAttribute("class", "…")` string literal values
 
 ```html
-<!-- Scoping helper for dynamic runtime classes -->
-<div class="is-open is-active" style="display: none;"></div>
+<!-- ✅ Works — btn--active is discovered from the classList.add call -->
+<!-- and scoped in both CSS and JS automatically -->
+<button class="btn"></button>
+<script>
+  const btn = document.getElementById('btn');
+  btn.addEventListener('click', () => btn.classList.add('btn--active'));
+</script>
 ```
+
+The only exception is `innerHTML` / `insertAdjacentHTML` HTML string scanning, which still only recognises class names that also appear in the HTML template.
 
 ---
 
@@ -650,6 +767,7 @@ TLS certs are generated automatically (mkcert if available, openssl fallback) wh
 
 **Production hardening (automatic in `--serve`):**
 * **Security headers:** every response includes `x-content-type-options: nosniff`, `x-frame-options: SAMEORIGIN`, `referrer-policy: strict-origin-when-cross-origin`, `permissions-policy: interest-cohort=()`.
+* **URL routing (dev and production):** pages are served at their filename without the `.html` extension. `dist/about.html` is at `/about`, `dist/blog/post.html` is at `/blog/post`, `dist/index.html` is at `/`. Unmatched paths fall through to `/404` if a `dist/404.html` exists.
 * **Rate limiting:** 500 requests per 10 seconds per IP. Clients over the limit get `429 Too Many Requests` with `Retry-After`. Not active in the dev server. When behind a reverse proxy the limit applies to the proxy's IP; use the proxy's own rate limiting for per-client control.
 * **Graceful shutdown:** SIGTERM and SIGINT stop accepting connections, destroy all open HTTP/2 sessions (including the live-reload SSE connection), and drain in-flight requests before exiting. Force-exits after 10 seconds if anything hasn't drained.
 * **Path traversal protection:** static asset URLs are validated against `dist/`; requests that escape with `/../` sequences get `400 Bad Request`.
@@ -938,9 +1056,10 @@ The docs site `vite.config.js` sets `test.include: ['src/**/*.test.mjs']`. The s
 
 Two GitHub Actions workflows handle all automation.
 
-**CI** (`.github/workflows/ci.yml`) — runs on every push to `main` and every PR:
-- Runs `yarn test:ci` (unit tests with coverage) on Node 24
-- `permissions: contents: read`
+**CI** (`.github/workflows/ci.yml`) — runs on every push to `main` and every PR, two parallel jobs on Node 24:
+- `test`: runs `yarn test:ci` (unit tests with coverage)
+- `e2e`: builds the package (`yarn build`), installs Chromium via `playwright install --with-deps chromium`, then runs `yarn e2e` (Playwright tests)
+- Both jobs have `permissions: contents: read`
 
 **Release** (`.github/workflows/release.yml`) — triggers on version tags:
 
@@ -1026,6 +1145,7 @@ When generating code, pages, or components for a Bascik project, the following c
 6. **Dynamic Toggles:** Use `data-` attributes for runtime state that changes via JavaScript (e.g. `data-state="open"`). Scoped class names are assigned at build time and cannot be reliably looked up by JS string manipulation *unless* you utilize a scoping helper (Section 5).
 7. **Text Props:** Props accept text only. For rich HTML content, use slots.
 8. **Script Modules:** `<script type="module">` scripts are not wrapped in an IIFE, but their selectors are still rewritten.
+9. **Literal Tag Text Is Safe:** Component tag text inside `<script>`, `<style>`, or `<textarea>` content (e.g. `<my-card>` in a JSON-LD string or code example) is treated as text and never resolved into a component.
 
 ---
 

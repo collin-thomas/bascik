@@ -200,9 +200,70 @@ export const prefixElementAttribute = (
       .join(" ");
   });
 
+  // Discover class names used only in JS (never in a class= attr).
+  // The CSS pass scopes every class name it finds, so JS-only classes would
+  // otherwise be scoped in CSS but left unscoped in JS, making the two out of sync.
+  // Covers: classList.*, querySelector-family (".cls"), className =, setAttribute("class",…)
+  if (attribute === "class") {
+    const knownClasses = new Set(attributesToReplace.map((a) => a.attributeName));
+    const addIfNew = (className: string): void => {
+      if (!knownClasses.has(className)) {
+        attributesToReplace.push({
+          attributeName: className,
+          obfuscatedAttributeName: obfuscateAttributeName(`bascik__${scopeKey}__${className}`),
+        });
+        knownClasses.add(className);
+      }
+    };
+
+    for (const scriptMatch of scopedAttrsHtml.matchAll(
+      /<script\b[^>]*>([\s\S]*?)<\/script[^>]*>/gi,
+    )) {
+      const src = scriptMatch[1];
+
+      // classList.add/remove/toggle/contains/replace — extract every quoted token
+      for (const callMatch of src.matchAll(
+        /classList\.(?:add|remove|toggle|contains|replace)\(([^)]*)\)/gm,
+      )) {
+        for (const tokenMatch of callMatch[1].matchAll(/["']([^"']+)["']/g)) {
+          addIfNew(tokenMatch[1]);
+        }
+      }
+
+      // querySelector / querySelectorAll / closest / matches — extract ".token" class tokens
+      for (const callMatch of src.matchAll(
+        /(?:querySelector(?:All)?|closest|matches)\(\s*["']([^"']*)["']\s*\)/gm,
+      )) {
+        for (const tokenMatch of callMatch[1].matchAll(
+          /(?<![a-zA-Z0-9_-])\.([a-zA-Z_][a-zA-Z0-9_-]*)/g,
+        )) {
+          addIfNew(tokenMatch[1]);
+        }
+      }
+
+      // el.className = "x y" and el.className += " x"
+      for (const assignMatch of src.matchAll(
+        /\bclassName\s*\+?=\s*["']([^"']*)["']/gm,
+      )) {
+        for (const token of assignMatch[1].trim().split(/\s+/)) {
+          if (token) addIfNew(token);
+        }
+      }
+
+      // setAttribute("class", "x y")
+      for (const attrMatch of src.matchAll(
+        /setAttribute\(\s*["']class["']\s*,\s*["']([^"']*)["']\s*\)/gm,
+      )) {
+        for (const token of attrMatch[1].trim().split(/\s+/)) {
+          if (token) addIfNew(token);
+        }
+      }
+    }
+  }
+
   // Rewrite DOM selector references in script blocks to use the scoped attribute values.
   const scopedHtml = scopedAttrsHtml.replace(
-    /<script\b[^>]*>([\s\S]*?)<\/script>/gi,
+    /<script\b[^>]*>([\s\S]*?)<\/script[^>]*>/gi,
     (match) => {
       let updatedMatch = match;
       attributesToReplace.forEach(
@@ -489,7 +550,7 @@ export const namespaceScriptTags = (
 ): BascikComponent => {
   // Only wrap <script> tags with no type or type="text/javascript"
   component.fileContent = component.fileContent.replace(
-    /(<script\b[^>]*>)([\s\S]*?)(<\/script>)/gi,
+    /(<script\b[^>]*>)([\s\S]*?)(<\/script[^>]*>)/gi,
     (match, open, code, close) => {
       // Server scripts run in Node.js at request time — never wrap in browser IIFE
       if (/\bdata-bascik-server\b/i.test(open)) return match;

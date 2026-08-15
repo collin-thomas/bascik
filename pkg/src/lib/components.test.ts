@@ -1111,6 +1111,56 @@ describe("recursivelyTranspile – complex regression", () => {
   });
 });
 
+describe("raw-text elements – literal tags are not resolved", () => {
+  const componentList: ComponentList = {
+    "my-card": { fileContent: "<div>card</div>" },
+  };
+
+  it("getFirstComponent ignores a literal tag inside JSON-LD script content", () => {
+    const html =
+      '<script type="application/ld+json">{"text": "Use <my-card> in a page."}</script>';
+    expect(getFirstComponent(html, componentList)).toEqual({});
+  });
+
+  it("getFirstComponent ignores literal tags inside style and textarea", () => {
+    const html =
+      "<style>/* <my-card> */</style><textarea><my-card></my-card></textarea>";
+    expect(getFirstComponent(html, componentList)).toEqual({});
+  });
+
+  it("getFirstComponent finds a real tag after a script mentioning it", () => {
+    const html =
+      '<script>console.log("<my-card>")</script><my-card></my-card>';
+    const result = getFirstComponent(html, componentList);
+    expect(result.name).toBe("my-card");
+    expect(result.content).toBe("<my-card></my-card>");
+  });
+
+  it("replaceTag leaves the literal tag in script content untouched", () => {
+    const html =
+      '<script>{"a": "<my-card>"}</script><my-card></my-card>';
+    expect(replaceTag(html, "my-card", "<div>card</div>")).toBe(
+      '<script>{"a": "<my-card>"}</script><div>card</div>',
+    );
+  });
+
+  it("replaceTag self-closing fallback skips a literal tag in script content", () => {
+    const html = '<script>var s = "<my-card/>";</script><my-card/>';
+    expect(replaceTag(html, "my-card", "<div>card</div>")).toBe(
+      '<script>var s = "<my-card/>";</script><div>card</div>',
+    );
+  });
+
+  it("getTag pairs open/close correctly when a script inside contains a stray close tag", () => {
+    const html =
+      '<my-card><script>console.log("</my-card>")</script><p>slot</p></my-card>';
+    const result = getTag(html, "my-card");
+    expect(result.innerContent).toBe(
+      '<script>console.log("</my-card>")</script><p>slot</p>',
+    );
+  });
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Property-based fuzzing
 // ─────────────────────────────────────────────────────────────────────────────

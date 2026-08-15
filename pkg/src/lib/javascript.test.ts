@@ -281,15 +281,164 @@ describe("prefixElementAttribute – class classList methods", () => {
     );
   });
 
-  it("scopes classList.replace — only scoped names are rewritten", () => {
+  it("scopes classList.replace — both args scoped when both appear in classList call", () => {
     const c = makeComponent(
       '<div class="active"></div><script>el.classList.replace("active", "other")</script>',
     );
     const result = prefixElementAttribute(c, "class", "test1234");
-    // "active" is a known scoped class; "other" is not in the component HTML so not rewritten
+    // "other" only appears in the classList.replace() call, never in a class= attr;
+    // the fix discovers it from the JS and scopes it so CSS and JS stay in sync.
     expect(result.fileContent).toContain(
-      `classList.replace("${scopeClass("active")}", "other")`,
+      `classList.replace("${scopeClass("active")}", "${scopeClass("other")}")`,
     );
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// JS-only class discovery: classes used only in classList.* (never in class= attrs)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("prefixElementAttribute – JS-only class discovery via classList", () => {
+  it("scopes a modifier class used only in classList.add, not in any HTML class attr", () => {
+    // Regression: CSS scopes every class name it finds, but the JS rewrite pass
+    // only used to process classes discovered from HTML class= attributes.
+    // A modifier like btn--active added dynamically would be scoped in CSS but
+    // left unscoped in JS, so the two never matched.
+    const c = makeComponent(
+      '<button class="btn"></button><script>el.classList.add("btn--active")</script>',
+      ".btn { } .btn--active { color: red; }",
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain(`classList.add("${scopeClass("btn--active")}")`);
+    expect(result.cssFileContent).toContain(`.${scopeClass("btn--active")}`);
+  });
+
+  it("scopes a JS-only class in classList.remove", () => {
+    const c = makeComponent(
+      '<div class="base"></div><script>el.classList.remove("loading")</script>',
+      ".loading { opacity: 0.5; }",
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain(`classList.remove("${scopeClass("loading")}")`);
+    expect(result.cssFileContent).toContain(`.${scopeClass("loading")}`);
+  });
+
+  it("scopes a JS-only class in classList.toggle", () => {
+    const c = makeComponent(
+      '<nav></nav><script>el.classList.toggle("open")</script>',
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain(`classList.toggle("${scopeClass("open")}")`);
+  });
+
+  it("scopes a JS-only class in classList.contains", () => {
+    const c = makeComponent(
+      '<div></div><script>el.classList.contains("selected")</script>',
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain(`classList.contains("${scopeClass("selected")}")`);
+  });
+
+  it("does not double-scope a class that appears in both HTML attrs and classList.add", () => {
+    const c = makeComponent(
+      '<div class="active"></div><script>el.classList.add("active")</script>',
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    const scoped = scopeClass("active");
+    expect(result.fileContent).toContain(`classList.add("${scoped}")`);
+    // Must not appear double-scoped
+    expect(result.fileContent).not.toContain(`bascik__my-comp__bascik__`);
+  });
+
+  it("scopes multiple JS-only classes across multiple classList calls", () => {
+    const c = makeComponent(
+      '<div></div><script>el.classList.add("spinner"); el.classList.remove("done");</script>',
+      ".spinner { } .done { }",
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain(`classList.add("${scopeClass("spinner")}")`);
+    expect(result.fileContent).toContain(`classList.remove("${scopeClass("done")}")`);
+    expect(result.cssFileContent).toContain(`.${scopeClass("spinner")}`);
+    expect(result.cssFileContent).toContain(`.${scopeClass("done")}`);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// JS-only class discovery: querySelector / className / setAttribute patterns
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("prefixElementAttribute – JS-only class discovery via selector and assignment", () => {
+  it("scopes a JS-only class used in querySelector", () => {
+    const c = makeComponent(
+      '<div></div><script>document.querySelector(".js-only")</script>',
+      ".js-only { color: red; }",
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain(`querySelector(".${scopeClass("js-only")}")`);
+    expect(result.cssFileContent).toContain(`.${scopeClass("js-only")}`);
+  });
+
+  it("scopes a JS-only class used in querySelectorAll", () => {
+    const c = makeComponent(
+      '<ul></ul><script>el.querySelectorAll(".item")</script>',
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain(`querySelectorAll(".${scopeClass("item")}")`);
+  });
+
+  it("scopes a JS-only class used in closest", () => {
+    const c = makeComponent(
+      '<div></div><script>el.closest(".panel")</script>',
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain(`closest(".${scopeClass("panel")}")`);
+  });
+
+  it("scopes a JS-only class used in matches", () => {
+    const c = makeComponent(
+      '<div></div><script>el.matches(".active")</script>',
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain(`matches(".${scopeClass("active")}")`);
+  });
+
+  it("scopes a JS-only class assigned via className =", () => {
+    const c = makeComponent(
+      '<div></div><script>el.className = "loading"</script>',
+      ".loading { opacity: 0.5; }",
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain(`className = "${scopeClass("loading")}"`);
+    expect(result.cssFileContent).toContain(`.${scopeClass("loading")}`);
+  });
+
+  it("scopes JS-only classes assigned via className = with multiple tokens", () => {
+    const c = makeComponent(
+      '<div></div><script>el.className = "card card--active"</script>',
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain(
+      `className = "${scopeClass("card")} ${scopeClass("card--active")}"`,
+    );
+  });
+
+  it("scopes a JS-only class set via setAttribute(\"class\", …)", () => {
+    const c = makeComponent(
+      '<div></div><script>el.setAttribute("class", "hidden")</script>',
+      ".hidden { display: none; }",
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain(`setAttribute("class", "${scopeClass("hidden")}")`);
+    expect(result.cssFileContent).toContain(`.${scopeClass("hidden")}`);
+  });
+
+  it("does not double-scope a class appearing in both HTML and querySelector", () => {
+    const c = makeComponent(
+      '<div class="card"></div><script>el.querySelector(".card")</script>',
+    );
+    const result = prefixElementAttribute(c, "class", "test1234");
+    expect(result.fileContent).toContain(`querySelector(".${scopeClass("card")}")`);
+    expect(result.fileContent).not.toContain(`bascik__my-comp__bascik__`);
   });
 });
 

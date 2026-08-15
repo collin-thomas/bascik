@@ -203,9 +203,30 @@ export const listComponents = async (): Promise<ComponentList> => {
 const ATTR_VALUE = `(?:[^>"']|"[^"]*"|'[^']*')*`;
 
 /**
+ * Return a same-length copy of `htmlString` where the inner content of
+ * `<script>`, `<style>`, and `<textarea>` elements is blanked out with
+ * spaces. Component-tag searches run against the masked string so literal
+ * tag text inside raw-text elements (e.g. `<my-card>` mentioned in a
+ * JSON-LD string or a code example) is never resolved as a component.
+ * Because lengths are preserved, indices found in the masked string are
+ * valid in the original.
+ */
+const maskRawTextContent = (htmlString: string): string =>
+  htmlString.replace(
+    new RegExp(
+      `(<(script|style|textarea)(?:${ATTR_VALUE})>)([\\s\\S]*?)(<\\/\\2\\s*>)`,
+      "gi",
+    ),
+    (_m, open: string, _tag: string, content: string, close: string) =>
+      `${open}${" ".repeat(content.length)}${close}`,
+  );
+
+/**
  * Find the first `<tagName ...>` opening tag in `htmlString` and return its
  * full text plus start/end indices.  The attribute scan is quote-aware so a
  * `>` inside a quoted attribute value does not end the tag early.
+ * Occurrences inside `<script>`, `<style>`, and `<textarea>` content are
+ * ignored — they are text, not markup.
  */
 const findOpenTag = (
   htmlString: string,
@@ -213,7 +234,7 @@ const findOpenTag = (
 ): { openTag: string; start: number; end: number } | null => {
   const tn = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const openTagRegexp = new RegExp(`<${tn}(?:${ATTR_VALUE})>`, "i");
-  const openTagMatch = openTagRegexp.exec(htmlString);
+  const openTagMatch = openTagRegexp.exec(maskRawTextContent(htmlString));
   if (!openTagMatch) return null;
   return {
     openTag: openTagMatch[0],
@@ -253,8 +274,16 @@ export const replaceTag = (
   }
   // Fall back to self-closing: <tagName ... /> or <tagName/>
   // Use a replacement function for the same `$`-safety reason.
-  const selfClosingRegexp = new RegExp(`<${tagName}(\\s[^>]*)?\\/?>`, "i");
-  return htmlString.replace(selfClosingRegexp, () => transpiledTag);
+  // Search the masked string so a literal tag inside <script>/<style>/<textarea>
+  // content is never replaced; splice by index into the original string.
+  const selfClosingRegexp = new RegExp(`<${tagName}(?:${ATTR_VALUE})\\s*\\/?>`, "i");
+  const selfClosingMatch = selfClosingRegexp.exec(maskRawTextContent(htmlString));
+  if (!selfClosingMatch) return htmlString;
+  return (
+    htmlString.slice(0, selfClosingMatch.index) +
+    transpiledTag +
+    htmlString.slice(selfClosingMatch.index + selfClosingMatch[0].length)
+  );
 };
 
 export const getTagContents = (
@@ -287,7 +316,9 @@ export const getFirstComponent = (
     `<\\b(${componentNames.join("|")})\\b[\\s\\S]*?>`,
     "i",
   );
-  const match = htmlString.match(matchComponentName);
+  // Match against the masked string so literal component-tag text inside
+  // <script>/<style>/<textarea> content (e.g. JSON-LD strings) is ignored.
+  const match = maskRawTextContent(htmlString).match(matchComponentName);
   if (!match) {
     return {};
   }
@@ -329,14 +360,18 @@ export const getTag = (
   }
 
   // Try self-closing: <tagName ... /> or <tagName/>
+  // Search the masked string so literal tag text inside raw-text elements is skipped.
   const selfClosingPattern = new RegExp(
     `<${tagName}([\\s\\S]*?)\\/?>`,
     "i",
   );
-  const selfClosingMatch = htmlString.match(selfClosingPattern);
+  const selfClosingMatch = selfClosingPattern.exec(maskRawTextContent(htmlString));
   if (selfClosingMatch) {
     const returnObj = {
-      content: selfClosingMatch[0],
+      content: htmlString.slice(
+        selfClosingMatch.index,
+        selfClosingMatch.index + selfClosingMatch[0].length,
+      ),
       innerContent: "",
     };
     if (!componentList) return returnObj;
@@ -480,13 +515,16 @@ const findMatchingClose = (
   const tn = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const openRe = new RegExp(`<${tn}[\\s>]`, "gi");
   const closeRe = new RegExp(`<\\/${tn}>`, "gi");
+  // Scan the masked string so literal tag text inside <script>/<style>/<textarea>
+  // content never skews the depth counter. Indices are valid in the original.
+  const masked = maskRawTextContent(html);
   let depth = 1;
   let pos = contentStart;
-  while (pos < html.length) {
+  while (pos < masked.length) {
     openRe.lastIndex = pos;
     closeRe.lastIndex = pos;
-    const openMatch = openRe.exec(html);
-    const closeMatch = closeRe.exec(html);
+    const openMatch = openRe.exec(masked);
+    const closeMatch = closeRe.exec(masked);
     if (!closeMatch) return -1;
     if (!openMatch || closeMatch.index < openMatch.index) {
       depth--;

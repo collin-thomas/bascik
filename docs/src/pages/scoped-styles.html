@@ -53,11 +53,12 @@
           console.log(await renderMdRange('./content/scoped-styles.md', { from: 'See it in action', to: 'Source and output' }));
         </script>
 
-        <component-demo data-bascik-prop-file="src/components/feature-card/">
+        <component-demo data-bascik-prop-file="src/components/my-card/">
           <div data-bascik-slot="example">
-            <feature-card data-bascik-prop-label="Scoped" data-bascik-prop-title="Isolated Styles"
-              data-bascik-prop-desc="Hover over me to see transitions and shadows that won't leak out.">
-            </feature-card>
+            <my-card>
+              <h3>Isolated Styles</h3>
+              <p>Click to toggle the active state.</p>
+            </my-card>
           </div>
           <div data-bascik-slot="source-usage">
             <code-block data-bascik-prop-lang="html"><script data-bascik-build>
@@ -75,28 +76,12 @@
                 console.log(await extractDemoBlock('./content/scoped-styles.md', 'source-html'));
               </script></code-block>
           </div>
-          <div data-bascik-slot="source-css">
-            <code-block data-bascik-prop-lang="css"><script data-bascik-build>
-                import { join } from 'node:path';
-                import { pathToFileURL } from 'node:url';
-                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/scoped-styles.md', 'source-css'));
-              </script></code-block>
-          </div>
           <div data-bascik-slot="output-html">
             <code-block data-bascik-prop-lang="html"><script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                 console.log(await extractDemoBlock('./content/scoped-styles.md', 'output-html'));
-              </script></code-block>
-          </div>
-          <div data-bascik-slot="output-css">
-            <code-block data-bascik-prop-lang="css"><script data-bascik-build>
-                import { join } from 'node:path';
-                import { pathToFileURL } from 'node:url';
-                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/scoped-styles.md', 'output-css'));
               </script></code-block>
           </div>
         </component-demo>

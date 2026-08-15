@@ -1,0 +1,15 @@
+<div>
+  <p>Bascik assembles components at build time and ships plain HTML files with no framework runtime.</p>
+  <div id="detail" hidden>
+    <p>No JavaScript is added to the page. Every script in the output was written by you.</p>
+  </div>
+  <button id="btn" type="button">Read more</button>
+</div>
+<script>
+  const btn = document.getElementById('btn');
+  const detail = document.getElementById('detail');
+  btn.addEventListener('click', () => {
+    detail.hidden = !detail.hidden;
+    btn.textContent = detail.hidden ? 'Read more' : 'Show less';
+  });
+</script>

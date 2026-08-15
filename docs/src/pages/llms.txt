@@ -365,7 +365,6 @@ For per-request server-side rendering, see [Server scripts](/server).
   const firstPara = md.split('\n\n')[1];
   console.log(`
     <feature-card
-      data-bascik-prop-label="Build Time"
       data-bascik-prop-title="Generated from Markdown"
       data-bascik-prop-desc="${marked.parseInline(firstPara)}">
     </feature-card>
@@ -377,9 +376,8 @@ For per-request server-side rendering, see [Server scripts](/server).
 ```html
 <!-- The script is replaced by its stdout output -->
 <div class="bascik__feature-card__fcard">
-  <p class="bascik__feature-card__fcard-label">Build Time</p>
-  <h3 class="bascik__feature-card__fcard-title">Generated from Markdown</h3>
-  <p class="bascik__feature-card__fcard-desc">Bascik is a build tool for HTML components...</p>
+  <h3 class="bascik__feature-card__el__h3">Generated from Markdown</h3>
+  <p class="bascik__feature-card__el__p">Bascik is a build tool for HTML components...</p>
 </div>
 ```
 
@@ -398,17 +396,21 @@ Scaffolds a complete starter project in a new directory. Prompts for a project n
 
 ```text
 my-project/
-  bascik.config.js
   package.json
+  bascik.config.js
   .gitignore
+  .github/skills/bascik/SKILL.md
+  .claude/skills/bascik/SKILL.md
   src/
     pages/
+      assets/
+        favicon.svg
+      css/
+        styles.css
       index.html
       about.html
       contact.html
       404.html
-      css/
-        styles.css
     components/
       site-meta/
       site-header/
@@ -743,6 +745,7 @@ Bascik rewrites DOM selector references inside component `<script>` tags to matc
 | `<script type="module">`                                 | ✓     | Not wrapped in an IIFE (modules are already isolated by spec). DOM selector references still rewritten.                                                                                                                                                     |
 | `<script type="application/json">` (and any non-JS type) | ✓     | Left completely untouched.                                                                                                                                                                                                                                  |
 | `<script data-bascik-build>`                             | ✓     | Executed at **transpile time** as a Node.js ESM module. The script's stdout is injected in place of the tag. Runs in both dev and build modes. Use `console.log()` / `process.stdout.write()` to output HTML. Top-level `import` and `await` are supported. |
+| Literal component tags inside `<script>`, `<style>`, or `<textarea>` | ✓     | Treated as text, never resolved into components. Safe to mention tags like `<my-card>` in JSON-LD strings, inline scripts, or code examples.                                                                                                              |
 
 ### DOM Selector Rewriting
 
@@ -763,13 +766,13 @@ Bascik rewrites DOM selector references inside component `<script>` tags to matc
 | `element.classList.remove`                    | `el.classList.remove("my-cls")`      | `class`          | ✓     | Single and multi-argument forms.                                                              |
 | `element.classList.toggle`                    | `el.classList.toggle("my-cls")`      | `class`          | ✓     | The optional boolean second argument is passed through unchanged.                             |
 | `element.classList.contains`                  | `el.classList.contains("my-cls")`    | `class`          | ✓     |                                                                                                |
-| `element.classList.replace`                   | `el.classList.replace("old", "new")` | `class`          | ✓     | Both the old-token and new-token arguments are rewritten if they match a scoped class name.  |
+| `element.classList.replace`                   | `el.classList.replace("old", "new")` | `class`          | ✓     | Both the old-token and new-token arguments are always rewritten, including class names that only appear in the JS call and never in a `class=` HTML attribute. |
 | Compound `querySelector` / `querySelectorAll` | `querySelector(".foo .bar")`         | `class` / `id`   | ✓     | Space-separated and combinator-separated (`>`, `+`, `~`) tokens are each rewritten. Adjacent-class compound `.foo.bar` only rewrites the leading token.                         |
 | `element.className` setter                    | `el.className = "my-cls"`            | `class`          | ✓     | Single-class and space-separated multi-class assignments (`= "…"` and `+= "…"`) are rewritten. Template literals (e.g. `` `box ${state}` ``) are **not** rewritten, see limitations below. Reading `el.className` is unchanged. |
 | `element.setAttribute("class", …)`            | `el.setAttribute("class", "my-cls")` | `class`          | ✓     | String literal values are rewritten.                                                                                                                                            |
 | `element.setAttribute("id", …)`               | `el.setAttribute("id", "my-id")`     | `id`             | ✓     | String literal values are rewritten.                                                                                                                                            |
 | `element.setAttribute("name", …)`             | `el.setAttribute("name", "my-name")` | `name`           | ✓     | String literal values for known `name` attributes are rewritten to the per-instance scoped name.                                                                                |
-| `innerHTML` / `insertAdjacentHTML` strings    | `el.innerHTML = '<div class="box">'` | `class`          | ✓     | Known class names in HTML string literals are rewritten. Only class names that appear as static `class="…"` attributes in the component template are eligible.                  |
+| `innerHTML` / `insertAdjacentHTML` strings    | `el.innerHTML = '<div class="box">'` | `class`          | ✓     | Known class names in HTML string literals are rewritten. Only class names that appear as static `class="…"` attributes in the component template are eligible (HTML string scanning does not use JS-only class discovery). |
 | `element.removeAttribute`                     | `el.removeAttribute("class")`        |                  | ✕     | Attribute names (not values) are passed with no rewriting needed or applied.                                                                                                       |
 | `element.hasAttribute`                        | `el.hasAttribute("id")`              |                  | ✕     | Same as `removeAttribute`: attribute name, not value.                                                                                                                          |
 | `element.toggleAttribute`                     | `el.toggleAttribute("hidden")`       |                  | ✕     | Boolean attribute name only with no value to rewrite.                                                                                                                              |
@@ -781,6 +784,12 @@ Bascik rewrites DOM selector references inside component `<script>` tags to matc
 ### Notes on Gaps
 
 The unsupported JS patterns above all involve **dynamic attribute manipulation** where static analysis cannot safely identify which component's attribute is being referenced from a string literal.
+
+### JS-only class discovery
+
+Class names that only appear in JavaScript (never in a `class="…"` HTML attribute) are automatically discovered and added to the scope map before the JS rewrite runs. This covers all class-referencing patterns: `classList.*` arguments, `.className` tokens in `querySelector` / `querySelectorAll` / `closest` / `matches` selector strings, `el.className = "…"` assignments, and `el.setAttribute("class", "…")` values. CSS-only classes (only in the `.css` file, never in HTML or JS) are scoped in CSS only, which is fine since nothing in JS needs to reference them.
+
+The exception is `innerHTML` / `insertAdjacentHTML` string scanning, which only recognises classes that appear in the HTML template.
 
 The recommended pattern is to query scoped elements by a single `id` or single-class selector first, store the reference, then use the reference for all further DOM operations:
 
@@ -809,27 +818,201 @@ const panel = document.getElementById("panel"); // rewritten with instance hash
 
 When a component uses `<input name="username">`, Bascik scopes the `name` attribute to a per-instance value like `bascik__comp__a1b2c3__username`. As a result, `new FormData(form)` entries use the **scoped** name as the key. If your server-side code expects the unscoped field name, you will need to adapt it, or extract values using `formData.get` with the scoped name, or via `form.elements` iteration.
 
-## Component Format
+# Components
 
-A component is one `.html` file in `src/components/`. Its tag name is derived from the file name.
+Components are the core building block in Bascik. Each component is a `.html` file in `src/components/`. The file name becomes the tag name used in your pages and in other components.
 
+## HTML-Only Components
+
+The simplest component is just markup. No CSS, no JavaScript required.
+
+<!-- demo:source-usage-hello -->
 ```html
-<!-- src/components/site-nav.html -->
-<nav class="nav">
-  <a href="/">Home</a>
-  <a href="/about">About</a>
-</nav>
+<hello-card></hello-card>
 ```
 
-Use it in any page or other component:
-
+<!-- demo:source-html-hello -->
 ```html
-<site-nav></site-nav>
+<article class="hello-card">
+  <p class="hello-card-kicker">One file. One tag.</p>
+  <h3 class="hello-card-title">Plain HTML, ready to reuse.</h3>
+  <p class="hello-card-body">Bascik replaces the custom tag at build time and ships the finished markup.</p>
+</article>
 ```
 
-Self-closing syntax works too: `<site-nav />`
+Components can appear in other components too. If `site-layout.html` uses `<page-footer></page-footer>`, every page that uses `<site-layout>` gets the footer automatically.
 
-> **No restart needed.** The dev server watches the components directory. Drop a new `.html` (or paired `.css`) file in and all pages that use that tag are automatically re-transpiled and reloaded with no server restart required.
+## HTML with CSS
+
+Add a `<style>` block to style the component inline. Bascik scopes the CSS to the component at build time so selectors from one component never affect another.
+
+<!-- demo:source-usage-badge -->
+```html
+<comp-badge></comp-badge>
+```
+
+<!-- demo:source-html-badge -->
+```html
+<style>
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: #d1fae5;
+    color: #065f46;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .badge-dot {
+    width: 6px;
+    height: 6px;
+    background: #10b981;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+</style>
+<span class="badge">
+  <span class="badge-dot"></span>
+  All systems operational
+</span>
+```
+
+> **More on the next page.** [Scoped Styles](/scoped-styles) covers exactly how class names and selectors are namespaced and what CSS patterns are supported.
+
+## HTML with JavaScript
+
+Add a `<script>` block for interactive behavior. Use `id` on any element you need to target from JS and reach it with `getElementById`.
+
+<!-- demo:source-usage-toggle -->
+```html
+<comp-toggle></comp-toggle>
+```
+
+<!-- demo:source-html-toggle -->
+```html
+<div>
+  <p>Bascik assembles components at build time and ships plain HTML files with no framework runtime.</p>
+  <div id="detail" hidden>
+    <p>No JavaScript is added to the page. Every script in the output was written by you.</p>
+  </div>
+  <button id="btn" type="button">Read more</button>
+</div>
+```
+
+<!-- demo:source-js-toggle -->
+```js
+const btn = document.getElementById('btn');
+const detail = document.getElementById('detail');
+btn.addEventListener('click', () => {
+  detail.hidden = !detail.hidden;
+  btn.textContent = detail.hidden ? 'Read more' : 'Show less';
+});
+```
+
+> **More on that page.** [Scoped JavaScript](/scoped-javascript) explains how Bascik rewrites selectors so multiple instances of the same component on the same page stay fully independent.
+
+## HTML, CSS, and JavaScript Together
+
+All three can live in a single file. A `<style>` block, the markup, and a `<script>` block in any order — Bascik handles all of them.
+
+<!-- demo:source-usage-alert -->
+```html
+<comp-alert></comp-alert>
+```
+
+<!-- demo:source-html-alert -->
+```html
+<style>
+  .alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    background: #fffbeb;
+  }
+  .alert-body {
+    flex: 1;
+    margin: 0;
+    font-size: 0.9rem;
+    color: #92400e;
+  }
+  .alert-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #b45309;
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 0;
+  }
+</style>
+<div class="alert" id="alert">
+  <p class="alert-body">Scheduled maintenance Sunday, 2am–4am UTC.</p>
+  <button id="close" class="alert-close" aria-label="Dismiss">×</button>
+</div>
+<script>
+  document.getElementById('close').addEventListener('click', () => {
+    document.getElementById('alert').hidden = true;
+  });
+</script>
+```
+
+## Separate CSS Files
+
+As a component grows, moving the CSS into its own file keeps things readable. Create a `.css` file with the same base name alongside the `.html` file. Both approaches are fully equivalent — Bascik applies the same scoping either way.
+
+<!-- demo:source-usage-card -->
+```html
+<feature-card
+  data-bascik-prop-title="Build-time Components"
+  data-bascik-prop-desc="Bascik resolves tags and ships plain HTML.">
+</feature-card>
+```
+
+<!-- demo:source-html-card -->
+```html
+<div class="fcard">
+  <h3 data-bascik-prop-title></h3>
+  <p data-bascik-prop-desc></p>
+</div>
+```
+
+<!-- demo:source-css-card -->
+```css
+.fcard {
+  padding: 24px;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+
+  h3 { color: var(--text); }
+  p  { font-size: 0.875rem; color: var(--text-muted); }
+
+  &:hover {
+    border-color: var(--border-hover);
+    box-shadow: 0 0 0 1px var(--accent-dim);
+  }
+}
+```
+
+## Subfolder Layout
+
+For components with multiple files, a subfolder keeps things tidy. Name the subfolder and the files inside it the same:
+
+```text
+src/components/
+  feature-card/
+    feature-card.html
+    feature-card.css
+```
+
+Bascik derives the tag name from the `.html` filename, not the folder. `feature-card/feature-card.html` still produces `<feature-card>`.
+
+> **No restart needed.** The dev server watches `src/components/` for new and changed files. Drop in a new `.html` or `.css` file and all affected pages re-transpile and reload automatically.
 
 # Configuration
 
@@ -1166,6 +1349,7 @@ export const buildOverrideConfig = {
 6. Use `data-` attributes for runtime state that changes via JavaScript (e.g. `data-state="open"`). Scoped class names are assigned at build time and cannot be reliably looked up by JS string manipulation.
 7. Props accept text only. For rich HTML content, use slots.
 8. `<script type="module">` scripts are not wrapped in an IIFE but their selectors are still rewritten.
+9. Component tag text inside `<script>`, `<style>`, or `<textarea>` content (e.g. `<my-card>` in a JSON-LD string or code example) is treated as text and never resolved into a component.
 
 # FAQ
 
@@ -1417,7 +1601,7 @@ All logic lives in `pkg/src/lib/`. Each file has a single, well-defined responsi
 | `config.ts` | Loads and merges `bascik.config.js`, default config, and build overrides into a single frozen `BascikConfig` object consumed everywhere else. |
 | `userConfig.ts` | Dynamically imports the user's `bascik.config.js` from `process.cwd()`, exporting `bascikConfig` and `buildOverrideConfig`. |
 | `processing.ts` | The core transpilation pipeline. Contains `pageProcessing` (page phase) and `recursivelyTranspile` (component phase), plus pipeline utility types. |
-| `components.ts` | Loads component HTML and CSS files from disk, detects component tags in HTML strings, extracts props/slots/attributes, and injects resolved content back. |
+| `components.ts` | Loads component HTML and CSS files from disk, detects component tags in HTML strings, extracts props/slots/attributes, and injects resolved content back. Tag detection masks `<script>`/`<style>`/`<textarea>` content so literal tag text (e.g. in JSON-LD strings) is never resolved. |
 | `javascript.ts` | The scoping transforms: `prefixElementAttribute` (rewrites HTML attributes, JS DOM selectors, and CSS) and `namespaceScriptTags` (wraps scripts in IIFEs). |
 | `styles.ts` | All CSS transformations: element selector conversion, class prefixing, `@keyframes` / `@layer` / container scoping, custom property prefixing, CSS deduplication. |
 | `names.ts` | Generates unique instance IDs (`getUniqueId`) and hashes long scoped names to short hex strings (`obfuscateAttributeName` via SHAKE-256) when obfuscation is enabled. |
@@ -1510,13 +1694,21 @@ on:
     branches: [main]
 ```
 
-It runs the unit test suite with coverage across Node 24:
+It runs two parallel jobs across Node 24:
+
+**`test`** — unit tests with coverage:
 
 ```sh
 yarn test:ci
 ```
 
-The job has `permissions: contents: read` to enforce least privilege.
+**`e2e`** — end-to-end Playwright tests against the built fixture site:
+
+```sh
+yarn build && yarn e2e
+```
+
+The `e2e` job installs only the Chromium browser via `playwright install --with-deps chromium` before running. Both jobs have `permissions: contents: read` to enforce least privilege.
 
 ## Release Workflow
 
@@ -2030,6 +2222,25 @@ el.className += " bascik__site-nav__is-open";
 el.setAttribute("class", "bascik__site-nav__toggle-btn");
 ```
 
+### JS-only class discovery
+
+The CSS pass scopes every class name it finds in the `.css` file regardless of whether that class appears in the HTML template. Without a corresponding discovery pass, class names used only in JavaScript (never in a `class="…"` attribute) would be scoped in CSS but left unscoped in JS, making them permanently out of sync.
+
+To fix this, after the HTML attribute pass builds the initial class scope map, a second scan over every `<script>` block extracts class name string literals from all class-referencing JS patterns and adds any new names to the scope map before the JS rewrite runs:
+
+- `classList.add / remove / toggle / contains / replace` — every quoted argument
+- `querySelector / querySelectorAll / closest / matches` — every `.className` token in the selector string
+- `el.className = "…"` and `el.className += "…"` — every space-separated token
+- `el.setAttribute("class", "…")` — every space-separated token
+
+This means modifier classes like `btn--active` that are only ever toggled dynamically still get scoped correctly in both CSS and JS without any special annotation:
+
+```js
+// Works — btn--active is discovered from the classList.add call
+// and scoped in both CSS and JS even though it never appears in class="…"
+el.classList.add("btn--active");
+```
+
 ### Name selectors
 
 ```js
@@ -2467,6 +2678,12 @@ When `useWorkers: true` is set, worker threads share the same filesystem and the
 ## Phase 2: Component Phase (`recursivelyTranspile`)
 
 The component phase recurses until no custom component tags remain in the HTML string. On each pass it finds the first component tag, fully resolves it, and substitutes it. It then repeats until no more tags are found.
+
+### Raw-text masking
+
+Component tags are only markup outside of raw-text elements. Text like `<my-card>` inside a `<script>` (for example a JSON-LD string), a `<style>` comment, or a `<textarea>` is content, not a component usage, and resolving it there would inject component markup, including a stray `</script>`, into the middle of script content and corrupt the page.
+
+To prevent this, every tag search runs against a masked copy of the HTML produced by `maskRawTextContent`. The mask replaces the inner content of `<script>`, `<style>`, and `<textarea>` elements with an equal number of spaces, so the masked string has exactly the same length as the original. Searches (`getFirstComponent`, `findOpenTag`, the self-closing fallbacks, and the `findMatchingClose` depth counter) find indices in the masked string, and those indices are then used to slice and splice the original string. The same masking idea is used by the unresolved-tag warning scanner, which strips raw-text content before looking for leftover hyphenated tags.
 
 For each component tag found:
 
@@ -3408,6 +3625,139 @@ The Markdown is converted to HTML and baked into the static output. No CMS API c
 - It does not add any JavaScript to pages. Every script in the output was written by you.
 - It does not require Web Components, Shadow DOM, or any browser-specific API.
 
+## Example: One Component, Start to Finish
+
+Create a file. The file name is the tag name. HTML, CSS, and JavaScript live together in that one file, and everything gets scoped automatically at build time.
+
+<!-- demo:home-card-component -->
+```html
+<!-- src/components/my-card.html -->
+<style>
+  .card {
+    padding: 26px 28px;
+    border: 1px solid #3a3d40;
+    border-radius: 10px;
+
+    &.active {
+      border-color: #d3ff8d;
+      h3 { color: #d3ff8d; }
+    }
+  }
+</style>
+<div class="card" id="card">
+  <div data-bascik-slot></div>
+</div>
+<script>
+  const card = document.getElementById('card');
+  card.addEventListener('click', () => {
+    card.classList.toggle('active');
+  });
+</script>
+```
+
+Reference the tag in any page. No imports, no registration, no configuration.
+
+<!-- demo:home-card-usage -->
+```html
+<!-- src/pages/index.html -->
+<my-card>
+  <h3>My Card</h3>
+  <p>Any HTML goes inside as slot content.</p>
+</my-card>
+```
+
+At build time Bascik inlines the component and scopes every class name and DOM selector:
+
+<!-- demo:home-card-output -->
+```html
+<!-- dist/index.html - CSS classes and JS selectors scoped -->
+<style>
+  .bascik__my-card__card {
+    padding: 26px 28px;
+    border: 1px solid #3a3d40;
+    border-radius: 10px;
+
+    &.bascik__my-card__active {
+      border-color: #d3ff8d;
+      h3 { color: #d3ff8d; }
+    }
+  }
+</style>
+<div class="bascik__my-card__card" id="bascik__my-card__a1b__card">
+  <h3>My Card</h3>
+  <p>Any HTML goes inside as slot content.</p>
+</div>
+<script>
+  (function () {
+    const card = document.getElementById('bascik__my-card__a1b__card');
+    card.addEventListener('click', () => {
+      card.classList.toggle('bascik__my-card__active');
+    });
+  })();
+</script>
+```
+
+## Example: Two Isolated Instances
+
+The same component used twice on one page. Each instance gets its own namespace, so plain `getElementById` and `querySelector` calls stay fully isolated without runtime JS, Shadow DOM, or a virtual DOM.
+
+<!-- demo:home-counter-html -->
+```html
+<!-- src/components/demo-counter.html - component template -->
+<div class="ctr">
+  <span class="ctr-label" data-bascik-prop-label></span>
+  <span class="ctr-count" id="count">0</span>
+  <div class="ctr-btns">
+    <button class="ctr-dec">−</button>
+    <button class="ctr-inc">+</button>
+  </div>
+</div>
+
+<!-- src/pages/index.html - usage -->
+<demo-counter data-bascik-prop-label="Instance A"></demo-counter>
+<demo-counter data-bascik-prop-label="Instance B"></demo-counter>
+```
+
+<!-- demo:home-counter-css -->
+```css
+/* Auto-scoped - class names become:
+   .bascik__demo-counter__ctr { ... } */
+.ctr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.ctr-count {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.ctr-dec, .ctr-inc {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+```
+
+<!-- demo:home-counter-js -->
+```js
+// Plain JavaScript. No framework APIs, no special
+// syntax. Bascik scopes the selectors at build time
+// so each instance stays fully isolated.
+const count = document.getElementById('count');
+const dec = document.querySelector('.ctr-dec');
+const inc = document.querySelector('.ctr-inc');
+let n = 0;
+dec.addEventListener('click', () => {
+  n--; count.textContent = n;
+});
+inc.addEventListener('click', () => {
+  n++; count.textContent = n;
+});
+```
+
 # Lighthouse 100s
 
 Bascik gives you an enormous head start on Lighthouse scores. Because it outputs plain HTML with zero framework runtime, you begin every page with near-perfect scores, and reaching 100 across Performance, Accessibility, Best Practices, and SEO is a matter of applying a small, well-known set of HTML attributes and link tags.
@@ -4160,7 +4510,6 @@ This example passes values directly into the `feature-card` component via `data-
 <!-- demo:source-usage -->
 ```html
 <feature-card
-  data-bascik-prop-label="Interactive"
   data-bascik-prop-title="Component Props"
   data-bascik-prop-desc="These values are injected into the component template at build time.">
 </feature-card>
@@ -4169,11 +4518,8 @@ This example passes values directly into the `feature-card` component via `data-
 <!-- demo:output-html -->
 ```html
 <div class="bascik__feature-card__fcard">
-  <p class="bascik__feature-card__fcard-label">Interactive</p>
-  <h3 class="bascik__feature-card__fcard-title">Component Props</h3>
-  <p class="bascik__feature-card__fcard-desc">
-    These values are injected into the component template at build time.
-  </p>
+  <h3 class="bascik__feature-card__el__h3">Component Props</h3>
+  <p class="bascik__feature-card__el__p">These values are injected into the component template at build time.</p>
 </div>
 ```
 
@@ -4793,146 +5139,77 @@ This guide focuses on the CSS behavior you write and observe. The compiler imple
 
 ## See it in action
 
-Hover the card to see its transitions and shadows stay isolated to the component.
+Click the card to toggle its active state. Hover for the hover state. Both are isolated to this component.
 
 ### Source and output
 
-**Source HTML** (`feature-card.html`):
+**Source** (`my-card.html` — CSS, HTML, and JS in one file):
 
 <!-- demo:source-usage -->
 ```html
-<feature-card
-  data-bascik-prop-label="Scoped"
-  data-bascik-prop-title="Isolated Styles"
-  data-bascik-prop-desc="Hover to see scoped transitions.">
-</feature-card>
+<my-card>
+  <h3>Isolated Styles</h3>
+  <p>Click to toggle the active state.</p>
+</my-card>
 ```
 
 <!-- demo:source-html -->
 ```html
-<div class="fcard">
-  <p class="fcard-label" data-bascik-prop-label></p>
-  <h3 class="fcard-title" data-bascik-prop-title></h3>
-  <p class="fcard-desc" data-bascik-prop-desc></p>
-  <div class="fcard-slot">
-    <div data-bascik-slot></div>
-  </div>
+<style>
+  .card {
+    padding: 26px 28px;
+    background: #242628;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+
+    h3 { margin: 0 0 8px; color: #f0f1f2; }
+    p  { margin: 0; color: #8d929e; }
+
+    &:hover {
+      border-color: rgba(211,255,141,0.35);
+      box-shadow: 0 0 0 1px rgba(211,255,141,0.12);
+    }
+
+    &.active {
+      background: rgba(211,255,141,0.07);
+      border-color: rgba(211,255,141,0.5);
+      box-shadow: 0 0 0 1px rgba(211,255,141,0.25), 0 0 20px rgba(211,255,141,0.08);
+
+      h3 { color: #d3ff8d; }
+    }
+  }
+</style>
+<div class="card" id="card">
+  <div data-bascik-slot></div>
 </div>
+<script>
+  const card = document.getElementById('card');
+  card.addEventListener('click', () => {
+    card.classList.toggle('active');
+  });
+</script>
 ```
 
-**Source CSS** (`feature-card.css`):
-
-<!-- demo:source-css -->
-```css
-.fcard {
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 24px;
-  transition: border-color .2s, transform .2s, box-shadow .2s;
-}
-
-.fcard:hover {
-  border-color: var(--border-hover);
-  box-shadow: 0 0 0 1px var(--accent-dim), 0 8px 32px rgba(0,0,0,0.3);
-  transform: translateY(-2px);
-}
-
-.fcard-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  color: var(--accent);
-  margin-bottom: 8px;
-}
-
-.fcard-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: var(--text);
-}
-
-.fcard-desc {
-  font-size: 0.88rem;
-  color: var(--text-muted);
-  margin-bottom: 0;
-}
-
-.fcard-slot {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
-}
-
-.fcard-slot:empty {
-  display: none;
-}
-```
-
-**Compiled output HTML** (class names scoped, props injected, slot wrappers removed):
+**Compiled output** (class names and IDs scoped, script wrapped in IIFE):
 
 <!-- demo:output-html -->
 ```html
-<div class="bascik__feature-card__fcard">
-  <p class="bascik__feature-card__fcard-label">Scoped</p>
-  <h3 class="bascik__feature-card__fcard-title">Isolated Styles</h3>
-  <p class="bascik__feature-card__fcard-desc">
-    Hover over me to see transitions and shadows that won't leak out.
-  </p>
+<style>
+  .bascik__my-card__card { ... }
+  .bascik__my-card__card .bascik__my-card__active { ... }
+</style>
+<div class="bascik__my-card__card" id="bascik__my-card__a1b__card">
+  <h3>Isolated Styles</h3>
+  <p>Click to toggle the active state.</p>
 </div>
-```
-
-**Compiled output CSS** (all class selectors prefixed with the component scope):
-
-<!-- demo:output-css -->
-```css
-.bascik__feature-card__fcard {
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 24px;
-  transition: border-color .2s, transform .2s, box-shadow .2s;
-}
-
-.bascik__feature-card__fcard:hover {
-  border-color: var(--border-hover);
-  box-shadow: 0 0 0 1px var(--accent-dim), 0 8px 32px rgba(0,0,0,0.3);
-  transform: translateY(-2px);
-}
-
-.bascik__feature-card__fcard-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  color: var(--accent);
-  margin-bottom: 8px;
-}
-
-.bascik__feature-card__fcard-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: var(--text);
-}
-
-.bascik__feature-card__fcard-desc {
-  font-size: 0.88rem;
-  color: var(--text-muted);
-  margin-bottom: 0;
-}
-
-.bascik__feature-card__fcard-slot {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
-}
-
-.bascik__feature-card__fcard-slot:empty {
-  display: none;
-}
+<script>
+  (function(){
+  const card = document.getElementById('bascik__my-card__a1b__card');
+  card.addEventListener('click', () => {
+    card.classList.toggle('bascik__my-card__active');
+  });
+  })();
+</script>
 ```
 
 # Search
@@ -5310,6 +5587,12 @@ The `serve.logging.level` setting controls the request log threshold, and `reque
 Bascik increments the port automatically if the preferred port is already in use.
 
 `cacheHttp` defaults to `true` in `--serve` mode and `false` in the dev server. When `true`, pages receive `ETag` headers and the server returns `304 Not Modified` when a client's cached copy is still fresh. Static assets also get `Cache-Control: public, max-age=3600`. Set `cacheHttp: false` to disable all of this if you are behind a CDN that manages caching itself.
+
+## URL routing
+
+Both the dev server and `bascik --serve` strip the `.html` extension and serve pages at the bare path. A file compiled to `dist/about.html` is available at `/about`, and `dist/blog/post.html` is available at `/blog/post`. The root page (`dist/index.html`) maps to `/`.
+
+Requests for a path that has no matching page fall through to the `404` page if one exists (`dist/404.html`), otherwise the server returns a plain `404 Not Found`.
 
 ## What `--serve` does differently from `--build`
 
@@ -7807,7 +8090,7 @@ The goal is to keep the runtime boring and predictable.
 
 If a project needs a template engine, use one that already solves the problem well. Bascik is the static-site engine; the template library is an app choice.
 
-## Recipe 1: plain JS template literals
+## Plain JS template literals
 
 For many pages, the simplest approach is still ordinary JavaScript string templates.
 
@@ -7835,7 +8118,7 @@ For many pages, the simplest approach is still ordinary JavaScript string templa
 
 This is often enough for dashboards, landing pages, and one-off server-rendered sections. It is explicit, familiar, and easy to reason about.
 
-## Recipe 2: a tiny shared HTML helper
+## A tiny shared HTML helper
 
 When the same escaping or list-rendering logic appears repeatedly, keep it in a small helper module and import it.
 
@@ -7870,7 +8153,7 @@ export const renderList = (items) =>
 
 This is the same philosophy as the server-script rule: keep the runtime small, but let your app own the reusable helpers it wants.
 
-## Recipe 3: EJS for loops and includes
+## EJS for loops and includes
 
 If the project needs more structure, use a template library like EJS for layout fragments and repeated markup.
 
@@ -7904,7 +8187,7 @@ npm install ejs
 
 This works well when the HTML is large, repetitive, or needs layout-like partials. Bascik still stays out of the way because the template engine is just a dependency in the app layer.
 
-## Recipe 4: Nunjucks for richer template composition
+## Nunjucks for richer template composition
 
 Nunjucks is a good fit for pages that want includes, layout blocks, and more opinionated template syntax without turning Bascik into a framework.
 
@@ -7939,7 +8222,7 @@ npm install nunjucks
 
 Nunjucks is useful when the site has a lot of repetitive HTML and a real template structure. Bascik still remains the static compiler; the template library just renders fragments into ordinary HTML before they are injected.
 
-## Recipe 5: Handlebars
+## Handlebars
 
 Handlebars is a good choice when the team prefers a logic-less template syntax and wants helpers registered separately from template files.
 

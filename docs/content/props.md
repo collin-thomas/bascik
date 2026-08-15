@@ -104,7 +104,6 @@ This example passes values directly into the `feature-card` component via `data-
 <!-- demo:source-usage -->
 ```html
 <feature-card
-  data-bascik-prop-label="Interactive"
   data-bascik-prop-title="Component Props"
   data-bascik-prop-desc="These values are injected into the component template at build time.">
 </feature-card>
@@ -113,10 +112,7 @@ This example passes values directly into the `feature-card` component via `data-
 <!-- demo:output-html -->
 ```html
 <div class="bascik__feature-card__fcard">
-  <p class="bascik__feature-card__fcard-label">Interactive</p>
-  <h3 class="bascik__feature-card__fcard-title">Component Props</h3>
-  <p class="bascik__feature-card__fcard-desc">
-    These values are injected into the component template at build time.
-  </p>
+  <h3 class="bascik__feature-card__el__h3">Component Props</h3>
+  <p class="bascik__feature-card__el__p">These values are injected into the component template at build time.</p>
 </div>
 ```

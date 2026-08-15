@@ -235,3 +235,20 @@ The project uses **Vitest 4** (`"vitest": "^4.1.10"`). Vitest 4 introduced break
 - When mocking a module whose functions are captured via `promisify()` (or any closure), the mock must use `vi.hoisted()` so the promisified wrapper always closes over the same `vi.fn()` instance, not a stale one from a previous factory run.
 - Use `mfn.mockReset()` in `beforeEach` instead of `vi.clearAllMocks()` / `vi.resetAllMocks()` to avoid module-mock recreation.
 - Read the Vitest 4 migration guide before writing or debugging tests: https://vitest.dev/guide/migration
+
+## TypeScript Type Checking
+
+**After editing any `.ts` file in `pkg/src/`, run a TSC check before finishing the task:**
+
+```sh
+npx --prefix pkg tsc -p pkg/tsconfig.json --noEmit
+```
+
+`create/` and `extensions/vscode-bascik/` have their own tsconfigs; check them when editing files in those packages:
+
+```sh
+npx --prefix create tsc -p create/tsconfig.json --noEmit
+npx --prefix extensions/vscode-bascik tsc -p extensions/vscode-bascik/tsconfig.json --noEmit
+```
+
+Fix all errors before finishing. Do not suppress errors with `// @ts-ignore` or `as any` when a proper type fix is straightforward.

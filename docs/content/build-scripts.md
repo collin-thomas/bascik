@@ -187,7 +187,6 @@ For per-request server-side rendering, see [Server scripts](/server).
   const firstPara = md.split('\n\n')[1];
   console.log(`
     <feature-card
-      data-bascik-prop-label="Build Time"
       data-bascik-prop-title="Generated from Markdown"
       data-bascik-prop-desc="${marked.parseInline(firstPara)}">
     </feature-card>
@@ -199,8 +198,7 @@ For per-request server-side rendering, see [Server scripts](/server).
 ```html
 <!-- The script is replaced by its stdout output -->
 <div class="bascik__feature-card__fcard">
-  <p class="bascik__feature-card__fcard-label">Build Time</p>
-  <h3 class="bascik__feature-card__fcard-title">Generated from Markdown</h3>
-  <p class="bascik__feature-card__fcard-desc">Bascik is a build tool for HTML components...</p>
+  <h3 class="bascik__feature-card__el__h3">Generated from Markdown</h3>
+  <p class="bascik__feature-card__el__p">Bascik is a build tool for HTML components...</p>
 </div>
 ```

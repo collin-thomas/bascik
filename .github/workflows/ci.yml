@@ -33,3 +33,38 @@ jobs:
       - name: Run tests with coverage
         working-directory: pkg
         run: yarn test:ci
+
+  e2e:
+    name: E2E Tests (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    strategy:
+      matrix:
+        node: [24]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: yarn
+          cache-dependency-path: yarn.lock
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build package
+        working-directory: pkg
+        run: yarn build
+
+      - name: Install Playwright browsers
+        working-directory: pkg
+        run: node_modules/.bin/playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        working-directory: pkg
+        run: yarn e2e

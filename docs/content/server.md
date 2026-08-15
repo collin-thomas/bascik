@@ -237,6 +237,12 @@ Bascik increments the port automatically if the preferred port is already in use
 
 `cacheHttp` defaults to `true` in `--serve` mode and `false` in the dev server. When `true`, pages receive `ETag` headers and the server returns `304 Not Modified` when a client's cached copy is still fresh. Static assets also get `Cache-Control: public, max-age=3600`. Set `cacheHttp: false` to disable all of this if you are behind a CDN that manages caching itself.
 
+## URL routing
+
+Both the dev server and `bascik --serve` strip the `.html` extension and serve pages at the bare path. A file compiled to `dist/about.html` is available at `/about`, and `dist/blog/post.html` is available at `/blog/post`. The root page (`dist/index.html`) maps to `/`.
+
+Requests for a path that has no matching page fall through to the `404` page if one exists (`dist/404.html`), otherwise the server returns a plain `404 Not Found`.
+
 ## What `--serve` does differently from `--build`
 
 | Capability | `bascik --build` | `bascik --serve` |
