@@ -53,9 +53,9 @@ After any `pkg/src/` change, rebuild the package and the docs server will pick i
 yarn --cwd docs build
 ```
 
-### Updating SKILL.md and llms.txt
+### Updating Dynamic Documentation Assets
 
-After editing any `docs/content/*.md` file, update the Copilot skill and LLM context files by invoking the prompt file in Copilot chat:
+Before committing changes that edited source code, tests, or any `docs/content/*.md`, run this custom prompt:
 
 ```sh
 /pre-commit
