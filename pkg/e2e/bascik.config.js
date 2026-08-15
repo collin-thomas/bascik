@@ -18,6 +18,8 @@ export const bascikConfig = {
     id: true,
     name: true,
   },
+  siteUrl: 'http://localhost:4200',
+  useWorkers: true,
   serve: {
     port: 9443,
     hostname: 'localhost',

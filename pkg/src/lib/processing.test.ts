@@ -51,6 +51,10 @@ vi.mock("./build-scripts.js", () => ({
   executeBuildScripts: vi.fn((html: string) => Promise.resolve(html)),
 }));
 
+vi.mock("./sitemap.js", () => ({
+  generateSitemapFiles: vi.fn(async () => { }),
+}));
+
 vi.mock("./mem.js", () => ({
   mem: {
     storePage: vi.fn(),
@@ -1294,5 +1298,131 @@ describe("selectivelyProcessPagesForWatchPath – open pages first", () => {
     const { eventEmitter } = await import("./events.js");
     // Both pages are transpiled
     expect(eventEmitter.emit).toHaveBeenCalledTimes(pages.length);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// U: processAllPages – build mode calls generateSitemapFiles
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("processAllPages – build mode sitemap", () => {
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    (BascikConfig as Record<string, unknown>).inlineStyles = false;
+    (BascikConfig as Record<string, unknown>).isBuild = true;
+    (BascikConfig as Record<string, unknown>).useWorkers = false;
+    const componentsModule = await import("./components.js");
+    vi.spyOn(componentsModule, "listComponents").mockResolvedValue({});
+  });
+
+  afterEach(() => {
+    (BascikConfig as Record<string, unknown>).isBuild = false;
+  });
+
+  it("calls generateSitemapFiles after transpiling in build mode", async () => {
+    (listPages as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    const { generateSitemapFiles } = await import("./sitemap.js");
+    await processAllPages();
+    expect(generateSitemapFiles).toHaveBeenCalledOnce();
+  });
+
+  it("does not call generateSitemapFiles in dev mode", async () => {
+    (BascikConfig as Record<string, unknown>).isBuild = false;
+    (listPages as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    const { generateSitemapFiles } = await import("./sitemap.js");
+    await processAllPages();
+    expect(generateSitemapFiles).not.toHaveBeenCalled();
+  });
+
+  it("still calls generateSitemapFiles even when some pages fail to transpile", async () => {
+    (listPages as ReturnType<typeof vi.fn>).mockResolvedValue(["src/pages/bad.html"]);
+    // Page with no body → transpilePage returns null
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue("<html><head></head></html>");
+    const { generateSitemapFiles } = await import("./sitemap.js");
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+    await processAllPages();
+    expect(generateSitemapFiles).toHaveBeenCalledOnce();
+    warnSpy.mockRestore();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// V: transpilePage – minifyScripts branch coverage
+// Tests the minifyScriptTagsInHtml skip conditions:
+//   – non-JS type scripts (application/ld+json, etc.) are not minified
+//   – server scripts (data-bascik-server) are not minified
+//   – external scripts (src=) are not minified
+//   – text/javascript scripts are minified
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("transpilePage – minifyScripts branch coverage", () => {
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    (BascikConfig as Record<string, unknown>).inlineStyles = false;
+    (BascikConfig as Record<string, unknown>).isBuild = true;
+    (BascikConfig as Record<string, unknown>).minifyScripts = true;
+    const { writeFile, mkdir } = await import("node:fs/promises");
+    (mkdir as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    (writeFile as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    (BascikConfig as Record<string, unknown>).isBuild = false;
+    (BascikConfig as Record<string, unknown>).minifyScripts = false;
+  });
+
+  it("minifies inline text/javascript script content", async () => {
+    const html =
+      '<!DOCTYPE html><html><head></head><body>' +
+      '<script>var   x   =   1;</script>' +
+      '</body></html>';
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(html);
+    const result = await transpilePage(PAGE_PATH, {});
+    expect(result).not.toBeNull();
+    expect(result!.distHtml).not.toContain("var   x");
+  });
+
+  it("does not minify application/ld+json scripts", async () => {
+    const jsonLd = '{"@context":"https://schema.org","@type":"WebSite"}';
+    const html =
+      `<!DOCTYPE html><html><head></head><body>` +
+      `<script type="application/ld+json">${jsonLd}</script>` +
+      `</body></html>`;
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(html);
+    const result = await transpilePage(PAGE_PATH, {});
+    expect(result).not.toBeNull();
+    expect(result!.distHtml).toContain(jsonLd);
+  });
+
+  it("does not minify data-bascik-server scripts", async () => {
+    const serverCode = "const   x   =   require('fs');";
+    const html =
+      `<!DOCTYPE html><html><head></head><body>` +
+      `<script data-bascik-server>${serverCode}</script>` +
+      `</body></html>`;
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(html);
+    const result = await transpilePage(PAGE_PATH, {});
+    expect(result).not.toBeNull();
+    expect(result!.distHtml).toContain(serverCode);
+  });
+
+  it("does not minify external scripts (with src attribute)", async () => {
+    const html =
+      '<!DOCTYPE html><html><head></head><body>' +
+      '<script src="/app.js"></script>' +
+      '</body></html>';
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(html);
+    const result = await transpilePage(PAGE_PATH, {});
+    expect(result).not.toBeNull();
+    expect(result!.distHtml).toContain('src="/app.js"');
+  });
+
+  it("returns correct HTML when there are no inline JS scripts to minify", async () => {
+    const html =
+      '<!DOCTYPE html><html><head></head><body><p>no scripts</p></body></html>';
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(html);
+    const result = await transpilePage(PAGE_PATH, {});
+    expect(result).not.toBeNull();
+    expect(result!.distHtml).toContain("<p>no scripts</p>");
   });
 });

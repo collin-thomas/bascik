@@ -90,9 +90,9 @@ describe("checkProject", () => {
     workDir = join(originalCwd, `.check-test-${process.pid}-${Date.now()}`);
     await mkdir(workDir, { recursive: true });
     process.chdir(workDir);
-    errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-    logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+    logSpy = vi.spyOn(console, "log").mockImplementation(() => { });
   });
 
   afterEach(async () => {
@@ -216,6 +216,58 @@ describe("checkProject", () => {
     listComponentsMock.mockResolvedValue({});
 
     await expect(checkProject()).resolves.toBe(true);
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  it("uses plural 'Unknown components' when multiple unknown tags appear in one file", async () => {
+    await setupProject({
+      "pages/index.html": "<ghost-one></ghost-one><ghost-two></ghost-two>",
+    });
+    listPagesMock.mockResolvedValue([join(workDir, "pages/index.html")]);
+    listComponentsMock.mockResolvedValue({});
+
+    await expect(checkProject()).resolves.toBe(false);
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining("Unknown components"),
+    );
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("<ghost-one>"));
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("<ghost-two>"));
+  });
+
+  it("uses plural 'Unused components' when multiple components are unused", async () => {
+    await setupProject({
+      "pages/index.html": "<p>no components used</p>",
+      "components/widget-a/widget-a.html": "<div>a</div>",
+      "components/widget-b/widget-b.html": "<div>b</div>",
+    });
+    listPagesMock.mockResolvedValue([join(workDir, "pages/index.html")]);
+    listComponentsMock.mockResolvedValue({
+      "widget-a": { fileName: join(workDir, "components/widget-a/widget-a.html") },
+      "widget-b": { fileName: join(workDir, "components/widget-b/widget-b.html") },
+    });
+
+    await expect(checkProject()).resolves.toBe(true);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("Unused components"),
+    );
+  });
+
+  it("includes unused-count note in success log when there are unused components", async () => {
+    await setupProject({
+      "pages/index.html": "<my-used></my-used>",
+      "components/my-used/my-used.html": "<div>used</div>",
+      "components/not-used/not-used.html": "<div>not used</div>",
+    });
+    listPagesMock.mockResolvedValue([join(workDir, "pages/index.html")]);
+    listComponentsMock.mockResolvedValue({
+      "my-used": { fileName: join(workDir, "components/my-used/my-used.html") },
+      "not-used": { fileName: join(workDir, "components/not-used/not-used.html") },
+    });
+
+    await expect(checkProject()).resolves.toBe(true);
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining("unused"),
+    );
     expect(errorSpy).not.toHaveBeenCalled();
   });
 });
