@@ -1,0 +1,21 @@
+<div class="tab-bar">
+  <div data-bascik-slot></div>
+</div>
+
+<style>
+  .tab-bar {
+    display: flex;
+    gap: 2px;
+    padding: 0 12px;
+    align-items: center;
+    background: transparent;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .tab-bar::-webkit-scrollbar {
+    display: none;
+  }
+</style>

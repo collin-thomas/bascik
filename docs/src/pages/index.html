@@ -258,51 +258,23 @@
       overflow: hidden;
     }
 
-    .how-code-tabs {
-      display: flex;
-      gap: 2px;
-      padding: 0 12px;
-      align-items: center;
-      background: var(--code-tabs-bg);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .how-code-tab {
-      padding: 10px 14px;
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
+    /* mono font for filename tabs; match bg to page surface, not pre-bg */
+    .how-code-tabs .how-code-tab {
       font-family: var(--mono);
       font-size: 0.78rem;
-      font-weight: 600;
-      cursor: pointer;
-      touch-action: manipulation;
-      position: relative;
-      isolation: isolate;
-      transition: color .15s;
     }
 
-    .how-code-tab::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      clip-path: polygon(7px 0%, 100% 0%, calc(100% - 7px) 100%, 0% 100%);
-      z-index: -1;
-      transition: background .15s;
+    .how-code .how-code-tabs {
+      background: var(--bg);
     }
 
-    .how-code-tab.active {
-      color: #18191b;
+    .demo-tabs-bar .demo-tab-btn {
+      font-family: var(--mono);
+      font-size: 0.78rem;
     }
 
-    .how-code-tab.active::before {
-      background: var(--accent);
-    }
-
-    @media (hover: hover) {
-      .how-code-tab:hover:not(.active) {
-        color: var(--text);
-      }
+    .demo-panel .demo-tabs-bar {
+      background: var(--bg);
     }
 
     .how-src-pane {
@@ -484,53 +456,6 @@
       overflow: hidden;
     }
 
-    .demo-tabs-bar {
-      display: flex;
-      gap: 2px;
-      padding: 0 10px;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-      background: var(--code-tabs-bg);
-    }
-
-    .demo-tab-btn {
-      padding: 10px 16px;
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      font-weight: 600;
-      cursor: pointer;
-      touch-action: manipulation;
-      position: relative;
-      isolation: isolate;
-      transition: color .15s;
-    }
-
-    .demo-tab-btn::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      clip-path: polygon(7px 0%, 100% 0%, calc(100% - 7px) 100%, 0% 100%);
-      z-index: -1;
-      transition: background .15s;
-    }
-
-    .demo-tab-btn.active {
-      color: #18191b;
-    }
-
-    .demo-tab-btn.active::before {
-      background: var(--accent);
-    }
-
-    @media (hover: hover) {
-      .demo-tab-btn:hover:not(.active) {
-        color: var(--text);
-      }
-    }
-
     .demo-pane {
       padding: 20px 22px;
     }
@@ -690,11 +615,11 @@
         <div class="how-split">
           <!-- Code panel with tabs -->
           <div class="how-code">
-            <tab-strip class="how-code-tabs">
-              <button class="how-code-tab active" data-how="component">my-card.html</button>
-              <button class="how-code-tab" data-how="usage">index.html</button>
-              <button class="how-code-tab" data-how="output">dist/index.html</button>
-            </tab-strip>
+            <tab-bar class="how-code-tabs">
+              <button class="tab-btn how-code-tab active" data-how="component">my-card.html</button>
+              <button class="tab-btn how-code-tab" data-how="usage">index.html</button>
+              <button class="tab-btn how-code-tab" data-how="output">dist/index.html</button>
+            </tab-bar>
             <pre class="how-src-pane" id="how-component"><code><span class="hl-comment">&lt;!-- src/components/my-card.html --&gt;</span>
 <span class="hl-tag">&lt;style&gt;</span>
   .card {
@@ -799,11 +724,11 @@
         <div class="demo-layout">
           <!-- Code panel -->
           <div class="demo-panel">
-            <div class="demo-tabs-bar">
-              <button class="demo-tab-btn active" data-tab="html">HTML</button>
-              <button class="demo-tab-btn" data-tab="css">CSS</button>
-              <button class="demo-tab-btn" data-tab="js">JS</button>
-            </div>
+            <tab-bar class="demo-tabs-bar">
+              <button class="tab-btn demo-tab-btn active" data-tab="html">HTML</button>
+              <button class="tab-btn demo-tab-btn" data-tab="css">CSS</button>
+              <button class="tab-btn demo-tab-btn" data-tab="js">JS</button>
+            </tab-bar>
             <div class="demo-pane" data-pane="html">
               <pre><code><span class="hl-comment">&lt;!-- src/components/demo-counter.html - component template --&gt;</span>
 <span class="hl-tag">&lt;div</span> <span class="hl-attr">class</span>=<span class="hl-val">"ctr"</span><span class="hl-tag">&gt;</span>

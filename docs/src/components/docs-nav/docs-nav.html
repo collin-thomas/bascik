@@ -2,6 +2,7 @@
   <div class="dnav-inner">
     <a href="/" class="dnav-logo" aria-label="Bascik home"><docs-logo></docs-logo></a>
     <div class="dnav-right">
+      <docs-search></docs-search>
       <button type="button" class="dnav-toggle" aria-label="Toggle navigation" aria-expanded="false">
         <span class="dnav-toggle-icon"></span>
       </button>
@@ -12,7 +13,6 @@
           <li><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener">GitHub</a></li>
         </ul>
         <div class="mobile-only-sections">
-          <hr class="mobile-sep" />
           <script data-bascik-build>
             import { join } from 'node:path';
             import { pathToFileURL } from 'node:url';
@@ -57,7 +57,6 @@
           </ul>
         </div>
       </div>
-      <docs-search></docs-search>
       <button type="button" class="dnav-theme-toggle" aria-label="Switch to light theme">
         <!-- Sun: shown in dark mode, click to go light -->
         <svg class="theme-icon theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none"

@@ -895,6 +895,20 @@ test.describe('my-feature-test page', () => {
 
 There are 44 e2e test files covering CSS scoping, JS scoping, slots, props, attribute inheritance, animations, observers, SVG, and head components.
 
+### Testing JavaScript in a Bascik Project
+
+Browser component scripts are IIFE-based and not directly importable. The recommended pattern for testing complex client-side logic:
+
+1. **Extract pure functions** (no DOM, no `fetch`) into a sibling `.mjs` module that exports them — e.g. `search-logic.mjs` alongside `docs-search.html`.
+2. **Combine at build time**: use a `<script data-bascik-build>` to read both the logic module and a DOM-wiring `.js` file, strip `export` keywords from the module, and output a single `<script>` containing one IIFE with all functions inside it. This keeps esbuild minification working correctly (no cross-script boundary renames).
+3. **Test the module with Vitest**: import the `.mjs` file directly in a `*.test.mjs` file. No browser or DOM required for pure function tests.
+
+```sh
+yarn workspace bascik-docs test   # run docs-site unit tests
+```
+
+The docs site `vite.config.js` sets `test.include: ['src/**/*.test.mjs']`. The search component's `search-logic.mjs` exports `tokens`, `score`, `snippet`, `basePath`, and `buildResults`; `search-logic.test.mjs` has 30 tests covering tier ordering, dominant-page grouping, deduplication, and edge cases.
+
 ---
 
 ## 14. CI / CD

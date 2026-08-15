@@ -32,6 +32,7 @@ export const NAV = [
     { href: '/recipes/markdown', label: 'Markdown' },
     { href: '/recipes/server-scripts', label: 'Server Scripts' },
     { href: '/recipes/templating', label: 'Templating' },
+    { href: '/recipes/testing', label: 'Testing' },
   ]},
   { section: 'Reference', pages: [
     { href: '/compatibility', label: 'Scoping Compatibility' },

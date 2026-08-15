@@ -1,12 +1,12 @@
 .cblock {
   background: var(--pre-bg);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
+  border: var(--cblock-border, 1px solid var(--border));
+  border-radius: var(--cblock-radius, var(--r));
   overflow: hidden;
 }
 
 .cblock-header {
-  display: flex;
+  display: var(--cblock-header-display, flex);
   align-items: center;
   justify-content: space-between;
   padding: 8px 16px;

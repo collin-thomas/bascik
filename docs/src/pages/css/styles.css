@@ -110,8 +110,8 @@
     --hl-num:         #9a3412;
     --pillar-bg:      var(--surface);
     --pillar-border:  var(--border);
-    --live-dot-bg:    var(--text-muted);
-    --live-dot-shadow: 0 0 0 2px var(--border);
+    --live-dot-bg:    var(--text);
+    --live-dot-shadow: 0 0 0 2px var(--accent);
     --hero-glow:   rgba(100,160,30,0.22);
     --hero-glow-2: rgba(100,160,30,0.11);
   }
@@ -162,8 +162,8 @@ html[data-theme="light"] {
   --hl-num:         #9a3412;
   --pillar-bg:      var(--surface);
   --pillar-border:  var(--border);
-  --live-dot-bg:    var(--text-muted);
-  --live-dot-shadow: 0 0 0 2px var(--border);
+  --live-dot-bg:    var(--text);
+  --live-dot-shadow: 0 0 0 2px var(--accent);
   --hero-glow:   rgba(100,160,30,0.22);
   --hero-glow-2: rgba(100,160,30,0.11);
 }
@@ -180,6 +180,7 @@ body {
   font-size: 16px;
   line-height: 1.7;
   margin: 0;
+  overflow-x: hidden;
 }
 
 /* Render live CSS examples against the palette their source code targets. */
@@ -215,10 +216,45 @@ body {
   color-scheme: dark;
 }
 
+/* Remove code-block rounding when inside a component-demo pane */
+[data-demo-pane] { --cblock-radius: 0; --cblock-border: none; --cblock-header-display: none; }
+
+/* ── Tab button — parallelogram active state, used with tab-bar component ── */
+.tab-btn {
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  touch-action: manipulation;
+  position: relative;
+  isolation: isolate;
+  transition: color .15s;
+}
+
+.tab-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(7px 0%, 100% 0%, calc(100% - 7px) 100%, 0% 100%);
+  z-index: -1;
+  transition: background .15s;
+}
+
+@media (hover: hover) {
+  .tab-btn:hover:not(.active) { color: var(--text); }
+  .tab-btn:hover:not(.active)::before { background: var(--elevated); }
+}
+
+.tab-btn.active { color: #18191b; font-weight: 600; }
+.tab-btn.active::before { background: var(--accent); }
+
 /* ── Layout ── */
 .container  { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
 .docs-layout { display: grid; grid-template-columns: 220px 1fr; gap: 0; min-height: 80vh; }
-.docs-content { padding: 48px 40px 80px; max-width: 780px; }
+.docs-content { padding: 48px 40px 80px; max-width: 780px; min-width: 0; overflow-x: hidden; }
 
 /* ── Typography ── */
 h1,h2,h3,h4 { margin-top: 0; line-height: 1.2; font-weight: 700; }
@@ -258,6 +294,7 @@ code {
   border-radius: var(--r-sm);
   padding: 2px 7px;
   color: var(--accent-fg);
+  overflow-wrap: break-word;
 }
 
 pre {

@@ -71,11 +71,12 @@
   color: var(--text);
 }
 
-/* Desktop: links wrapper always visible */
+/* Desktop: links wrapper always visible; order:-1 keeps it left of search (which moved first in DOM for mobile) */
 @media (min-width: 769px) {
   .dnav-links-wrapper {
     display: flex;
     align-items: center;
+    order: -1;
   }
 }
 
