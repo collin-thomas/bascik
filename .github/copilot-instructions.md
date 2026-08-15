@@ -119,18 +119,20 @@ Marker IDs are arbitrary strings (e.g. `source-html`, `output-css`, `code`, `out
 
 ### How to use it in an HTML slot
 
-Use `extractDemoBlock` from `scripts/md-renderer.mjs` inside a `data-bascik-build` script. Note: the `<script data-bascik-build>` must be placed **immediately after** the `<code-block>` opening tag with no newline between them, so the injected content has no leading blank line.
+Use `extractDemoBlock` from `scripts/md-renderer.mjs` inside a `data-bascik-build` script. Bascik trims slot content at build time, so normal indentation around the `<script>` tag is fine — no collapsed one-liner is needed.
 
 ```html
 <div data-bascik-slot="source-html">
-  <code-block data-bascik-prop-lang="html"><script data-bascik-build>
-    import { join } from 'node:path';
-    import { pathToFileURL } from 'node:url';
-    const { extractDemoBlock } = await import(
-      pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
-    );
-    console.log(await extractDemoBlock('./content/03-scoped-css.md', 'source-html'));
-  </script></code-block>
+  <code-block data-bascik-prop-lang="html">
+    <script data-bascik-build>
+      import { join } from 'node:path';
+      import { pathToFileURL } from 'node:url';
+      const { extractDemoBlock } = await import(
+        pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+      );
+      console.log(await extractDemoBlock('./content/03-scoped-css.md', 'source-html'));
+    </script>
+  </code-block>
 </div>
 ```
 

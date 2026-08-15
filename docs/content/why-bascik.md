@@ -26,9 +26,9 @@ Create one HTML file, then use its filename as a tag anywhere, with no registrat
 ```css
 .hello-card {
   padding: 24px;
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-top: 3px solid var(--accent);
+  background: #242628;
+  border: 1px solid #3a3d40;
+  border-top: 3px solid #d3ff8d;
 }
 ```
 
@@ -47,9 +47,9 @@ Create one HTML file, then use its filename as a tag anywhere, with no registrat
 ```css
 .bascik__hello-card__hello-card {
   padding: 24px;
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-top: 3px solid var(--accent);
+  background: #242628;
+  border: 1px solid #3a3d40;
+  border-top: 3px solid #d3ff8d;
 }
 ```
 

@@ -116,7 +116,7 @@ Each instance of this component has its own isolated state. Place it on a page a
 }
 
 .bascik__my-counter__count-value {
-  font-family: var(--font-mono);
+  font-family: monospace;
   font-size: 1.5rem;
   min-width: 2ch;
   text-align: center;
@@ -333,25 +333,22 @@ One thing to be aware of: if a library dynamically sets a class or ID value at r
   cursor: pointer;
   font-family: inherit;
   font-size: 0.95rem;
-  color: var(--text);
+  color: #f0f1f2;
   transition: color 0.15s, border-color 0.15s;
 }
 
 .tab[data-state="on"] {
-  border-bottom-color: var(--accent);
-  color: var(--accent);
+  border-bottom-color: #d3ff8d;
+  color: #d3ff8d;
   font-weight: 600;
 }
 
 .status {
   margin: 12px 0 0;
   font-size: 0.8rem;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
+  color: #8d929e;
+  font-family: monospace;
 }
-```
-
-<!-- demo:state-output-html -->
 ```html
 <!-- .tab and .status are scoped; attribute selector is untouched -->
 <div v-scope="{ active: false }">
@@ -372,21 +369,21 @@ One thing to be aware of: if a library dynamically sets a class or ID value at r
   cursor: pointer;
   font-family: inherit;
   font-size: 0.95rem;
-  color: var(--text);
+  color: #f0f1f2;
   transition: color 0.15s, border-color 0.15s;
 }
 
 /* .tab scoped to .bascik__state-tab__tab; [data-state="on"] passes through unchanged */
 .bascik__state-tab__tab[data-state="on"] {
-  border-bottom-color: var(--accent);
-  color: var(--accent);
+  border-bottom-color: #d3ff8d;
+  color: #d3ff8d;
   font-weight: 600;
 }
 
 .bascik__state-tab__status {
   margin: 12px 0 0;
   font-size: 0.8rem;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
+  color: #8d929e;
+  font-family: monospace;
 }
 ```

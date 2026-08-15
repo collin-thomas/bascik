@@ -59,7 +59,7 @@ This component combines a class, an ID selector, bare `h3` and `p` selectors, a 
 <!-- demo:scope-lab-css -->
 ```css
 .scope-lab {
-  --signal-color: var(--accent);
+  --signal-color: #d3ff8d;
   display: flex;
   gap: 16px;
 }
@@ -73,8 +73,8 @@ This component combines a class, an ID selector, bare `h3` and `p` selectors, a 
   outline: 3px solid color-mix(in srgb, var(--signal-color) 22%, transparent);
 }
 
-h3 { color: var(--text); }
-p { color: var(--text-muted); }
+h3 { color: #f0f1f2; }
+p { color: #8d929e; }
 
 @keyframes scope-pulse {
   50% { opacity: 0.35; transform: scale(0.72); }
@@ -100,7 +100,7 @@ p { color: var(--text-muted); }
 <!-- demo:scope-lab-output-css -->
 ```css
 .bascik__scope-lab__scope-lab {
-  --bascik__scope-lab__signal-color: var(--accent);
+  --bascik__scope-lab__signal-color: #d3ff8d;
 }
 
 .bascik__scope-lab__scope-lab-pulse {
@@ -112,8 +112,8 @@ p { color: var(--text-muted); }
   outline: 3px solid color-mix(in srgb, var(--bascik__scope-lab__signal-color) 22%, transparent);
 }
 
-.bascik__scope-lab__el__h3 { color: var(--text); }
-.bascik__scope-lab__el__p { color: var(--text-muted); }
+.bascik__scope-lab__el__h3 { color: #f0f1f2; }
+.bascik__scope-lab__el__p { color: #8d929e; }
 
 @media (max-width: 600px) {
   .bascik__scope-lab__scope-lab { align-items: flex-start; }
@@ -161,6 +161,51 @@ The lab styles `#signal`. Output → CSS shows its generated class selector; Out
 The lab declares `--signal-color` and uses it for the animated indicator. Its Output CSS shows both the scoped declaration and rewritten `var()` reference.
 
 > **Only locally-declared properties are scoped.** If a component uses `var(--global-var)` but doesn't declare `--global-var` in its own CSS, that reference is left untouched so it still resolves from a global stylesheet.
+
+### Using global design tokens in a component
+
+Define your design tokens once in a global stylesheet, then consume them inside any component. Because the component never declares those properties locally, Bascik leaves the `var()` references as-is and they resolve from the global stylesheet at render time.
+
+```css
+/* src/styles.css — design tokens, linked in every page <head> */
+:root {
+  --brand:     #d3ff8d;
+  --card-bg:   #1e2022;
+  --text-muted: #8d929e;
+}
+```
+
+```html
+<!-- src/components/brand-card.html -->
+<style>
+  .card {
+    padding: 24px 28px;
+    background: var(--card-bg);    /* global — Bascik leaves untouched */
+    border-top: 3px solid var(--brand);
+    border-radius: 10px;
+  }
+  .card-label {
+    color: var(--text-muted);
+  }
+</style>
+<div class="card">
+  <p class="card-label" data-bascik-prop-label></p>
+  <div data-bascik-slot></div>
+</div>
+```
+
+```css
+/* dist/ output — class names scoped, var() refs preserved */
+.bascik__brand-card__card {
+  padding: 24px 28px;
+  background: var(--card-bg);
+  border-top: 3px solid var(--brand);
+  border-radius: 10px;
+}
+.bascik__brand-card__card-label {
+  color: var(--text-muted);
+}
+```
 
 ## Toggling Scoping
 

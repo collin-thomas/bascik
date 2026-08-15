@@ -1,0 +1,24 @@
+.toggle-wrap {
+  padding: 24px;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  max-width: 420px;
+}
+
+.toggle-wrap p {
+  color: var(--text-muted);
+  margin: 0 0 16px;
+}
+
+.toggle-wrap button {
+  display: inline-block;
+  padding: 8px 18px;
+  background: var(--accent);
+  color: #18191b;
+  border: none;
+  border-radius: var(--r-sm);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}

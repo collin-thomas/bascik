@@ -20,6 +20,25 @@ The simplest component is just markup. No CSS, no JavaScript required.
 </article>
 ```
 
+> **Styles omitted for clarity.** This demo component includes a companion `.css` file that styles the card. The CSS is not shown in the source view so the demo stays focused on the HTML structure.
+
+<!-- demo:output-html-hello -->
+```html
+<article class="bascik__hello-card__hello-card">
+  <p class="bascik__hello-card__hello-card-kicker">One file. One tag.</p>
+  <h3 class="bascik__hello-card__hello-card-title">Plain HTML, ready to reuse.</h3>
+  <p class="bascik__hello-card__hello-card-body">Bascik replaces the custom tag at build time and ships the finished markup.</p>
+</article>
+```
+
+<!-- demo:output-css-hello -->
+```css
+.bascik__hello-card__hello-card { ... }
+.bascik__hello-card__hello-card-kicker { ... }
+.bascik__hello-card__hello-card-title { ... }
+.bascik__hello-card__hello-card-body { ... }
+```
+
 Components can appear in other components too. If `site-layout.html` uses `<page-footer></page-footer>`, every page that uses `<site-layout>` gets the footer automatically.
 
 ## HTML with CSS
@@ -59,6 +78,20 @@ Add a `<style>` block to style the component inline. Bascik scopes the CSS to th
 </span>
 ```
 
+<!-- demo:output-html-badge -->
+```html
+<span class="bascik__comp-badge__badge">
+  <span class="bascik__comp-badge__badge-dot"></span>
+  All systems operational
+</span>
+```
+
+<!-- demo:output-css-badge -->
+```css
+.bascik__comp-badge__badge { ... }
+.bascik__comp-badge__badge-dot { ... }
+```
+
 > **More on the next page.** [Scoped Styles](/scoped-styles) covers exactly how class names and selectors are namespaced and what CSS patterns are supported.
 
 ## HTML with JavaScript
@@ -72,7 +105,7 @@ Add a `<script>` block for interactive behavior. Use `id` on any element you nee
 
 <!-- demo:source-html-toggle -->
 ```html
-<div>
+<div class="toggle-wrap">
   <p>Bascik assembles components at build time and ships plain HTML files with no framework runtime.</p>
   <div id="detail" hidden>
     <p>No JavaScript is added to the page. Every script in the output was written by you.</p>
@@ -91,7 +124,37 @@ btn.addEventListener('click', () => {
 });
 ```
 
-> **More on that page.** [Scoped JavaScript](/scoped-javascript) explains how Bascik rewrites selectors so multiple instances of the same component on the same page stay fully independent.
+> **Styles omitted for clarity.** This demo component includes a companion `.css` file that styles the card. The CSS is not shown in the source view so the demo stays focused on the JavaScript.
+
+<!-- demo:output-html-toggle -->
+```html
+<div class="bascik__comp-toggle__toggle-wrap">
+  <p class="bascik__comp-toggle__el__p">Bascik assembles components at build time and ships plain HTML files with no framework runtime.</p>
+  <div id="bascik__comp-toggle__a1b__detail" hidden>
+    <p class="bascik__comp-toggle__el__p">No JavaScript is added to the page. Every script in the output was written by you.</p>
+  </div>
+  <button class="bascik__comp-toggle__el__button" id="bascik__comp-toggle__a1b__btn" type="button">Read more</button>
+</div>
+<script>
+  (function(){
+  const btn = document.getElementById('bascik__comp-toggle__a1b__btn');
+  const detail = document.getElementById('bascik__comp-toggle__a1b__detail');
+  btn.addEventListener('click', () => {
+    detail.hidden = !detail.hidden;
+    btn.textContent = detail.hidden ? 'Read more' : 'Show less';
+  });
+  })();
+</script>
+```
+
+<!-- demo:output-css-toggle -->
+```css
+.bascik__comp-toggle__toggle-wrap { ... }
+.bascik__comp-toggle__toggle-wrap .bascik__comp-toggle__el__p { ... }
+.bascik__comp-toggle__toggle-wrap .bascik__comp-toggle__el__button { ... }
+```
+
+> **See also.** [Scoped JavaScript](/scoped-javascript) explains how Bascik rewrites selectors so multiple instances of the same component on the same page stay fully independent.
 
 ## HTML, CSS, and JavaScript Together
 
@@ -141,6 +204,28 @@ All three can live in a single file. A `<style>` block, the markup, and a `<scri
 </script>
 ```
 
+<!-- demo:output-html-alert -->
+```html
+<div class="bascik__comp-alert__alert" id="bascik__comp-alert__a1b__alert">
+  <p class="bascik__comp-alert__alert-body">Scheduled maintenance Sunday, 2am–4am UTC.</p>
+  <button id="bascik__comp-alert__a1b__close" class="bascik__comp-alert__alert-close" aria-label="Dismiss">×</button>
+</div>
+<script>
+  (function(){
+  document.getElementById('bascik__comp-alert__a1b__close').addEventListener('click', () => {
+    document.getElementById('bascik__comp-alert__a1b__alert').hidden = true;
+  });
+  })();
+</script>
+```
+
+<!-- demo:output-css-alert -->
+```css
+.bascik__comp-alert__alert { ... }
+.bascik__comp-alert__alert-body { ... }
+.bascik__comp-alert__alert-close { ... }
+```
+
 ## Separate CSS Files
 
 As a component grows, moving the CSS into its own file keeps things readable. Create a `.css` file with the same base name alongside the `.html` file. Both approaches are fully equivalent — Bascik applies the same scoping either way.
@@ -165,18 +250,34 @@ As a component grows, moving the CSS into its own file keeps things readable. Cr
 ```css
 .fcard {
   padding: 24px;
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
+  background: #242628;
+  border: 1px solid #3a3d40;
+  border-radius: 10px;
 
-  h3 { color: var(--text); }
-  p  { font-size: 0.875rem; color: var(--text-muted); }
+  h3 { color: #f0f1f2; }
+  p  { font-size: 0.875rem; color: #8d929e; }
 
   &:hover {
-    border-color: var(--border-hover);
-    box-shadow: 0 0 0 1px var(--accent-dim);
+    border-color: rgba(211,255,141,0.35);
+    box-shadow: 0 0 0 1px rgba(211,255,141,0.12);
   }
 }
+```
+
+<!-- demo:output-html-card -->
+```html
+<div class="bascik__feature-card__fcard">
+  <h3>Build-time Components</h3>
+  <p>Bascik resolves tags and ships plain HTML.</p>
+</div>
+```
+
+<!-- demo:output-css-card -->
+```css
+.bascik__feature-card__fcard { ... }
+.bascik__feature-card__fcard h3 { ... }
+.bascik__feature-card__fcard p { ... }
+.bascik__feature-card__fcard:hover { ... }
 ```
 
 ## Subfolder Layout

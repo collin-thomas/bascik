@@ -222,7 +222,7 @@ A **skip link** is one of the highest-value, lowest-effort accessibility improve
   top: -100%;
   left: 0;
   padding: 8px 16px;
-  background: var(--accent);
+  background: #d3ff8d;
   color: #000;
   font-weight: 600;
   z-index: 9999;
