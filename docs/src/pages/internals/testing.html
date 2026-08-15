@@ -34,6 +34,7 @@
             };
             console.log(`
               <h1>Testing</h1>
+              <p style="color:var(--text-muted);font-size:.92rem;margin-bottom:1rem">Bascik has two separate test suites: <strong>unit tests</strong> (Vitest) that verify individual library modules, and <strong>end-to-end tests</strong> (Playwright) that build and browser-test the full transpilation pipeline against a fixture site.</p>
               <h2>Unit Test Coverage</h2>
               <p style="color:var(--text-muted);font-size:.92rem;margin-bottom:1rem">Line, function, and branch coverage from the Vitest unit test suite. CLI entry points (<code>index.ts</code>, <code>transpile.ts</code>, <code>page-worker.ts</code>) are excluded — they run only in E2E tests below.</p>
               <table style="width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:.9rem">
@@ -89,7 +90,7 @@
             };
             console.log(`
               <h2 style="margin-top:2.5rem">E2E Coverage (Playwright + V8)</h2>
-              <p style="color:var(--text-muted);font-size:.92rem;margin-bottom:1rem">Coverage captured while the CLI builds the 52-page E2E fixture site. Exercises the full transpilation pipeline end-to-end including the CLI entry point, startup, and worker threads that unit tests cannot reach. Regenerate with <code>yarn workspace @bascik/bascik update-e2e-coverage</code>.</p>
+              <p style="color:var(--text-muted);font-size:.92rem;margin-bottom:1rem">Coverage captured while the CLI builds the 52-page E2E fixture site. Exercises the full transpilation pipeline end-to-end including the CLI entry point, startup, and worker threads that unit tests cannot reach.</p>
               <table style="width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:.9rem">
                 <thead>
                   <tr style="text-align:left;border-bottom:1px solid var(--border)">
@@ -121,6 +122,7 @@
                   </tr>
                 </tbody>
               </table>
+              <p style="font-size:.8rem;color:var(--text-muted);margin-top:-.5rem">Regenerate with <code>yarn workspace @bascik/bascik update-e2e-coverage</code></p>
             `);
           } catch {
             // e2e coverage file not present; skip
@@ -135,9 +137,12 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          // Strip the first h1 — it's output above the coverage table instead.
+          // Strip the h1 and intro paragraph — both are emitted above the coverage table instead.
           const html = await renderMd('./content/internals/testing.md');
-          console.log(html.replace(/^<h1[^>]*>.*?<\/h1>\s*/i, ''));
+          console.log(html
+            .replace(/^<h1[^>]*>.*?<\/h1>\s*/i, '')
+            .replace(/^<p[^>]*>.*?<\/p>\s*/is, '')
+          );
         </script>
         <script data-bascik-build>
           import { join } from 'node:path';
