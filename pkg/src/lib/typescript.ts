@@ -42,15 +42,24 @@ import { stripTypeScriptTypes } from "node:module";
 const QUOTED_OR_TS_FLAG_RE =
   /("[^"]*"|'[^']*')|(\s+data-bascik-ts(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+))?(?=[\s>]))/gi;
 
-/** Return `true` if a `<script …>` open tag declares `data-bascik-ts`. */
-export const isTypeScriptOpenTag = (openTag: string): boolean => {
-  QUOTED_OR_TS_FLAG_RE.lastIndex = 0;
+// Same quote-aware shape for the Node-executed script markers.
+const QUOTED_OR_NODE_FLAG_RE =
+  /("[^"]*"|'[^']*')|(\s+data-bascik-(?:build|server)(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+))?(?=[\s>]))/gi;
+
+// Quote-aware flag detection: quoted values are consumed first, so the flag is
+// only recognised as an actual attribute name.
+const hasFlagAttr = (openTag: string, re: RegExp): boolean => {
+  re.lastIndex = 0;
   let m: RegExpExecArray | null;
-  while ((m = QUOTED_OR_TS_FLAG_RE.exec(openTag)) !== null) {
+  while ((m = re.exec(openTag)) !== null) {
     if (m[2] !== undefined) return true;
   }
   return false;
 };
+
+/** Return `true` if a `<script …>` open tag declares `data-bascik-ts`. */
+export const isTypeScriptOpenTag = (openTag: string): boolean =>
+  hasFlagAttr(openTag, QUOTED_OR_TS_FLAG_RE);
 
 /** Remove the `data-bascik-ts` attribute from an open tag (quote-aware). */
 const removeTsFlag = (openTag: string): string =>
@@ -95,7 +104,7 @@ export const transpileInlineTypeScript = (
   return html.replace(SCRIPT_BLOCK_RE, (match, open: string, code: string, close: string) => {
     if (!isTypeScriptOpenTag(open)) return match;
     // Node-executed scripts keep their TS source — Node runs it natively.
-    if (/\bdata-bascik-(?:build|server)\b/i.test(open)) return match;
+    if (hasFlagAttr(open, QUOTED_OR_NODE_FLAG_RE)) return match;
     try {
       const js = stripTypes(code);
       const cleanedOpen = removeTsFlag(open);

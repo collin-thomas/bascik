@@ -89,6 +89,15 @@ describe("transpileInlineTypeScript", () => {
     expect(transpileInlineTypeScript(html)).toBe(html);
   });
 
+  it("still strips when 'data-bascik-build' only appears inside an attribute value", () => {
+    const html =
+      '<script data-note="see data-bascik-build docs" data-bascik-ts>const n: number = 1;</script>';
+    const result = transpileInlineTypeScript(html);
+    expect(result).not.toContain("data-bascik-ts");
+    expect(result).not.toContain(": number");
+    expect(result).toContain('data-note="see data-bascik-build docs"');
+  });
+
   it("leaves plain JS scripts in the same document untouched", () => {
     const html =
       "<script>const a = 1;</script>" +
