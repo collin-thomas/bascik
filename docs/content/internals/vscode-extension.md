@@ -40,7 +40,7 @@ npm run compile        # generates compatibility-rules.json then runs tsc
 npm run watch          # recompiles on save
 ```
 
-The `precompile` script runs `docs/scripts/generate-compatibility-rules.mjs` first, so `src/compatibility-rules.json` is always regenerated from the docs before the TypeScript compiles.
+The `precompile` script runs `docs/scripts/generate-compatibility-rules.ts` first, so `src/compatibility-rules.json` is always regenerated from the docs before the TypeScript compiles.
 
 To launch a VS Code Extension Development Host with the extension loaded, open `extensions/vscode-bascik/` as the workspace root in VS Code and press F5 (uses the `Run Extension` launch config in `.vscode/launch.json`).
 

@@ -6,10 +6,11 @@
   "author": "Collin Thomas",
   "scripts": {
     "dev": "bascik",
-    "build": "node scripts/generate-search-index.mjs && bascik --build",
-    "pkg-dev": "node --inspect --watch-path=./bascik.config.js --watch-path=../../pkg/src ../../pkg/src/transpile.ts",
-    "generate:llms": "node scripts/generate-llms-txt.mjs",
-    "generate:search": "node scripts/generate-search-index.mjs",
+    "build": "node scripts/generate-search-index.ts && bascik --build",
+    "pkg-dev": "node --inspect --watch-path=./bascik.config.ts --watch-path=../../pkg/src ../../pkg/src/transpile.ts",
+    "generate:llms": "node scripts/generate-llms-txt.ts",
+    "generate:search": "node scripts/generate-search-index.ts",
+    "sync": "node scripts/generate-llms-txt.ts && cp src/pages/assets/SKILL.md ../create/assets/SKILL.md",
     "test": "vitest run"
   },
   "devDependencies": {

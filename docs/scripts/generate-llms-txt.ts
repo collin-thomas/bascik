@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * generate-llms-txt.mjs
+ * generate-llms-txt.ts
  *
  * Reads all Markdown files from content/ in filename order,
  * concatenates them, and writes the result to src/pages/llms.txt so
  * that bascik copies it to dist/llms.txt and serves it at /llms.txt.
  *
  * Usage (from docs/):
- *   node scripts/generate-llms-txt.mjs
+ *   node scripts/generate-llms-txt.ts
  *
  * Or via yarn workspace script:
  *   yarn --cwd docs generate:llms
@@ -23,9 +23,9 @@ const contentDir = join(docsDir, 'content');
 const outputFile = join(docsDir, 'src', 'pages', 'llms.txt');
 
 /** Recursively collect all .md files under a directory, sorted by path. */
-async function collectMdFiles(dir) {
+async function collectMdFiles(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true });
-  const files = [];
+  const files: string[] = [];
   for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
     const fullPath = join(dir, entry.name);
     if (entry.isDirectory()) {
@@ -41,14 +41,13 @@ async function collectMdFiles(dir) {
 const EXCLUDE = new Set(['license.md']);
 
 const mdFiles = (await collectMdFiles(contentDir)).filter(
-  f => !EXCLUDE.has(f.split('/').pop())
+  f => !EXCLUDE.has(f.split('/').pop()!)
 );
 
 const sections = await Promise.all(
   mdFiles.map(f => readFile(f, 'utf8'))
 );
 
-// Join sections with a blank line between each
 const output = sections.map(s => s.trimEnd()).join('\n\n') + '\n';
 
 await writeFile(outputFile, output, 'utf8');

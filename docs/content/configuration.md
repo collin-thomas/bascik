@@ -152,6 +152,8 @@ export const buildOverrideConfig = defineConfig({
 
 Only applies to inline scripts (those without a `src` attribute) and to `.js` files copied into `dist/`. Non-JS script types such as `application/ld+json` are always left untouched.
 
+To strip TypeScript from component scripts, pass Node's built-in `stripTypeScriptTypes` here — see [TypeScript in Component Scripts](/scoped-javascript#typescript-in-component-scripts).
+
 ### `obfuscateAttributeNames`
 
 Hash the generated class and id names to short hex strings instead of the verbose `bascik__component__id__name` format. Recommended for production.
@@ -318,7 +320,7 @@ Set to `false` when debugging a script that reads external state not covered by 
 
 ## `buildOverrideConfig`
 
-Exporting a second `buildOverrideConfig` object lets you set options that only apply during `bascik --build`, overriding the values in `bascikConfig`. A common pattern is to enable obfuscation and minification only in production:
+Exporting a second `buildOverrideConfig` object lets you set options that apply during `bascik --build` and `bascik --serve` (production server), overriding the values in `bascikConfig`. A common pattern is to enable obfuscation and minification only in production:
 
 ```js
 export const buildOverrideConfig = {

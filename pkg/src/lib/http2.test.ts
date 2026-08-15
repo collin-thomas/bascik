@@ -47,7 +47,7 @@ vi.mock("./config.js", () => ({
   shouldLog: vi.fn(() => true),
   BascikConfig: {
     cacheHttp: false,
-    isServe: false,
+    isProdServer: false,
     directory: { pages: "src/pages", components: "src/components" },
   },
 }));
@@ -672,15 +672,15 @@ describe("serveHttp2 – path traversal protection", () => {
 
 describe("serveHttp2 – rate limiting", () => {
   beforeEach(async () => {
-    // Rate limiting is isServe-only; enable it for this suite.
+    // Rate limiting is isProdServer-only; enable it for this suite.
     const { BascikConfig } = await import("./config.js");
-    (BascikConfig as any).isServe = true;
+    (BascikConfig as any).isProdServer = true;
     await serveHttp2();
   });
 
   afterEach(async () => {
     const { BascikConfig } = await import("./config.js");
-    (BascikConfig as any).isServe = false;
+    (BascikConfig as any).isProdServer = false;
   });
 
   it("allows requests below the rate limit", async () => {
@@ -1040,14 +1040,14 @@ describe("serveHttp2 – SSE live-reload (/bascik-live-reload)", () => {
 
   it("responds 404 in --serve mode (SSE only runs in dev)", async () => {
     const { BascikConfig } = await import("./config.js");
-    (BascikConfig as any).isServe = true;
+    (BascikConfig as any).isProdServer = true;
     const handler = getStreamHandler()!;
     const stream = makeStream();
     await handler(stream, makeHeaders("/bascik-live-reload"));
     expect(stream.respond).toHaveBeenCalledWith(
       expect.objectContaining({ ":status": 404 }),
     );
-    (BascikConfig as any).isServe = false;
+    (BascikConfig as any).isProdServer = false;
   });
 });
 
@@ -1218,9 +1218,9 @@ describe("serveHttp2 – logAccess skip conditions", () => {
     (BascikConfig as any).devServer = { logging: { level: "info", requests: true } };
   });
 
-  it("uses serve.logging config when isServe is true", async () => {
+  it("uses serve.logging config when isProdServer is true", async () => {
     const { BascikConfig } = await import("./config.js");
-    (BascikConfig as any).isServe = true;
+    (BascikConfig as any).isProdServer = true;
     (BascikConfig as any).serve = { logging: { level: "info", requests: true } };
     mockMem.getPage.mockReturnValue(makePage());
     const handler = getStreamHandler()!;
@@ -1230,7 +1230,7 @@ describe("serveHttp2 – logAccess skip conditions", () => {
       String(c[0]).includes("GET"),
     );
     expect(accessLines.length).toBeGreaterThan(0);
-    (BascikConfig as any).isServe = false;
+    (BascikConfig as any).isProdServer = false;
   });
 });
 
@@ -1471,7 +1471,7 @@ describe("serveHttp2 – boot page", () => {
 
   it("serves a 404 (not the boot page) in --serve mode even when isBooting is true", async () => {
     const { BascikConfig } = await import("./config.js");
-    (BascikConfig as any).isServe = true;
+    (BascikConfig as any).isProdServer = true;
     mockMem.getPage.mockReturnValue(undefined);
     const handler = getStreamHandler()!;
     const stream = makeStream();
@@ -1479,7 +1479,7 @@ describe("serveHttp2 – boot page", () => {
     expect(stream.respond).toHaveBeenCalledWith(
       expect.objectContaining({ ":status": 404 }),
     );
-    (BascikConfig as any).isServe = false;
+    (BascikConfig as any).isProdServer = false;
   });
 
   it("sends no body for HEAD requests to the boot page", async () => {

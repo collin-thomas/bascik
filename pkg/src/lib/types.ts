@@ -160,7 +160,7 @@ export interface BascikConfigOptions {
    */
   buildScriptCache?: boolean;
   isBuild?: boolean;
-  isServe?: boolean;
+  isProdServer?: boolean;
   /**
    * Development server logging controls. These are separate from the normal
    * `console.warn`/`console.error` diagnostics and only affect the high-traffic

@@ -218,7 +218,7 @@ export const serveHttp2 = async () => {
 
       const logAccess = () => {
         if (responseStatus === 0) return;
-        const logging = BascikConfig.isServe
+        const logging = BascikConfig.isProdServer
           ? (BascikConfig.serve?.logging ?? { level: "info", requests: true })
           : (BascikConfig.devServer?.logging ?? { level: "info", requests: true });
         if (logging.requests === false) return;
@@ -240,7 +240,7 @@ export const serveHttp2 = async () => {
         // ── Rate limiting ────────────────────────────────────────────────────
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const remoteIp = (stream as any).session?.socket?.remoteAddress ?? "unknown";
-        if (BascikConfig.isServe && isRateLimited(remoteIp)) {
+        if (BascikConfig.isProdServer && isRateLimited(remoteIp)) {
           responseStatus = 429;
           stream.respond({ ":status": 429, "retry-after": String(RATE_WINDOW_MS / 1000), ...SECURITY_HEADERS });
           stream.end("Too Many Requests");
@@ -354,7 +354,7 @@ export const serveHttp2 = async () => {
         // ── Live-reload SSE ──────────────────────────────────────────────────
         if (pathname === "/bascik-live-reload") {
           // Disable in production serve mode.
-          if (BascikConfig.isServe) {
+          if (BascikConfig.isProdServer) {
             responseStatus = 404;
             stream.respond({ ":status": 404, ...SECURITY_HEADERS });
             return stream.end();
@@ -431,7 +431,7 @@ export const serveHttp2 = async () => {
           // During the initial transpile, serve a boot page instead of 404.
           // The boot page connects to the SSE endpoint and reloads automatically
           // when its specific page is transpiled or when boot finishes entirely.
-          if (mem.isBooting && !BascikConfig.isServe) {
+          if (mem.isBooting && !BascikConfig.isProdServer) {
             responseStatus = 200;
             stream.respond({ ":status": 200, "content-type": "text/html; charset=utf-8", "cache-control": "no-store", ...SECURITY_HEADERS });
             return stream.end(isHead ? undefined : BOOT_PAGE_HTML);

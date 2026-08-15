@@ -5,8 +5,8 @@ import type { BascikConfigOptions } from "./types.js";
 const args = process.argv.slice(2);
 const isBuild =
   args.includes("--build") || parseInt(process.env.BASCIK_BUILD ?? "0") === 1;
-const isServe =
-  args.includes("--serve") || parseInt(process.env.BASCIK_SERVE ?? "0") === 1;
+const isProdServer =
+  args.includes("--serve") || parseInt(process.env.BASCIK_PROD_SERVER ?? "0") === 1;
 
 // Worker threads do not inherit the main thread's process.argv (they only see
 // their own script path), but they DO inherit process.env. Propagate isBuild
@@ -14,12 +14,12 @@ const isServe =
 // value as the main thread — otherwise disk writes and other isBuild-gated
 // behaviour silently no-op inside every worker.
 process.env.BASCIK_BUILD = isBuild ? "1" : "0";
-process.env.BASCIK_SERVE = isServe ? "1" : "0";
+process.env.BASCIK_PROD_SERVER = isProdServer ? "1" : "0";
 
 // Applied on top of defaultConfig when --serve is active, before user config.
 // This means production-appropriate settings are on by default; users can still
 // override any of them in bascik.config.js.
-const serveDefaultConfig: Partial<Omit<BascikConfigOptions, "isBuild" | "isServe">> = {
+const serveDefaultConfig: Partial<Omit<BascikConfigOptions, "isBuild" | "isProdServer">> = {
   cacheHttp: true,
 };
 
@@ -29,14 +29,14 @@ const serveDefaultConfig: Partial<Omit<BascikConfigOptions, "isBuild" | "isServe
 // so they stay off in dev but on for `bascik --build`. Users can still
 // override any of them in bascik.config.js (or via buildOverrideConfig).
 export const buildDefaultConfig: Partial<
-  Omit<BascikConfigOptions, "isBuild" | "isServe">
+  Omit<BascikConfigOptions, "isBuild" | "isProdServer">
 > = {
   minifyStyles: true,
   minifyScripts: true,
   obfuscateAttributeNames: true,
 };
 
-export const defaultConfig: Omit<BascikConfigOptions, "isBuild" | "isServe"> = {
+export const defaultConfig: Omit<BascikConfigOptions, "isBuild" | "isProdServer"> = {
   directory: {
     pages: "src/pages",
     components: "src/components",
@@ -116,14 +116,20 @@ const deepFreeze = <T>(value: T): Readonly<T> => {
   return value;
 };
 
-type ConfigInput = Partial<Omit<BascikConfigOptions, "isBuild" | "isServe">>;
+type ConfigInput = Partial<
+  Omit<BascikConfigOptions, "isBuild" | "isProdServer" | "directory" | "scopeAttribute" | "generate">
+> & {
+  directory?: Partial<BascikConfigOptions["directory"]>;
+  scopeAttribute?: Partial<BascikConfigOptions["scopeAttribute"]>;
+  generate?: Partial<BascikConfigOptions["generate"]>;
+};
 
 /**
  * Merge the layered configs into the final, frozen `BascikConfig`.
  *
  * Layer order (lowest → highest precedence):
- *   defaultConfig → (isServe ? serveDefaultConfig) → (isBuild ? buildDefaultConfig)
- *   → userConfig → (isBuild ? buildOverride)
+ *   defaultConfig → (isProdServer ? serveDefaultConfig) → (isBuild ? buildDefaultConfig)
+ *   → userConfig → ((isBuild || isProdServer) ? buildOverride)
  *
  * Exported (pure) so tests can exercise the merge logic directly without
  * relying on module-cache manipulation of the argv/env-derived singleton.
@@ -131,34 +137,34 @@ type ConfigInput = Partial<Omit<BascikConfigOptions, "isBuild" | "isServe">>;
 export const initBascikConfig = (
   userConfig: ConfigInput,
   buildOverride: ConfigInput = {},
-  flags: { isBuild?: boolean; isServe?: boolean } = {},
+  flags: { isBuild?: boolean; isProdServer?: boolean } = {},
 ) => {
   const isBuild = flags.isBuild ?? false;
-  const isServe = flags.isServe ?? false;
+  const isProdServer = flags.isProdServer ?? false;
   const userDirectory: Partial<BascikConfigOptions["directory"]> =
     userConfig.directory ?? {};
   const buildDirectory: Partial<BascikConfigOptions["directory"]> =
     buildOverride.directory ?? {};
   const BascikConfig: BascikConfigOptions = {
     ...defaultConfig,
-    ...(isServe ? serveDefaultConfig : {}),
+    ...(isProdServer ? serveDefaultConfig : {}),
     ...(isBuild ? buildDefaultConfig : {}),
     ...userConfig,
-    ...(isBuild ? buildOverride : {}),
+    ...((isBuild || isProdServer) ? buildOverride : {}),
     directory: {
       ...defaultConfig.directory,
       ...userDirectory,
-      ...(isBuild ? buildDirectory : {}),
+      ...((isBuild || isProdServer) ? buildDirectory : {}),
     },
     scopeAttribute: {
       ...defaultConfig.scopeAttribute,
       ...(userConfig.scopeAttribute ?? {}),
-      ...(isBuild ? (buildOverride.scopeAttribute ?? {}) : {}),
+      ...((isBuild || isProdServer) ? (buildOverride.scopeAttribute ?? {}) : {}),
     },
     generate: {
       ...defaultConfig.generate,
       ...(userConfig.generate ?? {}),
-      ...(isBuild ? (buildOverride.generate ?? {}) : {}),
+      ...((isBuild || isProdServer) ? (buildOverride.generate ?? {}) : {}),
     },
     devServer: {
       ...defaultConfig.devServer,
@@ -171,15 +177,15 @@ export const initBascikConfig = (
     serve: {
       ...defaultConfig.serve,
       ...(userConfig.serve ?? {}),
-      ...(isBuild ? (buildOverride.serve ?? {}) : {}),
+      ...((isBuild || isProdServer) ? (buildOverride.serve ?? {}) : {}),
       logging: {
         ...defaultConfig.serve?.logging,
         ...((userConfig.serve ?? {}).logging ?? {}),
-        ...(((isBuild ? (buildOverride.serve ?? {}) : {}).logging) ?? {}),
+        ...((((isBuild || isProdServer) ? (buildOverride.serve ?? {}) : {}).logging) ?? {}),
       },
     },
     isBuild,
-    isServe,
+    isProdServer: isProdServer,
   };
   (["pages", "components"] as const).forEach((key) => {
     BascikConfig.directory[key] = resolve(
@@ -193,5 +199,5 @@ export const initBascikConfig = (
 export const { BascikConfig } = initBascikConfig(
   bascikConfig ?? {},
   buildOverrideConfig ?? {},
-  { isBuild, isServe },
+  { isBuild, isProdServer: isProdServer },
 );

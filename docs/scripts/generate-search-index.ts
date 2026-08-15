@@ -4,58 +4,62 @@
  *   - a page-level entry (heading: null, text = intro paragraph)
  *   - a section-level entry (heading = h2 text, path = /page#anchor)
  *
- * Run via: node scripts/generate-search-index.mjs
+ * Run via: node scripts/generate-search-index.ts
  */
 import { readFile, writeFile } from 'node:fs/promises';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { NAV } from './nav.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const docsDir = resolve(__dirname, '..');
 
-const { NAV } = await import('./nav.mjs');
-
-function slugify(text) {
+function slugify(text: string): string {
   return text.toLowerCase().replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-');
 }
 
-function stripMd(text) {
+function stripMd(text: string): string {
   return text
-    .replace(/<!--[\s\S]*?-->/g, '')              // HTML comments
-    .replace(/<!--/g, '')                         // unterminated comment starts
-    .replace(/-->/g, '')                          // stray comment ends
-    .replace(/```[\s\S]*?```/gm, '')              // fenced code blocks
-    .replace(/`([^`\n]+)`/g, '$1')                // inline code
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')      // links
-    .replace(/^#{1,6}\s+/gm, '')                  // headings
-    .replace(/\*\*([^*]+)\*\*/g, '$1')            // bold
-    .replace(/\*([^*\n]+)\*/g, '$1')              // italic
-    .replace(/^>\s*/gm, '')                        // blockquotes
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<!--/g, '')
+    .replace(/-->/g, '')
+    .replace(/```[\s\S]*?```/gm, '')
+    .replace(/`([^`\n]+)`/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*\n]+)\*/g, '$1')
+    .replace(/^>\s*/gm, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
 
-async function readMd(href) {
-  // Try standard path first: /getting-started → content/getting-started.md
+async function readMd(href: string): Promise<string | null> {
   const standard = join(docsDir, 'content', href.slice(1) + '.md');
-  try { return await readFile(standard, 'utf8'); } catch {}
-  // Fallback: /recipes/markdown → content/markdown.md
-  const base = join(docsDir, 'content', href.split('/').pop() + '.md');
-  try { return await readFile(base, 'utf8'); } catch {}
+  try { return await readFile(standard, 'utf8'); } catch { }
+  const base = join(docsDir, 'content', href.split('/').pop()! + '.md');
+  try { return await readFile(base, 'utf8'); } catch { }
   return null;
 }
 
-function parseMd(md, navLabel, section, href) {
-  const lines = md.split('\n');
-  const entries = [];
+interface SearchEntry {
+  title: string;
+  navLabel: string;
+  section: string;
+  path: string;
+  heading: string | null;
+  text: string;
+}
 
-  // Find h1 for page title
+function parseMd(md: string, navLabel: string, section: string, href: string): SearchEntry[] {
+  const lines = md.split('\n');
+  const entries: SearchEntry[] = [];
+
   const h1Line = lines.find(l => /^# /.test(l));
   const title = h1Line ? h1Line.slice(2).trim() : navLabel;
 
-  // Split into sections delimited by ## headings (ignore ###)
-  const sections = [];
-  let cur = { heading: null, lines: [] };
+  const sections: { heading: string | null; lines: string[] }[] = [];
+  let cur: { heading: string | null; lines: string[] } = { heading: null, lines: [] };
   let pastH1 = false;
   for (const line of lines) {
     if (/^# /.test(line)) { pastH1 = true; continue; }
@@ -69,11 +73,9 @@ function parseMd(md, navLabel, section, href) {
   }
   sections.push(cur);
 
-  // Page-level entry (intro text before first ##)
   const introText = stripMd(sections[0].lines.join('\n')).slice(0, 800);
   entries.push({ title, navLabel, section, path: href, heading: null, text: introText });
 
-  // Section-level entries
   for (const sec of sections.slice(1)) {
     if (!sec.heading) continue;
     const text = stripMd(sec.lines.join('\n')).slice(0, 800);
@@ -84,13 +86,12 @@ function parseMd(md, navLabel, section, href) {
   return entries;
 }
 
-const entries = [];
+const entries: SearchEntry[] = [];
 
 for (const { section, pages } of NAV) {
   for (const { href, label } of pages) {
     const md = await readMd(href);
     if (!md) {
-      // Page with no MD: add minimal entry so it still appears in search
       entries.push({ title: label, navLabel: label, section, path: href, heading: null, text: '' });
       continue;
     }

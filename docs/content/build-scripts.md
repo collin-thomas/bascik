@@ -173,7 +173,7 @@ Environment variables set in your shell or a `.env` file (loaded with a tool lik
 
 - **No streaming:** the full stdout of the script is collected before injection. You cannot stream HTML into the page incrementally.
 - **No HMR awareness:** in dev mode Bascik watches source files. If a build script reads an external file, changes to that file won't automatically re-trigger the script. Restart the dev server to re-run.
-- **ESM only:** scripts are written as `.mjs` files. Use `import` syntax; `require()` is not available.
+- **ESM only:** Build scripts run as ES modules — use `import`/`export` syntax; `require()` is not available. Write helpers as `.ts` (preferred on Node 24), `.js`, or `.mjs`. The `.mjs` extension explicitly marks a file as ESM regardless of `package.json` settings; the "m" stands for "module." In a Bascik project with `"type": "module"` in `package.json` (the default), plain `.js` and `.ts` work identically, so `.mjs` is usually unnecessary.
 - **Node.js only:** browser globals like `window` and `document` are not available in build scripts.
 
 For per-request server-side rendering, see [Server scripts](/server).

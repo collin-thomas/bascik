@@ -8,7 +8,7 @@ This file applies to all work inside `/docs/`. Read it before creating or editin
 
 The Markdown files serve three purposes simultaneously:
 1. They are the canonical source for the rendered docs page (via `data-bascik-build`)
-2. They feed `llms.txt` (via `docs/scripts/generate-llms-txt.mjs`)
+2. They feed `llms.txt` (via `docs/scripts/generate-llms-txt.ts`)
 3. They feed `SKILL.md` (the Copilot skill file at `docs/src/pages/assets/SKILL.md`, served at `/assets/SKILL.md`)
 
 **When adding or updating docs content:**
@@ -27,13 +27,13 @@ Each docs page that has a corresponding MD file uses a `<script data-bascik-buil
   import { join } from 'node:path';
   import { pathToFileURL } from 'node:url';
   const { renderMd } = await import(
-    pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+    pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
   );
   console.log(await renderMd('./content/topic.md'));
 </script>
 ```
 
-The `renderMd` helper (`docs/scripts/md-renderer.mjs`) applies these transformations:
+The `renderMd` helper (`docs/scripts/md-renderer.ts`) applies these transformations:
 - Fenced code blocks (` ``` `) → `<code-block data-bascik-prop-lang="…">` component
 - Blockquotes (`>`) → `<div class="callout">`
 
@@ -77,18 +77,21 @@ The `renderMd` helper (`docs/scripts/md-renderer.mjs`) applies these transformat
 - Callout/tip boxes: Markdown blockquote (`> **Label.** body text`)
 - No inline HTML in MD files — keep MD pure Markdown
 
-## Updating llms.txt and SKILL.md
+## Updating llms.txt, SKILL.md, and create/assets/SKILL.md
 
-After adding or significantly changing a content MD file, **always do both steps together** — they are a single atomic operation:
+After adding or significantly changing a content MD file, run the sync command:
 
-1. Regenerate `llms.txt` from the content files:
-   ```sh
-   yarn --cwd docs generate:llms  # runs docs/scripts/generate-llms-txt.mjs
-   ```
+```sh
+yarn --cwd docs sync
+```
 
-2. **Immediately** update the relevant section in `docs/src/pages/assets/SKILL.md` to mirror the change.
+This does two things in one step:
+1. Regenerates `docs/src/pages/llms.txt` from all content MD files
+2. Copies `docs/src/pages/assets/SKILL.md` to `create/assets/SKILL.md` so newly scaffolded projects get the latest skill
 
-These two files must stay in sync. A content change that lands in `llms.txt` but not `SKILL.md` (or vice versa) means Copilot is working from stale guidance — which is how bugs like "use `querySelector` for per-instance elements" go undetected.
+**After running `sync`, manually update the relevant section in `docs/src/pages/assets/SKILL.md`** to mirror the content change, then run `sync` again to propagate it to `create/assets/SKILL.md`.
+
+These files must stay in sync. A content change that lands in `llms.txt` but not `SKILL.md` (or vice versa) means Copilot is working from stale guidance — which is how bugs like "use `querySelector` for per-instance elements" go undetected.
 
 ## Sidebar
 
@@ -119,7 +122,7 @@ Marker IDs are arbitrary strings (e.g. `source-html`, `output-css`, `code`, `out
 
 ### How to use it in an HTML slot
 
-Use `extractDemoBlock` from `scripts/md-renderer.mjs` inside a `data-bascik-build` script. Note: the `<script data-bascik-build>` must be placed **immediately after** the `<code-block>` opening tag with no newline between them, so the injected content has no leading blank line.
+Use `extractDemoBlock` from `scripts/md-renderer.ts` inside a `data-bascik-build` script. Note: the `<script data-bascik-build>` must be placed **immediately after** the `<code-block>` opening tag with no newline between them, so the injected content has no leading blank line.
 
 ```html
 <div data-bascik-slot="source-html">
@@ -127,7 +130,7 @@ Use `extractDemoBlock` from `scripts/md-renderer.mjs` inside a `data-bascik-buil
     import { join } from 'node:path';
     import { pathToFileURL } from 'node:url';
     const { extractDemoBlock } = await import(
-      pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+      pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
     );
     console.log(await extractDemoBlock('./content/03-scoped-css.md', 'source-html'));
   </script></code-block>
@@ -248,9 +251,15 @@ The project uses **Vitest 4** (`"vitest": "^4.1.10"`). Vitest 4 introduced break
 - Use `mfn.mockReset()` in `beforeEach` instead of `vi.clearAllMocks()` / `vi.resetAllMocks()` to avoid module-mock recreation.
 - Read the Vitest 4 migration guide before writing or debugging tests: https://vitest.dev/guide/migration
 
-## TypeScript Type Checking
+## Naming Conventions
 
-**After editing any `.ts` file in `pkg/src/`, run a TSC check before finishing the task:**
+Always choose clear, unambiguous names. When something could be confused with another concept, add the disambiguating word rather than abbreviating. Examples:
+
+- `isProdServer` not `isServe` (there is both a dev server and a prod server)
+- `BASCIK_PROD_SERVER` not `BASCIK_SERVE` (the env var mirrors the concept)
+- Prefer the full word over a contraction when the shorter form is ambiguous in context
+
+## TypeScript Type Checking
 
 ```sh
 npx --prefix pkg tsc -p pkg/tsconfig.json --noEmit
