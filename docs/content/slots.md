@@ -2,91 +2,60 @@
 
 Slots let you pass inner HTML content into a component at the usage site. Bascik supports a default slot, named slots, and slot fallback content.
 
-## Default Slot
+## Default slots and fallback content
 
 Add `data-bascik-slot` (no value) to any element in your component template to mark where inner content should be inserted. The element itself is replaced by the slot content.
 
+Place default content inside the marker and it renders whenever the component tag has no inner content.
+
+<!-- demo:basic-slot-html -->
 ```html
-<!-- my-card.html -->
-<div class="card">
-  <div data-bascik-slot></div>
-</div>
+<section class="simple-slot-card">
+  <p class="simple-slot-label">Default slot</p>
+  <div data-bascik-slot>
+    <p class="simple-slot-fallback">Fallback content appears when the tag is empty.</p>
+  </div>
+</section>
 ```
 
-Usage:
-
-```html
-<my-card>
-  <h2>Card Title</h2>
-  <p>Card body text.</p>
-</my-card>
+<!-- demo:basic-slot-css -->
+```css
+.simple-slot-card {
+  min-height: 9rem;
+  padding: 20px;
+  border: 1px solid var(--border);
+}
 ```
 
-Output:
-
+<!-- demo:basic-slot-usage -->
 ```html
-<div class="card">
-  <h2>Card Title</h2>
-  <p>Card body text.</p>
-</div>
+<simple-slot-card>
+  <p>Custom content replaces the fallback.</p>
+</simple-slot-card>
+
+<simple-slot-card></simple-slot-card>
 ```
 
-## Slot Fallback Content
-
-Place default content inside the slot marker. It renders when the usage site passes no inner content.
-
+<!-- demo:basic-slot-output-html -->
 ```html
-<!-- my-card.html -->
-<div class="card">
-  <div data-bascik-slot><p>No content provided.</p></div>
-</div>
-```
+<section class="bascik__simple-slot-card__simple-slot-card">
+  <p class="bascik__simple-slot-card__simple-slot-label">Default slot</p>
+  <p>Custom content replaces the fallback.</p>
+</section>
 
-```html
-<!-- No inner content - fallback renders -->
-<my-card></my-card>
-
-<!-- Inner content provided - overrides fallback -->
-<my-card><p>Custom content.</p></my-card>
+<section class="bascik__simple-slot-card__simple-slot-card">
+  <p class="bascik__simple-slot-card__simple-slot-label">Default slot</p>
+  <p class="bascik__simple-slot-card__simple-slot-fallback">
+    Fallback content appears when the tag is empty.
+  </p>
+</section>
 ```
 
 ## Named Slots
 
 Use `data-bascik-slot="name"` in the component template to define named slot zones. At the usage site, wrap content for each zone with the same attribute.
 
-In the component template:
-
-```html
-<!-- page-layout.html -->
-<div class="layout">
-  <header>
-    <div data-bascik-slot="header"></div>
-  </header>
-  <main>
-    <div data-bascik-slot></div>
-  </main>
-  <aside>
-    <div data-bascik-slot="sidebar"></div>
-  </aside>
-</div>
-```
-
-At the usage site:
-
-```html
-<!-- index.html -->
-<page-layout>
-  <p>Main body content.</p>
-
-  <div data-bascik-slot="header">
-    <h1>Page Title</h1>
-  </div>
-
-  <div data-bascik-slot="sidebar">
-    <nav>Sidebar nav</nav>
-  </div>
-</page-layout>
-```
+The first demo on this page combines named `eyebrow`, `title`, and `actions` slots with a default body slot. Open its Source tab to compare the component template with its usage.
 
 > **How it works:** Named slot wrappers in the usage inner HTML are extracted by name and injected into the matching `data-bascik-slot="name"` placeholder in the template. Everything left over goes into the default slot.
 
@@ -108,11 +77,11 @@ Whitespace *within* slot content is preserved exactly as written.
 
 > **Code examples stay literal by default.** Bascik skips transpilation inside `<code>` elements by default, so slot trimming only applies to regular component resolution. If you opt into `skipTranspilingElementContents: ['code', 'pre']`, raw `<pre>` content is preserved too.
 
-> **MDN reference.** Bascik slots are build-time insertion points built with standard HTML plus `data-*` attributes. For the actual elements you place into slots, treat [MDN's HTML reference](https://developer.mozilla.org/en-US/docs/Web/HTML) as the primary source of truth.
+**MDN reference.** Bascik slots are build-time insertion points built with standard HTML plus `data-*` attributes. For the actual elements you place into slots, treat [MDN's HTML reference](https://developer.mozilla.org/en-US/docs/Web/HTML) as the primary source of truth.
 
-## Interactive Demo
+## See it in action
 
-This demo uses two named slots (`eyebrow` and `actions`) plus the default slot for the body content.
+This example uses two named slots (`eyebrow` and `actions`) plus the default slot for the body content.
 
 <!-- demo:source-usage -->
 ```html

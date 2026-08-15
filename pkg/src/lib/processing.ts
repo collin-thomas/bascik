@@ -66,6 +66,7 @@ import {
   getRelativePath,
   deepReadDirFlat,
 } from "./file-system.js";
+import { getHttpPath } from "./paths.js";
 import {
   listComponents,
   invalidateComponentListCache,
@@ -133,19 +134,28 @@ export const getFilePosition = (
 const liveReloadScript = `
 <script>
   (function() {
-  const eventSource = new EventSource("/bascik-live-reload");
-  eventSource.onmessage = function(event) {
-    if (event.data === 'reload') {
-      window.location.reload();
+    var wasConnected = false;
+    var source;
+    function connect() {
+      source = new EventSource("/bascik-live-reload");
+      source.onmessage = function(e) {
+        if (e.data === 'reload') {
+          window.location.reload();
+        } else if (e.data === 'connected') {
+          if (wasConnected) {
+            // Server restarted — reload to pick up fresh build output.
+            window.location.reload();
+          }
+          wasConnected = true;
+        }
+      };
+      source.onerror = function() {
+        source.close();
+        setTimeout(connect, 1500);
+      };
     }
-  };
-  eventSource.onerror = function(event) {
-    eventSource.close();
-    console.warn('Live-Reload Connection Lost: Start development server and refresh the page to restart live-reload.')
-  }
-  window.onbeforeunload = function () {
-    eventSource.close();
-  };
+    window.addEventListener('beforeunload', function() { if (source) source.close(); });
+    connect();
   })();
 </script>
 `;
@@ -444,6 +454,19 @@ export const recursivelyTranspile = (
 };
 
 
+/** Partitions absolute page paths into [openPages, otherPages] by active SSE connections. */
+export const partitionByOpenPages = (pageList: string[]): [string[], string[]] => {
+  const openSet = new Set(mem.openPages);
+  if (openSet.size === 0) return [[], pageList];
+  const open: string[] = [];
+  const rest: string[] = [];
+  for (const path of pageList) {
+    const httpPath = getHttpPath(getRelativePath(path, "pages"));
+    (openSet.has(httpPath) ? open : rest).push(path);
+  }
+  return [open, rest];
+};
+
 export const selectivelyProcessPagesForWatchPath = async (changedPath: string): Promise<void> => {
   invalidateComponentListCache();
   const filename = basename(changedPath);
@@ -462,10 +485,13 @@ export const selectivelyProcessPagesForWatchPath = async (changedPath: string): 
     }),
   )).filter((p): p is string => p !== null);
 
-  const toTranspile = matching.length > 0 ? matching : pageList;
-  await Promise.all(
-    toTranspile.map((path) => pageProcessing(path, componentList, globalStylesHtml)),
-  );
+  const candidates = matching.length > 0 ? matching : pageList;
+  const [openPages, restPages] = partitionByOpenPages(candidates);
+  // Transpile open pages first so the browser reload fires before the rest complete.
+  if (openPages.length > 0) {
+    await Promise.all(openPages.map((path) => pageProcessing(path, componentList, globalStylesHtml)));
+  }
+  await Promise.all(restPages.map((path) => pageProcessing(path, componentList, globalStylesHtml)));
 };
 
 export const selectivelyProcessPages = async (path: string): Promise<void> => {
@@ -493,7 +519,13 @@ export const processAllPages = async (options?: { useWorkers?: boolean }) => {
     listComponents(),
     resolveInlineStylesHtml(),
   ]);
-  const pageList = pages ?? [];
+  // In dev mode, open pages go first so they emit "transpiled" sooner.
+  const pageList = (() => {
+    const all = pages ?? [];
+    if (BascikConfig.isBuild) return all;
+    const [open, rest] = partitionByOpenPages(all);
+    return [...open, ...rest];
+  })();
 
   let results: (TranspilePageResult | null)[];
 

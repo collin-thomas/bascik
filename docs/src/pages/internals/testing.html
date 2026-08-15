@@ -19,13 +19,130 @@
 
       <main class="docs-content">
         <p class="section-label">Internals</p>
+
+        <script data-bascik-build>
+          import { readFile } from 'node:fs/promises';
+          import { join } from 'node:path';
+          try {
+            const raw = await readFile(join(process.cwd(), '../pkg/test-coverage.json'), 'utf8');
+            const { total } = JSON.parse(raw);
+            const fmt = (n) => n.toFixed(1) + '%';
+            const bar = (n) => {
+              const pct = Math.round(n);
+              const color = pct >= 80 ? '#6abf69' : pct >= 50 ? '#c8a84b' : '#c06060';
+              return `<span style="display:inline-block;width:100px;height:8px;background:rgba(255,255,255,0.08);border-radius:2px;vertical-align:middle;margin-right:6px;overflow:hidden"><span style="display:block;width:${pct}px;height:100%;background:${color};border-radius:2px"></span></span>`;
+            };
+            console.log(`
+              <h1>Testing</h1>
+              <p style="color:var(--text-muted);font-size:.92rem;margin-bottom:1rem">Bascik has two separate test suites: <strong>unit tests</strong> (Vitest) that verify individual library modules, and <strong>end-to-end tests</strong> (Playwright) that build and browser-test the full transpilation pipeline against a fixture site.</p>
+              <h2>Unit Test Coverage</h2>
+              <p style="color:var(--text-muted);font-size:.92rem;margin-bottom:1rem">Line, function, and branch coverage from the Vitest unit test suite. CLI entry points (<code>index.ts</code>, <code>transpile.ts</code>, <code>page-worker.ts</code>) are excluded — they run only in E2E tests below.</p>
+              <table style="width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:.9rem">
+                <thead>
+                  <tr style="text-align:left;border-bottom:1px solid var(--border)">
+                    <th style="padding:8px 12px 8px 0;color:var(--text-muted);font-weight:600">Metric</th>
+                    <th style="padding:8px 12px">Coverage</th>
+                    <th style="padding:8px 0;color:var(--text-muted)">Covered / Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom:1px solid var(--border)">
+                    <td style="padding:10px 12px 10px 0;font-weight:600">Lines</td>
+                    <td style="padding:10px 12px">${bar(total.lines.pct)}<strong>${fmt(total.lines.pct)}</strong></td>
+                    <td style="padding:10px 0;color:var(--text-muted)">${total.lines.covered} / ${total.lines.total}</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid var(--border)">
+                    <td style="padding:10px 12px 10px 0;font-weight:600">Statements</td>
+                    <td style="padding:10px 12px">${bar(total.statements.pct)}<strong>${fmt(total.statements.pct)}</strong></td>
+                    <td style="padding:10px 0;color:var(--text-muted)">${total.statements.covered} / ${total.statements.total}</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid var(--border)">
+                    <td style="padding:10px 12px 10px 0;font-weight:600">Functions</td>
+                    <td style="padding:10px 12px">${bar(total.functions.pct)}<strong>${fmt(total.functions.pct)}</strong></td>
+                    <td style="padding:10px 0;color:var(--text-muted)">${total.functions.covered} / ${total.functions.total}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:10px 12px 10px 0;font-weight:600">Branches</td>
+                    <td style="padding:10px 12px">${bar(total.branches.pct)}<strong>${fmt(total.branches.pct)}</strong></td>
+                    <td style="padding:10px 0;color:var(--text-muted)">${total.branches.covered} / ${total.branches.total}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p style="font-size:.8rem;color:var(--text-muted);margin-top:-.5rem">Regenerate with <code>yarn workspace @bascik/bascik update-coverage</code></p>
+            `);
+          } catch {
+            // coverage file not present; fall back to heading only
+            console.log('<h1>Testing</h1>');
+          }
+        </script>
+
+        <script data-bascik-build>
+          import { readFile } from 'node:fs/promises';
+          import { join } from 'node:path';
+          try {
+            const raw = await readFile(join(process.cwd(), '../pkg/e2e-test-coverage.json'), 'utf8');
+            const { total } = JSON.parse(raw);
+            const fmt = (n) => n.toFixed(1) + '%';
+            const bar = (n) => {
+              const pct = Math.round(n);
+              const color = pct >= 80 ? '#6abf69' : pct >= 50 ? '#c8a84b' : '#c06060';
+              return `<span style="display:inline-block;width:100px;height:8px;background:rgba(255,255,255,0.08);border-radius:2px;vertical-align:middle;margin-right:6px;overflow:hidden"><span style="display:block;width:${pct}px;height:100%;background:${color};border-radius:2px"></span></span>`;
+            };
+            console.log(`
+              <h2 style="margin-top:2.5rem">E2E Coverage (Playwright + V8)</h2>
+              <p style="color:var(--text-muted);font-size:.92rem;margin-bottom:1rem">Coverage captured while the CLI builds the 55-page E2E fixture site. Exercises the full transpilation pipeline end-to-end including the CLI entry point, startup, and worker threads that unit tests cannot reach.</p>
+              <table style="width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:.9rem">
+                <thead>
+                  <tr style="text-align:left;border-bottom:1px solid var(--border)">
+                    <th style="padding:8px 12px 8px 0;color:var(--text-muted);font-weight:600">Metric</th>
+                    <th style="padding:8px 12px">Coverage</th>
+                    <th style="padding:8px 0;color:var(--text-muted)">Covered / Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom:1px solid var(--border)">
+                    <td style="padding:10px 12px 10px 0;font-weight:600">Lines</td>
+                    <td style="padding:10px 12px">${bar(total.lines.pct)}<strong>${fmt(total.lines.pct)}</strong></td>
+                    <td style="padding:10px 0;color:var(--text-muted)">${total.lines.covered} / ${total.lines.total}</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid var(--border)">
+                    <td style="padding:10px 12px 10px 0;font-weight:600">Statements</td>
+                    <td style="padding:10px 12px">${bar(total.statements.pct)}<strong>${fmt(total.statements.pct)}</strong></td>
+                    <td style="padding:10px 0;color:var(--text-muted)">${total.statements.covered} / ${total.statements.total}</td>
+                  </tr>
+                  <tr style="border-bottom:1px solid var(--border)">
+                    <td style="padding:10px 12px 10px 0;font-weight:600">Functions</td>
+                    <td style="padding:10px 12px">${bar(total.functions.pct)}<strong>${fmt(total.functions.pct)}</strong></td>
+                    <td style="padding:10px 0;color:var(--text-muted)">${total.functions.covered} / ${total.functions.total}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:10px 12px 10px 0;font-weight:600">Branches</td>
+                    <td style="padding:10px 12px">${bar(total.branches.pct)}<strong>${fmt(total.branches.pct)}</strong></td>
+                    <td style="padding:10px 0;color:var(--text-muted)">${total.branches.covered} / ${total.branches.total}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p style="font-size:.8rem;color:var(--text-muted);margin-top:-.5rem">Regenerate with <code>yarn workspace @bascik/bascik update-e2e-coverage</code></p>
+            `);
+          } catch {
+            // e2e coverage file not present; skip
+          }
+        </script>
+
+        <!-- Content rendered from docs/content/internals/testing.md at build time.
+             To update page content, edit the MD file — not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/internals/testing.md'));
+          // Strip the h1 and intro paragraph because the page emits them above the coverage tables.
+          const html = await renderMd('./content/internals/testing.md');
+          console.log(html
+            .replace(/^<h1[^>]*>.*?<\/h1>\s*/i, '')
+            .replace(/^<p[^>]*>.*?<\/p>\s*/is, '')
+          );
         </script>
         <script data-bascik-build>
           import { join } from 'node:path';

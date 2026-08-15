@@ -7,6 +7,7 @@
   "author": "Collin Thomas",
   "type": "module",
   "files": [
+    "assets/",
     "dist/",
     "src/",
     "README.md"
@@ -17,6 +18,9 @@
   "engines": {
     "node": ">=24.17.0"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "@types/node": "^24.0.0",
     "typescript": "^7.0.2",
@@ -25,7 +29,8 @@
   },
   "scripts": {
     "build": "node_modules/.bin/tsc -p tsconfig.build.json",
-    "prepack": "cp ../LICENSE LICENSE",
+    "prepare": "mkdir -p assets && ([ -f ../docs/src/pages/assets/SKILL.md ] && cp ../docs/src/pages/assets/SKILL.md assets/SKILL.md || true) && node_modules/.bin/tsc -p tsconfig.build.json",
+    "prepack": "cp ../LICENSE LICENSE && mkdir -p assets && cp ../docs/src/pages/assets/SKILL.md assets/SKILL.md",
     "test": "vitest",
     "test:ci": "vitest run",
     "typecheck": "node_modules/.bin/tsc --noEmit"

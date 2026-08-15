@@ -53,16 +53,14 @@
       <main class="docs-content">
         <p class="section-label">Recipe</p>
 
-        <!-- Content rendered from docs/content/using-markdown.md at build time.
-             To update page content, edit the MD file - not this file.
-             The MD file also feeds into llms.txt via scripts/generate-llms-txt.mjs. -->
+        <!-- Intro rendered from docs/content/using-markdown.md. -->
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
-          const { renderMd } = await import(
+          const { renderMdRange } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/using-markdown.md'));
+          console.log(await renderMdRange('./content/using-markdown.md', { to: 'marked' }));
         </script>
 
         <component-demo>
@@ -76,8 +74,7 @@
             </div>
           </div>
           <div data-bascik-slot="source-usage">
-            <code-block data-bascik-prop-lang="md">
-              <script data-bascik-build>
+            <code-block data-bascik-prop-lang="md"><script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
@@ -86,8 +83,7 @@
             </code-block>
           </div>
           <div data-bascik-slot="output-html">
-            <code-block data-bascik-prop-lang="html">
-              <script data-bascik-build>
+            <code-block data-bascik-prop-lang="html"><script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
@@ -96,6 +92,15 @@
             </code-block>
           </div>
         </component-demo>
+
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMdRange } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMdRange('./content/using-markdown.md', { from: 'marked' }, { stripDemoBlocks: true }));
+        </script>
 
         <script data-bascik-build>
           import { join } from 'node:path';

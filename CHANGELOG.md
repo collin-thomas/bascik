@@ -7,22 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-
-- **Yarn workspace CLI linking on fresh installs** — the `bascik` bin now points to a tracked launcher, allowing Yarn to create the executable link before `pkg/dist/` is built.
-- **ANSI escape codes leaking from build/server scripts** — HTML-generating child processes now disable color output and strip terminal escape sequences before injection, preventing Netlify/CI environments from corrupting rendered footer text with `\u001b[33m` / `\u001b[39m` sequences.
-- **Windows self-signed cert generation** — the PowerShell `Export-PfxCertificate` command was missing its password parameter (corrupted by a prior redaction), so dev-server certificate generation failed on Windows.
-- **Uppercase static-asset extensions** — request extensions are now lowercased before routing and MIME lookup, so `/STYLE.CSS` serves with `text/css` and `.HTML` paths route the same as `.html` instead of being treated as unknown static files.
-- **Slot markers with preceding attributes** — `data-bascik-slot` (default and named) is now matched even when other attributes come before it (e.g. `<div class="card-body" data-bascik-slot>`), using a quote-aware scan so marker text inside attribute values never false-positives.
-- **Nested same-tag slot fallback content** — default and named slot replacement is now depth-aware. Previously a fallback like `<div data-bascik-slot><div>…</div></div>` closed at the first `</div>`, leaving a stray close tag in the output.
-- **Attribute inheritance onto single-quoted `class`** — merging an inherited `class` onto a root element whose class attribute uses single quotes no longer produces a duplicate `class` attribute.
-- **`[id]` selector removal with braces in strings** — `removeIdSelectors` now shields CSS string literals first, so a `}` inside `content: "…"` can no longer truncate the rule match and corrupt the surrounding CSS.
-- **Windows path separators in file-system comparisons** — configured `directory.pages`/`directory.components` paths (backslashes from `resolve()` on Windows) are now normalized before comparison against watcher-supplied forward-slash paths, fixing asset copy, dist-path mapping, deletion, and display paths on Windows.
-- **`from`/`to` inside `@keyframes` no longer treated as element selectors** — CSS `from { }` and `to { }` keyframe percentage selectors were being converted to scoped element-selector classes (e.g. `.bascik__comp__el__from`), producing malformed keyframe CSS. Both keywords are now in the reserved list alongside CSS unit keywords.
-- **`prefixKeyframes` no longer double-scopes on second pass** — if a keyframe name was already scoped (starts with `bascik__`), a second run of the scoping pipeline would prefix it a second time. It is now skipped.
-
 ### Added
 
+- **Open-page priority transpilation** — when a file change triggers a full re-transpile of all pages (e.g. a file in `directory.watch` changed), pages with an active SSE live-reload connection are transpiled first. Those pages emit `"transpiled"` before the rest of the batch, so the browser reload fires as soon as the visible page is ready without waiting for all other pages to finish. `MemoryStore` now tracks open pages via `trackOpenPage` / `untrackOpenPage`, called by the HTTP/2 server when SSE connections open and close. `partitionByOpenPages` in `processing.ts` splits any page list into open and rest batches.
+- **`yarn workspace @bascik/bascik update-coverage`** — new script that runs the full test suite with coverage and copies the summary JSON to `pkg/test-coverage.json`. The docs build reads this file to show current line, function, and branch coverage on the Testing internals page without requiring an external service.
+- **BSAL-1.0 license page** — the Bascik Source Available License 1.0 is now published at `https://bascik.dev/license` and linked from the docs footer. All three `LICENSE` files include `URL: https://bascik.dev/license` at the top. `pkg/package.json` and `create/package.json` have a `prepack` script that copies the root `LICENSE` into each package before publishing.
+- **`NOTICE.md`** — third-party attribution file crediting chokidar (MIT, Paul Miller / Elan Shanker).
 - **Component filename case normalization** — component names are now lowercased when loaded from disk, so `My-Card.html` registers as `my-card` and is used as `<my-card>`. Previously, an uppercase filename would silently never resolve because the lookup was always lowercased but the stored key was not.
 - **FAQ docs page** — new `/faq` page covering who made Bascik, why it was built, and common edge-case questions (native element name collisions, uppercase filenames).
 - **`data-bascik-server` script blocks** — a new script tag variant that executes at request time on the server instead of at build time. Use it to personalize pages with per-user data (session info, database queries, etc.). The script body receives `process.env.BASCIK_REQUEST` (JSON with `{ path, method, headers, searchParams }`). `data-bascik-server` blocks are preserved through `--build` and executed fresh on every request — they are never cached and are completely separate from `data-bascik-build`.
@@ -41,13 +31,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `devServer.logging` and `serve.logging` config — control file-copy/transpile/delete chatter in dev mode and request logging in prod mode via a shared log-level model (`silent`/`error`/`warn`/`info`/`debug`), with per-event toggles for copies, deletes, transpiles, and requests.
 - CLI build logging via `--log [path]` — optional file capture of build output. When omitted, no build log is written; when used, Bascik stores output in `.bascik/build.log` by default unless a custom path is provided.
 - The dev server now serves pages from memory as soon as they are transpiled, without waiting on disk writes — disk output is skipped entirely in dev mode and only happens during `--build`.
-
-### Changed
-
-- Removed the stale `verboseLogging` config option. Console details are now handled by the CLI build log (`--log`) and the explicit log-level settings in `devServer.logging` / `serve.logging`.
+- HTML component system — define components as `.html` files, reference by tag name.
+- Recursive component transpilation.
+- Self-closing (void element) tag syntax: `<my-nav />` is equivalent to `<my-nav></my-nav>`.
+- Custom props via `data-bascik-prop-*` attributes — pass text values from the usage site into component templates.
+- Default slots via `<slot-component>` or `data-bascik-slot` (no value) — slot fallback content is rendered when no content is provided at the usage site.
+- Named slots via `data-bascik-slot="name"` — inject content into specific zones of a component template, with fallback to the placeholder element's own inner content.
+- Attribute inheritance — non-`data-bascik-*` attributes on a component usage tag (e.g. `class`, `aria-*`, `data-*`) are automatically merged onto the component's root element.
+- `<head>` component support — components can now be used inside `<head>` to share `<meta>` tags, `<link>` elements, etc.
 
 ### Fixed
 
+- **SSE live-reload missing when `Referer` header is absent** — the `eventHandler` for `/bascik-live-reload` bailed early when `headers.referer` was missing (e.g. Safari, privacy extensions, `Referrer-Policy: no-referrer`), silently swallowing every `"transpiled"` event and causing the browser to never reload. The handler now reloads unconditionally when no referer is present, and only applies path-matching when a referer is available.
+- **SSE live-reload lost after dev server restart** — the injected live-reload script closed the `EventSource` permanently on `onerror` and printed a console warning instead of reconnecting. After a server restart, the browser required a manual page refresh to resume live reload. The script now retries the connection every 1.5 seconds after an error, and reloads the page once when it successfully reconnects so the browser picks up any build changes that occurred while the server was down. `window.onbeforeunload` (overwritable property) replaced with `addEventListener('beforeunload')`.
 - **Build hang from catastrophic regex backtracking** — the quote-aware attribute scan (`ATTR_VALUE`) used by `findOpenTag`, `getTag`, `replaceTag`, `injectProps`, and `extractInheritableAttributes` was `(?:"[^"]*"|'[^']*'|[^>])*`, whose `[^>]` alternative also matches quote characters. That ambiguity made the regex engine explore exponentially many parses whenever the surrounding pattern could not match — e.g. a `data-bascik-prop-*` marker whose element had no balancing close tag in the scanned string — hanging `bascik --build` indefinitely. `ATTR_VALUE` is now the unambiguous `(?:[^>"']|"[^"]*"|'[^']*')*`, restoring millisecond parsing on all inputs.
 - **Infinite component-expansion loop caused by `$` in replacement strings** — `replaceTag` and `executeBuildScripts` now use replacement functions instead of replacement strings when calling `String.prototype.replace`. This prevents `$1`, `$2`, `$&` and other `$`-special patterns in slot content or build-script output (e.g. PostgreSQL parameterized queries like `$1`) from being misinterpreted as back-references, which previously caused infinite expansion loops and heap-exhausting OOM crashes on pages that documented server-script examples.
 - **`executeServerScripts` `$`-pattern expansion in replacement output** — `executeServerScripts` now uses a function replacement (`() => output`) instead of a plain string replacement. When a `data-bascik-server` script's stdout contained `$1`, `$&`, etc. (e.g. from a PostgreSQL query string in a Postgres-based server script), the replacement string was misinterpreted, causing the capture group value or matched text to be injected into the output instead of the literal `$n` character. The fix matches what `executeBuildScripts` already did.
@@ -76,26 +72,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CLI argument handling** — `bascik --help`/`-h` and `--version`/`-v` now print usage/version and exit instead of starting the dev server; unknown flags print an error and exit 1 without starting the server.
 - **Quote-aware attribute scanning** — prop extraction/injection, inheritable-attribute extraction, and `preserveElementContents` now handle single-quoted attribute values and `>` inside quoted attribute values.
 - **`injectProps` build hang** — the `injectProps` regex previously wrapped `ATTR_VALUE` (which is itself `(...)*`) in an outer `((?:ATTR_VALUE)*?)` / `((?:ATTR_VALUE)*)` group, creating nested quantifiers `((?:...)*)*` that caused catastrophic backtracking on pages with many attributes. Replaced with `(ATTR_VALUE?)` / `(ATTR_VALUE)` — equivalent semantically but without nesting. A similar redundant `?` on the `extractInheritableAttributes` open-tag scan was removed for the same reason.
+- `<meta name="...">` attributes are shielded from name-attribute scoping so standard metadata vocabulary (e.g. `viewport`, `description`) is not rewritten.
+- Unused `data-bascik-prop-*` marker attributes are stripped from the output even when no prop value is passed.
+- `listPages()` uses `BascikConfig.directory.pages` instead of a hardcoded path.
+
 
 ### Changed
 
+- **License replaced: ELv2 → BSAL-1.0** — Elastic License 2.0 replaced with the Bascik Source Available License 1.0. Key differences: the hosted-service restriction is narrowed to specifically prohibit "hosted or managed build/transpilation service" rather than the ELv2 "managed service" framing; the SaaS-oriented "license key" clause is removed; redistribution of modified copies is now permitted as long as no fee is charged for the software itself.
+- **Yarn workspace CLI linking on fresh installs** — the `bascik` bin now points to a tracked launcher, allowing Yarn to create the executable link before `pkg/dist/` is built.
+- **ANSI escape codes leaking from build/server scripts** — HTML-generating child processes now disable color output and strip terminal escape sequences before injection, preventing Netlify/CI environments from corrupting rendered footer text with `\u001b[33m` / `\u001b[39m` sequences.
+- **Windows self-signed cert generation** — the PowerShell `Export-PfxCertificate` command was missing its password parameter (corrupted by a prior redaction), so dev-server certificate generation failed on Windows.
+- **Uppercase static-asset extensions** — request extensions are now lowercased before routing and MIME lookup, so `/STYLE.CSS` serves with `text/css` and `.HTML` paths route the same as `.html` instead of being treated as unknown static files.
+- **Slot markers with preceding attributes** — `data-bascik-slot` (default and named) is now matched even when other attributes come before it (e.g. `<div class="card-body" data-bascik-slot>`), using a quote-aware scan so marker text inside attribute values never false-positives.
+- **Nested same-tag slot fallback content** — default and named slot replacement is now depth-aware. Previously a fallback like `<div data-bascik-slot><div>…</div></div>` closed at the first `</div>`, leaving a stray close tag in the output.
+- **Attribute inheritance onto single-quoted `class`** — merging an inherited `class` onto a root element whose class attribute uses single quotes no longer produces a duplicate `class` attribute.
+- **`[id]` selector removal with braces in strings** — `removeIdSelectors` now shields CSS string literals first, so a `}` inside `content: "…"` can no longer truncate the rule match and corrupt the surrounding CSS.
+- **Windows path separators in file-system comparisons** — configured `directory.pages`/`directory.components` paths (backslashes from `resolve()` on Windows) are now normalized before comparison against watcher-supplied forward-slash paths, fixing asset copy, dist-path mapping, deletion, and display paths on Windows.
+- **`from`/`to` inside `@keyframes` no longer treated as element selectors** — CSS `from { }` and `to { }` keyframe percentage selectors were being converted to scoped element-selector classes (e.g. `.bascik__comp__el__from`), producing malformed keyframe CSS. Both keywords are now in the reserved list alongside CSS unit keywords.
+- **`prefixKeyframes` no longer double-scopes on second pass** — if a keyframe name was already scoped (starts with `bascik__`), a second run of the scoping pipeline would prefix it a second time. It is now skipped.
 - Extra dev-mode re-transpile paths now live under `directory.watch`.
+- Removed the stale `verboseLogging` config option. Console details are now handled by the CLI build log (`--log`) and the explicit log-level settings in `devServer.logging` / `serve.logging`.
 - `inlineStyles` now accepts `false`, `true`, or an explicit array of file paths so projects can choose no global inlining, all page CSS, or specific stylesheets.
 - `useWorkers` now defaults to `false` (sequential main-thread transpilation). Worker startup has a fixed cost — each worker independently loads the transpiler's module graph before processing its first page — which outweighs the parallelism benefit on small sites or sites whose slow parts are I/O-bound (e.g. `<script data-bascik-build>` blocks), rather than CPU-bound.
 - `minifyStyles`, `minifyScripts`, and `obfuscateAttributeNames` now default to `false` in dev and `true` only during `bascik --build` (previously they were `true` even in dev, contradicting the docs which describe them as production defaults). `buildOverrideConfig.serve` is now merged during builds, and the resolved `BascikConfig` is recursively frozen.
 
-### Added
-
-**Components**
-
-- HTML component system — define components as `.html` files, reference by tag name.
-- Recursive component transpilation.
-- Self-closing (void element) tag syntax: `<my-nav />` is equivalent to `<my-nav></my-nav>`.
-- Custom props via `data-bascik-prop-*` attributes — pass text values from the usage site into component templates.
-- Default slots via `<slot-component>` or `data-bascik-slot` (no value) — slot fallback content is rendered when no content is provided at the usage site.
-- Named slots via `data-bascik-slot="name"` — inject content into specific zones of a component template, with fallback to the placeholder element's own inner content.
-- Attribute inheritance — non-`data-bascik-*` attributes on a component usage tag (e.g. `class`, `aria-*`, `data-*`) are automatically merged onto the component's root element.
-- `<head>` component support — components can now be used inside `<head>` to share `<meta>` tags, `<link>` elements, etc.
 
 **Styles**
 
@@ -123,7 +124,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `directory.pages` / `directory.components` — configure source directories.
 - `obfuscateAttributeNames` — short hash-based class names in production builds.
-- `--log [path]` — optional build log capture for diagnostics; defaults to `.bascik/build.log` when enabled.
 - `deduplicateCss` — deduplicate component styles per page.
 - `minifyStyles` — enable/disable built-in CSS minification.
 - `minifyScripts` — enable/disable built-in JS minification, or supply a custom minifier function.
@@ -142,10 +142,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows path support — forward-slash-only regex patterns updated to `[\\/]`.
 - Fully async I/O throughout (`access()` + dynamic `import()`, async `pki` operations).
 
-### Fixed
-
-- `<meta name="...">` attributes are shielded from name-attribute scoping so standard metadata vocabulary (e.g. `viewport`, `description`) is not rewritten.
-- Unused `data-bascik-prop-*` marker attributes are stripped from the output even when no prop value is passed.
-- `listPages()` uses `BascikConfig.directory.pages` instead of a hardcoded path.
 
 [Unreleased]: https://github.com/collin-thomas/bascik/commits/main

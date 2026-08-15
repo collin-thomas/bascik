@@ -1,3 +1,8 @@
+---
+name: bascik
+description: Comprehensive guide for building with Bascik, a file-based web component framework. Use when creating components, writing scoped CSS or JavaScript, configuring props or slots, using the CLI, setting up the build, or debugging Bascik-specific behavior.
+---
+
 # Bascik Developer & Usage Copilot Skill (`SKILL.md`)
 
 This file contains the **complete, centralized documentation and development skill guide** for Bascik. It is designed to provide Copilot and external developers with everything needed to build, compile, maintain, and write components for the Bascik project.
@@ -19,6 +24,12 @@ This file contains the **complete, centralized documentation and development ski
 * It does not add any JavaScript to pages. Every script in the output was written by you.
 * It does not require Web Components, Shadow DOM, or any browser-specific API.
 
+### How Bascik Positions Against Other Tools
+* **Directly competes with Next.js** for content sites, landing pages, and SEO-critical pages. Next.js ships 80–100+ KB of React runtime and hydration overhead even for pages with no client-side state; Bascik ships zero. In competitive SEO keyword spaces, that difference is measurable in Core Web Vitals (LCP, INP, CLS).
+* **Complements HTMX and Alpine.js:** Bascik resolves components at build time; HTMX/Alpine add behavior at runtime. They compose cleanly.
+* **Different scope than Hugo / Eleventy / Jekyll:** those tools focus on content pipelines (Markdown collections, taxonomies, front matter). Bascik focuses on HTML page composition and component reuse without a template language.
+* The honest rule: use Bascik for pages that do not need a JavaScript framework runtime. Use Next.js, React, or Vue for applications that do.
+
 ### Source Vocabulary and Browser Compatibility
 * The custom component tags in a Bascik project are the components the developer creates; Bascik does not provide a framework-owned component catalog.
 * Build instructions such as `data-bascik-slot`, `data-bascik-prop-*`, and `data-bascik-build` use HTML's standards-valid `data-*` extension mechanism.
@@ -39,7 +50,7 @@ The `create/` folder is intentionally separate from `pkg/`. Contributor work in 
 
 The generator in `create/src/index.ts` validates input, then calls `create/src/scaffold.ts` to write the project files. The generated app is not coupled to the monorepo layout. It just uses the published `@bascik/bascik` package and then runs as a normal Bascik site.
 
-For local contributor testing of the generator itself, rebuild from `create/`, link it with `npm link`, and invoke it via `npx create-bascik ...`; that remains the working flow for exercising the local scaffold end-to-end.
+For local contributor testing of the generator itself, rebuild from `create/`, link it with `npm link`, and invoke it via `npx create-bascik ...`; that remains the working flow for exercising the local scaffold end-to-end. `npm link` runs the `prepare` script, which copies the latest SKILL.md from `docs/` and rebuilds `dist/` automatically, so no separate build step is needed after a fresh checkout.
 
 ---
 
@@ -79,6 +90,8 @@ src/components/
 ```
 
 All class names, element selectors, `#id` selectors, `@keyframes`, `@layer`, `@container`, `:is()/.class`, `:where()/.class`, `:has()/.class`, child/sibling combinator selectors, and CSS custom properties in component CSS are automatically scoped to that component. SVG elements with `class` attributes inside component HTML are also scoped. CSS `#id` selectors are converted to generated class selectors and the class is injected on the matching HTML element.
+
+These rewrites compose normally in one component: bare element selectors receive generated classes, locally declared custom properties and their `var()` references are renamed together, and keyframe declarations stay synchronized with `animation` references.
 
 ```css
 /* site-nav.css — source */
@@ -315,6 +328,7 @@ Inject text values into a component at usage time.
 ></alert-box>
 ```
 Props in Bascik follow the same basic idea as React props, but the mechanism is plain HTML through `data-bascik-prop-*` attributes.
+The `data-bascik-prop-*` marker is removed from compiled output, while the target element's other attributes are preserved.
 *Props accept text values only. For rich HTML content, use slots.*
 
 ---
@@ -873,7 +887,41 @@ There are 44 e2e test files covering CSS scoping, JS scoping, slots, props, attr
 
 ---
 
-## 14. Key Constraints & Rules for AI Code Generation (MUST FOLLOW)
+## 14. CI / CD
+
+Two GitHub Actions workflows handle all automation.
+
+**CI** (`.github/workflows/ci.yml`) — runs on every push to `main` and every PR:
+- Runs `yarn test:ci` (unit tests with coverage) on Node 24
+- `permissions: contents: read`
+
+**Release** (`.github/workflows/release.yml`) — triggers on version tags:
+
+| Package | Tag | Job guard |
+|---|---|---|
+| `@bascik/bascik` | `v*.*.*` | `if: startsWith(github.ref_name, 'v')` |
+| `create-bascik` | `create-v*.*.*` | `if: startsWith(github.ref_name, 'create-v')` |
+
+Both release jobs: install → test → build → `npm publish --provenance --access public`.
+
+- `--provenance` requires `id-token: write` permission; generates a signed attestation on npmjs.com linking the package to the Actions run.
+- Both `package.json` files also declare `"publishConfig": { "access": "public" }`.
+- Requires the `NPM_TOKEN` repository secret (Settings → Secrets and variables → Actions).
+
+**Tagging a release:**
+```sh
+# @bascik/bascik
+git tag v1.2.0 && git push origin main --tags
+
+# create-bascik
+git tag create-v1.0.3 && git push origin main --tags
+```
+
+`dist/` is never committed to git — the workflow always builds it fresh.
+
+---
+
+## 15. Key Constraints & Rules for AI Code Generation (MUST FOLLOW)
 
 When generating code, pages, or components for a Bascik project, the following conventions are strictly enforced:
 
@@ -888,7 +936,7 @@ When generating code, pages, or components for a Bascik project, the following c
 
 ---
 
-## 15. FAQ
+## 16. FAQ
 
 **How do you pronounce Bascik? Where does the name come from?** Just like "basic." The idea is basic, the implementation is basic in theory, and the usage is basic. The spelling comes from the author's maternal grandmother's maiden name — so it's unique and means something personal.
 

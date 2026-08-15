@@ -332,24 +332,24 @@ export const serveHttp2 = async () => {
 
           stream.write(`data: connected\n\n`);
 
+          // Parse the referer once at connection time for path-matching and open-page tracking.
+          let openPagePath: string | null = null;
+          try {
+            if (headers.referer) openPagePath = new URL(headers.referer as string).pathname;
+          } catch { }
+          if (openPagePath) mem.trackOpenPage(openPagePath);
+
           const eventHandler = ({
             relativePagePath,
           }: {
             relativePagePath: string;
           }) => {
-            // Referer is optional — direct navigation, privacy extensions, and
-            // `Referrer-Policy: no-referrer` all omit it.  new URL(undefined)
-            // throws inside this event listener (outside the request try/catch),
-            // which would crash the process on every save for such clients.
-            let refererUrl: URL | null = null;
-            try {
-              if (headers.referer) refererUrl = new URL(headers.referer as string);
-            } catch {
-              refererUrl = null;
+            if (openPagePath) {
+              const httpPath = getHttpPath(relativePagePath);
+              // Normalize trailing slashes: browsers may omit the trailing slash on index routes.
+              const strip = (p: string) => p.replace(/\/$/, "") || "/";
+              if (strip(openPagePath) !== strip(httpPath)) return;
             }
-            if (!refererUrl) return;
-            const httpPath = getHttpPath(relativePagePath);
-            if (refererUrl.pathname !== httpPath) return;
             stream.write(`data: reload\n\n`);
           };
 
@@ -361,6 +361,7 @@ export const serveHttp2 = async () => {
           eventEmitter.on("asset-changed", assetChangedHandler);
 
           stream.on("close", () => {
+            if (openPagePath) mem.untrackOpenPage(openPagePath);
             eventEmitter.removeListener("transpiled", eventHandler);
             eventEmitter.removeListener("asset-changed", assetChangedHandler);
           });

@@ -232,3 +232,79 @@ The hash is deterministic, the same full scoped name always produces the same sh
 ## CSS Deduplication
 
 After all components on a page have been resolved, `deduplicateCss` receives the list of used components. Because class-scoped names are identical across all instances of the same component, a Set-based deduplication is sufficient, each component's CSS block appears exactly once in the final `<style>` tag, regardless of how many times that component was used on the page.
+
+---
+
+## Design Decisions
+
+This section documents the implementation trade-offs and constraint decisions behind specific scoping patterns, including cases that required non-obvious solutions and patterns that were evaluated but not implemented.
+
+### CSS `#id {}` selector detection
+
+The challenge is distinguishing a CSS ID selector from a hex colour value in property position, since both use the `#` character.
+
+**Initial approach (abandoned):** A simple lookahead `/#([a-zA-Z][a-zA-Z0-9-_]*)(?=[\s{:,])/g` incorrectly matched hex colour values:
+
+```css
+background: linear-gradient(#abc, #def)   /* ← comma triggered the match */
+background: #abc url('./img.png')         /* ← space triggered the match */
+color: #abc\n                             /* ← newline triggered the match */
+```
+
+**Current implementation:** A context-aware lookahead `/#([a-zA-Z][a-zA-Z0-9-_]*)(?=[^{};]*\{)/g` that uses the position of the next `{` relative to `;` and `}` to determine selector vs. value context:
+
+- In **selector position**, the next `{` always appears before any `;` or `}`.
+- In **value position** (property declarations, gradient arguments, etc.), a `;` or `}` always appears before the next `{`.
+
+```css
+#btn { }                        → matches  (selector: { before ;/})
+.parent #btn { }                → matches  (compound selector)
+color: #abc;                    → skipped  (value: ; before {)
+linear-gradient(#abc, #def)     → skipped  (value: } closes rule before next {)
+```
+
+Implemented in `convertCssIdSelectorsToClasses` in `styles.ts`. The `#id {}` selector is converted to a scoped class selector (`.bascik__comp__id__id {}`) and the generated class is injected onto the matching HTML element. Specificity drops from `(0,1,0,0)` to `(0,0,1,0)`, consistent with how element selectors are handled.
+
+### CSS comma-separated element selectors
+
+The same context-aware lookahead used for `#id` detection applies here. Adding `)` to the stop set (`[^{};)]*\{`) prevents false positives inside `:is()`, `:where()`, and `:has()` pseudo-functions, because the closing `)` terminates the lookahead before `{` is reached:
+
+```
+div:is(p, h2) { }                    →  ) stops lookahead → skipped ✓
+h1, h2 { }                           →  { before ;/}/)} → MATCHES ✓
+transition: color 0.2s, opacity 0.3s; →  ; before { → skipped ✓
+```
+
+Pass 2 regex: `/(?<=,[ \t]*)[a-z1-6]+(?=[^{};)]*\{)/g`
+
+### Compound and descendant element selectors
+
+`.card p {}` was not previously scoped because there was no reliable way to anchor the element selector to a specific component. The class-scoping pass, which runs first, introduces `bascik__` prefixes that serve as safe anchors for a subsequent pass:
+
+```css
+/* Source */
+.card p { color: blue; }
+.list > li { padding: 0; }
+
+/* After scoping */
+.bascik__card .bascik__card__el__p { color: blue; }
+.bascik__list > .bascik__list__el__li { padding: 0; }
+```
+
+This works because `bascik__` never appears in CSS property value position. Bare element-to-element combinators (`div p {}`, `p + p {}`) with no class anchor on the left side are still not converted.
+
+### CSS nesting element selectors
+
+The `&` character is exclusively a CSS nesting selector and never appears in property value position, making `& ` (ampersand + whitespace) a reliable anchor for detecting nested element selectors:
+
+```
+/(?<=&\s+(?:[>+~]\s+)?)[a-z1-6]+(?=[^{};)]*\{)/g
+```
+
+This handles `& p {}`, `& > h2 {}`, `& + li {}`, and `& ~ span {}`. Patterns with an element appearing after a class in nesting (`& .parent p {}`) and elements directly appended to `&` without whitespace (`&p {}`) are not converted.
+
+### CSS `element.id` property setter
+
+Rewriting `el.id = "my-id"` to use the scoped ID name was evaluated and rejected. The pattern `\.id\s*=\s*["']` matches any property chain ending in `.id`, including `el.dataset.id = "foo"` (which sets a `data-id` attribute, not the DOM `id`). There is no reliable way to distinguish these two cases with static analysis.
+
+The correct pattern is to use `getElementById("my-id")` to retrieve an element reference, then operate on the reference. Bascik rewrites `getElementById` and other explicit DOM lookup methods correctly.

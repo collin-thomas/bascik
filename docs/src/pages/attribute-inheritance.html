@@ -19,25 +19,25 @@
       <main class="docs-content">
         <p class="section-label">Feature</p>
 
-        <!-- Content rendered from docs/content/attribute-inheritance.md at build time.
-             To update page content, edit the MD file - not this file. -->
+        <!-- Intro and demo context rendered from docs/content/attribute-inheritance.md. -->
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
-          const { renderMd } = await import(
+          const { renderMdRange } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/attribute-inheritance.md', { stripDemoBlocks: true }));
+          console.log(await renderMdRange('./content/attribute-inheritance.md', { to: 'How It Works' }));
+          console.log(await renderMdRange('./content/attribute-inheritance.md', { from: 'See it in action' }, { stripDemoBlocks: true }));
         </script>
 
         <component-demo data-bascik-prop-file="src/components/inherit-demo-card/">
           <div data-bascik-slot="example">
-            <inherit-demo-card class="featured-card" aria-label="Featured inheritance demo" data-testid="inherit-demo">
+            <inherit-demo-card class="featured-card" id="featured-inheritance" aria-label="Featured inheritance demo"
+              data-testid="inherit-demo">
             </inherit-demo-card>
           </div>
           <div data-bascik-slot="source-usage">
-            <code-block data-bascik-prop-lang="html">
-              <script data-bascik-build>
+            <code-block data-bascik-prop-lang="html"><script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
@@ -46,8 +46,7 @@
             </code-block>
           </div>
           <div data-bascik-slot="source-html">
-            <code-block data-bascik-prop-lang="html">
-              <script data-bascik-build>
+            <code-block data-bascik-prop-lang="html"><script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
@@ -56,8 +55,7 @@
             </code-block>
           </div>
           <div data-bascik-slot="source-css">
-            <code-block data-bascik-prop-lang="css">
-              <script data-bascik-build>
+            <code-block data-bascik-prop-lang="css"><script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
@@ -66,8 +64,7 @@
             </code-block>
           </div>
           <div data-bascik-slot="output-html">
-            <code-block data-bascik-prop-lang="html">
-              <script data-bascik-build>
+            <code-block data-bascik-prop-lang="html"><script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
@@ -76,6 +73,15 @@
             </code-block>
           </div>
         </component-demo>
+
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMdRange } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMdRange('./content/attribute-inheritance.md', { from: 'How It Works', to: 'See it in action' }));
+        </script>
 
         <script data-bascik-build>
           import { join } from 'node:path';

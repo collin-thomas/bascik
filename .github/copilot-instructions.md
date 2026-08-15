@@ -175,6 +175,23 @@ yarn --cwd docs bascik --build
 
 Then inspect the relevant `docs/dist/` output to confirm the pkg change has the intended effect.
 
+## Tests and Coverage
+
+**When adding, removing, or significantly changing tests in `pkg/src/`:**
+
+- The testing docs (`docs/content/internals/testing.md`) describe the test approach, not an enumerated list of files — the "Test Files" section links to GitHub which is always current. You only need to update the prose if the testing *patterns* change (e.g. a new mock strategy, a new test runner, new helpers).
+- The coverage numbers shown on the testing page are read from `pkg/test-coverage.json` (unit tests) and `pkg/e2e-test-coverage.json` (E2E build-step coverage) at docs build time. After adding tests, regenerate both:
+  ```sh
+  yarn workspace @bascik/bascik update-coverage        # unit tests
+  yarn workspace @bascik/bascik update-e2e-coverage    # E2E (requires built dist/)
+  ```
+  Then commit both JSON files alongside the test changes.
+
+**When changing `pkg/src/lib/dev-server.md` (or adding to the live-reload / SSE / watch system):**
+Update `docs/content/internals/dev-server.md` to reflect the change. This page is the source of truth for how the dev server and watch system work.
+
+**General principle:** the three files that must stay in sync are `llms.txt`, `SKILL.md`, and the relevant `docs/content/internals/*.md`. The copilot-instructions file is the enforcement mechanism — add notes here when a new sync relationship is created.
+
 ## License Source of Truth
 
 The license lives in **three places** that must stay in sync:
@@ -189,3 +206,24 @@ The license lives in **three places** that must stay in sync:
 3. Run `cp LICENSE pkg/LICENSE && cp LICENSE create/LICENSE` to sync the package copies immediately
 
 Do **not** delete the root `LICENSE` — GitHub reads it for repo-level license detection. Do not edit `pkg/LICENSE` or `create/LICENSE` directly; they are derived files.
+
+## Agent Environment Notes
+
+### VS Code Sandbox — Commands That Need Network Will Hang
+
+The agent runs inside a VS Code sandbox. Commands that bind to a port or make outbound connections (Playwright E2E tests, `yarn dev`, `curl`) hang indefinitely when run inside the sandbox. Do **not** retry these commands with slight variations — they will all hang.
+
+- **Unit tests** (`npx vitest run`) work fine; no network is needed.
+- **E2E tests** (`npx playwright test`) require network and must be run by the user in a normal terminal outside the sandbox. Tell the user to run them and report the output.
+- If a sandboxed terminal command hangs, accept it and move on. Do not loop.
+
+### Test Framework: Vitest 4
+
+The project uses **Vitest 4** (`"vitest": "^4.1.10"`). Vitest 4 introduced breaking changes to mock behavior:
+
+- `vi.clearAllMocks()`, `vi.resetAllMocks()`, and `vi.restoreAllMocks()` now also clear/reset/restore **module-level mocks** created via `vi.mock()`. In earlier versions only instance-level (`vi.spyOn`) mocks were affected.
+- If `vi.mock()` factories return `vi.fn()` created inline (e.g. `() => ({ exec: vi.fn() })`), those instances are recreated on each reset, severing the reference stored in test-file variables like `const mockExec = exec`.
+- The fix is `vi.hoisted()`: declare shared `vi.fn()` instances there, then reference them in both the factory and the test body. The `vi.hoisted()` callback runs before the hoisted `vi.mock()` factories, so the same instance is always used.
+- When mocking a module whose functions are captured via `promisify()` (or any closure), the mock must use `vi.hoisted()` so the promisified wrapper always closes over the same `vi.fn()` instance, not a stale one from a previous factory run.
+- Use `mfn.mockReset()` in `beforeEach` instead of `vi.clearAllMocks()` / `vi.resetAllMocks()` to avoid module-mock recreation.
+- Read the Vitest 4 migration guide before writing or debugging tests: https://vitest.dev/guide/migration

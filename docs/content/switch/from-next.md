@@ -1,6 +1,6 @@
-# Migrating from Next.js
+# Switch from Next.js
 
-Next.js and Bascik share file-based routing, but Next.js is a full-stack React framework while Bascik is a build-time HTML assembler. The migration is largely about removing framework abstractions: replace JSX pages with HTML files, replace data-fetching functions with build scripts, and replace special Next.js components with their standard HTML equivalents.
+Next.js and Bascik share file-based routing, but Next.js is a full-stack React framework while Bascik is a build-time HTML assembler. Switching is largely about removing framework abstractions: replace JSX pages with HTML files, replace data-fetching functions with build scripts, and replace special Next.js components with their standard HTML equivalents.
 
 ## Pages Router → src/pages/
 

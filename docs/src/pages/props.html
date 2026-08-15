@@ -19,15 +19,24 @@
       <main class="docs-content">
         <p class="section-label">Feature</p>
 
-        <!-- Content rendered from docs/content/props.md at build time.
-             To update page content, edit the MD file - not this file. -->
+        <!-- Intro rendered from docs/content/props.md. -->
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
-          const { renderMd } = await import(
+          const { renderMdRange } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
           );
-          console.log(await renderMd('./content/props.md', { stripDemoBlocks: true }));
+          console.log(await renderMdRange('./content/props.md', { to: 'Define and pass props' }));
+        </script>
+
+        <!-- Present the demo section before the detailed reference. -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMdRange } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMdRange('./content/props.md', { from: 'See it in action' }, { stripDemoBlocks: true }));
         </script>
 
         <component-demo data-bascik-prop-file="src/pages/index.html">
@@ -36,27 +45,87 @@
               data-bascik-prop-desc="These values are injected into the component template at build time.">
             </feature-card>
           </div>
-          <div data-bascik-slot="code">
-            <code-block data-bascik-prop-lang="html">
-              <script data-bascik-build>
+          <div data-bascik-slot="source-usage">
+            <code-block data-bascik-prop-lang="html"><script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/props.md', 'code'));
+                console.log(await extractDemoBlock('./content/props.md', 'source-usage'));
               </script>
             </code-block>
           </div>
-          <div data-bascik-slot="output">
-            <code-block data-bascik-prop-lang="html">
-              <script data-bascik-build>
+          <div data-bascik-slot="output-html">
+            <code-block data-bascik-prop-lang="html"><script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
-                console.log(await extractDemoBlock('./content/props.md', 'output'));
+                console.log(await extractDemoBlock('./content/props.md', 'output-html'));
               </script>
             </code-block>
           </div>
         </component-demo>
+
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMdRange } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMdRange('./content/props.md', { from: 'Define and pass props', to: 'Props with Existing Attributes' }, { stripDemoBlocks: true }));
+        </script>
+
+        <component-demo data-bascik-prop-file="src/components/alert-box/">
+          <div data-bascik-slot="example">
+            <alert-box data-bascik-prop-title="Success" data-bascik-prop-message="Your changes have been saved.">
+            </alert-box>
+          </div>
+          <div data-bascik-slot="source-usage">
+            <code-block data-bascik-prop-lang="html"><script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/props.md', 'basic-props-usage'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="source-html">
+            <code-block data-bascik-prop-lang="html"><script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/props.md', 'basic-props-html'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="source-css">
+            <code-block data-bascik-prop-lang="css"><script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/props.md', 'basic-props-css'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-html">
+            <code-block data-bascik-prop-lang="html"><script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/props.md', 'basic-props-output-html'));
+              </script>
+            </code-block>
+          </div>
+        </component-demo>
+
+        <!-- Remaining reference follows the runnable examples. -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMdRange } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMdRange('./content/props.md', { from: 'Props with Existing Attributes', to: 'See it in action' }));
+        </script>
 
         <script data-bascik-build>
           import { join } from 'node:path';

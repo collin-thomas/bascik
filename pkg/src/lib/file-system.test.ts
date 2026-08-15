@@ -6,13 +6,14 @@ import {
   listPages,
   getDirectoryPath,
   getDistPagePath,
+  getRelativePath,
   deleteDistFile,
   deleteDistDir,
   createDir,
   copyReplicatePath,
 } from "./file-system.js";
 import { BascikConfig } from "./config.js";
-import { readFile, writeFile } from "node:fs/promises";
+import { readdir, rm, mkdir, copyFile, readFile, writeFile } from "node:fs/promises";
 
 const isDirMock = vi.fn().mockImplementation(() => false);
 
@@ -39,6 +40,10 @@ vi.mock("./config.js", () => ({
     const levels = ["silent", "error", "warn", "info", "debug"] as const;
     return (levels.indexOf((configuredLevel ?? "info") as any) >= levels.indexOf(eventLevel as any));
   },
+}));
+
+vi.mock("./javascript.js", () => ({
+  minifyJs: vi.fn(async (js: string) => js),
 }));
 
 vi.mock("./styles.js", () => ({
@@ -243,10 +248,7 @@ describe("copyReplicatePath – CSS minification", () => {
 
 describe("getRelativePath — Windows separators", () => {
   it("matches when the configured directory uses backslashes", async () => {
-    const { getRelativePath } = await import("./file-system.js");
     const original = BascikConfig.directory.pages;
-    // Simulate a Windows `resolve()` result with backslash separators while
-    // the watcher hands us a forward-slash path.
     (BascikConfig.directory as any).pages = "C:\\proj\\src\\pages";
     try {
       expect(getRelativePath("C:/proj/src/pages/404.html", "pages")).toBe(
@@ -255,5 +257,172 @@ describe("getRelativePath — Windows separators", () => {
     } finally {
       (BascikConfig.directory as any).pages = original;
     }
+  });
+});
+
+describe("getRelativePath – additional branches", () => {
+  it("uses components directory when parentDir is 'components'", () => {
+    expect(getRelativePath("components/ui/button.html", "components")).toBe(
+      "components/ui/button.html",
+    );
+  });
+
+  it("returns parentDir-prefixed path when no prefix matches", () => {
+    // path has no pages/ segment at all → else branch in the ternary
+    expect(getRelativePath("about.html", "pages")).toBe("pages/about.html");
+  });
+});
+
+describe("deepReadDir – error path", () => {
+  it("returns empty array when readdir rejects", async () => {
+    vi.mocked(readdir).mockRejectedValueOnce(new Error("EACCES"));
+    vi.spyOn(console, "error").mockImplementation(() => { });
+    const result = await deepReadDir("./secret");
+    expect(result).toEqual([]);
+    expect(console.error).toHaveBeenCalledWith(
+      "Failed to read directory ./secret",
+      expect.any(Error),
+    );
+  });
+});
+
+describe("deleteDistFile – error handling", () => {
+  it("silently swallows ENOENT", async () => {
+    vi.mocked(rm).mockRejectedValueOnce(Object.assign(new Error("ENOENT"), { code: "ENOENT" }));
+    vi.spyOn(console, "error").mockImplementation(() => { });
+    await deleteDistFile("pages/missing.html");
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  it("logs non-ENOENT errors", async () => {
+    const err = Object.assign(new Error("EPERM"), { code: "EPERM" });
+    vi.mocked(rm).mockRejectedValueOnce(err);
+    vi.spyOn(console, "error").mockImplementation(() => { });
+    await deleteDistFile("pages/missing.html");
+    expect(console.error).toHaveBeenCalledWith("Error Deleting Dist File", err);
+  });
+
+  it("does not log when deletes logging is disabled", async () => {
+    (BascikConfig.devServer!.logging as any).deletes = false;
+    try {
+      await deleteDistFile("pages/about.html");
+      expect(console.log).not.toHaveBeenCalled();
+    } finally {
+      (BascikConfig.devServer!.logging as any).deletes = true;
+    }
+  });
+});
+
+describe("deleteDistFile – displayRelativePath branches", () => {
+  it("displays path as-is when it starts with pagesDir/ (no leading segment)", async () => {
+    await deleteDistFile("pages/styles.css");
+    expect(console.log).toHaveBeenCalledWith("deleted file: pages/styles.css");
+  });
+
+  it("displays components-relative path when path includes /componentsDir/", async () => {
+    await deleteDistFile("/project/components/btn.html");
+    expect(console.log).toHaveBeenCalledWith("deleted file: components/btn.html");
+  });
+
+  it("displays components-relative path when path starts with componentsDir/", async () => {
+    await deleteDistFile("components/btn.html");
+    expect(console.log).toHaveBeenCalledWith("deleted file: components/btn.html");
+  });
+
+  it("strips dist/ prefix for paths that fall through to the final fallback", async () => {
+    await deleteDistFile("dist/index.html");
+    expect(console.log).toHaveBeenCalledWith("deleted file: index.html");
+  });
+});
+
+describe("deleteDistDir – error handling", () => {
+  it("silently swallows ENOENT", async () => {
+    vi.mocked(rm).mockRejectedValueOnce(Object.assign(new Error("ENOENT"), { code: "ENOENT" }));
+    vi.spyOn(console, "error").mockImplementation(() => { });
+    await deleteDistDir("pages/assets");
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  it("logs non-ENOENT errors", async () => {
+    const err = Object.assign(new Error("EPERM"), { code: "EPERM" });
+    vi.mocked(rm).mockRejectedValueOnce(err);
+    vi.spyOn(console, "error").mockImplementation(() => { });
+    await deleteDistDir("pages/assets");
+    expect(console.error).toHaveBeenCalledWith("Error Deleting Dist Directory", err);
+  });
+});
+
+describe("createDir – error path", () => {
+  it("logs error when mkdir rejects", async () => {
+    const err = new Error("EPERM");
+    vi.mocked(mkdir).mockRejectedValueOnce(err as any);
+    vi.spyOn(console, "error").mockImplementation(() => { });
+    await createDir("./bad-path");
+    expect(console.error).toHaveBeenCalledWith("Error Creating Dist Directory", err);
+  });
+});
+
+describe("copyReplicatePath – JS minification", () => {
+  beforeEach(() => {
+    vi.mocked(readFile).mockReset();
+    vi.mocked(writeFile).mockReset();
+  });
+
+  afterEach(() => {
+    (BascikConfig as any).minifyScripts = false;
+  });
+
+  it("writes minified JS using a custom minify function", async () => {
+    (BascikConfig as any).minifyScripts = async (code: string) => code.replace(/\s+/g, "");
+    vi.mocked(readFile)
+      .mockResolvedValueOnce("const x = 1 ;" as any)
+      .mockRejectedValueOnce(new Error("ENOENT"));
+
+    await copyReplicatePath("pages/js/app.js", "dist");
+
+    expect(writeFile).toHaveBeenCalledOnce();
+    const written = vi.mocked(writeFile).mock.calls[0][1] as string;
+    expect(written).toBe("constx=1;");
+  });
+
+  it("skips write when minified JS already matches dest", async () => {
+    (BascikConfig as any).minifyScripts = async (code: string) => code.trim();
+    const content = "const x = 1;";
+    vi.mocked(readFile)
+      .mockResolvedValueOnce(content as any)
+      .mockResolvedValueOnce(content as any);
+
+    await copyReplicatePath("pages/js/app.js", "dist");
+
+    expect(writeFile).not.toHaveBeenCalled();
+  });
+
+  it("calls minifyJs when minifyScripts is true", async () => {
+    (BascikConfig as any).minifyScripts = true;
+    vi.mocked(readFile)
+      .mockResolvedValueOnce("const x = 1;" as any)
+      .mockRejectedValueOnce(new Error("ENOENT"));
+
+    await copyReplicatePath("pages/js/app.js", "dist");
+
+    const { minifyJs } = await import("./javascript.js");
+    expect(vi.mocked(minifyJs)).toHaveBeenCalledWith("const x = 1;");
+    expect(writeFile).toHaveBeenCalledOnce();
+  });
+});
+
+describe("copyReplicatePath – generic error path", () => {
+  it("logs error when copyFile rejects", async () => {
+    const err = new Error("Disk full");
+    vi.mocked(copyFile).mockRejectedValueOnce(err);
+    vi.spyOn(console, "error").mockImplementation(() => { });
+
+    await copyReplicatePath("pages/image.png", "dist");
+
+    expect(console.error).toHaveBeenCalledWith(
+      "Failed to copy file:",
+      expect.any(String),
+      err,
+    );
   });
 });

@@ -1,6 +1,6 @@
 # Scoped Styles
 
-Bascik automatically namespaces your component CSS at build time. Paired `.css` files and inline `<style>` tags inside component HTML both go through the same scoping pipeline, so class names, element selectors, `@media` queries, and `@keyframes` stay isolated to the component.
+Scoped styles namespace a component's CSS at build time, keeping its selectors and animations from leaking into the rest of the page.
 
 ## Where Scoped CSS Can Live
 
@@ -22,46 +22,115 @@ src/components/
     site-nav.css  ← scoped to site-nav
 ```
 
+## How Scoped Names Are Formed
+
+Class names are scoped to the **component type** so every instance of the same component shares identical scoped class names. This is intentional: it allows Bascik to emit a single `<style>` block per component regardless of how many times it appears on the page.
+
+ID and `name` attributes are scoped per **component instance** so multiple instances on the same page always have distinct DOM identifiers.
+
+```text
+class  →  bascik__<componentName>__<originalName>
+id     →  bascik__<componentName>__<instanceId>__<originalName>
+name   →  bascik__<componentName>__<instanceId>__<originalName>
+```
+
+In production builds (`obfuscateAttributeNames: true`, the default), these verbose names are hashed to short hex strings such as `ba1b2c3d`. The HTML, CSS, and JavaScript are all rewritten with the same hashed names so they stay in sync. This is entirely a build-time transformation with no runtime overhead.
+
+## Selector and animation lab
+
+This component combines a class, an ID selector, bare `h3` and `p` selectors, a local custom property, a media query, and a keyframe animation. Inspect Source and Output to see Bascik rewrite them while the pulse runs in the preview.
+
+<!-- demo:scope-lab-usage -->
+```html
+<scope-lab></scope-lab>
+```
+
+<!-- demo:scope-lab-html -->
+```html
+<section class="scope-lab">
+  <span class="scope-lab-pulse" id="signal" aria-hidden="true"></span>
+  <div>
+    <h3>Scoped selectors are active</h3>
+    <p>Bare element selectors, keyframes, and custom properties stay inside this component.</p>
+  </div>
+</section>
+```
+
+<!-- demo:scope-lab-css -->
+```css
+.scope-lab {
+  --signal-color: var(--accent);
+  display: flex;
+  gap: 16px;
+}
+
+.scope-lab-pulse {
+  background: var(--signal-color);
+  animation: scope-pulse 1.6s ease-in-out infinite;
+}
+
+#signal {
+  outline: 3px solid color-mix(in srgb, var(--signal-color) 22%, transparent);
+}
+
+h3 { color: var(--text); }
+p { color: var(--text-muted); }
+
+@keyframes scope-pulse {
+  50% { opacity: 0.35; transform: scale(0.72); }
+}
+
+@media (max-width: 600px) {
+  .scope-lab { align-items: flex-start; }
+}
+```
+
+<!-- demo:scope-lab-output-html -->
+```html
+<section class="bascik__scope-lab__scope-lab">
+  <span class="bascik__scope-lab__scope-lab-pulse bascik__scope-lab__id__signal"
+        id="bascik__scope-lab__a1b2__signal" aria-hidden="true"></span>
+  <div>
+    <h3 class="bascik__scope-lab__el__h3">Scoped selectors are active</h3>
+    <p class="bascik__scope-lab__el__p">Bare element selectors stay local.</p>
+  </div>
+</section>
+```
+
+<!-- demo:scope-lab-output-css -->
+```css
+.bascik__scope-lab__scope-lab {
+  --bascik__scope-lab__signal-color: var(--accent);
+}
+
+.bascik__scope-lab__scope-lab-pulse {
+  background: var(--bascik__scope-lab__signal-color);
+  animation: bascik__scope-lab__keyframe__scope-pulse 1.6s ease-in-out infinite;
+}
+
+.bascik__scope-lab__id__signal {
+  outline: 3px solid color-mix(in srgb, var(--bascik__scope-lab__signal-color) 22%, transparent);
+}
+
+.bascik__scope-lab__el__h3 { color: var(--text); }
+.bascik__scope-lab__el__p { color: var(--text-muted); }
+
+@media (max-width: 600px) {
+  .bascik__scope-lab__scope-lab { align-items: flex-start; }
+}
+```
+
 ## Class Scoping
 
 Every class name in the `.css` file is prefixed with a unique instance ID. The corresponding HTML attributes are updated to match.
 
-```css
-/* site-nav.css - source */
-.navigation ul { list-style-type: none; }
-.navigation ul li a { padding: 8px; }
-```
-
-<!-- compiled-output -->
-```css
-/* compiled output */
-.bascik__site-nav__a1b2c3__navigation ul { list-style-type: none; }
-.bascik__site-nav__a1b2c3__navigation ul li a { padding: 8px; }
-```
+Both demos on this page show the source class names under Source and their rewritten names under Output.
 
 ## Element Selector Scoping
 
 Bare element selectors like `p {}` or `h2 {}` are converted to generated class selectors and injected onto matching elements inside the component.
 
-```css
-/* my-comp.css - source */
-p { color: #d3ff8d; }
-h2 { font-size: 2rem; }
-```
-
-<!-- compiled-output -->
-```css
-/* compiled output */
-.bascik__my-comp__x1__el__p { color: #d3ff8d; }
-.bascik__my-comp__x1__el__h2 { font-size: 2rem; }
-```
-
-Every `<p>` and `<h2>` inside the component gets the generated class injected at build time, you never write these class names yourself.
-
-<!-- compiled-output -->
-```html
-<p class="bascik__my-comp__x1__el__p">...</p>
-```
+The selector and animation lab above uses this exact pattern. Its Source CSS contains bare selectors; its Output tabs show the generated classes in both CSS and HTML.
 
 > **Isolation guarantee:** Element styles only affect elements inside the component. A `p {}` rule in `my-comp.css` will never affect `<p>` tags on the page or in other components.
 
@@ -69,86 +138,27 @@ Every `<p>` and `<h2>` inside the component gets the generated class injected at
 
 Media queries work normally. Class names inside them are scoped like any other rule:
 
-```css
-@media (max-width: 600px) {
-  .logo { font-size: 0.9rem; }
-}
-```
-
-<!-- compiled-output -->
-```css
-@media (max-width: 600px) {
-  .bascik__comp__x1__logo { font-size: 0.9rem; }
-}
-```
+The selector and animation lab includes a mobile media query. Open Output → CSS to see its `.scope-lab` selector rewritten inside the unchanged `@media` wrapper.
 
 ## @keyframes Scoping
 
 Keyframe names are also prefixed so animations from different components never collide:
 
-```css
-@keyframes spin { to { transform: rotate(360deg); } }
-.icon { animation: spin 1s linear infinite; }
-```
+The pulsing indicator in the lab is driven by `@keyframes scope-pulse`. Open Output → CSS to see the scoped keyframe name and rewritten `animation` declaration.
 
-<!-- compiled-output -->
-```css
-@keyframes bascik__comp__x1__keyframe__spin { to { transform: rotate(360deg); } }
-.bascik__comp__x1__icon {
-  animation: bascik__comp__x1__keyframe__spin 1s linear infinite;
-}
-```
 ## CSS ID Selectors
 
 CSS `#id` selectors are converted to scoped class selectors, and the generated class is injected onto the matching element in the HTML. This means `#btn {}` in a component is fully isolated, the same ID name in another component or on the page produces a completely different selector.
 
-```css
-/* my-comp.css - source */
-#submit-btn { background: #d3ff8d; }
-```
-
-<!-- compiled-output -->
-```css
-/* compiled output */
-.bascik__my-comp__id__submit-btn { background: #d3ff8d; }
-```
-
-<!-- compiled-output -->
-```html
-<!-- The matching element gets the generated class injected -->
-<button id="bascik__my-comp__a1b2__submit-btn"
-        class="bascik__my-comp__id__submit-btn">Submit</button>
-```
+The lab styles `#signal`. Output → CSS shows its generated class selector; Output → HTML shows that class injected beside the per-instance scoped `id`.
 
 > **Specificity note:** Converting `#id` to a class drops specificity from `(0,1,0,0)` to `(0,0,1,0)`. `[id]` and `[id="…"]` attribute-selector forms are stripped at compile time, use a class selector instead.
+
 ## CSS Custom Properties
 
 `--var-name` declarations in a component's CSS are automatically scoped. All `var(--var-name)` references within the same file are updated to match, so custom properties stay isolated to their component.
 
-```css
-/* source */
-:root {
-  --brand: #d3ff8d;
-  --size: 1rem;
-}
-.title {
-  color: var(--brand);
-  font-size: var(--size);
-}
-```
-
-<!-- compiled-output -->
-```css
-/* compiled */
-:root {
-  --bascik__my-comp__x1__brand: #d3ff8d;
-  --bascik__my-comp__x1__size: 1rem;
-}
-.bascik__my-comp__x1__title {
-  color: var(--bascik__my-comp__x1__brand);
-  font-size: var(--bascik__my-comp__x1__size);
-}
-```
+The lab declares `--signal-color` and uses it for the animated indicator. Its Output CSS shows both the scoped declaration and rewritten `var()` reference.
 
 > **Only locally-declared properties are scoped.** If a component uses `var(--global-var)` but doesn't declare `--global-var` in its own CSS, that reference is left untouched so it still resolves from a global stylesheet.
 
@@ -209,9 +219,17 @@ export const bascikConfig = {
 
 With `deduplicateCss: false`, class selectors behave like `id` selectors, scoped per instance, but Bascik emits a separate `<style>` block for every component instance. Use the `id`-based pattern above instead whenever possible; it works with the default settings and avoids extra style blocks.
 
-## Live Demo
+## How Scoping Works
 
-The `feature-card` component used throughout these docs illustrates scoped styles end-to-end. Source files and compiled output are shown below.
+This guide focuses on the CSS behavior you write and observe. The compiler implementation is documented separately.
+
+> **Under the hood.** Read the [Scoping System internals](/internals/scoping-system) for the scoping passes, generated attribute maps, selector transformations, and deduplication model.
+
+## See it in action
+
+Hover the card to see its transitions and shadows stay isolated to the component.
+
+### Source and output
 
 **Source HTML** (`feature-card.html`):
 

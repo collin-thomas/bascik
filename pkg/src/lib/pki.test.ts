@@ -1,15 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import os from "node:os";
 
+// vi.hoisted() runs before vi.mock() factories so the same vi.fn() references
+// are used in both the factory (which is hoisted) and the test file.
+const { _mockAccess, _mockExec, _mockRm } = vi.hoisted(() => ({
+  _mockAccess: vi.fn(),
+  _mockExec: vi.fn(),
+  _mockRm: vi.fn().mockResolvedValue(undefined),
+}));
+
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
 vi.mock("node:fs/promises", () => ({
-  access: vi.fn(),
-  rm: vi.fn().mockResolvedValue(undefined),
+  access: _mockAccess,
+  rm: _mockRm,
 }));
 
 vi.mock("node:child_process", () => ({
-  exec: vi.fn(),
+  exec: _mockExec,
 }));
 
 vi.mock("node:os", () => ({
@@ -19,17 +27,14 @@ vi.mock("node:os", () => ({
 // ─── Imports (after mocks) ────────────────────────────────────────────────────
 
 import { createSelfSignedCert } from "./pki.js";
-import { access, rm } from "node:fs/promises";
-import { exec } from "node:child_process";
 
-const mockAccess = access as unknown as ReturnType<typeof vi.fn>;
-const mockExec = exec as unknown as ReturnType<typeof vi.fn>;
-const mockRm = rm as unknown as ReturnType<typeof vi.fn>;
+const mockAccess = _mockAccess;
+const mockExec = _mockExec;
+const mockRm = _mockRm;
 const mockPlatform = (os as any).platform as ReturnType<typeof vi.fn>;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Make exec call its callback with success */
 const makeExecSucceed = () => {
   mockExec.mockImplementation(
     (_cmd: string, cb: (err: null, stdout: string, stderr: string) => void) => {
@@ -38,7 +43,6 @@ const makeExecSucceed = () => {
   );
 };
 
-/** Make exec call its callback with an error */
 const makeExecFail = (msg = "openssl not found") => {
   mockExec.mockImplementation((_cmd: string, cb: (err: Error) => void) => {
     cb(new Error(msg));
@@ -48,9 +52,12 @@ const makeExecFail = (msg = "openssl not found") => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  mockAccess.mockReset();
+  mockExec.mockReset();
+  mockRm.mockReset();
   mockRm.mockResolvedValue(undefined);
   mockPlatform.mockReturnValue("linux");
+  mockAccess.mockResolvedValue(undefined); // default: certs exist → early return
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -71,16 +78,14 @@ describe("createSelfSignedCert – certs already exist", () => {
 
 describe("createSelfSignedCert – Unix cert generation", () => {
   beforeEach(() => {
-    // Simulate missing certs (access throws)
-    mockAccess.mockRejectedValue(
-      Object.assign(new Error("ENOENT"), { code: "ENOENT" }),
-    );
+    mockAccess.mockReset();
+    mockAccess.mockImplementation(() => { throw Object.assign(new Error("ENOENT"), { code: "ENOENT" }); });
     mockPlatform.mockReturnValue("linux");
   });
 
   it("calls exec with an openssl req command", async () => {
     makeExecSucceed();
-    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "log").mockImplementation(() => { });
     await createSelfSignedCert();
     expect(mockExec).toHaveBeenCalledTimes(1);
     const cmd = mockExec.mock.calls[0][0] as string;
@@ -89,7 +94,7 @@ describe("createSelfSignedCert – Unix cert generation", () => {
 
   it("includes localhost in the openssl subject", async () => {
     makeExecSucceed();
-    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "log").mockImplementation(() => { });
     await createSelfSignedCert();
     const cmd = mockExec.mock.calls[0][0] as string;
     expect(cmd).toContain("localhost");
@@ -97,7 +102,7 @@ describe("createSelfSignedCert – Unix cert generation", () => {
 
   it("logs success after generating the cert", async () => {
     makeExecSucceed();
-    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => { });
     await createSelfSignedCert();
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining("Generated self-signed certificate"),
@@ -111,23 +116,21 @@ describe("createSelfSignedCert – Unix cert generation", () => {
 
 describe("createSelfSignedCert – Windows cert generation", () => {
   beforeEach(() => {
-    mockAccess.mockRejectedValue(
-      Object.assign(new Error("ENOENT"), { code: "ENOENT" }),
-    );
+    mockAccess.mockReset();
+    mockAccess.mockImplementation(() => { throw Object.assign(new Error("ENOENT"), { code: "ENOENT" }); });
     mockPlatform.mockReturnValue("win32");
   });
 
   it("calls exec multiple times for the Windows PowerShell + openssl flow", async () => {
     makeExecSucceed();
-    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "log").mockImplementation(() => { });
     await createSelfSignedCert();
-    // Windows path calls exec 3 times (PS, pkcs12 key, pkcs12 cert)
     expect(mockExec).toHaveBeenCalledTimes(3);
   });
 
   it("the first exec call uses PowerShell", async () => {
     makeExecSucceed();
-    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "log").mockImplementation(() => { });
     await createSelfSignedCert();
     const cmd = mockExec.mock.calls[0][0] as string;
     expect(cmd).toContain("powershell");
@@ -135,7 +138,7 @@ describe("createSelfSignedCert – Windows cert generation", () => {
 
   it("removes the temporary pfx file after generation", async () => {
     makeExecSucceed();
-    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "log").mockImplementation(() => { });
     await createSelfSignedCert();
     expect(mockRm).toHaveBeenCalledWith(
       expect.stringContaining("bascik-cert.pfx"),
@@ -149,13 +152,22 @@ describe("createSelfSignedCert – Windows cert generation", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("createSelfSignedCert – exec failure", () => {
+  beforeEach(() => {
+    mockAccess.mockReset();
+    mockAccess.mockImplementation(() => { throw Object.assign(new Error("ENOENT"), { code: "ENOENT" }); });
+  });
+
   it("throws (rather than process.exit) when exec fails", async () => {
-    mockAccess.mockRejectedValue(new Error("ENOENT"));
     makeExecFail("openssl error");
-    // Must throw so callers can handle it — process.exit() in a library
-    // would kill worker threads and embedders without a chance to recover.
     await expect(createSelfSignedCert()).rejects.toThrow(
       /Failed to generate self-signed certificate/,
     );
+  });
+
+  it("stringifies a non-Error value thrown by exec", async () => {
+    mockExec.mockImplementation(
+      (_cmd: string, cb: (err: unknown) => void) => { cb("exec string error"); },
+    );
+    await expect(createSelfSignedCert()).rejects.toThrow("exec string error");
   });
 });

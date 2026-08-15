@@ -40,8 +40,15 @@
 
     .hero-actions {
       display: flex;
+      flex-direction: column;
       gap: 12px;
-      flex-wrap: wrap;
+    }
+
+    @media (min-width: 480px) {
+      .hero-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
     }
 
     .hero-quickstart {
@@ -439,8 +446,16 @@
         grid-template-columns: 1fr;
       }
 
+      .how-result {
+        order: -1;
+      }
+
       .demo-layout {
         grid-template-columns: 1fr;
+      }
+
+      .demo-live {
+        order: -1;
       }
     }
 
@@ -487,18 +502,18 @@
     <section class="home-section">
       <div class="container">
         <p class="section-label">How it works</p>
-        <h2 class="section-heading">You write the HTML. Bascik scopes it.</h2>
+        <h2 class="section-heading">Write your code. Bascik does the rest.</h2>
         <p class="section-sub">Create a file with your component name. Add your HTML, CSS, and JavaScript. Reference
           that tag in any page or component with no imports or configuration needed.</p>
 
         <div class="how-split">
           <!-- Code panel with tabs -->
           <div class="how-code">
-            <div class="how-code-tabs">
+            <tab-strip class="how-code-tabs">
               <button class="how-code-tab active" data-how="component">my-card.html</button>
               <button class="how-code-tab" data-how="usage">index.html</button>
               <button class="how-code-tab" data-how="output">dist/index.html</button>
-            </div>
+            </tab-strip>
             <pre class="how-src-pane" id="how-component"><code><span class="hl-comment">&lt;!-- src/components/my-card.html --&gt;</span>
 <span class="hl-tag">&lt;style&gt;</span>
   .card {
@@ -555,7 +570,7 @@
           <div class="how-result">
             <p class="how-result-eyebrow">
               <span class="how-result-dot"></span>
-              Live render
+              Live Example
             </p>
             <div class="how-result-card" id="how-demo-card">
               <h3>My Card</h3>
@@ -763,9 +778,9 @@ inc.addEventListener(<span class="hl-val">'click'</span>, () => {
               scoped,
               partial, or unsupported.</p>
           </a>
-          <a href="/migrate" class="card" style="text-decoration:none">
-            <p class="section-label">Migration</p>
-            <h3 style="margin-bottom:6px">Migration Guides</h3>
+          <a href="/switch" class="card" style="text-decoration:none">
+            <p class="section-label">Switching</p>
+            <h3 style="margin-bottom:6px">Switch to Bascik</h3>
             <p style="margin:0;font-size:0.875rem">Moving from React, Next.js, Eleventy, or Astro. Concept mapping and
               worked examples.</p>
           </a>

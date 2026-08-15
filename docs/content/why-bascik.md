@@ -2,6 +2,57 @@
 
 The guiding principle behind Bascik is simple: use what already exists. Do not invent new syntax, do not add a runtime, do not get in the way. HTML, CSS, and JavaScript are enough.
 
+## See it in action
+
+Create one HTML file, then use its filename as a tag anywhere, with no registration, imports, or framework API.
+
+<!-- demo:source-usage -->
+```html
+<hello-card></hello-card>
+```
+
+<!-- demo:source-html -->
+```html
+<article class="hello-card">
+  <p class="hello-card-kicker">One file. One tag.</p>
+  <h3 class="hello-card-title">Plain HTML, ready to reuse.</h3>
+  <p class="hello-card-body">
+    Bascik replaces the custom tag at build time and ships the finished markup.
+  </p>
+</article>
+```
+
+<!-- demo:source-css -->
+```css
+.hello-card {
+  padding: 24px;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
+}
+```
+
+<!-- demo:output-html -->
+```html
+<article class="bascik__hello-card__hello-card">
+  <p class="bascik__hello-card__hello-card-kicker">One file. One tag.</p>
+  <h3 class="bascik__hello-card__hello-card-title">Plain HTML, ready to reuse.</h3>
+  <p class="bascik__hello-card__hello-card-body">
+    Bascik replaces the custom tag at build time and ships the finished markup.
+  </p>
+</article>
+```
+
+<!-- demo:output-css -->
+```css
+.bascik__hello-card__hello-card {
+  padding: 24px;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
+}
+```
+
 ## The Problem Bascik Solves
 
 You've been here. You're building a straightforward site and you've copy-pasted the same navigation markup into every page for the third time. You Google _"how to reuse HTML on multiple pages without a framework"_ or ask ChatGPT _"HTML components without React."_ The answers are always the same: Web Components (verbose, requires JavaScript to render), server-side includes (awkward, server-dependent), or a full framework (React, Vue, Astro) that feels like enormous overkill for something this simple.

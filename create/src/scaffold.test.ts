@@ -25,12 +25,14 @@ import {
 
 vi.mock("node:fs/promises", () => ({
   mkdir: vi.fn(async () => undefined),
+  readFile: vi.fn(async () => "# Bascik Skill"),
   writeFile: vi.fn(async () => undefined),
 }));
 
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 
 const mockMkdir = mkdir as ReturnType<typeof vi.fn>;
+const mockReadFile = readFile as ReturnType<typeof vi.fn>;
 const mockWriteFile = writeFile as ReturnType<typeof vi.fn>;
 
 vi.spyOn(console, "log").mockImplementation(() => { });
@@ -275,6 +277,8 @@ describe("scaffold", () => {
   it("creates all component and page directories", async () => {
     await scaffold("my-app", "/tmp");
     const dirs = mockMkdir.mock.calls.map((c) => String(c[0]));
+    expect(dirs.some((d) => d.includes(".github/skills/bascik"))).toBe(true);
+    expect(dirs.some((d) => d.includes(".claude/skills/bascik"))).toBe(true);
     expect(dirs.some((d) => d.includes("src/pages/assets"))).toBe(true);
     expect(dirs.some((d) => d.includes("src/pages/css"))).toBe(true);
     expect(dirs.some((d) => d.includes("site-header"))).toBe(true);
@@ -283,9 +287,16 @@ describe("scaffold", () => {
     expect(dirs.some((d) => d.includes("site-meta"))).toBe(true);
   });
 
-  it("writes all 18 expected files", async () => {
+  it("writes all 20 expected files", async () => {
     await scaffold("my-app", "/tmp");
-    expect(mockWriteFile.mock.calls.length).toBe(18);
+    expect(mockWriteFile.mock.calls.length).toBe(20);
+  });
+
+  it("writes SKILL.md into .github/skills/bascik and .claude/skills/bascik", async () => {
+    await scaffold("my-app", "/tmp");
+    const paths = allWrittenPaths().filter((p) => p.endsWith("SKILL.md"));
+    expect(paths.some((p) => p.includes(".github/skills/bascik"))).toBe(true);
+    expect(paths.some((p) => p.includes(".claude/skills/bascik"))).toBe(true);
   });
 
   it("writes root config files", async () => {

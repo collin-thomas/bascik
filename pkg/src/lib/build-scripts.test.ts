@@ -14,7 +14,10 @@ vi.mock("node:fs/promises", () => ({
 }));
 
 vi.mock("./config.js", () => ({
-  BascikConfig: { isBuild: false },
+  BascikConfig: {
+    isBuild: false,
+    directory: { pages: "src/pages", components: "src/components" },
+  },
 }));
 
 import { execFile } from "node:child_process";
@@ -282,5 +285,33 @@ describe("executeBuildScripts", () => {
     const html = "<span>&copy; <script data-bascik-build>console.log(1)</script></span>";
     const result = await executeBuildScripts(html);
     expect(result).toBe("<span>&copy; 2026 Built with Bascik</span>");
+  });
+
+  it("forwards stderr output to process.stderr", async () => {
+    const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+    mockExecFile.mockImplementation(
+      (_cmd: unknown, _args: unknown, _opts: unknown,
+        cb: (err: null, stdout: string, stderr: string) => void) => {
+        cb(null, "<p>out</p>", "warning: something unusual");
+      },
+    );
+    await executeBuildScripts("<script data-bascik-build>x</script>");
+    expect(stderrSpy).toHaveBeenCalledWith("warning: something unusual");
+    stderrSpy.mockRestore();
+  });
+
+  it("includes file path and line/column in the error message when filePath is provided", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+    rejectWith("syntax error");
+    const html =
+      '<p>first</p>\n<script data-bascik-build>bad()</script>';
+    await executeBuildScripts(html, "src/pages/test-page.html");
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("test-page.html"),
+    );
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("line"),
+    );
+    warnSpy.mockRestore();
   });
 });

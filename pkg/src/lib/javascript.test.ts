@@ -1010,3 +1010,84 @@ describe("prefixElementAttribute – scoping completeness", () => {
     );
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// minifyJs – regex literal preservation
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("minifyJs – regex literal handling", () => {
+  it("preserves a simple regex literal verbatim", () => {
+    // /abc/g follows '=' so it is unambiguously a regex, not division
+    expect(minifyJs("var re = /abc/g;")).toBe("var re = /abc/g;");
+  });
+
+  it("preserves a regex literal with flags", () => {
+    expect(minifyJs("var re = /hello world/gi;")).toBe("var re = /hello world/gi;");
+  });
+
+  it("does not confuse '/' in a character class with the closing delimiter", () => {
+    // /[/]/ — the '/' inside [...] is part of the character class, not the end
+    expect(minifyJs("var re = /[/]/;")).toBe("var re = /[/]/;");
+  });
+
+  it("preserves a regex with escape sequences", () => {
+    expect(minifyJs("var re = /a\\/b/;")).toBe("var re = /a\\/b/;");
+  });
+
+  it("treats '/' as division (not regex start) after an identifier", () => {
+    // After 'a' the '/' is preceded by a word char → division, not regex
+    const result = minifyJs("var n = a/b;");
+    // The '/' is preserved as division; code is collapsed but not mangled
+    expect(result).toContain("/");
+    expect(result).not.toContain("/b/"); // must not re-interpret as regex
+  });
+
+  it("handles a regex that contains a block comment string verbatim", () => {
+    expect(minifyJs("var re = /\\/\\*/g;")).toBe("var re = /\\/\\*/g;");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// namespaceScriptTags – explicit server-script shielding
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("namespaceScriptTags – data-bascik-server shielding", () => {
+  it("does not wrap a data-bascik-server script in an IIFE", () => {
+    const c = { name: "my-comp", fileContent: "<script data-bascik-server>var x = 1;</script>" };
+    const result = namespaceScriptTags(c);
+    // The script body must be unchanged — no IIFE wrapping
+    expect(result.fileContent).toContain("var x = 1;");
+    expect(result.fileContent).not.toContain("(function()");
+  });
+
+  it("wraps a plain script but leaves an adjacent server script untouched", () => {
+    const c = {
+      name: "my-comp",
+      fileContent:
+        "<script>var client = 1;</script>" +
+        "<script data-bascik-server>var server = 2;</script>",
+    };
+    const result = namespaceScriptTags(c);
+    expect(result.fileContent).toContain("(function()");
+    expect(result.fileContent).toContain("var server = 2;");
+    // The server block must not be wrapped
+    const serverIdx = result.fileContent.indexOf("var server = 2;");
+    const iffeAfterServer = result.fileContent.indexOf("(function()", serverIdx);
+    expect(iffeAfterServer).toBe(-1);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// prefixElementAttribute – null componentInstanceId auto-generates an id
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("prefixElementAttribute – auto-generated instance id", () => {
+  it("scopes attributes when componentInstanceId is null (auto-generates id)", () => {
+    const c = makeComponent('<div id="box"></div>');
+    // Passing null forces getUniqueId to be called internally
+    const result = prefixElementAttribute(c, "id", null);
+    // The scoped name should contain "bascik__my-comp__" followed by a generated id
+    expect(result.fileContent).toMatch(/bascik__my-comp__[0-9a-f]{8}__box/);
+    expect(result.fileContent).not.toContain('id="box"');
+  });
+});

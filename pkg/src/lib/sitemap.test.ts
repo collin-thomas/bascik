@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { pagePathToUrlPath, buildSitemapXml, buildRobotsTxt, escapeXml, is404Page, generateSitemapFiles } from "./sitemap.js";
 import { listPages } from "./file-system.js";
 import { writeFile } from "node:fs/promises";
+import { BascikConfig } from "./config.js";
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -160,5 +161,57 @@ describe("buildRobotsTxt", () => {
   it("includes the sitemap URL", () => {
     const txt = buildRobotsTxt("https://example.com");
     expect(txt).toContain("Sitemap: https://example.com/sitemap.xml");
+  });
+});
+
+describe("generateSitemapFiles – early-return branches", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Reset to default enabled state
+    (BascikConfig as Record<string, unknown>).generate = { sitemap: true, robots: true };
+    (BascikConfig as Record<string, unknown>).siteUrl = "https://example.com";
+    vi.mocked(listPages).mockResolvedValue([]);
+  });
+
+  it("returns without writing files when both sitemap and robots are disabled", async () => {
+    (BascikConfig as Record<string, unknown>).generate = { sitemap: false, robots: false };
+    await generateSitemapFiles();
+    expect(writeFile).not.toHaveBeenCalled();
+  });
+
+  it("warns and returns without writing when siteUrl is not configured", async () => {
+    (BascikConfig as Record<string, unknown>).siteUrl = undefined;
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+    await generateSitemapFiles();
+    expect(writeFile).not.toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("siteUrl"));
+    warnSpy.mockRestore();
+  });
+
+  it("writes only robots.txt when sitemap is disabled but robots is enabled", async () => {
+    (BascikConfig as Record<string, unknown>).generate = { sitemap: false, robots: true };
+    await generateSitemapFiles();
+    const writtenPaths = vi.mocked(writeFile).mock.calls.map(([f]) => String(f));
+    expect(writtenPaths).not.toContain("dist/sitemap.xml");
+    expect(writtenPaths.some((p) => p.endsWith("robots.txt"))).toBe(true);
+  });
+
+  it("writes only sitemap.xml when robots is disabled but sitemap is enabled", async () => {
+    (BascikConfig as Record<string, unknown>).generate = { sitemap: true, robots: false };
+    await generateSitemapFiles();
+    const writtenPaths = vi.mocked(writeFile).mock.calls.map(([f]) => String(f));
+    expect(writtenPaths.some((p) => p.endsWith("sitemap.xml"))).toBe(true);
+    expect(writtenPaths).not.toContain("dist/robots.txt");
+  });
+
+  it("trims trailing slash from siteUrl before writing", async () => {
+    (BascikConfig as Record<string, unknown>).siteUrl = "https://example.com/";
+    (BascikConfig as Record<string, unknown>).generate = { sitemap: false, robots: true };
+    await generateSitemapFiles();
+    const robotsCall = vi.mocked(writeFile).mock.calls.find(([f]) =>
+      String(f).endsWith("robots.txt")
+    );
+    expect(String(robotsCall?.[1])).toContain("https://example.com/sitemap.xml");
+    expect(String(robotsCall?.[1])).not.toContain("https://example.com//sitemap.xml");
   });
 });

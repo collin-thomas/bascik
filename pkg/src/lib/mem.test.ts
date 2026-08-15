@@ -185,3 +185,65 @@ describe("storePage update", () => {
     expect(mem.pagesThisComponentIsUsedOn("comp-b")).not.toContain("upd-comp");
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Open-page tracking
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("openPages tracking", () => {
+  it("starts empty", () => {
+    expect(mem.openPages).toEqual([]);
+  });
+
+  it("trackOpenPage adds an http path", () => {
+    mem.trackOpenPage("/about");
+    expect(mem.openPages).toContain("/about");
+  });
+
+  it("untrackOpenPage removes the path", () => {
+    mem.trackOpenPage("/about");
+    mem.untrackOpenPage("/about");
+    expect(mem.openPages).not.toContain("/about");
+  });
+
+  it("tracks multiple pages independently", () => {
+    mem.trackOpenPage("/about");
+    mem.trackOpenPage("/faq");
+    expect(mem.openPages).toContain("/about");
+    expect(mem.openPages).toContain("/faq");
+  });
+
+  it("untracking one page does not affect others", () => {
+    mem.trackOpenPage("/about");
+    mem.trackOpenPage("/faq");
+    mem.untrackOpenPage("/about");
+    expect(mem.openPages).not.toContain("/about");
+    expect(mem.openPages).toContain("/faq");
+  });
+
+  it("tracking the same path twice does not duplicate it", () => {
+    mem.trackOpenPage("/about");
+    mem.trackOpenPage("/about");
+    expect(mem.openPages.filter(p => p === "/about")).toHaveLength(1);
+  });
+
+  it("untracking a path that was never tracked is a no-op", () => {
+    expect(() => mem.untrackOpenPage("/never-tracked")).not.toThrow();
+    expect(mem.openPages).toEqual([]);
+  });
+
+  it("untracking one connection for a path does not remove it when another is open", () => {
+    mem.trackOpenPage("/about");
+    mem.trackOpenPage("/about");
+    mem.untrackOpenPage("/about");
+    expect(mem.openPages).toContain("/about");
+  });
+
+  it("untracking all connections for a path removes it", () => {
+    mem.trackOpenPage("/about");
+    mem.trackOpenPage("/about");
+    mem.untrackOpenPage("/about");
+    mem.untrackOpenPage("/about");
+    expect(mem.openPages).not.toContain("/about");
+  });
+});
