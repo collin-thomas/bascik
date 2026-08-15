@@ -8,3 +8,4 @@
 6. Use `data-` attributes for runtime state that changes via JavaScript (e.g. `data-state="open"`). Scoped class names are assigned at build time and cannot be reliably looked up by JS string manipulation.
 7. Props accept text only. For rich HTML content, use slots.
 8. `<script type="module">` scripts are not wrapped in an IIFE but their selectors are still rewritten.
+9. Component tag text inside `<script>`, `<style>`, or `<textarea>` content (e.g. `<my-card>` in a JSON-LD string or code example) is treated as text and never resolved into a component.
