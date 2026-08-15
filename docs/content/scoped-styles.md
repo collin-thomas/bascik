@@ -227,144 +227,75 @@ This guide focuses on the CSS behavior you write and observe. The compiler imple
 
 ## See it in action
 
-Hover the card to see its transitions and shadows stay isolated to the component.
+Click the card to toggle its active state. Hover for the hover state. Both are isolated to this component.
 
 ### Source and output
 
-**Source HTML** (`feature-card.html`):
+**Source** (`my-card.html` — CSS, HTML, and JS in one file):
 
 <!-- demo:source-usage -->
 ```html
-<feature-card
-  data-bascik-prop-label="Scoped"
-  data-bascik-prop-title="Isolated Styles"
-  data-bascik-prop-desc="Hover to see scoped transitions.">
-</feature-card>
+<my-card>
+  <h3>Isolated Styles</h3>
+  <p>Click to toggle the active state.</p>
+</my-card>
 ```
 
 <!-- demo:source-html -->
 ```html
-<div class="fcard">
-  <p class="fcard-label" data-bascik-prop-label></p>
-  <h3 class="fcard-title" data-bascik-prop-title></h3>
-  <p class="fcard-desc" data-bascik-prop-desc></p>
-  <div class="fcard-slot">
-    <div data-bascik-slot></div>
-  </div>
+<style>
+  .card {
+    padding: 26px 28px;
+    background: #242628;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+
+    h3 { margin: 0 0 8px; color: #f0f1f2; }
+    p  { margin: 0; color: #8d929e; }
+
+    &:hover {
+      border-color: rgba(211,255,141,0.35);
+      box-shadow: 0 0 0 1px rgba(211,255,141,0.12);
+    }
+
+    &.active {
+      background: rgba(211,255,141,0.07);
+      border-color: rgba(211,255,141,0.5);
+      box-shadow: 0 0 0 1px rgba(211,255,141,0.25), 0 0 20px rgba(211,255,141,0.08);
+
+      h3 { color: #d3ff8d; }
+    }
+  }
+</style>
+<div class="card" id="card">
+  <div data-bascik-slot></div>
 </div>
+<script>
+  const card = document.getElementById('card');
+  card.addEventListener('click', () => {
+    card.classList.toggle('active');
+  });
+</script>
 ```
 
-**Source CSS** (`feature-card.css`):
-
-<!-- demo:source-css -->
-```css
-.fcard {
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 24px;
-  transition: border-color .2s, transform .2s, box-shadow .2s;
-}
-
-.fcard:hover {
-  border-color: var(--border-hover);
-  box-shadow: 0 0 0 1px var(--accent-dim), 0 8px 32px rgba(0,0,0,0.3);
-  transform: translateY(-2px);
-}
-
-.fcard-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  color: var(--accent);
-  margin-bottom: 8px;
-}
-
-.fcard-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: var(--text);
-}
-
-.fcard-desc {
-  font-size: 0.88rem;
-  color: var(--text-muted);
-  margin-bottom: 0;
-}
-
-.fcard-slot {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
-}
-
-.fcard-slot:empty {
-  display: none;
-}
-```
-
-**Compiled output HTML** (class names scoped, props injected, slot wrappers removed):
+**Compiled output** (class names and IDs scoped, script wrapped in IIFE):
 
 <!-- demo:output-html -->
 ```html
-<div class="bascik__feature-card__fcard">
-  <p class="bascik__feature-card__fcard-label">Scoped</p>
-  <h3 class="bascik__feature-card__fcard-title">Isolated Styles</h3>
-  <p class="bascik__feature-card__fcard-desc">
-    Hover over me to see transitions and shadows that won't leak out.
-  </p>
+<style>
+  .bascik__my-card__card { ... }
+  .bascik__my-card__card .bascik__my-card__active { ... }
+</style>
+<div class="bascik__my-card__card" id="bascik__my-card__a1b__card">
+  <h3>Isolated Styles</h3>
+  <p>Click to toggle the active state.</p>
 </div>
-```
-
-**Compiled output CSS** (all class selectors prefixed with the component scope):
-
-<!-- demo:output-css -->
-```css
-.bascik__feature-card__fcard {
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 24px;
-  transition: border-color .2s, transform .2s, box-shadow .2s;
-}
-
-.bascik__feature-card__fcard:hover {
-  border-color: var(--border-hover);
-  box-shadow: 0 0 0 1px var(--accent-dim), 0 8px 32px rgba(0,0,0,0.3);
-  transform: translateY(-2px);
-}
-
-.bascik__feature-card__fcard-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  color: var(--accent);
-  margin-bottom: 8px;
-}
-
-.bascik__feature-card__fcard-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: var(--text);
-}
-
-.bascik__feature-card__fcard-desc {
-  font-size: 0.88rem;
-  color: var(--text-muted);
-  margin-bottom: 0;
-}
-
-.bascik__feature-card__fcard-slot {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
-}
-
-.bascik__feature-card__fcard-slot:empty {
-  display: none;
-}
+<script>
+  (function(){
+  const card = document.getElementById('bascik__my-card__a1b__card');
+  card.addEventListener('click', () => {
+    card.classList.toggle('bascik__my-card__active');
+  });
+  })();
+</script>
 ```

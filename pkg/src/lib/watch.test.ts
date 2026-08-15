@@ -43,9 +43,9 @@ const {
     watchers.push(w);
     return w;
   };
-  const mockWatch = vi.fn((_path: string) => makeWatcher());
+  const mockWatch = vi.fn((_path: string, _opts: Record<string, unknown>) => makeWatcher());
   const resetMocks = () => {
-    mockWatch.mockReset().mockImplementation((_path: string) => makeWatcher());
+    mockWatch.mockReset().mockImplementation((_path: string, _opts: Record<string, unknown>) => makeWatcher());
     mockPageProcessing.mockReset().mockResolvedValue(undefined);
     mockProcessAllPages.mockReset().mockResolvedValue(undefined);
     mockRemovePage.mockReset().mockResolvedValue(undefined);

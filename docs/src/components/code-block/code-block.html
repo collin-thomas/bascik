@@ -3,7 +3,20 @@
     <span class="cblock-lang" data-bascik-prop-lang>html</span>
     <span class="cblock-file" data-bascik-prop-file></span>
   </div>
-  <pre><code class="cblock-body"><span data-bascik-slot></span></code></pre>
+  <div class="cblock-pre-wrap">
+    <pre><code class="cblock-body"><span data-bascik-slot></span></code></pre>
+    <button class="cblock-copy" aria-label="Copy code" title="Copy">
+      <svg class="cblock-copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+      </svg>
+      <svg class="cblock-check-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </button>
+  </div>
 </div>
 
 <script>
@@ -229,6 +242,7 @@
   const root = document.getElementById('cblock-root');
   const langEl = root && root.querySelector('.cblock-lang');
   const codeEl = root && root.querySelector('.cblock-body');
+  const copyBtn = root && root.querySelector('.cblock-copy');
   if (langEl && codeEl) {
     const lang = langEl.textContent.trim().toLowerCase();
     const raw = codeEl.textContent;
@@ -237,4 +251,18 @@
       if (result !== null) codeEl.innerHTML = result;
     }
   }
-</script>
+  if (copyBtn && codeEl) {
+    copyBtn.addEventListener('click', function () {
+      navigator.clipboard.writeText(codeEl.textContent).then(function () {
+        copyBtn.dataset.cblockDone = '';
+        copyBtn.setAttribute('aria-label', 'Copied!');
+        copyBtn.setAttribute('title', 'Copied!');
+        setTimeout(function () {
+          delete copyBtn.dataset.cblockDone;
+          copyBtn.setAttribute('aria-label', 'Copy code');
+          copyBtn.setAttribute('title', 'Copy');
+        }, 2000);
+      });
+    });
+  }
+</script><!-- MARKER_TEST_ABC -->

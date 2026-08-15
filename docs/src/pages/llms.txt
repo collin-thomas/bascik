@@ -365,7 +365,6 @@ For per-request server-side rendering, see [Server scripts](/server).
   const firstPara = md.split('\n\n')[1];
   console.log(`
     <feature-card
-      data-bascik-prop-label="Build Time"
       data-bascik-prop-title="Generated from Markdown"
       data-bascik-prop-desc="${marked.parseInline(firstPara)}">
     </feature-card>
@@ -377,9 +376,8 @@ For per-request server-side rendering, see [Server scripts](/server).
 ```html
 <!-- The script is replaced by its stdout output -->
 <div class="bascik__feature-card__fcard">
-  <p class="bascik__feature-card__fcard-label">Build Time</p>
-  <h3 class="bascik__feature-card__fcard-title">Generated from Markdown</h3>
-  <p class="bascik__feature-card__fcard-desc">Bascik is a build tool for HTML components...</p>
+  <h3 class="bascik__feature-card__el__h3">Generated from Markdown</h3>
+  <p class="bascik__feature-card__el__p">Bascik is a build tool for HTML components...</p>
 </div>
 ```
 
@@ -809,27 +807,201 @@ const panel = document.getElementById("panel"); // rewritten with instance hash
 
 When a component uses `<input name="username">`, Bascik scopes the `name` attribute to a per-instance value like `bascik__comp__a1b2c3__username`. As a result, `new FormData(form)` entries use the **scoped** name as the key. If your server-side code expects the unscoped field name, you will need to adapt it, or extract values using `formData.get` with the scoped name, or via `form.elements` iteration.
 
-## Component Format
+# Components
 
-A component is one `.html` file in `src/components/`. Its tag name is derived from the file name.
+Components are the core building block in Bascik. Each component is a `.html` file in `src/components/`. The file name becomes the tag name used in your pages and in other components.
 
+## HTML-Only Components
+
+The simplest component is just markup. No CSS, no JavaScript required.
+
+<!-- demo:source-usage-hello -->
 ```html
-<!-- src/components/site-nav.html -->
-<nav class="nav">
-  <a href="/">Home</a>
-  <a href="/about">About</a>
-</nav>
+<hello-card></hello-card>
 ```
 
-Use it in any page or other component:
-
+<!-- demo:source-html-hello -->
 ```html
-<site-nav></site-nav>
+<article class="hello-card">
+  <p class="hello-card-kicker">One file. One tag.</p>
+  <h3 class="hello-card-title">Plain HTML, ready to reuse.</h3>
+  <p class="hello-card-body">Bascik replaces the custom tag at build time and ships the finished markup.</p>
+</article>
 ```
 
-Self-closing syntax works too: `<site-nav />`
+Components can appear in other components too. If `site-layout.html` uses `<page-footer></page-footer>`, every page that uses `<site-layout>` gets the footer automatically.
 
-> **No restart needed.** The dev server watches the components directory. Drop a new `.html` (or paired `.css`) file in and all pages that use that tag are automatically re-transpiled and reloaded with no server restart required.
+## HTML with CSS
+
+Add a `<style>` block to style the component inline. Bascik scopes the CSS to the component at build time so selectors from one component never affect another.
+
+<!-- demo:source-usage-badge -->
+```html
+<comp-badge></comp-badge>
+```
+
+<!-- demo:source-html-badge -->
+```html
+<style>
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: #d1fae5;
+    color: #065f46;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .badge-dot {
+    width: 6px;
+    height: 6px;
+    background: #10b981;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+</style>
+<span class="badge">
+  <span class="badge-dot"></span>
+  All systems operational
+</span>
+```
+
+> **More on the next page.** [Scoped Styles](/scoped-styles) covers exactly how class names and selectors are namespaced and what CSS patterns are supported.
+
+## HTML with JavaScript
+
+Add a `<script>` block for interactive behavior. Use `id` on any element you need to target from JS and reach it with `getElementById`.
+
+<!-- demo:source-usage-toggle -->
+```html
+<comp-toggle></comp-toggle>
+```
+
+<!-- demo:source-html-toggle -->
+```html
+<div>
+  <p>Bascik assembles components at build time and ships plain HTML files with no framework runtime.</p>
+  <div id="detail" hidden>
+    <p>No JavaScript is added to the page. Every script in the output was written by you.</p>
+  </div>
+  <button id="btn" type="button">Read more</button>
+</div>
+```
+
+<!-- demo:source-js-toggle -->
+```js
+const btn = document.getElementById('btn');
+const detail = document.getElementById('detail');
+btn.addEventListener('click', () => {
+  detail.hidden = !detail.hidden;
+  btn.textContent = detail.hidden ? 'Read more' : 'Show less';
+});
+```
+
+> **More on that page.** [Scoped JavaScript](/scoped-javascript) explains how Bascik rewrites selectors so multiple instances of the same component on the same page stay fully independent.
+
+## HTML, CSS, and JavaScript Together
+
+All three can live in a single file. A `<style>` block, the markup, and a `<script>` block in any order — Bascik handles all of them.
+
+<!-- demo:source-usage-alert -->
+```html
+<comp-alert></comp-alert>
+```
+
+<!-- demo:source-html-alert -->
+```html
+<style>
+  .alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    background: #fffbeb;
+  }
+  .alert-body {
+    flex: 1;
+    margin: 0;
+    font-size: 0.9rem;
+    color: #92400e;
+  }
+  .alert-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #b45309;
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 0;
+  }
+</style>
+<div class="alert" id="alert">
+  <p class="alert-body">Scheduled maintenance Sunday, 2am–4am UTC.</p>
+  <button id="close" class="alert-close" aria-label="Dismiss">×</button>
+</div>
+<script>
+  document.getElementById('close').addEventListener('click', () => {
+    document.getElementById('alert').hidden = true;
+  });
+</script>
+```
+
+## Separate CSS Files
+
+As a component grows, moving the CSS into its own file keeps things readable. Create a `.css` file with the same base name alongside the `.html` file. Both approaches are fully equivalent — Bascik applies the same scoping either way.
+
+<!-- demo:source-usage-card -->
+```html
+<feature-card
+  data-bascik-prop-title="Build-time Components"
+  data-bascik-prop-desc="Bascik resolves tags and ships plain HTML.">
+</feature-card>
+```
+
+<!-- demo:source-html-card -->
+```html
+<div class="fcard">
+  <h3 data-bascik-prop-title></h3>
+  <p data-bascik-prop-desc></p>
+</div>
+```
+
+<!-- demo:source-css-card -->
+```css
+.fcard {
+  padding: 24px;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+
+  h3 { color: var(--text); }
+  p  { font-size: 0.875rem; color: var(--text-muted); }
+
+  &:hover {
+    border-color: var(--border-hover);
+    box-shadow: 0 0 0 1px var(--accent-dim);
+  }
+}
+```
+
+## Subfolder Layout
+
+For components with multiple files, a subfolder keeps things tidy. Name the subfolder and the files inside it the same:
+
+```text
+src/components/
+  feature-card/
+    feature-card.html
+    feature-card.css
+```
+
+Bascik derives the tag name from the `.html` filename, not the folder. `feature-card/feature-card.html` still produces `<feature-card>`.
+
+> **No restart needed.** The dev server watches `src/components/` for new and changed files. Drop in a new `.html` or `.css` file and all affected pages re-transpile and reload automatically.
 
 # Configuration
 
@@ -1510,13 +1682,21 @@ on:
     branches: [main]
 ```
 
-It runs the unit test suite with coverage across Node 24:
+It runs two parallel jobs across Node 24:
+
+**`test`** — unit tests with coverage:
 
 ```sh
 yarn test:ci
 ```
 
-The job has `permissions: contents: read` to enforce least privilege.
+**`e2e`** — end-to-end Playwright tests against the built fixture site:
+
+```sh
+yarn build && yarn e2e
+```
+
+The `e2e` job installs only the Chromium browser via `playwright install --with-deps chromium` before running. Both jobs have `permissions: contents: read` to enforce least privilege.
 
 ## Release Workflow
 
@@ -4160,7 +4340,6 @@ This example passes values directly into the `feature-card` component via `data-
 <!-- demo:source-usage -->
 ```html
 <feature-card
-  data-bascik-prop-label="Interactive"
   data-bascik-prop-title="Component Props"
   data-bascik-prop-desc="These values are injected into the component template at build time.">
 </feature-card>
@@ -4169,11 +4348,8 @@ This example passes values directly into the `feature-card` component via `data-
 <!-- demo:output-html -->
 ```html
 <div class="bascik__feature-card__fcard">
-  <p class="bascik__feature-card__fcard-label">Interactive</p>
-  <h3 class="bascik__feature-card__fcard-title">Component Props</h3>
-  <p class="bascik__feature-card__fcard-desc">
-    These values are injected into the component template at build time.
-  </p>
+  <h3 class="bascik__feature-card__el__h3">Component Props</h3>
+  <p class="bascik__feature-card__el__p">These values are injected into the component template at build time.</p>
 </div>
 ```
 
@@ -4793,146 +4969,77 @@ This guide focuses on the CSS behavior you write and observe. The compiler imple
 
 ## See it in action
 
-Hover the card to see its transitions and shadows stay isolated to the component.
+Click the card to toggle its active state. Hover for the hover state. Both are isolated to this component.
 
 ### Source and output
 
-**Source HTML** (`feature-card.html`):
+**Source** (`my-card.html` — CSS, HTML, and JS in one file):
 
 <!-- demo:source-usage -->
 ```html
-<feature-card
-  data-bascik-prop-label="Scoped"
-  data-bascik-prop-title="Isolated Styles"
-  data-bascik-prop-desc="Hover to see scoped transitions.">
-</feature-card>
+<my-card>
+  <h3>Isolated Styles</h3>
+  <p>Click to toggle the active state.</p>
+</my-card>
 ```
 
 <!-- demo:source-html -->
 ```html
-<div class="fcard">
-  <p class="fcard-label" data-bascik-prop-label></p>
-  <h3 class="fcard-title" data-bascik-prop-title></h3>
-  <p class="fcard-desc" data-bascik-prop-desc></p>
-  <div class="fcard-slot">
-    <div data-bascik-slot></div>
-  </div>
+<style>
+  .card {
+    padding: 26px 28px;
+    background: #242628;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+
+    h3 { margin: 0 0 8px; color: #f0f1f2; }
+    p  { margin: 0; color: #8d929e; }
+
+    &:hover {
+      border-color: rgba(211,255,141,0.35);
+      box-shadow: 0 0 0 1px rgba(211,255,141,0.12);
+    }
+
+    &.active {
+      background: rgba(211,255,141,0.07);
+      border-color: rgba(211,255,141,0.5);
+      box-shadow: 0 0 0 1px rgba(211,255,141,0.25), 0 0 20px rgba(211,255,141,0.08);
+
+      h3 { color: #d3ff8d; }
+    }
+  }
+</style>
+<div class="card" id="card">
+  <div data-bascik-slot></div>
 </div>
+<script>
+  const card = document.getElementById('card');
+  card.addEventListener('click', () => {
+    card.classList.toggle('active');
+  });
+</script>
 ```
 
-**Source CSS** (`feature-card.css`):
-
-<!-- demo:source-css -->
-```css
-.fcard {
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 24px;
-  transition: border-color .2s, transform .2s, box-shadow .2s;
-}
-
-.fcard:hover {
-  border-color: var(--border-hover);
-  box-shadow: 0 0 0 1px var(--accent-dim), 0 8px 32px rgba(0,0,0,0.3);
-  transform: translateY(-2px);
-}
-
-.fcard-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  color: var(--accent);
-  margin-bottom: 8px;
-}
-
-.fcard-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: var(--text);
-}
-
-.fcard-desc {
-  font-size: 0.88rem;
-  color: var(--text-muted);
-  margin-bottom: 0;
-}
-
-.fcard-slot {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
-}
-
-.fcard-slot:empty {
-  display: none;
-}
-```
-
-**Compiled output HTML** (class names scoped, props injected, slot wrappers removed):
+**Compiled output** (class names and IDs scoped, script wrapped in IIFE):
 
 <!-- demo:output-html -->
 ```html
-<div class="bascik__feature-card__fcard">
-  <p class="bascik__feature-card__fcard-label">Scoped</p>
-  <h3 class="bascik__feature-card__fcard-title">Isolated Styles</h3>
-  <p class="bascik__feature-card__fcard-desc">
-    Hover over me to see transitions and shadows that won't leak out.
-  </p>
+<style>
+  .bascik__my-card__card { ... }
+  .bascik__my-card__card .bascik__my-card__active { ... }
+</style>
+<div class="bascik__my-card__card" id="bascik__my-card__a1b__card">
+  <h3>Isolated Styles</h3>
+  <p>Click to toggle the active state.</p>
 </div>
-```
-
-**Compiled output CSS** (all class selectors prefixed with the component scope):
-
-<!-- demo:output-css -->
-```css
-.bascik__feature-card__fcard {
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 24px;
-  transition: border-color .2s, transform .2s, box-shadow .2s;
-}
-
-.bascik__feature-card__fcard:hover {
-  border-color: var(--border-hover);
-  box-shadow: 0 0 0 1px var(--accent-dim), 0 8px 32px rgba(0,0,0,0.3);
-  transform: translateY(-2px);
-}
-
-.bascik__feature-card__fcard-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  color: var(--accent);
-  margin-bottom: 8px;
-}
-
-.bascik__feature-card__fcard-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: var(--text);
-}
-
-.bascik__feature-card__fcard-desc {
-  font-size: 0.88rem;
-  color: var(--text-muted);
-  margin-bottom: 0;
-}
-
-.bascik__feature-card__fcard-slot {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
-}
-
-.bascik__feature-card__fcard-slot:empty {
-  display: none;
-}
+<script>
+  (function(){
+  const card = document.getElementById('bascik__my-card__a1b__card');
+  card.addEventListener('click', () => {
+    card.classList.toggle('bascik__my-card__active');
+  });
+  })();
+</script>
 ```
 
 # Search
@@ -5310,6 +5417,12 @@ The `serve.logging.level` setting controls the request log threshold, and `reque
 Bascik increments the port automatically if the preferred port is already in use.
 
 `cacheHttp` defaults to `true` in `--serve` mode and `false` in the dev server. When `true`, pages receive `ETag` headers and the server returns `304 Not Modified` when a client's cached copy is still fresh. Static assets also get `Cache-Control: public, max-age=3600`. Set `cacheHttp: false` to disable all of this if you are behind a CDN that manages caching itself.
+
+## URL routing
+
+Both the dev server and `bascik --serve` strip the `.html` extension and serve pages at the bare path. A file compiled to `dist/about.html` is available at `/about`, and `dist/blog/post.html` is available at `/blog/post`. The root page (`dist/index.html`) maps to `/`.
+
+Requests for a path that has no matching page fall through to the `404` page if one exists (`dist/404.html`), otherwise the server returns a plain `404 Not Found`.
 
 ## What `--serve` does differently from `--build`
 

@@ -243,7 +243,7 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
     const pageFile = filePath ?? "";
     const siteUrl = BascikConfig.siteUrl ?? "";
     const cacheKey = useCache
-      ? await computeScriptCacheKey(trimmedScript, BascikConfig.isBuild, pageFile, siteUrl)
+      ? await computeScriptCacheKey(trimmedScript, BascikConfig.isBuild ?? false, pageFile, siteUrl)
       : null;
     if (cacheKey !== null) {
       const cached = await readScriptCache(cacheDir, cacheKey);

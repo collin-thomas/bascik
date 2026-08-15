@@ -210,6 +210,39 @@
       color: var(--accent-fg);
     }
 
+    .install-copy-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+      line-height: 0;
+      flex-shrink: 0;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .install-copy-btn:hover {
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    .install-copy-btn .copy-check {
+      display: none;
+    }
+
+    .copy-btn--done .copy-icon {
+      display: none;
+    }
+
+    .copy-btn--done .copy-check {
+      display: block;
+      color: var(--accent);
+    }
+
     .hero-quickstart {
       margin: 20px 0 0;
     }
@@ -256,6 +289,9 @@
       border: 1px solid var(--border);
       border-radius: var(--r);
       overflow: hidden;
+      --cblock-header-display: none;
+      --cblock-border: none;
+      --cblock-radius: 0;
     }
 
     /* mono font for filename tabs; match bg to page surface, not pre-bg */
@@ -277,23 +313,7 @@
       background: var(--bg);
     }
 
-    .how-src-pane {
-      background: transparent;
-      border: none;
-      border-radius: 0;
-      padding: 22px 24px;
-      margin: 0;
-      font-size: 0.82rem;
-      line-height: 1.72;
-    }
 
-    .how-src-pane code {
-      background: none;
-      border: none;
-      padding: 0;
-      color: var(--pre-text);
-      font-size: inherit;
-    }
 
     .how-result {
       display: flex;
@@ -370,41 +390,6 @@
       cursor: pointer;
     }
 
-    .hl-tag {
-      color: var(--hl-tag);
-    }
-
-    .hl-attr {
-      color: var(--hl-kw);
-    }
-
-    .hl-val {
-      color: var(--hl-str);
-    }
-
-    .hl-comment {
-      color: var(--hl-comment);
-      font-style: italic;
-    }
-
-    .hl-scoped {
-      color: var(--hl-scoped);
-    }
-
-    .hl-selector,
-    .hl-keyword {
-      color: var(--hl-kw);
-    }
-
-    .hl-property,
-    .hl-function {
-      color: var(--hl-tag);
-    }
-
-    .hl-number {
-      color: var(--hl-num);
-    }
-
     /* ── Pillars ── */
     .pillars-grid {
       display: grid;
@@ -454,28 +439,9 @@
       border: 1px solid var(--border);
       border-radius: var(--r);
       overflow: hidden;
-    }
-
-    .demo-pane {
-      padding: 20px 22px;
-    }
-
-    .demo-pane pre {
-      background: transparent;
-      border: none;
-      border-radius: 0;
-      padding: 0;
-      margin: 0;
-      font-size: 0.8rem;
-      line-height: 1.7;
-    }
-
-    .demo-pane pre code {
-      background: none;
-      border: none;
-      padding: 0;
-      color: var(--pre-text);
-      font-size: inherit;
+      --cblock-header-display: none;
+      --cblock-border: none;
+      --cblock-radius: 0;
     }
 
     .demo-live {
@@ -600,7 +566,8 @@
           <a href="https://github.com/collin-thomas/bascik" class="btn btn-ghost" target="_blank"
             rel="noopener noreferrer">GitHub</a>
         </div>
-        <pre class="install-command hero-quickstart"><code>npm create bascik@latest</code></pre>
+        <pre
+          class="install-command hero-quickstart"><code>npm create bascik@latest</code><button class="install-copy-btn" aria-label="Copy" title="Copy"><svg class="copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg class="copy-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg></button></pre>
       </div>
     </section>
 
@@ -620,82 +587,89 @@
               <button class="tab-btn how-code-tab" data-how="usage">index.html</button>
               <button class="tab-btn how-code-tab" data-how="output">dist/index.html</button>
             </tab-bar>
-            <pre class="how-src-pane" id="how-component"><code><span class="hl-comment">&lt;!-- src/components/my-card.html --&gt;</span>
-<span class="hl-tag">&lt;style&gt;</span>
-  .card {
-    padding: 26px 28px;
-    background: #242628;
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 10px;
+            <div class="how-src-pane" id="how-component">
+              <code-block data-bascik-prop-lang="html">&lt;!-- src/components/my-card.html --&gt;
+                &lt;style&gt;
+                .card {
+                padding: 26px 28px;
+                background: #242628;
+                border: 1px solid rgba(255,255,255,0.07);
+                border-radius: 10px;
 
-    h3 { margin: 0 0 8px; color: #f0f1f2; }
-    p  { margin: 0; color: #8d929e; }
+                h3 { margin: 0 0 8px; color: #f0f1f2; }
+                p { margin: 0; color: #8d929e; }
 
-    &:hover {
-      border-color: rgba(211,255,141,0.35);
-      box-shadow: 0 0 0 1px rgba(211,255,141,0.12);
-    }
+                &amp;:hover {
+                border-color: rgba(211,255,141,0.35);
+                box-shadow: 0 0 0 1px rgba(211,255,141,0.12);
+                }
 
-    &.active {
-      background: rgba(211,255,141,0.07);
-      border-color: rgba(211,255,141,0.5);
-      box-shadow: 0 0 0 1px rgba(211,255,141,0.25), 0 0 20px rgba(211,255,141,0.08);
+                &amp;.active {
+                background: rgba(211,255,141,0.07);
+                border-color: rgba(211,255,141,0.5);
+                box-shadow: 0 0 0 1px rgba(211,255,141,0.25), 0 0 20px rgba(211,255,141,0.08);
 
-      h3 { color: #d3ff8d; }
-    }
-  }
-<span class="hl-tag">&lt;/style&gt;</span>
-<span class="hl-tag">&lt;div</span> <span class="hl-attr">class</span>=<span class="hl-val">"card"</span> <span class="hl-attr">id</span>=<span class="hl-val">"card"</span><span class="hl-tag">&gt;</span>
-  <span class="hl-tag">&lt;div</span> <span class="hl-attr">data-bascik-slot</span><span class="hl-tag">&gt;&lt;/div&gt;</span>
-<span class="hl-tag">&lt;/div&gt;</span>
-<span class="hl-tag">&lt;script&gt;</span>
-  const card = document.getElementById(<span class="hl-val">'card'</span>);
-  card.addEventListener(<span class="hl-val">'click'</span>, () =&gt; {
-    card.classList.toggle(<span class="hl-val">'active'</span>);
-  });
-<span class="hl-tag">&lt;/script&gt;</span></code></pre>
-            <pre class="how-src-pane" id="how-usage" hidden><code><span class="hl-comment">&lt;!-- src/pages/index.html --&gt;</span>
-<span class="hl-tag">&lt;my-card&gt;</span>
-  <span class="hl-tag">&lt;h3&gt;</span>My Card<span class="hl-tag">&lt;/h3&gt;</span>
-  <span class="hl-tag">&lt;p&gt;</span>Any HTML goes inside as slot content.<span class="hl-tag">&lt;/p&gt;</span>
-<span class="hl-tag">&lt;/my-card&gt;</span></code></pre>
-            <pre class="how-src-pane" id="how-output" hidden><code><span class="hl-comment">&lt;!-- dist/index.html - CSS classes and JS selectors scoped --&gt;</span>
-<span class="hl-tag">&lt;style&gt;</span>
-  .<span class="hl-scoped">bascik__my-card__card</span> {
-    padding: 26px 28px;
-    background: #242628;
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 10px;
+                h3 { color: #d3ff8d; }
+                }
+                }
+                &lt;/style&gt;
+                &lt;div class="card" id="card"&gt;
+                &lt;div data-bascik-slot&gt;&lt;/div&gt;
+                &lt;/div&gt;
+                &lt;script&gt;
+                const card = document.getElementById('card');
+                card.addEventListener('click', () =&gt; {
+                card.classList.toggle('active');
+                });
+                &lt;/script&gt;</code-block>
+            </div>
+            <div class="how-src-pane" id="how-usage" hidden>
+              <code-block data-bascik-prop-lang="html">&lt;!-- src/pages/index.html --&gt;
+                &lt;my-card&gt;
+                &lt;h3&gt;My Card&lt;/h3&gt;
+                &lt;p&gt;Any HTML goes inside as slot content.&lt;/p&gt;
+                &lt;/my-card&gt;</code-block>
+            </div>
+            <div class="how-src-pane" id="how-output" hidden>
+              <code-block data-bascik-prop-lang="html">&lt;!-- dist/index.html - CSS classes and JS selectors scoped
+                --&gt;
+                &lt;style&gt;
+                .bascik__my-card__card {
+                padding: 26px 28px;
+                background: #242628;
+                border: 1px solid rgba(255,255,255,0.07);
+                border-radius: 10px;
 
-    h3 { margin: 0 0 8px; color: #f0f1f2; }
-    p  { margin: 0; color: #8d929e; }
+                h3 { margin: 0 0 8px; color: #f0f1f2; }
+                p { margin: 0; color: #8d929e; }
 
-    &:hover {
-      border-color: rgba(211,255,141,0.35);
-      box-shadow: 0 0 0 1px rgba(211,255,141,0.12);
-    }
+                &amp;:hover {
+                border-color: rgba(211,255,141,0.35);
+                box-shadow: 0 0 0 1px rgba(211,255,141,0.12);
+                }
 
-    &.<span class="hl-scoped">bascik__my-card__active</span> {
-      background: rgba(211,255,141,0.07);
-      border-color: rgba(211,255,141,0.5);
-      box-shadow: 0 0 0 1px rgba(211,255,141,0.25), 0 0 20px rgba(211,255,141,0.08);
+                &amp;.bascik__my-card__active {
+                background: rgba(211,255,141,0.07);
+                border-color: rgba(211,255,141,0.5);
+                box-shadow: 0 0 0 1px rgba(211,255,141,0.25), 0 0 20px rgba(211,255,141,0.08);
 
-      h3 { color: #d3ff8d; }
-    }
-  }
-<span class="hl-tag">&lt;/style&gt;</span>
-<span class="hl-tag">&lt;div</span> <span class="hl-attr">class</span>=<span class="hl-val">"<span class="hl-scoped">bascik__my-card__card</span>"</span> <span class="hl-attr">id</span>=<span class="hl-val">"<span class="hl-scoped">bascik__my-card__a1b__card</span>"</span><span class="hl-tag">&gt;</span>
-  <span class="hl-tag">&lt;h3&gt;</span>My Card<span class="hl-tag">&lt;/h3&gt;</span>
-  <span class="hl-tag">&lt;p&gt;</span>Any HTML goes inside as slot content.<span class="hl-tag">&lt;/p&gt;</span>
-<span class="hl-tag">&lt;/div&gt;</span>
-<span class="hl-tag">&lt;script&gt;</span>
-  (function(){
-  const card = document.getElementById(<span class="hl-val">'<span class="hl-scoped">bascik__my-card__a1b__card</span>'</span>);
-  card.addEventListener(<span class="hl-val">'click'</span>, () => {
-    card.classList.toggle(<span class="hl-val">'<span class="hl-scoped">bascik__my-card__active</span>'</span>);
-  });
-  })();
-<span class="hl-tag">&lt;/script&gt;</span></code></pre>
+                h3 { color: #d3ff8d; }
+                }
+                }
+                &lt;/style&gt;
+                &lt;div class="bascik__my-card__card" id="bascik__my-card__a1b__card"&gt;
+                &lt;h3&gt;My Card&lt;/h3&gt;
+                &lt;p&gt;Any HTML goes inside as slot content.&lt;/p&gt;
+                &lt;/div&gt;
+                &lt;script&gt;
+                (function(){
+                const card = document.getElementById('bascik__my-card__a1b__card');
+                card.addEventListener('click', () =&gt; {
+                card.classList.toggle('bascik__my-card__active');
+                });
+                })();
+                &lt;/script&gt;</code-block>
+            </div>
           </div>
 
           <!-- Live rendered result -->
@@ -730,50 +704,51 @@
               <button class="tab-btn demo-tab-btn" data-tab="js">JS</button>
             </tab-bar>
             <div class="demo-pane" data-pane="html">
-              <pre><code><span class="hl-comment">&lt;!-- src/components/demo-counter.html - component template --&gt;</span>
-<span class="hl-tag">&lt;div</span> <span class="hl-attr">class</span>=<span class="hl-val">"ctr"</span><span class="hl-tag">&gt;</span>
-  <span class="hl-tag">&lt;span</span> <span class="hl-attr">class</span>=<span class="hl-val">"ctr-label"</span>
-         <span class="hl-attr">data-bascik-prop-label</span><span class="hl-tag">&gt;&lt;/span&gt;</span>
-  <span class="hl-tag">&lt;span</span> <span class="hl-attr">class</span>=<span class="hl-val">"ctr-count"</span> <span class="hl-attr">id</span>=<span class="hl-val">"count"</span><span class="hl-tag">&gt;</span>0<span class="hl-tag">&lt;/span&gt;</span>
-  <span class="hl-tag">&lt;div</span> <span class="hl-attr">class</span>=<span class="hl-val">"ctr-btns"</span><span class="hl-tag">&gt;</span>
-    <span class="hl-tag">&lt;button</span> <span class="hl-attr">class</span>=<span class="hl-val">"ctr-dec"</span><span class="hl-tag">&gt;</span>−<span class="hl-tag">&lt;/button&gt;</span>
-    <span class="hl-tag">&lt;button</span> <span class="hl-attr">class</span>=<span class="hl-val">"ctr-inc"</span><span class="hl-tag">&gt;</span>+<span class="hl-tag">&lt;/button&gt;</span>
-  <span class="hl-tag">&lt;/div&gt;</span>
-<span class="hl-tag">&lt;/div&gt;</span>
+              <code-block data-bascik-prop-lang="html">&lt;!-- src/components/demo-counter.html - component template
+                --&gt;
+                &lt;div class="ctr"&gt;
+                &lt;span class="ctr-label"
+                data-bascik-prop-label&gt;&lt;/span&gt;
+                &lt;span class="ctr-count" id="count"&gt;0&lt;/span&gt;
+                &lt;div class="ctr-btns"&gt;
+                &lt;button class="ctr-dec"&gt;−&lt;/button&gt;
+                &lt;button class="ctr-inc"&gt;+&lt;/button&gt;
+                &lt;/div&gt;
+                &lt;/div&gt;
 
-<span class="hl-comment">&lt;!-- src/pages/index.html - usage --&gt;</span>
-<span class="hl-tag">&lt;demo-counter</span> <span class="hl-attr">data-bascik-prop-label</span>=<span class="hl-val">"Instance A"</span><span class="hl-tag">&gt;&lt;/demo-counter&gt;</span>
-<span class="hl-tag">&lt;demo-counter</span> <span class="hl-attr">data-bascik-prop-label</span>=<span class="hl-val">"Instance B"</span><span class="hl-tag">&gt;&lt;/demo-counter&gt;</span></code></pre>
+                &lt;!-- src/pages/index.html - usage --&gt;
+                &lt;demo-counter data-bascik-prop-label="Instance A"&gt;&lt;/demo-counter&gt;
+                &lt;demo-counter data-bascik-prop-label="Instance B"&gt;&lt;/demo-counter&gt;</code-block>
             </div>
             <div class="demo-pane" data-pane="css" hidden>
-              <pre><code><span class="hl-comment">/* Auto-scoped - class names become:
-   .bascik__demo-counter__ctr { ... } */</span>
-<span class="hl-selector">.ctr</span> { <span class="hl-property">display</span>: <span class="hl-keyword">flex</span>; <span class="hl-property">flex-direction</span>: <span class="hl-keyword">column</span>;
-       <span class="hl-property">align-items</span>: <span class="hl-keyword">center</span>; <span class="hl-property">gap</span>: <span class="hl-number">16px</span>; }
-<span class="hl-selector">.ctr-count</span> {
-  <span class="hl-property">font-size</span>: <span class="hl-number">2.4rem</span>; <span class="hl-property">font-weight</span>: <span class="hl-number">700</span>;
-  <span class="hl-property">color</span>: <span class="hl-function">var</span>(<span class="hl-val">--accent</span>);
-}
-<span class="hl-selector">.ctr-dec, .ctr-inc</span> {
-  <span class="hl-property">width</span>: <span class="hl-number">40px</span>; <span class="hl-property">height</span>: <span class="hl-number">40px</span>;
-  <span class="hl-property">border-radius</span>: <span class="hl-number">6px</span>; <span class="hl-property">cursor</span>: <span class="hl-keyword">pointer</span>;
-}</code></pre>
+              <code-block data-bascik-prop-lang="css">/* Auto-scoped - class names become:
+                .bascik__demo-counter__ctr { ... } */
+                .ctr { display: flex; flex-direction: column;
+                align-items: center; gap: 16px; }
+                .ctr-count {
+                font-size: 2.4rem; font-weight: 700;
+                color: var(--accent);
+                }
+                .ctr-dec, .ctr-inc {
+                width: 40px; height: 40px;
+                border-radius: 6px; cursor: pointer;
+                }</code-block>
             </div>
             <div class="demo-pane" data-pane="js" hidden>
-              <pre><code><span class="hl-comment">// Notice: this is plain JavaScript. No framework APIs,
-// no special syntax. Write it normally and Bascik
-// scopes the selectors at build time so each instance
-// stays fully isolated.</span>
-<span class="hl-keyword">const</span> count = document.<span class="hl-function">getElementById</span>(<span class="hl-val">'count'</span>);
-<span class="hl-keyword">const</span> dec   = document.<span class="hl-function">querySelector</span>(<span class="hl-val">'.ctr-dec'</span>);
-<span class="hl-keyword">const</span> inc   = document.<span class="hl-function">querySelector</span>(<span class="hl-val">'.ctr-inc'</span>);
-<span class="hl-keyword">let</span> n = <span class="hl-number">0</span>;
-dec.<span class="hl-function">addEventListener</span>(<span class="hl-val">'click'</span>, () => {
-  n--; count.<span class="hl-property">textContent</span> = n;
-});
-inc.<span class="hl-function">addEventListener</span>(<span class="hl-val">'click'</span>, () => {
-  n++; count.<span class="hl-property">textContent</span> = n;
-});</code></pre>
+              <code-block data-bascik-prop-lang="js">// Notice: this is plain JavaScript. No framework APIs,
+                // no special syntax. Write it normally and Bascik
+                // scopes the selectors at build time so each instance
+                // stays fully isolated.
+                const count = document.getElementById('count');
+                const dec = document.querySelector('.ctr-dec');
+                const inc = document.querySelector('.ctr-inc');
+                let n = 0;
+                dec.addEventListener('click', () => {
+                n--; count.textContent = n;
+                });
+                inc.addEventListener('click', () => {
+                n++; count.textContent = n;
+                });</code-block>
             </div>
           </div>
 
@@ -817,6 +792,16 @@ inc.<span class="hl-function">addEventListener</span>(<span class="hl-val">'clic
           btn.classList.add('active');
           panel.querySelector('[data-pane="' + btn.dataset.tab + '"]').hidden = false;
         });
+      });
+
+      function flashCopy(btn) {
+        btn.classList.add('copy-btn--done');
+        setTimeout(() => btn.classList.remove('copy-btn--done'), 2000);
+      }
+
+      // Install command copy
+      document.querySelector('.install-copy-btn').addEventListener('click', function () {
+        navigator.clipboard.writeText('npm create bascik@latest').then(() => flashCopy(this));
       });
     </script>
 

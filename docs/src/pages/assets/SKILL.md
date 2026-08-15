@@ -62,19 +62,72 @@ For local contributor testing of the generator itself, rebuild from `create/`, l
 
 A component is one `.html` file inside `src/components/`. Its tag name is derived from the file name.
 
+**HTML-only component:**
 ```html
-<!-- src/components/site-nav.html -->
-<nav class="nav">
-  <a href="/">Home</a>
-  <a href="/about">About</a>
-</nav>
+<!-- src/components/page-footer.html -->
+<footer>
+  <p>© 2025 My Site. All rights reserved.</p>
+</footer>
+```
+
+**HTML with inline CSS:**
+```html
+<!-- src/components/promo-banner.html -->
+<style>
+  .banner { padding: 1rem 1.5rem; background: #e8f4fd; border-left: 4px solid #3b82f6; }
+</style>
+<aside class="banner">…</aside>
+```
+
+**HTML with inline JavaScript** (use `id` + `getElementById` for per-instance targeting):
+```html
+<!-- src/components/scroll-top.html -->
+<button id="btn" type="button">Back to top</button>
+<script>
+  document.getElementById('btn').addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+</script>
+```
+
+**All three in one file** (HTML + `<style>` + `<script>`):
+```html
+<!-- src/components/alert-box.html -->
+<style>
+  .alert { display: flex; align-items: center; gap: 0.75rem; padding: 1rem; border: 1px solid #f59e0b; border-radius: 6px; background: #fffbeb; }
+  .alert-close { margin-left: auto; background: none; border: none; cursor: pointer; }
+</style>
+<div class="alert" id="alert">
+  <span>Maintenance on Sunday, 2am–4am UTC.</span>
+  <button id="close" class="alert-close" aria-label="Dismiss">×</button>
+</div>
+<script>
+  document.getElementById('close').addEventListener('click', () => {
+    document.getElementById('alert').hidden = true;
+  });
+</script>
 ```
 
 Use it in any page or other component:
 ```html
-<site-nav></site-nav>
+<alert-box></alert-box>
 ```
 *Self-closing tags are also supported:* `<site-nav />` or `<site-nav class="top" />`
+
+**Separate CSS file** — pair a `.css` file with the same base name:
+```
+src/components/
+  alert-box.html
+  alert-box.css   ← scoped to alert-box
+```
+
+**Subfolder layout** (same tag name regardless of folder):
+```
+src/components/
+  alert-box/
+    alert-box.html
+    alert-box.css
+```
 
 **No restart needed.** The dev server watches the components directory. Drop a new `.html` (or paired `.css`) file in and all pages that use that tag are automatically re-transpiled and reloaded with no server restart required.
 
@@ -650,6 +703,7 @@ TLS certs are generated automatically (mkcert if available, openssl fallback) wh
 
 **Production hardening (automatic in `--serve`):**
 * **Security headers:** every response includes `x-content-type-options: nosniff`, `x-frame-options: SAMEORIGIN`, `referrer-policy: strict-origin-when-cross-origin`, `permissions-policy: interest-cohort=()`.
+* **URL routing (dev and production):** pages are served at their filename without the `.html` extension. `dist/about.html` is at `/about`, `dist/blog/post.html` is at `/blog/post`, `dist/index.html` is at `/`. Unmatched paths fall through to `/404` if a `dist/404.html` exists.
 * **Rate limiting:** 500 requests per 10 seconds per IP. Clients over the limit get `429 Too Many Requests` with `Retry-After`. Not active in the dev server. When behind a reverse proxy the limit applies to the proxy's IP; use the proxy's own rate limiting for per-client control.
 * **Graceful shutdown:** SIGTERM and SIGINT stop accepting connections, destroy all open HTTP/2 sessions (including the live-reload SSE connection), and drain in-flight requests before exiting. Force-exits after 10 seconds if anything hasn't drained.
 * **Path traversal protection:** static asset URLs are validated against `dist/`; requests that escape with `/../` sequences get `400 Bad Request`.
@@ -938,9 +992,10 @@ The docs site `vite.config.js` sets `test.include: ['src/**/*.test.mjs']`. The s
 
 Two GitHub Actions workflows handle all automation.
 
-**CI** (`.github/workflows/ci.yml`) — runs on every push to `main` and every PR:
-- Runs `yarn test:ci` (unit tests with coverage) on Node 24
-- `permissions: contents: read`
+**CI** (`.github/workflows/ci.yml`) — runs on every push to `main` and every PR, two parallel jobs on Node 24:
+- `test`: runs `yarn test:ci` (unit tests with coverage)
+- `e2e`: builds the package (`yarn build`), installs Chromium via `playwright install --with-deps chromium`, then runs `yarn e2e` (Playwright tests)
+- Both jobs have `permissions: contents: read`
 
 **Release** (`.github/workflows/release.yml`) — triggers on version tags:
 

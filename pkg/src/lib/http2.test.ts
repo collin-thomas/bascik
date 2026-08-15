@@ -1186,7 +1186,7 @@ describe("serveHttp2 – logAccess skip conditions", () => {
     const stream = makeStream();
     await handler(stream, makeHeaders("/bascik-live-reload"));
     const accessLines = consoleSpy.mock.calls.filter(
-      (c) => String(c[0]).includes("bascik-live-reload"),
+      (c: unknown[]) => String(c[0]).includes("bascik-live-reload"),
     );
     expect(accessLines).toHaveLength(0);
   });
@@ -1198,7 +1198,7 @@ describe("serveHttp2 – logAccess skip conditions", () => {
     const handler = getStreamHandler()!;
     const stream = makeStream();
     await handler(stream, makeHeaders("/about", "GET"));
-    const accessLines = consoleSpy.mock.calls.filter((c) =>
+    const accessLines = consoleSpy.mock.calls.filter((c: unknown[]) =>
       String(c[0]).includes("GET") && String(c[0]).includes("/about"),
     );
     expect(accessLines.length).toBeGreaterThan(0);
@@ -1211,7 +1211,7 @@ describe("serveHttp2 – logAccess skip conditions", () => {
     const handler = getStreamHandler()!;
     const stream = makeStream();
     await handler(stream, makeHeaders("/about", "GET"));
-    const accessLines = consoleSpy.mock.calls.filter((c) =>
+    const accessLines = consoleSpy.mock.calls.filter((c: unknown[]) =>
       String(c[0]).includes("GET") && String(c[0]).includes("/about"),
     );
     expect(accessLines).toHaveLength(0);
@@ -1226,7 +1226,7 @@ describe("serveHttp2 – logAccess skip conditions", () => {
     const handler = getStreamHandler()!;
     const stream = makeStream();
     await handler(stream, makeHeaders("/about", "GET"));
-    const accessLines = consoleSpy.mock.calls.filter((c) =>
+    const accessLines = consoleSpy.mock.calls.filter((c: unknown[]) =>
       String(c[0]).includes("GET"),
     );
     expect(accessLines.length).toBeGreaterThan(0);

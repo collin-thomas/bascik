@@ -14,13 +14,21 @@ on:
     branches: [main]
 ```
 
-It runs the unit test suite with coverage across Node 24:
+It runs two parallel jobs across Node 24:
+
+**`test`** — unit tests with coverage:
 
 ```sh
 yarn test:ci
 ```
 
-The job has `permissions: contents: read` to enforce least privilege.
+**`e2e`** — end-to-end Playwright tests against the built fixture site:
+
+```sh
+yarn build && yarn e2e
+```
+
+The `e2e` job installs only the Chromium browser via `playwright install --with-deps chromium` before running. Both jobs have `permissions: contents: read` to enforce least privilege.
 
 ## Release Workflow
 
