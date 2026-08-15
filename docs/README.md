@@ -30,21 +30,21 @@ Run `yarn install` from the **repo root** (not this directory). The repo uses ya
 # from repo root
 yarn install
 yarn workspace @bascik/bascik build   # build the package first
-yarn --cwd docs dev                   # dev server at https://localhost:8443
-yarn --cwd docs build                 # write dist/
+yarn workspace bascik-docs dev        # dev server at https://localhost:8443
+yarn workspace bascik-docs build      # write dist/
 ```
 
 ## Package Development (linked source)
 
 ```sh
-yarn --cwd docs pkg-dev   # watches pkg source directly via --watch-path
+yarn workspace bascik-docs pkg-dev   # watches pkg source directly via --watch-path
 ```
 
 ## Design
 
 The docs site shares the same color palette as the demo app:
 
-```
+```text
 background:  #18191b
 accent:      #d3ff8d
 text:        #f0f1f2

@@ -35,18 +35,12 @@ yarn install
 
 ```sh
 yarn workspace @bascik/bascik build   # build the package (start here)
-yarn --cwd docs dev                   # start docs dev server at https://localhost:8443
 yarn workspace @bascik/bascik test    # run unit tests
 yarn workspace @bascik/bascik e2e     # run e2e tests
+yarn workspace bascik-docs dev        # start docs dev server
 ```
 
 After any `pkg/src/` change, rebuild the package and the docs server will pick it up automatically (it watches for changes).
-
-### Running the docs build
-
-```sh
-yarn --cwd docs build
-```
 
 ### Updating Dynamic Documentation Assets
 
