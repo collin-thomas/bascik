@@ -143,8 +143,11 @@ export interface BascikConfigOptions {
    * Enable the persistent disk cache for `<script data-bascik-build>` output.
    * Cached results are stored in `node_modules/.cache/bascik/script-cache/`.
    * The cache key covers the script content, dev/build mode, the current page
-   * path, the site URL, and the content of any local files the script references
-   * — so the cache self-invalidates when inputs change.
+   * path, the site URL, and the content of any `content/` or `scripts/` files
+   * whose quoted path literals appear in the script — so the cache
+   * self-invalidates when those tracked inputs change. Only files under those
+   * directories with `.md`, `.mjs`, `.js`, or `.ts` extensions are detected;
+   * other file reads are not tracked by the cache key.
    *
    * Defaults to `true`. Set to `false` to disable (e.g. when debugging a script
    * that reads external data not tracked by the cache key).

@@ -29,8 +29,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-### Added
-
 - **Build-script output disk cache** — `<script data-bascik-build>` output is now cached on disk under `node_modules/.cache/bascik/script-cache/`. The cache key is a SHA-256 hash of the script content, dev/build mode, the current page path, the site URL, and the content of any `content/` or `scripts/` files the script references, so the cache self-invalidates when inputs change. Sites with many build scripts skip the Node.js child-process spawn entirely for unchanged scripts, cutting repeat build times significantly.
 
 - **`buildScriptCache` config option** — set to `false` in `bascik.config.js` to disable the build-script output cache (useful when debugging a script that reads external state not tracked by the cache key). Defaults to `true`.

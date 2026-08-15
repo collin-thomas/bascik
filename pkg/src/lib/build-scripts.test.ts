@@ -473,7 +473,9 @@ describe("build-script output cache", () => {
     expect(mockExecFile).toHaveBeenCalledTimes(1);
 
     // Second call with the same script: mock a cache hit (same key, same file).
-    vi.clearAllMocks();
+    mockExecFile.mockClear();
+    mockReadFile.mockClear();
+    mockWriteFile.mockClear();
     mockReadFile.mockResolvedValueOnce(
       JSON.stringify({ v: SCRIPT_CACHE_VERSION, output: "<p>executed</p>" }),
     );
@@ -493,7 +495,9 @@ describe("build-script output cache", () => {
       "<script data-bascik-build>canonical()</script>",
       "src/pages/page-a.html",
     );
-    vi.clearAllMocks();
+    mockExecFile.mockClear();
+    mockReadFile.mockClear();
+    mockWriteFile.mockClear();
     mockReadFile.mockRejectedValue(new Error("ENOENT"));
     resolveWith("<link rel='canonical' href='/b'>");
 
