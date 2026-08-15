@@ -974,6 +974,24 @@ describe("serveHttp2 – SSE live-reload (/bascik-live-reload)", () => {
     expect(stream.write).toHaveBeenCalledWith("data: reload\n\n");
   });
 
+  it("sends reload when Referer lacks trailing slash but page path is an index route", async () => {
+    // Browser Referer for /blog/index.html is typically `/blog` (no trailing slash),
+    // but getHttpPath returns `/blog/`. The fix must normalize both before comparing.
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/bascik-live-reload", "GET", "", "https://localhost:8443/blog"));
+    fireTranspiled("pages/blog/index.html");
+    expect(stream.write).toHaveBeenCalledWith("data: reload\n\n");
+  });
+
+  it("sends reload when Referer has trailing slash and page path is an index route", async () => {
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/bascik-live-reload", "GET", "", "https://localhost:8443/blog/"));
+    fireTranspiled("pages/blog/index.html");
+    expect(stream.write).toHaveBeenCalledWith("data: reload\n\n");
+  });
+
   it("does not send reload when Referer is a different page than the one transpiled", async () => {
     const handler = getStreamHandler()!;
     const stream = makeStream();

@@ -1622,7 +1622,7 @@ cd create
 npm run build
 ```
 
-The `npm link` symlink points at the `create/` directory, so a fresh `dist/` is picked up immediately without relinking.
+The `npm link` symlink points at the `create/` directory, so a fresh `dist/` is picked up immediately without relinking. `npm link` also runs `prepare`, which copies the latest SKILL.md from docs and rebuilds `dist/` — so the initial link after a fresh checkout needs no separate build step.
 
 ## Tests
 
@@ -1656,6 +1656,8 @@ yarn install
 ```sh
 cd create && npm install && npm link && cd ..
 ```
+
+`npm link` runs the `prepare` script, which copies the latest SKILL.md from `docs/` and rebuilds `dist/` automatically. No separate build step is needed.
 
 ### 3. Create a test site
 

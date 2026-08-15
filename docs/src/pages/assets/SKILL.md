@@ -50,7 +50,7 @@ The `create/` folder is intentionally separate from `pkg/`. Contributor work in 
 
 The generator in `create/src/index.ts` validates input, then calls `create/src/scaffold.ts` to write the project files. The generated app is not coupled to the monorepo layout. It just uses the published `@bascik/bascik` package and then runs as a normal Bascik site.
 
-For local contributor testing of the generator itself, rebuild from `create/`, link it with `npm link`, and invoke it via `npx create-bascik ...`; that remains the working flow for exercising the local scaffold end-to-end.
+For local contributor testing of the generator itself, rebuild from `create/`, link it with `npm link`, and invoke it via `npx create-bascik ...`; that remains the working flow for exercising the local scaffold end-to-end. `npm link` runs the `prepare` script, which copies the latest SKILL.md from `docs/` and rebuilds `dist/` automatically, so no separate build step is needed after a fresh checkout.
 
 ---
 

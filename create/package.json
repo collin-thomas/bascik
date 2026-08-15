@@ -29,6 +29,7 @@
   },
   "scripts": {
     "build": "node_modules/.bin/tsc -p tsconfig.build.json",
+    "prepare": "mkdir -p assets && ([ -f ../docs/src/pages/assets/SKILL.md ] && cp ../docs/src/pages/assets/SKILL.md assets/SKILL.md || true) && node_modules/.bin/tsc -p tsconfig.build.json",
     "prepack": "cp ../LICENSE LICENSE && mkdir -p assets && cp ../docs/src/pages/assets/SKILL.md assets/SKILL.md",
     "test": "vitest",
     "test:ci": "vitest run",

@@ -346,7 +346,9 @@ export const serveHttp2 = async () => {
           }) => {
             if (openPagePath) {
               const httpPath = getHttpPath(relativePagePath);
-              if (openPagePath !== httpPath) return;
+              // Normalize trailing slashes: browsers may omit the trailing slash on index routes.
+              const strip = (p: string) => p.replace(/\/$/, "") || "/";
+              if (strip(openPagePath) !== strip(httpPath)) return;
             }
             stream.write(`data: reload\n\n`);
           };
