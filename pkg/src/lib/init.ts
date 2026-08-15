@@ -32,15 +32,16 @@ const INDEX_HTML = `<!DOCTYPE html>
 `;
 
 const BASCIK_CONFIG = `// Bascik works without this file — defaults are src/pages and src/components.
-// Uncomment bascikConfig below to customise directories or other options.
+// Uncomment to customise directories or other options.
 // Full reference: https://bascik.dev/configuration
 //
-// export const bascikConfig = {
+// import { defineConfig } from '@bascik/bascik/config';
+// export default defineConfig({
 //   directory: { pages: 'src/pages', components: 'src/components' },
-// };
+// });
 
-// Applied only during \`bascik --build\`, merged over bascikConfig.
-export const buildOverrideConfig = {
+// Applied only during \`bascik --build\` and \`bascik --serve\`.
+export const build = {
   minifyStyles: true,
   minifyScripts: true,
   obfuscateAttributeNames: true,

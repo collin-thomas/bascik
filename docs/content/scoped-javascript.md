@@ -168,7 +168,7 @@ Bascik ships plain JavaScript to the browser, so TypeScript in component `<scrip
 import { stripTypeScriptTypes } from 'node:module';
 import { defineConfig } from '@bascik/bascik/config';
 
-export const buildOverrideConfig = defineConfig({
+export const build = defineConfig({
   minifyScripts: (js) => stripTypeScriptTypes(js),
 });
 ```

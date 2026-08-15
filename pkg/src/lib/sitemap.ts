@@ -13,9 +13,9 @@
  * Only runs during `bascik --build`. The dev server does not generate these
  * files.
  *
- * @example bascik.config.js
- * ```js
- * export const bascikConfig = {
+ * @example bascik.config.ts
+ * ```ts
+ * export default {
  *   siteUrl: 'https://example.com',
  *   generate: { sitemap: true, robots: true }, // both default to true
  * };

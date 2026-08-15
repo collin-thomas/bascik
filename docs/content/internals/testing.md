@@ -68,15 +68,17 @@ Tests then navigate to pages on that server and assert against the live browser 
 
 ## Fixture Design
 
-`obfuscateAttributeNames` is set to `false` in the fixture config so Playwright selectors can use readable scoped names:
+`obfuscateAttributeNames` is left at its default (`false`) in the fixture config so Playwright selectors can use readable scoped names like `bascik__my-comp__btn`. The only non-default values set are the site URL and the production server port:
 
-```js
-// pkg/e2e/bascik.config.js
-export const bascikConfig = {
-  obfuscateAttributeNames: false,  // keeps names like bascik__my-comp__btn
-  scopeScriptBlocks: true,
-  scopeAttribute: { class: true, id: true, name: true },
-};
+```ts
+// pkg/e2e/bascik.config.ts
+import { defineConfig } from '@bascik/bascik/config';
+
+export default defineConfig({
+  siteUrl: 'http://localhost:4200',
+  useWorkers: true,
+  serve: { port: 9443 },
+});
 ```
 
 Each fixture page renders two or more instances of the component under test so isolation can be verified, changes to instance A must not affect instance B.

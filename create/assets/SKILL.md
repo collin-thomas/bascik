@@ -358,7 +358,7 @@ Because class names are scoped to the component **name** (not per-instance), `qu
 **Escape hatch:** Set `deduplicateCss: false` in `bascik.config.js` to switch to per-instance class scoping. By default, all instances of the same component share identical scoped class names so Bascik emits one shared `<style>` block per component. With `deduplicateCss: false`, class selectors become unique per instance (like IDs), but Bascik emits a separate `<style>` block for each component instance. For most components, using an `id` to anchor the script is simpler.
 
 ```js
-export const bascikConfig = {
+export default {
   deduplicateCss: false, // each instance gets unique class names, one <style> per instance
 };
 ```
@@ -372,7 +372,7 @@ Bascik ships plain JavaScript to the browser, so TypeScript in component `<scrip
 import { stripTypeScriptTypes } from 'node:module';
 import { defineConfig } from '@bascik/bascik/config';
 
-export const buildOverrideConfig = defineConfig({
+export const build = defineConfig({
   minifyScripts: (js) => stripTypeScriptTypes(js),
 });
 ```
@@ -668,7 +668,7 @@ Use `bascik.config.ts` (preferred) or `bascik.config.js` (takes precedence if bo
 // bascik.config.ts
 import { defineConfig } from '@bascik/bascik/config';
 
-export const bascikConfig = defineConfig({
+export default defineConfig({
   directory: {
     pages: "src/pages", // default
     components: "src/components", // default
@@ -717,7 +717,7 @@ export const bascikConfig = defineConfig({
 });
 
 // Applied only during `bascik --build`, merged over bascikConfig
-export const buildOverrideConfig = defineConfig({
+export const build = defineConfig({
   obfuscateAttributeNames: true,
   minifyStyles: true,
 });
@@ -727,7 +727,7 @@ export const buildOverrideConfig = defineConfig({
 
 ```ts
 import { transform } from 'esbuild';
-export const buildOverrideConfig = defineConfig({
+export const build = defineConfig({
   minifyScripts: async (js) => (await transform(js, { minify: true, loader: 'js' })).code,
 });
 ```
@@ -797,7 +797,7 @@ bascik --check  # static analysis: validate pages and components without buildin
 
 **`serve` config block:** configure the production server in `bascik.config.js`:
 ```js
-export const bascikConfig = {
+export default {
   cacheHttp: true,       // default in --serve; false in dev
   serve: {
     port: 8443,            // default
@@ -1002,7 +1002,7 @@ Tailwind utility classes are global by design. Bascik's class scoping would rena
 
 **Required config:** disable class scoping in `bascik.config.js`:
 ```js
-export const bascikConfig = {
+export default {
   scopeAttribute: {
     class: false, // let Tailwind utility classes pass through unchanged
     id: true,

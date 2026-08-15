@@ -440,11 +440,11 @@ Keep inlined critical CSS to the minimum needed for above-the-fold visibility, t
 >
 > ```js
 > // bascik.config.js
-> export const bascikConfig = {
+> export default {
 >   inlineStyles: ['src/pages/css/styles.css'],
 > };
 >
-> export const buildOverrideConfig = {
+> export const build = {
 >   minifyStyles: true,
 > };
 > ```
@@ -465,7 +465,7 @@ npm install --save-dev esbuild
 // bascik.config.js
 import { transform } from 'esbuild';
 
-export const buildOverrideConfig = {
+export const build = {
   minifyStyles: true,
   minifyScripts: async (js) => {
     const result = await transform(js, { minify: true, loader: 'js' });

@@ -105,7 +105,7 @@ The `featured` class is a global class that you define in your page-level styles
 Attribute inheritance is enabled by default. Set `inheritAttributes: false` in `bascik.config.js` when you want every component root to be controlled only by its own template:
 
 ```js
-export const bascikConfig = {
+export default {
   inheritAttributes: false,
 };
 ```
@@ -612,7 +612,7 @@ Use the `serve` key in `bascik.config.js` to customize the server for both dev a
 
 ```js
 // bascik.config.js
-export const bascikConfig = {
+export default {
   serve: {
     port: 443,
     hostname: '0.0.0.0',   // bind all interfaces (needed in containers)
@@ -1127,7 +1127,7 @@ Create a `bascik.config.ts` file in your project root to override any default se
 // bascik.config.ts
 import { defineConfig } from '@bascik/bascik/config';
 
-export const bascikConfig = defineConfig({
+export default defineConfig({
   directory: {
     pages: 'src/pages',
     components: 'src/components',
@@ -1173,7 +1173,7 @@ export const bascikConfig = defineConfig({
   },
 });
 
-export const buildOverrideConfig = defineConfig({
+export const build = defineConfig({
   obfuscateAttributeNames: true,
   minifyStyles: true,
 });
@@ -1261,7 +1261,7 @@ Minify inline `<script>` content and `.js` static files in the build output. Acc
 import { defineConfig } from '@bascik/bascik/config';
 import { transform } from 'esbuild';
 
-export const buildOverrideConfig = defineConfig({
+export const build = defineConfig({
   minifyScripts: async (js) => {
     const result = await transform(js, { minify: true, loader: 'js' });
     return result.code;
@@ -1393,12 +1393,12 @@ This eliminates the render-blocking `<link rel="stylesheet">` request, the CSS a
 ```ts
 import { defineConfig } from '@bascik/bascik/config';
 
-export const bascikConfig = defineConfig({
+export default defineConfig({
   inlineStyles: ['src/pages/css/styles.css'],
   minifyStyles: false,
 });
 
-export const buildOverrideConfig = defineConfig({
+export const build = defineConfig({
   minifyStyles: true,
 });
 ```
@@ -1442,7 +1442,7 @@ Set to `false` when debugging a script that reads external state not covered by 
 Exporting a second `buildOverrideConfig` object lets you set options that apply during `bascik --build` and `bascik --serve` (production server), overriding the values in `bascikConfig`. A common pattern is to enable obfuscation and minification only in production:
 
 ```js
-export const buildOverrideConfig = {
+export const build = {
   obfuscateAttributeNames: true,
   minifyStyles: true,
   minifyScripts: true, // or a custom function for esbuild/terser
@@ -2555,7 +2555,7 @@ Tests then navigate to pages on that server and assert against the live browser 
 
 ```js
 // pkg/e2e/bascik.config.js
-export const bascikConfig = {
+export default {
   obfuscateAttributeNames: false,  // keeps names like bascik__my-comp__btn
   scopeScriptBlocks: true,
   scopeAttribute: { class: true, id: true, name: true },
@@ -3127,7 +3127,7 @@ Set `scopeAttribute.class` to `false` in `bascik.config.js`:
 
 ```js
 // bascik.config.js
-export const bascikConfig = {
+export default {
   scopeAttribute: {
     class: false, // let Tailwind utility classes pass through unchanged
     id: true,
@@ -4237,11 +4237,11 @@ Keep inlined critical CSS to the minimum needed for above-the-fold visibility, t
 >
 > ```js
 > // bascik.config.js
-> export const bascikConfig = {
+> export default {
 >   inlineStyles: ['src/pages/css/styles.css'],
 > };
 >
-> export const buildOverrideConfig = {
+> export const build = {
 >   minifyStyles: true,
 > };
 > ```
@@ -4262,7 +4262,7 @@ npm install --save-dev esbuild
 // bascik.config.js
 import { transform } from 'esbuild';
 
-export const buildOverrideConfig = {
+export const build = {
   minifyStyles: true,
   minifyScripts: async (js) => {
     const result = await transform(js, { minify: true, loader: 'js' });
@@ -4644,7 +4644,7 @@ See [Production Server](/server) for full documentation on server scripts and th
 Configure the port and TLS in `bascik.config.js` before building:
 
 ```js
-export const bascikConfig = {
+export default {
   serve: {
     port: 443,
     hostname: '0.0.0.0',    // bind all interfaces; required in containers
@@ -5012,7 +5012,7 @@ Bascik ships plain JavaScript to the browser, so TypeScript in component `<scrip
 import { stripTypeScriptTypes } from 'node:module';
 import { defineConfig } from '@bascik/bascik/config';
 
-export const buildOverrideConfig = defineConfig({
+export const build = defineConfig({
   minifyScripts: (js) => stripTypeScriptTypes(js),
 });
 ```
@@ -5372,7 +5372,7 @@ Define your design tokens once in a global stylesheet, then consume them inside 
 All scoping can be controlled in [`bascik.config.js`](/configuration):
 
 ```js
-export const bascikConfig = {
+export default {
   scopeAttribute: {
     class: true, // scope class names
     id: true,    // scope id attributes
@@ -5417,7 +5417,7 @@ Avoid this anti-pattern:
 By default, all instances of the same component share identical scoped class names so Bascik can emit a single `<style>` block per component, regardless of how many times it appears on the page. If you genuinely need class selectors to be unique per instance (for example, to use `querySelector` safely across multiple instances), set `deduplicateCss: false`:
 
 ```js
-export const bascikConfig = {
+export default {
   deduplicateCss: false, // each instance gets its own unique class names
 };
 ```
@@ -5860,7 +5860,7 @@ Configure the production server in `bascik.config.js` under the `serve` key.
 
 ```js
 // bascik.config.js
-export const bascikConfig = {
+export default {
   cacheHttp: true,     // default in --serve; false in dev
   serve: {
     port: 8443,         // default
@@ -5950,7 +5950,7 @@ Sitemap generation is on by default. To enable it, set `siteUrl` in your config:
 
 ```js
 // bascik.config.js
-export const bascikConfig = {
+export default {
   siteUrl: 'https://example.com',
 };
 ```
@@ -6001,7 +6001,7 @@ Each page is converted from its file path to a URL path following these rules:
 Control sitemap and robots.txt generation independently via the `generate` option:
 
 ```js
-export const bascikConfig = {
+export default {
   siteUrl: 'https://example.com',
   generate: {
     sitemap: true,  // default
@@ -6013,7 +6013,7 @@ export const bascikConfig = {
 Set either to `false` to skip that file:
 
 ```js
-export const bascikConfig = {
+export default {
   siteUrl: 'https://example.com',
   generate: { sitemap: true, robots: false }, // skip robots.txt
 };

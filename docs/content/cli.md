@@ -229,7 +229,7 @@ Use the `serve` key in `bascik.config.js` to customize the server for both dev a
 
 ```js
 // bascik.config.js
-export const bascikConfig = {
+export default {
   serve: {
     port: 443,
     hostname: '0.0.0.0',   // bind all interfaces (needed in containers)

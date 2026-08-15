@@ -216,7 +216,7 @@ Set `scopeAttribute.class` to `false` in `bascik.config.js`:
 
 ```js
 // bascik.config.js
-export const bascikConfig = {
+export default {
   scopeAttribute: {
     class: false, // let Tailwind utility classes pass through unchanged
     id: true,

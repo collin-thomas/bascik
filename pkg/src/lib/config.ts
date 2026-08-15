@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { bascikConfig, buildOverrideConfig } from "./userConfig.js";
+import { config, buildConfig } from "./userConfig.js";
 import type { BascikConfigOptions } from "./types.js";
 
 const args = process.argv.slice(2);
@@ -27,7 +27,7 @@ const prodServerDefaultConfig: Partial<Omit<BascikConfigOptions, "isBuild" | "is
 // active, before user config. Minification and attribute-name obfuscation are
 // production-only defaults: they slow down rebuilds and make debugging harder,
 // so they stay off in dev but on for `bascik --build`. Users can still
-// override any of them in bascik.config.js (or via buildOverrideConfig).
+// override any of them in bascik.config (or via the build export).
 export const buildDefaultConfig: Partial<
   Omit<BascikConfigOptions, "isBuild" | "isProdServer">
 > = {
@@ -197,7 +197,7 @@ export const initBascikConfig = (
 };
 
 export const { BascikConfig } = initBascikConfig(
-  bascikConfig ?? {},
-  buildOverrideConfig ?? {},
+  config ?? {},
+  buildConfig ?? {},
   { isBuild, isProdServer: isProdServer },
 );

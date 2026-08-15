@@ -216,7 +216,7 @@ Configure the production server in `bascik.config.js` under the `serve` key.
 
 ```js
 // bascik.config.js
-export const bascikConfig = {
+export default {
   cacheHttp: true,     // default in --serve; false in dev
   serve: {
     port: 8443,         // default

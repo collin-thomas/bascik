@@ -2,8 +2,8 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 
 // userConfig is mocked so config.ts can be imported without top-level await
 vi.mock("./userConfig.js", () => ({
-  bascikConfig: {},
-  buildOverrideConfig: {},
+  config: {},
+  buildConfig: {},
 }));
 
 import { defaultConfig, BascikConfig, initBascikConfig } from "./config.js";

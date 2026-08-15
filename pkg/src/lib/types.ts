@@ -66,10 +66,10 @@ export interface BascikConfigOptions {
    *              minified string.  Async functions are supported, which lets
    *              you plug in esbuild, terser, or any other tool:
    *
-   * ```js
-   * // bascik.config.js
+   * ```ts
+   * // bascik.config.ts
    * import { transform } from 'esbuild';
-   * export const buildOverrideConfig = {
+   * export const build = {
    *   minifyScripts: async (js) => (await transform(js, { minify: true })).code,
    * };
    * ```

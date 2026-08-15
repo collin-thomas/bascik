@@ -18,8 +18,8 @@
   },
   "exports": {
     "./config": {
-      "types": "./src/lib/userConfig.ts",
-      "default": "./dist/lib/userConfig.js"
+      "types": "./src/lib/defineConfig.ts",
+      "default": "./dist/lib/defineConfig.js"
     },
     "./*": "./*"
   },

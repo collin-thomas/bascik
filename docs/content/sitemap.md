@@ -6,7 +6,7 @@ Sitemap generation is on by default. To enable it, set `siteUrl` in your config:
 
 ```js
 // bascik.config.js
-export const bascikConfig = {
+export default {
   siteUrl: 'https://example.com',
 };
 ```
@@ -57,7 +57,7 @@ Each page is converted from its file path to a URL path following these rules:
 Control sitemap and robots.txt generation independently via the `generate` option:
 
 ```js
-export const bascikConfig = {
+export default {
   siteUrl: 'https://example.com',
   generate: {
     sitemap: true,  // default
@@ -69,7 +69,7 @@ export const bascikConfig = {
 Set either to `false` to skip that file:
 
 ```js
-export const bascikConfig = {
+export default {
   siteUrl: 'https://example.com',
   generate: { sitemap: true, robots: false }, // skip robots.txt
 };

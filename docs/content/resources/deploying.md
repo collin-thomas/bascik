@@ -76,7 +76,7 @@ See [Production Server](/server) for full documentation on server scripts and th
 Configure the port and TLS in `bascik.config.js` before building:
 
 ```js
-export const bascikConfig = {
+export default {
   serve: {
     port: 443,
     hostname: '0.0.0.0',    // bind all interfaces; required in containers

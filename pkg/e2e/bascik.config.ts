@@ -2,7 +2,7 @@
 // scoped names like `bascik__scope-test__active` rather than opaque hashes.
 import { defineConfig } from '@bascik/bascik/config';
 
-export const bascikConfig = defineConfig({
+export default defineConfig({
   siteUrl: 'http://localhost:4200',
   useWorkers: true,
   serve: {

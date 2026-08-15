@@ -8,7 +8,7 @@ Create a `bascik.config.ts` file in your project root to override any default se
 // bascik.config.ts
 import { defineConfig } from '@bascik/bascik/config';
 
-export const bascikConfig = defineConfig({
+export default defineConfig({
   directory: {
     pages: 'src/pages',
     components: 'src/components',
@@ -54,7 +54,7 @@ export const bascikConfig = defineConfig({
   },
 });
 
-export const buildOverrideConfig = defineConfig({
+export const build = defineConfig({
   obfuscateAttributeNames: true,
   minifyStyles: true,
 });
@@ -142,7 +142,7 @@ Minify inline `<script>` content and `.js` static files in the build output. Acc
 import { defineConfig } from '@bascik/bascik/config';
 import { transform } from 'esbuild';
 
-export const buildOverrideConfig = defineConfig({
+export const build = defineConfig({
   minifyScripts: async (js) => {
     const result = await transform(js, { minify: true, loader: 'js' });
     return result.code;
@@ -269,17 +269,17 @@ inlineStyles: true
 inlineStyles: ['src/pages/css/styles.css']
 ```
 
-This eliminates the render-blocking `<link rel="stylesheet">` request, the CSS arrives in the same HTTP response as the HTML. It pairs naturally with `buildOverrideConfig` to minify only in production:
+This eliminates the render-blocking `<link rel="stylesheet">` request, the CSS arrives in the same HTTP response as the HTML. It pairs naturally with `build` to minify only in production:
 
 ```ts
 import { defineConfig } from '@bascik/bascik/config';
 
-export const bascikConfig = defineConfig({
+export default defineConfig({
   inlineStyles: ['src/pages/css/styles.css'],
   minifyStyles: false,
 });
 
-export const buildOverrideConfig = defineConfig({
+export const build = defineConfig({
   minifyStyles: true,
 });
 ```
@@ -318,12 +318,12 @@ rm -rf node_modules/.cache/bascik/script-cache
 
 Set to `false` when debugging a script that reads external state not covered by the cache key (e.g. a live API call or a file referenced by a dynamic path).
 
-## `buildOverrideConfig`
+## `build`
 
-Exporting a second `buildOverrideConfig` object lets you set options that apply during `bascik --build` and `bascik --serve` (production server), overriding the values in `bascikConfig`. A common pattern is to enable obfuscation and minification only in production:
+Exporting a `build` object lets you set options that apply during `bascik --build` and `bascik --serve` (production server), overriding the default export. A common pattern is to enable obfuscation and minification only in production:
 
 ```js
-export const buildOverrideConfig = {
+export const build = {
   obfuscateAttributeNames: true,
   minifyStyles: true,
   minifyScripts: true, // or a custom function for esbuild/terser
