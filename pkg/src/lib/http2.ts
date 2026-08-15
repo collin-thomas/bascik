@@ -91,7 +91,7 @@ setInterval(() => {
   }
 }, RATE_WINDOW_MS).unref();
 
-export const serveHttp2 = async () => {
+export const startHttp2Server = async () => {
   const hostname = BascikConfig.serve?.hostname ?? "localhost";
   const startPort = BascikConfig.serve?.port ?? 8443;
   const distDir = resolve(process.cwd(), "dist");

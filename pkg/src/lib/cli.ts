@@ -11,7 +11,7 @@
 export type CliAction =
   | "init"
   | "check"
-  | "serve"
+  | "prodServer"
   | "build"
   | "dev"
   | "help"
@@ -60,7 +60,7 @@ export const resolveCliAction = (args: string[]): CliDecision => {
     return { action: "check" };
   }
   if (args.includes("--serve")) {
-    return { action: "serve" };
+    return { action: "prodServer" };
   }
   if (args.includes("--build")) {
     return { action: "build" };

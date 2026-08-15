@@ -12,18 +12,18 @@ const isProdServer =
 // their own script path), but they DO inherit process.env. Propagate isBuild
 // via the env var fallback above so worker threads compute the same isBuild
 // value as the main thread — otherwise disk writes and other isBuild-gated
-// behaviour silently no-op inside every worker.
+// behavior silently no-op inside every worker.
 process.env.BASCIK_BUILD = isBuild ? "1" : "0";
 process.env.BASCIK_PROD_SERVER = isProdServer ? "1" : "0";
 
 // Applied on top of defaultConfig when --serve is active, before user config.
 // This means production-appropriate settings are on by default; users can still
 // override any of them in bascik.config.js.
-const serveDefaultConfig: Partial<Omit<BascikConfigOptions, "isBuild" | "isProdServer">> = {
+const prodServerDefaultConfig: Partial<Omit<BascikConfigOptions, "isBuild" | "isProdServer">> = {
   cacheHttp: true,
 };
 
-// Applied on top of defaultConfig (and serveDefaultConfig) when --build is
+// Applied on top of defaultConfig (and prodServerDefaultConfig) when --build is
 // active, before user config. Minification and attribute-name obfuscation are
 // production-only defaults: they slow down rebuilds and make debugging harder,
 // so they stay off in dev but on for `bascik --build`. Users can still
@@ -128,7 +128,7 @@ type ConfigInput = Partial<
  * Merge the layered configs into the final, frozen `BascikConfig`.
  *
  * Layer order (lowest → highest precedence):
- *   defaultConfig → (isProdServer ? serveDefaultConfig) → (isBuild ? buildDefaultConfig)
+ *   defaultConfig → (isProdServer ? prodServerDefaultConfig) → (isBuild ? buildDefaultConfig)
  *   → userConfig → ((isBuild || isProdServer) ? buildOverride)
  *
  * Exported (pure) so tests can exercise the merge logic directly without
@@ -147,7 +147,7 @@ export const initBascikConfig = (
     buildOverride.directory ?? {};
   const BascikConfig: BascikConfigOptions = {
     ...defaultConfig,
-    ...(isProdServer ? serveDefaultConfig : {}),
+    ...(isProdServer ? prodServerDefaultConfig : {}),
     ...(isBuild ? buildDefaultConfig : {}),
     ...userConfig,
     ...((isBuild || isProdServer) ? buildOverride : {}),

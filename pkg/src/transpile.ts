@@ -13,7 +13,7 @@ if (BascikConfig.isBuild) {
   const serverReady = Promise.all([
     createSelfSignedCert(),
     import("./lib/http2.js"),
-  ]).then(([, { serveHttp2 }]) => serveHttp2());
+  ]).then(([, { startHttp2Server }]) => startHttp2Server());
 
   await watchFiles();
   mem.setBootingDone();

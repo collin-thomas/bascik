@@ -94,7 +94,7 @@ const main = async (): Promise<void> => {
       process.exit(ok ? 0 : 1);
       return;
     }
-    case "serve": {
+    case "prodServer": {
       const { serveProduction } = await import("./lib/serve.js");
       await serveProduction();
       return;

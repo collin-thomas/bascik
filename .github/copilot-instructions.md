@@ -151,11 +151,7 @@ The mapping is straightforward: `docs/content/topic.md` corresponds to `docs/src
 
 ## Keeping the Changelog Up to Date
 
-`CHANGELOG.md` at the repo root must stay current. **Whenever you add a feature, fix a bug, or make any user-visible change to `pkg/src/`**, add an entry to the `[Unreleased]` section before finishing the task. Don't batch it up later.
-
-This applies even when the primary task is updating docs, `llms.txt`, or `SKILL.md` — if the underlying package behavior changed, the changelog entry comes first.
-
-Entry format: one bullet per change, grouped under `### Added`, `### Fixed`, or `### Changed`. Keep bullets concise (one sentence). See existing entries for style.
+`CHANGELOG.md` is not actively maintained during pre-1.0 development — the 1.0.0 release entry will be written as a high-level announcement. **Once 1.0.0 ships**, resume normal changelog discipline: add an entry to `[Unreleased]` whenever you add a feature, fix a bug, or make any user-visible change to `pkg/src/`. One bullet per change, grouped under `### Added`, `### Fixed`, or `### Changed`.
 
 ## Keeping the Compatibility Doc Up to Date
 
