@@ -215,6 +215,18 @@ The license lives in **three places** that must stay in sync:
 
 Do **not** delete the root `LICENSE` — GitHub reads it for repo-level license detection. Do not edit `pkg/LICENSE` or `create/LICENSE` directly; they are derived files.
 
+## Node 24 — Native TypeScript Support
+
+This project runs on **Node 24**. Node natively strips TypeScript types — no transpiler or extra flags needed for erasable syntax.
+
+- `node example.ts` works directly (Node 22.18+ with only erasable syntax, no flags required).
+- Erasable syntax: type annotations, interfaces, type aliases, `import type`. These are stripped at runtime.
+- Non-erasable syntax (`enum`, parameter properties, namespaces with runtime code) is **not** supported — a separate transpile step is required for those.
+- Node does **not** type-check. Run `npx tsc --noEmit` separately for type checking.
+- No `tsconfig.json` is needed for Node to run `.ts` files.
+
+**Practical implication:** `data-bascik-build` and `data-bascik-server` scripts can import `.ts` helper files and Node handles them natively. Bascik does not need to add its own type-stripping layer for server-side or build-time scripts.
+
 ## Agent Environment Notes
 
 ### VS Code Sandbox — Commands That Need Network Will Hang

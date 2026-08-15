@@ -14,7 +14,7 @@ That scaffolds the project, installs dependencies, and starts the dev server in 
 
 Pass a different name to use it as both the directory name and the site title. If you omit the name, the tool prompts for one (defaulting to `bascik-app`). Drop `-y` to step through the install and dev server prompts manually.
 
-`npm create bascik@latest` scaffolds a complete starter site: pages, components, global CSS, `bascik.config.js`, and a `.gitignore`. If you prefer to set everything up manually, see [Manual Setup](#manual-setup) below.
+`npm create bascik@latest` scaffolds a complete starter site: pages, components, global CSS, `bascik.config.ts`, and a `.gitignore`. If you prefer to set everything up manually, see [Manual Setup](#manual-setup) below.
 
 ## Starting the Dev Server
 
@@ -32,7 +32,7 @@ After running `mkcert -install`, restart the dev server. See the [CLI page](/cli
 
 ## Folder Structure
 
-Bascik looks for two directories by default. Both can be overridden in [bascik.config.js](/configuration).
+Bascik looks for two directories by default. Both can be overridden in [bascik.config.ts](/configuration).
 
 ```text
 src/

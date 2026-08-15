@@ -5,6 +5,12 @@ import type { BascikConfigOptions } from "./types.js";
 
 type UserConfig = Partial<Omit<BascikConfigOptions, "isBuild">>;
 
+/** Public type for bascik.config.ts — use with `defineConfig`. */
+export type BascikConfig = UserConfig;
+
+/** Type helper for bascik.config.ts — wraps config in the correct type. */
+export const defineConfig = (config: BascikConfig): BascikConfig => config;
+
 export interface UserConfigModule {
   bascikConfig?: UserConfig;
   buildOverrideConfig?: UserConfig;
@@ -48,7 +54,8 @@ export const loadUserConfig = async (
   }
 };
 
-const configPath = resolve(process.cwd(), "bascik.config.js");
+const jsPath = resolve(process.cwd(), "bascik.config.js");
+const configPath = await access(jsPath).then(() => jsPath, () => resolve(process.cwd(), "bascik.config.ts"));
 const loaded = await loadUserConfig(configPath);
 
 export let bascikConfig: UserConfig = loaded.bascikConfig;

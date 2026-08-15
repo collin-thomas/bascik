@@ -1,12 +1,14 @@
 # Configuration
 
-Create a `bascik.config.js` file in your project root to override any default settings.
+Create a `bascik.config.ts` file in your project root to override any default settings. Import `defineConfig` for full autocomplete and type checking on every option — your editor will surface valid values, flag typos, and show inline docs as you type. A plain `bascik.config.js` also works and takes precedence if both files exist.
 
 ## Full Example
 
-```js
-// bascik.config.js
-export const bascikConfig = {
+```ts
+// bascik.config.ts
+import { defineConfig } from '@bascik/bascik/src/lib/userConfig.js';
+
+export const bascikConfig = defineConfig({
   directory: {
     pages: 'src/pages',
     components: 'src/components',
@@ -50,12 +52,12 @@ export const bascikConfig = {
       transpiles: true,
     },
   },
-};
+});
 
-export const buildOverrideConfig = {
+export const buildOverrideConfig = defineConfig({
   obfuscateAttributeNames: true,
   minifyStyles: true,
-};
+});
 ```
 
 ## Options Reference
@@ -135,16 +137,17 @@ Minify inline `<script>` content and `.js` static files in the build output. Acc
 - **`false`:** no minification.
 - **`(fn)`:** a custom async-capable function called for each script body. Use this to plug in esbuild, terser, or any other tool:
 
-```js
-// bascik.config.js
+```ts
+// bascik.config.ts
+import { defineConfig } from '@bascik/bascik/src/lib/userConfig.js';
 import { transform } from 'esbuild';
 
-export const buildOverrideConfig = {
+export const buildOverrideConfig = defineConfig({
   minifyScripts: async (js) => {
     const result = await transform(js, { minify: true, loader: 'js' });
     return result.code;
   },
-};
+});
 ```
 
 Only applies to inline scripts (those without a `src` attribute) and to `.js` files copied into `dist/`. Non-JS script types such as `application/ld+json` are always left untouched.
@@ -266,15 +269,17 @@ inlineStyles: ['src/pages/css/styles.css']
 
 This eliminates the render-blocking `<link rel="stylesheet">` request, the CSS arrives in the same HTTP response as the HTML. It pairs naturally with `buildOverrideConfig` to minify only in production:
 
-```js
-export const bascikConfig = {
+```ts
+import { defineConfig } from '@bascik/bascik/src/lib/userConfig.js';
+
+export const bascikConfig = defineConfig({
   inlineStyles: ['src/pages/css/styles.css'],
   minifyStyles: false,
-};
+});
 
-export const buildOverrideConfig = {
+export const buildOverrideConfig = defineConfig({
   minifyStyles: true,
-};
+});
 ```
 
 > **When to inline.** Stylesheets under ~15 KB (gzipped) are good candidates. Larger stylesheets are better loaded asynchronously or split into critical and non-critical parts.

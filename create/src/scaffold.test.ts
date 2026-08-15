@@ -302,7 +302,7 @@ describe("scaffold", () => {
   it("writes root config files", async () => {
     await scaffold("my-app", "/tmp");
     expect(writtenTo("package.json")).toBeDefined();
-    expect(writtenTo("bascik.config.js")).toBeDefined();
+    expect(writtenTo("bascik.config.ts")).toBeDefined();
     expect(writtenTo(".gitignore")).toBeDefined();
   });
 

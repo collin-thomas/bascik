@@ -14,7 +14,7 @@ Scaffolds a complete starter project in a new directory. Prompts for a project n
 ```text
 my-project/
   package.json
-  bascik.config.js
+  bascik.config.ts
   .gitignore
   .github/skills/bascik/SKILL.md
   .claude/skills/bascik/SKILL.md

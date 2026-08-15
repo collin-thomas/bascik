@@ -24,8 +24,10 @@ Running `npx create-bascik <name>` writes this structure:
 ```text
 <name>/
   package.json
-  bascik.config.js
+  bascik.config.ts
   .gitignore
+  .github/skills/bascik/SKILL.md
+  .claude/skills/bascik/SKILL.md
   src/
     pages/
       index.html

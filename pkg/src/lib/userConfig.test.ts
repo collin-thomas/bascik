@@ -70,4 +70,14 @@ describe("loadUserConfig", () => {
     const mod = await importUserConfig(p);
     expect(mod.bascikConfig).toEqual({ cacheHttp: true });
   });
+
+  it("loads a bascik.config.ts file (Node 24 strips types natively)", async () => {
+    const { loadUserConfig } = await import("./userConfig.js");
+    const dir = await mkdtemp(join(tmpdir(), "bascik-cfg-"));
+    dirs.push(dir);
+    const p = join(dir, "bascik.config.ts");
+    await writeFile(p, `export const bascikConfig: Record<string, unknown> = { scopeScriptBlocks: false };`, "utf8");
+    const { bascikConfig } = await loadUserConfig(p);
+    expect(bascikConfig).toEqual({ scopeScriptBlocks: false });
+  });
 });

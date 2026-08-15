@@ -631,7 +631,7 @@ export async function scaffold(
   await Promise.all([
     // Root
     writeFile(join(root, "package.json"), PACKAGE_JSON(projectName), "utf8"),
-    writeFile(join(root, "bascik.config.js"), BASCIK_CONFIG, "utf8"),
+    writeFile(join(root, "bascik.config.ts"), BASCIK_CONFIG, "utf8"),
     writeFile(join(root, ".gitignore"), GITIGNORE, "utf8"),
     writeFile(join(root, ".github", "skills", "bascik", "SKILL.md"), skillMd, "utf8"),
     writeFile(join(root, ".claude", "skills", "bascik", "SKILL.md"), skillMd, "utf8"),
