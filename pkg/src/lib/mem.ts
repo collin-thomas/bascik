@@ -14,13 +14,13 @@ interface StorePageArgs {
 class MemoryStore {
   #files: Map<string, StoredPage>;
   #components: Map<string, Set<string>>;
-  /** HTTP paths of pages with an active SSE live-reload connection. */
-  #openPages: Set<string>;
+  /** HTTP paths of pages with an active SSE live-reload connection, with connection counts. */
+  #openPages: Map<string, number>;
 
   constructor() {
     this.#files = new Map();
     this.#components = new Map();
-    this.#openPages = new Set();
+    this.#openPages = new Map();
   }
 
   async storePage({
@@ -119,15 +119,21 @@ class MemoryStore {
   }
 
   trackOpenPage(httpPath: string): void {
-    this.#openPages.add(httpPath);
+    this.#openPages.set(httpPath, (this.#openPages.get(httpPath) ?? 0) + 1);
   }
 
   untrackOpenPage(httpPath: string): void {
-    this.#openPages.delete(httpPath);
+    const count = this.#openPages.get(httpPath);
+    if (count === undefined) return;
+    if (count <= 1) {
+      this.#openPages.delete(httpPath);
+    } else {
+      this.#openPages.set(httpPath, count - 1);
+    }
   }
 
   get openPages(): string[] {
-    return [...this.#openPages];
+    return [...this.#openPages.keys()];
   }
 }
 

@@ -1,29 +1,34 @@
-{"total": {"lines":{"total":5665,"covered":4882,"skipped":0,"pct":86.17},"statements":{"total":5665,"covered":4882,"skipped":0,"pct":86.17},"functions":{"total":158,"covered":133,"skipped":0,"pct":84.17},"branches":{"total":740,"covered":563,"skipped":0,"pct":76.08},"branchesTrue":{"total":0,"covered":0,"skipped":0,"pct":100}}
-,"/Users/collin/github/bascik/pkg/e2e/bascik.config.js": {"lines":{"total":27,"covered":27,"skipped":0,"pct":100},"functions":{"total":0,"covered":0,"skipped":0,"pct":100},"statements":{"total":27,"covered":27,"skipped":0,"pct":100},"branches":{"total":1,"covered":1,"skipped":0,"pct":100}}
-,"/Users/collin/github/bascik/pkg/src/index.ts": {"lines":{"total":111,"covered":99,"skipped":0,"pct":89.18},"functions":{"total":4,"covered":4,"skipped":0,"pct":100},"statements":{"total":111,"covered":99,"skipped":0,"pct":89.18},"branches":{"total":23,"covered":18,"skipped":0,"pct":78.26}}
-,"/Users/collin/github/bascik/pkg/src/transpile.ts": {"lines":{"total":18,"covered":18,"skipped":0,"pct":100},"functions":{"total":0,"covered":0,"skipped":0,"pct":100},"statements":{"total":18,"covered":18,"skipped":0,"pct":100},"branches":{"total":3,"covered":3,"skipped":0,"pct":100}}
-,"/Users/collin/github/bascik/pkg/src/lib/build-scripts.ts": {"lines":{"total":181,"covered":179,"skipped":0,"pct":98.89},"functions":{"total":8,"covered":8,"skipped":0,"pct":100},"statements":{"total":181,"covered":179,"skipped":0,"pct":98.89},"branches":{"total":28,"covered":22,"skipped":0,"pct":78.57}}
-,"/Users/collin/github/bascik/pkg/src/lib/check.ts": {"lines":{"total":189,"covered":169,"skipped":0,"pct":89.41},"functions":{"total":5,"covered":5,"skipped":0,"pct":100},"statements":{"total":189,"covered":169,"skipped":0,"pct":89.41},"branches":{"total":29,"covered":20,"skipped":0,"pct":68.96}}
-,"/Users/collin/github/bascik/pkg/src/lib/cli.ts": {"lines":{"total":87,"covered":85,"skipped":0,"pct":97.7},"functions":{"total":1,"covered":1,"skipped":0,"pct":100},"statements":{"total":87,"covered":85,"skipped":0,"pct":97.7},"branches":{"total":19,"covered":18,"skipped":0,"pct":94.73}}
-,"/Users/collin/github/bascik/pkg/src/lib/components.ts": {"lines":{"total":725,"covered":677,"skipped":0,"pct":93.37},"functions":{"total":19,"covered":18,"skipped":0,"pct":94.73},"statements":{"total":725,"covered":677,"skipped":0,"pct":93.37},"branches":{"total":105,"covered":85,"skipped":0,"pct":80.95}}
-,"/Users/collin/github/bascik/pkg/src/lib/config.ts": {"lines":{"total":196,"covered":196,"skipped":0,"pct":100},"functions":{"total":3,"covered":3,"skipped":0,"pct":100},"statements":{"total":196,"covered":196,"skipped":0,"pct":100},"branches":{"total":41,"covered":31,"skipped":0,"pct":75.6}}
-,"/Users/collin/github/bascik/pkg/src/lib/events.ts": {"lines":{"total":8,"covered":8,"skipped":0,"pct":100},"functions":{"total":0,"covered":0,"skipped":0,"pct":100},"statements":{"total":8,"covered":8,"skipped":0,"pct":100},"branches":{"total":0,"covered":0,"skipped":0,"pct":100}}
-,"/Users/collin/github/bascik/pkg/src/lib/file-system.ts": {"lines":{"total":245,"covered":101,"skipped":0,"pct":41.22},"functions":{"total":14,"covered":6,"skipped":0,"pct":42.85},"statements":{"total":245,"covered":101,"skipped":0,"pct":41.22},"branches":{"total":18,"covered":12,"skipped":0,"pct":66.66}}
-,"/Users/collin/github/bascik/pkg/src/lib/http2.ts": {"lines":{"total":506,"covered":368,"skipped":0,"pct":72.72},"functions":{"total":11,"covered":6,"skipped":0,"pct":54.54},"statements":{"total":506,"covered":368,"skipped":0,"pct":72.72},"branches":{"total":96,"covered":58,"skipped":0,"pct":60.41}}
-,"/Users/collin/github/bascik/pkg/src/lib/init.ts": {"lines":{"total":148,"covered":140,"skipped":0,"pct":94.59},"functions":{"total":3,"covered":3,"skipped":0,"pct":100},"statements":{"total":148,"covered":140,"skipped":0,"pct":94.59},"branches":{"total":16,"covered":14,"skipped":0,"pct":87.5}}
-,"/Users/collin/github/bascik/pkg/src/lib/javascript.ts": {"lines":{"total":650,"covered":611,"skipped":0,"pct":94},"functions":{"total":9,"covered":8,"skipped":0,"pct":88.88},"statements":{"total":650,"covered":611,"skipped":0,"pct":94},"branches":{"total":67,"covered":51,"skipped":0,"pct":76.11}}
-,"/Users/collin/github/bascik/pkg/src/lib/mem.ts": {"lines":{"total":134,"covered":118,"skipped":0,"pct":88.05},"functions":{"total":10,"covered":9,"skipped":0,"pct":90},"statements":{"total":134,"covered":118,"skipped":0,"pct":88.05},"branches":{"total":15,"covered":13,"skipped":0,"pct":86.66}}
-,"/Users/collin/github/bascik/pkg/src/lib/mime.ts": {"lines":{"total":110,"covered":110,"skipped":0,"pct":100},"functions":{"total":0,"covered":0,"skipped":0,"pct":100},"statements":{"total":110,"covered":110,"skipped":0,"pct":100},"branches":{"total":0,"covered":0,"skipped":0,"pct":100}}
-,"/Users/collin/github/bascik/pkg/src/lib/names.ts": {"lines":{"total":22,"covered":15,"skipped":0,"pct":68.18},"functions":{"total":3,"covered":2,"skipped":0,"pct":66.66},"statements":{"total":22,"covered":15,"skipped":0,"pct":68.18},"branches":{"total":4,"covered":2,"skipped":0,"pct":50}}
-,"/Users/collin/github/bascik/pkg/src/lib/page-worker.ts": {"lines":{"total":18,"covered":15,"skipped":0,"pct":83.33},"functions":{"total":0,"covered":0,"skipped":0,"pct":100},"statements":{"total":18,"covered":15,"skipped":0,"pct":83.33},"branches":{"total":2,"covered":1,"skipped":0,"pct":50}}
-,"/Users/collin/github/bascik/pkg/src/lib/paths.ts": {"lines":{"total":11,"covered":11,"skipped":0,"pct":100},"functions":{"total":1,"covered":1,"skipped":0,"pct":100},"statements":{"total":11,"covered":11,"skipped":0,"pct":100},"branches":{"total":1,"covered":1,"skipped":0,"pct":100}}
-,"/Users/collin/github/bascik/pkg/src/lib/pki.ts": {"lines":{"total":60,"covered":18,"skipped":0,"pct":30},"functions":{"total":1,"covered":1,"skipped":0,"pct":100},"statements":{"total":60,"covered":18,"skipped":0,"pct":30},"branches":{"total":2,"covered":1,"skipped":0,"pct":50}}
-,"/Users/collin/github/bascik/pkg/src/lib/processing.ts": {"lines":{"total":769,"covered":566,"skipped":0,"pct":73.6},"functions":{"total":17,"covered":12,"skipped":0,"pct":70.58},"statements":{"total":769,"covered":566,"skipped":0,"pct":73.6},"branches":{"total":86,"covered":56,"skipped":0,"pct":65.11}}
-,"/Users/collin/github/bascik/pkg/src/lib/serve.ts": {"lines":{"total":98,"covered":87,"skipped":0,"pct":88.77},"functions":{"total":3,"covered":3,"skipped":0,"pct":100},"statements":{"total":98,"covered":87,"skipped":0,"pct":88.77},"branches":{"total":11,"covered":8,"skipped":0,"pct":72.72}}
-,"/Users/collin/github/bascik/pkg/src/lib/server-scripts.ts": {"lines":{"total":189,"covered":189,"skipped":0,"pct":100},"functions":{"total":4,"covered":4,"skipped":0,"pct":100},"statements":{"total":189,"covered":189,"skipped":0,"pct":100},"branches":{"total":19,"covered":14,"skipped":0,"pct":73.68}}
-,"/Users/collin/github/bascik/pkg/src/lib/sitemap.ts": {"lines":{"total":143,"covered":137,"skipped":0,"pct":95.8},"functions":{"total":6,"covered":6,"skipped":0,"pct":100},"statements":{"total":143,"covered":137,"skipped":0,"pct":95.8},"branches":{"total":17,"covered":13,"skipped":0,"pct":76.47}}
-,"/Users/collin/github/bascik/pkg/src/lib/styles.ts": {"lines":{"total":765,"covered":732,"skipped":0,"pct":95.68},"functions":{"total":23,"covered":21,"skipped":0,"pct":91.3},"statements":{"total":765,"covered":732,"skipped":0,"pct":95.68},"branches":{"total":96,"covered":88,"skipped":0,"pct":91.66}}
-,"/Users/collin/github/bascik/pkg/src/lib/userConfig.ts": {"lines":{"total":55,"covered":43,"skipped":0,"pct":78.18},"functions":{"total":2,"covered":2,"skipped":0,"pct":100},"statements":{"total":55,"covered":43,"skipped":0,"pct":78.18},"branches":{"total":4,"covered":2,"skipped":0,"pct":50}}
-,"/Users/collin/github/bascik/pkg/src/lib/watch.ts": {"lines":{"total":101,"covered":85,"skipped":0,"pct":84.15},"functions":{"total":4,"covered":4,"skipped":0,"pct":100},"statements":{"total":101,"covered":85,"skipped":0,"pct":84.15},"branches":{"total":20,"covered":18,"skipped":0,"pct":90}}
-,"/Users/collin/github/bascik/pkg/src/lib/worker-pool.ts": {"lines":{"total":99,"covered":78,"skipped":0,"pct":78.78},"functions":{"total":7,"covered":6,"skipped":0,"pct":85.71},"statements":{"total":99,"covered":78,"skipped":0,"pct":78.78},"branches":{"total":17,"covered":13,"skipped":0,"pct":76.47}}
+{
+  "total": {
+    "lines": {
+      "total": 5665,
+      "covered": 4882,
+      "skipped": 0,
+      "pct": 86.17
+    },
+    "statements": {
+      "total": 5665,
+      "covered": 4882,
+      "skipped": 0,
+      "pct": 86.17
+    },
+    "functions": {
+      "total": 158,
+      "covered": 133,
+      "skipped": 0,
+      "pct": 84.17
+    },
+    "branches": {
+      "total": 740,
+      "covered": 563,
+      "skipped": 0,
+      "pct": 76.08
+    },
+    "branchesTrue": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 100
+    }
+  }
 }

@@ -231,4 +231,19 @@ describe("openPages tracking", () => {
     expect(() => mem.untrackOpenPage("/never-tracked")).not.toThrow();
     expect(mem.openPages).toEqual([]);
   });
+
+  it("untracking one connection for a path does not remove it when another is open", () => {
+    mem.trackOpenPage("/about");
+    mem.trackOpenPage("/about");
+    mem.untrackOpenPage("/about");
+    expect(mem.openPages).toContain("/about");
+  });
+
+  it("untracking all connections for a path removes it", () => {
+    mem.trackOpenPage("/about");
+    mem.trackOpenPage("/about");
+    mem.untrackOpenPage("/about");
+    mem.untrackOpenPage("/about");
+    expect(mem.openPages).not.toContain("/about");
+  });
 });

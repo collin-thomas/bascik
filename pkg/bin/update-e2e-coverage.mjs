@@ -16,7 +16,7 @@
  */
 
 import { execSync, spawn } from 'node:child_process';
-import { mkdirSync, rmSync, existsSync, utimesSync, writeFileSync, unlinkSync } from 'node:fs';
+import { mkdirSync, rmSync, existsSync, utimesSync, writeFileSync, unlinkSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import http2 from 'node:http2';
@@ -216,6 +216,7 @@ execSync(
   `"${c8}" report --temp-directory "${covDir}" -r json-summary -o "${repDir}"`,
   { cwd: pkgDir, stdio: 'inherit' },
 );
-execSync(`cp "${repDir}/coverage-summary.json" "${join(pkgDir, 'e2e-test-coverage.json')}"`, { cwd: pkgDir });
+const summary = JSON.parse(readFileSync(`${repDir}/coverage-summary.json`, 'utf8'));
+const outPath = join(pkgDir, 'e2e-test-coverage.json');
+writeFileSync(outPath, JSON.stringify({ total: summary['total'] }, null, 2) + '\n');
 console.log('Done → e2e-test-coverage.json');
-process.exit(0);

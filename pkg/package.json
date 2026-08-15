@@ -41,7 +41,7 @@
     "test": "vitest",
     "test:ci": "vitest run --coverage.enabled --coverage.reporter='text-summary'",
     "test:coverage": "vitest run --coverage.enabled",
-    "update-coverage": "vitest run --coverage.enabled && cp coverage/coverage-summary.json test-coverage.json",
+    "update-coverage": "vitest run --coverage.enabled && node bin/update-coverage.mjs",
     "update-e2e-coverage": "node bin/update-e2e-coverage.mjs",
     "bench": "vitest bench",
     "typecheck": "node_modules/.bin/tsc --noEmit",
