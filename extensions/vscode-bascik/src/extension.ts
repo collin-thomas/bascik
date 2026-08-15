@@ -1,0 +1,208 @@
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as vscode from 'vscode';
+import { matchCompatibilityRules } from './rules';
+
+const BUILT_IN_HTML_ELEMENTS = new Set([
+  'a', 'abbr', 'address', 'area', 'article', 'aside', 'audio', 'b', 'base', 'bdi', 'bdo', 'blockquote', 'body', 'br', 'button', 'canvas', 'caption', 'cite', 'code', 'col', 'colgroup', 'data', 'datalist', 'dd', 'del', 'details', 'dfn', 'dialog', 'div', 'dl', 'dt', 'em', 'embed', 'fieldset', 'figcaption', 'figure', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hgroup', 'hr', 'html', 'i', 'iframe', 'img', 'input', 'ins', 'kbd', 'label', 'legend', 'li', 'link', 'main', 'map', 'mark', 'meta', 'meter', 'nav', 'noscript', 'object', 'ol', 'optgroup', 'option', 'output', 'p', 'picture', 'pre', 'progress', 'q', 'rp', 'rt', 'ruby', 's', 'samp', 'script', 'search', 'section', 'select', 'slot', 'small', 'source', 'span', 'strong', 'style', 'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'template', 'textarea', 'tfoot', 'th', 'thead', 'time', 'title', 'tr', 'track', 'u', 'ul', 'var', 'video', 'wbr'
+]);
+
+function normalizeComponentName(name: string): string {
+  return name.replace(/\\/g, '/').split('/').pop()?.replace(/\.html$/i, '').toLowerCase() ?? '';
+}
+
+function findComponentMap(workspaceRoot: string): Map<string, string> {
+  const components = new Map<string, string>();
+  const dir = path.join(workspaceRoot, 'src', 'components');
+
+  if (!fs.existsSync(dir)) {
+    return components;
+  }
+
+  const stack = [dir];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current || !fs.existsSync(current)) continue;
+
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(fullPath);
+      } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.html')) {
+        const name = normalizeComponentName(fullPath);
+        if (name) {
+          components.set(name, fullPath);
+        }
+      }
+    }
+  }
+
+  return components;
+}
+
+function getWorkspaceRoot(): string | undefined {
+  const folder = vscode.workspace.workspaceFolders?.[0];
+  return folder?.uri.fsPath;
+}
+
+class ComponentDefinitionProvider implements vscode.DefinitionProvider {
+  provideDefinition(
+    document: vscode.TextDocument,
+    position: vscode.Position,
+    _token: vscode.CancellationToken,
+  ): vscode.ProviderResult<vscode.Definition> {
+    const range = document.getWordRangeAtPosition(position, /[A-Za-z0-9-]+/);
+    if (!range) {
+      return undefined;
+    }
+
+    const word = document.getText(range);
+    if (!word || BUILT_IN_HTML_ELEMENTS.has(word.toLowerCase())) {
+      return undefined;
+    }
+
+    const root = getWorkspaceRoot();
+    if (!root) {
+      return undefined;
+    }
+
+    const componentMap = findComponentMap(root);
+    const tagName = word.toLowerCase();
+    const file = componentMap.get(tagName);
+    if (!file || !fs.existsSync(file)) {
+      return undefined;
+    }
+
+    return new vscode.Location(vscode.Uri.file(file), new vscode.Position(0, 0));
+  }
+}
+
+function createDiagnosticsForDocument(document: vscode.TextDocument): vscode.Diagnostic[] {
+  const { languageId } = document;
+
+  if (languageId !== 'css' && languageId !== 'javascript' && languageId !== 'typescript' && languageId !== 'html') {
+    return [];
+  }
+
+  const text = document.getText();
+  const diagnostics: vscode.Diagnostic[] = [];
+
+  const addCompatibilityDiagnostics = (sourceText: string, kind: 'css' | 'js', offset: number) => {
+    for (const rule of matchCompatibilityRules(sourceText, kind)) {
+      const flags = rule.regex.flags.includes('g') ? rule.regex.flags : `${rule.regex.flags}g`;
+      const regex = new RegExp(rule.regex.source, flags);
+      const match = regex.exec(sourceText);
+      if (!match || typeof match.index !== 'number') continue;
+      const start = document.positionAt(offset + match.index);
+      const end = document.positionAt(offset + match.index + Math.max(match[0].length, 1));
+      const diag = new vscode.Diagnostic(
+        new vscode.Range(start, end),
+        `${rule.message} ${rule.suggestion}`,
+        vscode.DiagnosticSeverity.Warning,
+      );
+      diag.source = 'bascik';
+      diagnostics.push(diag);
+    }
+  };
+
+  const parseScriptOpenTagAttributes = (openTag: string): Map<string, string | true> => {
+    const attrs = new Map<string, string | true>();
+    const insideTag = openTag
+      .replace(/^<script\b/i, '')
+      .replace(/>$/, '');
+    const attrRe = /([^\s"'=<>`/]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/gi;
+    let match: RegExpExecArray | null;
+    while ((match = attrRe.exec(insideTag)) !== null) {
+      const name = match[1]?.toLowerCase();
+      if (!name) continue;
+      const value = match[2] ?? match[3] ?? match[4];
+      attrs.set(name, value === undefined ? true : value);
+    }
+    return attrs;
+  };
+
+  const isJavaScriptScriptTag = (openTag: string): boolean => {
+    const attrs = parseScriptOpenTagAttributes(openTag);
+    const typeValue = attrs.get('type');
+    if (!typeValue || typeValue === true) return true;
+    const normalized = String(typeValue).trim().toLowerCase();
+    return normalized === 'module'
+      || normalized === 'text/javascript'
+      || normalized === 'application/javascript'
+      || normalized === 'text/ecmascript'
+      || normalized === 'application/ecmascript';
+  };
+
+  const scriptBlockRe = /(<script\b(?:[^>"']|"[^"]*"|'[^']*')*>)([\s\S]*?)<\/script\s*>/gi;
+  const styleBlockRe = /(<style\b(?:[^>"']|"[^"]*"|'[^']*')*>)([\s\S]*?)<\/style\s*>/gi;
+
+  if (languageId === 'html') {
+    let scriptMatch: RegExpExecArray | null;
+    while ((scriptMatch = scriptBlockRe.exec(text)) !== null) {
+      const openTag = scriptMatch[1];
+      const scriptBody = scriptMatch[2] ?? '';
+      const scriptBodyOffset = (scriptMatch.index ?? 0) + openTag.length;
+      const attrs = parseScriptOpenTagAttributes(openTag);
+      if (attrs.has('data-bascik-build') && attrs.has('data-bascik-server')) {
+        const start = document.positionAt(scriptMatch.index ?? 0);
+        const end = document.positionAt((scriptMatch.index ?? 0) + openTag.length);
+        const diag = new vscode.Diagnostic(
+          new vscode.Range(start, end),
+          'data-bascik-build and data-bascik-server cannot both appear on the same <script> tag. Remove one — a script runs at build time or at request time, not both.',
+          vscode.DiagnosticSeverity.Error,
+        );
+        diag.source = 'bascik';
+        diagnostics.push(diag);
+      }
+      if (isJavaScriptScriptTag(openTag)) {
+        addCompatibilityDiagnostics(scriptBody, 'js', scriptBodyOffset);
+      }
+    }
+
+    let styleMatch: RegExpExecArray | null;
+    while ((styleMatch = styleBlockRe.exec(text)) !== null) {
+      const openTag = styleMatch[1];
+      const styleBody = styleMatch[2] ?? '';
+      const styleBodyOffset = (styleMatch.index ?? 0) + openTag.length;
+      addCompatibilityDiagnostics(styleBody, 'css', styleBodyOffset);
+    }
+  } else if (languageId === 'css') {
+    addCompatibilityDiagnostics(text, 'css', 0);
+  } else {
+    addCompatibilityDiagnostics(text, 'js', 0);
+  }
+
+  return diagnostics;
+}
+
+export function activate(context: vscode.ExtensionContext): void {
+  const definitionProvider = new ComponentDefinitionProvider();
+  context.subscriptions.push(
+    vscode.languages.registerDefinitionProvider(
+      [{ language: 'html' }, { language: 'javascript' }, { language: 'typescript' }, { language: 'css' }],
+      definitionProvider,
+    ),
+  );
+
+  const diagnostics = vscode.languages.createDiagnosticCollection('bascik');
+  context.subscriptions.push(diagnostics);
+
+  const refreshDiagnostics = (document: vscode.TextDocument | undefined) => {
+    if (!document) return;
+    const items = createDiagnosticsForDocument(document);
+    diagnostics.set(document.uri, items);
+  };
+
+  for (const document of vscode.workspace.textDocuments) {
+    refreshDiagnostics(document);
+  }
+
+  context.subscriptions.push(
+    vscode.workspace.onDidOpenTextDocument(refreshDiagnostics),
+    vscode.workspace.onDidChangeTextDocument((event) => refreshDiagnostics(event.document)),
+  );
+}
+
+export function deactivate(): void {
+  // no-op
+}

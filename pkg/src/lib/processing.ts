@@ -650,9 +650,15 @@ export const transpilePage = async (
   {
     const unresolved = new Set<string>();
     for (const chunk of [transpiledHtmlBody, transpiledHeadContent]) {
+      // Strip <script>, <style>, and <textarea> content so literal text like
+      // `<my-tag>` inside JSON-LD or demo strings doesn't produce false warnings.
+      const scannable = chunk.replace(
+        /<(script|style|textarea)(\s[^>]*)?>([\s\S]*?)<\/\1>/gi,
+        "<$1$2></$1>",
+      );
       const re = /<([a-z][a-z0-9]*(?:-[a-z0-9]+)+)[\s\/>]/gi;
       let m: RegExpExecArray | null;
-      while ((m = re.exec(chunk)) !== null) {
+      while ((m = re.exec(scannable)) !== null) {
         const tag = m[1].toLowerCase();
         unresolved.add(tag);
       }
@@ -757,13 +763,12 @@ export const transpilePage = async (
   };
 };
 
-export const removePage = (absolutePagePath: string): void => {
+export const removePage = async (absolutePagePath: string): Promise<void> => {
   const relativePagePath = getRelativePath(absolutePagePath, "pages");
 
   // Memory
   if (!BascikConfig.isBuild) {
     mem.removePage(absolutePagePath);
   }
-  // File system is async, do not await
-  deleteDistFile(relativePagePath);
+  await deleteDistFile(relativePagePath);
 };

@@ -3,6 +3,30 @@
 
 <head>
   <docs-head></docs-head>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { canonical } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/canonical.mjs')).href
+    );
+    console.log(await canonical());
+  </script>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { openGraph } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/open-graph.mjs')).href
+    );
+    console.log(await openGraph());
+  </script>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { breadcrumbLd } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/breadcrumb-ld.mjs')).href
+    );
+    console.log(await breadcrumbLd());
+  </script>
   <meta name="description"
     content="Bascik gives you an enormous head start on Lighthouse scores. Learn responsive images, lazy loading, preload hints, and SEO best practices." />
   <title>Lighthouse 100s - Bascik Docs</title>
@@ -32,7 +56,7 @@
     .docs-content table:first-of-type td {
       font-size: 2.6rem;
       font-weight: 800;
-      color: var(--accent);
+      color: var(--accent-fg);
       line-height: 1;
       padding: 16px 8px 0;
     }

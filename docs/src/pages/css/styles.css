@@ -17,6 +17,101 @@
   --r-sm:         6px;
   --r-lg:         16px;
   --anchor-scroll-offset: 84px;
+  --nav-bg:       rgba(24,25,27,0.9);
+  --pre-bg:       #0d0e0f;
+  --accent-border: rgba(211,255,141,0.22);
+  --accent-fg:    #d3ff8d;
+  --ghost-border-hover: #d3ff8d;
+  --badge-bg: var(--accent-dim);
+  --badge-color: var(--accent-fg);
+  --badge-border: var(--accent-border);
+  --card-border-hover: var(--border-hover);
+  --card-shadow-hover: var(--accent-dim);
+  --primary-hover-filter: brightness(0.88);
+  --callout-bg: var(--accent-dim);
+  --callout-border: var(--accent-border);
+  --step-bg: var(--accent-dim);
+  --step-border: rgba(211,255,141,0.3);
+  --step-color: var(--accent-fg);
+  --pagination-label: #d3ff8d;
+  --pagination-border-hover: rgba(211,255,141,0.35);
+  /* ── Syntax token colors (code-block component) ── */
+  --pre-text:       #cdd6f4;
+  --syn-cm:         #9ca3af;
+  --syn-str:        #98c379;
+  --syn-kw:         #c792ea;
+  --syn-num:        #e5c07b;
+  --syn-attr:       #89ddff;
+  --syn-val:        #f1fa8c;
+  --code-header-bg: rgba(255,255,255,0.04);
+  --code-tabs-bg:   rgba(255,255,255,0.025);
+  /* ── Homepage manual highlight spans ── */
+  --hl-tag:         #89b4fa;
+  --hl-kw:          #cba6f7;
+  --hl-str:         #a6e3a1;
+  --hl-comment:     #7e8190;
+  --hl-scoped:      var(--accent);
+  --hl-num:         #f9e2af;
+  /* ── Homepage pillar card ── */
+  --pillar-bg:       #2e3428;
+  --pillar-border:   rgba(211,255,141,0.14);
+  /* ── Live indicator dot ── */
+  --live-dot-bg:     var(--accent);
+  --live-dot-shadow: 0 0 8px rgba(211,255,141,0.45);
+  /* ── Homepage hero glow ── */
+  --hero-glow:   rgba(211,255,141,0.14);
+  --hero-glow-2: rgba(211,255,141,0.06);
+}
+
+html[data-theme="light"] {
+  --bg:           #f2f3f0;
+  --surface:      #eaebe8;
+  --elevated:     #e2e3e0;
+  --border:       rgba(0,0,0,0.09);
+  --border-hover: rgba(211,255,141,0.65);
+  --accent:       #d3ff8d;
+  --accent-dim:   rgba(211,255,141,0.28);
+  --text:         #18191b;
+  --text-muted:   #525d6a;
+  --nav-bg:       rgba(242,243,240,0.92);
+  --pre-bg:       var(--elevated);
+  --accent-border: rgba(211,255,141,0.45);
+  --accent-fg:    #18191b;
+  --ghost-border-hover: rgba(24,25,27,0.45);
+  --badge-bg: var(--elevated);
+  --badge-color: var(--text-muted);
+  --badge-border: var(--border);
+  --card-border-hover: rgba(24,25,27,0.38);
+  --card-shadow-hover: rgba(24,25,27,0.10);
+  --primary-hover-filter: brightness(0.96);
+  --callout-bg: var(--elevated);
+  --callout-border: var(--border);
+  --step-bg: var(--badge-bg);
+  --step-border: var(--badge-border);
+  --step-color: var(--badge-color);
+  --pagination-label: #18191b;
+  --pagination-border-hover: rgba(24,25,27,0.38);
+  --pre-text:       var(--text);
+  --syn-cm:         #4b5563;
+  --syn-str:        #065f46;
+  --syn-kw:         #6d28d9;
+  --syn-num:        #9a3412;
+  --syn-attr:       #1d4ed8;
+  --syn-val:        #065f46;
+  --code-header-bg: rgba(0,0,0,0.04);
+  --code-tabs-bg:   rgba(0,0,0,0.04);
+  --hl-tag:         #1d4ed8;
+  --hl-kw:          #6d28d9;
+  --hl-str:         #065f46;
+  --hl-comment:     #6b7280;
+  --hl-scoped:      var(--accent-fg);
+  --hl-num:         #9a3412;
+  --pillar-bg:      var(--surface);
+  --pillar-border:  var(--border);
+  --live-dot-bg:    var(--text);
+  --live-dot-shadow: 0 0 0 2px var(--accent);
+  --hero-glow:   rgba(100,160,30,0.22);
+  --hero-glow-2: rgba(100,160,30,0.11);
 }
 
 html {
@@ -31,12 +126,81 @@ body {
   font-size: 16px;
   line-height: 1.7;
   margin: 0;
+  overflow-x: hidden;
 }
+
+/* Render live CSS examples against the palette their source code targets. */
+[data-demo-theme="dark"] {
+  --bg: #18191b;
+  --surface: #1e2022;
+  --elevated: #242628;
+  --border: rgba(255,255,255,0.07);
+  --border-hover: rgba(211,255,141,0.35);
+  --accent: #d3ff8d;
+  --accent-dim: rgba(211,255,141,0.12);
+  --accent-border: rgba(211,255,141,0.22);
+  --accent-fg: #d3ff8d;
+  --ghost-border-hover: #d3ff8d;
+  --badge-bg: rgba(211,255,141,0.12);
+  --badge-color: #d3ff8d;
+  --badge-border: rgba(211,255,141,0.22);
+  --card-border-hover: rgba(211,255,141,0.35);
+  --card-shadow-hover: rgba(211,255,141,0.12);
+  --primary-hover-filter: brightness(0.88);
+  --callout-bg: rgba(211,255,141,0.12);
+  --callout-border: rgba(211,255,141,0.22);
+  --step-bg: rgba(211,255,141,0.12);
+  --step-border: rgba(211,255,141,0.3);
+  --step-color: #d3ff8d;
+  --pagination-label: #d3ff8d;
+  --pagination-border-hover: rgba(211,255,141,0.35);
+  --text: #f0f1f2;
+  --text-muted: #8d929e;
+  --pre-bg: #0d0e0f;
+  --bg-muted: #1e2022;
+  color: var(--text);
+  color-scheme: dark;
+}
+
+/* Remove code-block rounding when inside a component-demo pane */
+[data-demo-pane] { --cblock-radius: 0; --cblock-border: none; --cblock-header-display: none; }
+
+/* ── Tab button — parallelogram active state, used with tab-bar component ── */
+.tab-btn {
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  touch-action: manipulation;
+  position: relative;
+  isolation: isolate;
+  transition: color .15s;
+}
+
+.tab-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(7px 0%, 100% 0%, calc(100% - 7px) 100%, 0% 100%);
+  z-index: -1;
+  transition: background .15s;
+}
+
+@media (hover: hover) {
+  .tab-btn:hover:not(.active) { color: var(--text); }
+  .tab-btn:hover:not(.active)::before { background: var(--elevated); }
+}
+
+.tab-btn.active { color: #18191b; font-weight: 600; }
+.tab-btn.active::before { background: var(--accent); }
 
 /* ── Layout ── */
 .container  { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
 .docs-layout { display: grid; grid-template-columns: 220px 1fr; gap: 0; min-height: 80vh; }
-.docs-content { padding: 48px 40px 80px; max-width: 780px; }
+.docs-content { padding: 48px 40px 80px; max-width: 780px; min-width: 0; overflow-x: hidden; }
 
 /* ── Typography ── */
 h1,h2,h3,h4 { margin-top: 0; line-height: 1.2; font-weight: 700; }
@@ -57,7 +221,7 @@ h2:first-of-type { border-top: none; padding-top: 0; margin-top: 32px; }
 h3 { font-size: 1.05rem; margin: 28px 0 8px; }
 p  { margin-top: 0; color: var(--text-muted); }
 
-a { color: var(--accent); text-decoration: none; transition: opacity .15s; }
+a { color: var(--accent-fg); text-decoration: none; transition: opacity .15s; }
 a:hover { opacity: 0.8; }
 
 /* Prose links must have a non-color indicator (WCAG 1.4.1) */
@@ -75,11 +239,12 @@ code {
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
   padding: 2px 7px;
-  color: var(--accent);
+  color: var(--accent-fg);
+  overflow-wrap: break-word;
 }
 
 pre {
-  background: #0d0e0f;
+  background: var(--pre-bg);
   border: 1px solid var(--border);
   border-radius: var(--r);
   padding: 20px 24px;
@@ -94,7 +259,11 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
   border-radius: var(--r); padding: 24px;
   transition: border-color .2s, box-shadow .2s;
 }
-.card:hover { border-color: var(--border-hover); box-shadow: 0 0 0 1px var(--accent-dim); }
+.card:hover {
+  border-color: var(--card-border-hover);
+  box-shadow: 0 0 0 1px var(--card-shadow-hover);
+  opacity: 1;
+}
 
 /* ── Grid ── */
 .grid-2 { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 20px; }
@@ -102,18 +271,18 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
 
 /* ── Callout ── */
 .callout {
-  background: var(--accent-dim); border: 1px solid rgba(211,255,141,0.22);
+  background: var(--callout-bg); border: 1px solid var(--callout-border);
   border-radius: var(--r); padding: 16px 20px; margin: 20px 0;
 }
 .callout p { color: var(--text); margin: 0; font-size: 0.9rem; }
-.callout strong { color: var(--accent); }
+.callout strong { color: var(--accent-fg); }
 
 /* ── Badge ── */
 .badge {
   display: inline-block; padding: 3px 11px; border-radius: 999px;
   font-size: 0.72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
-  background: var(--accent-dim); color: var(--accent);
-  border: 1px solid rgba(211,255,141,0.22);
+  background: var(--badge-bg); color: var(--badge-color);
+  border: 1px solid var(--badge-border);
 }
 
 /* ── Buttons ── */
@@ -121,21 +290,21 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
   display: inline-flex; align-items: center; gap: 8px;
   padding: 10px 22px; border: none; border-radius: var(--r-sm);
   font-size: 0.9rem; font-weight: 600; cursor: pointer; text-decoration: none;
-  transition: filter .15s;
+  transition: filter .15s, border-color .15s, color .15s;
 }
 .btn-primary { background: var(--accent); color: #18191b; }
 .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
 @media (hover: hover) {
-  .btn-primary:hover { filter: brightness(0.88); opacity: 1; }
-  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); opacity: 1; }
+  .btn-primary:hover { filter: var(--primary-hover-filter); opacity: 1; }
+  .btn-ghost:hover { border-color: var(--ghost-border-hover); color: var(--accent-fg); opacity: 1; }
 }
 
 /* ── Utilities ── */
-.text-accent  { color: var(--accent); }
+.text-accent  { color: var(--accent-fg); }
 .text-muted   { color: var(--text-muted); }
 .section-label {
   font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .1em; color: var(--accent); margin-bottom: 6px;
+  letter-spacing: .1em; color: var(--accent-fg); margin-bottom: 6px;
 }
 .page-intro,
 .docs-content h1 + p { font-size: 1.05rem; max-width: 600px; margin-bottom: 40px; }
@@ -144,9 +313,9 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
 }
 .step-num {
   width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
-  background: var(--accent-dim); border: 1px solid rgba(211,255,141,0.3);
+  background: var(--step-bg); border: 1px solid var(--step-border);
   display: flex; align-items: center; justify-content: center;
-  font-size: 0.8rem; font-weight: 700; color: var(--accent);
+  font-size: 0.8rem; font-weight: 700; color: var(--step-color);
   margin-top: 2px;
 }
 .step-body h3 { margin: 0 0 6px; }
@@ -202,7 +371,7 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
 }
 
 .docs-pagination a:hover {
-  border-color: var(--border-hover);
+  border-color: var(--pagination-border-hover);
   background: var(--elevated);
   opacity: 1;
 }
@@ -224,7 +393,7 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
 .docs-pagination [data-pg-label] {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--pagination-label);
 }
 
 @media (max-width: 640px) {

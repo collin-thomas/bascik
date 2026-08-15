@@ -26,6 +26,7 @@ This file contains the **complete, centralized documentation and development ski
 
 ### How Bascik Positions Against Other Tools
 * **Directly competes with Next.js** for content sites, landing pages, and SEO-critical pages. Next.js ships 80–100+ KB of React runtime and hydration overhead even for pages with no client-side state; Bascik ships zero. In competitive SEO keyword spaces, that difference is measurable in Core Web Vitals (LCP, INP, CLS).
+* **Closest surface resemblance to Svelte:** Both use single-file components with scoped styles. The difference is that Svelte compiles to a JavaScript runtime for reactive DOM management; Bascik compiles to plain HTML with no runtime added.
 * **Complements HTMX and Alpine.js:** Bascik resolves components at build time; HTMX/Alpine add behavior at runtime. They compose cleanly.
 * **Different scope than Hugo / Eleventy / Jekyll:** those tools focus on content pipelines (Markdown collections, taxonomies, front matter). Bascik focuses on HTML page composition and component reuse without a template language.
 * The honest rule: use Bascik for pages that do not need a JavaScript framework runtime. Use Next.js, React, or Vue for applications that do.
@@ -37,16 +38,19 @@ This file contains the **complete, centralized documentation and development ski
 
 ### Repository Layout and the Create App
 
-The repo is split into three top-level folders:
+The repo is split into four top-level folders:
 
 ```text
 bascik/
   pkg/          ← the @bascik/bascik npm package
   create/       ← the standalone generator used by `npm create bascik@latest`
   docs/         ← the docs site and internal developer guide
+  extensions/   ← editor tooling, including the VS Code extension for component navigation and scoping checks
 ```
 
 The `create/` folder is intentionally separate from `pkg/`. Contributor work in this monorepo uses Yarn with the single root `yarn.lock`, while generated projects intentionally use npm and receive their own `package-lock.json`. That split keeps contributor workflows Yarn-only while preserving the standard npm onboarding flow for generated apps.
+
+The editor package in `extensions/vscode-bascik/` is intentionally separate from `pkg/`. It provides command-click component resolution and warnings for patterns that are unsupported or risky under Bascik's scoping model. The rules are generated from the compatibility matrix in `docs/content/compatibility.md` via `docs/scripts/generate-compatibility-rules.mjs`, so the editor and the published capability table stay in sync automatically instead of drifting apart.
 
 The generator in `create/src/index.ts` validates input, then calls `create/src/scaffold.ts` to write the project files. The generated app is not coupled to the monorepo layout. It just uses the published `@bascik/bascik` package and then runs as a normal Bascik site.
 
@@ -90,6 +94,8 @@ src/components/
 ```
 
 All class names, element selectors, `#id` selectors, `@keyframes`, `@layer`, `@container`, `:is()/.class`, `:where()/.class`, `:has()/.class`, child/sibling combinator selectors, and CSS custom properties in component CSS are automatically scoped to that component. SVG elements with `class` attributes inside component HTML are also scoped. CSS `#id` selectors are converted to generated class selectors and the class is injected on the matching HTML element.
+
+`html`, `body`, and `head` are **never** converted to scoped classes. Cross-boundary selectors like `html[data-theme="light"] .foo {}` compile correctly: the root element name is preserved verbatim and only `.foo` is scoped, producing `html[data-theme="light"] .bascik__comp__foo {}`. This means theme-switching, dark/light mode, and other document-root state selectors in component CSS work as expected.
 
 These rewrites compose normally in one component: bare element selectors receive generated classes, locally declared custom properties and their `var()` references are renamed together, and keyframe declarations stay synchronized with `animation` references.
 
@@ -146,6 +152,8 @@ CSS custom properties declared in the file are also scoped. `var(--prop, fallbac
 * `:nth-child(An+B of .selector)`: class names in the `of <selector>` argument are scoped (same global `(?<=\.)` pass as `:is()`, `:where()`, `:has()`); works for `:nth-child` and `:nth-last-child`
 * `@font-face`: passed through untouched; declare in a shared stylesheet to avoid duplicate injections
 * `@import`: not followed; include CSS directly in the component file instead
+* Standalone attribute selectors (for example `[data-state]`) are not scoped and can leak globally; anchor them with a scoped class like `.card[data-state]`
+* Element names inside `:is()`, `:where()`, and `:has()` are not converted; use class selectors inside those pseudo-classes
 
 ---
 
@@ -197,6 +205,7 @@ DOM selectors in component scripts are rewritten to match scoped names:
 * `el.id = "value"`: property setter not rewritten; use `getElementById` then work from the reference
 * `el.style.setProperty("--my-var", value)`: runtime CSS custom property names are not rewritten; the scoped var name (e.g. `--bascik__comp__my-var`) is different from the source name
 * Template literals: `` el.className = `box ${state}` ``, not rewritten; use `classList.add/remove` instead
+* Template-literal replacement arguments in `classList.replace(oldName, \`${dynamic}\`)` are not rewritten safely; prefer `classList.add/remove/toggle` with static class names
 * `querySelector("[name='username']")`: attribute-selector form for `name`; use `getElementsByName` instead
 
 ### Scoping Model
@@ -392,6 +401,7 @@ Components work inside `<head>` to organize metadata:
 * Use `console.log()` or `process.stdout.write()` to output HTML.
 * Build scripts run before component resolution, so their output can contain component tags.
 * On error, the script tag is replaced with an empty string and a warning is logged.
+* **Hard error:** combining `data-bascik-build` and `data-bascik-server` on the same tag throws and aborts the build. A script runs at build time or at request time — not both.
 
 ### Rendering and Styling Markdown
 
@@ -458,9 +468,10 @@ Tag a `<script>` block with `data-bascik-server` to run it **at request time** o
 
 ```html
 <script data-bascik-server>
+  import { escapeHtml } from './lib/escape-html.mjs';
+
   const req = JSON.parse(process.env.BASCIK_REQUEST);
-  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const name = esc(req.headers['x-display-name'] ?? 'Guest');
+  const name = escapeHtml(req.headers['x-display-name'] ?? 'Guest');
   console.log(`<p>Welcome, ${name}!</p>`);
 </script>
 ```
@@ -471,6 +482,8 @@ Tag a `<script>` block with `data-bascik-server` to run it **at request time** o
 * `method`: HTTP method in uppercase, e.g. `"GET"`
 * `headers`: request headers as string-to-string object (HTTP/2 pseudo-headers excluded)
 * `searchParams`: parsed query params as string-to-string object
+
+Bascik intentionally does not inject a global `escapeHtml()` helper into every server script. If you want a shared escape utility, keep it in a project file or import it explicitly.
 
 Rules:
 * Top-level `import` and `await` are supported.
@@ -554,7 +567,7 @@ src/
 
 ## 11. CLI & Development Workflow
 
-### Creating a New Project
+### Scaffold a New Project
 
 The zero-friction way to start a new Bascik project:
 
@@ -885,6 +898,20 @@ test.describe('my-feature-test page', () => {
 
 There are 44 e2e test files covering CSS scoping, JS scoping, slots, props, attribute inheritance, animations, observers, SVG, and head components.
 
+### Testing JavaScript in a Bascik Project
+
+Browser component scripts are IIFE-based and not directly importable. The recommended pattern for testing complex client-side logic:
+
+1. **Extract pure functions** (no DOM, no `fetch`) into a sibling `.mjs` module that exports them — e.g. `search-logic.mjs` alongside `docs-search.html`.
+2. **Combine at build time**: use a `<script data-bascik-build>` to read both the logic module and a DOM-wiring `.js` file, strip `export` keywords from the module, and output a single `<script>` containing one IIFE with all functions inside it. This keeps esbuild minification working correctly (no cross-script boundary renames).
+3. **Test the module with Vitest**: import the `.mjs` file directly in a `*.test.mjs` file. No browser or DOM required for pure function tests.
+
+```sh
+yarn workspace bascik-docs test   # run docs-site unit tests
+```
+
+The docs site `vite.config.js` sets `test.include: ['src/**/*.test.mjs']`. The search component's `search-logic.mjs` exports `tokens`, `score`, `snippet`, `basePath`, and `buildResults`; `search-logic.test.mjs` has 30 tests covering tier ordering, dominant-page grouping, deduplication, and edge cases.
+
 ---
 
 ## 14. CI / CD
@@ -921,7 +948,53 @@ git tag create-v1.0.3 && git push origin main --tags
 
 ---
 
-## 15. Key Constraints & Rules for AI Code Generation (MUST FOLLOW)
+## 15. Switch to Bascik
+
+Detailed per-framework migration guides live at `/switch/*`. Key patterns that apply across all migrations:
+
+- **Component files:** Rename to hyphenated `.html` files in `src/components/<name>/`. Remove framework-specific syntax (`<template>`, JSX, `.astro` frontmatter fences). The HTML file is just the component markup.
+- **Scoped styles:** Delete framework scoped-style blocks (`<style scoped>`, `.module.css`). Create a paired `.css` file alongside the component HTML. Class names stay the same; Bascik scopes them at build time.
+- **Slots:** `<slot />` / `children` → `data-bascik-slot` (no value) for default, `data-bascik-slot="name"` for named slots.
+- **Props:** `defineProps` / component props → `data-bascik-prop-*` attributes (text only).
+- **Reactive state:** `ref`, `useState`, etc. → plain `<script>` with vanilla JS. Bascik scopes `id` values so multiple instances stay independent.
+- **Routing:** Client-side router → one `.html` file per URL in `src/pages/`. No dynamic segments; generate static files for parameterized routes.
+- **Build-time data:** `onMounted` / `getStaticProps` / frontmatter → `<script data-bascik-build>` (Node.js ESM, stdout injected).
+
+### From Svelte
+
+Full guide: `/switch/from-svelte`. Key Svelte-specific mappings:
+
+| Svelte | Bascik |
+|--------|--------|
+| `.svelte` file (`<script>` + markup + `<style>`) | `.html` + `.css` paired files |
+| `children` snippet / `{@render children()}` (Svelte 5) | `data-bascik-slot` (no value) |
+| `<slot />` (Svelte 4, deprecated) | `data-bascik-slot` (no value) |
+| Named snippet prop / `{#snippet header()}` (Svelte 5) | `data-bascik-slot="x"` |
+| `<slot name="x" />` (Svelte 4, deprecated) | `data-bascik-slot="x"` |
+| `$props()` / `export let` | `data-bascik-prop-*` attributes |
+| `$state()` / reactive variables | Vanilla JS `<script>` |
+| `{#if}` / `{#each}` | Static HTML or `<script data-bascik-build>` |
+| SvelteKit file routing (`+page.svelte`) | One `.html` per route in `src/pages/` |
+| `onMount` data fetch | `<script data-bascik-build>` (build time) or `<script>` (runtime) |
+
+### From Vue
+
+Full guide: `/switch/from-vue`. Key Vue-specific mappings:
+
+| Vue | Bascik |
+|-----|--------|
+| `<template>` + `<style scoped>` | `.html` + `.css` paired files |
+| `<slot />` | `data-bascik-slot` (no value) |
+| `<slot name="x" />` | `data-bascik-slot="x"` |
+| `defineProps` | `data-bascik-prop-*` attributes |
+| `ref` / `reactive` | Vanilla JS `<script>` |
+| `v-if` / `v-show` | CSS `display:none` or JS toggle |
+| `vue-router` | One `.html` per route in `src/pages/` |
+| `onMounted` data fetch | `<script data-bascik-build>` |
+
+---
+
+## 16. Key Constraints & Rules for AI Code Generation (MUST FOLLOW)
 
 When generating code, pages, or components for a Bascik project, the following conventions are strictly enforced:
 
@@ -936,7 +1009,7 @@ When generating code, pages, or components for a Bascik project, the following c
 
 ---
 
-## 16. FAQ
+## 17. FAQ
 
 **How do you pronounce Bascik? Where does the name come from?** Just like "basic." The idea is basic, the implementation is basic in theory, and the usage is basic. The spelling comes from the author's maternal grandmother's maiden name — so it's unique and means something personal.
 

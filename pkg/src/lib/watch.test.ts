@@ -2,8 +2,31 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ─── Hoisted mock factories ───────────────────────────────────────────────────
 
-const { mockWatch, getWatcher, clearWatchers } = vi.hoisted(() => {
+const {
+  mockWatch,
+  getWatcher,
+  clearWatchers,
+  resetMocks,
+  mockPageProcessing,
+  mockProcessAllPages,
+  mockRemovePage,
+  mockSelectivelyProcessPages,
+  mockSelectivelyProcessPagesForWatchPath,
+  mockCopyReplicatePath,
+  mockDeleteDistDir,
+  mockDeleteDistFile,
+  mockEventEmit,
+} = vi.hoisted(() => {
   const watchers: { on: ReturnType<typeof vi.fn> }[] = [];
+  const mockPageProcessing = vi.fn().mockResolvedValue(undefined);
+  const mockProcessAllPages = vi.fn().mockResolvedValue(undefined);
+  const mockRemovePage = vi.fn().mockResolvedValue(undefined);
+  const mockSelectivelyProcessPages = vi.fn().mockResolvedValue(undefined);
+  const mockSelectivelyProcessPagesForWatchPath = vi.fn().mockResolvedValue(undefined);
+  const mockCopyReplicatePath = vi.fn().mockResolvedValue(undefined);
+  const mockDeleteDistDir = vi.fn().mockResolvedValue(undefined);
+  const mockDeleteDistFile = vi.fn().mockResolvedValue(undefined);
+  const mockEventEmit = vi.fn();
   const makeWatcher = () => {
     const w = {
       on: vi.fn(function (
@@ -20,12 +43,37 @@ const { mockWatch, getWatcher, clearWatchers } = vi.hoisted(() => {
     watchers.push(w);
     return w;
   };
+  const mockWatch = vi.fn((_path: string) => makeWatcher());
+  const resetMocks = () => {
+    mockWatch.mockReset().mockImplementation((_path: string) => makeWatcher());
+    mockPageProcessing.mockReset().mockResolvedValue(undefined);
+    mockProcessAllPages.mockReset().mockResolvedValue(undefined);
+    mockRemovePage.mockReset().mockResolvedValue(undefined);
+    mockSelectivelyProcessPages.mockReset().mockResolvedValue(undefined);
+    mockSelectivelyProcessPagesForWatchPath.mockReset().mockResolvedValue(
+      undefined,
+    );
+    mockCopyReplicatePath.mockReset().mockResolvedValue(undefined);
+    mockDeleteDistDir.mockReset().mockResolvedValue(undefined);
+    mockDeleteDistFile.mockReset().mockResolvedValue(undefined);
+    mockEventEmit.mockReset();
+  };
   return {
-    mockWatch: vi.fn((_path: string) => makeWatcher()),
+    mockWatch,
     getWatcher: (i: number) => watchers[i],
     clearWatchers: () => {
       watchers.length = 0;
     },
+    resetMocks,
+    mockPageProcessing,
+    mockProcessAllPages,
+    mockRemovePage,
+    mockSelectivelyProcessPages,
+    mockSelectivelyProcessPagesForWatchPath,
+    mockCopyReplicatePath,
+    mockDeleteDistDir,
+    mockDeleteDistFile,
+    mockEventEmit,
   };
 });
 
@@ -36,17 +84,17 @@ vi.mock("chokidar", () => ({
 }));
 
 vi.mock("./processing.js", () => ({
-  pageProcessing: vi.fn(),
-  processAllPages: vi.fn(),
-  removePage: vi.fn(),
-  selectivelyProcessPages: vi.fn(),
-  selectivelyProcessPagesForWatchPath: vi.fn(),
+  pageProcessing: mockPageProcessing,
+  processAllPages: mockProcessAllPages,
+  removePage: mockRemovePage,
+  selectivelyProcessPages: mockSelectivelyProcessPages,
+  selectivelyProcessPagesForWatchPath: mockSelectivelyProcessPagesForWatchPath,
 }));
 
 vi.mock("./file-system.js", () => ({
-  copyReplicatePath: vi.fn().mockResolvedValue(undefined),
-  deleteDistDir: vi.fn().mockResolvedValue(undefined),
-  deleteDistFile: vi.fn().mockResolvedValue(undefined),
+  copyReplicatePath: mockCopyReplicatePath,
+  deleteDistDir: mockDeleteDistDir,
+  deleteDistFile: mockDeleteDistFile,
 }));
 
 vi.mock("./config.js", () => ({
@@ -68,7 +116,7 @@ vi.mock("./mime.js", () => ({
 }));
 
 vi.mock("./events.js", () => ({
-  eventEmitter: { emit: vi.fn() },
+  eventEmitter: { emit: mockEventEmit },
 }));
 
 // ─── Imports (after mocks) ────────────────────────────────────────────────────
@@ -92,7 +140,7 @@ import { eventEmitter } from "./events.js";
 // ─────────────────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  resetMocks();
   clearWatchers();
 });
 
@@ -190,7 +238,7 @@ describe("watchFiles – html page watcher (watcher 1)", () => {
 
   it("calls processAllPages on 'ready'", async () => {
     const readyHandler = getHandler(1, "ready");
-    vi.clearAllMocks();
+    mockProcessAllPages.mockClear();
     await readyHandler?.();
     expect(processAllPages).toHaveBeenCalledTimes(1);
   });

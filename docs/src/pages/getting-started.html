@@ -3,9 +3,61 @@
 
 <head>
   <docs-head></docs-head>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { canonical } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/canonical.mjs')).href
+    );
+    console.log(await canonical());
+  </script>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { openGraph } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/open-graph.mjs')).href
+    );
+    console.log(await openGraph());
+  </script>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { breadcrumbLd } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/breadcrumb-ld.mjs')).href
+    );
+    console.log(await breadcrumbLd());
+  </script>
   <meta name="description"
     content="Bascik requires Node.js v24+. Install the CLI and build your first HTML component with scoped CSS and JS in under five minutes." />
   <title>Getting Started - Bascik Docs</title>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "Getting Started with Bascik",
+    "description": "Set up a Bascik project in under five minutes. Requires Node.js v24+.",
+    "step": [
+      {
+        "@type": "HowToStep",
+        "position": "1",
+        "name": "Create a new project",
+        "text": "Run: npm create bascik@latest my-site -y — this scaffolds the project, installs dependencies, and starts the dev server in one shot."
+      },
+      {
+        "@type": "HowToStep",
+        "position": "2",
+        "name": "Start the development server",
+        "text": "Run npm run dev from your project directory. Bascik serves your site over HTTP/2 at https://localhost:8443 by default."
+      },
+      {
+        "@type": "HowToStep",
+        "position": "3",
+        "name": "Build for production",
+        "text": "Run npm run build to output a dist/ directory of plain HTML files ready for any static host."
+      }
+    ]
+  }
+  </script>
 </head>
 
 <body>
@@ -47,8 +99,7 @@
                   pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
                 );
                 console.log(await extractDemoBlock('./content/getting-started.md', 'component-html'));
-              </script>
-            </code-block>
+              </script></code-block>
           </div>
         </div>
 
@@ -64,8 +115,7 @@
                   pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
                 );
                 console.log(await extractDemoBlock('./content/getting-started.md', 'page-html'));
-              </script>
-            </code-block>
+              </script></code-block>
           </div>
         </div>
 

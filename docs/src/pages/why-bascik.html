@@ -3,6 +3,30 @@
 
 <head>
   <docs-head></docs-head>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { canonical } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/canonical.mjs')).href
+    );
+    console.log(await canonical());
+  </script>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { openGraph } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/open-graph.mjs')).href
+    );
+    console.log(await openGraph());
+  </script>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { breadcrumbLd } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/breadcrumb-ld.mjs')).href
+    );
+    console.log(await breadcrumbLd());
+  </script>
   <meta name="description"
     content="The guiding principle behind Bascik is simple: use what already exists. Do not invent new abstractions where plain HTML already works." />
   <title>Why Bascik - Bascik Docs</title>
@@ -39,8 +63,7 @@
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                 console.log(await extractDemoBlock('./content/why-bascik.md', 'source-usage'));
-              </script>
-            </code-block>
+              </script></code-block>
           </div>
           <div data-bascik-slot="source-html">
             <code-block data-bascik-prop-lang="html"><script data-bascik-build>
@@ -48,8 +71,7 @@
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                 console.log(await extractDemoBlock('./content/why-bascik.md', 'source-html'));
-              </script>
-            </code-block>
+              </script></code-block>
           </div>
           <div data-bascik-slot="source-css">
             <code-block data-bascik-prop-lang="css"><script data-bascik-build>
@@ -57,8 +79,7 @@
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                 console.log(await extractDemoBlock('./content/why-bascik.md', 'source-css'));
-              </script>
-            </code-block>
+              </script></code-block>
           </div>
           <div data-bascik-slot="output-html">
             <code-block data-bascik-prop-lang="html"><script data-bascik-build>
@@ -66,8 +87,7 @@
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                 console.log(await extractDemoBlock('./content/why-bascik.md', 'output-html'));
-              </script>
-            </code-block>
+              </script></code-block>
           </div>
           <div data-bascik-slot="output-css">
             <code-block data-bascik-prop-lang="css"><script data-bascik-build>
@@ -75,8 +95,7 @@
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                 console.log(await extractDemoBlock('./content/why-bascik.md', 'output-css'));
-              </script>
-            </code-block>
+              </script></code-block>
           </div>
         </component-demo>
 

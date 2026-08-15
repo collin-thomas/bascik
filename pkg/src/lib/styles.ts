@@ -30,6 +30,10 @@ const CSS_UNIT_KEYWORDS = new Set([
   "dpi", "dpcm", "dppx",
   // CSS @keyframes pseudo-selectors — not HTML elements
   "from", "to",
+  // Root/structural elements — never inside a component; must not be hashed
+  // so that cross-boundary selectors like `html[data-theme="light"] .class`
+  // compile correctly in component CSS.
+  "html", "body", "head",
 ]);
 
 export const convertCssElementSelectorsToClasses = (
@@ -320,10 +324,13 @@ export const shieldCssStrings = (
 };
 
 export const removeCommentsFromCss = (css: string): string => {
-  // Strip comments only outside string literals — `/*` inside a quoted
-  // string or url() is data, not a comment.
-  const { css: shielded, restore } = shieldCssStrings(css);
-  return restore(shielded.replace(/\/\*[\s\S]*?\*\//gim, ""));
+  // Single-pass: strings/url() win over comment detection so apostrophes
+  // inside comments (e.g. `/* the logo's angle */`) are never mistaken for
+  // the start of a CSS string literal.
+  return css.replace(
+    /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|url\(\s*(?:[^)"']|"[^"]*"|'[^']*')*\s*\))|\/\*[\s\S]*?\*\//g,
+    (_match, stringOrUrl?: string) => stringOrUrl ?? "",
+  );
 };
 
 /**

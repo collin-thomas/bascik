@@ -3,16 +3,162 @@
 
 <head>
   <docs-head></docs-head>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { canonical } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/canonical.mjs')).href
+    );
+    console.log(await canonical());
+  </script>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { openGraph } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/open-graph.mjs')).href
+    );
+    console.log(await openGraph());
+  </script>
   <meta name="description"
     content="Bascik is a build tool for HTML components with automatic scoped CSS and JS. No runtime. No framework." />
   <title>Bascik - HTML components. Zero runtime.</title>
   <link rel="prefetch" href="/why-bascik" />
   <link rel="prefetch" href="/getting-started" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Bascik",
+    "url": "https://bascik.dev",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://bascik.dev/search?q={search_term_string}"
+      },
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Bascik",
+    "url": "https://bascik.dev",
+    "description": "A build tool for HTML components with automatic scoped CSS and JS. No runtime. No framework.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "macOS, Windows, Linux",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "creator": {
+      "@type": "Person",
+      "name": "Collin Thomas",
+      "url": "https://github.com/collin-thomas"
+    },
+    "downloadUrl": "https://www.npmjs.com/package/@bascik/bascik",
+    "softwareVersion": "1.0.0",
+    "license": "https://bascik.dev/license"
+  }
+  </script>
   <style>
+    /* Animatable gradient positions (must be @property to interpolate inside gradients) */
+    @property --hero-x {
+      syntax: '<percentage>';
+      inherits: false;
+      initial-value: 50%;
+    }
+
+    @property --hero-y {
+      syntax: '<percentage>';
+      inherits: false;
+      initial-value: -5%;
+    }
+
+    @property --orb2-x {
+      syntax: '<percentage>';
+      inherits: false;
+      initial-value: 18%;
+    }
+
     /* ── Hero ── */
     .hero {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
       padding: 96px 0 80px;
-      background: radial-gradient(ellipse 90% 55% at 50% -5%, rgba(211, 255, 141, 0.09), transparent);
+    }
+
+    /* Primary glow — drifts lazily and pulses at half cursor-blink speed */
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 85% 60% at var(--hero-x) var(--hero-y), var(--hero-glow), transparent);
+      animation: hero-drift 9s ease-in-out infinite, hero-pulse 2.2s ease-in-out infinite;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* Secondary accent orb drifting in from the bottom-left corner */
+    .hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 35% 28% at var(--orb2-x) 108%, var(--hero-glow-2), transparent);
+      animation: hero-orb2 14s ease-in-out infinite;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    @keyframes hero-drift {
+
+      0%,
+      100% {
+        --hero-x: 50%;
+        --hero-y: -5%;
+      }
+
+      30% {
+        --hero-x: 63%;
+        --hero-y: 8%;
+      }
+
+      60% {
+        --hero-x: 42%;
+        --hero-y: 3%;
+      }
+    }
+
+    @keyframes hero-orb2 {
+
+      0%,
+      100% {
+        --orb2-x: 18%;
+      }
+
+      40% {
+        --orb2-x: 32%;
+      }
+
+      70% {
+        --orb2-x: 12%;
+      }
+    }
+
+    @keyframes hero-pulse {
+
+      0%,
+      100% {
+        opacity: 0.35;
+      }
+
+      40% {
+        opacity: 1;
+      }
     }
 
     .hero-eyebrow {
@@ -51,16 +197,21 @@
       }
     }
 
-    .hero-quickstart {
-      display: inline-block;
-      margin: 20px 0 0;
+    .install-command {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
       padding: 10px 18px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--r-sm);
       font-family: var(--mono);
       font-size: 0.88rem;
-      color: var(--accent);
+      color: var(--accent-fg);
+    }
+
+    .hero-quickstart {
+      margin: 20px 0 0;
     }
 
     .hero-quickstart code {
@@ -101,43 +252,29 @@
     }
 
     .how-code {
-      background: #0d0e0f;
+      background: var(--pre-bg);
       border: 1px solid var(--border);
       border-radius: var(--r);
       overflow: hidden;
     }
 
-    .how-code-tabs {
-      display: flex;
-      gap: 2px;
-      padding: 10px 12px 0;
-      background: rgba(255, 255, 255, 0.025);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .how-code-tab {
-      padding: 6px 14px 9px;
-      background: transparent;
-      border: none;
-      border-radius: var(--r-sm) var(--r-sm) 0 0;
-      color: var(--text-muted);
+    /* mono font for filename tabs; match bg to page surface, not pre-bg */
+    .how-code-tabs .how-code-tab {
       font-family: var(--mono);
       font-size: 0.78rem;
-      font-weight: 600;
-      cursor: pointer;
-      touch-action: manipulation;
-      transition: color .15s, background .15s;
     }
 
-    .how-code-tab.active {
-      color: var(--text);
-      background: #0d0e0f;
+    .how-code .how-code-tabs {
+      background: var(--bg);
     }
 
-    @media (hover: hover) {
-      .how-code-tab:hover:not(.active) {
-        color: var(--text);
-      }
+    .demo-tabs-bar .demo-tab-btn {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+    }
+
+    .demo-panel .demo-tabs-bar {
+      background: var(--bg);
     }
 
     .how-src-pane {
@@ -148,14 +285,13 @@
       margin: 0;
       font-size: 0.82rem;
       line-height: 1.72;
-      min-height: 220px;
     }
 
     .how-src-pane code {
       background: none;
       border: none;
       padding: 0;
-      color: #cdd6f4;
+      color: var(--pre-text);
       font-size: inherit;
     }
 
@@ -173,7 +309,7 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: .1em;
-      color: var(--accent);
+      color: var(--accent-fg);
       margin: 0;
     }
 
@@ -181,8 +317,8 @@
       width: 7px;
       height: 7px;
       border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 8px rgba(211, 255, 141, 0.45);
+      background: var(--live-dot-bg);
+      box-shadow: var(--live-dot-shadow);
       flex-shrink: 0;
       animation: livepulse 2.5s ease-in-out infinite;
     }
@@ -190,7 +326,7 @@
     .how-result-card {
       background: var(--elevated);
       border: 1px solid var(--border);
-      border-radius: var(--r);
+      border-radius: 10px;
       padding: 26px 28px;
       transition: border-color .2s, box-shadow .2s;
     }
@@ -216,17 +352,17 @@
     .how-result-card a {
       font-size: 0.85rem;
       font-weight: 600;
-      color: var(--accent);
+      color: var(--accent-fg);
       text-decoration: none;
     }
 
-    .how-result-card[data-active] {
+    .how-result-card.active {
       background: rgba(211, 255, 141, 0.07);
       border-color: rgba(211, 255, 141, 0.5);
       box-shadow: 0 0 0 1px rgba(211, 255, 141, 0.25), 0 0 20px rgba(211, 255, 141, 0.08);
     }
 
-    .how-result-card[data-active] h3 {
+    .how-result-card.active h3 {
       color: var(--accent);
     }
 
@@ -235,24 +371,38 @@
     }
 
     .hl-tag {
-      color: #89b4fa;
+      color: var(--hl-tag);
     }
 
     .hl-attr {
-      color: #cba6f7;
+      color: var(--hl-kw);
     }
 
     .hl-val {
-      color: #a6e3a1;
+      color: var(--hl-str);
     }
 
     .hl-comment {
-      color: #7e8190;
+      color: var(--hl-comment);
       font-style: italic;
     }
 
     .hl-scoped {
-      color: var(--accent);
+      color: var(--hl-scoped);
+    }
+
+    .hl-selector,
+    .hl-keyword {
+      color: var(--hl-kw);
+    }
+
+    .hl-property,
+    .hl-function {
+      color: var(--hl-tag);
+    }
+
+    .hl-number {
+      color: var(--hl-num);
     }
 
     /* ── Pillars ── */
@@ -264,8 +414,8 @@
 
     .pillar {
       padding: 28px 24px;
-      background: #2e3428;
-      border: 1px solid rgba(211, 255, 141, 0.14);
+      background: var(--pillar-bg);
+      border: 1px solid var(--pillar-border);
       border-radius: var(--r);
     }
 
@@ -287,7 +437,7 @@
     .pillar p {
       margin: 0;
       font-size: 0.875rem;
-      color: var(--text);
+      color: var(--text-muted);
       line-height: 1.6;
     }
 
@@ -300,43 +450,10 @@
     }
 
     .demo-panel {
-      background: #0d0e0f;
+      background: var(--pre-bg);
       border: 1px solid var(--border);
       border-radius: var(--r);
       overflow: hidden;
-    }
-
-    .demo-tabs-bar {
-      display: flex;
-      gap: 2px;
-      padding: 10px 10px 0;
-      border-bottom: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.025);
-    }
-
-    .demo-tab-btn {
-      padding: 6px 16px 9px;
-      background: none;
-      border: none;
-      border-radius: var(--r-sm) var(--r-sm) 0 0;
-      color: var(--text-muted);
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      font-weight: 600;
-      cursor: pointer;
-      touch-action: manipulation;
-      transition: color .15s, background .15s;
-    }
-
-    .demo-tab-btn.active {
-      color: var(--text);
-      background: #0d0e0f;
-    }
-
-    @media (hover: hover) {
-      .demo-tab-btn:hover:not(.active) {
-        color: var(--text);
-      }
     }
 
     .demo-pane {
@@ -357,7 +474,7 @@
       background: none;
       border: none;
       padding: 0;
-      color: #cdd6f4;
+      color: var(--pre-text);
       font-size: inherit;
     }
 
@@ -379,8 +496,8 @@
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 6px rgba(211, 255, 141, 0.5);
+      background: var(--live-dot-bg);
+      box-shadow: var(--live-dot-shadow);
       flex-shrink: 0;
       animation: livepulse 2s ease-in-out infinite;
     }
@@ -419,21 +536,10 @@
     }
 
     .install-block {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      background: #0d0e0f;
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      padding: 14px 24px;
-      font-family: var(--mono);
-      font-size: 0.9rem;
-      color: #cdd6f4;
       margin-bottom: 28px;
     }
 
     .install-prompt {
-      color: var(--accent);
       user-select: none;
     }
 
@@ -494,7 +600,7 @@
           <a href="https://github.com/collin-thomas/bascik" class="btn btn-ghost" target="_blank"
             rel="noopener noreferrer">GitHub</a>
         </div>
-        <pre class="hero-quickstart"><code>npm create bascik@latest</code></pre>
+        <pre class="install-command hero-quickstart"><code>npm create bascik@latest</code></pre>
       </div>
     </section>
 
@@ -509,21 +615,34 @@
         <div class="how-split">
           <!-- Code panel with tabs -->
           <div class="how-code">
-            <tab-strip class="how-code-tabs">
-              <button class="how-code-tab active" data-how="component">my-card.html</button>
-              <button class="how-code-tab" data-how="usage">index.html</button>
-              <button class="how-code-tab" data-how="output">dist/index.html</button>
-            </tab-strip>
+            <tab-bar class="how-code-tabs">
+              <button class="tab-btn how-code-tab active" data-how="component">my-card.html</button>
+              <button class="tab-btn how-code-tab" data-how="usage">index.html</button>
+              <button class="tab-btn how-code-tab" data-how="output">dist/index.html</button>
+            </tab-bar>
             <pre class="how-src-pane" id="how-component"><code><span class="hl-comment">&lt;!-- src/components/my-card.html --&gt;</span>
 <span class="hl-tag">&lt;style&gt;</span>
   .card {
     padding: 26px 28px;
-    background: #1e2022;
-    border: 1px solid rgba(255,255,255,0.08);
+    background: #242628;
+    border: 1px solid rgba(255,255,255,0.07);
     border-radius: 10px;
 
     h3 { margin: 0 0 8px; color: #f0f1f2; }
     p  { margin: 0; color: #8d929e; }
+
+    &:hover {
+      border-color: rgba(211,255,141,0.35);
+      box-shadow: 0 0 0 1px rgba(211,255,141,0.12);
+    }
+
+    &.active {
+      background: rgba(211,255,141,0.07);
+      border-color: rgba(211,255,141,0.5);
+      box-shadow: 0 0 0 1px rgba(211,255,141,0.25), 0 0 20px rgba(211,255,141,0.08);
+
+      h3 { color: #d3ff8d; }
+    }
   }
 <span class="hl-tag">&lt;/style&gt;</span>
 <span class="hl-tag">&lt;div</span> <span class="hl-attr">class</span>=<span class="hl-val">"card"</span> <span class="hl-attr">id</span>=<span class="hl-val">"card"</span><span class="hl-tag">&gt;</span>
@@ -544,12 +663,25 @@
 <span class="hl-tag">&lt;style&gt;</span>
   .<span class="hl-scoped">bascik__my-card__card</span> {
     padding: 26px 28px;
-    background: #1e2022;
-    border: 1px solid rgba(255,255,255,0.08);
+    background: #242628;
+    border: 1px solid rgba(255,255,255,0.07);
     border-radius: 10px;
 
     h3 { margin: 0 0 8px; color: #f0f1f2; }
     p  { margin: 0; color: #8d929e; }
+
+    &:hover {
+      border-color: rgba(211,255,141,0.35);
+      box-shadow: 0 0 0 1px rgba(211,255,141,0.12);
+    }
+
+    &.<span class="hl-scoped">bascik__my-card__active</span> {
+      background: rgba(211,255,141,0.07);
+      border-color: rgba(211,255,141,0.5);
+      box-shadow: 0 0 0 1px rgba(211,255,141,0.25), 0 0 20px rgba(211,255,141,0.08);
+
+      h3 { color: #d3ff8d; }
+    }
   }
 <span class="hl-tag">&lt;/style&gt;</span>
 <span class="hl-tag">&lt;div</span> <span class="hl-attr">class</span>=<span class="hl-val">"<span class="hl-scoped">bascik__my-card__card</span>"</span> <span class="hl-attr">id</span>=<span class="hl-val">"<span class="hl-scoped">bascik__my-card__a1b__card</span>"</span><span class="hl-tag">&gt;</span>
@@ -587,16 +719,16 @@
         <p class="section-label">Demo</p>
         <h2 class="section-heading">One component. Two isolated instances.</h2>
         <p class="section-sub">Bascik scopes CSS class names and DOM selectors at build time. Each component instance
-          gets its own namespace with no runtime and no Shadow DOM.</p>
+          gets its own namespace without runtime JS or a Shadow or Virtual DOM.</p>
 
         <div class="demo-layout">
           <!-- Code panel -->
           <div class="demo-panel">
-            <div class="demo-tabs-bar">
-              <button class="demo-tab-btn active" data-tab="html">HTML</button>
-              <button class="demo-tab-btn" data-tab="css">CSS</button>
-              <button class="demo-tab-btn" data-tab="js">JS</button>
-            </div>
+            <tab-bar class="demo-tabs-bar">
+              <button class="tab-btn demo-tab-btn active" data-tab="html">HTML</button>
+              <button class="tab-btn demo-tab-btn" data-tab="css">CSS</button>
+              <button class="tab-btn demo-tab-btn" data-tab="js">JS</button>
+            </tab-bar>
             <div class="demo-pane" data-pane="html">
               <pre><code><span class="hl-comment">&lt;!-- src/components/demo-counter.html - component template --&gt;</span>
 <span class="hl-tag">&lt;div</span> <span class="hl-attr">class</span>=<span class="hl-val">"ctr"</span><span class="hl-tag">&gt;</span>
@@ -616,15 +748,15 @@
             <div class="demo-pane" data-pane="css" hidden>
               <pre><code><span class="hl-comment">/* Auto-scoped - class names become:
    .bascik__demo-counter__ctr { ... } */</span>
-.ctr { display: flex; flex-direction: column;
-       align-items: center; gap: 16px; }
-.ctr-count {
-  font-size: 2.4rem; font-weight: 700;
-  color: var(--accent);
+<span class="hl-selector">.ctr</span> { <span class="hl-property">display</span>: <span class="hl-keyword">flex</span>; <span class="hl-property">flex-direction</span>: <span class="hl-keyword">column</span>;
+       <span class="hl-property">align-items</span>: <span class="hl-keyword">center</span>; <span class="hl-property">gap</span>: <span class="hl-number">16px</span>; }
+<span class="hl-selector">.ctr-count</span> {
+  <span class="hl-property">font-size</span>: <span class="hl-number">2.4rem</span>; <span class="hl-property">font-weight</span>: <span class="hl-number">700</span>;
+  <span class="hl-property">color</span>: <span class="hl-function">var</span>(<span class="hl-val">--accent</span>);
 }
-.ctr-dec, .ctr-inc {
-  width: 40px; height: 40px;
-  border-radius: 6px; cursor: pointer;
+<span class="hl-selector">.ctr-dec, .ctr-inc</span> {
+  <span class="hl-property">width</span>: <span class="hl-number">40px</span>; <span class="hl-property">height</span>: <span class="hl-number">40px</span>;
+  <span class="hl-property">border-radius</span>: <span class="hl-number">6px</span>; <span class="hl-property">cursor</span>: <span class="hl-keyword">pointer</span>;
 }</code></pre>
             </div>
             <div class="demo-pane" data-pane="js" hidden>
@@ -632,15 +764,15 @@
 // no special syntax. Write it normally and Bascik
 // scopes the selectors at build time so each instance
 // stays fully isolated.</span>
-const count = document.getElementById(<span class="hl-val">'count'</span>);
-const dec   = document.querySelector(<span class="hl-val">'.ctr-dec'</span>);
-const inc   = document.querySelector(<span class="hl-val">'.ctr-inc'</span>);
-let n = 0;
-dec.addEventListener(<span class="hl-val">'click'</span>, () => {
-  n--; count.textContent = n;
+<span class="hl-keyword">const</span> count = document.<span class="hl-function">getElementById</span>(<span class="hl-val">'count'</span>);
+<span class="hl-keyword">const</span> dec   = document.<span class="hl-function">querySelector</span>(<span class="hl-val">'.ctr-dec'</span>);
+<span class="hl-keyword">const</span> inc   = document.<span class="hl-function">querySelector</span>(<span class="hl-val">'.ctr-inc'</span>);
+<span class="hl-keyword">let</span> n = <span class="hl-number">0</span>;
+dec.<span class="hl-function">addEventListener</span>(<span class="hl-val">'click'</span>, () => {
+  n--; count.<span class="hl-property">textContent</span> = n;
 });
-inc.addEventListener(<span class="hl-val">'click'</span>, () => {
-  n++; count.textContent = n;
+inc.<span class="hl-function">addEventListener</span>(<span class="hl-val">'click'</span>, () => {
+  n++; count.<span class="hl-property">textContent</span> = n;
 });</code></pre>
             </div>
           </div>
@@ -649,9 +781,9 @@ inc.addEventListener(<span class="hl-val">'click'</span>, () => {
           <div class="demo-live">
             <div class="demo-live-label">
               <span class="demo-live-dot"></span>
-              <span>Two instances of one component file</span>
+              <span>Multiple instances of a component on the same page</span>
             </div>
-            <div class="demo-instances">
+            <div class="demo-instances" data-demo-theme="dark">
               <demo-counter data-bascik-prop-label="Instance A"></demo-counter>
               <demo-counter data-bascik-prop-label="Instance B"></demo-counter>
             </div>
@@ -662,7 +794,7 @@ inc.addEventListener(<span class="hl-val">'click'</span>, () => {
     <script>
       // How it works - live card toggle
       document.getElementById('how-demo-card').addEventListener('click', () => {
-        document.getElementById('how-demo-card').toggleAttribute('data-active');
+        document.getElementById('how-demo-card').classList.toggle('active');
       });
 
       // How it works - tab switcher
@@ -796,7 +928,7 @@ inc.addEventListener(<span class="hl-val">'click'</span>, () => {
         <p class="section-sub">One command scaffolds your project and starts the dev server. No config required to get
           going.</p>
         <div>
-          <div class="install-block">
+          <div class="install-command install-block">
             <span class="install-prompt">$</span>
             <span>npm create bascik@latest</span>
           </div>

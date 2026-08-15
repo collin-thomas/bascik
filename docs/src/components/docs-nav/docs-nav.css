@@ -1,7 +1,7 @@
 /* Docs Nav — all styles live here so bascik scopes them alongside the HTML */
 
 .dnav {
-  background: rgba(24,25,27,0.9);
+  background: var(--nav-bg);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
   position: sticky;
@@ -27,18 +27,56 @@
   display: inline-flex;
   align-items: center;
   line-height: 1;
-  transition: opacity .15s;
+  transition: none;
 }
 
 .dnav-logo:hover {
-  opacity: 0.8;
+  opacity: 1;
 }
 
-/* Desktop: links wrapper always visible */
+/* Icon visibility driven by data-theme / system preference */
+.theme-icon { display: none; pointer-events: none; }
+.theme-icon-sun { display: block; }
+
+@media (prefers-color-scheme: light) {
+  html:not([data-theme="dark"]) .theme-icon-sun  { display: none; }
+  html:not([data-theme="dark"]) .theme-icon-moon { display: block; }
+}
+
+:root[data-theme="light"] .theme-icon-sun  { display: none; }
+:root[data-theme="light"] .theme-icon-moon { display: block; }
+
+.dnav-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dnav-theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 7px;
+  cursor: pointer;
+  border-radius: var(--r-sm);
+  color: var(--text-muted);
+  transition: color .15s, background .15s;
+  flex-shrink: 0;
+}
+
+.dnav-theme-toggle:hover {
+  background: var(--elevated);
+  color: var(--text);
+}
+
+/* Desktop: links wrapper always visible; order:-1 keeps it left of search (which moved first in DOM for mobile) */
 @media (min-width: 769px) {
   .dnav-links-wrapper {
     display: flex;
     align-items: center;
+    order: -1;
   }
 }
 
@@ -60,27 +98,48 @@
   border-radius: var(--r-sm);
   text-decoration: none;
   display: block;
-  transition: color .15s, background .15s;
+  position: relative;
+  transition: color .15s;
+}
+
+/* Parallelogram background — matches the logo's exact angle (7px / 28px ≈ 14°) */
+.dnav-links li a::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(7px 0%, 100% 0%, calc(100% - 7px) 100%, 0% 100%);
+  z-index: -1;
+  transition: background .15s;
 }
 
 .dnav-links li a:hover {
   color: var(--text);
-  background: var(--elevated);
   opacity: 1;
 }
 
+.dnav-links li a:hover::before {
+  background: var(--elevated);
+}
+
 .dnav-links li a[aria-current="page"] {
-  color: var(--accent);
-  background: var(--accent-dim);
-  border: 1px solid rgba(211,255,141,0.15);
+  color: #18191b;
+  border: none;
+}
+
+.dnav-links li a[aria-current="page"]::before {
+  background: var(--accent);
 }
 
 /* Mobile hamburger button */
 .dnav-toggle {
   display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   background: none;
   border: none;
-  padding: 8px;
+  padding: 0;
   cursor: pointer;
   touch-action: manipulation;
   z-index: 110;
@@ -135,7 +194,9 @@
     padding: 12px 20px;
   }
 
-  .dnav-toggle { display: block; }
+  .dnav-toggle { display: flex; }
+
+  .dnav-theme-toggle { display: none; }
 
   /* Hide compact top-level links on mobile — full list is in the overlay */
   .dnav-links { display: none; }
@@ -175,7 +236,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .1em;
-    color: var(--accent);
+    color: var(--accent-fg);
     margin-bottom: 12px;
     margin-top: 24px;
   }
@@ -209,12 +270,31 @@
   }
 
   .mobile-sec-nav li a[aria-current="page"] {
-    color: var(--accent) !important;
-    background: var(--accent-dim);
+    color: #18191b !important;
+    background: var(--accent);
     font-weight: 600;
-    text-decoration: underline;
-    text-decoration-color: rgba(211, 255, 141, 0.4);
-    text-underline-offset: 4px;
+    text-decoration: none;
+  }
+
+  .mobile-theme-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    border-radius: var(--r-sm);
+    background: none;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-align: left;
+    transition: color .15s, background .15s;
+  }
+
+  .mobile-theme-btn:hover {
+    color: var(--text);
+    background: var(--elevated);
   }
 }
 

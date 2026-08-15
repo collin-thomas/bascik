@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <docs-head></docs-head>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { canonical } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/canonical.mjs')).href
+    );
+    console.log(await canonical());
+  </script>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { openGraph } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/open-graph.mjs')).href
+    );
+    console.log(await openGraph());
+  </script>
+  <meta name="robots" content="noindex" />
+  <meta name="description" content="Search the Bascik documentation." />
+  <title>Search - Bascik Docs</title>
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+      <docs-sidebar></docs-sidebar>
+
+      <main class="docs-content">
+        <!-- Content rendered from docs/content/search.md at build time.
+             To update page content, edit the MD file — not this file. -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMd } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMd('./content/search.md'));
+        </script>
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+
+</body>
+
+</html>

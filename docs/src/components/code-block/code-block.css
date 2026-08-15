@@ -1,16 +1,16 @@
 .cblock {
-  background: #0d0e0f;
-  border: 1px solid var(--border);
-  border-radius: var(--r);
+  background: var(--pre-bg);
+  border: var(--cblock-border, 1px solid var(--border));
+  border-radius: var(--cblock-radius, var(--r));
   overflow: hidden;
 }
 
 .cblock-header {
-  display: flex;
+  display: var(--cblock-header-display, flex);
   align-items: center;
   justify-content: space-between;
   padding: 8px 16px;
-  background: rgba(255,255,255,0.025);
+  background: var(--code-header-bg);
   border-bottom: 1px solid var(--border);
 }
 
@@ -20,7 +20,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .06em;
-  color: var(--accent);
+  color: var(--accent-fg);
 }
 
 .cblock-file {
@@ -39,9 +39,18 @@
 
 .cblock pre code {
   font-size: 0.82rem;
-  color: #cdd6f4;
+  color: var(--pre-text);
   line-height: 1.7;
   background: none;
   border: none;
   padding: 0;
 }
+
+.cblock [data-code-token="cm"] { color: var(--syn-cm); }
+.cblock [data-code-token="str"] { color: var(--syn-str); }
+.cblock [data-code-token="kw"],
+.cblock [data-code-token="sel"] { color: var(--syn-kw); }
+.cblock [data-code-token="num"] { color: var(--syn-num); }
+.cblock [data-code-token="attr"],
+.cblock [data-code-token="fn"] { color: var(--syn-attr); }
+.cblock [data-code-token="val"] { color: var(--syn-val); }

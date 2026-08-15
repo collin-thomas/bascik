@@ -28,6 +28,8 @@ Output in the compiled HTML:
 
 If a build script throws, Bascik logs a warning and replaces the script tag with an empty string. The build continues rather than aborting. Check your terminal output if content is missing from the page.
 
+One case that does hard-fail and abort the build: putting both `data-bascik-build` and `data-bascik-server` on the same `<script>` tag. That combination is never valid — a script runs at build time or at request time, not both. Bascik throws an error with the file name and line number. The VS Code extension also flags it as an error before you build.
+
 ## Example: Reading a Markdown File
 
 A common pattern is converting Markdown content to HTML at build time:

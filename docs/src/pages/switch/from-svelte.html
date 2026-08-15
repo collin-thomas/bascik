@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <docs-head></docs-head>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { canonical } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/canonical.mjs')).href
+    );
+    console.log(await canonical());
+  </script>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { openGraph } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/open-graph.mjs')).href
+    );
+    console.log(await openGraph());
+  </script>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { breadcrumbLd } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/breadcrumb-ld.mjs')).href
+    );
+    console.log(await breadcrumbLd());
+  </script>
+  <meta name="description"
+    content="Svelte and Bascik both use single-file components with scoped styles. Learn how to switch a Svelte project to Bascik." />
+  <title>Switch from Svelte - Bascik Docs</title>
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+
+      <docs-sidebar></docs-sidebar>
+
+      <main class="docs-content">
+        <p class="section-label">Switch</p>
+
+        <!-- Content rendered from docs/content/switch/from-svelte.md at build time.
+             To update page content, edit the MD file - not this file. -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMd } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMd('./content/switch/from-svelte.md'));
+        </script>
+
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/switch/from-svelte'));
+        </script>
+
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+</body>
+
+</html>

@@ -41,7 +41,7 @@
 import { execFile } from "node:child_process";
 import { writeFile, unlink, mkdir } from "node:fs/promises";
 import { freemem, totalmem } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { getRelativePath } from "./file-system.js";
 import { BascikConfig } from "./config.js";
 
@@ -71,7 +71,7 @@ const childSemaphore = () => _sem ??= new Semaphore(
 
 // Manual promise wrapper so tests can mock execFile with a plain vi.fn()
 // without needing to simulate Node's promisify.custom symbol.
-const runModule = async (path: string): Promise<{ stdout: string; stderr: string }> => {
+const runModule = async (path: string, extraEnv: Record<string, string> = {}): Promise<{ stdout: string; stderr: string }> => {
   const sem = childSemaphore();
   await sem.acquire();
   return new Promise((resolve, reject) => {
@@ -85,6 +85,7 @@ const runModule = async (path: string): Promise<{ stdout: string; stderr: string
           BASCIK_BUILD: BascikConfig.isBuild ? "1" : "0",
           FORCE_COLOR: "0",
           NO_COLOR: "1",
+          ...extraEnv,
         },
         timeout: BUILD_SCRIPT_TIMEOUT,
         killSignal: "SIGTERM",
@@ -106,11 +107,17 @@ const BARE_TOKEN = String.raw`[^\s"'=<>\`]+`;
 const ATTR_VALUE = String.raw`(?:"[^"]*"|'[^']*'|${BARE_TOKEN})`;
 const ATTR = String.raw`${BARE_TOKEN}(?:\s*=\s*${ATTR_VALUE})?`;
 const FLAG = String.raw`data-bascik-build(?:\s*=\s*${ATTR_VALUE})?`;
+const SERVER_FLAG = String.raw`data-bascik-server(?:\s*=\s*${ATTR_VALUE})?`;
 
 // Match <script data-bascik-build …> … </script> (captures inner content).
 const BUILD_SCRIPT_RE = new RegExp(
   String.raw`<script\b(?:\s+${ATTR})*\s+${FLAG}(?:\s+${ATTR})*\s*>([\s\S]*?)<\/script>`,
   "gi",
+);
+
+const BUILD_SERVER_CONFLICT_RE = new RegExp(
+  String.raw`<script\b(?:\s+${ATTR})*\s+${SERVER_FLAG}(?:\s+${ATTR})*\s*>`,
+  "i",
 );
 
 // Strip ANSI terminal color sequences so build-time HTML injection never leaks
@@ -145,13 +152,31 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
   const outputs = await Promise.all(matches.map(async (match) => {
     const [fullTag, scriptContent] = match;
     const index = match.index ?? 0;
+
+    // Hard-fail if the same tag has both data-bascik-build and data-bascik-server.
+    // The opening tag is everything before the captured content and closing tag.
+    const openTag = fullTag.slice(0, fullTag.length - scriptContent.length - "</script>".length);
+    if (BUILD_SERVER_CONFLICT_RE.test(openTag)) {
+      let errorMsg = `[bascik] error: <script> tag has both data-bascik-build and data-bascik-server`;
+      if (filePath) {
+        const prefix = html.slice(0, index);
+        const prefixLines = prefix.split(/\r?\n/);
+        errorMsg += ` in "${getRelativePath(filePath, "pages")}" at (line ${prefixLines.length}, column ${prefixLines[prefixLines.length - 1].length + 1})`;
+      }
+      throw new Error(`${errorMsg}. A script can only run at build time or at request time — not both. Remove one of the attributes.`);
+    }
+
     const tmpPath = join(
       tempDir,
       `build-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
     );
     try {
       await writeFile(tmpPath, scriptContent.trim(), "utf8");
-      const { stdout, stderr } = await runModule(tmpPath);
+      const { stdout, stderr } = await runModule(tmpPath, {
+        BASCIK_PAGE_FILE: filePath ?? "",
+        BASCIK_SITE_URL: BascikConfig.siteUrl ?? "",
+        BASCIK_PAGES_DIR: resolve(process.cwd(), BascikConfig.directory.pages),
+      });
       if (stderr) process.stderr.write(stderr);
       return { fullTag, index, output: stripAnsiEscapeCodes(stdout) };
     } catch (err) {

@@ -43,6 +43,26 @@ Bascik's component model lives entirely at build time. There is no runtime equiv
 
 For sites that need selective reactivity on specific components, petite-vue (~5 KB) is a better fit than full Vue. See the [JavaScript Libraries](/libraries) page for examples.
 
+## Svelte
+
+[Svelte](https://svelte.dev) is the framework whose single-file component format looks most like Bascik's. A `.svelte` file is `<script>` + markup + `<style>`, scoped styles are the default, and the compiler strips the framework syntax. The resemblance stops at the output.
+
+Svelte compiles to a JavaScript runtime that manages reactive state and DOM updates in the browser. Every page needs that compiled output to function. A page with reactive state ships JS for the reactivity system plus JS for the application logic itself.
+
+Bascik's output for an equivalent component is a static HTML file with no JavaScript added. There is nothing to hydrate, no reactive tree to initialize, no framework-managed DOM.
+
+**What Svelte adds to a page:**
+
+- A compiled JavaScript bundle per component (size varies; runtime helpers are shared across the app)
+- A reactivity model (`$state`, `$derived`, `$effect`) that requires JavaScript to function
+- Template syntax (`{#if}`, `{#each}`, `{@html}`) that resolves to JavaScript, not plain HTML
+
+Svelte is well-suited to applications that need reactive UI updating in response to user input or server data. It is not suited to pages that are mostly static and do not need a JavaScript-managed DOM.
+
+For content sites and documentation portals, the closest Svelte analog is SvelteKit in static-output mode (`adapter-static`). Even then, SvelteKit ships JavaScript for client-side navigation and hydration. Bascik's output for equivalent pages is plain HTML with none of that overhead.
+
+If you are coming from Svelte and building a content-first site, the migration is mostly mechanical: remove Svelte's script and template blocks, extract `<style>` to a paired `.css` file, and replace reactive primitives with vanilla JS where runtime behavior is still needed. See the [Switch from Svelte](/switch/from-svelte) guide.
+
 ## Next.js
 
 Next.js is a React meta-framework that adds routing, server-side rendering, static site generation, and a full bundling pipeline on top of React. For applications that need those things, it is a reasonable choice.
@@ -84,6 +104,7 @@ If your site is primarily content-driven and you want a full publishing pipeline
 | **HTMX** | ~14 KB | Request, target, swap, trigger, and history concepts | `hx-*` custom attributes interpreted at runtime | Usually |
 | **Alpine.js** | ~16 KB | Alpine state and directive model | `x-*` and `@*` directives interpreted at runtime | No |
 | **petite-vue** | ~5 KB | Vue reactivity and directive model | `v-*` and `@*` directives interpreted at runtime | No |
+| **Svelte** | Compiled JS bundle (varies) | Svelte component model and reactivity (`$state`, `$effect`) | `.svelte` file format with compiler-resolved directives | No |
 | **Vue / React** | 40–100+ KB | Framework component model, lifecycle, and state APIs | Vue directives/templates or React JSX | No |
 | **Hugo / Eleventy / Jekyll** | None | Template syntax, content collections, front matter, generator conventions | Builder-specific templating languages | No |
 

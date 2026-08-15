@@ -1,6 +1,9 @@
 # Bascik
 
-A build tool for HTML components. No JavaScript framework — plain HTML, CSS, and JavaScript, compiled at build time. Zero JavaScript added to your pages.
+Bascik is a build tool for HTML components. It scopes and assembles reusable HTML component files into plain HTML pages at build time. Zero JavaScript is added to your pages.
+
+HTML components.
+Zero runtime.
 
 **Documentation:** [bascik.dev](https://bascik.dev)  
 **Package:** [`@bascik/bascik`](https://www.npmjs.com/package/@bascik/bascik)

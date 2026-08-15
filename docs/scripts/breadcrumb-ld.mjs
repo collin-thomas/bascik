@@ -1,0 +1,73 @@
+/**
+ * Generates a BreadcrumbList JSON-LD script tag for the current page.
+ * Only outputs anything for nested pages (section/page-name).
+ *
+ * Breadcrumb structure:
+ *   Bascik > Section (if a parent page exists) > Page title
+ *
+ * Usage inside a <script data-bascik-build> block:
+ *
+ *   const { breadcrumbLd } = await import(
+ *     pathToFileURL(join(process.cwd(), 'scripts/breadcrumb-ld.mjs')).href
+ *   );
+ *   console.log(await breadcrumbLd());
+ */
+import { readFile } from 'node:fs/promises';
+
+// Sections that have their own index page (e.g. /internals, /switch)
+const SECTIONS_WITH_PAGE = new Set(['internals', 'switch']);
+
+const SECTION_LABELS = {
+  internals: 'Internals',
+  switch:    'Switch',
+  recipes:   'Recipes',
+  resources: 'Resources',
+};
+
+export async function breadcrumbLd() {
+  const siteUrl = (process.env.BASCIK_SITE_URL ?? '').replace(/\/$/, '');
+  const pageFile = process.env.BASCIK_PAGE_FILE ?? '';
+  const pagesDir = process.env.BASCIK_PAGES_DIR ?? '';
+
+  if (!siteUrl || !pageFile || !pagesDir) return '';
+
+  const relPath = pageFile.startsWith(pagesDir)
+    ? pageFile.slice(pagesDir.length).replace(/^[\\/]/, '').replace(/\\/g, '/')
+    : '';
+
+  const parts = relPath.replace(/\.html$/, '').split('/');
+  if (parts.length < 2) return ''; // top-level pages don't need breadcrumbs
+
+  const [section] = parts;
+  const html = await readFile(pageFile, 'utf8');
+  const titleM = html.match(/<title[^>]*>([^<]+)<\/title>/);
+  // Strip " - Bascik Docs" / " - Bascik Developer Guide" / " - Bascik" suffixes
+  const pageLabel = titleM
+    ? titleM[1].replace(/ - Bascik.*$/, '').trim()
+    : parts[parts.length - 1];
+
+  const sectionLabel = SECTION_LABELS[section]
+    ?? (section[0].toUpperCase() + section.slice(1));
+
+  const items = [
+    { '@type': 'ListItem', position: 1, name: 'Bascik', item: `${siteUrl}/` },
+  ];
+
+  if (SECTIONS_WITH_PAGE.has(section)) {
+    items.push({
+      '@type': 'ListItem', position: 2,
+      name: sectionLabel, item: `${siteUrl}/${section}`,
+    });
+    items.push({ '@type': 'ListItem', position: 3, name: pageLabel });
+  } else {
+    items.push({ '@type': 'ListItem', position: 2, name: pageLabel });
+  }
+
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items,
+  };
+
+  return `<script type="application/ld+json">\n${JSON.stringify(schema, null, 2)}\n</script>`;
+}

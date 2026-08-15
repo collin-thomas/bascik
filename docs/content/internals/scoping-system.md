@@ -69,6 +69,8 @@ p { margin: 0; }
 <p class="bascik__site-nav__el__p">Content</p>
 ```
 
+`html`, `body`, and `head` are excluded from element-to-class conversion. Cross-boundary selectors like `html[data-theme="light"] .foo {}` are left with the root element name intact, so the scoped output is `html[data-theme="light"] .bascik__...__foo {}` — matching correctly when the document root carries a theme or state attribute.
+
 ### @keyframes
 
 ```css

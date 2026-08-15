@@ -17,12 +17,14 @@ import { MIME_MAP } from "./mime.js";
 import { eventEmitter } from "./events.js";
 
 export const watchFiles = async () => {
+  const onWatchError = (err: unknown) => console.error("[bascik] watch error:", err);
+
   // Copy non-page files
   chokidar
     .watch([BascikConfig.directory.pages], {
       ignored: (path: string, stats?: Stats): boolean => {
         const hasFileExt = Array.from(MIME_MAP.keys()).some((ext) =>
-          new RegExp(`${ext}$`).test(path),
+          ext.startsWith(".") && path.endsWith(ext),
         );
         return !!(stats?.isFile() && !hasFileExt);
       },
@@ -30,20 +32,22 @@ export const watchFiles = async () => {
       usePolling: true,
       interval: 100,
     })
-    .on("add", (path) => copyReplicatePath(path, "dist"))
+    .on("add", (path) => copyReplicatePath(path, "dist").catch(onWatchError))
     .on("change", async (path) => {
-      await copyReplicatePath(path, "dist");
-      // Reload any currently-open page when a static asset changes
-      if (!BascikConfig.isBuild) {
-        eventEmitter.emit("asset-changed");
-      }
+      try {
+        await copyReplicatePath(path, "dist");
+        // Reload any currently-open page when a static asset changes
+        if (!BascikConfig.isBuild) {
+          eventEmitter.emit("asset-changed");
+        }
+      } catch (err) { onWatchError(err); }
     })
-    .on("unlink", (path) => deleteDistFile(path))
-    .on("unlinkDir", (path) => deleteDistDir(path));
+    .on("unlink", (path) => deleteDistFile(path).catch(onWatchError))
+    .on("unlinkDir", (path) => deleteDistDir(path).catch(onWatchError));
 
   // Transpile pages as they change
   let initialScanDone = false;
-  await new Promise<void>((resolve) => {
+  await new Promise<void>((resolve, reject) => {
     chokidar
       .watch([BascikConfig.directory.pages], {
         // only watch html files
@@ -54,15 +58,14 @@ export const watchFiles = async () => {
         interval: 100,
       })
       .on("add", (path) => {
-        if (initialScanDone) pageProcessing(path);
+        if (initialScanDone) pageProcessing(path).catch(onWatchError);
       })
-      .on("change", (path) => pageProcessing(path))
-      .on("unlink", (path: string, _stats?: Stats) => removePage(path))
-      .on("unlinkDir", (path: string, _stats?: Stats) => deleteDistDir(path))
-      .on("ready", async () => {
+      .on("change", (path) => pageProcessing(path).catch(onWatchError))
+      .on("unlink", (path: string, _stats?: Stats) => removePage(path).catch(onWatchError))
+      .on("unlinkDir", (path: string, _stats?: Stats) => deleteDistDir(path).catch(onWatchError))
+      .on("ready", () => {
         initialScanDone = true;
-        await processAllPages();
-        resolve();
+        processAllPages().then(() => resolve()).catch(reject);
       });
   });
 
@@ -80,10 +83,10 @@ export const watchFiles = async () => {
       interval: 100,
     })
     // If you add a component, how will we know what pages to update unless we go and look
-    .on("add", async () => processAllPages())
+    .on("add", async () => processAllPages().catch(onWatchError))
     // For changes and deletion of components we can be selective
-    .on("change", async (path) => selectivelyProcessPages(path))
-    .on("unlink", async (path) => selectivelyProcessPages(path));
+    .on("change", async (path) => selectivelyProcessPages(path).catch(onWatchError))
+    .on("unlink", async (path) => selectivelyProcessPages(path).catch(onWatchError));
 
   // Re-transpile all pages when user-specified extra paths change (dev only)
   if (!BascikConfig.isBuild && BascikConfig.directory.watch.length) {
@@ -94,8 +97,8 @@ export const watchFiles = async () => {
         usePolling: true,
         interval: 100,
       })
-      .on("add", async (path) => selectivelyProcessPagesForWatchPath(path))
-      .on("change", async (path) => selectivelyProcessPagesForWatchPath(path))
-      .on("unlink", async () => processAllPages());
+      .on("add", async (path) => selectivelyProcessPagesForWatchPath(path).catch(onWatchError))
+      .on("change", async (path) => selectivelyProcessPagesForWatchPath(path).catch(onWatchError))
+      .on("unlink", async () => processAllPages().catch(onWatchError));
   }
 };

@@ -23,7 +23,10 @@
                var idx = links.findIndex(function (a) { return a.getAttribute('href') === path; });
                if (idx !== -1) {
                     links[idx].setAttribute('aria-current', 'page');
-                    links[idx].scrollIntoView({ block: 'nearest' });
+                    requestAnimationFrame(function () {
+                         var linkTop = links[idx].getBoundingClientRect().top - sidebar.getBoundingClientRect().top + sidebar.scrollTop;
+                         sidebar.scrollTop = linkTop - sidebar.clientHeight / 2 + links[idx].offsetHeight / 2;
+                    });
                     var next = links[idx + 1];
                     if (next) {
                          var link = document.createElement('link');

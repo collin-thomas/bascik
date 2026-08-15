@@ -36,26 +36,40 @@
 .sidebar-nav li a {
   display: block;
   padding: 5px 10px;
-  border-radius: var(--r-sm);
   font-size: 0.875rem;
   color: var(--text-muted);
   text-decoration: none;
-  transition: color .15s, background .15s;
+  position: relative;
+  transition: color .15s;
+}
+
+/* Parallelogram background — same angle as the logo (7px / 28px) */
+.sidebar-nav li a::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(7px 0%, 100% 0%, calc(100% - 7px) 100%, 0% 100%);
+  z-index: -1;
+  transition: background .15s;
 }
 
 .sidebar-nav li a:hover {
   color: var(--text);
-  background: var(--elevated);
   opacity: 1;
 }
 
+.sidebar-nav li a:hover::before {
+  background: var(--elevated);
+}
+
 .sidebar-nav li a[aria-current="page"] {
-  color: var(--accent) !important;
-  background: var(--accent-dim);
+  color: #18191b !important;
   font-weight: 600;
-  text-decoration: underline;
-  text-decoration-color: rgba(211, 255, 141, 0.4);
-  text-underline-offset: 4px;
+  text-decoration: none;
+}
+
+.sidebar-nav li a[aria-current="page"]::before {
+  background: var(--accent);
 }
 
 @media (max-width: 768px) {

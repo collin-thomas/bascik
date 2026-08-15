@@ -154,6 +154,27 @@ describe("convertCssElementSelectorsToClasses", () => {
     expect(css).not.toContain("bascik__my-comp__el__rem");
     expect(elementsConvertedClasses).not.toContain("rem");
   });
+
+  it("does not scope html, body, or head — they are never inside a component", () => {
+    // Cross-boundary selectors like `html[data-theme="light"] .my-class` must
+    // preserve `html` verbatim so the compiled selector actually matches.
+    const cases = [
+      { css: `html[data-theme="light"] .foo { color: red; }`, label: "html with attribute selector" },
+      { css: `html[data-theme="light"] .foo { color: red; }\nhtml[data-theme="dark"] .foo { color: blue; }`, label: "multiple html rules" },
+      { css: `body { margin: 0; }`, label: "body standalone" },
+      { css: `head { display: none; }`, label: "head standalone" },
+    ];
+    for (const { css, label } of cases) {
+      const { css: result, elementsConvertedClasses } =
+        convertCssElementSelectorsToClasses(css, "my-comp");
+      expect(result, label).not.toContain("bascik__my-comp__el__html");
+      expect(result, label).not.toContain("bascik__my-comp__el__body");
+      expect(result, label).not.toContain("bascik__my-comp__el__head");
+      expect(elementsConvertedClasses, label).not.toContain("html");
+      expect(elementsConvertedClasses, label).not.toContain("body");
+      expect(elementsConvertedClasses, label).not.toContain("head");
+    }
+  });
 });
 
 describe("addElementClassesInHtml", () => {
@@ -210,10 +231,32 @@ describe("removeIdSelectors", () => {
 });
 
 describe("removeCommentsFromCss", () => {
-  it("test", () => {
+  it("removes a standard comment", () => {
     expect(removeCommentsFromCss(idCss)).not.toContain(
       "/* ID selectors will be removed */",
     );
+  });
+
+  it("removes a multi-line comment that contains an apostrophe", () => {
+    const css = `.foo {\n  color: red;\n}\n/* matches the logo's angle */\n.bar {\n  color: blue;\n}`;
+    const result = removeCommentsFromCss(css);
+    expect(result).not.toContain("/*");
+    expect(result).toContain(".foo");
+    expect(result).toContain(".bar");
+  });
+
+  it("preserves single-quoted string literals that follow an apostrophe-containing comment", () => {
+    const css = `.a {\n  color: red;\n}\n/* the logo's angle (7px / 28px ≈ 14°)\n*/\n.b::before {\n  content: '';\n}`;
+    const result = removeCommentsFromCss(css);
+    expect(result).not.toContain("/*");
+    expect(result).toContain(".b::before");
+    expect(result).toContain("content: ''");
+  });
+
+  it("preserves /* inside a string literal", () => {
+    const css = `.a { content: "/* not a comment */"; color: red; }`;
+    const result = removeCommentsFromCss(css);
+    expect(result).toContain('"/* not a comment */"');
   });
 });
 

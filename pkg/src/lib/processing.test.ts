@@ -1065,6 +1065,21 @@ describe("transpilePage – unresolved component tag warning", () => {
     expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining("<my-resolved>"));
     warnSpy.mockRestore();
   });
+
+  it("does not warn about hyphenated tags inside script/style elements", async () => {
+    const html = [
+      "<!DOCTYPE html><html>",
+      '<head><script type="application/ld+json">{"text": "use <my-card> here"}</script></head>',
+      "<body><style>.x { /* <my-widget> */ }</style></body>",
+      "</html>",
+    ].join("");
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(html);
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+    await transpilePage(PAGE_PATH, {});
+    expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining("<my-card>"));
+    expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining("<my-widget>"));
+    warnSpy.mockRestore();
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
