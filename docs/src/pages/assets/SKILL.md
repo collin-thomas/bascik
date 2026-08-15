@@ -33,8 +33,9 @@ One component file, its usage, and the scoped build output:
 <style>
   .card {
     padding: 26px 28px;
+    border: 1px solid #3a3d40;
     border-radius: 10px;
-    &.active { border-color: rgba(211, 255, 141, 0.5); }
+    &.active { border-color: #d3ff8d; }
   }
 </style>
 <div class="card" id="card">
@@ -61,8 +62,9 @@ One component file, its usage, and the scoped build output:
 <style>
   .bascik__my-card__card {
     padding: 26px 28px;
+    border: 1px solid #3a3d40;
     border-radius: 10px;
-    &.bascik__my-card__active { border-color: rgba(211, 255, 141, 0.5); }
+    &.bascik__my-card__active { border-color: #d3ff8d; }
   }
 </style>
 <div class="bascik__my-card__card" id="bascik__my-card__a1b__card">

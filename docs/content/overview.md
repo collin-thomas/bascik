@@ -26,21 +26,11 @@ Create a file. The file name is the tag name. HTML, CSS, and JavaScript live tog
 <style>
   .card {
     padding: 26px 28px;
-    background: #242628;
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    border: 1px solid #3a3d40;
     border-radius: 10px;
 
-    h3 { margin: 0 0 8px; color: #f0f1f2; }
-    p { margin: 0; color: #8d929e; }
-
-    &:hover {
-      border-color: rgba(211, 255, 141, 0.35);
-    }
-
     &.active {
-      background: rgba(211, 255, 141, 0.07);
-      border-color: rgba(211, 255, 141, 0.5);
-
+      border-color: #d3ff8d;
       h3 { color: #d3ff8d; }
     }
   }
@@ -75,21 +65,11 @@ At build time Bascik inlines the component and scopes every class name and DOM s
 <style>
   .bascik__my-card__card {
     padding: 26px 28px;
-    background: #242628;
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    border: 1px solid #3a3d40;
     border-radius: 10px;
 
-    h3 { margin: 0 0 8px; color: #f0f1f2; }
-    p { margin: 0; color: #8d929e; }
-
-    &:hover {
-      border-color: rgba(211, 255, 141, 0.35);
-    }
-
     &.bascik__my-card__active {
-      background: rgba(211, 255, 141, 0.07);
-      border-color: rgba(211, 255, 141, 0.5);
-
+      border-color: #d3ff8d;
       h3 { color: #d3ff8d; }
     }
   }
