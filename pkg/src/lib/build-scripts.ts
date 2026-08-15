@@ -25,7 +25,7 @@
  * Rules
  * ──────────────────────────────────────────────────────────────────────────────
  * - The script is written to a temporary `.mjs` file and executed with the
- *   same Node.js binary that is running Bascik.  With `lang="ts"` on the tag,
+ *   same Node.js binary that is running Bascik.  With `data-bascik-ts` on the tag,
  *   the TypeScript type annotations are stripped first (erasure-only — the
  *   same semantics as Node ≥ 24 running a `.ts` file natively), so build
  *   scripts can be written in TypeScript.
@@ -261,7 +261,7 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
       `build-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
     );
     try {
-      // lang="ts" scripts have their type annotations stripped before
+      // data-bascik-ts scripts have their type annotations stripped before
       // execution (Node refuses to type-strip files under node_modules,
       // where the temp dir lives — so Bascik strips in-process instead).
       const executable = isTypeScriptOpenTag(openTag)

@@ -123,10 +123,10 @@ describe("executeServerScripts", () => {
     );
   });
 
-  it("strips types from lang=\"ts\" scripts before writing the temp file", async () => {
+  it("strips types from data-bascik-ts scripts before writing the temp file", async () => {
     resolveWith("");
     await executeServerScripts(
-      `<script data-bascik-server lang="ts">const n: number = 1;\nconsole.log(n);</script>`,
+      `<script data-bascik-server data-bascik-ts>const n: number = 1;\nconsole.log(n);</script>`,
       baseRequest,
     );
     const [tmpPath, written] = (writeFile as ReturnType<typeof vi.fn>).mock.calls[0];

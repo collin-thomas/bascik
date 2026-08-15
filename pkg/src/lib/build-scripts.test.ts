@@ -92,10 +92,10 @@ describe("executeBuildScripts", () => {
     );
   });
 
-  it("strips types from lang=\"ts\" scripts before writing the temp file", async () => {
+  it("strips types from data-bascik-ts scripts before writing the temp file", async () => {
     resolveWith("");
     await executeBuildScripts(
-      `<script data-bascik-build lang="ts">const n: number = 1;\nconsole.log(n);</script>`,
+      `<script data-bascik-build data-bascik-ts>const n: number = 1;\nconsole.log(n);</script>`,
     );
     const [tmpPath, written] = (writeFile as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(tmpPath).toMatch(/\.mjs$/);

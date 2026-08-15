@@ -161,7 +161,7 @@ export const listComponents = async (): Promise<ComponentList> => {
         // stays in its original position (minifyHtml moves <script> tags).
         const rawContent = fileContent.toString();
         const builtContent = await executeBuildScripts(rawContent, fileName);
-        // Strip types from client <script lang="ts"> blocks so the scoping
+        // Strip types from client <script data-bascik-ts> blocks so the scoping
         // pipeline (and the browser) only ever sees plain JavaScript.
         const resolvedContent = transpileInlineTypeScript(builtContent, fileName);
         const component: BascikComponent = {

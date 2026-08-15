@@ -617,7 +617,7 @@ export const transpilePage = async (
   // can contain component tags, which will be resolved below.
   const rawHtml = (await readFile(pagePath)).toString();
   const builtHtml = await executeBuildScripts(rawHtml, pagePath);
-  // Strip types from page-level client <script lang="ts"> blocks so the rest
+  // Strip types from page-level client <script data-bascik-ts> blocks so the rest
   // of the pipeline (scoping, minification, browser) sees plain JavaScript.
   // Node-executed scripts (data-bascik-build/server) are left untouched.
   const htmlWithBuildOutput = transpileInlineTypeScript(builtHtml, pagePath);
