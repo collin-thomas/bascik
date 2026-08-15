@@ -58,3 +58,37 @@ test.describe('build-scripts-test page', () => {
     expect(response?.status()).toBe(200);
   });
 });
+
+// ─── Build script env vars + cache per-page isolation ────────────────────────
+//
+// These two fixture pages have IDENTICAL build-script source, but the cache key
+// includes BASCIK_PAGE_FILE, so each page is built independently and receives
+// its own page-specific env vars. This directly guards against the bug where
+// canonical.mjs / open-graph.mjs would return the first page's cached output
+// for every subsequent page.
+
+test.describe('BASCIK_PAGE_FILE env var is passed to build scripts', () => {
+  test('build script receives the correct BASCIK_PAGE_FILE for its page', async ({ page }) => {
+    await page.goto('/build-script-page-env-test');
+    const text = await page.locator('#page-file').textContent();
+    expect(text).toContain('build-script-page-env-test.html');
+    // Must NOT contain the "-b" variant's path — no stale cross-page cache hit.
+    expect(text).not.toContain('build-script-page-env-test-b.html');
+  });
+
+  test('build script receives BASCIK_SITE_URL from config', async ({ page }) => {
+    await page.goto('/build-script-page-env-test');
+    const text = await page.locator('#site-url').textContent();
+    // The e2e fixture config sets siteUrl: 'http://localhost:4200'
+    expect(text).toContain('localhost:4200');
+  });
+});
+
+test.describe('build script cache keys are per-page (page-b variant)', () => {
+  test('page-b gets its own BASCIK_PAGE_FILE, not page-a\'s cached output', async ({ page }) => {
+    await page.goto('/build-script-page-env-test-b');
+    const text = await page.locator('#page-file').textContent();
+    expect(text).toContain('build-script-page-env-test-b.html');
+    expect(text).not.toContain('build-script-page-env-test.html');
+  });
+});

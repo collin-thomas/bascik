@@ -403,6 +403,24 @@ Components work inside `<head>` to organize metadata:
 * On error, the script tag is replaced with an empty string and a warning is logged.
 * **Hard error:** combining `data-bascik-build` and `data-bascik-server` on the same tag throws and aborts the build. A script runs at build time or at request time — not both.
 
+### Build Script Output Cache
+
+Each `<script data-bascik-build>` spawns a Node.js child process (~50–150 ms startup each). Bascik caches script output on disk so unchanged scripts skip the spawn on subsequent builds or server restarts.
+
+**Cache location:** `node_modules/.cache/bascik/script-cache/<sha256>.json`
+
+**Cache key:** SHA-256 of the script content + dev/build mode + the current page path (`BASCIK_PAGE_FILE`) + the site URL + the full content of any `content/*.md` or `scripts/*.mjs` files referenced as quoted path literals in the script. The page path is included so that scripts like `canonical.mjs` that use `process.env.BASCIK_PAGE_FILE` get a separate cache entry per page. Changing a referenced file produces a new key and a cache miss for that script only; all other scripts keep their cached output.
+
+**To disable:** set `buildScriptCache: false` in `bascik.config.js` (useful when debugging a script that reads external state not tracked by the cache key).
+
+**To bust the entire cache** (e.g. after upgrading a build-time npm dependency):
+
+```sh
+rm -rf node_modules/.cache/bascik/script-cache
+```
+
+With `useWorkers: true`, multiple workers share the same cache directory. Workers that independently miss the same key both spawn a child process; last write wins with identical content. This is a minor inefficiency on a cold first build only.
+
 ### Rendering and Styling Markdown
 
 Install a Markdown parser such as `marked`, read the source in a build script, and write the resulting HTML to stdout:
@@ -521,6 +539,8 @@ export const bascikConfig = {
     sitemap: true, // write dist/sitemap.xml
     robots: true,  // write dist/robots.txt
   },
+  useWorkers: false,       // true: transpile pages across CPU-core worker threads
+  buildScriptCache: true,  // false: disable disk cache for <script data-bascik-build>
   devServer: {
     logging: {
       level: 'info',    // silent | error | warn | info | debug

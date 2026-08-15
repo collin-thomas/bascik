@@ -61,6 +61,7 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild" | "isServe"> = {
   },
   inlineStyles: false,
   useWorkers: false,
+  buildScriptCache: true,
   devServer: {
     logging: {
       level: "info",
