@@ -73,11 +73,11 @@ export interface ServerRequest {
 const SERVER_SCRIPT_RE =
   /<script\b(?:[^>"']|"[^"]*"|'[^']*')*\sdata-bascik-server\b(?:[^>"']|"[^"]*"|'[^']*')*>([\s\S]*?)<\/script>/gi;
 
-// Prepended to every server script so authors can call bascikEsc() without
+// Prepended to every server script so authors can call escapeHtml() without
 // defining their own helper. ESM imports are hoisted so this runs after all
 // import bindings are resolved even when the user's script starts with imports.
 const SCRIPT_PREAMBLE =
-  `const bascikEsc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');\n`;
+  `const escapeHtml=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');\n`;
 
 // Strip ANSI terminal color sequences so server-side HTML injection never leaks
 // terminal formatting from CI or Netlify build environments into the page output.
