@@ -95,4 +95,4 @@ This is stable because the ID is rewritten with a per-instance hash, and the scr
 
 ## Source of truth
 
-The extension follows the compatibility rules documented in [Scoping Compatibility](/compatibility) and the internal notes in [VS Code Extension](/internals/vscode-extension).
+The extension follows the compatibility rules documented in [Scoping Compatibility](/compatibility).

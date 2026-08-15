@@ -17,6 +17,16 @@ npm run watch     # recompiles on save
 
 Open `extensions/vscode-bascik/` as the workspace root in VS Code and press **F5** to launch an Extension Development Host with the extension loaded.
 
+## Implementation
+
+The extension uses:
+
+- the VS Code `DefinitionProvider` API for component tag navigation
+- the `DiagnosticCollection` API for inline warnings in HTML, CSS, and JS files
+- a workspace scan of `src/components` to build a component-name to file map
+
+The `precompile` script runs `docs/scripts/generate-compatibility-rules.ts` before `tsc`, so `src/compatibility-rules.json` is always regenerated from the compatibility docs before the TypeScript compiles.
+
 ## Publishing to the VS Code Marketplace
 
 ### Prerequisites

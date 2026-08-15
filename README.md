@@ -16,6 +16,7 @@ Zero runtime.
 | ----------- | ---------------------------------------------------------------------------------- |
 | `pkg/`      | The `@bascik/bascik` npm package — source, tests, benchmarks — see [pkg/README.md](pkg/README.md) |
 | `create/`   | The `create-bascik` scaffolding CLI — `npm create bascik@latest` — see [create/README.md](create/README.md) |
+| `extensions/vscode-bascik/` | The VS Code extension — see [extensions/vscode-bascik/README.md](extensions/vscode-bascik/README.md) |
 | `docs/`     | Documentation site at [bascik.dev](https://bascik.dev) — built with Bascik itself |
 
 ---
@@ -51,3 +52,13 @@ After any `pkg/src/` change, rebuild the package and the docs server will pick i
 ```sh
 yarn --cwd docs build
 ```
+
+### Updating SKILL.md and llms.txt
+
+After editing any `docs/content/*.md` file, update the Copilot skill and LLM context files by invoking the prompt file in Copilot chat:
+
+```sh
+#pre-commit.prompt.md
+```
+
+This regenerates `llms.txt`, updates `docs/src/pages/assets/SKILL.md` to reflect any new or changed content, copies it to `create/assets/SKILL.md`, and updates unit and E2E test coverage JSON files — all in one step. Don't call `yarn generate:llms` or `yarn sync` individually; the prompt handles everything.

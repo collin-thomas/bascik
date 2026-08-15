@@ -207,6 +207,8 @@ bascik --build
 
 The output uses root-relative asset paths (for example `/css/styles.css`) and must be served by an HTTP server. Opening files directly with `file://` will break stylesheet and script loading.
 
+For guidance on deploying to static hosts or running the production server, see [Deploying](/resources/deploying).
+
 ## Production server
 
 `bascik --serve` starts the same HTTP/2 server used for development, but pointed at a pre-built `dist/` directory. Run `--build` first, then `--serve`:

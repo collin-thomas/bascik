@@ -28,8 +28,8 @@
     console.log(await breadcrumbLd());
   </script>
   <meta name="description"
-    content="The Bascik VS Code extension provides editor warnings derived from the compatibility matrix, keeping the compiler and editor tooling in sync." />
-  <title>VS Code Extension - Bascik Developer Guide</title>
+    content="Deploy Bascik sites to any static host or run the production server for dynamic content. Generic guidance for GitHub Pages, Netlify, Cloudflare Pages, and more." />
+  <title>Deploying - Bascik Docs</title>
 </head>
 
 <body>
@@ -42,20 +42,22 @@
       <docs-sidebar></docs-sidebar>
 
       <main class="docs-content">
-        <p class="section-label">Internals</p>
+        <p class="section-label">Reference</p>
+        <!-- Content rendered from docs/content/resources/deploying.md at build time.
+             To update page content, edit the MD file — not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
           );
-          console.log(await renderMd('./content/internals/vscode-extension.md'));
+          console.log(await renderMd('./content/resources/deploying.md'));
         </script>
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
           const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.ts')).href);
-          console.log(renderPagination('/internals/vscode-extension'));
+          console.log(renderPagination('/resources/deploying'));
         </script>
 
       </main>

@@ -1,6 +1,10 @@
 # Lighthouse 100s
 
-Bascik gives you an enormous head start on Lighthouse scores. Because it outputs plain HTML with zero framework runtime, you begin every page with near-perfect scores, and reaching 100 across Performance, Accessibility, Best Practices, and SEO is a matter of applying a small, well-known set of HTML attributes and link tags.
+Bascik gives you an enormous head start on Lighthouse scores. Because it outputs plain HTML with zero framework runtime, you begin every page with near-perfect scores, and reaching 100 across all four Lighthouse categories is a matter of applying a small, well-known set of HTML patterns.
+
+Framework sites start at a deficit. Every component, every route, every reactive binding you add ships more JavaScript to the browser — more to parse, more to execute before the page is usable. The Lighthouse scores that look fine on a five-page MVP look very different at fifty pages with real content, images, and third-party scripts.
+
+Bascik inverts that relationship. Adding a new component adds zero JavaScript to your pages. Adding a new page adds zero overhead. Your performance baseline stays constant no matter how large the codebase grows — the only thing that affects your scores is what you deliberately put on the page.
 
 | Performance | Accessibility | Best Practices | SEO |
 | :---: | :---: | :---: | :---: |
@@ -10,7 +14,7 @@ Bascik gives you an enormous head start on Lighthouse scores. Because it outputs
 
 ---
 
-This page is dedicated to helping you get the most out of the performance floor Bascik gives you. The techniques below are standard HTML and link-tag patterns with no build plugins or dependencies required. Apply them to any page and you will keep those 100s as your site grows.
+Hitting 100 across the board is achievable on any Bascik site. The techniques below are the complete playbook: standard HTML attributes and `<link>` tags that lock in each Lighthouse category. There are no build plugins, no dependencies, and no configuration — just patterns that work in every browser and stay effective as your site grows.
 
 ## Responsive Images with `srcset`
 
@@ -444,6 +448,8 @@ Keep inlined critical CSS to the minimum needed for above-the-fold visibility, t
 >   minifyStyles: true,
 > };
 > ```
+>
+> Once your stylesheet grows past roughly 15–20 KB (gzipped: ~4–5 KB), it is worth considering a linked external stylesheet instead. The tradeoff: the first page load pays one extra HTTP request, but every subsequent page in the session gets the file from the browser cache for free. If most of your traffic arrives from search and reads a single page, inline wins. If visitors typically navigate several pages per session, the cached external file pays off by page two. HTTP/2 reduces the penalty of the extra request significantly, but it does not eliminate it.
 
 ## Minify JavaScript Output
 

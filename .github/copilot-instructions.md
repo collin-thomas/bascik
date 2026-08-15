@@ -79,17 +79,19 @@ The `renderMd` helper (`docs/scripts/md-renderer.ts`) applies these transformati
 
 ## Updating llms.txt, SKILL.md, and create/assets/SKILL.md
 
-After adding or significantly changing a content MD file, run the sync command:
+**Preferred workflow** — invoke the prompt file. It regenerates `llms.txt`, reads all docs content, updates SKILL.md with LLM judgment, then propagates everything in one shot:
 
-```sh
-yarn --cwd docs sync
+```
+#pre-commit.prompt.md
 ```
 
-This does two things in one step:
-1. Regenerates `docs/src/pages/llms.txt` from all content MD files
-2. Copies `docs/src/pages/assets/SKILL.md` to `create/assets/SKILL.md` so newly scaffolded projects get the latest skill
+Do not call `generate:llms`, `yarn sync`, or `yarn workspace bascik-docs generate:llms` individually — the prompt handles all of that.
 
-**After running `sync`, manually update the relevant section in `docs/src/pages/assets/SKILL.md`** to mirror the content change, then run `sync` again to propagate it to `create/assets/SKILL.md`.
+**Shell-only fallback** (no SKILL.md update, just propagate after a manual edit):
+
+```sh
+yarn sync
+```
 
 These files must stay in sync. A content change that lands in `llms.txt` but not `SKILL.md` (or vice versa) means Copilot is working from stale guidance — which is how bugs like "use `querySelector` for per-instance elements" go undetected.
 
@@ -161,7 +163,7 @@ The mapping is straightforward: `docs/content/topic.md` corresponds to `docs/src
 - Fixed or improved → update the Status and/or Notes of the existing row.
 - Intentionally unsupported → add a row with 🚫 and an explanation.
 
-After editing `compatibility.md`, regenerate `llms.txt` and update `SKILL.md` as usual (they pull from the same MD files).
+After editing `compatibility.md`, run `#pre-commit.prompt.md` as usual.
 
 ## Keeping Docs in Sync with the Package
 
@@ -187,12 +189,7 @@ Then inspect the relevant `docs/dist/` output to confirm the pkg change has the 
 **When adding, removing, or significantly changing tests in `pkg/src/`:**
 
 - The testing docs (`docs/content/internals/testing.md`) describe the test approach, not an enumerated list of files — the "Test Files" section links to GitHub which is always current. You only need to update the prose if the testing *patterns* change (e.g. a new mock strategy, a new test runner, new helpers).
-- The coverage numbers shown on the testing page are read from `pkg/test-coverage.json` (unit tests) and `pkg/e2e-test-coverage.json` (E2E build-step coverage) at docs build time. After adding tests, regenerate both:
-  ```sh
-  yarn workspace @bascik/bascik update-coverage        # unit tests
-  yarn workspace @bascik/bascik update-e2e-coverage    # E2E (requires built dist/)
-  ```
-  Then commit both JSON files alongside the test changes.
+- The coverage numbers shown on the testing page are read from `pkg/test-coverage.json` (unit tests) and `pkg/e2e-test-coverage.json` (E2E build-step coverage) at docs build time. After adding tests, run `#pre-commit.prompt.md` — it regenerates both coverage files as part of its Step 1.
 
 **When changing `pkg/src/lib/dev-server.md` (or adding to the live-reload / SSE / watch system):**
 Update `docs/content/internals/dev-server.md` to reflect the change. This page is the source of truth for how the dev server and watch system work.

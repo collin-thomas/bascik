@@ -61,6 +61,21 @@
       padding: 16px 8px 0;
     }
 
+    @media (max-width: 600px) {
+
+      /* Reflow 1×4 score table to 2×2: flatten rows into grid items */
+      .docs-content table:first-of-type {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .docs-content table:first-of-type thead,
+      .docs-content table:first-of-type tbody,
+      .docs-content table:first-of-type tr {
+        display: contents;
+      }
+    }
+
     .technique-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
