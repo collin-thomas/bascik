@@ -79,6 +79,14 @@ describe("transpileInlineTypeScript", () => {
     expect(out).not.toContain(": string");
   });
 
+  it("matches script blocks whose closing tag contains trailing whitespace text", () => {
+    const html = "<script data-bascik-ts>const n: number = 1;</script \n data-note>";
+    const out = transpileInlineTypeScript(html);
+    expect(out).toContain("<script>const n");
+    expect(out).toContain("</script \n data-note>");
+    expect(out).not.toContain(": number");
+  });
+
   it("leaves data-bascik-build data-bascik-ts scripts untouched (handled at execution time)", () => {
     const html = "<script data-bascik-build data-bascik-ts>const n: number = 1;</script>";
     expect(transpileInlineTypeScript(html)).toBe(html);

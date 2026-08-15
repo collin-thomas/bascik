@@ -81,7 +81,7 @@ export const stripTypes = (source: string): string =>
 // Quote-aware <script> scanner (same shape as build-scripts.ts): an attribute
 // value may contain `>` so consume quoted strings rather than [^>]*.
 const SCRIPT_BLOCK_RE =
-  /(<script\b(?:[^>"']|"[^"]*"|'[^']*')*>)([\s\S]*?)(<\/script\s*>)/gi;
+  /(<script\b(?:[^>"']|"[^"]*"|'[^']*')*>)([\s\S]*?)(<\/script(?:\s[^>]*)?>)/gi;
 
 // Same raw-text masking convention used elsewhere in the repo: preserve string
 // length by blanking raw-text element content with spaces before scanning for
