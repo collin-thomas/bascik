@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **False "unresolved component" warning for tags inside `<script>`/`<style>`** — the post-transpilation unresolved-tag scanner now strips the content of `<script>`, `<style>`, and `<textarea>` elements before scanning, so literal text like `<my-card>` inside a JSON-LD block (or any other raw-text element) no longer produces a spurious warning.
+
 - **CSS comment with apostrophe drops following rules** — `removeCommentsFromCss` used `shieldCssStrings` as a pre-pass, but apostrophes inside `/* ... */` comments (e.g. `/* the logo's angle */`) were misread as string delimiters, shielding everything up to the next `'` in the source and preventing comment removal. The function now uses a single-pass alternation regex that correctly prioritises string literals over comment detection so apostrophes inside comments are never mistaken for string starts.
 
 - **HTTP/2 crash on client disconnect during file open** — the `"open"` handler for static file streams now guards `if (stream.destroyed)` before calling `stream.respond()`, preventing an unhandled `ERR_HTTP2_INVALID_STREAM` crash when the client disconnects between the `createReadStream` call and the file descriptor being opened.

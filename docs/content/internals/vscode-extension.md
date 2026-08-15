@@ -43,3 +43,9 @@ npm run watch          # recompiles on save
 The `precompile` script runs `docs/scripts/generate-compatibility-rules.mjs` first, so `src/compatibility-rules.json` is always regenerated from the docs before the TypeScript compiles.
 
 To launch a VS Code Extension Development Host with the extension loaded, open `extensions/vscode-bascik/` as the workspace root in VS Code and press F5 (uses the `Run Extension` launch config in `.vscode/launch.json`).
+
+## Publishing to the VS Code Marketplace
+
+The full publishing steps, pre-publish checklist, and version-bump workflow are documented in [`extensions/vscode-bascik/README.md`](https://github.com/collin-bascik/bascik/blob/main/extensions/vscode-bascik/README.md).
+
+In short: add a `publisher` field to `package.json`, install `@vscode/vsce`, run `npm run compile && vsce package` to produce a `.vsix`, verify it locally, then run `vsce publish` with a Marketplace PAT.

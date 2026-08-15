@@ -96,8 +96,7 @@
     var mobileThemeBtn = document.querySelector('.mobile-theme-btn');
     if (themeBtn || mobileThemeBtn) {
       function effectiveTheme() {
-        return document.documentElement.getAttribute('data-theme') ||
-          (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        return document.documentElement.getAttribute('data-theme') || 'dark';
       }
       function syncThemeLabels() {
         var isDark = effectiveTheme() === 'dark';
@@ -110,7 +109,7 @@
       function toggleTheme() {
         var next = effectiveTheme() === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem('theme', next);
+        sessionStorage.setItem('theme', next);
         syncThemeLabels();
       }
       syncThemeLabels();
