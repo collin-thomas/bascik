@@ -26,6 +26,7 @@ This file contains the **complete, centralized documentation and development ski
 
 ### How Bascik Positions Against Other Tools
 * **Directly competes with Next.js** for content sites, landing pages, and SEO-critical pages. Next.js ships 80–100+ KB of React runtime and hydration overhead even for pages with no client-side state; Bascik ships zero. In competitive SEO keyword spaces, that difference is measurable in Core Web Vitals (LCP, INP, CLS).
+* **Closest surface resemblance to Svelte:** Both use single-file components with scoped styles. The difference is that Svelte compiles to a JavaScript runtime for reactive DOM management; Bascik compiles to plain HTML with no runtime added.
 * **Complements HTMX and Alpine.js:** Bascik resolves components at build time; HTMX/Alpine add behavior at runtime. They compose cleanly.
 * **Different scope than Hugo / Eleventy / Jekyll:** those tools focus on content pipelines (Markdown collections, taxonomies, front matter). Bascik focuses on HTML page composition and component reuse without a template language.
 * The honest rule: use Bascik for pages that do not need a JavaScript framework runtime. Use Next.js, React, or Vue for applications that do.
@@ -37,16 +38,19 @@ This file contains the **complete, centralized documentation and development ski
 
 ### Repository Layout and the Create App
 
-The repo is split into three top-level folders:
+The repo is split into four top-level folders:
 
 ```text
 bascik/
   pkg/          ← the @bascik/bascik npm package
   create/       ← the standalone generator used by `npm create bascik@latest`
   docs/         ← the docs site and internal developer guide
+  extensions/   ← editor tooling, including the VS Code extension for component navigation and scoping checks
 ```
 
 The `create/` folder is intentionally separate from `pkg/`. Contributor work in this monorepo uses Yarn with the single root `yarn.lock`, while generated projects intentionally use npm and receive their own `package-lock.json`. That split keeps contributor workflows Yarn-only while preserving the standard npm onboarding flow for generated apps.
+
+The editor package in `extensions/vscode-bascik/` is intentionally separate from `pkg/`. It provides command-click component resolution and warnings for patterns that are unsupported or risky under Bascik's scoping model. The rules are generated from the compatibility matrix in `docs/content/compatibility.md` via `docs/scripts/generate-compatibility-rules.mjs`, so the editor and the published capability table stay in sync automatically instead of drifting apart.
 
 The generator in `create/src/index.ts` validates input, then calls `create/src/scaffold.ts` to write the project files. The generated app is not coupled to the monorepo layout. It just uses the published `@bascik/bascik` package and then runs as a normal Bascik site.
 
@@ -90,6 +94,8 @@ src/components/
 ```
 
 All class names, element selectors, `#id` selectors, `@keyframes`, `@layer`, `@container`, `:is()/.class`, `:where()/.class`, `:has()/.class`, child/sibling combinator selectors, and CSS custom properties in component CSS are automatically scoped to that component. SVG elements with `class` attributes inside component HTML are also scoped. CSS `#id` selectors are converted to generated class selectors and the class is injected on the matching HTML element.
+
+`html`, `body`, and `head` are **never** converted to scoped classes. Cross-boundary selectors like `html[data-theme="light"] .foo {}` compile correctly: the root element name is preserved verbatim and only `.foo` is scoped, producing `html[data-theme="light"] .bascik__comp__foo {}`. This means theme-switching, dark/light mode, and other document-root state selectors in component CSS work as expected.
 
 These rewrites compose normally in one component: bare element selectors receive generated classes, locally declared custom properties and their `var()` references are renamed together, and keyframe declarations stay synchronized with `animation` references.
 
@@ -392,6 +398,7 @@ Components work inside `<head>` to organize metadata:
 * Use `console.log()` or `process.stdout.write()` to output HTML.
 * Build scripts run before component resolution, so their output can contain component tags.
 * On error, the script tag is replaced with an empty string and a warning is logged.
+* **Hard error:** combining `data-bascik-build` and `data-bascik-server` on the same tag throws and aborts the build. A script runs at build time or at request time — not both.
 
 ### Rendering and Styling Markdown
 
@@ -458,6 +465,8 @@ Tag a `<script>` block with `data-bascik-server` to run it **at request time** o
 
 ```html
 <script data-bascik-server>
+  import { escapeHtml } from './lib/escape-html.mjs';
+
   const req = JSON.parse(process.env.BASCIK_REQUEST);
   const name = escapeHtml(req.headers['x-display-name'] ?? 'Guest');
   console.log(`<p>Welcome, ${name}!</p>`);
@@ -471,7 +480,7 @@ Tag a `<script>` block with `data-bascik-server` to run it **at request time** o
 * `headers`: request headers as string-to-string object (HTTP/2 pseudo-headers excluded)
 * `searchParams`: parsed query params as string-to-string object
 
-**`escapeHtml(value)`** is injected automatically into every server script. It HTML-escapes `&`, `<`, `>`, and `"`. Use it for any user-controlled value from headers, cookies, query params, or database rows before writing to stdout. Bascik does not auto-escape raw HTML output for you, because that would get in the way of normal server-rendered HTML. No import needed.
+Bascik intentionally does not inject a global `escapeHtml()` helper into every server script. If you want a shared escape utility, keep it in a project file or import it explicitly.
 
 Rules:
 * Top-level `import` and `await` are supported.
@@ -555,7 +564,7 @@ src/
 
 ## 11. CLI & Development Workflow
 
-### Creating a New Project
+### Scaffold a New Project
 
 The zero-friction way to start a new Bascik project:
 
@@ -933,6 +942,23 @@ Detailed per-framework migration guides live at `/switch/*`. Key patterns that a
 - **Reactive state:** `ref`, `useState`, etc. → plain `<script>` with vanilla JS. Bascik scopes `id` values so multiple instances stay independent.
 - **Routing:** Client-side router → one `.html` file per URL in `src/pages/`. No dynamic segments; generate static files for parameterized routes.
 - **Build-time data:** `onMounted` / `getStaticProps` / frontmatter → `<script data-bascik-build>` (Node.js ESM, stdout injected).
+
+### From Svelte
+
+Full guide: `/switch/from-svelte`. Key Svelte-specific mappings:
+
+| Svelte | Bascik |
+|--------|--------|
+| `.svelte` file (`<script>` + markup + `<style>`) | `.html` + `.css` paired files |
+| `children` snippet / `{@render children()}` (Svelte 5) | `data-bascik-slot` (no value) |
+| `<slot />` (Svelte 4, deprecated) | `data-bascik-slot` (no value) |
+| Named snippet prop / `{#snippet header()}` (Svelte 5) | `data-bascik-slot="x"` |
+| `<slot name="x" />` (Svelte 4, deprecated) | `data-bascik-slot="x"` |
+| `$props()` / `export let` | `data-bascik-prop-*` attributes |
+| `$state()` / reactive variables | Vanilla JS `<script>` |
+| `{#if}` / `{#each}` | Static HTML or `<script data-bascik-build>` |
+| SvelteKit file routing (`+page.svelte`) | One `.html` per route in `src/pages/` |
+| `onMount` data fetch | `<script data-bascik-build>` (build time) or `<script>` (runtime) |
 
 ### From Vue
 

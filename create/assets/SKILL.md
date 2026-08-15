@@ -392,6 +392,7 @@ Components work inside `<head>` to organize metadata:
 * Use `console.log()` or `process.stdout.write()` to output HTML.
 * Build scripts run before component resolution, so their output can contain component tags.
 * On error, the script tag is replaced with an empty string and a warning is logged.
+* **Hard error:** combining `data-bascik-build` and `data-bascik-server` on the same tag throws and aborts the build. A script runs at build time or at request time — not both.
 
 ### Rendering and Styling Markdown
 

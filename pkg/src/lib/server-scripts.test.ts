@@ -109,7 +109,7 @@ describe("executeServerScripts", () => {
     expect(result).toContain("<main>");
   });
 
-  it("writes the script content to a temp .mjs file with the escapeHtml preamble", async () => {
+  it("writes the script content to a temp .mjs file", async () => {
     resolveWith("");
     const scriptContent = "console.log('hi');";
     await executeServerScripts(
@@ -270,17 +270,19 @@ describe("executeServerScripts", () => {
     expect(result).toBe("<div><p>cost: $&amp; tax included</p></div>");
   });
 
-  it("prepends the escapeHtml preamble to every server script written to disk", async () => {
+  it("writes the user script content without injecting a hidden escapeHtml helper", async () => {
     resolveWith("");
     await executeServerScripts("<script data-bascik-server>console.log('hi')</script>", baseRequest);
     const written = (writeFile as ReturnType<typeof vi.fn>).mock.calls[0][1] as string;
-    expect(written).toMatch(/^const escapeHtml=/);
+    expect(written).toBe("console.log('hi')");
+    expect(written).not.toContain("escapeHtml");
   });
 
-  it("places the preamble before the user script content", async () => {
+  it("does not alter the order of user code when writing temp scripts", async () => {
     resolveWith("");
     await executeServerScripts("<script data-bascik-server>const x=1;</script>", baseRequest);
     const written = (writeFile as ReturnType<typeof vi.fn>).mock.calls[0][1] as string;
-    expect(written.indexOf("escapeHtml")).toBeLessThan(written.indexOf("const x=1;"));
+    expect(written).toBe("const x=1;");
+    expect(written.indexOf("escapeHtml")).toBe(-1);
   });
 });

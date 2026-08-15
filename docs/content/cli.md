@@ -2,7 +2,7 @@
 
 Bascik features a simple, fast, and highly informative CLI for both development and production building.
 
-## `npm create bascik@latest`: scaffold a new project
+## Scaffold a new project
 
 ```sh
 npm create bascik@latest

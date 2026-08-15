@@ -1,36 +1,83 @@
 <nav class="dnav">
   <div class="dnav-inner">
     <a href="/" class="dnav-logo" aria-label="Bascik home"><docs-logo></docs-logo></a>
-    <button type="button" class="dnav-toggle" aria-label="Toggle navigation" aria-expanded="false">
-      <span class="dnav-toggle-icon"></span>
-    </button>
-    <div class="dnav-links-wrapper">
-      <ul class="dnav-links">
-        <li><a href="/why-bascik">Why Bascik</a></li>
-        <li><a href="/getting-started">Docs</a></li>
-        <li><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener">GitHub</a></li>
-      </ul>
-      <div class="mobile-only-sections">
-        <hr class="mobile-sep" />
-        <script data-bascik-build>
-          import { join } from 'node:path';
-          import { pathToFileURL } from 'node:url';
-          const { NAV } = await import(pathToFileURL(join(process.cwd(), 'scripts/nav.mjs')).href);
-          let html = '';
-          for (const section of NAV) {
-            html += `<p class="mobile-sec-heading">${section.section}</p><ul class="mobile-sec-nav">`;
-            for (const page of section.pages) {
-              html += `<li><a href="${page.href}">${page.label}</a></li>`;
-            }
-            html += '</ul>';
-          }
-          console.log(html);
-        </script>
-        <hr class="mobile-sep" />
-        <ul class="mobile-sec-nav">
-          <li><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener">GitHub &#x2197;</a></li>
+    <div class="dnav-right">
+      <button type="button" class="dnav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span class="dnav-toggle-icon"></span>
+      </button>
+      <div class="dnav-links-wrapper">
+        <ul class="dnav-links">
+          <li><a href="/why-bascik">Why Bascik</a></li>
+          <li><a href="/getting-started">Docs</a></li>
+          <li><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener">GitHub</a></li>
         </ul>
+        <div class="mobile-only-sections">
+          <hr class="mobile-sep" />
+          <script data-bascik-build>
+            import { join } from 'node:path';
+            import { pathToFileURL } from 'node:url';
+            const { NAV } = await import(pathToFileURL(join(process.cwd(), 'scripts/nav.mjs')).href);
+            let html = '';
+            for (const section of NAV) {
+              html += `<p class="mobile-sec-heading">${section.section}</p><ul class="mobile-sec-nav">`;
+              for (const page of section.pages) {
+                html += `<li><a href="${page.href}">${page.label}</a></li>`;
+              }
+              html += '</ul>';
+            }
+            console.log(html);
+          </script>
+          <hr class="mobile-sep" />
+          <ul class="mobile-sec-nav">
+            <li><a href="https://github.com/collin-thomas/bascik" target="_blank" rel="noopener">GitHub &#x2197;</a>
+            </li>
+            <li>
+              <button type="button" class="mobile-theme-btn">
+                <svg class="theme-icon theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  aria-hidden="true">
+                  <circle cx="12" cy="12" r="5" />
+                  <line x1="12" y1="1" x2="12" y2="3" />
+                  <line x1="12" y1="21" x2="12" y2="23" />
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                  <line x1="1" y1="12" x2="3" y2="12" />
+                  <line x1="21" y1="12" x2="23" y2="12" />
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+                <svg class="theme-icon theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  aria-hidden="true">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+                <span class="mobile-theme-label">Light</span>
+              </button>
+            </li>
+          </ul>
+        </div>
       </div>
+      <docs-search></docs-search>
+      <button type="button" class="dnav-theme-toggle" aria-label="Switch to light theme">
+        <!-- Sun: shown in dark mode, click to go light -->
+        <svg class="theme-icon theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="5" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+        <!-- Moon: shown in light mode, click to go dark -->
+        <svg class="theme-icon theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+      </button>
     </div>
   </div>
 </nav>
@@ -44,6 +91,32 @@
         toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         document.body.style.overflow = isOpen ? 'hidden' : '';
       });
+    }
+
+    var themeBtn = document.querySelector('.dnav-theme-toggle');
+    var mobileThemeBtn = document.querySelector('.mobile-theme-btn');
+    if (themeBtn || mobileThemeBtn) {
+      function effectiveTheme() {
+        return document.documentElement.getAttribute('data-theme') ||
+          (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      }
+      function syncThemeLabels() {
+        var isDark = effectiveTheme() === 'dark';
+        if (themeBtn) themeBtn.setAttribute('aria-label', isDark ? 'Switch to light theme' : 'Switch to dark theme');
+        if (mobileThemeBtn) {
+          var span = mobileThemeBtn.querySelector('.mobile-theme-label');
+          if (span) span.textContent = isDark ? 'Light' : 'Dark';
+        }
+      }
+      function toggleTheme() {
+        var next = effectiveTheme() === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+        syncThemeLabels();
+      }
+      syncThemeLabels();
+      if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+      if (mobileThemeBtn) mobileThemeBtn.addEventListener('click', toggleTheme);
     }
 
     var path = window.location.pathname;

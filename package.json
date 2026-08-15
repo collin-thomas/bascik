@@ -1,4 +1,4 @@
 {
   "private": true,
-  "workspaces": ["pkg", "create", "docs"]
+  "workspaces": ["pkg", "create", "docs", "extensions/vscode-bascik"]
 }

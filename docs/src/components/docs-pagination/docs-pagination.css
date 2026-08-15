@@ -20,7 +20,7 @@
 }
 
 .docs-pagination a:hover {
-  border-color: var(--border-hover);
+  border-color: var(--pagination-border-hover);
   background: var(--elevated);
   opacity: 1;
 }
@@ -42,7 +42,7 @@
 .docs-pagination [data-pg-label] {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--pagination-label);
 }
 
 @media (max-width: 640px) {

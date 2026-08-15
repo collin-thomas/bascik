@@ -31,4 +31,4 @@ The process is the same regardless of source framework:
 | Component state / hooks | Vanilla JS in a `<script>` tag (auto-scoped per instance) |
 | Data fetching at build time | Not built-in, pre-generate the HTML in a build script and include it in the page |
 
-> Choose where you are coming from: [React](/switch/from-react) · [Next.js](/switch/from-next) · [Eleventy](/switch/from-eleventy) · [Astro](/switch/from-astro) · [Hugo](/switch/from-hugo)
+> Choose where you are coming from: [React](/switch/from-react) · [Vue](/switch/from-vue) · [Next.js](/switch/from-next) · [Svelte](/switch/from-svelte) · [Eleventy](/switch/from-eleventy) · [Astro](/switch/from-astro) · [Hugo](/switch/from-hugo)

@@ -71,7 +71,7 @@ const childSemaphore = () => _sem ??= new Semaphore(
 
 // Manual promise wrapper so tests can mock execFile with a plain vi.fn()
 // without needing to simulate Node's promisify.custom symbol.
-const runModule = async (path: string): Promise<{ stdout: string; stderr: string }> => {
+const runModule = async (path: string, extraEnv: Record<string, string> = {}): Promise<{ stdout: string; stderr: string }> => {
   const sem = childSemaphore();
   await sem.acquire();
   return new Promise((resolve, reject) => {
@@ -85,6 +85,7 @@ const runModule = async (path: string): Promise<{ stdout: string; stderr: string
           BASCIK_BUILD: BascikConfig.isBuild ? "1" : "0",
           FORCE_COLOR: "0",
           NO_COLOR: "1",
+          ...extraEnv,
         },
         timeout: BUILD_SCRIPT_TIMEOUT,
         killSignal: "SIGTERM",
@@ -145,13 +146,31 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
   const outputs = await Promise.all(matches.map(async (match) => {
     const [fullTag, scriptContent] = match;
     const index = match.index ?? 0;
+
+    // Hard-fail if the same tag has both data-bascik-build and data-bascik-server.
+    // The opening tag is everything before the captured content and closing tag.
+    const openTag = fullTag.slice(0, fullTag.length - scriptContent.length - "</script>".length);
+    if (/\bdata-bascik-server\b/i.test(openTag)) {
+      let errorMsg = `[bascik] error: <script> tag has both data-bascik-build and data-bascik-server`;
+      if (filePath) {
+        const prefix = html.slice(0, index);
+        const prefixLines = prefix.split(/\r?\n/);
+        errorMsg += ` in "${getRelativePath(filePath, "pages")}" at (line ${prefixLines.length}, column ${prefixLines[prefixLines.length - 1].length + 1})`;
+      }
+      throw new Error(`${errorMsg}. A script can only run at build time or at request time — not both. Remove one of the attributes.`);
+    }
+
     const tmpPath = join(
       tempDir,
       `build-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
     );
     try {
       await writeFile(tmpPath, scriptContent.trim(), "utf8");
-      const { stdout, stderr } = await runModule(tmpPath);
+      const { stdout, stderr } = await runModule(tmpPath, {
+        BASCIK_PAGE_FILE: filePath ?? "",
+        BASCIK_SITE_URL: BascikConfig.siteUrl ?? "",
+        BASCIK_PAGES_DIR: BascikConfig.directory.pages,
+      });
       if (stderr) process.stderr.write(stderr);
       return { fullTag, index, output: stripAnsiEscapeCodes(stdout) };
     } catch (err) {

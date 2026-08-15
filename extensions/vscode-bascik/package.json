@@ -1,0 +1,28 @@
+{
+  "name": "bascik-vscode",
+  "displayName": "Bascik",
+  "description": "VS Code support for Bascik component tags and scoping compatibility warnings.",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onLanguage:html",
+    "onLanguage:css",
+    "onLanguage:javascript",
+    "onLanguage:typescript"
+  ],
+  "contributes": {},
+  "scripts": {
+    "precompile": "node ../../docs/scripts/generate-compatibility-rules.mjs",
+    "compile": "tsc -p ./tsconfig.json",
+    "watch": "tsc -watch -p ./tsconfig.json",
+    "vscode:prepublish": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.6.3"
+  }
+}

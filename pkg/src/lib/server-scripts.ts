@@ -73,12 +73,6 @@ export interface ServerRequest {
 const SERVER_SCRIPT_RE =
   /<script\b(?:[^>"']|"[^"]*"|'[^']*')*\sdata-bascik-server\b(?:[^>"']|"[^"]*"|'[^']*')*>([\s\S]*?)<\/script>/gi;
 
-// Prepended to every server script so authors can call escapeHtml() without
-// defining their own helper. ESM imports are hoisted so this runs after all
-// import bindings are resolved even when the user's script starts with imports.
-const SCRIPT_PREAMBLE =
-  `const escapeHtml=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');\n`;
-
 // Strip ANSI terminal color sequences so server-side HTML injection never leaks
 // terminal formatting from CI or Netlify build environments into the page output.
 const stripAnsiEscapeCodes = (value: string): string =>
@@ -167,7 +161,7 @@ export const executeServerScripts = async (
           `server-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
         );
         try {
-          await writeFile(tmpPath, SCRIPT_PREAMBLE + scriptContent.trim(), "utf8");
+          await writeFile(tmpPath, scriptContent.trim(), "utf8");
           const { stdout, stderr } = await runModule(tmpPath, request, timeoutMs);
           if (stderr) process.stderr.write(stderr);
           return { fullTag, output: stripAnsiEscapeCodes(stdout) };

@@ -827,7 +827,7 @@ describe("serveHttp2 – graceful shutdown", () => {
       (c: any[]) => c[0] === "session",
     ) as [string, (session: { destroy: ReturnType<typeof vi.fn>; once: ReturnType<typeof vi.fn> }) => void];
 
-    const mockSession = { destroy: vi.fn(), once: vi.fn() };
+    const mockSession = { destroy: vi.fn(), once: vi.fn(), on: vi.fn() };
     sessionHandler(mockSession);
 
     const [, sigIntHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
@@ -1109,6 +1109,25 @@ describe("serveHttp2 – fileStream error handling", () => {
     expect(() => errorCb?.(new Error("read error"))).not.toThrow();
     // respond() must not be called on a destroyed stream
     expect(stream.respond).not.toHaveBeenCalled();
+  });
+
+  it("does nothing when stream is destroyed by the time the 'open' event fires", async () => {
+    const fakeFileStream = { on: vi.fn().mockReturnThis(), pipe: vi.fn(), destroy: vi.fn() };
+    mockCreateReadStream.mockReturnValue(fakeFileStream);
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+
+    await handler(stream, makeHeaders("/style.css", "GET"));
+
+    // Simulate client disconnect before the file descriptor opens
+    (stream as any).destroyed = true;
+
+    const openCb = fakeFileStream.on.mock.calls.find((c: any[]) => c[0] === "open")?.[1] as () => void;
+    openCb?.();
+
+    expect(stream.respond).not.toHaveBeenCalled();
+    expect(fakeFileStream.pipe).not.toHaveBeenCalled();
+    expect(fakeFileStream.destroy).toHaveBeenCalled();
   });
 
   it("closes stream via NGHTTP2_INTERNAL_ERROR when error occurs after headers sent", async () => {
@@ -1515,6 +1534,86 @@ describe("serveHttp2 – SSE boot-done event", () => {
     const closeCallback = stream.on.mock.calls.find((c: any[]) => c[0] === "close")?.[1] as () => void;
     closeCallback?.();
     expect(mockEventEmitter.removeListener).toHaveBeenCalledWith("boot-done", expect.any(Function));
+  });
+
+  it("does not write to the SSE stream when it is destroyed (boot-done race)", async () => {
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/bascik-live-reload"));
+    (stream as any).destroyed = true;
+    fireBootDone();
+    // Only the initial "data: connected" write should be present, not a reload.
+    expect(stream.write).not.toHaveBeenCalledWith("data: reload\n\n");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SSE destroyed-stream guards
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("serveHttp2 – SSE handlers do not write to a destroyed stream", () => {
+  const mockEventEmitter = eventEmitter as unknown as {
+    on: ReturnType<typeof vi.fn>;
+    removeListener: ReturnType<typeof vi.fn>;
+  };
+
+  beforeEach(async () => {
+    await serveHttp2();
+  });
+
+  const fireEvent = (event: string, arg?: unknown) => {
+    const [, cb] = mockEventEmitter.on.mock.calls.find(
+      (c: any[]) => c[0] === event,
+    ) as [string, (a?: unknown) => void];
+    cb(arg);
+  };
+
+  it("does not write to the SSE stream when it is destroyed (transpiled race)", async () => {
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/bascik-live-reload"));
+    (stream as any).destroyed = true;
+    fireEvent("transpiled", { relativePagePath: "pages/about.html" });
+    expect(stream.write).not.toHaveBeenCalledWith("data: reload\n\n");
+  });
+
+  it("does not write to the SSE stream when it is destroyed (asset-changed race)", async () => {
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/bascik-live-reload"));
+    (stream as any).destroyed = true;
+    fireEvent("asset-changed");
+    expect(stream.write).not.toHaveBeenCalledWith("data: reload\n\n");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// onError – ERR_HTTP2_INVALID_STREAM suppression
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("serveHttp2 – onError suppresses ERR_HTTP2_INVALID_STREAM", () => {
+  let consoleSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(async () => {
+    await serveHttp2();
+    consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+  });
+
+  afterEach(() => {
+    consoleSpy.mockRestore();
+  });
+
+  it("does not log or respond when ERR_HTTP2_INVALID_STREAM is caught (client disconnected mid-request)", async () => {
+    const page = makePage({ content: Buffer.from("<html>Hi</html>") });
+    mockMem.getPage.mockReturnValue(page);
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    // Simulate stream.respond() throwing ERR_HTTP2_INVALID_STREAM (client disconnected
+    // between the await stat() / await executeServerScripts() and the respond() call).
+    const invalidStreamErr = Object.assign(new Error("invalid stream"), { code: "ERR_HTTP2_INVALID_STREAM" });
+    stream.respond.mockImplementationOnce(() => { throw invalidStreamErr; });
+    await handler(stream, makeHeaders("/about", "GET"));
+    expect(consoleSpy).not.toHaveBeenCalled();
   });
 });
 

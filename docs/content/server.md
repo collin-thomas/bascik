@@ -18,7 +18,11 @@ Tag a `<script>` block with `data-bascik-server` to run it at **request time** o
 ```html
 <script data-bascik-server>
   const req = JSON.parse(process.env.BASCIK_REQUEST);
-  const name = escapeHtml(req.headers['x-display-name'] ?? 'Guest');
+  const name = (req.headers['x-display-name'] ?? 'Guest')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
   console.log(`<p>Welcome, ${name}!</p>`);
 </script>
 ```
@@ -94,32 +98,44 @@ The script's working directory is your project root (`process.cwd()`), so relati
 - The script tag (including all its attributes and the closing `</script>` tag) is completely replaced by stdout output. Empty stdout means the tag slot becomes an empty string.
 - Anything written to stderr from within the script is forwarded to the server's stderr.
 
-### escapeHtml
+### Escaping user-controlled output
 
-Bascik injects an `escapeHtml(value)` helper into every server script automatically. Use it for any user-controlled value before writing it to stdout. The server script output is injected as raw HTML, so values from headers, cookies, query params, or database rows must be escaped to prevent XSS.
+The output of a server script is injected as raw HTML, so values from headers, cookies, query params, or database rows must be HTML-escaped before they are written to `stdout`. Bascik does not escape your output for you automatically, because that would get in the way of normal raw HTML output.
 
-This is a convenience utility, not an opinionated override. Bascik does not sanitize or escape your output for you, because that would break the rule of getting out of the way. Instead, it gives you a simple, explicit tool for HTML escaping when you need it.
+Use a small helper in your own script, or keep it inline if you only need it once.
 
 ```html
 <script data-bascik-server>
   const { headers, searchParams } = JSON.parse(process.env.BASCIK_REQUEST);
+  const escapeHtml = (value) => String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
   const name = escapeHtml(headers['x-display-name'] ?? 'Guest');
   const tab = escapeHtml(searchParams.tab ?? 'overview');
   console.log(`<p>Hello ${name} &mdash; tab: ${tab}</p>`);
 </script>
 ```
 
-`escapeHtml` escapes `&`, `<`, `>`, and `"`. It is available without any import and is always defined, even when the script starts with `import` statements.
+This keeps the escape logic explicit, local, and easy to customize for your app.
 
 ## Practical examples
 
-> **Escape user-controlled output.** Any value from a request (cookies, query params, headers, database rows) must be HTML-escaped before writing with `console.log`. Bascik provides `escapeHtml(value)` as a simple XSS-prevention helper, but it does not escape the output for you automatically because that would get in the way of normal raw HTML output.
+> **Escape user-controlled output.** Any value from a request (cookies, query params, headers, database rows) must be HTML-escaped before writing with `console.log`. Keep the helper in your server script, or import a shared one, instead of relying on a hidden global.
 
 ### Reading request context
 
 ```html
 <script data-bascik-server>
   const { headers, searchParams } = JSON.parse(process.env.BASCIK_REQUEST);
+  const escapeHtml = (value) => String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
   const user = escapeHtml(headers['x-display-name'] ?? 'Guest');
   const tab = escapeHtml(searchParams.tab ?? 'overview');
   console.log(`<p>Hello ${user} - tab: ${tab}</p>`);
@@ -134,6 +150,12 @@ Read a session cookie, look up the user in SQLite, and render a greeting.
 <script data-bascik-server>
   import Database from 'better-sqlite3';
   const { headers } = JSON.parse(process.env.BASCIK_REQUEST);
+  const escapeHtml = (value) => String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
   const sessionId = headers['cookie']?.match(/session=([^;]+)/)?.[1];
   const db = new Database('./data/app.db');
   const user = sessionId && db.prepare('SELECT name FROM users WHERE session_id = ?').get(sessionId);
@@ -149,6 +171,12 @@ Use `searchParams` to drive server-rendered pagination with no client-side JavaS
 <script data-bascik-server>
   import Database from 'better-sqlite3';
   const { searchParams } = JSON.parse(process.env.BASCIK_REQUEST);
+  const escapeHtml = (value) => String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
   const page = Math.max(1, Number(searchParams.page ?? 1));
   const db = new Database('./data/app.db');
   const items = db.prepare('SELECT title FROM articles ORDER BY created_at DESC LIMIT 20 OFFSET ?').all((page - 1) * 20);
@@ -167,6 +195,12 @@ npm install pg
 ```html
 <script data-bascik-server>
   import pg from 'pg';
+  const escapeHtml = (value) => String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
   const db = new pg.Pool({ connectionString: process.env.DATABASE_URL });
   const { rows } = await db.query('SELECT title FROM articles ORDER BY created_at DESC LIMIT 10');
   await db.end();

@@ -1,0 +1,187 @@
+<button type="button" class="dnav-search-btn" aria-label="Search docs" aria-expanded="false">
+  <svg class="search-btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="11" cy="11" r="8"></circle>
+    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+  <span class="search-btn-text">Search docs…</span>
+  <kbd class="search-btn-kbd">⌘K</kbd>
+</button>
+
+<div class="search-overlay" hidden>
+  <div class="search-backdrop"></div>
+  <div class="search-panel" role="dialog" aria-modal="true" aria-label="Search documentation">
+    <div class="search-input-row">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="search" class="search-input" placeholder="Search docs…" autocomplete="off" spellcheck="false" />
+      <kbd class="search-esc">Esc</kbd>
+    </div>
+    <ul class="search-results" role="listbox" aria-label="Search results"></ul>
+    <p class="search-empty" hidden>No results.</p>
+    <p class="search-hint">Start typing to search all docs pages.</p>
+  </div>
+</div>
+<script>
+  (function () {
+    var btn = document.querySelector('.dnav-search-btn');
+    var overlay = document.querySelector('.search-overlay');
+    var backdrop = document.querySelector('.search-backdrop');
+    var input = document.querySelector('.search-input');
+    var list = document.querySelector('.search-results');
+    var empty = document.querySelector('.search-empty');
+    var hint = document.querySelector('.search-hint');
+
+    // Portal to <body> so position:fixed escapes the nav's backdrop-filter stacking context
+    document.body.appendChild(overlay);
+    var index = null;
+
+    function open() {
+      overlay.hidden = false;
+      btn.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+      input.focus();
+      if (!index) loadIndex();
+    }
+
+    function close() {
+      overlay.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+      input.value = '';
+      list.innerHTML = '';
+      empty.hidden = true;
+      hint.hidden = false;
+    }
+
+    async function loadIndex() {
+      try {
+        index = await (await fetch('/assets/search-index.json')).json();
+        if (input.value.trim()) runSearch(input.value);
+      } catch (e) { }
+    }
+
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function tokens(q) {
+      return q.split(/\s+/).filter(function (w) { return w.length >= 2; });
+    }
+
+    function score(e, q, toks) {
+      var nl = (e.navLabel || '').toLowerCase();
+      var h = (e.heading || '').toLowerCase();
+      var t = (e.text || '').toLowerCase();
+      var s = 0;
+
+      // Phrase matching (highest priority)
+      if (nl === q) s += 200;
+      else if (nl.startsWith(q)) s += 100;
+      else if (nl.includes(q)) s += 70;
+      if (h.includes(q)) s += 50;
+      if (t.includes(q)) s += 25;
+
+      // Per-token matching — handles multi-word queries
+      if (toks.length > 0) {
+        var nlHits = toks.reduce(function (n, tok) { return n + (nl.includes(tok) ? 1 : 0); }, 0);
+        var hHits = toks.reduce(function (n, tok) { return n + (h.includes(tok) ? 1 : 0); }, 0);
+        var tHits = toks.reduce(function (n, tok) { return n + (t.includes(tok) ? 1 : 0); }, 0);
+        var n = toks.length;
+        // All-tokens-match bonus
+        if (nlHits === n) s += 60;
+        if (hHits === n) s += 40;
+        if (tHits === n) s += 20;
+        // Per-hit scoring
+        s += nlHits * 12 + hHits * 8 + tHits * 4;
+      }
+
+      return s;
+    }
+
+    // Return ~120 chars centred on the first query/token match in text
+    function snippet(text, q, toks) {
+      if (!text) return '';
+      var lo = text.toLowerCase();
+      var idx = q ? lo.indexOf(q) : -1;
+      if (idx < 0) {
+        for (var i = 0; i < toks.length; i++) {
+          idx = lo.indexOf(toks[i]);
+          if (idx >= 0) break;
+        }
+      }
+      var start = Math.max(0, idx > 40 ? idx - 40 : 0);
+      return (start > 0 ? '…' : '') + text.slice(start, start + 120) + (start + 120 < text.length ? '…' : '');
+    }
+
+    function runSearch(query) {
+      if (!index) return;
+      var q = query.toLowerCase().trim();
+      list.innerHTML = '';
+      empty.hidden = true;
+      hint.hidden = !!q;
+      if (!q) return;
+
+      var toks = tokens(q);
+      var seen = {};
+      var top = index
+        .map(function (e) { return { e: e, s: score(e, q, toks) }; })
+        .filter(function (x) { return x.s > 0; })
+        .sort(function (a, b) { return b.s - a.s; })
+        .reduce(function (acc, x) {
+          if (!seen[x.e.path] && acc.length < 8) { seen[x.e.path] = true; acc.push(x.e); }
+          return acc;
+        }, []);
+
+      if (!top.length) { empty.hidden = false; return; }
+
+      list.innerHTML = top.map(function (e) {
+        var label = e.heading
+          ? esc(e.navLabel) + ' <span class="sr-sep">›</span> ' + esc(e.heading)
+          : esc(e.navLabel);
+        var snip = snippet(e.text, q, toks);
+        var snipHtml = snip ? '<span class="sr-text">' + esc(snip) + '</span>' : '';
+        return '<li role="option"><a href="' + esc(e.path) + '" class="sr-link">'
+          + '<span class="sr-section">' + esc(e.section || '') + '</span>'
+          + '<span class="sr-label">' + label + '</span>'
+          + snipHtml + '</a></li>';
+      }).join('');
+    }
+
+    btn.addEventListener('click', open);
+    backdrop.addEventListener('click', close);
+    input.addEventListener('input', function () { runSearch(input.value); });
+
+    document.addEventListener('keydown', function (e) {
+      var isMod = e.metaKey || e.ctrlKey;
+      if (isMod && e.key === 'k') { e.preventDefault(); overlay.hidden ? open() : close(); return; }
+      if (e.key === 'Escape' && !overlay.hidden) { close(); return; }
+      if (!overlay.hidden && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+        e.preventDefault();
+        var links = Array.from(list.querySelectorAll('.sr-link'));
+        if (!links.length) return;
+        var cur = document.activeElement;
+        var idx = links.indexOf(cur);
+        if (e.key === 'ArrowDown') idx = (cur === input || idx < 0) ? 0 : Math.min(idx + 1, links.length - 1);
+        else idx = idx > 0 ? idx - 1 : 0;
+        links[idx].focus();
+      }
+    });
+
+    // Adjust keyboard shortcut label for non-Mac
+    var kbd = document.querySelector('.search-btn-kbd');
+    if (kbd && !/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) {
+      kbd.textContent = 'Ctrl+K';
+    }
+
+    // Auto-open on /search?q= (for SearchAction)
+    if (window.location.pathname === '/search') {
+      var q = new URLSearchParams(window.location.search).get('q');
+      if (q) { input.value = q; open(); hint.hidden = true; }
+      else open();
+    }
+  })();
+</script>

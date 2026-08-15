@@ -138,6 +138,14 @@ Use `extractDemoBlock` from `scripts/md-renderer.mjs` inside a `data-bascik-buil
 
 This repo is the **bascik package itself** (`pkg/`). When a rendering or build issue (e.g. minification stripping newlines, whitespace collapsing, HTML output mangled) would otherwise require a workaround in the docs content or build scripts, **fix it in `pkg/src/` instead**. Do not paper over bascik bugs with hacks in the docs layer.
 
+## Keeping SEO Meta in Sync with Content
+
+Each docs page has a `<title>` and `<meta name="description">` hardcoded in its HTML file. These are **not** generated from the Markdown — they are maintained manually.
+
+**When editing a `docs/content/*.md` file**, check whether the h1 or intro paragraph changed in a way that should be reflected in the corresponding HTML page's `<title>` or `<meta name="description">`. If so, update both together.
+
+The mapping is straightforward: `docs/content/topic.md` corresponds to `docs/src/pages/topic.html`. The `<title>` should reflect the page's h1 (with ` - Bascik Docs` suffix for non-homepage pages), and the description should be a concise search-optimised summary drawn from the intro paragraph.
+
 ## Keeping the Changelog Up to Date
 
 `CHANGELOG.md` at the repo root must stay current. **Whenever you add a feature, fix a bug, or make any user-visible change to `pkg/src/`**, add an entry to the `[Unreleased]` section before finishing the task. Don't batch it up later.

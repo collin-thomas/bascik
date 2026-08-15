@@ -28,10 +28,16 @@ export const NAV = [
     { href: '/sitemap', label: 'Sitemap & robots.txt' },
     { href: '/libraries', label: 'JavaScript Libraries' },
   ]},
+  { section: 'Recipes', pages: [
+    { href: '/recipes/markdown', label: 'Markdown' },
+    { href: '/recipes/server-scripts', label: 'Server Scripts' },
+    { href: '/recipes/templating', label: 'Templating' },
+  ]},
   { section: 'Reference', pages: [
     { href: '/compatibility', label: 'Scoping Compatibility' },
     { href: '/faq', label: 'FAQ' },
     { href: '/agent-skill', label: 'Agent Skill' },
+    { href: '/resources/vscode-extension', label: 'VS Code Extension' },
   ]},
   { section: 'Internals', pages: [
     { href: '/internals', label: 'Internals Overview' },
@@ -41,18 +47,17 @@ export const NAV = [
     { href: '/internals/dev-server', label: 'Dev Server' },
     { href: '/internals/testing', label: 'Testing' },
     { href: '/internals/create-app', label: 'Create App' },
+    { href: '/internals/vscode-extension', label: 'VS Code Extension' },
     { href: '/internals/ci-cd', label: 'CI / CD' },
   ]},
   { section: 'Switch to Bascik', pages: [
     { href: '/switch', label: 'Overview' },
-    { href: '/switch/from-react', label: 'From React' },
-    { href: '/switch/from-vue', label: 'From Vue' },
-    { href: '/switch/from-next', label: 'From Next.js' },
-    { href: '/switch/from-eleventy', label: 'From Eleventy' },
     { href: '/switch/from-astro', label: 'From Astro' },
+    { href: '/switch/from-eleventy', label: 'From Eleventy' },
     { href: '/switch/from-hugo', label: 'From Hugo' },
-  ]},
-  { section: 'Recipes', pages: [
-    { href: '/using-markdown', label: 'Using Markdown' },
+    { href: '/switch/from-next', label: 'From Next.js' },
+    { href: '/switch/from-react', label: 'From React' },
+    { href: '/switch/from-svelte', label: 'From Svelte' },
+    { href: '/switch/from-vue', label: 'From Vue' },
   ]},
 ];

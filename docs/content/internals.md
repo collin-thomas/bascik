@@ -57,3 +57,4 @@ After any `pkg/src/` change, rebuild the package and the docs server will pick i
 - [Scoping System](/internals/scoping-system), how IDs, class names, CSS, and JavaScript references are namespaced per component instance.
 - [Dev Server](/internals/dev-server), the HTTP/2 server, TLS certificate generation, memory store, live reload, and watch system.
 - [Testing](/internals/testing), running tests, coverage, writing new tests, and the benchmarking suite.
+- [VS Code Extension](/internals/vscode-extension), editor tooling for component navigation and scoping compatibility warnings.

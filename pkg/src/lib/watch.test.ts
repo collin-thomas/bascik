@@ -36,11 +36,11 @@ vi.mock("chokidar", () => ({
 }));
 
 vi.mock("./processing.js", () => ({
-  pageProcessing: vi.fn(),
-  processAllPages: vi.fn(),
+  pageProcessing: vi.fn().mockResolvedValue(undefined),
+  processAllPages: vi.fn().mockResolvedValue(undefined),
   removePage: vi.fn(),
-  selectivelyProcessPages: vi.fn(),
-  selectivelyProcessPagesForWatchPath: vi.fn(),
+  selectivelyProcessPages: vi.fn().mockResolvedValue(undefined),
+  selectivelyProcessPagesForWatchPath: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("./file-system.js", () => ({

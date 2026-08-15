@@ -15,12 +15,12 @@ describe("MIME_MAP", () => {
     expect(MIME_MAP.get(".css")).toBe("text/css; charset=utf-8");
   });
 
-  it(".js → application/javascript; charset=utf-8", () => {
-    expect(MIME_MAP.get(".js")).toBe("application/javascript; charset=utf-8");
+  it(".js → text/javascript; charset=utf-8", () => {
+    expect(MIME_MAP.get(".js")).toBe("text/javascript; charset=utf-8");
   });
 
-  it(".mjs → application/javascript; charset=utf-8", () => {
-    expect(MIME_MAP.get(".mjs")).toBe("application/javascript; charset=utf-8");
+  it(".mjs → text/javascript; charset=utf-8", () => {
+    expect(MIME_MAP.get(".mjs")).toBe("text/javascript; charset=utf-8");
   });
 
   it(".json → application/json; charset=utf-8", () => {

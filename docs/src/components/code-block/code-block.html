@@ -11,20 +11,19 @@
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  // Syntax token colors — all WCAG AA on #0d0e0f background (≥4.5:1)
   const C = {
-    cm: '#9ca3af', // comments
-    str: '#98c379', // strings
-    kw: '#c792ea', // keywords / at-rules / tag names
-    num: '#e5c07b', // numbers / hex colors
-    attr: '#89ddff', // HTML attributes / CSS property names
-    val: '#f1fa8c', // attribute values / CSS values
-    sel: '#c792ea', // CSS selectors
-    fn: '#89ddff', // function names
+    cm: 'cm',
+    str: 'str',
+    kw: 'kw',
+    num: 'num',
+    attr: 'attr',
+    val: 'val',
+    sel: 'sel',
+    fn: 'fn',
   };
 
-  function tok(color, s) {
-    return '<span style="color:' + color + '">' + e(s) + '</span>';
+  function tok(token, s) {
+    return '<span data-code-token="' + token + '">' + e(s) + '</span>';
   }
 
   function highlight(src, lang) {

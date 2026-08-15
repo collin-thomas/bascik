@@ -314,4 +314,29 @@ describe("executeBuildScripts", () => {
     );
     warnSpy.mockRestore();
   });
+
+  it("throws when both data-bascik-build and data-bascik-server are on the same tag", async () => {
+    const html = "<script data-bascik-build data-bascik-server>x</script>";
+    await expect(executeBuildScripts(html)).rejects.toThrow(
+      /both data-bascik-build and data-bascik-server/,
+    );
+    expect(mockExecFile).not.toHaveBeenCalled();
+  });
+
+  it("throws for both-attribute conflict regardless of attribute order", async () => {
+    const html = "<script data-bascik-server data-bascik-build>x</script>";
+    await expect(executeBuildScripts(html)).rejects.toThrow(
+      /both data-bascik-build and data-bascik-server/,
+    );
+    expect(mockExecFile).not.toHaveBeenCalled();
+  });
+
+  it("includes file and line number in the both-attributes error", async () => {
+    const html = '<p>intro</p>\n<script data-bascik-build data-bascik-server>x</script>';
+    await expect(
+      executeBuildScripts(html, "src/pages/my-page.html"),
+    ).rejects.toThrow(
+      expect.objectContaining({ message: expect.stringMatching(/my-page\.html.*line 2/) }),
+    );
+  });
 });

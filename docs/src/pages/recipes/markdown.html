@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <docs-head></docs-head>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { canonical } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/canonical.mjs')).href
+    );
+    console.log(await canonical());
+  </script>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { openGraph } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/open-graph.mjs')).href
+    );
+    console.log(await openGraph());
+  </script>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { breadcrumbLd } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/breadcrumb-ld.mjs')).href
+    );
+    console.log(await breadcrumbLd());
+  </script>
+  <meta name="description"
+    content="Bascik does not ship a Markdown pipeline, but build-time scripts are Node.js - so any Markdown library works out of the box." />
+  <title>Markdown Recipes - Bascik Docs</title>
+  <style>
+    .markdown-preview-body {
+      padding: 22px 24px 24px;
+      background: #fff;
+      border-radius: 6px;
+      color: #25282d;
+      font: 1rem/1.7 Georgia, serif;
+    }
+
+    .markdown-preview-body h2 {
+      margin: 0 0 10px;
+      padding: 0;
+      border: 0;
+      color: #142c35;
+      font: 700 1.5rem/1.2 system-ui, sans-serif;
+    }
+
+    .markdown-preview-body p {
+      margin-bottom: 16px;
+      color: #4c555b;
+    }
+
+    .markdown-preview-body blockquote {
+      margin: 0;
+      padding: 12px 16px;
+      border-left: 4px solid #b89400;
+      background: #fff5bf;
+    }
+
+    .markdown-preview-body blockquote p {
+      margin: 0;
+      color: #3d3a2a;
+    }
+  </style>
+</head>
+
+<body>
+
+  <docs-nav></docs-nav>
+
+  <div class="container">
+    <div class="docs-layout">
+      <docs-sidebar></docs-sidebar>
+
+      <main class="docs-content">
+        <p class="section-label">Recipe</p>
+
+        <!-- Intro rendered from docs/content/markdown.md. -->
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMdRange } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMdRange('./content/markdown.md', { to: 'marked' }));
+        </script>
+
+        <component-demo>
+          <div data-bascik-slot="example">
+            <div class="markdown-preview-body">
+              <h2>A practical heading</h2>
+              <p>Markdown stays comfortable for authors, while the published page stays <strong>plain HTML</strong>.</p>
+              <blockquote>
+                <p>Add an editorial treatment with ordinary CSS.</p>
+              </blockquote>
+            </div>
+          </div>
+          <div data-bascik-slot="source-usage">
+            <code-block data-bascik-prop-lang="md">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/markdown.md', 'source-md'));
+              </script>
+            </code-block>
+          </div>
+          <div data-bascik-slot="output-html">
+            <code-block data-bascik-prop-lang="html">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                console.log(await extractDemoBlock('./content/markdown.md', 'output-html'));
+              </script>
+            </code-block>
+          </div>
+        </component-demo>
+
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderMdRange } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+          );
+          console.log(await renderMdRange('./content/markdown.md', { from: 'marked' }, { stripDemoBlocks: true }));
+        </script>
+
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          console.log(renderPagination('/recipes/markdown'));
+        </script>
+      </main>
+    </div>
+  </div>
+
+  <docs-footer></docs-footer>
+
+</body>
+
+</html>

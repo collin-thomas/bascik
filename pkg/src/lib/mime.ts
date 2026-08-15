@@ -6,9 +6,11 @@ export const MIME_MAP = new Map([
   [".txt", "text/plain; charset=utf-8"],
   [".xml", "text/xml; charset=utf-8"],
   [".ics", "text/calendar; charset=utf-8"],
-  [".js", "application/javascript; charset=utf-8"],
-  [".mjs", "application/javascript; charset=utf-8"],
-  [".ts", "application/typescript; charset=utf-8"],
+  // RFC 9239: text/javascript is the current standard (application/javascript is deprecated)
+  [".js", "text/javascript; charset=utf-8"],
+  [".mjs", "text/javascript; charset=utf-8"],
+  [".cjs", "text/javascript; charset=utf-8"],
+  [".ts", "text/typescript; charset=utf-8"],
 
   // JSON / Data
   [".json", "application/json; charset=utf-8"],
@@ -81,7 +83,6 @@ export const MIME_MAP = new Map([
 
   // Web Assembly & Others
   [".wasm", "application/wasm"],
-  [".cjs", "application/javascript; charset=utf-8"],
   [".lock", "text/plain; charset=utf-8"],
   [".env", "text/plain; charset=utf-8"],
 

@@ -178,6 +178,8 @@ export const serveHttp2 = async () => {
   ``` 
   */
   const onError = (error: unknown, stream: ServerHttp2Stream): void => {
+    // Client disconnected mid-request — not a server bug, nothing to respond to.
+    if ((error as NodeJS.ErrnoException).code === "ERR_HTTP2_INVALID_STREAM") return;
     try {
       if (!stream.headersSent) {
         if ((error as NodeJS.ErrnoException).code === "ENOENT") {
@@ -203,6 +205,8 @@ export const serveHttp2 = async () => {
   server.on("session", (session: http2.ServerHttp2Session) => {
     openSessions.add(session);
     session.once("close", () => openSessions.delete(session));
+    // Prevent unhandled 'error' event crashes from protocol-level session errors.
+    session.on("error", (err) => console.error("[bascik] HTTP/2 session error:", err));
   });
 
   server.on(
@@ -330,6 +334,7 @@ export const serveHttp2 = async () => {
           });
 
           fileStream.on("open", () => {
+            if (stream.destroyed) { fileStream.destroy(); return; }
             responseStatus = 200;
             stream.respond(staticHeaders);
             fileStream.pipe(stream);
@@ -375,6 +380,7 @@ export const serveHttp2 = async () => {
           }: {
             relativePagePath: string;
           }) => {
+            if (stream.destroyed) return;
             if (openPagePath) {
               const httpPath = getHttpPath(relativePagePath);
               // Normalize trailing slashes: browsers may omit the trailing slash on index routes.
@@ -385,11 +391,12 @@ export const serveHttp2 = async () => {
           };
 
           const assetChangedHandler = () => {
+            if (stream.destroyed) return;
             stream.write(`data: reload\n\n`);
           };
 
           // Reload boot pages immediately when the initial scan finishes.
-          const bootDoneHandler = () => stream.write(`data: reload\n\n`);
+          const bootDoneHandler = () => { if (stream.destroyed) return; stream.write(`data: reload\n\n`); };
 
           eventEmitter.on("transpiled", eventHandler);
           eventEmitter.on("asset-changed", assetChangedHandler);

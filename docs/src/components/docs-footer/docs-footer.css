@@ -51,7 +51,7 @@
 }
 
 .dfooter-made-by a {
-  color: var(--accent);
+  color: var(--accent-fg);
   text-decoration: none;
   transition: opacity .15s;
 }
@@ -72,7 +72,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .1em;
-  color: var(--accent);
+  color: var(--accent-fg);
   margin: 0 0 10px;
 }
 
@@ -119,7 +119,7 @@
 }
 
 .dfooter-copy a:hover {
-  color: var(--accent);
+  color: var(--accent-fg);
   opacity: 1;
 }
 
@@ -136,7 +136,7 @@
 }
 
 .dfooter-links a:hover {
-  color: var(--accent);
+  color: var(--accent-fg);
   opacity: 1;
 }
 
