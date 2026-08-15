@@ -29,6 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Added
+
+- **Build-script output disk cache** — `<script data-bascik-build>` output is now cached on disk under `node_modules/.cache/bascik/script-cache/`. The cache key is a SHA-256 hash of the script content, dev/build mode, the current page path, the site URL, and the content of any `content/` or `scripts/` files the script references, so the cache self-invalidates when inputs change. Sites with many build scripts skip the Node.js child-process spawn entirely for unchanged scripts, cutting repeat build times significantly.
+
+- **`buildScriptCache` config option** — set to `false` in `bascik.config.js` to disable the build-script output cache (useful when debugging a script that reads external state not tracked by the cache key). Defaults to `true`.
+
 - **Page-context env vars for build scripts** — `<script data-bascik-build>` blocks now receive `BASCIK_PAGE_FILE` (absolute path to the current page file), `BASCIK_SITE_URL` (the `siteUrl` from `bascik.config.js`), and `BASCIK_PAGES_DIR` (resolved absolute path to the pages directory) as environment variables. Build scripts can use these to generate per-page content such as canonical link tags without hardcoding paths.
 
 - **Conflict detection for `data-bascik-build` + `data-bascik-server`** — placing both attributes on the same `<script>` tag now throws a hard build error with the file name and line number instead of silently discarding the server attribute. The VS Code extension also flags the combination as an error diagnostic. Docs updated.

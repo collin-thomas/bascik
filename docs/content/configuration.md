@@ -39,6 +39,7 @@ export const bascikConfig = {
   },
 
   useWorkers: false,
+  buildScriptCache: true,
 
   devServer: {
     logging: {
@@ -289,7 +290,26 @@ useWorkers: true
 
 Spinning up the worker pool has a fixed cost, each worker loads the transpiler's module graph independently, which takes roughly 15-250ms in total depending on machine and cache state (all workers load in parallel, so this is a one-time fixed delay, not a per-page cost). For small sites, or sites without slow per-page work, this fixed cost outweighs the benefit of spreading pages across cores, and sequential transpilation on the main thread finishes first.
 
-> **When to enable.** Turn this on for larger sites (dozens of pages or more) doing CPU-heavy work per page, complex CSS/JS scoping across many components. It will not help much on sites whose slow parts are I/O-bound (e.g. `<script data-bascik-build>` blocks that fetch data or spawn subprocesses), since that work is already asynchronous regardless of which thread initiates it.
+> **When to enable.** Turn this on for larger sites (dozens of pages or more) doing CPU-heavy work per page, complex CSS/JS scoping across many components. It will not help much on sites whose slow parts are I/O-bound (e.g. `<script data-bascik-build>` blocks that fetch data or spawn subprocesses), since that work is already asynchronous regardless of which thread initiates it. Combine with `buildScriptCache: true` (the default) for the biggest speedup: workers handle parallel page transpilation while the cache eliminates redundant child-process spawns for unchanged scripts.
+
+### `buildScriptCache`
+
+Cache `<script data-bascik-build>` output on disk so unchanged scripts skip the Node.js child-process spawn on subsequent builds or server restarts.
+
+```js
+buildScriptCache: true  // default
+buildScriptCache: false // disable for debugging
+```
+
+Cache entries live in `node_modules/.cache/bascik/script-cache/`. The cache key covers the script content, dev/build mode, the current page path (`BASCIK_PAGE_FILE`), the site URL, and the content of any `content/*.md` or `scripts/*.mjs` files the script references as quoted path literals. This means the cache self-invalidates on a per-script basis: editing one Markdown file only invalidates scripts that reference that file.
+
+To bust the entire cache manually, for example after upgrading a build-time npm dependency whose output changed:
+
+```sh
+rm -rf node_modules/.cache/bascik/script-cache
+```
+
+Set to `false` when debugging a script that reads external state not covered by the cache key (e.g. a live API call or a file referenced by a dynamic path).
 
 ## `buildOverrideConfig`
 

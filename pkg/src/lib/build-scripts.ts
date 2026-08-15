@@ -39,7 +39,8 @@
  */
 
 import { execFile } from "node:child_process";
-import { writeFile, unlink, mkdir } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { readFile, writeFile, unlink, mkdir } from "node:fs/promises";
 import { freemem, totalmem } from "node:os";
 import { join, resolve } from "node:path";
 import { getRelativePath } from "./file-system.js";
@@ -130,6 +131,73 @@ const stripAnsiEscapeCodes = (value: string): string =>
 /** Per-build-script execution timeout (ms). Keeps a hung script from hanging the build forever. */
 const BUILD_SCRIPT_TIMEOUT = 60_000;
 
+// ─── Build-script output cache ───────────────────────────────────────────────
+// Caches child-process output on disk, keyed by a SHA-256 hash of the script
+// content plus the content of any local files it references. Subsequent builds
+// skip the Node.js child-process spawn entirely for unchanged scripts.
+
+// Bump to invalidate all existing disk cache entries (e.g. when key composition changes).
+export const SCRIPT_CACHE_VERSION = 2;
+
+// Extract relative paths the script depends on from quoted string literals:
+//   './content/foo.md'  or  'scripts/md-renderer.mjs'
+export const extractScriptDeps = (script: string): string[] => {
+  const seen = new Set<string>();
+  for (const m of script.matchAll(
+    /['`"]((?:\.\/)?(?:content|scripts)\/[^'`"\n]+\.(?:md|mjs|js|ts))['`"]/g,
+  )) {
+    seen.add(m[1]);
+  }
+  return [...seen];
+};
+
+const computeScriptCacheKey = async (
+  script: string,
+  isBuild: boolean,
+  filePath: string,
+  siteUrl: string,
+): Promise<string> => {
+  const hash = createHash("sha256");
+  hash.update(String(SCRIPT_CACHE_VERSION));
+  hash.update(script);
+  hash.update(isBuild ? "1" : "0");
+  hash.update(filePath);   // BASCIK_PAGE_FILE — varies per page
+  hash.update(siteUrl);    // BASCIK_SITE_URL  — can affect script output
+  const deps = extractScriptDeps(script);
+  if (deps.length > 0) {
+    const contents = await Promise.all(
+      deps.map(p => readFile(join(process.cwd(), p), "utf8").catch(() => "")),
+    );
+    contents.forEach(c => hash.update(c));
+  }
+  return hash.digest("hex");
+};
+
+const readScriptCache = async (
+  cacheDir: string,
+  key: string,
+): Promise<string | null> => {
+  try {
+    const raw = await readFile(join(cacheDir, `${key}.json`), "utf8");
+    const entry = JSON.parse(raw) as { v: number; output: string };
+    if (entry.v === SCRIPT_CACHE_VERSION) return entry.output;
+  } catch { /* cache miss */ }
+  return null;
+};
+
+const writeScriptCache = async (
+  cacheDir: string,
+  key: string,
+  output: string,
+): Promise<void> => {
+  // Best-effort: don't let a cache write failure abort the build.
+  await writeFile(
+    join(cacheDir, `${key}.json`),
+    JSON.stringify({ v: SCRIPT_CACHE_VERSION, output }),
+    "utf8",
+  ).catch(() => { });
+};
+
 /**
  * Find every `<script data-bascik-build>` block in `html`, execute each as a
  * Node.js ESM module, and replace the tag with the script's stdout output.
@@ -145,7 +213,11 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
   // that Node.js ESM resolution can walk up and find the project's own
   // node_modules when build scripts import third-party packages (e.g. marked).
   const tempDir = join(process.cwd(), "node_modules", ".cache", "bascik");
-  await mkdir(tempDir, { recursive: true });
+  const cacheDir = join(tempDir, "script-cache");
+  await Promise.all([
+    mkdir(tempDir, { recursive: true }),
+    mkdir(cacheDir, { recursive: true }),
+  ]);
 
   // All scripts start concurrently; the semaphore in runModule caps how many
   // child processes are alive at once based on available system memory.
@@ -166,19 +238,35 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
       throw new Error(`${errorMsg}. A script can only run at build time or at request time — not both. Remove one of the attributes.`);
     }
 
+    const trimmedScript = scriptContent.trim();
+    const useCache = BascikConfig.buildScriptCache !== false;
+    const pageFile = filePath ?? "";
+    const siteUrl = BascikConfig.siteUrl ?? "";
+    const cacheKey = useCache
+      ? await computeScriptCacheKey(trimmedScript, BascikConfig.isBuild, pageFile, siteUrl)
+      : null;
+    if (cacheKey !== null) {
+      const cached = await readScriptCache(cacheDir, cacheKey);
+      if (cached !== null) {
+        return { fullTag, index, output: cached };
+      }
+    }
+
     const tmpPath = join(
       tempDir,
       `build-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
     );
     try {
-      await writeFile(tmpPath, scriptContent.trim(), "utf8");
+      await writeFile(tmpPath, trimmedScript, "utf8");
       const { stdout, stderr } = await runModule(tmpPath, {
         BASCIK_PAGE_FILE: filePath ?? "",
         BASCIK_SITE_URL: BascikConfig.siteUrl ?? "",
         BASCIK_PAGES_DIR: resolve(process.cwd(), BascikConfig.directory.pages),
       });
       if (stderr) process.stderr.write(stderr);
-      return { fullTag, index, output: stripAnsiEscapeCodes(stdout) };
+      const output = stripAnsiEscapeCodes(stdout);
+      if (cacheKey !== null) await writeScriptCache(cacheDir, cacheKey, output);
+      return { fullTag, index, output };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       let errorMsg = `[bascik] build script error`;

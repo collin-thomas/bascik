@@ -21,7 +21,7 @@ On startup (and whenever a component is added), the watch system calls `processA
 
 The page phase prepares the source HTML document and orchestrates the component phase:
 
-1. **Execute build scripts.** Any `<script data-bascik-build>` blocks are run as Node.js ESM modules. Their stdout replaces the script tag. The result can contain component tags, these will be resolved in step 4.
+1. **Execute build scripts.** Any `<script data-bascik-build>` blocks are run as Node.js ESM modules. Their stdout replaces the script tag. The result can contain component tags, these will be resolved in step 4. Output is cached on disk so unchanged scripts skip the child-process spawn on subsequent builds — see [Build Script Output Cache](#build-script-output-cache) below.
 2. **Extract body and head.** The inner content of `<body>` and `<head>` are extracted separately so component injection can happen in both zones independently.
 3. **Obtain component list.** On the multi-page startup path (`processAllPages`), the list is pre-computed once and passed in. On a single-page re-transpilation, it is loaded from `src/components/` at this point.
 4. **Run component phase.** `recursivelyTranspile` is called on both the body and head HTML strings. Each call returns a `TranspileResult` containing the resolved HTML and the list of components that were used.
@@ -31,6 +31,54 @@ The page phase prepares the source HTML document and orchestrates the component 
 8. **Reassemble HTML.** The resolved body and head are placed back into the original HTML document structure.
 9. **Write output.** In build mode, the finished HTML is written to `dist/`. In dev mode, no disk write occurs, the result is stored in the in-memory page store so the HTTP/2 server can serve it instantly.
 10. **Emit transpiled event.** `eventEmitter.emit("transpiled")` triggers live-reload for any connected browser.
+
+## Build Script Output Cache
+
+Every `<script data-bascik-build>` block spawns a fresh Node.js child process, which carries a ~50–150 ms V8 startup cost even for a trivial script. On a site with many pages and many build-script blocks this cost dominates total build time. The cache eliminates that cost for scripts whose inputs have not changed.
+
+### Location
+
+Cache entries live under `node_modules/.cache/bascik/script-cache/` as individual JSON files named by their cache key:
+
+```text
+node_modules/.cache/bascik/script-cache/<sha256>.json
+```
+
+Each file contains `{ "v": <version>, "output": "<html>" }`. The `v` field is a hard-coded integer in `build-scripts.ts`; bumping it at the source level immediately invalidates every existing entry across all projects.
+
+### Cache key
+
+The key is the SHA-256 hex digest of:
+
+1. The cache version integer.
+2. The trimmed script content.
+3. `"1"` or `"0"` for build vs. dev mode (`isBuild`), since the same script may produce different output in each mode via the `BASCIK_BUILD` env var.
+4. The current page file path (`BASCIK_PAGE_FILE`). This is critical: scripts like `canonical.mjs` and `open-graph.mjs` have identical content on every page but use `process.env.BASCIK_PAGE_FILE` to produce page-specific output (different URLs). Without this component the cache would return the first page's output for every subsequent page.
+5. The site URL (`BASCIK_SITE_URL`), since it can influence output and changes rarely.
+6. The full content of every local file the script references, concatenated in order.
+
+File references are extracted by `extractScriptDeps()` (exported from `build-scripts.ts`), which scans the script source for quoted path literals matching `content/*.md` or `scripts/*.mjs` patterns:
+
+```text
+'./content/foo.md'          → included in key
+'scripts/md-renderer.mjs'  → included in key
+```
+
+If the script contains no detectable references, only items 1–5 contribute to the key.
+
+### Invalidation
+
+Because the content of every referenced file is hashed into the key, editing a content file produces a new key for any script that references it, giving a cache miss. Scripts on other pages that do not reference that file keep their old keys and continue to hit the cache.
+
+To bust the entire cache manually — for example after upgrading `marked` or another build-time dependency that `scripts/*.mjs` files import — delete the cache directory:
+
+```sh
+rm -rf node_modules/.cache/bascik/script-cache
+```
+
+### Interaction with `useWorkers`
+
+When `useWorkers: true` is set, worker threads share the same filesystem and therefore the same cache directory. On the first (cold) build, multiple workers may independently get a cache miss for the same script, spawn child processes, and write the same entry. Because every worker writes the same content for the same key, the last write wins harmlessly. On subsequent builds all workers benefit from the cached entries.
 
 ## Phase 2: Component Phase (`recursivelyTranspile`)
 

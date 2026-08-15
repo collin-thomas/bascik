@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { executeBuildScripts } from "./build-scripts.js";
+import { executeBuildScripts, extractScriptDeps, SCRIPT_CACHE_VERSION } from "./build-scripts.js";
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -11,17 +11,20 @@ vi.mock("node:fs/promises", () => ({
   writeFile: vi.fn(async () => { }),
   unlink: vi.fn(async () => { }),
   mkdir: vi.fn(async () => { }),
+  // readFile: cache reads + dep-file reads always miss in tests (no disk state).
+  readFile: vi.fn(async () => { throw new Error("ENOENT"); }),
 }));
 
 vi.mock("./config.js", () => ({
   BascikConfig: {
     isBuild: false,
+    buildScriptCache: true,
     directory: { pages: "src/pages", components: "src/components" },
   },
 }));
 
 import { execFile } from "node:child_process";
-import { writeFile, unlink } from "node:fs/promises";
+import { writeFile, unlink, readFile } from "node:fs/promises";
 import { BascikConfig } from "./config.js";
 
 const mockExecFile = execFile as unknown as ReturnType<typeof vi.fn>;
@@ -357,5 +360,164 @@ describe("executeBuildScripts", () => {
     const html = '<script data-note="data-bascik-server" data-bascik-build>x</script>';
     const result = await executeBuildScripts(html);
     expect(result).toBe("<p>ok</p>");
+  });
+});
+
+// ─── extractScriptDeps ───────────────────────────────────────────────────────
+
+describe("extractScriptDeps", () => {
+  it("returns an empty array for a script with no recognisable file references", () => {
+    expect(extractScriptDeps("console.log('hello world')")).toEqual([]);
+  });
+
+  it("extracts a ./content/*.md reference in single quotes", () => {
+    const script = "const { renderMd } = await import(r); console.log(await renderMd('./content/foo.md'));";
+    expect(extractScriptDeps(script)).toContain("./content/foo.md");
+  });
+
+  it("extracts a scripts/*.mjs reference without a leading ./", () => {
+    const script = "pathToFileURL(join(cwd, 'scripts/md-renderer.mjs')).href";
+    expect(extractScriptDeps(script)).toContain("scripts/md-renderer.mjs");
+  });
+
+  it("extracts references in double quotes", () => {
+    expect(extractScriptDeps(`renderMd("./content/bar.md")`)).toContain("./content/bar.md");
+  });
+
+  it("deduplicates identical references", () => {
+    const script = "renderMd('./content/dup.md'); renderMd('./content/dup.md')";
+    const deps = extractScriptDeps(script);
+    expect(deps.filter(d => d === "./content/dup.md")).toHaveLength(1);
+  });
+
+  it("extracts multiple distinct references from the same script", () => {
+    const script = `
+      const { renderMd } = await import(pathToFileURL(join(cwd, 'scripts/md-renderer.mjs')).href);
+      console.log(await renderMd('./content/intro.md'));
+    `;
+    const deps = extractScriptDeps(script);
+    expect(deps).toContain("scripts/md-renderer.mjs");
+    expect(deps).toContain("./content/intro.md");
+  });
+});
+
+// ─── script output cache ─────────────────────────────────────────────────────
+
+const mockReadFile = readFile as unknown as ReturnType<typeof vi.fn>;
+const mockWriteFile = writeFile as unknown as ReturnType<typeof vi.fn>;
+
+describe("build-script output cache", () => {
+  it("writes a .json cache entry after a successful script execution", async () => {
+    resolveWith("<p>result</p>");
+    await executeBuildScripts("<script data-bascik-build>nodeps()</script>");
+    const jsonCall = mockWriteFile.mock.calls.find(
+      ([path]: [string]) => path.endsWith(".json"),
+    );
+    expect(jsonCall).toBeDefined();
+    const [, content] = jsonCall as [string, string];
+    const entry = JSON.parse(content);
+    expect(entry.output).toBe("<p>result</p>");
+    expect(entry.v).toBeGreaterThan(0);
+  });
+
+  it("does not write a cache entry when the script fails", async () => {
+    rejectWith("syntax error");
+    await executeBuildScripts("<script data-bascik-build>bad()</script>");
+    const jsonCall = mockWriteFile.mock.calls.find(
+      ([path]: [string]) => path.endsWith(".json"),
+    );
+    expect(jsonCall).toBeUndefined();
+  });
+
+  it("returns cached output and skips execFile on a cache hit", async () => {
+    // Return a valid cache entry on the first readFile call (the cache-file read).
+    mockReadFile.mockResolvedValueOnce(
+      JSON.stringify({ v: SCRIPT_CACHE_VERSION, output: "<p>from-cache</p>" }),
+    );
+    const result = await executeBuildScripts(
+      "<script data-bascik-build>nodeps()</script>",
+    );
+    expect(result).toBe("<p>from-cache</p>");
+    expect(mockExecFile).not.toHaveBeenCalled();
+  });
+
+  it("ignores a cache entry whose version does not match", async () => {
+    resolveWith("<p>fresh</p>");
+    // Stale version — should be treated as a miss.
+    mockReadFile.mockResolvedValueOnce(
+      JSON.stringify({ v: 0, output: "<p>stale</p>" }),
+    );
+    const result = await executeBuildScripts(
+      "<script data-bascik-build>nodeps()</script>",
+    );
+    expect(result).toBe("<p>fresh</p>");
+    expect(mockExecFile).toHaveBeenCalledTimes(1);
+  });
+
+  it("treats malformed cache JSON as a miss and runs the script normally", async () => {
+    resolveWith("<p>fresh</p>");
+    mockReadFile.mockResolvedValueOnce("not valid json{{{");
+    const result = await executeBuildScripts(
+      "<script data-bascik-build>nodeps()</script>",
+    );
+    expect(result).toBe("<p>fresh</p>");
+    expect(mockExecFile).toHaveBeenCalledTimes(1);
+  });
+
+  it("two scripts with identical content produce the same cache key and share cached output", async () => {
+    // First call: cache miss — execFile runs and writes the cache.
+    resolveWith("<p>executed</p>");
+    const tag = "<script data-bascik-build>nodeps()</script>";
+    const result1 = await executeBuildScripts(tag);
+    expect(result1).toBe("<p>executed</p>");
+    expect(mockExecFile).toHaveBeenCalledTimes(1);
+
+    // Second call with the same script: mock a cache hit (same key, same file).
+    vi.clearAllMocks();
+    mockReadFile.mockResolvedValueOnce(
+      JSON.stringify({ v: SCRIPT_CACHE_VERSION, output: "<p>executed</p>" }),
+    );
+    const result2 = await executeBuildScripts(tag);
+    expect(result2).toBe("<p>executed</p>");
+    expect(mockExecFile).not.toHaveBeenCalled();
+  });
+
+  it("different filePath produces a different cache key so page-specific scripts (canonical, OG) are not reused across pages", async () => {
+    resolveWith("<link rel='canonical' href='/a'>");
+    // Same script content, different filePath — must produce different keys,
+    // so execFile is called for both rather than the second page hitting the first page's cached canonical URL.
+    mockReadFile
+      .mockRejectedValue(new Error("ENOENT")); // always cache miss
+
+    await executeBuildScripts(
+      "<script data-bascik-build>canonical()</script>",
+      "src/pages/page-a.html",
+    );
+    vi.clearAllMocks();
+    mockReadFile.mockRejectedValue(new Error("ENOENT"));
+    resolveWith("<link rel='canonical' href='/b'>");
+
+    await executeBuildScripts(
+      "<script data-bascik-build>canonical()</script>",
+      "src/pages/page-b.html",
+    );
+    // Both pages must have spawned their own child process.
+    expect(mockExecFile).toHaveBeenCalledTimes(1);
+    // And the cache write path for both must use a .json file (different keys, so two distinct writes).
+    const jsonWrites = mockWriteFile.mock.calls.filter(([p]: [string]) => p.endsWith(".json"));
+    expect(jsonWrites.length).toBe(1);
+  });
+
+  it("skips cache reads and writes entirely when buildScriptCache is false", async () => {
+    (BascikConfig as Record<string, unknown>).buildScriptCache = false;
+    resolveWith("<p>no-cache</p>");
+    const result = await executeBuildScripts(
+      "<script data-bascik-build>nodeps()</script>",
+    );
+    expect(result).toBe("<p>no-cache</p>");
+    expect(mockExecFile).toHaveBeenCalledTimes(1);
+    const jsonWrites = mockWriteFile.mock.calls.filter(([p]: [string]) => p.endsWith(".json"));
+    expect(jsonWrites.length).toBe(0);
+    (BascikConfig as Record<string, unknown>).buildScriptCache = true;
   });
 });

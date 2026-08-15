@@ -139,6 +139,23 @@ export interface BascikConfigOptions {
    * export const bascikConfig = { useWorkers: true };
    */
   useWorkers?: boolean;
+  /**
+   * Enable the persistent disk cache for `<script data-bascik-build>` output.
+   * Cached results are stored in `node_modules/.cache/bascik/script-cache/`.
+   * The cache key covers the script content, dev/build mode, the current page
+   * path, the site URL, and the content of any local files the script references
+   * — so the cache self-invalidates when inputs change.
+   *
+   * Defaults to `true`. Set to `false` to disable (e.g. when debugging a script
+   * that reads external data not tracked by the cache key).
+   *
+   * To bust the entire cache manually:
+   * `rm -rf node_modules/.cache/bascik/script-cache`
+   *
+   * @example
+   * export const bascikConfig = { buildScriptCache: false };
+   */
+  buildScriptCache?: boolean;
   isBuild?: boolean;
   isServe?: boolean;
   /**
