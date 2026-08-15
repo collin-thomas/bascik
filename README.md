@@ -34,15 +34,10 @@ yarn install
 ### Working on the package
 
 ```sh
-yarn workspace @bascik/bascik build   # compile pkg/src/ → pkg/dist/
-yarn workspace @bascik/bascik test    # run unit tests
-```
-
-### Developing against the docs site
-
-```sh
-yarn workspace @bascik/bascik build   # build pkg first
+yarn workspace @bascik/bascik build   # build the package (start here)
 yarn --cwd docs dev                   # start docs dev server at https://localhost:8443
+yarn workspace @bascik/bascik test    # run unit tests
+yarn workspace @bascik/bascik e2e     # run e2e tests
 ```
 
 After any `pkg/src/` change, rebuild the package and the docs server will pick it up automatically (it watches for changes).
