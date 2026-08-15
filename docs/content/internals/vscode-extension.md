@@ -20,6 +20,8 @@ The extension warns on common unsupported or brittle cases such as:
 - `:is(p, h2)`-style element selectors inside pseudo-class arguments
 - unsafe runtime JavaScript patterns such as `element.id = ...` or template-literal class assignment
 
+Class names that only appear in JavaScript (never in a `class="…"` HTML attribute) are fully supported by the build pipeline's JS-only class discovery pass. The extension does not warn on these patterns.
+
 The warnings are intentionally high-signal. They are meant to prevent silent behavior drift, not to replicate a full linter.
 
 ## Implementation shape
