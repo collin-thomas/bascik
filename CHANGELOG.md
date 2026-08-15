@@ -31,6 +31,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `devServer.logging` and `serve.logging` config — control file-copy/transpile/delete chatter in dev mode and request logging in prod mode via a shared log-level model (`silent`/`error`/`warn`/`info`/`debug`), with per-event toggles for copies, deletes, transpiles, and requests.
 - CLI build logging via `--log [path]` — optional file capture of build output. When omitted, no build log is written; when used, Bascik stores output in `.bascik/build.log` by default unless a custom path is provided.
 - The dev server now serves pages from memory as soon as they are transpiled, without waiting on disk writes — disk output is skipped entirely in dev mode and only happens during `--build`.
+- HTML component system — define components as `.html` files, reference by tag name.
+- Recursive component transpilation.
+- Self-closing (void element) tag syntax: `<my-nav />` is equivalent to `<my-nav></my-nav>`.
+- Custom props via `data-bascik-prop-*` attributes — pass text values from the usage site into component templates.
+- Default slots via `<slot-component>` or `data-bascik-slot` (no value) — slot fallback content is rendered when no content is provided at the usage site.
+- Named slots via `data-bascik-slot="name"` — inject content into specific zones of a component template, with fallback to the placeholder element's own inner content.
+- Attribute inheritance — non-`data-bascik-*` attributes on a component usage tag (e.g. `class`, `aria-*`, `data-*`) are automatically merged onto the component's root element.
+- `<head>` component support — components can now be used inside `<head>` to share `<meta>` tags, `<link>` elements, etc.
 
 ### Fixed
 
@@ -64,6 +72,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CLI argument handling** — `bascik --help`/`-h` and `--version`/`-v` now print usage/version and exit instead of starting the dev server; unknown flags print an error and exit 1 without starting the server.
 - **Quote-aware attribute scanning** — prop extraction/injection, inheritable-attribute extraction, and `preserveElementContents` now handle single-quoted attribute values and `>` inside quoted attribute values.
 - **`injectProps` build hang** — the `injectProps` regex previously wrapped `ATTR_VALUE` (which is itself `(...)*`) in an outer `((?:ATTR_VALUE)*?)` / `((?:ATTR_VALUE)*)` group, creating nested quantifiers `((?:...)*)*` that caused catastrophic backtracking on pages with many attributes. Replaced with `(ATTR_VALUE?)` / `(ATTR_VALUE)` — equivalent semantically but without nesting. A similar redundant `?` on the `extractInheritableAttributes` open-tag scan was removed for the same reason.
+- `<meta name="...">` attributes are shielded from name-attribute scoping so standard metadata vocabulary (e.g. `viewport`, `description`) is not rewritten.
+- Unused `data-bascik-prop-*` marker attributes are stripped from the output even when no prop value is passed.
+- `listPages()` uses `BascikConfig.directory.pages` instead of a hardcoded path.
+
 
 ### Changed
 
@@ -85,18 +97,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `useWorkers` now defaults to `false` (sequential main-thread transpilation). Worker startup has a fixed cost — each worker independently loads the transpiler's module graph before processing its first page — which outweighs the parallelism benefit on small sites or sites whose slow parts are I/O-bound (e.g. `<script data-bascik-build>` blocks), rather than CPU-bound.
 - `minifyStyles`, `minifyScripts`, and `obfuscateAttributeNames` now default to `false` in dev and `true` only during `bascik --build` (previously they were `true` even in dev, contradicting the docs which describe them as production defaults). `buildOverrideConfig.serve` is now merged during builds, and the resolved `BascikConfig` is recursively frozen.
 
-### Added
-
-**Components**
-
-- HTML component system — define components as `.html` files, reference by tag name.
-- Recursive component transpilation.
-- Self-closing (void element) tag syntax: `<my-nav />` is equivalent to `<my-nav></my-nav>`.
-- Custom props via `data-bascik-prop-*` attributes — pass text values from the usage site into component templates.
-- Default slots via `<slot-component>` or `data-bascik-slot` (no value) — slot fallback content is rendered when no content is provided at the usage site.
-- Named slots via `data-bascik-slot="name"` — inject content into specific zones of a component template, with fallback to the placeholder element's own inner content.
-- Attribute inheritance — non-`data-bascik-*` attributes on a component usage tag (e.g. `class`, `aria-*`, `data-*`) are automatically merged onto the component's root element.
-- `<head>` component support — components can now be used inside `<head>` to share `<meta>` tags, `<link>` elements, etc.
 
 **Styles**
 
@@ -124,7 +124,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `directory.pages` / `directory.components` — configure source directories.
 - `obfuscateAttributeNames` — short hash-based class names in production builds.
-- `--log [path]` — optional build log capture for diagnostics; defaults to `.bascik/build.log` when enabled.
 - `deduplicateCss` — deduplicate component styles per page.
 - `minifyStyles` — enable/disable built-in CSS minification.
 - `minifyScripts` — enable/disable built-in JS minification, or supply a custom minifier function.
@@ -143,10 +142,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Windows path support — forward-slash-only regex patterns updated to `[\\/]`.
 - Fully async I/O throughout (`access()` + dynamic `import()`, async `pki` operations).
 
-### Fixed
-
-- `<meta name="...">` attributes are shielded from name-attribute scoping so standard metadata vocabulary (e.g. `viewport`, `description`) is not rewritten.
-- Unused `data-bascik-prop-*` marker attributes are stripped from the output even when no prop value is passed.
-- `listPages()` uses `BascikConfig.directory.pages` instead of a hardcoded path.
 
 [Unreleased]: https://github.com/collin-thomas/bascik/commits/main
