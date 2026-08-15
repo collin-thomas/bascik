@@ -300,7 +300,7 @@ Define your design tokens once in a global stylesheet, then consume them inside 
 }
 ```
 
-### CSS Scoping Limitations (not yet supported)
+### CSS Scoping Compatibility Notes
 * `@property`: `@property --name { }` declaration names are scoped along with any matching `--name:` declarations and `var(--name)` references in the same component
 * `@starting-style`: class names and element selectors inside `@starting-style` blocks are scoped by the same passes that handle other at-rules; both standalone `@starting-style { .foo { } }` and nested `.foo { @starting-style { } }` forms work
 * `@counter-style`: `@counter-style name { }` declaration names are scoped; references in `list-style`, `list-style-type`, `counter(counter, name)`, and `counters(counter, sep, name)` in the same CSS file are updated to match
