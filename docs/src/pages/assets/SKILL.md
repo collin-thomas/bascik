@@ -526,7 +526,7 @@ Each `<script data-bascik-build>` spawns a Node.js child process (~50–150 ms s
 
 **Cache location:** `node_modules/.cache/bascik/script-cache/<sha256>.json`
 
-**Cache key:** SHA-256 of the script content + dev/build mode + the current page path (`BASCIK_PAGE_FILE`) + the site URL + the full content of any `content/*.md` or `scripts/*.mjs` files referenced as quoted path literals in the script. The page path is included so that scripts like `canonical.mjs` that use `process.env.BASCIK_PAGE_FILE` get a separate cache entry per page. Changing a referenced file produces a new key and a cache miss for that script only; all other scripts keep their cached output.
+**Cache key:** SHA-256 of the script content + dev/build mode + the current page path (`BASCIK_PAGE_FILE`) + the site URL + the full content of any `content/*.md` or `scripts/*.{mjs,js,ts}` files referenced as quoted path literals in the script. The page path is included so that scripts like `canonical.ts` that use `process.env.BASCIK_PAGE_FILE` get a separate cache entry per page. Changing a referenced file produces a new key and a cache miss for that script only; all other scripts keep their cached output.
 
 **To disable:** set `buildScriptCache: false` in `bascik.config.js` (useful when debugging a script that reads external state not tracked by the cache key).
 

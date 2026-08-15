@@ -14,6 +14,14 @@
  */
 import { readFile } from 'node:fs/promises';
 
+function escapeHtmlAttr(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 function extractTitle(html: string): string {
   const m = html.match(/<title[^>]*>([^<]+)<\/title>/i);
   return m ? m[1].trim() : '';
@@ -54,13 +62,17 @@ export async function openGraph(): Promise<string> {
   const tags = [
     `<meta property="og:type" content="website" />`,
     `<meta property="og:site_name" content="Bascik" />`,
-    `<meta property="og:url" content="${url}" />`,
+    `<meta property="og:url" content="${escapeHtmlAttr(url)}" />`,
   ];
-  if (title) tags.push(`<meta property="og:title" content="${title}" />`);
-  if (description) tags.push(`<meta property="og:description" content="${description}" />`);
+  if (title) tags.push(`<meta property="og:title" content="${escapeHtmlAttr(title)}" />`);
+  if (description) {
+    tags.push(`<meta property="og:description" content="${escapeHtmlAttr(description)}" />`);
+  }
   tags.push(`<meta name="twitter:card" content="summary" />`);
-  if (title) tags.push(`<meta name="twitter:title" content="${title}" />`);
-  if (description) tags.push(`<meta name="twitter:description" content="${description}" />`);
+  if (title) tags.push(`<meta name="twitter:title" content="${escapeHtmlAttr(title)}" />`);
+  if (description) {
+    tags.push(`<meta name="twitter:description" content="${escapeHtmlAttr(description)}" />`);
+  }
 
   return tags.join('\n');
 }
