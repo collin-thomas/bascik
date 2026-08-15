@@ -217,7 +217,7 @@ export const prefixElementAttribute = (
     };
 
     for (const scriptMatch of scopedAttrsHtml.matchAll(
-      /<script\b[^>]*>([\s\S]*?)<\/script>/gi,
+      /<script\b[^>]*>([\s\S]*?)<\/script[^>]*>/gi,
     )) {
       const src = scriptMatch[1];
 
@@ -263,7 +263,7 @@ export const prefixElementAttribute = (
 
   // Rewrite DOM selector references in script blocks to use the scoped attribute values.
   const scopedHtml = scopedAttrsHtml.replace(
-    /<script\b[^>]*>([\s\S]*?)<\/script>/gi,
+    /<script\b[^>]*>([\s\S]*?)<\/script[^>]*>/gi,
     (match) => {
       let updatedMatch = match;
       attributesToReplace.forEach(
@@ -550,7 +550,7 @@ export const namespaceScriptTags = (
 ): BascikComponent => {
   // Only wrap <script> tags with no type or type="text/javascript"
   component.fileContent = component.fileContent.replace(
-    /(<script\b[^>]*>)([\s\S]*?)(<\/script>)/gi,
+    /(<script\b[^>]*>)([\s\S]*?)(<\/script[^>]*>)/gi,
     (match, open, code, close) => {
       // Server scripts run in Node.js at request time — never wrap in browser IIFE
       if (/\bdata-bascik-server\b/i.test(open)) return match;

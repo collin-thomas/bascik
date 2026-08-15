@@ -618,34 +618,28 @@
               <button class="tab-btn how-code-tab" data-how="output">dist/index.html</button>
             </tab-bar>
             <div class="how-src-pane" id="how-component">
-              <code-block data-bascik-prop-lang="html">
-                <script data-bascik-build>
+              <code-block data-bascik-prop-lang="html"><script data-bascik-build>
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
                   const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                   console.log(await extractDemoBlock('./content/overview.md', 'home-card-component'));
-                </script>
-              </code-block>
+                </script></code-block>
             </div>
             <div class="how-src-pane" id="how-usage" hidden>
-              <code-block data-bascik-prop-lang="html">
-                <script data-bascik-build>
+              <code-block data-bascik-prop-lang="html"><script data-bascik-build>
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
                   const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                   console.log(await extractDemoBlock('./content/overview.md', 'home-card-usage'));
-                </script>
-              </code-block>
+                </script></code-block>
             </div>
             <div class="how-src-pane" id="how-output" hidden>
-              <code-block data-bascik-prop-lang="html">
-                <script data-bascik-build>
+              <code-block data-bascik-prop-lang="html"><script data-bascik-build>
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
                   const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                   console.log(await extractDemoBlock('./content/overview.md', 'home-card-output'));
-                </script>
-              </code-block>
+                </script></code-block>
             </div>
           </div>
 
@@ -681,34 +675,28 @@
               <button class="tab-btn demo-tab-btn" data-tab="js">JS</button>
             </tab-bar>
             <div class="demo-pane" data-pane="html">
-              <code-block data-bascik-prop-lang="html">
-                <script data-bascik-build>
+              <code-block data-bascik-prop-lang="html"><script data-bascik-build>
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
                   const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                   console.log(await extractDemoBlock('./content/overview.md', 'home-counter-html'));
-                </script>
-              </code-block>
+                </script></code-block>
             </div>
             <div class="demo-pane" data-pane="css" hidden>
-              <code-block data-bascik-prop-lang="css">
-                <script data-bascik-build>
+              <code-block data-bascik-prop-lang="css"><script data-bascik-build>
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
                   const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                   console.log(await extractDemoBlock('./content/overview.md', 'home-counter-css'));
-                </script>
-              </code-block>
+                </script></code-block>
             </div>
             <div class="demo-pane" data-pane="js" hidden>
-              <code-block data-bascik-prop-lang="js">
-                <script data-bascik-build>
+              <code-block data-bascik-prop-lang="js"><script data-bascik-build>
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
                   const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
                   console.log(await extractDemoBlock('./content/overview.md', 'home-counter-js'));
-                </script>
-              </code-block>
+                </script></code-block>
             </div>
           </div>
 
@@ -761,7 +749,10 @@
 
       // Install command copy
       document.querySelector('.install-copy-btn').addEventListener('click', function () {
-        navigator.clipboard.writeText('npm create bascik@latest').then(() => flashCopy(this));
+        if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') return;
+        navigator.clipboard.writeText('npm create bascik@latest').then(() => flashCopy(this)).catch(function () {
+          // Clipboard may be unavailable (permissions / non-secure context)
+        });
       });
     </script>
 

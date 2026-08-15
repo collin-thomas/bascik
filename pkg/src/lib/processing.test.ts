@@ -1188,7 +1188,7 @@ describe("removePage", () => {
   beforeEach(() => {
     (BascikConfig as Record<string, unknown>).isBuild = false;
     // mem.removePage is not in the base mock — add it for this suite
-    (mem as any).removePage = vi.fn();
+    (mem as Record<string, unknown>).removePage = vi.fn();
   });
 
   afterEach(() => {

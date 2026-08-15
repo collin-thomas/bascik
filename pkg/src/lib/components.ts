@@ -213,7 +213,10 @@ const ATTR_VALUE = `(?:[^>"']|"[^"]*"|'[^']*')*`;
  */
 const maskRawTextContent = (htmlString: string): string =>
   htmlString.replace(
-    /(<(script|style|textarea)(?:\s[^>]*)?>)([\s\S]*?)(<\/\2\s*>)/gi,
+    new RegExp(
+      `(<(script|style|textarea)(?:${ATTR_VALUE})>)([\\s\\S]*?)(<\\/\\2\\s*>)`,
+      "gi",
+    ),
     (_m, open: string, _tag: string, content: string, close: string) =>
       `${open}${" ".repeat(content.length)}${close}`,
   );
@@ -273,7 +276,7 @@ export const replaceTag = (
   // Use a replacement function for the same `$`-safety reason.
   // Search the masked string so a literal tag inside <script>/<style>/<textarea>
   // content is never replaced; splice by index into the original string.
-  const selfClosingRegexp = new RegExp(`<${tagName}(\\s[^>]*)?\\/?>`, "i");
+  const selfClosingRegexp = new RegExp(`<${tagName}(?:${ATTR_VALUE})\\s*\\/?>`, "i");
   const selfClosingMatch = selfClosingRegexp.exec(maskRawTextContent(htmlString));
   if (!selfClosingMatch) return htmlString;
   return (

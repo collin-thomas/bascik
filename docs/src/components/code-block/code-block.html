@@ -253,6 +253,7 @@
   }
   if (copyBtn && codeEl) {
     copyBtn.addEventListener('click', function () {
+      if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') return;
       navigator.clipboard.writeText(codeEl.textContent).then(function () {
         copyBtn.classList.add('cblock-copy--done');
         copyBtn.setAttribute('aria-label', 'Copied!');
@@ -262,6 +263,8 @@
           copyBtn.setAttribute('aria-label', 'Copy code');
           copyBtn.setAttribute('title', 'Copy');
         }, 2000);
+      }).catch(function () {
+        // Clipboard may be unavailable (permissions / non-secure context)
       });
     });
   }
