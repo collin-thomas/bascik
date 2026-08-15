@@ -1,4 +1,4 @@
-import { defineConfig } from '@bascik/bascik/src/lib/userConfig.js';
+import { defineConfig } from '@bascik/bascik/config';
 
 export const bascikConfig = defineConfig({
   directory: {

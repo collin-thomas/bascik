@@ -16,6 +16,13 @@
   "bin": {
     "bascik": "bin/bascik.js"
   },
+  "exports": {
+    "./config": {
+      "types": "./src/lib/userConfig.ts",
+      "default": "./dist/lib/userConfig.js"
+    },
+    "./*": "./*"
+  },
   "engines": {
     "node": ">=24.17.0"
   },

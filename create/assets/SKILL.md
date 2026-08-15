@@ -370,7 +370,7 @@ Bascik ships plain JavaScript to the browser, so TypeScript in component `<scrip
 ```ts
 // bascik.config.ts
 import { stripTypeScriptTypes } from 'node:module';
-import { defineConfig } from '@bascik/bascik/src/lib/userConfig.js';
+import { defineConfig } from '@bascik/bascik/config';
 
 export const buildOverrideConfig = defineConfig({
   minifyScripts: (js) => stripTypeScriptTypes(js),
@@ -666,7 +666,7 @@ Use `bascik.config.ts` (preferred) or `bascik.config.js` (takes precedence if bo
 
 ```ts
 // bascik.config.ts
-import { defineConfig } from '@bascik/bascik/src/lib/userConfig.js';
+import { defineConfig } from '@bascik/bascik/config';
 
 export const bascikConfig = defineConfig({
   directory: {

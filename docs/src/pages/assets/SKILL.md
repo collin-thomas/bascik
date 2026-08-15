@@ -411,7 +411,7 @@ Bascik ships plain JavaScript to the browser, so TypeScript in component `<scrip
 ```ts
 // bascik.config.ts
 import { stripTypeScriptTypes } from 'node:module';
-import { defineConfig } from '@bascik/bascik/src/lib/userConfig.js';
+import { defineConfig } from '@bascik/bascik/config';
 
 export const buildOverrideConfig = defineConfig({
   minifyScripts: (js) => stripTypeScriptTypes(js),
@@ -424,25 +424,29 @@ Component scripts can then use TypeScript annotations freely. Bascik's scoping p
 
 ## 5. Dynamic Runtime Class Scoping
 
-Class names used only in JavaScript (never in a `class="…"` HTML attribute) are automatically discovered and scoped. Bascik scans every `<script>` block for class-referencing JS patterns and adds any new class names to the scope map before the rewrite pass runs. You do not need any special workaround or scoping-helper element.
+For class names that are only toggled at runtime (e.g. via `classList.toggle`) and never appear in a `class="…"` HTML attribute, you must register the class somewhere in the component template HTML — even on a `hidden` element. If a class only appears inside a `<script>` block, Bascik scopes it on the CSS side but does not rewrite it on the JS side, producing a silent mismatch at runtime.
 
-**Patterns covered by JS-only class discovery:**
-* `classList.add/remove/toggle/contains/replace` arguments
-* `.className` tokens in `querySelector`, `querySelectorAll`, `closest`, `matches` selector strings
-* `el.className = "…"` and `el.className += "…"` space-separated tokens
-* `el.setAttribute("class", "…")` string literal values
+**Required pattern — hidden registration element:**
 
 ```html
-<!-- ✅ Works — btn--active is discovered from the classList.add call -->
-<!-- and scoped in both CSS and JS automatically -->
-<button class="btn"></button>
+<section class="card">
+  <div class="is-open" hidden></div>  <!-- registers is-open for both CSS and JS scoping -->
+  <p id="status">Panel closed</p>
+  <button id="toggle" type="button">Toggle</button>
+</section>
 <script>
-  const btn = document.getElementById('btn');
-  btn.addEventListener('click', () => btn.classList.add('btn--active'));
+  const toggle = document.getElementById('toggle');
+  const status = document.getElementById('status');
+  const card = document.querySelector('.card');
+
+  toggle.addEventListener('click', () => {
+    const isOpen = card.classList.toggle('is-open'); // rewritten correctly
+    status.textContent = isOpen ? 'Panel open' : 'Panel closed';
+  });
 </script>
 ```
 
-The only exception is `innerHTML` / `insertAdjacentHTML` HTML string scanning, which still only recognises class names that also appear in the HTML template.
+The hidden `<div class="is-open">` registers `is-open` in the HTML template so both the CSS and JS scoping passes see it. Without it, `classList.toggle('is-open')` would use the un-scoped name and never match the CSS — a silent runtime mismatch.
 
 ---
 
@@ -707,7 +711,7 @@ Use `bascik.config.ts` (preferred) or `bascik.config.js` (takes precedence if bo
 
 ```ts
 // bascik.config.ts
-import { defineConfig } from '@bascik/bascik/src/lib/userConfig.js';
+import { defineConfig } from '@bascik/bascik/config';
 
 export const bascikConfig = defineConfig({
   directory: {
@@ -828,10 +832,11 @@ Then run `bascik init` to scaffold the starter files and folder structure, or ad
 ### CLI Commands
 
 ```sh
-bascik          # dev: transpile, start HTTP/2 server at https://localhost:8443, watch
-bascik --build  # production: transpile to dist/ only
-bascik --serve  # production server: serve a pre-built dist/ with HTTP/2
-bascik --check  # static analysis: validate pages and components without building
+bascik                        # dev: transpile, start HTTP/2 server at https://localhost:8443, watch
+bascik --build                # production: transpile to dist/ only
+bascik --build --log [path]   # write build output to a log file (default: .bascik/build.log)
+bascik --serve                # production server: serve a pre-built dist/ with HTTP/2
+bascik --check                # static analysis: validate pages and components without building
 ```
 
 **`bascik --serve`:** starts the HTTP/2 server against a pre-built `dist/` directory. **Only needed when the site uses `data-bascik-server` scripts** for per-request dynamic content (personalized dashboards, user-specific data, server-rendered pagination). Sites with no server scripts can be deployed to any static host with no runtime server required. Run `bascik --build` first, then `bascik --serve`. Unlike the dev server, `--serve` does not watch files or inject live-reload. `data-bascik-server` scripts execute per-request in both modes.
@@ -1252,7 +1257,8 @@ When generating code, pages, or components for a Bascik project, the following c
 6. **Dynamic Toggles:** Use `data-` attributes for runtime state that changes via JavaScript (e.g. `data-state="open"`). Scoped class names are assigned at build time and cannot be reliably looked up by JS string manipulation *unless* you utilize a scoping helper (Section 5).
 7. **Text Props:** Props accept text only. For rich HTML content, use slots.
 8. **Script Modules:** `<script type="module">` scripts are not wrapped in an IIFE, but their selectors are still rewritten.
-9. **Literal Tag Text Is Safe:** Component tag text inside `<script>`, `<style>`, or `<textarea>` content (e.g. `<my-card>` in a JSON-LD string or code example) is treated as text and never resolved into a component.
+9. **Non-JS Script Types:** Script tags with any `type` other than `text/javascript` (e.g. `type="application/json"`) are left completely untouched — no IIFE wrapping, no selector rewriting.
+10. **Literal Tag Text Is Safe:** Component tag text inside `<script>`, `<style>`, or `<textarea>` content (e.g. `<my-card>` in a JSON-LD string or code example) is treated as text and never resolved into a component.
 
 ---
 

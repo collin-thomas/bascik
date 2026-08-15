@@ -6,7 +6,7 @@ Create a `bascik.config.ts` file in your project root to override any default se
 
 ```ts
 // bascik.config.ts
-import { defineConfig } from '@bascik/bascik/src/lib/userConfig.js';
+import { defineConfig } from '@bascik/bascik/config';
 
 export const bascikConfig = defineConfig({
   directory: {
@@ -139,7 +139,7 @@ Minify inline `<script>` content and `.js` static files in the build output. Acc
 
 ```ts
 // bascik.config.ts
-import { defineConfig } from '@bascik/bascik/src/lib/userConfig.js';
+import { defineConfig } from '@bascik/bascik/config';
 import { transform } from 'esbuild';
 
 export const buildOverrideConfig = defineConfig({
@@ -272,7 +272,7 @@ inlineStyles: ['src/pages/css/styles.css']
 This eliminates the render-blocking `<link rel="stylesheet">` request, the CSS arrives in the same HTTP response as the HTML. It pairs naturally with `buildOverrideConfig` to minify only in production:
 
 ```ts
-import { defineConfig } from '@bascik/bascik/src/lib/userConfig.js';
+import { defineConfig } from '@bascik/bascik/config';
 
 export const bascikConfig = defineConfig({
   inlineStyles: ['src/pages/css/styles.css'],
