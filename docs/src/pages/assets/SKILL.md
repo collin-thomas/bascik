@@ -459,7 +459,7 @@ Tag a `<script>` block with `data-bascik-server` to run it **at request time** o
 ```html
 <script data-bascik-server>
   const req = JSON.parse(process.env.BASCIK_REQUEST);
-  const name = bascikEsc(req.headers['x-display-name'] ?? 'Guest');
+  const name = escapeHtml(req.headers['x-display-name'] ?? 'Guest');
   console.log(`<p>Welcome, ${name}!</p>`);
 </script>
 ```
@@ -471,7 +471,7 @@ Tag a `<script>` block with `data-bascik-server` to run it **at request time** o
 * `headers`: request headers as string-to-string object (HTTP/2 pseudo-headers excluded)
 * `searchParams`: parsed query params as string-to-string object
 
-**`bascikEsc(value)`** is injected automatically into every server script. It HTML-escapes `&`, `<`, `>`, and `"`. Always use it for any user-controlled value from headers, cookies, query params, or database rows before writing to stdout. No import needed.
+**`escapeHtml(value)`** is injected automatically into every server script. It HTML-escapes `&`, `<`, `>`, and `"`. Use it for any user-controlled value from headers, cookies, query params, or database rows before writing to stdout. Bascik does not auto-escape raw HTML output for you, because that would get in the way of normal server-rendered HTML. No import needed.
 
 Rules:
 * Top-level `import` and `await` are supported.
