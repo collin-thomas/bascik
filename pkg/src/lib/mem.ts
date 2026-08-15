@@ -135,6 +135,11 @@ class MemoryStore {
   get openPages(): string[] {
     return [...this.#openPages.keys()];
   }
+
+  #isBooting = true;
+  /** True until the initial full-page scan completes on dev server startup. */
+  get isBooting(): boolean { return this.#isBooting; }
+  setBootingDone(): void { this.#isBooting = false; }
 }
 
 export const mem = new MemoryStore();

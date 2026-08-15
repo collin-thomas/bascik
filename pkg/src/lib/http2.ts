@@ -15,6 +15,37 @@ import { MIME_MAP } from "./mime.js";
 import { createReadStream } from "node:fs";
 import { executeServerScripts, DEFAULT_SCRIPT_TIMEOUT_MS } from "./server-scripts.js";
 
+// ─── Dev-server boot page (shown while the initial transpile is in progress) ──
+const BOOT_PAGE_HTML = Buffer.from(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Building site\u2026</title>
+<style>
+body{display:flex;align-items:center;justify-content:center;height:100vh;margin:0;
+font-family:system-ui,sans-serif;background:#0f0f0f;color:#ccc}
+.box{text-align:center}
+.spinner{width:36px;height:36px;border:3px solid #333;border-top-color:#888;
+border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 1rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+p{margin:0;font-size:.875rem;opacity:.5}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="spinner"></div>
+  <p>Building site\u2026</p>
+</div>
+<script>
+(function(){
+  var es=new EventSource('/bascik-live-reload');
+  es.onmessage=function(e){if(e.data==='reload')location.reload()};
+  es.onerror=function(){es.close();setTimeout(function(){location.reload()},1000)};
+})();
+</script>
+</body>
+</html>`);
+
 // ─── Security headers sent on every response ──────────────────────────────────
 const SECURITY_HEADERS: Record<string, string> = {
   "x-content-type-options": "nosniff",
@@ -357,13 +388,18 @@ export const serveHttp2 = async () => {
             stream.write(`data: reload\n\n`);
           };
 
+          // Reload boot pages immediately when the initial scan finishes.
+          const bootDoneHandler = () => stream.write(`data: reload\n\n`);
+
           eventEmitter.on("transpiled", eventHandler);
           eventEmitter.on("asset-changed", assetChangedHandler);
+          eventEmitter.on("boot-done", bootDoneHandler);
 
           stream.on("close", () => {
             if (openPagePath) mem.untrackOpenPage(openPagePath);
             eventEmitter.removeListener("transpiled", eventHandler);
             eventEmitter.removeListener("asset-changed", assetChangedHandler);
+            eventEmitter.removeListener("boot-done", bootDoneHandler);
           });
           return;
         }
@@ -378,6 +414,14 @@ export const serveHttp2 = async () => {
           mem.getPage(pathname);
 
         if (!page) {
+          // During the initial transpile, serve a boot page instead of 404.
+          // The boot page connects to the SSE endpoint and reloads automatically
+          // when its specific page is transpiled or when boot finishes entirely.
+          if (mem.isBooting && !BascikConfig.isServe) {
+            responseStatus = 200;
+            stream.respond({ ":status": 200, "content-type": "text/html; charset=utf-8", "cache-control": "no-store", ...SECURITY_HEADERS });
+            return stream.end(isHead ? undefined : BOOT_PAGE_HTML);
+          }
           responseStatus = 404;
           stream.respond({ ":status": 404, ...SECURITY_HEADERS });
           return stream.end("Not Found");

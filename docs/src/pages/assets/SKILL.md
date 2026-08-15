@@ -459,8 +459,7 @@ Tag a `<script>` block with `data-bascik-server` to run it **at request time** o
 ```html
 <script data-bascik-server>
   const req = JSON.parse(process.env.BASCIK_REQUEST);
-  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const name = esc(req.headers['x-display-name'] ?? 'Guest');
+  const name = bascikEsc(req.headers['x-display-name'] ?? 'Guest');
   console.log(`<p>Welcome, ${name}!</p>`);
 </script>
 ```
@@ -471,6 +470,8 @@ Tag a `<script>` block with `data-bascik-server` to run it **at request time** o
 * `method`: HTTP method in uppercase, e.g. `"GET"`
 * `headers`: request headers as string-to-string object (HTTP/2 pseudo-headers excluded)
 * `searchParams`: parsed query params as string-to-string object
+
+**`bascikEsc(value)`** is injected automatically into every server script. It HTML-escapes `&`, `<`, `>`, and `"`. Always use it for any user-controlled value from headers, cookies, query params, or database rows before writing to stdout. No import needed.
 
 Rules:
 * Top-level `import` and `await` are supported.
@@ -921,7 +922,36 @@ git tag create-v1.0.3 && git push origin main --tags
 
 ---
 
-## 15. Key Constraints & Rules for AI Code Generation (MUST FOLLOW)
+## 15. Switch to Bascik
+
+Detailed per-framework migration guides live at `/switch/*`. Key patterns that apply across all migrations:
+
+- **Component files:** Rename to hyphenated `.html` files in `src/components/<name>/`. Remove framework-specific syntax (`<template>`, JSX, `.astro` frontmatter fences). The HTML file is just the component markup.
+- **Scoped styles:** Delete framework scoped-style blocks (`<style scoped>`, `.module.css`). Create a paired `.css` file alongside the component HTML. Class names stay the same; Bascik scopes them at build time.
+- **Slots:** `<slot />` / `children` → `data-bascik-slot` (no value) for default, `data-bascik-slot="name"` for named slots.
+- **Props:** `defineProps` / component props → `data-bascik-prop-*` attributes (text only).
+- **Reactive state:** `ref`, `useState`, etc. → plain `<script>` with vanilla JS. Bascik scopes `id` values so multiple instances stay independent.
+- **Routing:** Client-side router → one `.html` file per URL in `src/pages/`. No dynamic segments; generate static files for parameterized routes.
+- **Build-time data:** `onMounted` / `getStaticProps` / frontmatter → `<script data-bascik-build>` (Node.js ESM, stdout injected).
+
+### From Vue
+
+Full guide: `/switch/from-vue`. Key Vue-specific mappings:
+
+| Vue | Bascik |
+|-----|--------|
+| `<template>` + `<style scoped>` | `.html` + `.css` paired files |
+| `<slot />` | `data-bascik-slot` (no value) |
+| `<slot name="x" />` | `data-bascik-slot="x"` |
+| `defineProps` | `data-bascik-prop-*` attributes |
+| `ref` / `reactive` | Vanilla JS `<script>` |
+| `v-if` / `v-show` | CSS `display:none` or JS toggle |
+| `vue-router` | One `.html` per route in `src/pages/` |
+| `onMounted` data fetch | `<script data-bascik-build>` |
+
+---
+
+## 16. Key Constraints & Rules for AI Code Generation (MUST FOLLOW)
 
 When generating code, pages, or components for a Bascik project, the following conventions are strictly enforced:
 
@@ -936,7 +966,7 @@ When generating code, pages, or components for a Bascik project, the following c
 
 ---
 
-## 16. FAQ
+## 17. FAQ
 
 **How do you pronounce Bascik? Where does the name come from?** Just like "basic." The idea is basic, the implementation is basic in theory, and the usage is basic. The spelling comes from the author's maternal grandmother's maiden name — so it's unique and means something personal.
 

@@ -109,7 +109,7 @@ describe("executeServerScripts", () => {
     expect(result).toContain("<main>");
   });
 
-  it("writes the script content to a temp .mjs file", async () => {
+  it("writes the script content to a temp .mjs file with the bascikEsc preamble", async () => {
     resolveWith("");
     const scriptContent = "console.log('hi');";
     await executeServerScripts(
@@ -118,7 +118,7 @@ describe("executeServerScripts", () => {
     );
     expect(writeFile).toHaveBeenCalledWith(
       expect.stringMatching(/\.mjs$/),
-      scriptContent,
+      expect.stringContaining(scriptContent),
       "utf8",
     );
   });
@@ -268,5 +268,19 @@ describe("executeServerScripts", () => {
     const html = "<div><script data-bascik-server>price()</script></div>";
     const result = await executeServerScripts(html, baseRequest);
     expect(result).toBe("<div><p>cost: $&amp; tax included</p></div>");
+  });
+
+  it("prepends the bascikEsc preamble to every server script written to disk", async () => {
+    resolveWith("");
+    await executeServerScripts("<script data-bascik-server>console.log('hi')</script>", baseRequest);
+    const written = (writeFile as ReturnType<typeof vi.fn>).mock.calls[0][1] as string;
+    expect(written).toMatch(/^const bascikEsc=/);
+  });
+
+  it("places the preamble before the user script content", async () => {
+    resolveWith("");
+    await executeServerScripts("<script data-bascik-server>const x=1;</script>", baseRequest);
+    const written = (writeFile as ReturnType<typeof vi.fn>).mock.calls[0][1] as string;
+    expect(written.indexOf("bascikEsc")).toBeLessThan(written.indexOf("const x=1;"));
   });
 });

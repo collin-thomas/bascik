@@ -40,7 +40,7 @@ vi.mock("node:fs", () => ({
 }));
 
 vi.mock("./mem.js", () => ({
-  mem: { getPage: vi.fn(), getPageExact: vi.fn(), trackOpenPage: vi.fn(), untrackOpenPage: vi.fn() },
+  mem: { getPage: vi.fn(), getPageExact: vi.fn(), trackOpenPage: vi.fn(), untrackOpenPage: vi.fn(), isBooting: false, setBootingDone: vi.fn() },
 }));
 
 vi.mock("./config.js", () => ({
@@ -93,6 +93,8 @@ const mockMem = mem as unknown as {
   getPageExact: ReturnType<typeof vi.fn>;
   trackOpenPage: ReturnType<typeof vi.fn>;
   untrackOpenPage: ReturnType<typeof vi.fn>;
+  isBooting: boolean;
+  setBootingDone: ReturnType<typeof vi.fn>;
 };
 const mockCreateReadStream = createReadStream as unknown as ReturnType<typeof vi.fn>;
 const mockStat = stat as unknown as ReturnType<typeof vi.fn>;
@@ -1397,6 +1399,122 @@ describe("serveHttp2 – custom cert config error", () => {
     await expect(serveHttp2()).rejects.toThrow("Custom TLS certificate files");
     (BascikConfig as any).serve = { port: 8443, hostname: "localhost" };
     (access as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Boot page (shown during initial dev-server startup)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("serveHttp2 – boot page", () => {
+  beforeEach(async () => {
+    mockMem.isBooting = true;
+    await serveHttp2();
+  });
+
+  afterEach(() => {
+    mockMem.isBooting = false;
+  });
+
+  it("serves the boot page with status 200 when isBooting is true and page is not yet in mem", async () => {
+    mockMem.getPage.mockReturnValue(undefined);
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/about", "GET"));
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({ ":status": 200, "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }),
+    );
+    const body = stream.end.mock.calls[0]?.[0];
+    expect(body?.toString()).toContain("Building site");
+  });
+
+  it("serves the real page (not the boot page) when the page is already in mem", async () => {
+    const page = makePage({ content: Buffer.from("<html>Ready</html>") });
+    mockMem.getPage.mockReturnValue(page);
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/about", "GET"));
+    expect(stream.end).toHaveBeenCalledWith(page.content);
+  });
+
+  it("serves a 404 (not the boot page) when isBooting is false and page is missing", async () => {
+    mockMem.isBooting = false;
+    mockMem.getPage.mockReturnValue(undefined);
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/missing", "GET"));
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({ ":status": 404 }),
+    );
+    expect(stream.end).toHaveBeenCalledWith("Not Found");
+  });
+
+  it("serves a 404 (not the boot page) in --serve mode even when isBooting is true", async () => {
+    const { BascikConfig } = await import("./config.js");
+    (BascikConfig as any).isServe = true;
+    mockMem.getPage.mockReturnValue(undefined);
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/about", "GET"));
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({ ":status": 404 }),
+    );
+    (BascikConfig as any).isServe = false;
+  });
+
+  it("sends no body for HEAD requests to the boot page", async () => {
+    mockMem.getPage.mockReturnValue(undefined);
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/about", "HEAD"));
+    expect(stream.end).toHaveBeenCalledWith(undefined);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SSE boot-done event
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("serveHttp2 – SSE boot-done event", () => {
+  const mockEventEmitter = eventEmitter as unknown as {
+    on: ReturnType<typeof vi.fn>;
+    removeListener: ReturnType<typeof vi.fn>;
+  };
+
+  beforeEach(async () => {
+    await serveHttp2();
+  });
+
+  const fireBootDone = () => {
+    const [, handler] = mockEventEmitter.on.mock.calls.find(
+      (c: any[]) => c[0] === "boot-done",
+    ) as [string, () => void];
+    handler();
+  };
+
+  it("registers a boot-done listener on the SSE connection", async () => {
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/bascik-live-reload"));
+    const events = mockEventEmitter.on.mock.calls.map((c: any[]) => c[0]);
+    expect(events).toContain("boot-done");
+  });
+
+  it("sends reload to the SSE client when boot-done fires", async () => {
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/bascik-live-reload", "GET", "", "https://localhost:8443/about"));
+    fireBootDone();
+    expect(stream.write).toHaveBeenCalledWith("data: reload\n\n");
+  });
+
+  it("removes the boot-done listener when the SSE stream closes", async () => {
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/bascik-live-reload"));
+    const closeCallback = stream.on.mock.calls.find((c: any[]) => c[0] === "close")?.[1] as () => void;
+    closeCallback?.();
+    expect(mockEventEmitter.removeListener).toHaveBeenCalledWith("boot-done", expect.any(Function));
   });
 });
 

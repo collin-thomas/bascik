@@ -33,14 +33,6 @@ export const NAV = [
     { href: '/faq', label: 'FAQ' },
     { href: '/agent-skill', label: 'Agent Skill' },
   ]},
-  { section: 'Switch to Bascik', pages: [
-    { href: '/switch', label: 'Overview' },
-    { href: '/switch/from-react', label: 'From React' },
-    { href: '/switch/from-next', label: 'From Next.js' },
-    { href: '/switch/from-eleventy', label: 'From Eleventy' },
-    { href: '/switch/from-astro', label: 'From Astro' },
-    { href: '/switch/from-hugo', label: 'From Hugo' },
-  ]},
   { section: 'Internals', pages: [
     { href: '/internals', label: 'Internals Overview' },
     { href: '/internals/architecture', label: 'Architecture' },
@@ -50,6 +42,15 @@ export const NAV = [
     { href: '/internals/testing', label: 'Testing' },
     { href: '/internals/create-app', label: 'Create App' },
     { href: '/internals/ci-cd', label: 'CI / CD' },
+  ]},
+  { section: 'Switch to Bascik', pages: [
+    { href: '/switch', label: 'Overview' },
+    { href: '/switch/from-react', label: 'From React' },
+    { href: '/switch/from-vue', label: 'From Vue' },
+    { href: '/switch/from-next', label: 'From Next.js' },
+    { href: '/switch/from-eleventy', label: 'From Eleventy' },
+    { href: '/switch/from-astro', label: 'From Astro' },
+    { href: '/switch/from-hugo', label: 'From Hugo' },
   ]},
   { section: 'Recipes', pages: [
     { href: '/using-markdown', label: 'Using Markdown' },

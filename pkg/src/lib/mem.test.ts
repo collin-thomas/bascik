@@ -247,3 +247,18 @@ describe("openPages tracking", () => {
     expect(mem.openPages).not.toContain("/about");
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Boot state: isBooting / setBootingDone
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("boot state", () => {
+  it("isBooting is true on a fresh MemoryStore", () => {
+    expect(mem.isBooting).toBe(true);
+  });
+
+  it("setBootingDone sets isBooting to false", () => {
+    mem.setBootingDone();
+    expect(mem.isBooting).toBe(false);
+  });
+});

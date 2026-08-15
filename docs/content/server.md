@@ -18,8 +18,7 @@ Tag a `<script>` block with `data-bascik-server` to run it at **request time** o
 ```html
 <script data-bascik-server>
   const req = JSON.parse(process.env.BASCIK_REQUEST);
-  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const name = esc(req.headers['x-display-name'] ?? 'Guest');
+  const name = bascikEsc(req.headers['x-display-name'] ?? 'Guest');
   console.log(`<p>Welcome, ${name}!</p>`);
 </script>
 ```
@@ -95,17 +94,32 @@ The script's working directory is your project root (`process.cwd()`), so relati
 - The script tag (including all its attributes and the closing `</script>` tag) is completely replaced by stdout output. Empty stdout means the tag slot becomes an empty string.
 - Anything written to stderr from within the script is forwarded to the server's stderr.
 
+### bascikEsc
+
+Bascik injects a `bascikEsc(value)` helper into every server script automatically. Use it to HTML-escape any user-controlled value before writing it to stdout. The server script output is injected as raw HTML, so values from headers, cookies, query params, or database rows must be escaped to prevent XSS.
+
+```html
+<script data-bascik-server>
+  const { headers, searchParams } = JSON.parse(process.env.BASCIK_REQUEST);
+  const name = bascikEsc(headers['x-display-name'] ?? 'Guest');
+  const tab = bascikEsc(searchParams.tab ?? 'overview');
+  console.log(`<p>Hello ${name} &mdash; tab: ${tab}</p>`);
+</script>
+```
+
+`bascikEsc` escapes `&`, `<`, `>`, and `"`. It is available without any import and is always defined, even when the script starts with `import` statements.
+
 ## Practical examples
 
-> **Escape user-controlled output.** Any value from a request (cookies, query params, headers, database rows) must be HTML-escaped before writing with `console.log`. A minimal helper: `` const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') ``.
+> **Escape user-controlled output.** Any value from a request (cookies, query params, headers, database rows) must be HTML-escaped before writing with `console.log`. Bascik injects a `bascikEsc(value)` helper into every server script automatically — use it instead of defining your own.
 
 ### Reading request context
 
 ```html
 <script data-bascik-server>
   const { headers, searchParams } = JSON.parse(process.env.BASCIK_REQUEST);
-  const user = headers['x-display-name'] ?? 'Guest';
-  const tab = searchParams.tab ?? 'overview';
+  const user = bascikEsc(headers['x-display-name'] ?? 'Guest');
+  const tab = bascikEsc(searchParams.tab ?? 'overview');
   console.log(`<p>Hello ${user} - tab: ${tab}</p>`);
 </script>
 ```
@@ -117,12 +131,11 @@ Read a session cookie, look up the user in SQLite, and render a greeting.
 ```html
 <script data-bascik-server>
   import Database from 'better-sqlite3';
-  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const { headers } = JSON.parse(process.env.BASCIK_REQUEST);
   const sessionId = headers['cookie']?.match(/session=([^;]+)/)?.[1];
   const db = new Database('./data/app.db');
   const user = sessionId && db.prepare('SELECT name FROM users WHERE session_id = ?').get(sessionId);
-  console.log(user ? `<p>Hello, ${esc(user.name)}</p>` : '<p>Not signed in.</p>');
+  console.log(user ? `<p>Hello, ${bascikEsc(user.name)}</p>` : '<p>Not signed in.</p>');
 </script>
 ```
 
@@ -133,12 +146,11 @@ Use `searchParams` to drive server-rendered pagination with no client-side JavaS
 ```html
 <script data-bascik-server>
   import Database from 'better-sqlite3';
-  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const { searchParams } = JSON.parse(process.env.BASCIK_REQUEST);
   const page = Math.max(1, Number(searchParams.page ?? 1));
   const db = new Database('./data/app.db');
   const items = db.prepare('SELECT title FROM articles ORDER BY created_at DESC LIMIT 20 OFFSET ?').all((page - 1) * 20);
-  console.log(`<ul>${items.map(a => `<li>${esc(a.title)}</li>`).join('')}</ul>`);
+  console.log(`<ul>${items.map(a => `<li>${bascikEsc(a.title)}</li>`).join('')}</ul>`);
 </script>
 ```
 
@@ -153,11 +165,10 @@ npm install pg
 ```html
 <script data-bascik-server>
   import pg from 'pg';
-  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const db = new pg.Pool({ connectionString: process.env.DATABASE_URL });
   const { rows } = await db.query('SELECT title FROM articles ORDER BY created_at DESC LIMIT 10');
   await db.end();
-  console.log(`<ul>${rows.map(r => `<li>${esc(r.title)}</li>`).join('')}</ul>`);
+  console.log(`<ul>${rows.map(r => `<li>${bascikEsc(r.title)}</li>`).join('')}</ul>`);
 </script>
 ```
 
