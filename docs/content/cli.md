@@ -13,17 +13,21 @@ Scaffolds a complete starter project in a new directory. Prompts for a project n
 
 ```text
 my-project/
-  bascik.config.js
   package.json
+  bascik.config.js
   .gitignore
+  .github/skills/bascik/SKILL.md
+  .claude/skills/bascik/SKILL.md
   src/
     pages/
+      assets/
+        favicon.svg
+      css/
+        styles.css
       index.html
       about.html
       contact.html
       404.html
-      css/
-        styles.css
     components/
       site-meta/
       site-header/

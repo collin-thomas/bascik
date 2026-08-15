@@ -15,7 +15,7 @@ The goal is to keep the runtime boring and predictable.
 
 If a project needs a template engine, use one that already solves the problem well. Bascik is the static-site engine; the template library is an app choice.
 
-## Recipe 1: plain JS template literals
+## Plain JS template literals
 
 For many pages, the simplest approach is still ordinary JavaScript string templates.
 
@@ -43,7 +43,7 @@ For many pages, the simplest approach is still ordinary JavaScript string templa
 
 This is often enough for dashboards, landing pages, and one-off server-rendered sections. It is explicit, familiar, and easy to reason about.
 
-## Recipe 2: a tiny shared HTML helper
+## A tiny shared HTML helper
 
 When the same escaping or list-rendering logic appears repeatedly, keep it in a small helper module and import it.
 
@@ -78,7 +78,7 @@ export const renderList = (items) =>
 
 This is the same philosophy as the server-script rule: keep the runtime small, but let your app own the reusable helpers it wants.
 
-## Recipe 3: EJS for loops and includes
+## EJS for loops and includes
 
 If the project needs more structure, use a template library like EJS for layout fragments and repeated markup.
 
@@ -112,7 +112,7 @@ npm install ejs
 
 This works well when the HTML is large, repetitive, or needs layout-like partials. Bascik still stays out of the way because the template engine is just a dependency in the app layer.
 
-## Recipe 4: Nunjucks for richer template composition
+## Nunjucks for richer template composition
 
 Nunjucks is a good fit for pages that want includes, layout blocks, and more opinionated template syntax without turning Bascik into a framework.
 
@@ -147,7 +147,7 @@ npm install nunjucks
 
 Nunjucks is useful when the site has a lot of repetitive HTML and a real template structure. Bascik still remains the static compiler; the template library just renders fragments into ordinary HTML before they are injected.
 
-## Recipe 5: Handlebars
+## Handlebars
 
 Handlebars is a good choice when the team prefers a logic-less template syntax and wants helpers registered separately from template files.
 
