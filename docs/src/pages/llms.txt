@@ -2656,7 +2656,7 @@ File references are extracted by `extractScriptDeps()` (exported from `build-scr
 
 ```text
 './content/foo.md'          → included in key
-'scripts/md-renderer.mjs'  → included in key
+'scripts/md-renderer.ts'  → included in key
 ```
 
 If the script contains no detectable references, only items 1–5 contribute to the key.
