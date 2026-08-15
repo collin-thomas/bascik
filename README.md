@@ -58,7 +58,7 @@ yarn --cwd docs build
 After editing any `docs/content/*.md` file, update the Copilot skill and LLM context files by invoking the prompt file in Copilot chat:
 
 ```sh
-#pre-commit.prompt.md
+/pre-commit
 ```
 
 This regenerates `llms.txt`, updates `docs/src/pages/assets/SKILL.md` to reflect any new or changed content, copies it to `create/assets/SKILL.md`, and updates unit and E2E test coverage JSON files — all in one step. Don't call `yarn generate:llms` or `yarn sync` individually; the prompt handles everything.
