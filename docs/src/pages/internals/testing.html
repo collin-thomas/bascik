@@ -30,7 +30,7 @@
             const bar = (n) => {
               const pct = Math.round(n);
               const color = pct >= 80 ? '#6abf69' : pct >= 50 ? '#c8a84b' : '#c06060';
-              return `<span style="display:inline-block;width:${pct}px;height:8px;background:${color};border-radius:2px;vertical-align:middle;margin-right:6px"></span>`;
+              return `<span style="display:inline-block;width:100px;height:8px;background:rgba(255,255,255,0.08);border-radius:2px;vertical-align:middle;margin-right:6px;overflow:hidden"><span style="display:block;width:${pct}px;height:100%;background:${color};border-radius:2px"></span></span>`;
             };
             console.log(`
               <h1>Testing</h1>
@@ -86,7 +86,7 @@
             const bar = (n) => {
               const pct = Math.round(n);
               const color = pct >= 80 ? '#6abf69' : pct >= 50 ? '#c8a84b' : '#c06060';
-              return `<span style="display:inline-block;width:${pct}px;height:8px;background:${color};border-radius:2px;vertical-align:middle;margin-right:6px"></span>`;
+              return `<span style="display:inline-block;width:100px;height:8px;background:rgba(255,255,255,0.08);border-radius:2px;vertical-align:middle;margin-right:6px;overflow:hidden"><span style="display:block;width:${pct}px;height:100%;background:${color};border-radius:2px"></span></span>`;
             };
             console.log(`
               <h2 style="margin-top:2.5rem">E2E Coverage (Playwright + V8)</h2>

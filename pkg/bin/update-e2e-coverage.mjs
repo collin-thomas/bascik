@@ -16,7 +16,7 @@
  */
 
 import { execSync, spawn } from 'node:child_process';
-import { mkdirSync, rmSync, existsSync, utimesSync } from 'node:fs';
+import { mkdirSync, rmSync, existsSync, utimesSync, writeFileSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import http2 from 'node:http2';
@@ -43,6 +43,26 @@ const run = (args) => {
 console.log('[1/7] --build');
 run('--build');
 
+// Create a static CSS file in dist/ so the static-file serving path in http2.ts fires
+writeFileSync(join(e2eDir, 'dist/cov-test.css'), '/* bascik coverage */');
+
+// Create a temp page with an unknown component to trigger check.ts error branches
+const tempPage = join(e2eDir, 'src/pages/cov-check-temp.html');
+writeFileSync(tempPage, '<!DOCTYPE html><html><body><ghost-comp-a></ghost-comp-a><ghost-comp-b></ghost-comp-b></body></html>');
+
+// Run `init` in a throwaway temp dir so initProject() writes its scaffold files
+// without touching the e2e fixture. This covers the `init` action branch in index.ts.
+const initDir = join(pkgDir, 'coverage/e2e-init-tmp');
+rmSync(initDir, { recursive: true, force: true });
+mkdirSync(initDir, { recursive: true });
+writeFileSync(join(initDir, 'package.json'), '{"name":"cov-init-test"}');
+try {
+  execSync(`node "${cli}" init`, { cwd: initDir, env, stdio: 'pipe' });
+  // Second run: files now exist → covers the "already present, skip" branches in init.ts
+  execSync(`node "${cli}" init`, { cwd: initDir, env, stdio: 'pipe' });
+} catch { /* any error still captures coverage */ }
+rmSync(initDir, { recursive: true, force: true });
+
 console.log('[2/7] --help');
 run('--help');
 
@@ -50,7 +70,10 @@ console.log('[3/7] --version');
 run('--version');
 
 console.log('[4/7] --check');
-run('--check');
+run('--check'); // errors expected — covers check.ts error paths and toDisplay
+
+// Remove temp check page immediately after --check so E2E Playwright tests don't see it
+if (existsSync(tempPage)) unlinkSync(tempPage);
 
 console.log('[5/7] --build --log');
 run(`--build --log "${join(pkgDir, 'coverage/e2e-build.log')}"`);
@@ -96,13 +119,19 @@ await new Promise((resolve) => {
 
   const runRequests = async () => {
     await new Promise(r => setTimeout(r, 400));
-    await h2req('GET', '/scope-test');             // mem.getPage, http2 stream handler
-    await h2req('GET', '/');                        // mem.getPageExact trailing-slash variant
-    await h2req('GET', '/server-scripts-test');    // server-scripts.ts executeServerScripts
-    await h2req('GET', '/nonexistent-xyz');        // http2 404 path
-    await h2req('POST', '/scope-test');             // http2 405 method-not-allowed
-    await h2req('HEAD', '/scope-test');             // http2 HEAD branch
-    await h2sse();                                  // mem.trackOpenPage + http2 SSE + mem.untrackOpenPage
+    await h2req('GET', '/scope-test');                          // mem.getPage, http2 stream handler
+    await h2req('GET', '/');                                     // mem.getPageExact trailing-slash
+    await h2req('GET', '/server-scripts-test');                 // server-scripts.ts executeServerScripts
+    await h2req('GET', '/nonexistent-xyz');                     // http2 404 page-not-found path
+    await h2req('POST', '/scope-test');                          // http2 405 method-not-allowed
+    await h2req('HEAD', '/scope-test');                          // http2 HEAD branch
+    await h2req('GET', '/cov-test.css');                        // static file serving path
+    await h2req('GET', '/missing-file.css');                    // static stat ENOENT → 404
+    await h2req('GET', '/../../../etc/shadow.css');             // path traversal → 400
+    await h2sse();                                               // mem.trackOpenPage + SSE + untrack
+    // Wait for brotli background compression to complete, then request with br encoding
+    await new Promise(r => setTimeout(r, 2000));
+    await h2req('GET', '/scope-test', 9443, { 'accept-encoding': 'br' }); // brotli branch
 
     // Touch a component → chokidar → selectivelyProcessPages → pageProcessing
     const comp = join(e2eDir, 'src/components/scope-test/scope-test.html');
@@ -134,20 +163,43 @@ await new Promise((resolve) => {
   });
 });
 
-// ── Step 7: --serve (isServe=true branches in config.ts) ─────────────────────
+// ── Step 7: --serve (isServe=true branches in config.ts, http2 serve paths) ──
 
-console.log('[7/7] --serve brief run');
+console.log('[7/7] --serve + HTTP/2 requests');
 await new Promise((resolve) => {
   const serveProc = spawn('node', [cli, '--serve'], {
     cwd: e2eDir, env, stdio: ['ignore', 'pipe', 'pipe'],
   });
-  const timeout = setTimeout(() => serveProc.kill('SIGTERM'), 8_000);
+  let serveReady = false;
+  const timeout = setTimeout(() => serveProc.kill('SIGTERM'), 25_000);
+
+  const serveRequests = async () => {
+    await new Promise(r => setTimeout(r, 300));
+    // Get the ETag from the first response, then reuse it for a 304 conditional GET
+    const etag = await new Promise((res) => {
+      const c = http2.connect('https://localhost:9443', { rejectUnauthorized: false });
+      c.on('error', () => { c.destroy(); res(''); });
+      const r = c.request({ ':method': 'GET', ':path': '/scope-test' });
+      r.on('response', (h) => { r.resume(); c.close(); res(h['etag'] ?? ''); });
+      r.on('error', () => res(''));
+      r.end();
+    });
+    if (etag) await h2req('GET', '/scope-test', 9443, { 'if-none-match': etag }); // 304 cache hit
+    await h2req('GET', '/server-scripts-test');   // server scripts in serve mode
+    await h2req('GET', '/bascik-live-reload');     // SSE returns 404 in serve mode
+    await h2req('POST', '/scope-test');            // 405 in serve mode
+    // Rate-limit flood: 502 requests from the same IP to trigger entry.count > 500 → 429
+    for (let i = 0; i < 502; i++) await h2req('GET', '/scope-test');
+    clearTimeout(timeout);
+    serveProc.kill('SIGTERM');
+  };
+
   serveProc.stdout.on('data', (chunk) => {
     const s = chunk.toString();
     process.stdout.write(s);
-    if (s.includes('Server running') || s.includes('https://localhost')) {
-      clearTimeout(timeout);
-      setTimeout(() => serveProc.kill('SIGTERM'), 300);
+    if (!serveReady && (s.includes('Server running') || s.includes('https://localhost'))) {
+      serveReady = true;
+      serveRequests().catch(() => serveProc.kill('SIGTERM'));
     }
   });
   serveProc.stderr.on('data', (chunk) => {
