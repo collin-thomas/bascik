@@ -6,7 +6,7 @@
  *
  * Run via: node scripts/generate-search-index.ts
  */
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { NAV } from './nav.ts';
@@ -99,6 +99,7 @@ for (const { section, pages } of NAV) {
   }
 }
 
-const outPath = join(docsDir, 'src/pages/assets/search-index.json');
+const outPath = join(docsDir, 'dist/assets/search-index.json');
+await mkdir(dirname(outPath), { recursive: true });
 await writeFile(outPath, JSON.stringify(entries));
-console.log(`search index: ${entries.length} entries → src/pages/assets/search-index.json`);
+console.log(`search index: ${entries.length} entries → dist/assets/search-index.json`);
