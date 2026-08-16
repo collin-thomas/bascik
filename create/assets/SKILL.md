@@ -396,7 +396,7 @@ Because class names are scoped to the component **name** (not per-instance), `qu
 </script>
 ```
 
-**Escape hatch:** Set `deduplicateCss: false` in `bascik.config.js` to switch to per-instance class scoping. By default, all instances of the same component share identical scoped class names so Bascik emits one shared `<style>` block per component. With `deduplicateCss: false`, class selectors become unique per instance (like IDs), but Bascik emits a separate `<style>` block for each component instance. For most components, using an `id` to anchor the script is simpler.
+**Escape hatch:** Set `deduplicateCss: false` in `bascik.config.ts` to switch to per-instance class scoping. By default, all instances of the same component share identical scoped class names so Bascik emits one shared `<style>` block per component. With `deduplicateCss: false`, class selectors become unique per instance (like IDs), but Bascik emits a separate `<style>` block for each component instance. For most components, using an `id` to anchor the script is simpler.
 
 ```js
 export default {
@@ -541,7 +541,7 @@ Non-`data-bascik-*` attributes on a usage tag are merged onto the component's ro
 </nav>
 ```
 
-Inherited class names are not scoped, they are treated as global page-level classes. To disable inheritance: `inheritAttributes: false` in `bascik.config.js`.
+Inherited class names are not scoped, they are treated as global page-level classes. To disable inheritance: `inheritAttributes: false` in `bascik.config.ts`.
 
 ### Self-Closing Tags
 ```html
@@ -592,7 +592,7 @@ Build scripts receive these `process.env` variables:
 |---|---|
 | `BASCIK_PAGE_FILE` | Absolute path of the current page file (e.g. `/project/src/pages/about.html`). Use this to generate page-specific output like canonical URLs. |
 | `BASCIK_BUILD` | `"1"` during `bascik --build`, `"0"` during dev. Use to produce different output per mode. |
-| `BASCIK_SITE_URL` | The `siteUrl` from `bascik.config.js`, e.g. `"https://example.com"`. |
+| `BASCIK_SITE_URL` | The `siteUrl` from `bascik.config.ts`, e.g. `"https://example.com"`. |
 
 These are critical for scripts that generate per-page output. A script using `BASCIK_PAGE_FILE` gets a separate cache entry per page automatically.
 
@@ -705,7 +705,7 @@ Rules:
 
 ---
 
-## 9. Configuration (`bascik.config.js`)
+## 9. Configuration (`bascik.config.ts`)
 
 Use `bascik.config.ts` (preferred) or `bascik.config.js` (takes precedence if both exist). Import `defineConfig` for full editor autocomplete and inline docs:
 
@@ -805,7 +805,7 @@ npm create bascik@latest my-site -y
 
 This scaffolds the project, installs dependencies, and starts the dev server in one shot. You're live at **https://localhost:8443**. Pass a different name to use it as both the directory name and the site title. Omit the name to be prompted for one (defaulting to `bascik-app`). Drop `-y` to step through the install and dev server prompts manually.
 
-The scaffold creates a complete starter site: pages, components, global CSS, `bascik.config.js`, and a `.gitignore`. When the dev server stops, the CLI prints a reminder:
+The scaffold creates a complete starter site: pages, components, global CSS, `bascik.config.ts`, and a `.gitignore`. When the dev server stops, the CLI prints a reminder:
 
 ```
 To start again:  cd my-site && npm run dev
@@ -841,8 +841,8 @@ bascik --check                # static analysis: validate pages and components w
 
 **`bascik --serve`:** starts the HTTP/2 server against a pre-built `dist/` directory. **Only needed when the site uses `data-bascik-server` scripts** for per-request dynamic content (personalized dashboards, user-specific data, server-rendered pagination). Sites with no server scripts can be deployed to any static host with no runtime server required. Run `bascik --build` first, then `bascik --serve`. Unlike the dev server, `--serve` does not watch files or inject live-reload. `data-bascik-server` scripts execute per-request in both modes.
 
-**`serve` config block:** configure the production server in `bascik.config.js`:
-```js
+**`serve` config block:** configure the production server in `bascik.config.ts`:
+```ts
 export default {
   cacheHttp: true,       // default in --serve; false in dev
   serve: {
@@ -889,7 +889,7 @@ transpiled: pages/about.html
 Server running at https://localhost:8443
 ```
 
-On startup, Bascik computes the full component list and global styles **once**, then transpiles all pages. By default pages transpile sequentially on the main thread; setting `useWorkers: true` in `bascik.config.js` distributes them across a pool of CPU-core worker threads instead. Worker startup has a fixed cost (each worker loads the transpiler's module graph independently), so `useWorkers` is opt-in and best suited to larger sites or CPU-heavy per-page work, small sites are usually faster with the sequential default. Brotli compression for each page runs in the background after storage and does not block the page from being marked ready or served; the server falls back to serving uncompressed content for any request that arrives before compression finishes. The server becomes ready as soon as memory is populated; no writes to `dist/` happen during dev mode.
+On startup, Bascik computes the full component list and global styles **once**, then transpiles all pages. By default pages transpile sequentially on the main thread; setting `useWorkers: true` in `bascik.config.ts` distributes them across a pool of CPU-core worker threads instead. Worker startup has a fixed cost (each worker loads the transpiler's module graph independently), so `useWorkers` is opt-in and best suited to larger sites or CPU-heavy per-page work, small sites are usually faster with the sequential default. Brotli compression for each page runs in the background after storage and does not block the page from being marked ready or served; the server falls back to serving uncompressed content for any request that arrives before compression finishes. The server becomes ready as soon as memory is populated; no writes to `dist/` happen during dev mode.
 
 #### 2. Watching for File Changes (Watch Mode)
 While the dev server is active, Bascik watches your file system and incrementally updates your build as files are added, updated, or removed:
@@ -1046,8 +1046,8 @@ Alpine.js uses `x-data` for state and `@click` / `x-show` for events and visibil
 ### Tailwind CSS
 Tailwind utility classes are global by design. Bascik's class scoping would rename `class="flex gap-4"` to `class="bascik__comp__flex bascik__comp__gap-4"`, breaking Tailwind's CSS.
 
-**Required config:** disable class scoping in `bascik.config.js`:
-```js
+**Required config:** disable class scoping in `bascik.config.ts`:
+```ts
 export default {
   scopeAttribute: {
     class: false, // let Tailwind utility classes pass through unchanged
