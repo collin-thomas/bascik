@@ -7,6 +7,7 @@ export default defineConfig({
   siteUrl: 'http://localhost:4200',
   useWorkers: true,
   obfuscateAttributeNames: false,
+  minifyStyles: false,
   serve: {
     port: 9443,
   },
