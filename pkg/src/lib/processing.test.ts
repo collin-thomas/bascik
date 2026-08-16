@@ -1359,6 +1359,21 @@ describe("processAllPages – build mode sitemap", () => {
     expect(generateSitemapFiles).toHaveBeenCalledOnce();
     warnSpy.mockRestore();
   });
+
+  it("calls generateSitemapFiles before printing the summary line", async () => {
+    const callOrder: string[] = [];
+    const { generateSitemapFiles } = await import("./sitemap.js");
+    (generateSitemapFiles as ReturnType<typeof vi.fn>).mockImplementation(async () => {
+      callOrder.push("sitemap");
+    });
+    const consoleSpy = vi.spyOn(console, "log").mockImplementation((msg: unknown) => {
+      if (typeof msg === "string" && msg.includes("transpiled")) callOrder.push("summary");
+    });
+    (listPages as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    await processAllPages();
+    expect(callOrder).toEqual(["sitemap", "summary"]);
+    consoleSpy.mockRestore();
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

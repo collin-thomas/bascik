@@ -569,13 +569,14 @@ export const processAllPages = async (options?: { useWorkers?: boolean }) => {
 
   const count = results.filter(Boolean).length;
   const elapsed = Math.round(performance.now() - start);
-  console.log(
-    `\n✓ ${count} page${count !== 1 ? "s" : ""} transpiled in ${elapsed}ms`,
-  );
 
   if (BascikConfig.isBuild) {
     await generateSitemapFiles();
   }
+
+  console.log(
+    `\n✓ ${count} page${count !== 1 ? "s" : ""} transpiled in ${elapsed}ms`,
+  );
 
   return results.map((r) => r?.relativePagePath ?? null);
 };
