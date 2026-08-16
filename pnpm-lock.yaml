@@ -32,6 +32,9 @@ importers:
         specifier: ^18.0.7
         version: 18.0.9
     devDependencies:
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
       vitest:
         specifier: ^4.1.10
         version: 4.1.10(@types/node@24.13.3)(@vitest/coverage-v8@4.1.10)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2))
