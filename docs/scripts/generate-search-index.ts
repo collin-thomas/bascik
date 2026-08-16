@@ -30,6 +30,8 @@ function stripMd(text: string): string {
     .replace(/\*\*([^*]+)\*\*/g, '$1')
     .replace(/\*([^*\n]+)\*/g, '$1')
     .replace(/^>\s*/gm, '')
+    .replace(/^[\s|:\-]+$/gm, '')   // table separator rows
+    .replace(/\|/g, ' ')            // table cell pipes → spaces
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }

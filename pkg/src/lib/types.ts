@@ -1,5 +1,12 @@
 // Central TypeScript types for the Bascik transpile pipeline
 
+export interface ExecEntry {
+  /** Path to the script (relative to project root). */
+  script: string;
+  /** File/directory globs that trigger a re-run in dev. Omit for build-only scripts. */
+  watch?: string | string[];
+}
+
 export interface BascikComponent {
   name: string;
   /** Set during file loading; not required for in-test component objects */
@@ -84,6 +91,23 @@ export interface BascikConfigOptions {
    * Defaults to ["code"].
    */
   skipTranspilingElementContents: string[];
+  /**
+   * Scripts to run as part of the build/dev lifecycle.
+   *
+   * - `script` — path to the script (relative to project root), run with the
+   *   same `node` binary that started bascik.
+   * - `watch` — one or more directories/files to watch. When present, the
+   *   script is run on dev startup (non-blocking) and re-run whenever a
+   *   watched file changes (followed by a live-reload). Omit for build-only
+   *   scripts that should not run during dev.
+   *
+   * @example
+   * exec: [
+   *   { script: 'scripts/generate-search-index.ts', watch: ['content/'] },
+   *   { script: 'scripts/generate-llms-txt.ts' },
+   * ]
+   */
+  exec?: ExecEntry[];
   /**
    * Control which files are generated in `dist/` during `bascik --build`.
    */

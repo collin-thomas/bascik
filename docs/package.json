@@ -8,8 +8,8 @@
     "node": ">=24.17.0"
   },
   "scripts": {
-    "dev": "node scripts/generate-search-index.ts && bascik",
-    "build": "node scripts/generate-search-index.ts && bascik --build",
+    "dev": "bascik",
+    "build": "bascik --build",
     "pkg-dev": "node --inspect --watch-path=./bascik.config.ts --watch-path=../../pkg/src ../../pkg/src/transpile.ts",
     "generate:llms": "node scripts/generate-llms-txt.ts",
     "generate:search": "node scripts/generate-search-index.ts",
