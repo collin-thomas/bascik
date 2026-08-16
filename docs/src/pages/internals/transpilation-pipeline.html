@@ -27,6 +27,14 @@
     );
     console.log(await breadcrumbLd());
   </script>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { articleSchema } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/article-schema.ts')).href
+    );
+    console.log(await articleSchema());
+  </script>
   <meta name="description"
     content="Bascik transforms source HTML into deployable HTML by replacing every component tag with its resolved, scoped content." />
   <title>Transpilation Pipeline - Bascik Developer Guide</title>

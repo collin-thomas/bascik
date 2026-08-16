@@ -27,6 +27,14 @@
     );
     console.log(await breadcrumbLd());
   </script>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { articleSchema } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/article-schema.ts')).href
+    );
+    console.log(await articleSchema());
+  </script>
   <meta name="description"
     content="Next.js is a full-stack React framework. Learn how to switch a Next.js project to Bascik's zero-runtime HTML component model." />
   <title>Switch from Next.js - Bascik Docs</title>

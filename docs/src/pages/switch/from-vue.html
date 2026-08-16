@@ -27,6 +27,14 @@
     );
     console.log(await breadcrumbLd());
   </script>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { articleSchema } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/article-schema.ts')).href
+    );
+    console.log(await articleSchema());
+  </script>
   <meta name="description"
     content="Vue and Bascik are both component-based. Learn how to switch a Vue project to Bascik's HTML-first, zero-runtime approach." />
   <title>Switch from Vue - Bascik Docs</title>

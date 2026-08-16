@@ -51,6 +51,7 @@ export const NAV: NavSection[] = [
       { href: '/recipes/server-scripts', label: 'Server Scripts' },
       { href: '/recipes/templating', label: 'Templating' },
       { href: '/recipes/testing', label: 'Testing' },
+      { href: '/recipes/head-scripts', label: 'Page-Aware Head Scripts' },
     ]
   },
   {

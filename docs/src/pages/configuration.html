@@ -27,6 +27,14 @@
     );
     console.log(await breadcrumbLd());
   </script>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { articleSchema } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/article-schema.ts')).href
+    );
+    console.log(await articleSchema());
+  </script>
   <meta name="description"
     content="Create a bascik.config.ts file in your project root to override any default settings and configure your Bascik build." />
   <title>Configuration - Bascik Docs</title>

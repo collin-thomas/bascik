@@ -27,6 +27,14 @@
     );
     console.log(await breadcrumbLd());
   </script>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { articleSchema } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/article-schema.ts')).href
+    );
+    console.log(await articleSchema());
+  </script>
   <meta name="description"
     content="Server script recipes for Bascik: escapeHtml helper, database queries, server-rendered pagination, and combining build and server scripts." />
   <title>Server Script Recipes - Bascik Docs</title>

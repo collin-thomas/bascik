@@ -36,8 +36,8 @@
     console.log(await articleSchema());
   </script>
   <meta name="description"
-    content="Bascik uses GitHub Actions for CI (Vitest on every push) and for releasing @bascik/bascik and create-bascik independently to npm via version tags." />
-  <title>CI / CD - Bascik Developer Guide</title>
+    content="Use BASCIK_PAGE_FILE and other env vars to write shared build scripts that emit page-specific head tags — canonical URLs, Open Graph, JSON-LD — without hardcoding anything per page." />
+  <title>Page-Aware Head Scripts - Bascik Docs</title>
 </head>
 
 <body>
@@ -46,13 +46,11 @@
 
   <div class="container">
     <div class="docs-layout">
-
       <docs-sidebar></docs-sidebar>
 
       <main class="docs-content">
-        <p class="section-label">Internals</p>
-
-        <!-- Content rendered from docs/content/internals/ci-cd.md at build time.
+        <p class="section-label">Recipe</p>
+        <!-- Content rendered from docs/content/head-scripts.md at build time.
              To update page content, edit the MD file — not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
@@ -60,9 +58,13 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
           );
-          console.log(await renderMd('./content/internals/ci-cd.md'));
+          console.log(await renderMd('./content/head-scripts.md'));
         </script>
 
+        <div class="callout">
+          <p><strong>Next:</strong> <a href="/build-scripts">Build Scripts</a> covers the full set of env vars, caching,
+            and shared script patterns.</p>
+        </div>
       </main>
     </div>
   </div>
