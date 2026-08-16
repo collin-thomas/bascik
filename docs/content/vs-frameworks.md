@@ -10,27 +10,24 @@ Everything else, interactivity, server communication, reactive state, is your de
 
 The custom component tags in a Bascik project are the ones **you create**. If you create `site-nav.html`, you can write `<site-nav>`. Bascik does not add a catalog of framework components with their own behavior or API.
 
-Bascik does use a small set of build instructions such as `data-bascik-slot`, `data-bascik-prop-*`, and `data-bascik-build`. They follow HTML's standard `data-*` extension mechanism, so browsers parse them as valid custom data attributes. Bascik consumes them during the build; they are not runtime directives that require browser JavaScript to interpret.
+Bascik does use a small set of build instructions such as `data-bascik-slot`, `data-bascik-prop-*`, and `data-bascik-build`. They use HTML's standard `data-*` extension mechanism to keep Bascik source valid HTML. Bascik consumes them during the build; they are not runtime directives that require browser JavaScript to interpret.
 
-## HTMX
+## HTMX and Alpine.js
 
-[HTMX](https://htmx.org) is a popular library that extends HTML with server-driven partial updates. You add attributes like `hx-get`, `hx-post`, `hx-target`, and `hx-swap` to elements, and HTMX intercepts the resulting events, fires requests to your server, and swaps portions of the page with the response.
+[HTMX](https://htmx.org) (~14 KB) and [Alpine.js](https://alpinejs.dev) (~16 KB) both take an attribute-based approach to adding behavior to HTML. HTMX focuses on server-driven partial updates: you add attributes like `hx-get`, `hx-post`, `hx-target`, and `hx-swap`, and HTMX intercepts events, fires requests to your server, and swaps portions of the page with the response. Alpine focuses on client-side interactivity: `x-data` defines state, and directives like `x-bind`, `x-show`, and `@click` wire that state to the DOM.
 
-**What HTMX adds to a page:**
-
-- ~14 KB of JavaScript (minified and gzipped) loaded on every page
-- A new attribute vocabulary to learn and maintain (`hx-get`, `hx-post`, `hx-target`, `hx-swap`, `hx-trigger`, `hx-push-url`, `hx-select`, `hx-boost`, and more)
-- A server requirement: HTMX works best when the backend returns HTML fragments
-
-HTMX is well-suited to applications that need dynamic server-driven updates without a full JavaScript client. It is not suited to pages that are mostly static, where the overhead of loading and running a JavaScript library is not justified.
-
-Bascik produces plain HTML. HTMX ships a JavaScript runtime. These are different tools aimed at different problems. For pages that genuinely need server-driven interactivity, you can use HTMX alongside Bascik: Bascik handles component organization at build time, and HTMX handles server communication at runtime.
+Both are compatible with Bascik. Bascik resolves components at build time and produces plain HTML; HTMX and Alpine run in the browser on whatever Bascik produced. There is no conflict, and no coordination required between them.
 
 ```html
-<!-- Bascik component that includes HTMX attributes - fully compatible -->
+<!-- HTMX and Alpine attributes work inside Bascik components without modification -->
 <button hx-get="/api/items" hx-target="#list" hx-swap="innerHTML">
   Load items
 </button>
+
+<div x-data="{ open: false }">
+  <button @click="open = !open">Toggle</button>
+  <p x-show="open">Visible when open is true</p>
+</div>
 ```
 
 ## Vue and React
@@ -40,8 +37,6 @@ Full-featured frameworks like Vue and React solve a different problem: client-si
 For documents, marketing sites, docs portals, blogs, portfolios, most of that machinery is unused. The framework runtime loads and runs on every page visit in exchange for features the page does not use.
 
 Bascik's component model lives entirely at build time. There is no runtime equivalent. A `<site-nav>` tag in source becomes a `<nav>` element in output, no JavaScript involved.
-
-For sites that need selective reactivity on specific components, petite-vue (~5 KB) is a better fit than full Vue. See the [JavaScript Libraries](/libraries) page for examples.
 
 ## Svelte
 
@@ -57,43 +52,27 @@ Bascik's output for an equivalent component is a static HTML file with no JavaSc
 - A reactivity model (`$state`, `$derived`, `$effect`) that requires JavaScript to function
 - Template syntax (`{#if}`, `{#each}`, `{@html}`) that resolves to JavaScript, not plain HTML
 
-Svelte is well-suited to applications that need reactive UI updating in response to user input or server data. It is not suited to pages that are mostly static and do not need a JavaScript-managed DOM.
-
 For content sites and documentation portals, the closest Svelte analog is SvelteKit in static-output mode (`adapter-static`). Even then, SvelteKit ships JavaScript for client-side navigation and hydration. Bascik's output for equivalent pages is plain HTML with none of that overhead.
-
-If you are coming from Svelte and building a content-first site, the migration is mostly mechanical: remove Svelte's script and template blocks, extract `<style>` to a paired `.css` file, and replace reactive primitives with vanilla JS where runtime behavior is still needed. See the [Switch from Svelte](/switch/from-svelte) guide.
 
 ## Next.js
 
-Next.js is a React meta-framework that adds routing, server-side rendering, static site generation, and a full bundling pipeline on top of React. For applications that need those things, it is a reasonable choice.
+Next.js is a React meta-framework that adds routing, server-side rendering, static site generation, and a full bundling pipeline on top of React. It is a powerful and complete system, and most of that power is aimed at applications with complex client-side state, authentication, API routes, and real-time data.
 
-For content sites, Bascik competes with Next.js directly. This is part of why Bascik exists.
+Many teams reach for Next.js on content sites, landing pages, and documentation portals because it is familiar and well-supported. The tradeoff is that every page ships 80+ KB or more of React runtime regardless of whether the page uses any client-side reactivity. Its conventions also gradually pull projects toward client-side patterns even for pages that were always static, and auditing what actually reaches the browser gets harder over time.
 
-In a competitive SEO environment, the difference between a page that ships zero JavaScript and one that ships 80+ KB of React runtime and hydration overhead is measurable. Google's Core Web Vitals (LCP, INP, CLS) are directly affected by JavaScript that blocks rendering or delays interaction readiness. Next.js makes it difficult to audit what is actually sent to the browser, and its conventions pull projects toward client-side patterns over time, even for pages that were always static.
+For a lot of what people build, that is simply more framework than the project needs. Bascik is built for exactly this kind of work. You write plain HTML, CSS, and JavaScript. Components are reused at build time. The output is a dist folder of static files you can open and verify file by file. There is no runtime to load, nothing to hydrate, and no React model to learn. Google's Core Web Vitals (LCP, INP, CLS) are directly affected by JavaScript that blocks rendering; Bascik's output has none of that overhead.
 
-If you know the output you want, you should be able to produce it directly. A build tool that makes it hard to ship a clean HTML page for a high-traffic content page is working against you.
+**What Bascik offers for these projects:**
 
-**Where Bascik competes with Next.js:**
-
-- Static marketing pages, landing pages, and content sites where React's runtime adds nothing
-- SEO-critical pages where JavaScript weight and hydration delay affect rankings
-- Projects where you want full transparency over what reaches the browser
-
-For applications that genuinely need React's component model, client-side routing, or API routes, Next.js is still the right tool. The honest framing is Bascik for pages that do not need a JavaScript framework, and Next.js for applications that do.
-
-## Alpine.js
-
-[Alpine.js](https://alpinejs.dev) (~16 KB) occupies similar territory to HTMX: a declarative attribute-based system for adding behavior to HTML. Alpine uses `x-data` for state, `x-bind` / `@click` / `x-show` for DOM interactions.
-
-Like HTMX, Alpine is compatible with Bascik. Bascik resolves components at build time; Alpine runs in the browser on whatever HTML Bascik produced.
+- Plain HTML, CSS, and JS authoring with component reuse. No JSX, no hooks, no framework model to adopt.
+- Build output you can open, read, and verify file by file.
+- Static pages that score well on Core Web Vitals without any optimization work.
 
 ## Static Site Builders: Hugo, Eleventy, Jekyll
 
 Traditional static site builders such as [Hugo](https://gohugo.io), [Eleventy](https://www.11ty.dev), and [Jekyll](https://jekyllrb.com) focus on content pipelines: Markdown collections, templates, front matter, taxonomies, and data-driven page generation.
 
 Bascik overlaps with them at the output level, all of these tools can ship plain static HTML, but the authoring model is different. Bascik stays close to hand-written HTML pages and reusable HTML components. It does not require a separate template language, collection system, or front matter format just to reuse a header, card, or footer.
-
-If your site is primarily content-driven and you want a full publishing pipeline, a static site builder may be the better fit. If your site is primarily HTML pages and reusable UI fragments, Bascik is the smaller tool.
 
 ## The Key Difference
 
@@ -110,6 +89,6 @@ If your site is primarily content-driven and you want a full publishing pipeline
 
 The browser can parse Bascik's source without needing to understand a new runtime language: custom tags are valid custom-element-shaped HTML names, and build instructions use the web platform's `data-*` convention. Bascik resolves both before deployment. By contrast, runtime directives such as `hx-get`, `x-data`, and `v-scope` only gain behavior after their library's JavaScript loads.
 
-Bascik does compete with Next.js for content sites, landing pages, and SEO-critical pages where the React runtime is overhead rather than a feature. For everything else, these tools are not rivals. Bascik fills the gap they leave open: component organization without a runtime. You can use Bascik as the build layer and any of the above as the interactivity layer, and they compose cleanly.
+Most of what people build, content sites, marketing pages, docs portals, company blogs, landing pages, does not require a framework runtime in the browser. Knowing what each tool is optimized for is the best basis for choosing. Bascik fills the gap they leave open: component reuse and predictable build output, without a runtime or a new programming model to adopt. You write plain HTML, CSS, and JavaScript, get the organizational benefits you would expect from a framework, and ship a dist folder you can fully audit. For the parts of a project that do need client-side behavior, Bascik composes cleanly with HTMX or Alpine.
 
 > **Combining tools.** A common pattern is Bascik for layout components (nav, footer, hero sections) and HTMX or Alpine for specific interactive elements. Each tool does what it is best at, and neither one intrudes on the other's domain.

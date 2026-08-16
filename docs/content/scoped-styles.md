@@ -209,10 +209,10 @@ Define your design tokens once in a global stylesheet, then consume them inside 
 
 ## Toggling Scoping
 
-All scoping can be controlled in [`bascik.config.js`](/configuration):
+All scoping can be controlled in [`bascik.config.ts`](/configuration):
 
 ```js
-export const bascikConfig = {
+export default {
   scopeAttribute: {
     class: true, // scope class names
     id: true,    // scope id attributes
@@ -257,7 +257,7 @@ Avoid this anti-pattern:
 By default, all instances of the same component share identical scoped class names so Bascik can emit a single `<style>` block per component, regardless of how many times it appears on the page. If you genuinely need class selectors to be unique per instance (for example, to use `querySelector` safely across multiple instances), set `deduplicateCss: false`:
 
 ```js
-export const bascikConfig = {
+export default {
   deduplicateCss: false, // each instance gets its own unique class names
 };
 ```
@@ -276,7 +276,7 @@ Click the card to toggle its active state. Hover for the hover state. Both are i
 
 ### Source and output
 
-**Source** (`my-card.html` — CSS, HTML, and JS in one file):
+**Source** (`my-card.html`, CSS, HTML, and JS in one file):
 
 <!-- demo:source-usage -->
 ```html

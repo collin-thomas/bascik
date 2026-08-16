@@ -37,7 +37,7 @@ describe('myPureFunction', () => {
 
 ## Testing browser scripts
 
-Browser component scripts are IIFE-based and not importable as modules. The solution is the same — extract pure functions to a `.mjs` module — but delivering them to the browser requires a build step.
+Browser component scripts are IIFE-based and not importable as modules. The solution is the same: extract pure functions to a `.mjs` module, but delivering them to the browser requires a build step.
 
 The component directory holds three files:
 
@@ -67,7 +67,7 @@ The build script in `my-widget.html` reads both JS files and combines them into 
 
 Bascik executes this at build time and replaces the tag with the output: one `<script>` block containing a single IIFE with all functions inside it. The minifier can then rename variables freely because every reference is in the same scope.
 
-> **One source of truth.** `widget-logic.mjs` is the canonical source for all pure functions. The browser bundle is generated from it on every build — the two cannot drift apart.
+> **One source of truth.** `widget-logic.mjs` is the canonical source for all pure functions. The browser bundle is generated from it on every build, so the two cannot drift apart.
 
 ## Setting up Vitest
 
@@ -92,7 +92,7 @@ Then add a test script to `package.json`:
 }
 ```
 
-A test file imports directly from the logic module — no build step, no browser:
+A test file imports directly from the logic module, with no build step and no browser:
 
 ```js
 import { describe, it, expect } from 'vitest';
@@ -113,7 +113,7 @@ npm test
 
 ## What to test
 
-**Test pure logic functions**: scoring, filtering, formatting, sorting, tokenisation, data transformation — anything that takes inputs and returns outputs with no side effects.
+**Test pure logic functions**: scoring, filtering, formatting, sorting, tokenisation, data transformation. Anything that takes inputs and returns outputs with no side effects.
 
 **Skip DOM interaction and HTTP handlers**: event listeners, `querySelector` calls, and render functions are low-value unit tests. For browser scripts, they are better covered by E2E tests (Playwright) or manual smoke-testing. For server scripts, focus on the data logic, not the `res.send` wiring.
 

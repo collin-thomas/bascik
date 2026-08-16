@@ -212,11 +212,11 @@ export const store = reactive({ cart: [] });
 
 [Tailwind CSS](https://tailwindcss.com) is a utility-first CSS framework. Because Tailwind's utility classes are global by design, you need to tell Bascik not to scope class attributes, otherwise Bascik renames `class="flex gap-4"` to `class="bascik__my-comp__flex bascik__my-comp__gap-4"`, which Tailwind's CSS will never match.
 
-Set `scopeAttribute.class` to `false` in `bascik.config.js`:
+Set `scopeAttribute.class` to `false` in `bascik.config.ts`:
 
-```js
-// bascik.config.js
-export const bascikConfig = {
+```ts
+// bascik.config.ts
+export default {
   scopeAttribute: {
     class: false, // let Tailwind utility classes pass through unchanged
     id: true,
@@ -349,6 +349,8 @@ One thing to be aware of: if a library dynamically sets a class or ID value at r
   color: #8d929e;
   font-family: monospace;
 }
+```
+
 ```html
 <!-- .tab and .status are scoped; attribute selector is untouched -->
 <div v-scope="{ active: false }">

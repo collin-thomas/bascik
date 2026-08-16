@@ -158,7 +158,7 @@ btn.addEventListener('click', () => {
 
 ## HTML, CSS, and JavaScript Together
 
-All three can live in a single file. A `<style>` block, the markup, and a `<script>` block in any order — Bascik handles all of them.
+All three can live in a single file. A `<style>` block, the markup, and a `<script>` block in any order; Bascik handles all of them.
 
 <!-- demo:source-usage-alert -->
 ```html
@@ -228,7 +228,7 @@ All three can live in a single file. A `<style>` block, the markup, and a `<scri
 
 ## Separate CSS Files
 
-As a component grows, moving the CSS into its own file keeps things readable. Create a `.css` file with the same base name alongside the `.html` file. Both approaches are fully equivalent — Bascik applies the same scoping either way.
+As a component grows, moving the CSS into its own file keeps things readable. Create a `.css` file with the same base name alongside the `.html` file. Both approaches are fully equivalent; Bascik applies the same scoping either way.
 
 <!-- demo:source-usage-card -->
 ```html

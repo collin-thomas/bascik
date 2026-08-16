@@ -8,7 +8,7 @@ This file applies to all work inside `/docs/`. Read it before creating or editin
 
 The Markdown files serve three purposes simultaneously:
 1. They are the canonical source for the rendered docs page (via `data-bascik-build`)
-2. They feed `llms.txt` (via `docs/scripts/generate-llms-txt.mjs`)
+2. They feed `llms.txt` (via `docs/scripts/generate-llms-txt.ts`)
 3. They feed `SKILL.md` (the Copilot skill file at `docs/src/pages/assets/SKILL.md`, served at `/assets/SKILL.md`)
 
 **When adding or updating docs content:**
@@ -27,13 +27,13 @@ Each docs page that has a corresponding MD file uses a `<script data-bascik-buil
   import { join } from 'node:path';
   import { pathToFileURL } from 'node:url';
   const { renderMd } = await import(
-    pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+    pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
   );
   console.log(await renderMd('./content/topic.md'));
 </script>
 ```
 
-The `renderMd` helper (`docs/scripts/md-renderer.mjs`) applies these transformations:
+The `renderMd` helper (`docs/scripts/md-renderer.ts`) applies these transformations:
 - Fenced code blocks (` ``` `) → `<code-block data-bascik-prop-lang="…">` component
 - Blockquotes (`>`) → `<div class="callout">`
 
@@ -77,18 +77,23 @@ The `renderMd` helper (`docs/scripts/md-renderer.mjs`) applies these transformat
 - Callout/tip boxes: Markdown blockquote (`> **Label.** body text`)
 - No inline HTML in MD files — keep MD pure Markdown
 
-## Updating llms.txt and SKILL.md
+## Updating llms.txt, SKILL.md, and create/assets/SKILL.md
 
-After adding or significantly changing a content MD file, **always do both steps together** — they are a single atomic operation:
+**Preferred workflow** — invoke the prompt file. It regenerates `llms.txt`, reads all docs content, updates SKILL.md with LLM judgment, then propagates everything in one shot:
 
-1. Regenerate `llms.txt` from the content files:
-   ```sh
-   yarn --cwd docs generate:llms  # runs docs/scripts/generate-llms-txt.mjs
-   ```
+```
+#pre-commit.prompt.md
+```
 
-2. **Immediately** update the relevant section in `docs/src/pages/assets/SKILL.md` to mirror the change.
+Do not call `generate:llms`, `yarn sync`, or `yarn workspace bascik-docs generate:llms` individually — the prompt handles all of that.
 
-These two files must stay in sync. A content change that lands in `llms.txt` but not `SKILL.md` (or vice versa) means Copilot is working from stale guidance — which is how bugs like "use `querySelector` for per-instance elements" go undetected.
+**Shell-only fallback** (no SKILL.md update, just propagate after a manual edit):
+
+```sh
+yarn sync
+```
+
+These files must stay in sync. A content change that lands in `llms.txt` but not `SKILL.md` (or vice versa) means Copilot is working from stale guidance — which is how bugs like "use `querySelector` for per-instance elements" go undetected.
 
 ## Sidebar
 
@@ -119,7 +124,7 @@ Marker IDs are arbitrary strings (e.g. `source-html`, `output-css`, `code`, `out
 
 ### How to use it in an HTML slot
 
-Use `extractDemoBlock` from `scripts/md-renderer.mjs` inside a `data-bascik-build` script. Bascik trims slot content at build time, so normal indentation around the `<script>` tag is fine — no collapsed one-liner is needed.
+Use `extractDemoBlock` from `scripts/md-renderer.ts` inside a `data-bascik-build` script. Bascik trims slot content at build time, so normal indentation around the `<script>` tag is fine — no collapsed one-liner is needed.
 
 ```html
 <div data-bascik-slot="source-html">
@@ -128,7 +133,7 @@ Use `extractDemoBlock` from `scripts/md-renderer.mjs` inside a `data-bascik-buil
       import { join } from 'node:path';
       import { pathToFileURL } from 'node:url';
       const { extractDemoBlock } = await import(
-        pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+        pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
       );
       console.log(await extractDemoBlock('./content/03-scoped-css.md', 'source-html'));
     </script>
@@ -150,11 +155,7 @@ The mapping is straightforward: `docs/content/topic.md` corresponds to `docs/src
 
 ## Keeping the Changelog Up to Date
 
-`CHANGELOG.md` at the repo root must stay current. **Whenever you add a feature, fix a bug, or make any user-visible change to `pkg/src/`**, add an entry to the `[Unreleased]` section before finishing the task. Don't batch it up later.
-
-This applies even when the primary task is updating docs, `llms.txt`, or `SKILL.md` — if the underlying package behavior changed, the changelog entry comes first.
-
-Entry format: one bullet per change, grouped under `### Added`, `### Fixed`, or `### Changed`. Keep bullets concise (one sentence). See existing entries for style.
+`CHANGELOG.md` is not actively maintained during pre-1.0 development — the 1.0.0 release entry will be written as a high-level announcement. **Once 1.0.0 ships**, resume normal changelog discipline: add an entry to `[Unreleased]` whenever you add a feature, fix a bug, or make any user-visible change to `pkg/src/`. One bullet per change, grouped under `### Added`, `### Fixed`, or `### Changed`.
 
 ## Keeping the Compatibility Doc Up to Date
 
@@ -164,7 +165,7 @@ Entry format: one bullet per change, grouped under `### Added`, `### Fixed`, or 
 - Fixed or improved → update the Status and/or Notes of the existing row.
 - Intentionally unsupported → add a row with 🚫 and an explanation.
 
-After editing `compatibility.md`, regenerate `llms.txt` and update `SKILL.md` as usual (they pull from the same MD files).
+After editing `compatibility.md`, run `#pre-commit.prompt.md` as usual.
 
 ## Keeping Docs in Sync with the Package
 
@@ -190,12 +191,7 @@ Then inspect the relevant `docs/dist/` output to confirm the pkg change has the 
 **When adding, removing, or significantly changing tests in `pkg/src/`:**
 
 - The testing docs (`docs/content/internals/testing.md`) describe the test approach, not an enumerated list of files — the "Test Files" section links to GitHub which is always current. You only need to update the prose if the testing *patterns* change (e.g. a new mock strategy, a new test runner, new helpers).
-- The coverage numbers shown on the testing page are read from `pkg/test-coverage.json` (unit tests) and `pkg/e2e-test-coverage.json` (E2E build-step coverage) at docs build time. After adding tests, regenerate both:
-  ```sh
-  yarn workspace @bascik/bascik update-coverage        # unit tests
-  yarn workspace @bascik/bascik update-e2e-coverage    # E2E (requires built dist/)
-  ```
-  Then commit both JSON files alongside the test changes.
+- The coverage numbers shown on the testing page are read from `pkg/test-coverage.json` (unit tests) and `pkg/e2e-test-coverage.json` (E2E build-step coverage) at docs build time. After adding tests, run `#pre-commit.prompt.md` — it regenerates both coverage files as part of its Step 1.
 
 **When changing `pkg/src/lib/dev-server.md` (or adding to the live-reload / SSE / watch system):**
 Update `docs/content/internals/dev-server.md` to reflect the change. This page is the source of truth for how the dev server and watch system work.
@@ -216,6 +212,18 @@ The license lives in **three places** that must stay in sync:
 3. Run `cp LICENSE pkg/LICENSE && cp LICENSE create/LICENSE` to sync the package copies immediately
 
 Do **not** delete the root `LICENSE` — GitHub reads it for repo-level license detection. Do not edit `pkg/LICENSE` or `create/LICENSE` directly; they are derived files.
+
+## Node 24 — Native TypeScript Support
+
+This project runs on **Node 24**. Node natively strips TypeScript types — no transpiler or extra flags needed for erasable syntax.
+
+- `node example.ts` works directly (Node 22.18+ with only erasable syntax, no flags required).
+- Erasable syntax: type annotations, interfaces, type aliases, `import type`. These are stripped at runtime.
+- Non-erasable syntax (`enum`, parameter properties, namespaces with runtime code) is **not** supported — a separate transpile step is required for those.
+- Node does **not** type-check. Run `npx tsc --noEmit` separately for type checking.
+- No `tsconfig.json` is needed for Node to run `.ts` files.
+
+**Practical implication:** `data-bascik-build` and `data-bascik-server` scripts can import `.ts` helper files and Node handles them natively. Bascik does not need to add its own type-stripping layer for server-side or build-time scripts.
 
 ## Agent Environment Notes
 
@@ -238,9 +246,15 @@ The project uses **Vitest 4** (`"vitest": "^4.1.10"`). Vitest 4 introduced break
 - Use `mfn.mockReset()` in `beforeEach` instead of `vi.clearAllMocks()` / `vi.resetAllMocks()` to avoid module-mock recreation.
 - Read the Vitest 4 migration guide before writing or debugging tests: https://vitest.dev/guide/migration
 
-## TypeScript Type Checking
+## Naming Conventions
 
-**After editing any `.ts` file in `pkg/src/`, run a TSC check before finishing the task:**
+Always choose clear, unambiguous names. When something could be confused with another concept, add the disambiguating word rather than abbreviating. Examples:
+
+- `isProdServer` not `isServe` (there is both a dev server and a prod server)
+- `BASCIK_PROD_SERVER` not `BASCIK_SERVE` (the env var mirrors the concept)
+- Prefer the full word over a contraction when the shorter form is ambiguous in context
+
+## TypeScript Type Checking
 
 ```sh
 npx --prefix pkg tsc -p pkg/tsconfig.json --noEmit

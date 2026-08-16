@@ -7,7 +7,7 @@
     import { join } from 'node:path';
     import { pathToFileURL } from 'node:url';
     const { canonical } = await import(
-      pathToFileURL(join(process.cwd(), 'scripts/canonical.mjs')).href
+      pathToFileURL(join(process.cwd(), 'scripts/canonical.ts')).href
     );
     console.log(await canonical('/recipes/markdown'));
   </script>
@@ -15,7 +15,7 @@
     import { join } from 'node:path';
     import { pathToFileURL } from 'node:url';
     const { openGraph } = await import(
-      pathToFileURL(join(process.cwd(), 'scripts/open-graph.mjs')).href
+      pathToFileURL(join(process.cwd(), 'scripts/open-graph.ts')).href
     );
     console.log(await openGraph());
   </script>
@@ -23,47 +23,13 @@
     import { join } from 'node:path';
     import { pathToFileURL } from 'node:url';
     const { breadcrumbLd } = await import(
-      pathToFileURL(join(process.cwd(), 'scripts/breadcrumb-ld.mjs')).href
+      pathToFileURL(join(process.cwd(), 'scripts/breadcrumb-ld.ts')).href
     );
     console.log(await breadcrumbLd());
   </script>
   <meta name="description"
     content="Bascik does not ship a Markdown pipeline, but build-time scripts are Node.js - so any Markdown library works out of the box." />
   <title>Markdown Recipes - Bascik Docs</title>
-  <style>
-    .markdown-preview-body {
-      padding: 22px 24px 24px;
-      background: #fff;
-      border-radius: 6px;
-      color: #25282d;
-      font: 1rem/1.7 Georgia, serif;
-    }
-
-    .markdown-preview-body h2 {
-      margin: 0 0 10px;
-      padding: 0;
-      border: 0;
-      color: #142c35;
-      font: 700 1.5rem/1.2 system-ui, sans-serif;
-    }
-
-    .markdown-preview-body p {
-      margin-bottom: 16px;
-      color: #4c555b;
-    }
-
-    .markdown-preview-body blockquote {
-      margin: 0;
-      padding: 12px 16px;
-      border-left: 4px solid #b89400;
-      background: #fff5bf;
-    }
-
-    .markdown-preview-body blockquote p {
-      margin: 0;
-      color: #3d3a2a;
-    }
-  </style>
 </head>
 
 <body>
@@ -82,7 +48,7 @@
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
           const { renderMdRange } = await import(
-            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
           );
           console.log(await renderMdRange('./content/markdown.md', { to: 'marked' }));
         </script>
@@ -102,7 +68,7 @@
               <script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
-                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
                 console.log(await extractDemoBlock('./content/markdown.md', 'source-md'));
               </script>
             </code-block>
@@ -112,7 +78,7 @@
               <script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
-                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
                 console.log(await extractDemoBlock('./content/markdown.md', 'output-html'));
               </script>
             </code-block>
@@ -123,7 +89,7 @@
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
           const { renderMdRange } = await import(
-            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
           );
           console.log(await renderMdRange('./content/markdown.md', { from: 'marked' }, { stripDemoBlocks: true }));
         </script>
@@ -131,7 +97,7 @@
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
-          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.ts')).href);
           console.log(renderPagination('/using-markdown'));
         </script>
       </main>

@@ -40,7 +40,7 @@ The skill covers:
 - Component authoring, slots, and props
 - Scoped CSS and scoped JavaScript rules and constraints
 - Build scripts (`data-bascik-build`)
-- Configuration options (`bascik.config.js`)
+- Configuration options (`bascik.config.ts`)
 - CLI commands and workflow
 - The scoping compatibility table
 - Folder structure and naming conventions

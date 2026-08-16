@@ -7,7 +7,7 @@
     import { join } from 'node:path';
     import { pathToFileURL } from 'node:url';
     const { canonical } = await import(
-      pathToFileURL(join(process.cwd(), 'scripts/canonical.mjs')).href
+      pathToFileURL(join(process.cwd(), 'scripts/canonical.ts')).href
     );
     console.log(await canonical());
   </script>
@@ -15,7 +15,7 @@
     import { join } from 'node:path';
     import { pathToFileURL } from 'node:url';
     const { openGraph } = await import(
-      pathToFileURL(join(process.cwd(), 'scripts/open-graph.mjs')).href
+      pathToFileURL(join(process.cwd(), 'scripts/open-graph.ts')).href
     );
     console.log(await openGraph());
   </script>
@@ -23,7 +23,7 @@
     import { join } from 'node:path';
     import { pathToFileURL } from 'node:url';
     const { breadcrumbLd } = await import(
-      pathToFileURL(join(process.cwd(), 'scripts/breadcrumb-ld.mjs')).href
+      pathToFileURL(join(process.cwd(), 'scripts/breadcrumb-ld.ts')).href
     );
     console.log(await breadcrumbLd());
   </script>
@@ -71,12 +71,12 @@
 
         <!-- Content rendered from docs/content/vs-frameworks.md at build time.
              To update page content, edit the MD file - not this file.
-             The MD file also feeds into llms.txt via scripts/generate-llms-txt.mjs. -->
+             The MD file also feeds into llms.txt via scripts/generate-llms-txt.ts. -->
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
           const { renderMd } = await import(
-            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
           );
           console.log(await renderMd('./content/vs-frameworks.md'));
         </script>
@@ -84,7 +84,7 @@
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
-          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.ts')).href);
           console.log(renderPagination('/vs-frameworks'));
         </script>
       </main>

@@ -13,7 +13,7 @@ Build scripts (`<script data-bascik-build>`) run **first**, before component res
 On startup (and whenever a component is added), the watch system calls `processAllPages()` instead of invoking `pageProcessing()` once per file. This avoids redundant I/O:
 
 1. **Hoist shared computation.** `listComponents()` and `resolveInlineStylesHtml()` each run **once**, in parallel, before any page is processed. The results are passed to every page rather than re-computed per page.
-2. **Transpile each page.** By default, pages are transpiled sequentially on the main thread. If `useWorkers: true` is set in `bascik.config.js`, a `WorkerPool` is created instead with `Math.min(os.cpus().length, pageCount)` workers, and each worker is initialised with the shared `componentList` and `globalStylesHtml` via `workerData`. The main thread dispatches page paths through the pool's queue and awaits all results. Worker startup has a fixed cost (each worker loads the transpiler's module graph independently), so this only pays off for larger sites or CPU-heavy per-page work, see the [`useWorkers`](/configuration#useworkers) config option.
+2. **Transpile each page.** By default, pages are transpiled sequentially on the main thread. If `useWorkers: true` is set in `bascik.config.ts`, a `WorkerPool` is created instead with `Math.min(os.cpus().length, pageCount)` workers, and each worker is initialised with the shared `componentList` and `globalStylesHtml` via `workerData`. The main thread dispatches page paths through the pool's queue and awaits all results. Worker startup has a fixed cost (each worker loads the transpiler's module graph independently), so this only pays off for larger sites or CPU-heavy per-page work, see the [`useWorkers`](/configuration#useworkers) config option.
 3. **Apply side effects on the main thread.** After transpilation completes, the main thread runs `mem.storePage()` and emits the `"transpiled"` event for each result. Brotli compression inside `storePage()` runs in the background and does not block the page from being marked ready or served.
 4. **Write to disk only in build mode.** In dev mode, pages are served entirely from the in-memory store, no `dist/` writes happen, so the server is ready as soon as memory is populated.
 
@@ -21,7 +21,7 @@ On startup (and whenever a component is added), the watch system calls `processA
 
 The page phase prepares the source HTML document and orchestrates the component phase:
 
-1. **Execute build scripts.** Any `<script data-bascik-build>` blocks are run as Node.js ESM modules. Their stdout replaces the script tag. The result can contain component tags, these will be resolved in step 4. Output is cached on disk so unchanged scripts skip the child-process spawn on subsequent builds — see [Build Script Output Cache](#build-script-output-cache) below.
+1. **Execute build scripts.** Any `<script data-bascik-build>` blocks are run as Node.js ESM modules. Their stdout replaces the script tag. The result can contain component tags, these will be resolved in step 4. Output is cached on disk so unchanged scripts skip the child-process spawn on subsequent builds (see [Build Script Output Cache](#build-script-output-cache) below).
 2. **Extract body and head.** The inner content of `<body>` and `<head>` are extracted separately so component injection can happen in both zones independently.
 3. **Obtain component list.** On the multi-page startup path (`processAllPages`), the list is pre-computed once and passed in. On a single-page re-transpilation, it is loaded from `src/components/` at this point.
 4. **Run component phase.** `recursivelyTranspile` is called on both the body and head HTML strings. Each call returns a `TranspileResult` containing the resolved HTML and the list of components that were used.
@@ -53,15 +53,15 @@ The key is the SHA-256 hex digest of:
 1. The cache version integer.
 2. The trimmed script content.
 3. `"1"` or `"0"` for build vs. dev mode (`isBuild`), since the same script may produce different output in each mode via the `BASCIK_BUILD` env var.
-4. The current page file path (`BASCIK_PAGE_FILE`). This is critical: scripts like `canonical.mjs` and `open-graph.mjs` have identical content on every page but use `process.env.BASCIK_PAGE_FILE` to produce page-specific output (different URLs). Without this component the cache would return the first page's output for every subsequent page.
+4. The current page file path (`BASCIK_PAGE_FILE`). This is critical: scripts like `canonical.ts` and `open-graph.ts` have identical content on every page but use `process.env.BASCIK_PAGE_FILE` to produce page-specific output (different URLs). Without this component the cache would return the first page's output for every subsequent page.
 5. The site URL (`BASCIK_SITE_URL`), since it can influence output and changes rarely.
 6. The full content of every local file the script references, concatenated in order.
 
-File references are extracted by `extractScriptDeps()` (exported from `build-scripts.ts`), which scans the script source for quoted path literals matching `content/*.md` or `scripts/*.mjs` patterns:
+File references are extracted by `extractScriptDeps()` (exported from `build-scripts.ts`), which scans the script source for quoted path literals matching `content/*.md` or `scripts/*.{mjs,js,ts}` patterns:
 
 ```text
 './content/foo.md'          → included in key
-'scripts/md-renderer.mjs'  → included in key
+'scripts/md-renderer.ts'  → included in key
 ```
 
 If the script contains no detectable references, only items 1–5 contribute to the key.
@@ -70,7 +70,7 @@ If the script contains no detectable references, only items 1–5 contribute to 
 
 Because the content of every referenced file is hashed into the key, editing a content file produces a new key for any script that references it, giving a cache miss. Scripts on other pages that do not reference that file keep their old keys and continue to hit the cache.
 
-To bust the entire cache manually — for example after upgrading `marked` or another build-time dependency that `scripts/*.mjs` files import — delete the cache directory:
+To bust the entire cache manually, for example after upgrading `marked` or another build-time dependency that `scripts/*.{mjs,js,ts}` files import, delete the cache directory:
 
 ```sh
 rm -rf node_modules/.cache/bascik/script-cache
@@ -101,7 +101,7 @@ A fresh `instanceId` (a random 8-byte hex string) is generated for this occurren
 3. `prefixElementAttribute(c, "class", instanceId)`: scopes class names in HTML attributes, CSS, and JS selector calls.
 4. `namespaceScriptTags(c)`: wraps every inline `<script>` in an IIFE.
 
-Each step is skipped if disabled in `bascik.config.js`.
+Each step is skipped if disabled in `bascik.config.ts`.
 
 ### Step 2: Template resolution
 

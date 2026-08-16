@@ -25,7 +25,7 @@ src/                         src/components/
 
 ## Component Syntax
 
-A Bascik component is a plain HTML file. There are no `<script>`, `<template>`, or `<style>` blocks in the component file itself — the HTML is the component markup. Scoped styles go in a paired `.css` file.
+A Bascik component is a plain HTML file. There are no `<script>`, `<template>`, or `<style>` blocks in the component file itself; the HTML is the component markup. Scoped styles go in a paired `.css` file.
 
 ```html
 <!-- SiteNav.svelte (Svelte - before) -->

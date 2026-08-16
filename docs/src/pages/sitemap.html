@@ -7,7 +7,7 @@
     import { join } from 'node:path';
     import { pathToFileURL } from 'node:url';
     const { canonical } = await import(
-      pathToFileURL(join(process.cwd(), 'scripts/canonical.mjs')).href
+      pathToFileURL(join(process.cwd(), 'scripts/canonical.ts')).href
     );
     console.log(await canonical());
   </script>
@@ -15,7 +15,7 @@
     import { join } from 'node:path';
     import { pathToFileURL } from 'node:url';
     const { openGraph } = await import(
-      pathToFileURL(join(process.cwd(), 'scripts/open-graph.mjs')).href
+      pathToFileURL(join(process.cwd(), 'scripts/open-graph.ts')).href
     );
     console.log(await openGraph());
   </script>
@@ -23,12 +23,12 @@
     import { join } from 'node:path';
     import { pathToFileURL } from 'node:url';
     const { breadcrumbLd } = await import(
-      pathToFileURL(join(process.cwd(), 'scripts/breadcrumb-ld.mjs')).href
+      pathToFileURL(join(process.cwd(), 'scripts/breadcrumb-ld.ts')).href
     );
     console.log(await breadcrumbLd());
   </script>
   <meta name="description"
-    content="Bascik generates a sitemap.xml and robots.txt automatically from your pages directory. Configure the base URL in bascik.config.js." />
+    content="Bascik generates a sitemap.xml and robots.txt automatically from your pages directory. Configure the base URL in bascik.config.ts." />
   <title>Sitemap & robots.txt - Bascik Docs</title>
 </head>
 
@@ -49,14 +49,14 @@
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
           const { renderMd } = await import(
-            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
           );
           console.log(await renderMd('./content/sitemap.md'));
         </script>
 
         <div class="callout">
           <p><strong>Next:</strong> See <a href="/configuration">Configuration</a> for the full list of
-            <code>bascik.config.js</code> options including <code>siteUrl</code> and <code>generateSitemap</code>.
+            <code>bascik.config.ts</code> options including <code>siteUrl</code> and <code>generateSitemap</code>.
           </p>
         </div>
       </main>

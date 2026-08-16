@@ -2,8 +2,8 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 
 // userConfig is mocked so config.ts can be imported without top-level await
 vi.mock("./userConfig.js", () => ({
-  bascikConfig: {},
-  buildOverrideConfig: {},
+  config: {},
+  buildConfig: {},
 }));
 
 import { defaultConfig, BascikConfig, initBascikConfig } from "./config.js";
@@ -209,6 +209,15 @@ describe("user config overrides", () => {
     expect(cfg.minifyStyles).toBe(true);
   });
 
+  it("lets buildOverrideConfig win over userConfig during --serve", () => {
+    const { BascikConfig: cfg } = initBascikConfig(
+      { minifyStyles: false },
+      { minifyStyles: true },
+      { isProdServer: true },
+    );
+    expect(cfg.minifyStyles).toBe(true);
+  });
+
   it("ignores buildOverrideConfig in dev mode", () => {
     const { BascikConfig: cfg } = initBascikConfig(
       { minifyStyles: false },
@@ -228,6 +237,16 @@ describe("buildOverrideConfig.serve merge", () => {
     );
     expect(cfg.serve?.port).toBe(443);
     // Keys not overridden by the build config keep the user value.
+    expect(cfg.serve?.hostname).toBe("example.test");
+  });
+
+  it("merges buildOverrideConfig.serve over user serve config during --serve", () => {
+    const { BascikConfig: cfg } = initBascikConfig(
+      { serve: { port: 9000, hostname: "example.test" } },
+      { serve: { port: 443 } },
+      { isProdServer: true },
+    );
+    expect(cfg.serve?.port).toBe(443);
     expect(cfg.serve?.hostname).toBe("example.test");
   });
 

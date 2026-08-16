@@ -15,7 +15,7 @@
   ],
   "contributes": {},
   "scripts": {
-    "precompile": "node ../../docs/scripts/generate-compatibility-rules.mjs",
+    "precompile": "node ../../docs/scripts/generate-compatibility-rules.ts",
     "compile": "tsc -p ./tsconfig.json",
     "watch": "tsc -watch -p ./tsconfig.json",
     "vscode:prepublish": "npm run compile"

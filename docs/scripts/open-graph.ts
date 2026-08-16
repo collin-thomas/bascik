@@ -8,20 +8,28 @@
  *   import { join } from 'node:path';
  *   import { pathToFileURL } from 'node:url';
  *   const { openGraph } = await import(
- *     pathToFileURL(join(process.cwd(), 'scripts/open-graph.mjs')).href
+ *     pathToFileURL(join(process.cwd(), 'scripts/open-graph.ts')).href
  *   );
  *   console.log(await openGraph());
  */
 import { readFile } from 'node:fs/promises';
 
-function extractTitle(html) {
+function escapeHtmlAttr(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function extractTitle(html: string): string {
   const m = html.match(/<title[^>]*>([^<]+)<\/title>/i);
   return m ? m[1].trim() : '';
 }
 
-function extractDescription(html) {
+function extractDescription(html: string): string {
   const metaRe = /<meta([^>]+)>/gi;
-  let m;
+  let m: RegExpExecArray | null;
   while ((m = metaRe.exec(html)) !== null) {
     const attrs = m[1];
     if (/name\s*=\s*["']description["']/i.test(attrs)) {
@@ -32,7 +40,7 @@ function extractDescription(html) {
   return '';
 }
 
-export async function openGraph() {
+export async function openGraph(): Promise<string> {
   const siteUrl = (process.env.BASCIK_SITE_URL ?? '').replace(/\/$/, '');
   const pageFile = process.env.BASCIK_PAGE_FILE ?? '';
   const pagesDir = process.env.BASCIK_PAGES_DIR ?? '';
@@ -54,13 +62,17 @@ export async function openGraph() {
   const tags = [
     `<meta property="og:type" content="website" />`,
     `<meta property="og:site_name" content="Bascik" />`,
-    `<meta property="og:url" content="${url}" />`,
+    `<meta property="og:url" content="${escapeHtmlAttr(url)}" />`,
   ];
-  if (title) tags.push(`<meta property="og:title" content="${title}" />`);
-  if (description) tags.push(`<meta property="og:description" content="${description}" />`);
+  if (title) tags.push(`<meta property="og:title" content="${escapeHtmlAttr(title)}" />`);
+  if (description) {
+    tags.push(`<meta property="og:description" content="${escapeHtmlAttr(description)}" />`);
+  }
   tags.push(`<meta name="twitter:card" content="summary" />`);
-  if (title) tags.push(`<meta name="twitter:title" content="${title}" />`);
-  if (description) tags.push(`<meta name="twitter:description" content="${description}" />`);
+  if (title) tags.push(`<meta name="twitter:title" content="${escapeHtmlAttr(title)}" />`);
+  if (description) {
+    tags.push(`<meta name="twitter:description" content="${escapeHtmlAttr(description)}" />`);
+  }
 
   return tags.join('\n');
 }

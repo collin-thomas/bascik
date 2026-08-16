@@ -4,12 +4,12 @@ import { join } from "node:path";
 import { mem } from "./mem.js";
 import { serveProduction } from "./serve.js";
 
-const { serveHttp2Mock } = vi.hoisted(() => ({
-  serveHttp2Mock: vi.fn().mockResolvedValue(undefined),
+const { startHttp2ServerMock } = vi.hoisted(() => ({
+  startHttp2ServerMock: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("./http2.js", () => ({
-  serveHttp2: serveHttp2Mock,
+  startHttp2Server: startHttp2ServerMock,
 }));
 
 describe("serveProduction", () => {
@@ -17,7 +17,7 @@ describe("serveProduction", () => {
   let originalCwd: string;
 
   beforeEach(async () => {
-    serveHttp2Mock.mockClear();
+    startHttp2ServerMock.mockClear();
     originalCwd = process.cwd();
     workDir = join(originalCwd, `.serve-test-${process.pid}-${Date.now()}`);
     await mkdir(join(workDir, "dist"), { recursive: true });
@@ -35,7 +35,7 @@ describe("serveProduction", () => {
       /could not read dist\/ directory/,
     );
     await expect(serveProduction()).rejects.toThrow(/bascik --build/);
-    expect(serveHttp2Mock).not.toHaveBeenCalled();
+    expect(startHttp2ServerMock).not.toHaveBeenCalled();
   });
 
   it("warns but still serves when dist/ contains no HTML pages", async () => {
@@ -47,7 +47,7 @@ describe("serveProduction", () => {
     expect(warn).toHaveBeenCalledWith(
       expect.stringContaining("no HTML pages found"),
     );
-    expect(serveHttp2Mock).toHaveBeenCalledOnce();
+    expect(startHttp2ServerMock).toHaveBeenCalledOnce();
     warn.mockRestore();
     log.mockRestore();
   });
@@ -66,7 +66,7 @@ describe("serveProduction", () => {
 
     await serveProduction();
 
-    expect(serveHttp2Mock).toHaveBeenCalledOnce();
+    expect(startHttp2ServerMock).toHaveBeenCalledOnce();
 
     const home = mem.getPageExact("/");
     const about = mem.getPageExact("/about");

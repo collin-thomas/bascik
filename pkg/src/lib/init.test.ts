@@ -67,7 +67,7 @@ describe("initProject", () => {
     await initProject();
     const cfg = writtenTo("bascik.config.js");
     expect(cfg).toBeDefined();
-    expect(cfg).toContain("export const bascikConfig");
+    expect(cfg).toContain("export const build");
   });
 
   it("skips index.html when it already exists", async () => {

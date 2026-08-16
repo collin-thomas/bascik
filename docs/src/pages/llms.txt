@@ -40,7 +40,7 @@ The skill covers:
 - Component authoring, slots, and props
 - Scoped CSS and scoped JavaScript rules and constraints
 - Build scripts (`data-bascik-build`)
-- Configuration options (`bascik.config.js`)
+- Configuration options (`bascik.config.ts`)
 - CLI commands and workflow
 - The scoping compatibility table
 - Folder structure and naming conventions
@@ -102,10 +102,10 @@ The `featured` class is a global class that you define in your page-level styles
 
 ## Disabling It
 
-Attribute inheritance is enabled by default. Set `inheritAttributes: false` in `bascik.config.js` when you want every component root to be controlled only by its own template:
+Attribute inheritance is enabled by default. Set `inheritAttributes: false` in `bascik.config.ts` when you want every component root to be controlled only by its own template:
 
 ```js
-export const bascikConfig = {
+export default {
   inheritAttributes: false,
 };
 ```
@@ -206,7 +206,7 @@ Output in the compiled HTML:
 
 If a build script throws, Bascik logs a warning and replaces the script tag with an empty string. The build continues rather than aborting. Check your terminal output if content is missing from the page.
 
-One case that does hard-fail and abort the build: putting both `data-bascik-build` and `data-bascik-server` on the same `<script>` tag. That combination is never valid — a script runs at build time or at request time, not both. Bascik throws an error with the file name and line number. The VS Code extension also flags it as an error before you build.
+One case that does hard-fail and abort the build: putting both `data-bascik-build` and `data-bascik-server` on the same `<script>` tag. That combination is never valid: a script runs at build time or at request time, not both. Bascik throws an error with the file name and line number. The VS Code extension also flags it as an error before you build.
 
 ## Example: Reading a Markdown File
 
@@ -347,11 +347,29 @@ Environment variables set in your shell or a `.env` file (loaded with a tool lik
 </script>
 ```
 
+## Script Caching
+
+Bascik caches build script output to `node_modules/.cache/bascik/script-cache/` so subsequent builds skip the Node.js subprocess entirely for unchanged scripts. The cache key is a SHA-256 hash of:
+
+- The script body
+- The contents of any local `scripts/` or `content/` files the script imports
+- The `isBuild` flag and `siteUrl`
+
+If a dependency file changes (because you edited it or switched branches), the cache entry is invalid and the script re-runs automatically. On a large site with many build scripts, the first build after a content change is slower; subsequent builds use the cache.
+
+To clear the cache manually (useful after a branch switch that changes shared scripts):
+
+```sh
+rm -rf node_modules/.cache/bascik/script-cache
+```
+
+To disable caching entirely, set `buildScriptCache: false` in your config. This is useful for scripts that read live external state not reflected in their source files.
+
 ## Limitations
 
 - **No streaming:** the full stdout of the script is collected before injection. You cannot stream HTML into the page incrementally.
 - **No HMR awareness:** in dev mode Bascik watches source files. If a build script reads an external file, changes to that file won't automatically re-trigger the script. Restart the dev server to re-run.
-- **ESM only:** scripts are written as `.mjs` files. Use `import` syntax; `require()` is not available.
+- **ESM only:** Build scripts run as ES modules. Use `import`/`export` syntax; `require()` is not available. Write helpers as `.ts` (preferred on Node 24), `.js`, or `.mjs`. The `.mjs` extension explicitly marks a file as ESM regardless of `package.json` settings; the "m" stands for "module." In a Bascik project with `"type": "module"` in `package.json` (the default), plain `.js` and `.ts` work identically, so `.mjs` is usually unnecessary.
 - **Node.js only:** browser globals like `window` and `document` are not available in build scripts.
 
 For per-request server-side rendering, see [Server scripts](/server).
@@ -397,7 +415,7 @@ Scaffolds a complete starter project in a new directory. Prompts for a project n
 ```text
 my-project/
   package.json
-  bascik.config.js
+  bascik.config.ts
   .gitignore
   .github/skills/bascik/SKILL.md
   .claude/skills/bascik/SKILL.md
@@ -590,6 +608,8 @@ bascik --build
 
 The output uses root-relative asset paths (for example `/css/styles.css`) and must be served by an HTTP server. Opening files directly with `file://` will break stylesheet and script loading.
 
+For guidance on deploying to static hosts or running the production server, see [Deploying](/resources/deploying).
+
 ## Production server
 
 `bascik --serve` starts the same HTTP/2 server used for development, but pointed at a pre-built `dist/` directory. Run `--build` first, then `--serve`:
@@ -606,11 +626,11 @@ The production server:
 
 ### Configuring the server
 
-Use the `serve` key in `bascik.config.js` to customize the server for both dev and production:
+Use the `serve` key in `bascik.config.ts` to customize the server for both dev and production:
 
-```js
-// bascik.config.js
-export const bascikConfig = {
+```ts
+// bascik.config.ts
+export default {
   serve: {
     port: 443,
     hostname: '0.0.0.0',   // bind all interfaces (needed in containers)
@@ -978,7 +998,7 @@ btn.addEventListener('click', () => {
 
 ## HTML, CSS, and JavaScript Together
 
-All three can live in a single file. A `<style>` block, the markup, and a `<script>` block in any order — Bascik handles all of them.
+All three can live in a single file. A `<style>` block, the markup, and a `<script>` block in any order; Bascik handles all of them.
 
 <!-- demo:source-usage-alert -->
 ```html
@@ -1048,7 +1068,7 @@ All three can live in a single file. A `<style>` block, the markup, and a `<scri
 
 ## Separate CSS Files
 
-As a component grows, moving the CSS into its own file keeps things readable. Create a `.css` file with the same base name alongside the `.html` file. Both approaches are fully equivalent — Bascik applies the same scoping either way.
+As a component grows, moving the CSS into its own file keeps things readable. Create a `.css` file with the same base name alongside the `.html` file. Both approaches are fully equivalent; Bascik applies the same scoping either way.
 
 <!-- demo:source-usage-card -->
 ```html
@@ -1117,13 +1137,15 @@ Bascik derives the tag name from the `.html` filename, not the folder. `feature-
 
 # Configuration
 
-Create a `bascik.config.js` file in your project root to override any default settings.
+Create a `bascik.config.ts` file in your project root to override any default settings. Import `defineConfig` for full autocomplete and type checking on every option; your editor will surface valid values, flag typos, and show inline docs as you type. A plain `bascik.config.js` also works and takes precedence if both files exist.
 
 ## Full Example
 
-```js
-// bascik.config.js
-export const bascikConfig = {
+```ts
+// bascik.config.ts
+import { defineConfig } from '@bascik/bascik/config';
+
+export default defineConfig({
   directory: {
     pages: 'src/pages',
     components: 'src/components',
@@ -1167,12 +1189,12 @@ export const bascikConfig = {
       transpiles: true,
     },
   },
-};
+});
 
-export const buildOverrideConfig = {
+export const build = defineConfig({
   obfuscateAttributeNames: true,
   minifyStyles: true,
-};
+});
 ```
 
 ## Options Reference
@@ -1252,19 +1274,22 @@ Minify inline `<script>` content and `.js` static files in the build output. Acc
 - **`false`:** no minification.
 - **`(fn)`:** a custom async-capable function called for each script body. Use this to plug in esbuild, terser, or any other tool:
 
-```js
-// bascik.config.js
+```ts
+// bascik.config.ts
+import { defineConfig } from '@bascik/bascik/config';
 import { transform } from 'esbuild';
 
-export const buildOverrideConfig = {
+export const build = defineConfig({
   minifyScripts: async (js) => {
     const result = await transform(js, { minify: true, loader: 'js' });
     return result.code;
   },
-};
+});
 ```
 
 Only applies to inline scripts (those without a `src` attribute) and to `.js` files copied into `dist/`. Non-JS script types such as `application/ld+json` are always left untouched.
+
+To strip TypeScript from component scripts, pass Node's built-in `stripTypeScriptTypes` here. See [TypeScript in Component Scripts](/scoped-javascript#typescript-in-component-scripts).
 
 ### `obfuscateAttributeNames`
 
@@ -1381,17 +1406,19 @@ inlineStyles: true
 inlineStyles: ['src/pages/css/styles.css']
 ```
 
-This eliminates the render-blocking `<link rel="stylesheet">` request, the CSS arrives in the same HTTP response as the HTML. It pairs naturally with `buildOverrideConfig` to minify only in production:
+This eliminates the render-blocking `<link rel="stylesheet">` request, the CSS arrives in the same HTTP response as the HTML. It pairs naturally with `build` to minify only in production:
 
-```js
-export const bascikConfig = {
+```ts
+import { defineConfig } from '@bascik/bascik/config';
+
+export default defineConfig({
   inlineStyles: ['src/pages/css/styles.css'],
   minifyStyles: false,
-};
+});
 
-export const buildOverrideConfig = {
+export const build = defineConfig({
   minifyStyles: true,
-};
+});
 ```
 
 > **When to inline.** Stylesheets under ~15 KB (gzipped) are good candidates. Larger stylesheets are better loaded asynchronously or split into critical and non-critical parts.
@@ -1418,7 +1445,7 @@ buildScriptCache: true  // default
 buildScriptCache: false // disable for debugging
 ```
 
-Cache entries live in `node_modules/.cache/bascik/script-cache/`. The cache key covers the script content, dev/build mode, the current page path (`BASCIK_PAGE_FILE`), the site URL, and the content of any `content/*.md` or `scripts/*.mjs` files the script references as quoted path literals. This means the cache self-invalidates on a per-script basis: editing one Markdown file only invalidates scripts that reference that file.
+Cache entries live in `node_modules/.cache/bascik/script-cache/`. The cache key covers the script content, dev/build mode, the current page path (`BASCIK_PAGE_FILE`), the site URL, and the content of any `content/*.md` or `scripts/*.{mjs,js,ts}` files the script references as quoted path literals. This means the cache self-invalidates on a per-script basis: editing one Markdown file only invalidates scripts that reference that file.
 
 To bust the entire cache manually, for example after upgrading a build-time npm dependency whose output changed:
 
@@ -1428,12 +1455,12 @@ rm -rf node_modules/.cache/bascik/script-cache
 
 Set to `false` when debugging a script that reads external state not covered by the cache key (e.g. a live API call or a file referenced by a dynamic path).
 
-## `buildOverrideConfig`
+## `build`
 
-Exporting a second `buildOverrideConfig` object lets you set options that only apply during `bascik --build`, overriding the values in `bascikConfig`. A common pattern is to enable obfuscation and minification only in production:
+Exporting a `build` object lets you set options that apply during `bascik --build` and `bascik --serve` (production server), overriding the default export. A common pattern is to enable obfuscation and minification only in production:
 
 ```js
-export const buildOverrideConfig = {
+export const build = {
   obfuscateAttributeNames: true,
   minifyStyles: true,
   minifyScripts: true, // or a custom function for esbuild/terser
@@ -1548,7 +1575,7 @@ When you build your site for production (`bascik --build`), this file is compile
 Once your first page is running, the next docs pages map cleanly to the next questions people usually have:
 
 - **[CLI / Command Line](/cli):** command output, watch behavior, `--check`, and production preview commands
-- **[Configuration](/configuration):** every `bascik.config.js` option in one place
+- **[Configuration](/configuration):** every `bascik.config.ts` option in one place
 - **[Scoped Styles](/scoped-styles):** how paired `.css` files and inline `<style>` tags are isolated per component
 
 ### A Small First Habit
@@ -1567,7 +1594,7 @@ Bascik requires Node.js v24+. Get up and running in under five minutes.
 
 ## Quick Start
 
-The fastest way to start a new Bascik project — no prompts, just a running site:
+The fastest way to start a new Bascik project with no prompts, just a running site:
 
 ```sh
 npm create bascik@latest my-site -y
@@ -1577,7 +1604,7 @@ That scaffolds the project, installs dependencies, and starts the dev server in 
 
 Pass a different name to use it as both the directory name and the site title. If you omit the name, the tool prompts for one (defaulting to `bascik-app`). Drop `-y` to step through the install and dev server prompts manually.
 
-`npm create bascik@latest` scaffolds a complete starter site: pages, components, global CSS, `bascik.config.js`, and a `.gitignore`. If you prefer to set everything up manually, see [Manual Setup](#manual-setup) below.
+`npm create bascik@latest` scaffolds a complete starter site: pages, components, global CSS, `bascik.config.ts`, and a `.gitignore`. If you prefer to set everything up manually, see [Manual Setup](#manual-setup) below.
 
 ## Starting the Dev Server
 
@@ -1595,7 +1622,7 @@ After running `mkcert -install`, restart the dev server. See the [CLI page](/cli
 
 ## Folder Structure
 
-Bascik looks for two directories by default. Both can be overridden in [bascik.config.js](/configuration).
+Bascik looks for two directories by default. Both can be overridden in [bascik.config.ts](/configuration).
 
 ```text
 src/
@@ -1699,8 +1726,8 @@ All logic lives in `pkg/src/lib/`. Each file has a single, well-defined responsi
 
 | Module | Responsibility |
 |--------|----------------|
-| `config.ts` | Loads and merges `bascik.config.js`, default config, and build overrides into a single frozen `BascikConfig` object consumed everywhere else. |
-| `userConfig.ts` | Dynamically imports the user's `bascik.config.js` from `process.cwd()`, exporting `bascikConfig` and `buildOverrideConfig`. |
+| `config.ts` | Loads and merges `bascik.config.ts`, default config, and build overrides into a single frozen `BascikConfig` object consumed everywhere else. |
+| `userConfig.ts` | Dynamically imports the user's `bascik.config` from `process.cwd()`, exporting `config` and `buildConfig`. |
 | `processing.ts` | The core transpilation pipeline. Contains `pageProcessing` (page phase) and `recursivelyTranspile` (component phase), plus pipeline utility types. |
 | `components.ts` | Loads component HTML and CSS files from disk, detects component tags in HTML strings, extracts props/slots/attributes, and injects resolved content back. Tag detection masks `<script>`/`<style>`/`<textarea>` content so literal tag text (e.g. in JSON-LD strings) is never resolved. |
 | `javascript.ts` | The scoping transforms: `prefixElementAttribute` (rewrites HTML attributes, JS DOM selectors, and CSS) and `namespaceScriptTags` (wraps scripts in IIFEs). |
@@ -1771,7 +1798,7 @@ The package ships as native ESM (`"type": "module"` in `package.json`). TypeScri
 
 ### CPU-aware worker pool (opt-in)
 
-When `useWorkers: true` is set in `bascik.config.js` (default `false`), `processAllPages()` creates `Math.min(os.cpus().length, pageCount)` worker threads via `worker-pool.ts` instead of transpiling sequentially on the main thread. Each worker is initialised once with the pre-computed `componentList` and `globalStylesHtml`, then reused for every page assigned to it. The main thread dispatches page paths through the pool's task queue and collects results to apply side effects (memory storage, event emission) after all workers complete.
+When `useWorkers: true` is set in `bascik.config.ts` (default `false`), `processAllPages()` creates `Math.min(os.cpus().length, pageCount)` worker threads via `worker-pool.ts` instead of transpiling sequentially on the main thread. Each worker is initialised once with the pre-computed `componentList` and `globalStylesHtml`, then reused for every page assigned to it. The main thread dispatches page paths through the pool's task queue and collects results to apply side effects (memory storage, event emission) after all workers complete.
 
 Spinning up the pool has a fixed cost, each worker loads the transpiler's module graph independently before it can process its first page. This pays for itself on larger sites with CPU-heavy per-page work, but for small sites (or sites whose slow parts are I/O-bound, like `<script data-bascik-build>` blocks) sequential transpilation on the main thread is often faster overall. See the [`useWorkers`](/configuration#useworkers) config option.
 
@@ -1797,13 +1824,13 @@ on:
 
 It runs two parallel jobs across Node 24:
 
-**`test`** — unit tests with coverage:
+**`test`**: unit tests with coverage:
 
 ```sh
 yarn test:ci
 ```
 
-**`e2e`** — end-to-end Playwright tests against the built fixture site:
+**`e2e`**: end-to-end Playwright tests against the built fixture site:
 
 ```sh
 yarn build && yarn e2e
@@ -1813,7 +1840,7 @@ The `e2e` job installs only the Chromium browser via `playwright install --with-
 
 ## Release Workflow
 
-The release workflow (`.github/workflows/release.yml`) triggers on version tags. The two packages are **independently versioned and released** — pushing a tag only publishes the package that tag belongs to.
+The release workflow (`.github/workflows/release.yml`) triggers on version tags. The two packages are **independently versioned and released**; pushing a tag only publishes the package that tag belongs to.
 
 | Package | Tag format | Example |
 |---|---|---|
@@ -1848,8 +1875,8 @@ Both packages publish to the public npm registry using a granular access token s
 
 Two flags are always passed:
 
-- `--access public` — required for scoped packages (`@bascik/bascik`) and explicit for `create-bascik`. Both `package.json` files also declare `"publishConfig": { "access": "public" }` as a belt-and-suspenders default.
-- `--provenance` — generates a signed attestation on npmjs.com that links the published package to the exact GitHub Actions run that built it. This requires `id-token: write` permission on the job.
+- `--access public`: required for scoped packages (`@bascik/bascik`) and explicit for `create-bascik`. Both `package.json` files also declare `"publishConfig": { "access": "public" }` as a belt-and-suspenders default.
+- `--provenance`: generates a signed attestation on npmjs.com that links the published package to the exact GitHub Actions run that built it. This requires `id-token: write` permission on the job.
 
 ## Tagging a Release
 
@@ -1892,8 +1919,8 @@ That split keeps the monorepo dev flow simple and keeps the generated project fa
 
 The package has two source files with distinct responsibilities:
 
-- `create/src/scaffold.ts` — pure data and file-writing logic. All generated file content lives here as exported string constants and functions. No I/O beyond `fs/promises`. This is what the tests cover.
-- `create/src/index.ts` — the CLI entry point. Handles prompts, the `-y` flag, and spawns `npm install` / `npm run dev`. Not unit-tested.
+- `create/src/scaffold.ts`: pure data and file-writing logic. All generated file content lives here as exported string constants and functions. No I/O beyond `fs/promises`. This is what the tests cover.
+- `create/src/index.ts`: the CLI entry point. Handles prompts, the `-y` flag, and spawns `npm install` / `npm run dev`. Not unit-tested.
 
 Keeping them split means you can test every generated file without invoking the CLI or touching the filesystem.
 
@@ -1904,8 +1931,10 @@ Running `npx create-bascik <name>` writes this structure:
 ```text
 <name>/
   package.json
-  bascik.config.js
+  bascik.config.ts
   .gitignore
+  .github/skills/bascik/SKILL.md
+  .claude/skills/bascik/SKILL.md
   src/
     pages/
       index.html
@@ -1948,7 +1977,7 @@ cd create
 npm run build
 ```
 
-The `npm link` symlink points at the `create/` directory, so a fresh `dist/` is picked up immediately without relinking. `npm link` also runs `prepare`, which copies the latest SKILL.md from docs and rebuilds `dist/` — so the initial link after a fresh checkout needs no separate build step.
+The `npm link` symlink points at the `create/` directory, so a fresh `dist/` is picked up immediately without relinking. `npm link` also runs `prepare`, which copies the latest SKILL.md from docs and rebuilds `dist/`, so the initial link after a fresh checkout needs no separate build step.
 
 ## Tests
 
@@ -1991,7 +2020,7 @@ cd create && npm install && npm link && cd ..
 npx create-bascik my-site -y
 ```
 
-The `-y` flag skips both prompts. The npm install will print a 404 error for `@bascik/bascik` (not on npm yet), but the dev server starts anyway — the workspace `node_modules` symlink resolves the package. Command+Click the URL to open it in a browser.
+The `-y` flag skips both prompts. The npm install will print a 404 error for `@bascik/bascik` (not on npm yet), but the dev server starts anyway; the workspace `node_modules` symlink resolves the package. Command+Click the URL to open it in a browser.
 
 ```text
 Server running at https://localhost:8443
@@ -2052,13 +2081,13 @@ Requests are dispatched in this order:
 
 ### Why in-memory beats streaming for HTML pages
 
-Static assets (CSS, JS, images) are served with `createReadStream().pipe(stream)` because they live on disk and streaming avoids loading them into memory twice. HTML pages work differently: every page is already fully materialized as a `Buffer` in `MemoryStore` from the moment it finishes transpiling. For an in-memory buffer there is no I/O to pipeline — the bottleneck that streaming exists to solve is absent. Sending the buffer directly with `stream.end(buf)` is a single syscall into the HTTP/2 framer, whereas piping through a `Readable` adds queue overhead for no gain. Pre-compressed brotli buffers follow the same pattern: `stream.end(page.compressedContent)` avoids per-request compression entirely.
+Static assets (CSS, JS, images) are served with `createReadStream().pipe(stream)` because they live on disk and streaming avoids loading them into memory twice. HTML pages work differently: every page is already fully materialized as a `Buffer` in `MemoryStore` from the moment it finishes transpiling. For an in-memory buffer there is no I/O to pipeline; the bottleneck that streaming exists to solve is absent. Sending the buffer directly with `stream.end(buf)` is a single syscall into the HTTP/2 framer, whereas piping through a `Readable` adds queue overhead for no gain. Pre-compressed brotli buffers follow the same pattern: `stream.end(page.compressedContent)` avoids per-request compression entirely.
 
 ### Boot page during initial startup
 
 The dev server binds its port concurrently with page transpilation. Any request that arrives before a page has been stored in `mem` would otherwise return a bare 404. Instead, Bascik serves a lightweight boot page: a spinner with a short "Building site..." label. The page carries no framework or external resources.
 
-The boot page connects to the normal `/bascik-live-reload` SSE endpoint. Because the Referer header contains the originally requested URL, the SSE handler tracks it the same way it tracks any open page. When that specific page finishes transpiling, the `"transpiled"` event fires and the SSE connection sends `reload` — the browser fetches the real page immediately without waiting for the rest of the project to finish. As a belt-and-suspenders measure, a `"boot-done"` event is emitted on the shared event emitter once `watchFiles()` resolves, which flushes any remaining boot-page connections (for example, a request to a path that does not exist yet). If the SSE connection itself fails before the page is ready, an `onerror` handler retries with a one-second `setTimeout`.
+The boot page connects to the normal `/bascik-live-reload` SSE endpoint. Because the Referer header contains the originally requested URL, the SSE handler tracks it the same way it tracks any open page. When that specific page finishes transpiling, the `"transpiled"` event fires and the SSE connection sends `reload`; the browser fetches the real page immediately without waiting for the rest of the project to finish. As a belt-and-suspenders measure, a `"boot-done"` event is emitted on the shared event emitter once `watchFiles()` resolves, which flushes any remaining boot-page connections (for example, a request to a path that does not exist yet). If the SSE connection itself fails before the page is ready, an `onerror` handler retries with a one-second `setTimeout`.
 
 The `isBooting` flag in `mem.ts` is set to `true` on module load and cleared (alongside the `"boot-done"` event) by `transpile.ts` immediately after `watchFiles()` resolves. Once the flag is cleared, unmatched paths fall through to the normal 404 path. The boot page is never served in `--serve` (production) mode.
 
@@ -2083,8 +2112,8 @@ This inverted index powers selective re-transpilation. When a component file cha
 When a file change triggers a full re-transpile of all pages (e.g. a file in `directory.watch` changed), Bascik uses the `#openPages` set to sort the page list so currently-open pages are transpiled first. Those pages emit the `"transpiled"` event before the rest of the batch, which means the browser live-reload fires as soon as the visible page is ready rather than waiting for all pages to finish.
 
 The tracking lifecycle:
-1. An SSE connection opens at `/bascik-live-reload` — the server parses the `Referer` header and calls `mem.trackOpenPage(path)`.
-2. The SSE stream closes (tab navigates away, browser closes) — the server calls `mem.untrackOpenPage(path)`.
+1. An SSE connection opens at `/bascik-live-reload`; the server parses the `Referer` header and calls `mem.trackOpenPage(path)`.
+2. The SSE stream closes (tab navigates away, browser closes); the server calls `mem.untrackOpenPage(path)`.
 3. `partitionByOpenPages` in `processing.ts` splits any page list into `[openPages, rest]` and the caller awaits open pages first.
 
 ### Brotli compression
@@ -2209,7 +2238,7 @@ p { margin: 0; }
 <p class="bascik__site-nav__el__p">Content</p>
 ```
 
-`html`, `body`, and `head` are excluded from element-to-class conversion. Cross-boundary selectors like `html[data-theme="light"] .foo {}` are left with the root element name intact, so the scoped output is `html[data-theme="light"] .bascik__...__foo {}` — matching correctly when the document root carries a theme or state attribute.
+`html`, `body`, and `head` are excluded from element-to-class conversion. Cross-boundary selectors like `html[data-theme="light"] .foo {}` are left with the root element name intact, so the scoped output is `html[data-theme="light"] .bascik__...__foo {}`, which matches correctly when the document root carries a theme or state attribute.
 
 ### @keyframes
 
@@ -2329,10 +2358,10 @@ The CSS pass scopes every class name it finds in the `.css` file regardless of w
 
 To fix this, after the HTML attribute pass builds the initial class scope map, a second scan over every `<script>` block extracts class name string literals from all class-referencing JS patterns and adds any new names to the scope map before the JS rewrite runs:
 
-- `classList.add / remove / toggle / contains / replace` — every quoted argument
-- `querySelector / querySelectorAll / closest / matches` — every `.className` token in the selector string
-- `el.className = "…"` and `el.className += "…"` — every space-separated token
-- `el.setAttribute("class", "…")` — every space-separated token
+- `classList.add / remove / toggle / contains / replace`: every quoted argument
+- `querySelector / querySelectorAll / closest / matches`: every `.className` token in the selector string
+- `el.className = "…"` and `el.className += "…"`: every space-separated token
+- `el.setAttribute("class", "…")`: every space-separated token
 
 This means modifier classes like `btn--active` that are only ever toggled dynamically still get scoped correctly in both CSS and JS without any special annotation:
 
@@ -2522,7 +2551,7 @@ The e2e fixture is a small but complete Bascik project at `pkg/e2e/`:
 
 ```text
 pkg/e2e/
-  bascik.config.js       ← fixture config (obfuscateAttributeNames: false)
+  bascik.config.ts       ← fixture config (obfuscateAttributeNames: false)
   playwright.config.ts   ← Playwright config; builds + serves fixture before tests
   server.mjs             ← minimal static HTTP server for dist/
   src/
@@ -2533,22 +2562,24 @@ pkg/e2e/
 
 Playwright's `webServer` hook runs two commands before any test:
 
-1. `node dist/index.js --config bascik.config.js --build`: transpiles the fixture site into `e2e/dist/`
+1. `node dist/index.js --config bascik.config.ts --build`: transpiles the fixture site into `e2e/dist/`
 2. `node server.mjs 4200`: serves `dist/` on `http://localhost:4200`
 
 Tests then navigate to pages on that server and assert against the live browser DOM.
 
 ## Fixture Design
 
-`obfuscateAttributeNames` is set to `false` in the fixture config so Playwright selectors can use readable scoped names:
+`obfuscateAttributeNames` is left at its default (`false`) in the fixture config so Playwright selectors can use readable scoped names like `bascik__my-comp__btn`. The only non-default values set are the site URL and the production server port:
 
-```js
-// pkg/e2e/bascik.config.js
-export const bascikConfig = {
-  obfuscateAttributeNames: false,  // keeps names like bascik__my-comp__btn
-  scopeScriptBlocks: true,
-  scopeAttribute: { class: true, id: true, name: true },
-};
+```ts
+// pkg/e2e/bascik.config.ts
+import { defineConfig } from '@bascik/bascik/config';
+
+export default defineConfig({
+  siteUrl: 'http://localhost:4200',
+  useWorkers: true,
+  serve: { port: 9443 },
+});
 ```
 
 Each fixture page renders two or more instances of the component under test so isolation can be verified, changes to instance A must not affect instance B.
@@ -2709,7 +2740,7 @@ Build scripts (`<script data-bascik-build>`) run **first**, before component res
 On startup (and whenever a component is added), the watch system calls `processAllPages()` instead of invoking `pageProcessing()` once per file. This avoids redundant I/O:
 
 1. **Hoist shared computation.** `listComponents()` and `resolveInlineStylesHtml()` each run **once**, in parallel, before any page is processed. The results are passed to every page rather than re-computed per page.
-2. **Transpile each page.** By default, pages are transpiled sequentially on the main thread. If `useWorkers: true` is set in `bascik.config.js`, a `WorkerPool` is created instead with `Math.min(os.cpus().length, pageCount)` workers, and each worker is initialised with the shared `componentList` and `globalStylesHtml` via `workerData`. The main thread dispatches page paths through the pool's queue and awaits all results. Worker startup has a fixed cost (each worker loads the transpiler's module graph independently), so this only pays off for larger sites or CPU-heavy per-page work, see the [`useWorkers`](/configuration#useworkers) config option.
+2. **Transpile each page.** By default, pages are transpiled sequentially on the main thread. If `useWorkers: true` is set in `bascik.config.ts`, a `WorkerPool` is created instead with `Math.min(os.cpus().length, pageCount)` workers, and each worker is initialised with the shared `componentList` and `globalStylesHtml` via `workerData`. The main thread dispatches page paths through the pool's queue and awaits all results. Worker startup has a fixed cost (each worker loads the transpiler's module graph independently), so this only pays off for larger sites or CPU-heavy per-page work, see the [`useWorkers`](/configuration#useworkers) config option.
 3. **Apply side effects on the main thread.** After transpilation completes, the main thread runs `mem.storePage()` and emits the `"transpiled"` event for each result. Brotli compression inside `storePage()` runs in the background and does not block the page from being marked ready or served.
 4. **Write to disk only in build mode.** In dev mode, pages are served entirely from the in-memory store, no `dist/` writes happen, so the server is ready as soon as memory is populated.
 
@@ -2717,7 +2748,7 @@ On startup (and whenever a component is added), the watch system calls `processA
 
 The page phase prepares the source HTML document and orchestrates the component phase:
 
-1. **Execute build scripts.** Any `<script data-bascik-build>` blocks are run as Node.js ESM modules. Their stdout replaces the script tag. The result can contain component tags, these will be resolved in step 4. Output is cached on disk so unchanged scripts skip the child-process spawn on subsequent builds — see [Build Script Output Cache](#build-script-output-cache) below.
+1. **Execute build scripts.** Any `<script data-bascik-build>` blocks are run as Node.js ESM modules. Their stdout replaces the script tag. The result can contain component tags, these will be resolved in step 4. Output is cached on disk so unchanged scripts skip the child-process spawn on subsequent builds (see [Build Script Output Cache](#build-script-output-cache) below).
 2. **Extract body and head.** The inner content of `<body>` and `<head>` are extracted separately so component injection can happen in both zones independently.
 3. **Obtain component list.** On the multi-page startup path (`processAllPages`), the list is pre-computed once and passed in. On a single-page re-transpilation, it is loaded from `src/components/` at this point.
 4. **Run component phase.** `recursivelyTranspile` is called on both the body and head HTML strings. Each call returns a `TranspileResult` containing the resolved HTML and the list of components that were used.
@@ -2749,15 +2780,15 @@ The key is the SHA-256 hex digest of:
 1. The cache version integer.
 2. The trimmed script content.
 3. `"1"` or `"0"` for build vs. dev mode (`isBuild`), since the same script may produce different output in each mode via the `BASCIK_BUILD` env var.
-4. The current page file path (`BASCIK_PAGE_FILE`). This is critical: scripts like `canonical.mjs` and `open-graph.mjs` have identical content on every page but use `process.env.BASCIK_PAGE_FILE` to produce page-specific output (different URLs). Without this component the cache would return the first page's output for every subsequent page.
+4. The current page file path (`BASCIK_PAGE_FILE`). This is critical: scripts like `canonical.ts` and `open-graph.ts` have identical content on every page but use `process.env.BASCIK_PAGE_FILE` to produce page-specific output (different URLs). Without this component the cache would return the first page's output for every subsequent page.
 5. The site URL (`BASCIK_SITE_URL`), since it can influence output and changes rarely.
 6. The full content of every local file the script references, concatenated in order.
 
-File references are extracted by `extractScriptDeps()` (exported from `build-scripts.ts`), which scans the script source for quoted path literals matching `content/*.md` or `scripts/*.mjs` patterns:
+File references are extracted by `extractScriptDeps()` (exported from `build-scripts.ts`), which scans the script source for quoted path literals matching `content/*.md` or `scripts/*.{mjs,js,ts}` patterns:
 
 ```text
 './content/foo.md'          → included in key
-'scripts/md-renderer.mjs'  → included in key
+'scripts/md-renderer.ts'  → included in key
 ```
 
 If the script contains no detectable references, only items 1–5 contribute to the key.
@@ -2766,7 +2797,7 @@ If the script contains no detectable references, only items 1–5 contribute to 
 
 Because the content of every referenced file is hashed into the key, editing a content file produces a new key for any script that references it, giving a cache miss. Scripts on other pages that do not reference that file keep their old keys and continue to hit the cache.
 
-To bust the entire cache manually — for example after upgrading `marked` or another build-time dependency that `scripts/*.mjs` files import — delete the cache directory:
+To bust the entire cache manually, for example after upgrading `marked` or another build-time dependency that `scripts/*.{mjs,js,ts}` files import, delete the cache directory:
 
 ```sh
 rm -rf node_modules/.cache/bascik/script-cache
@@ -2797,7 +2828,7 @@ A fresh `instanceId` (a random 8-byte hex string) is generated for this occurren
 3. `prefixElementAttribute(c, "class", instanceId)`: scopes class names in HTML attributes, CSS, and JS selector calls.
 4. `namespaceScriptTags(c)`: wraps every inline `<script>` in an IIFE.
 
-Each step is skipped if disabled in `bascik.config.js`.
+Each step is skipped if disabled in `bascik.config.ts`.
 
 ### Step 2: Template resolution
 
@@ -2837,60 +2868,6 @@ bascik__my-nav__toggle-btn
 ```
 
 When `obfuscateAttributeNames` is enabled (the default for builds), each full scoped name is hashed to a short hex string using SHAKE-256 before being written to the output, e.g. `ba1c2d3e4f`. See [Scoping System](/internals/scoping-system) for full details.
-
-# VS Code Extension
-
-The extension adds two things to the editor: component tag navigation (command-click a custom tag to jump to its source file) and unsupported pattern diagnostics (warnings for CSS and JS patterns that Bascik's scoping engine cannot handle safely).
-
-The warning set is generated from the [Scoping Compatibility](/compatibility) matrix. A generation step reads the rule metadata from that doc and writes `extensions/vscode-bascik/src/compatibility-rules.json` before the extension compiles, so the editor warnings stay in sync with the compatibility table automatically.
-
-The extension lives in `extensions/vscode-bascik/` as its own package rather than inside `pkg/` to keep the transpiler focused on build-time logic.
-
-## Features
-
-### Component tag navigation
-
-The extension scans the workspace for component files under `src/components` and resolves the corresponding tag name to the component file. When the cursor is on a custom tag, command-click opens the component source file.
-
-### Unsupported pattern diagnostics
-
-The extension warns on common unsupported or brittle cases such as:
-
-- `[id]` and other attribute selectors in CSS
-- `:is(p, h2)`-style element selectors inside pseudo-class arguments
-- unsafe runtime JavaScript patterns such as `element.id = ...` or template-literal class assignment
-
-Class names that only appear in JavaScript (never in a `class="…"` HTML attribute) are fully supported by the build pipeline's JS-only class discovery pass. The extension does not warn on these patterns.
-
-The warnings are intentionally high-signal. They are meant to prevent silent behavior drift, not to replicate a full linter.
-
-## Implementation shape
-
-The prototype extension uses:
-
-- the VS Code `DefinitionProvider` API for component tag navigation
-- the `DiagnosticCollection` API for warnings in HTML, CSS, and JS files
-- a workspace scan of `src/components` to build a component-name to file map
-
-## Developing locally
-
-The extension compiles independently from the rest of the monorepo.
-
-```sh
-cd extensions/vscode-bascik
-npm run compile        # generates compatibility-rules.json then runs tsc
-npm run watch          # recompiles on save
-```
-
-The `precompile` script runs `docs/scripts/generate-compatibility-rules.mjs` first, so `src/compatibility-rules.json` is always regenerated from the docs before the TypeScript compiles.
-
-To launch a VS Code Extension Development Host with the extension loaded, open `extensions/vscode-bascik/` as the workspace root in VS Code and press F5 (uses the `Run Extension` launch config in `.vscode/launch.json`).
-
-## Publishing to the VS Code Marketplace
-
-The full publishing steps, pre-publish checklist, and version-bump workflow are documented in [`extensions/vscode-bascik/README.md`](https://github.com/collin-bascik/bascik/blob/main/extensions/vscode-bascik/README.md).
-
-In short: add a `publisher` field to `package.json`, install `@vscode/vsce`, run `npm run compile && vsce package` to produce a `.vsix`, verify it locally, then run `vsce publish` with a Marketplace PAT.
 
 # Internals Guide
 
@@ -2951,7 +2928,6 @@ After any `pkg/src/` change, rebuild the package and the docs server will pick i
 - [Scoping System](/internals/scoping-system), how IDs, class names, CSS, and JavaScript references are namespaced per component instance.
 - [Dev Server](/internals/dev-server), the HTTP/2 server, TLS certificate generation, memory store, live reload, and watch system.
 - [Testing](/internals/testing), running tests, coverage, writing new tests, and the benchmarking suite.
-- [VS Code Extension](/internals/vscode-extension), editor tooling for component navigation and scoping compatibility warnings.
 
 # JavaScript Libraries
 
@@ -3167,11 +3143,11 @@ export const store = reactive({ cart: [] });
 
 [Tailwind CSS](https://tailwindcss.com) is a utility-first CSS framework. Because Tailwind's utility classes are global by design, you need to tell Bascik not to scope class attributes, otherwise Bascik renames `class="flex gap-4"` to `class="bascik__my-comp__flex bascik__my-comp__gap-4"`, which Tailwind's CSS will never match.
 
-Set `scopeAttribute.class` to `false` in `bascik.config.js`:
+Set `scopeAttribute.class` to `false` in `bascik.config.ts`:
 
-```js
-// bascik.config.js
-export const bascikConfig = {
+```ts
+// bascik.config.ts
+export default {
   scopeAttribute: {
     class: false, // let Tailwind utility classes pass through unchanged
     id: true,
@@ -3304,6 +3280,8 @@ One thing to be aware of: if a library dynamically sets a class or ID value at r
   color: #8d929e;
   font-family: monospace;
 }
+```
+
 ```html
 <!-- .tab and .status are scoped; attribute selector is untouched -->
 <div v-scope="{ active: false }">
@@ -3718,6 +3696,7 @@ The Markdown is converted to HTML and baked into the static output. No CMS API c
 - Rewrites DOM selector calls (`getElementById`, `querySelector`, etc.) in component scripts to match scoped attribute names.
 - Wraps component scripts in IIFEs so variables do not leak between components.
 - Outputs a `dist/` directory of plain `.html` files with no framework runtime, no client-side JS added by Bascik itself.
+- Supports TypeScript natively; `bascik.config.ts`, build scripts, and helper modules run on Node 24 with no compiler step.
 
 ## What Bascik Does Not Do
 
@@ -3838,17 +3817,33 @@ inc.addEventListener('click', () => {
 
 # Lighthouse 100s
 
-Bascik gives you an enormous head start on Lighthouse scores. Because it outputs plain HTML with zero framework runtime, you begin every page with near-perfect scores, and reaching 100 across Performance, Accessibility, Best Practices, and SEO is a matter of applying a small, well-known set of HTML attributes and link tags.
+Bascik gives you an enormous head start on Lighthouse scores. Because it outputs plain HTML with zero framework runtime, you begin every page with near-perfect scores, and reaching 100 across all four Lighthouse categories is a matter of applying a small, well-known set of HTML patterns.
 
 | Performance | Accessibility | Best Practices | SEO |
 | :---: | :---: | :---: | :---: |
 | 100 | 100 | 100 | 100 |
 
-> **Why Bascik wins by default.** Framework-rendered pages ship a JavaScript runtime, a hydration pass, and client-side routing logic before a single pixel of your content appears. Bascik ships none of that. The browser receives finished HTML. Every byte saved at the start compounds through every Core Web Vital metric.
+Framework sites start at a deficit. Every component, every route, every reactive binding you add ships more JavaScript to the browser: more to parse, more to execute before the page is usable. The Lighthouse scores that look fine on a five-page MVP look very different at fifty pages with real content, images, and third-party scripts.
 
----
+Bascik inverts that relationship. Adding a new component adds zero JavaScript to your pages. Adding a new page adds zero overhead. Your performance baseline stays constant no matter how large the codebase grows. The only thing that affects your scores is what you deliberately put on the page.
 
-This page is dedicated to helping you get the most out of the performance floor Bascik gives you. The techniques below are standard HTML and link-tag patterns with no build plugins or dependencies required. Apply them to any page and you will keep those 100s as your site grows.
+> **Fast at any size and complexity.** Framework-rendered pages ship a JavaScript runtime, a hydration pass, and client-side routing logic before a single pixel of your content appears. Bascik ships none of that. The browser receives finished HTML. Every byte saved at the start compounds through every Core Web Vital metric.
+
+## What Bascik Does
+
+Bascik's performance story starts before any of the techniques on this page. The build step is intentionally small, and that small footprint is itself an optimization.
+
+**Zero runtime.** The most impactful thing Bascik does is what it does not add. No framework bundle, no hydration script, no client-side router. The only JavaScript on any page is what you wrote.
+
+**CSS deduplication.** When a component appears multiple times on a page, Bascik emits a single `<style>` block regardless of instance count. A page with fifty cards carries the same CSS weight as a page with one.
+
+**HTML minification.** HTML comments are stripped and excess whitespace is collapsed in every built page. Content inside `<pre>` blocks is left intact.
+
+**Script minification.** `minifyScripts` is `true` by default, stripping comments and whitespace from every inline `<script>` block and any `.js` static files copied to `dist/`. For identifier mangling and dead-code elimination, plug in esbuild (see [Minify JavaScript Output](#minify-javascript-output) below).
+
+**Inline styles.** Set `inlineStyles` in `bascik.config.ts` to inject a stylesheet directly into `<head>`, eliminating the render-blocking HTTP request for that file entirely. Pair it with `minifyStyles: true` to minify the injected CSS at build time.
+
+Hitting 100 across the board is achievable on any Bascik site. The techniques below cover the rest: standard HTML patterns with no build plugins, no dependencies, and no configuration required.
 
 ## Responsive Images with `srcset`
 
@@ -4272,16 +4267,20 @@ Keep inlined critical CSS to the minimum needed for above-the-fold visibility, t
 
 > **Bascik tip.** If your global stylesheet is small (under ~15 KB), skip the split entirely, set `inlineStyles` in your config and Bascik handles it automatically. Zero render-blocking requests, no FOUC, and production builds minify the injected CSS when `minifyStyles` is true:
 >
-> ```js
-> // bascik.config.js
-> export const bascikConfig = {
->   inlineStyles: ['src/pages/css/styles.css'],
-> };
+> ```ts
+> // bascik.config.ts
+> import { defineConfig } from '@bascik/bascik/config';
 >
-> export const buildOverrideConfig = {
+> export default defineConfig({
+>   inlineStyles: ['src/pages/css/styles.css'],
+> });
+>
+> export const build = defineConfig({
 >   minifyStyles: true,
-> };
+> });
 > ```
+>
+> Once your stylesheet grows past roughly 15–20 KB (gzipped: ~4–5 KB), it is worth considering a linked external stylesheet instead. The tradeoff: the first page load pays one extra HTTP request, but every subsequent page in the session gets the file from the browser cache for free. If most of your traffic arrives from search and reads a single page, inline wins. If visitors typically navigate several pages per session, the cached external file pays off by page two. HTTP/2 reduces the penalty of the extra request significantly, but it does not eliminate it.
 
 ## Minify JavaScript Output
 
@@ -4293,17 +4292,18 @@ For maximum compression, identifier mangling, dead-code elimination, and tree-sh
 npm install --save-dev esbuild
 ```
 
-```js
-// bascik.config.js
+```ts
+// bascik.config.ts
+import { defineConfig } from '@bascik/bascik/config';
 import { transform } from 'esbuild';
 
-export const buildOverrideConfig = {
+export const build = defineConfig({
   minifyStyles: true,
   minifyScripts: async (js) => {
     const result = await transform(js, { minify: true, loader: 'js' });
     return result.code;
   },
-};
+});
 ```
 
 The function receives the raw JS string for each script block and must return the minified string. Async functions are fully supported, so any Promise-based minifier works. The built-in `true` mode is a safe fallback for projects that prefer to keep their toolchain dependency-free.
@@ -4471,7 +4471,7 @@ Here is a complete `<head>` combining every technique on this page. Copy it as a
   <link rel="preload" as="image" href="/images/hero.jpg" />
   <link rel="preload" as="font" href="/fonts/inter-var.woff2" type="font/woff2" crossorigin />
 
-  <!-- Styles: use inlineStyles in bascik.config.js to eliminate render-blocking requests -->
+  <!-- Styles: use inlineStyles in bascik.config.ts to eliminate render-blocking requests -->
 
   <!-- Prefetch likely next navigation -->
   <link rel="prefetch" href="/next-page" />
@@ -4601,6 +4601,173 @@ This example passes values directly into the `feature-card` component via `data-
 </div>
 ```
 
+# Deploying
+
+Bascik's build output is a standard folder of static HTML, CSS, and JavaScript files. `bascik --build` writes everything to `dist/`, and that folder can be served by any static host or CDN without additional configuration.
+
+## What's in `dist/`
+
+Running `bascik --build` produces:
+
+- **HTML**: compiled pages with component tags resolved, scoped class names applied, and build-script output inlined
+- **CSS and JS**: as-is from your `src/pages/` asset folders
+- **Static assets**: images, fonts, and any other files copied unchanged
+
+The output uses root-relative paths (e.g. `/css/styles.css`). Files must be served from an HTTP server; opening them directly with `file://` will break asset loading.
+
+## Static hosting
+
+For most Bascik sites, `dist/` is the deployable artifact. If your site has no `data-bascik-server` scripts, you only need a static host.
+
+Every major platform follows the same pattern:
+
+1. Run `bascik --build` to produce `dist/`
+2. Configure the host to deploy from the `dist/` folder
+3. Point the publish directory at `dist/`
+
+That covers GitHub Pages, Netlify, Cloudflare Pages, AWS S3, Vercel, and any other static host. Refer to your hosting provider's documentation for the exact steps. Because the output is plain HTML, CSS, and JS, it follows the same conventions as Vite, Astro, and other tools, so guides for those tools are largely applicable.
+
+### Tips that apply everywhere
+
+**Custom 404 page.** Name your page `src/pages/404.html`. After building, `dist/404.html` is the standard location for custom 404 pages recognized by GitHub Pages, Netlify, Cloudflare Pages, and Vercel.
+
+**Root-relative paths.** The build output uses root-relative paths. Serve the site at the domain root, or configure your host's base path setting to match.
+
+**Build command.** If your host runs a build command for you, use `npx bascik --build` or `bascik --build` (if installed as a dev dependency). Set the output directory to `dist/`.
+
+**No runtime required.** Bascik does not need Node.js at serve time for static sites. Any CDN or file server that can serve HTML files is sufficient.
+
+### GitHub Actions example
+
+A minimal workflow for building and uploading to any static host:
+
+```yaml
+name: Build
+on:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci
+      - run: npx bascik --build
+      # Upload dist/ to your host here
+```
+
+`dist/` is the artifact to upload or deploy.
+
+## Using the production server
+
+If your site uses `data-bascik-server` scripts for per-request dynamic content, you need infrastructure that can execute Node.js alongside the built files. The built-in production server handles this without any additional framework.
+
+```sh
+bascik --build   # compile to dist/
+bascik --serve   # start the HTTP/2 server; runs server scripts per request
+```
+
+See [Production Server](/server) for full documentation on server scripts and the request context API.
+
+> **TLS is always on.** Bascik's server has no plaintext HTTP mode. Some cloud platforms terminate TLS at the edge and forward cleartext to the container, which is incompatible. Use a platform that either passes TLS through to the container, or run a reverse proxy in front of Bascik that forwards HTTPS.
+
+### Server configuration
+
+Configure the port and TLS in `bascik.config.ts` before building:
+
+```ts
+export default {
+  serve: {
+    port: 443,
+    hostname: '0.0.0.0',    // bind all interfaces; required in containers
+    keyFile: '/etc/ssl/site.key',
+    certFile: '/etc/ssl/site.crt',
+  },
+};
+```
+
+When `keyFile` and `certFile` are omitted, Bascik generates certificates automatically using mkcert (if installed) or openssl as a fallback. For production, supply a certificate signed by a trusted CA.
+
+### Containers
+
+A two-stage Dockerfile keeps the final image lean:
+
+```dockerfile
+# Stage 1 — build
+FROM node:24-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npx bascik --build
+
+# Stage 2 — serve
+FROM node:24-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY --from=build /app/dist ./dist
+COPY bascik.config.ts .
+EXPOSE 8443
+CMD ["npx", "bascik", "--serve"]
+```
+
+To supply a real certificate, mount it at runtime:
+
+```sh
+docker run -p 8443:8443 \
+  -v /etc/letsencrypt/live/example.com/privkey.pem:/app/bascik-privkey.pem:ro \
+  -v /etc/letsencrypt/live/example.com/fullchain.pem:/app/bascik-cert.pem:ro \
+  my-site
+```
+
+Bascik looks for `bascik-privkey.pem` and `bascik-cert.pem` in the working directory by default; mounting them at those paths means no config change is needed.
+
+### PaaS (Railway, Render, Fly.io, etc.)
+
+Set the start command to `bascik --build && bascik --serve`, point the platform's health check at the server port, and configure the port via the `serve.port` setting to match the port the platform expects to expose.
+
+### VPS or bare metal
+
+Obtain a certificate (e.g. from Let's Encrypt via `certbot`) and point Bascik at it in `bascik.config.ts`. Then create a systemd unit to keep the server running:
+
+```ini
+# /etc/systemd/system/my-site.service
+[Unit]
+Description=My Bascik Site
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/srv/my-site
+ExecStartPre=/usr/bin/npx bascik --build
+ExecStart=/usr/bin/npx bascik --serve
+Restart=on-failure
+RestartSec=5s
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```sh
+systemctl daemon-reload
+systemctl enable --now my-site
+journalctl -u my-site -f
+```
+
+### Behind a reverse proxy
+
+If you already run nginx, Caddy, or another proxy, proxy HTTPS traffic to Bascik. The proxy-to-backend leg can use Bascik's self-signed certificate; only the client-facing edge needs a trusted cert. Pass the original client IP and any authentication headers through to `data-bascik-server` scripts so they have access to them.
+
+Note that the built-in rate limiter reads the TCP remote address. When running behind a proxy, all requests arrive from the proxy's IP, so rate limiting should be configured at the proxy layer instead.
+
+> **Platform docs.** Consult your hosting provider's documentation for specifics around caching headers, redirects, environment variables, and build pipelines. Bascik's output is standard enough that most generic guides apply directly.
+
 # VS Code Extension
 
 The Bascik VS Code extension is a lightweight editor companion for the scoping system. It helps you catch the patterns that are easy to write but unsafe to scope.
@@ -4708,11 +4875,11 @@ This is stable because the ID is rewritten with a per-instance hash, and the scr
 
 ## Source of truth
 
-The extension follows the compatibility rules documented in [Scoping Compatibility](/compatibility) and the internal notes in [VS Code Extension](/internals/vscode-extension).
+The extension follows the compatibility rules documented in [Scoping Compatibility](/compatibility).
 
 # Scoped JavaScript
 
-Write `<script>` tags directly in your component HTML. Bascik automatically rewrites selector strings to match each instance's unique identifiers. Multiple instances of the same component on the same page stay completely independent.
+Write `<script>` tags directly in your component HTML. Bascik automatically rewrites selector strings to match each instance's unique identifiers. Multiple instances of the same component on the same page stay completely independent. TypeScript is supported too. See [TypeScript in Component Scripts](#typescript-in-component-scripts).
 
 ## See it in action
 
@@ -4869,7 +5036,35 @@ Script tags with a `type` other than `text/javascript` are left completely untou
 </script>
 ```
 
-> **Tip:** Disable JS scoping entirely with `scopeScriptBlocks: false` in [bascik.config.js](/configuration).
+> **Tip:** Disable JS scoping entirely with `scopeScriptBlocks: false` in [bascik.config.ts](/configuration).
+
+## TypeScript in Component Scripts
+
+Bascik ships plain JavaScript to the browser, so TypeScript in component `<script>` blocks must be stripped before the output is served. Node 24 exposes `stripTypeScriptTypes` from `node:module`. Wire it into the `minifyScripts` hook and every inline script body gets its types erased automatically:
+
+```ts
+// bascik.config.ts
+import { stripTypeScriptTypes } from 'node:module';
+import { defineConfig } from '@bascik/bascik/config';
+
+export const build = defineConfig({
+  minifyScripts: (js) => stripTypeScriptTypes(js),
+});
+```
+
+Component scripts can then use TypeScript annotations freely:
+
+```html
+<script>
+  const count = document.getElementById('count') as HTMLElement;
+  let n: number = 0;
+  count.addEventListener('click', () => { n++; count.textContent = String(n); });
+</script>
+```
+
+Bascik's scoping pipeline runs first (IIFE wrapping, selector rewriting), then `minifyScripts` strips the types. Scoped identifiers survive the process untouched because type annotations don't overlap with class names or selector strings.
+
+> **Erasable syntax only.** `stripTypeScriptTypes` removes annotations, interfaces, type aliases, `as` casts, and `!` non-null assertions. Non-erasable syntax (`enum`, parameter properties, namespaces with runtime code) requires a separate compile step with `tsc` or `esbuild` before the HTML is processed by Bascik.
 
 ## How Scoping Works
 
@@ -5209,10 +5404,10 @@ Define your design tokens once in a global stylesheet, then consume them inside 
 
 ## Toggling Scoping
 
-All scoping can be controlled in [`bascik.config.js`](/configuration):
+All scoping can be controlled in [`bascik.config.ts`](/configuration):
 
 ```js
-export const bascikConfig = {
+export default {
   scopeAttribute: {
     class: true, // scope class names
     id: true,    // scope id attributes
@@ -5257,7 +5452,7 @@ Avoid this anti-pattern:
 By default, all instances of the same component share identical scoped class names so Bascik can emit a single `<style>` block per component, regardless of how many times it appears on the page. If you genuinely need class selectors to be unique per instance (for example, to use `querySelector` safely across multiple instances), set `deduplicateCss: false`:
 
 ```js
-export const bascikConfig = {
+export default {
   deduplicateCss: false, // each instance gets its own unique class names
 };
 ```
@@ -5276,7 +5471,7 @@ Click the card to toggle its active state. Hover for the hover state. Both are i
 
 ### Source and output
 
-**Source** (`my-card.html` — CSS, HTML, and JS in one file):
+**Source** (`my-card.html`, CSS, HTML, and JS in one file):
 
 <!-- demo:source-usage -->
 ```html
@@ -5696,11 +5891,11 @@ npm install pg
 
 ## Server configuration
 
-Configure the production server in `bascik.config.js` under the `serve` key.
+Configure the production server in `bascik.config.ts` under the `serve` key.
 
-```js
-// bascik.config.js
-export const bascikConfig = {
+```ts
+// bascik.config.ts
+export default {
   cacheHttp: true,     // default in --serve; false in dev
   serve: {
     port: 8443,         // default
@@ -5780,172 +5975,7 @@ On first start, Bascik looks for `bascik-cert.pem` and `bascik-privkey.pem` in t
 
 To use your own certificates (e.g. from Let's Encrypt), set `keyFile` and `certFile` in the `serve` config block and Bascik will use them instead of generating new ones.
 
-## Deployment
-
-Bascik's server always uses TLS, there is no plaintext HTTP mode. Most cloud platforms terminate TLS at the edge and send cleartext to the container, which is incompatible with Bascik's HTTPS-only server. The examples below use platforms and approaches that either pass TLS through to the container or work with Bascik's built-in cert handling.
-
-> **Security note.** Before going live: set `hostname: '0.0.0.0'` to bind all interfaces, supply a real CA-issued certificate via `keyFile`/`certFile`, and ensure only the required port is open in your firewall or security group.
-
-### Docker
-
-Build a two-stage image: the first stage transpiles the site, the second stage installs only what is needed to run the server.
-
-```dockerfile
-# Stage 1 - build
-FROM node:22-alpine AS build
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npx bascik --build
-
-# Stage 2 - serve
-FROM node:22-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY --from=build /app/dist ./dist
-COPY bascik.config.js .
-EXPOSE 8443
-CMD ["npx", "bascik", "--serve"]
-```
-
-Run it locally:
-
-```sh
-docker build -t my-site .
-docker run -p 8443:8443 my-site
-```
-
-Bascik generates a self-signed certificate inside the container on first start. To supply a real certificate, mount it at runtime:
-
-```sh
-docker run -p 8443:8443 \
-  -v /etc/letsencrypt/live/example.com/privkey.pem:/app/bascik-privkey.pem:ro \
-  -v /etc/letsencrypt/live/example.com/fullchain.pem:/app/bascik-cert.pem:ro \
-  my-site
-```
-
-### Google Cloud Run
-
-Cloud Run terminates TLS at the edge. Enable **end-to-end encryption** in the Cloud Run service settings so Google forwards HTTPS (not cleartext) to your container, Bascik needs HTTPS on the container port.
-
-```sh
-# Build and push the image to Artifact Registry
-gcloud builds submit --tag gcr.io/PROJECT_ID/my-site
-
-# Deploy to Cloud Run
-gcloud run deploy my-site \
-  --image gcr.io/PROJECT_ID/my-site \
-  --port 8443 \
-  --allow-unauthenticated \
-  --region us-central1
-```
-
-After deploying, go to the Cloud Run service in the console → **Edit & Deploy New Revision** → under **Container, Networking, Security** → **Encryption** → choose **End-to-end encryption (HTTP/2)**. Cloud Run will not verify Bascik's self-signed container cert.
-
-To make the `*.run.app` URL or a custom domain the canonical origin, set `siteUrl` in your `bascik.config.js` before building:
-
-```js
-export const bascikConfig = {
-  siteUrl: 'https://my-site-abc123-uc.a.run.app',
-  serve: { port: 8443, hostname: '0.0.0.0' },
-};
-```
-
-### VPS or dedicated server
-
-On a VPS (EC2, DigitalOcean Droplet, Hetzner, etc.) Bascik can own port 443 directly with no reverse proxy required.
-
-Get a certificate from Let's Encrypt:
-
-```sh
-certbot certonly --standalone -d example.com
-```
-
-Point Bascik at it in `bascik.config.js`:
-
-```js
-export const bascikConfig = {
-  siteUrl: 'https://example.com',
-  serve: {
-    port: 443,
-    hostname: '0.0.0.0',
-    keyFile: '/etc/letsencrypt/live/example.com/privkey.pem',
-    certFile: '/etc/letsencrypt/live/example.com/fullchain.pem',
-  },
-};
-```
-
-Create a `systemd` unit to keep the server running across reboots:
-
-```ini
-# /etc/systemd/system/my-site.service
-[Unit]
-Description=My Bascik Site
-After=network.target
-
-[Service]
-Type=simple
-User=www-data
-WorkingDirectory=/srv/my-site
-ExecStartPre=/usr/bin/npx bascik --build
-ExecStart=/usr/bin/npx bascik --serve
-Restart=on-failure
-RestartSec=5s
-Environment=NODE_ENV=production
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```sh
-systemctl daemon-reload
-systemctl enable --now my-site
-journalctl -u my-site -f     # follow logs
-```
-
-> **cert renewal.** Add a `certbot renew` cron job and a `systemctl restart my-site` hook so the server picks up the new cert after each renewal.
-
-### Behind nginx or Caddy
-
-If you already run a reverse proxy on the host, proxy HTTPS traffic to Bascik. Bascik's certificate does not need to be CA-trusted for the proxy-to-backend leg.
-
-**nginx:**
-
-```nginx
-server {
-    listen 443 ssl http2;
-    server_name example.com;
-
-    ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
-
-    location / {
-        proxy_pass https://localhost:8443;
-        proxy_ssl_verify off;      # Bascik's self-signed cert is fine here
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
-```
-
-**Caddy** (automatic HTTPS, zero config for certs):
-
-```
-example.com {
-    reverse_proxy https://localhost:8443 {
-        transport http {
-            tls_insecure_skip_verify
-        }
-    }
-}
-```
-
-> **Passing headers to server scripts.** When proxying, forward the original client IP and authentication headers so `data-bascik-server` scripts can access them: nginx adds `proxy_set_header X-Real-IP $remote_addr;`, Caddy adds `header_up X-Real-IP {remote_host}` automatically.
-
-> **Rate limiting behind a proxy.** The built-in rate limiter reads the TCP remote address, which will be the proxy's IP when running behind nginx or Caddy. Set the per-client limit in the proxy itself (e.g. nginx `limit_req_zone`) and set `cacheHttp: false` if the proxy handles caching too.
+> **Deploying.** For guidance on running the production server in containers, on a VPS, or behind a reverse proxy, see [Deploying](/resources/deploying).
 
 # Sitemap & robots.txt
 
@@ -5953,9 +5983,9 @@ Bascik generates a `sitemap.xml` and `robots.txt` automatically at build time. S
 
 Sitemap generation is on by default. To enable it, set `siteUrl` in your config:
 
-```js
-// bascik.config.js
-export const bascikConfig = {
+```ts
+// bascik.config.ts
+export default {
   siteUrl: 'https://example.com',
 };
 ```
@@ -6006,7 +6036,7 @@ Each page is converted from its file path to a URL path following these rules:
 Control sitemap and robots.txt generation independently via the `generate` option:
 
 ```js
-export const bascikConfig = {
+export default {
   siteUrl: 'https://example.com',
   generate: {
     sitemap: true,  // default
@@ -6018,7 +6048,7 @@ export const bascikConfig = {
 Set either to `false` to skip that file:
 
 ```js
-export const bascikConfig = {
+export default {
   siteUrl: 'https://example.com',
   generate: { sitemap: true, robots: false }, // skip robots.txt
 };
@@ -7622,7 +7652,7 @@ src/                         src/components/
 
 ## Component Syntax
 
-A Bascik component is a plain HTML file. There are no `<script>`, `<template>`, or `<style>` blocks in the component file itself — the HTML is the component markup. Scoped styles go in a paired `.css` file.
+A Bascik component is a plain HTML file. There are no `<script>`, `<template>`, or `<style>` blocks in the component file itself; the HTML is the component markup. Scoped styles go in a paired `.css` file.
 
 ```html
 <!-- SiteNav.svelte (Svelte - before) -->
@@ -8447,7 +8477,7 @@ describe('myPureFunction', () => {
 
 ## Testing browser scripts
 
-Browser component scripts are IIFE-based and not importable as modules. The solution is the same — extract pure functions to a `.mjs` module — but delivering them to the browser requires a build step.
+Browser component scripts are IIFE-based and not importable as modules. The solution is the same: extract pure functions to a `.mjs` module, but delivering them to the browser requires a build step.
 
 The component directory holds three files:
 
@@ -8477,7 +8507,7 @@ The build script in `my-widget.html` reads both JS files and combines them into 
 
 Bascik executes this at build time and replaces the tag with the output: one `<script>` block containing a single IIFE with all functions inside it. The minifier can then rename variables freely because every reference is in the same scope.
 
-> **One source of truth.** `widget-logic.mjs` is the canonical source for all pure functions. The browser bundle is generated from it on every build — the two cannot drift apart.
+> **One source of truth.** `widget-logic.mjs` is the canonical source for all pure functions. The browser bundle is generated from it on every build, so the two cannot drift apart.
 
 ## Setting up Vitest
 
@@ -8502,7 +8532,7 @@ Then add a test script to `package.json`:
 }
 ```
 
-A test file imports directly from the logic module — no build step, no browser:
+A test file imports directly from the logic module, with no build step and no browser:
 
 ```js
 import { describe, it, expect } from 'vitest';
@@ -8523,7 +8553,7 @@ npm test
 
 ## What to test
 
-**Test pure logic functions**: scoring, filtering, formatting, sorting, tokenisation, data transformation — anything that takes inputs and returns outputs with no side effects.
+**Test pure logic functions**: scoring, filtering, formatting, sorting, tokenisation, data transformation. Anything that takes inputs and returns outputs with no side effects.
 
 **Skip DOM interaction and HTTP handlers**: event listeners, `querySelector` calls, and render functions are low-value unit tests. For browser scripts, they are better covered by E2E tests (Playwright) or manual smoke-testing. For server scripts, focus on the data logic, not the `res.send` wiring.
 
@@ -8559,27 +8589,24 @@ Everything else, interactivity, server communication, reactive state, is your de
 
 The custom component tags in a Bascik project are the ones **you create**. If you create `site-nav.html`, you can write `<site-nav>`. Bascik does not add a catalog of framework components with their own behavior or API.
 
-Bascik does use a small set of build instructions such as `data-bascik-slot`, `data-bascik-prop-*`, and `data-bascik-build`. They follow HTML's standard `data-*` extension mechanism, so browsers parse them as valid custom data attributes. Bascik consumes them during the build; they are not runtime directives that require browser JavaScript to interpret.
+Bascik does use a small set of build instructions such as `data-bascik-slot`, `data-bascik-prop-*`, and `data-bascik-build`. They use HTML's standard `data-*` extension mechanism to keep Bascik source valid HTML. Bascik consumes them during the build; they are not runtime directives that require browser JavaScript to interpret.
 
-## HTMX
+## HTMX and Alpine.js
 
-[HTMX](https://htmx.org) is a popular library that extends HTML with server-driven partial updates. You add attributes like `hx-get`, `hx-post`, `hx-target`, and `hx-swap` to elements, and HTMX intercepts the resulting events, fires requests to your server, and swaps portions of the page with the response.
+[HTMX](https://htmx.org) (~14 KB) and [Alpine.js](https://alpinejs.dev) (~16 KB) both take an attribute-based approach to adding behavior to HTML. HTMX focuses on server-driven partial updates: you add attributes like `hx-get`, `hx-post`, `hx-target`, and `hx-swap`, and HTMX intercepts events, fires requests to your server, and swaps portions of the page with the response. Alpine focuses on client-side interactivity: `x-data` defines state, and directives like `x-bind`, `x-show`, and `@click` wire that state to the DOM.
 
-**What HTMX adds to a page:**
-
-- ~14 KB of JavaScript (minified and gzipped) loaded on every page
-- A new attribute vocabulary to learn and maintain (`hx-get`, `hx-post`, `hx-target`, `hx-swap`, `hx-trigger`, `hx-push-url`, `hx-select`, `hx-boost`, and more)
-- A server requirement: HTMX works best when the backend returns HTML fragments
-
-HTMX is well-suited to applications that need dynamic server-driven updates without a full JavaScript client. It is not suited to pages that are mostly static, where the overhead of loading and running a JavaScript library is not justified.
-
-Bascik produces plain HTML. HTMX ships a JavaScript runtime. These are different tools aimed at different problems. For pages that genuinely need server-driven interactivity, you can use HTMX alongside Bascik: Bascik handles component organization at build time, and HTMX handles server communication at runtime.
+Both are compatible with Bascik. Bascik resolves components at build time and produces plain HTML; HTMX and Alpine run in the browser on whatever Bascik produced. There is no conflict, and no coordination required between them.
 
 ```html
-<!-- Bascik component that includes HTMX attributes - fully compatible -->
+<!-- HTMX and Alpine attributes work inside Bascik components without modification -->
 <button hx-get="/api/items" hx-target="#list" hx-swap="innerHTML">
   Load items
 </button>
+
+<div x-data="{ open: false }">
+  <button @click="open = !open">Toggle</button>
+  <p x-show="open">Visible when open is true</p>
+</div>
 ```
 
 ## Vue and React
@@ -8589,8 +8616,6 @@ Full-featured frameworks like Vue and React solve a different problem: client-si
 For documents, marketing sites, docs portals, blogs, portfolios, most of that machinery is unused. The framework runtime loads and runs on every page visit in exchange for features the page does not use.
 
 Bascik's component model lives entirely at build time. There is no runtime equivalent. A `<site-nav>` tag in source becomes a `<nav>` element in output, no JavaScript involved.
-
-For sites that need selective reactivity on specific components, petite-vue (~5 KB) is a better fit than full Vue. See the [JavaScript Libraries](/libraries) page for examples.
 
 ## Svelte
 
@@ -8606,43 +8631,27 @@ Bascik's output for an equivalent component is a static HTML file with no JavaSc
 - A reactivity model (`$state`, `$derived`, `$effect`) that requires JavaScript to function
 - Template syntax (`{#if}`, `{#each}`, `{@html}`) that resolves to JavaScript, not plain HTML
 
-Svelte is well-suited to applications that need reactive UI updating in response to user input or server data. It is not suited to pages that are mostly static and do not need a JavaScript-managed DOM.
-
 For content sites and documentation portals, the closest Svelte analog is SvelteKit in static-output mode (`adapter-static`). Even then, SvelteKit ships JavaScript for client-side navigation and hydration. Bascik's output for equivalent pages is plain HTML with none of that overhead.
-
-If you are coming from Svelte and building a content-first site, the migration is mostly mechanical: remove Svelte's script and template blocks, extract `<style>` to a paired `.css` file, and replace reactive primitives with vanilla JS where runtime behavior is still needed. See the [Switch from Svelte](/switch/from-svelte) guide.
 
 ## Next.js
 
-Next.js is a React meta-framework that adds routing, server-side rendering, static site generation, and a full bundling pipeline on top of React. For applications that need those things, it is a reasonable choice.
+Next.js is a React meta-framework that adds routing, server-side rendering, static site generation, and a full bundling pipeline on top of React. It is a powerful and complete system, and most of that power is aimed at applications with complex client-side state, authentication, API routes, and real-time data.
 
-For content sites, Bascik competes with Next.js directly. This is part of why Bascik exists.
+Many teams reach for Next.js on content sites, landing pages, and documentation portals because it is familiar and well-supported. The tradeoff is that every page ships 80+ KB or more of React runtime regardless of whether the page uses any client-side reactivity. Its conventions also gradually pull projects toward client-side patterns even for pages that were always static, and auditing what actually reaches the browser gets harder over time.
 
-In a competitive SEO environment, the difference between a page that ships zero JavaScript and one that ships 80+ KB of React runtime and hydration overhead is measurable. Google's Core Web Vitals (LCP, INP, CLS) are directly affected by JavaScript that blocks rendering or delays interaction readiness. Next.js makes it difficult to audit what is actually sent to the browser, and its conventions pull projects toward client-side patterns over time, even for pages that were always static.
+For a lot of what people build, that is simply more framework than the project needs. Bascik is built for exactly this kind of work. You write plain HTML, CSS, and JavaScript. Components are reused at build time. The output is a dist folder of static files you can open and verify file by file. There is no runtime to load, nothing to hydrate, and no React model to learn. Google's Core Web Vitals (LCP, INP, CLS) are directly affected by JavaScript that blocks rendering; Bascik's output has none of that overhead.
 
-If you know the output you want, you should be able to produce it directly. A build tool that makes it hard to ship a clean HTML page for a high-traffic content page is working against you.
+**What Bascik offers for these projects:**
 
-**Where Bascik competes with Next.js:**
-
-- Static marketing pages, landing pages, and content sites where React's runtime adds nothing
-- SEO-critical pages where JavaScript weight and hydration delay affect rankings
-- Projects where you want full transparency over what reaches the browser
-
-For applications that genuinely need React's component model, client-side routing, or API routes, Next.js is still the right tool. The honest framing is Bascik for pages that do not need a JavaScript framework, and Next.js for applications that do.
-
-## Alpine.js
-
-[Alpine.js](https://alpinejs.dev) (~16 KB) occupies similar territory to HTMX: a declarative attribute-based system for adding behavior to HTML. Alpine uses `x-data` for state, `x-bind` / `@click` / `x-show` for DOM interactions.
-
-Like HTMX, Alpine is compatible with Bascik. Bascik resolves components at build time; Alpine runs in the browser on whatever HTML Bascik produced.
+- Plain HTML, CSS, and JS authoring with component reuse. No JSX, no hooks, no framework model to adopt.
+- Build output you can open, read, and verify file by file.
+- Static pages that score well on Core Web Vitals without any optimization work.
 
 ## Static Site Builders: Hugo, Eleventy, Jekyll
 
 Traditional static site builders such as [Hugo](https://gohugo.io), [Eleventy](https://www.11ty.dev), and [Jekyll](https://jekyllrb.com) focus on content pipelines: Markdown collections, templates, front matter, taxonomies, and data-driven page generation.
 
 Bascik overlaps with them at the output level, all of these tools can ship plain static HTML, but the authoring model is different. Bascik stays close to hand-written HTML pages and reusable HTML components. It does not require a separate template language, collection system, or front matter format just to reuse a header, card, or footer.
-
-If your site is primarily content-driven and you want a full publishing pipeline, a static site builder may be the better fit. If your site is primarily HTML pages and reusable UI fragments, Bascik is the smaller tool.
 
 ## The Key Difference
 
@@ -8659,7 +8668,7 @@ If your site is primarily content-driven and you want a full publishing pipeline
 
 The browser can parse Bascik's source without needing to understand a new runtime language: custom tags are valid custom-element-shaped HTML names, and build instructions use the web platform's `data-*` convention. Bascik resolves both before deployment. By contrast, runtime directives such as `hx-get`, `x-data`, and `v-scope` only gain behavior after their library's JavaScript loads.
 
-Bascik does compete with Next.js for content sites, landing pages, and SEO-critical pages where the React runtime is overhead rather than a feature. For everything else, these tools are not rivals. Bascik fills the gap they leave open: component organization without a runtime. You can use Bascik as the build layer and any of the above as the interactivity layer, and they compose cleanly.
+Most of what people build, content sites, marketing pages, docs portals, company blogs, landing pages, does not require a framework runtime in the browser. Knowing what each tool is optimized for is the best basis for choosing. Bascik fills the gap they leave open: component reuse and predictable build output, without a runtime or a new programming model to adopt. You write plain HTML, CSS, and JavaScript, get the organizational benefits you would expect from a framework, and ship a dist folder you can fully audit. For the parts of a project that do need client-side behavior, Bascik composes cleanly with HTMX or Alpine.
 
 > **Combining tools.** A common pattern is Bascik for layout components (nav, footer, hero sections) and HTMX or Alpine for specific interactive elements. Each tool does what it is best at, and neither one intrudes on the other's domain.
 
@@ -8736,7 +8745,7 @@ In Bascik, creating a component is creating a file. Name a file `my-nav.html` an
 
 CSS inside that file scopes itself to that component. Write `.card { padding: 20px; }` and Bascik rewrites it to something like `.bascik__my-card__card { padding: 20px; }` at build time. You never manage a namespace. You never worry about a class name colliding with another component. You write CSS the way you always have, it just works.
 
-JavaScript inside that file scopes itself too. Write `document.getElementById('count')` and Bascik rewrites it to target the scoped version of that element, so two instances of the same counter on one page stay completely isolated, not through Shadow DOM or any runtime trick, but because the selectors were rewritten before the browser ever saw them.
+JavaScript inside that file scopes itself too. Write `document.getElementById('count')` and Bascik rewrites it to target the scoped version of that element, so two instances of the same counter on one page stay completely isolated, not through Shadow DOM or any runtime trick, but because the selectors were rewritten before the browser ever saw them. TypeScript works here as well; `bascik.config.ts`, build scripts, and helper modules all run natively on Node 24 with no compiler step.
 
 > Create a file. Use the tag. Everything inside it, HTML, CSS, JavaScript, stays contained. No imports. No exports. No configuration. No special syntax to learn.
 

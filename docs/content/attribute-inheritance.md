@@ -53,10 +53,10 @@ The `featured` class is a global class that you define in your page-level styles
 
 ## Disabling It
 
-Attribute inheritance is enabled by default. Set `inheritAttributes: false` in `bascik.config.js` when you want every component root to be controlled only by its own template:
+Attribute inheritance is enabled by default. Set `inheritAttributes: false` in `bascik.config.ts` when you want every component root to be controlled only by its own template:
 
 ```js
-export const bascikConfig = {
+export default {
   inheritAttributes: false,
 };
 ```

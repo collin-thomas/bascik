@@ -1,5 +1,5 @@
 /**
- * md-renderer.mjs
+ * md-renderer.ts
  *
  * Renders a Markdown file to HTML for use inside a Bascik docs page.
  * Import this from a `data-bascik-build` script block in a page:
@@ -8,7 +8,7 @@
  *     import { join } from 'node:path';
  *     import { pathToFileURL } from 'node:url';
  *     const { renderMd } = await import(
- *       pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+ *       pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
  *     );
  *     console.log(await renderMd('./content/16-performance.md'));
  *   </script>
@@ -23,6 +23,16 @@
 
 import { readFile } from 'node:fs/promises';
 import { marked } from 'marked';
+
+interface RenderMdOptions {
+  skipFirstHeading?: boolean;
+  stripDemoBlocks?: boolean;
+}
+
+interface RenderRange {
+  from?: string;
+  to?: string;
+}
 
 /**
  * Reads a Markdown file and returns the rendered HTML string.
@@ -52,7 +62,7 @@ import { marked } from 'marked';
  * @param {string} markerId - The marker identifier, e.g. 'source-html'.
  * @returns {Promise<string>} HTML-escaped code ready for a <code-block> slot.
  */
-export async function extractDemoBlock(filePath, markerId) {
+export async function extractDemoBlock(filePath: string, markerId: string): Promise<string> {
   const md = await readFile(filePath, 'utf8');
   const markerRe = new RegExp(`<!--\\s*demo:${markerId}\\s*-->`, 'i');
   const markerMatch = markerRe.exec(md);
@@ -70,7 +80,10 @@ export async function extractDemoBlock(filePath, markerId) {
     .replace(/>/g, '&gt;');
 }
 
-export async function renderMd(filePath, { skipFirstHeading = false, stripDemoBlocks = false } = {}) {
+export async function renderMd(
+  filePath: string,
+  { skipFirstHeading = false, stripDemoBlocks = false }: RenderMdOptions = {},
+): Promise<string> {
   let md = await readFile(filePath, 'utf8');
   return _transformMd(md, { skipFirstHeading, stripDemoBlocks });
 }
@@ -84,7 +97,11 @@ export async function renderMd(filePath, { skipFirstHeading = false, stripDemoBl
  * @param {string} [range.to]   - Stop before this heading text (exclusive). Omit to go to end of file.
  * @param {object} [options]    - Same options as renderMd.
  */
-export async function renderMdRange(filePath, { from, to } = {}, options = {}) {
+export async function renderMdRange(
+  filePath: string,
+  { from, to }: RenderRange = {},
+  options: RenderMdOptions = {},
+): Promise<string> {
   let md = await readFile(filePath, 'utf8');
 
   if (from) {
@@ -99,7 +116,7 @@ export async function renderMdRange(filePath, { from, to } = {}, options = {}) {
   return _transformMd(md, options);
 }
 
-function _headingIndex(md, headingText) {
+function _headingIndex(md: string, headingText: string): number {
   const escaped = headingText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const re = new RegExp(`(^|\\n)(#{1,6} ${escaped}[ \\t]*)(?=\\n|$)`);
   const m = re.exec(md);
@@ -107,7 +124,10 @@ function _headingIndex(md, headingText) {
   return m[1] === '' ? m.index : m.index + 1;
 }
 
-function _transformMd(md, { skipFirstHeading = false, stripDemoBlocks = false } = {}) {
+function _transformMd(
+  md: string,
+  { skipFirstHeading = false, stripDemoBlocks = false }: RenderMdOptions = {},
+): string {
   if (stripDemoBlocks) {
     md = md.replace(/<!--\s*demo:[\w-]+\s*-->\n```[\w-]*\n[\s\S]*?\n```/g, '').trim();
   }

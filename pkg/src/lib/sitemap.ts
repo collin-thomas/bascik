@@ -13,9 +13,9 @@
  * Only runs during `bascik --build`. The dev server does not generate these
  * files.
  *
- * @example bascik.config.js
- * ```js
- * export const bascikConfig = {
+ * @example bascik.config.ts
+ * ```ts
+ * export default {
  *   siteUrl: 'https://example.com',
  *   generate: { sitemap: true, robots: true }, // both default to true
  * };
@@ -104,7 +104,7 @@ export const generateSitemapFiles = async (): Promise<void> => {
 
   if (!BascikConfig.siteUrl) {
     console.warn(
-      "[bascik] generate: `siteUrl` is not set in bascik.config.js — skipping sitemap/robots generation. " +
+      "[bascik] generate: `siteUrl` is not set in bascik.config.ts — skipping sitemap/robots generation. " +
       "Set `siteUrl: 'https://example.com'` to enable.",
     );
     return;

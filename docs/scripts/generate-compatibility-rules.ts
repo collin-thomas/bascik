@@ -27,11 +27,9 @@ for (const rule of rules) {
   }
 
   try {
-    // Validate the pattern can be compiled by JavaScript.
-    // eslint-disable-next-line no-new
     new RegExp(rule.pattern, rule.flags ?? '');
   } catch (error) {
-    throw new Error(`Invalid regex for ${rule.id}: ${rule.pattern} (${error.message})`);
+    throw new Error(`Invalid regex for ${rule.id}: ${rule.pattern} (${(error as Error).message})`);
   }
 }
 

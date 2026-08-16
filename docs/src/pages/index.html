@@ -7,7 +7,7 @@
     import { join } from 'node:path';
     import { pathToFileURL } from 'node:url';
     const { canonical } = await import(
-      pathToFileURL(join(process.cwd(), 'scripts/canonical.mjs')).href
+      pathToFileURL(join(process.cwd(), 'scripts/canonical.ts')).href
     );
     console.log(await canonical());
   </script>
@@ -15,7 +15,7 @@
     import { join } from 'node:path';
     import { pathToFileURL } from 'node:url';
     const { openGraph } = await import(
-      pathToFileURL(join(process.cwd(), 'scripts/open-graph.mjs')).href
+      pathToFileURL(join(process.cwd(), 'scripts/open-graph.ts')).href
     );
     console.log(await openGraph());
   </script>
@@ -607,7 +607,7 @@
                 <script data-bascik-build>
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
-                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
                   console.log(await extractDemoBlock('./content/overview.md', 'home-card-component'));
                 </script>
               </code-block>
@@ -617,7 +617,7 @@
                 <script data-bascik-build>
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
-                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
                   console.log(await extractDemoBlock('./content/overview.md', 'home-card-usage'));
                 </script>
               </code-block>
@@ -627,7 +627,7 @@
                 <script data-bascik-build>
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
-                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
                   console.log(await extractDemoBlock('./content/overview.md', 'home-card-output'));
                 </script>
               </code-block>
@@ -670,7 +670,7 @@
                 <script data-bascik-build>
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
-                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
                   console.log(await extractDemoBlock('./content/overview.md', 'home-counter-html'));
                 </script>
               </code-block>
@@ -680,7 +680,7 @@
                 <script data-bascik-build>
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
-                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
                   console.log(await extractDemoBlock('./content/overview.md', 'home-counter-css'));
                 </script>
               </code-block>
@@ -690,7 +690,7 @@
                 <script data-bascik-build>
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
-                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
                   console.log(await extractDemoBlock('./content/overview.md', 'home-counter-js'));
                 </script>
               </code-block>
@@ -828,7 +828,7 @@
           <a href="/configuration" class="card" style="text-decoration:none">
             <p class="section-label">Config</p>
             <h3 style="margin-bottom:6px">Configuration</h3>
-            <p style="margin:0;font-size:0.875rem">Override defaults in <code>bascik.config.js</code>. Toggle scoping,
+            <p style="margin:0;font-size:0.875rem">Override defaults in <code>bascik.config.ts</code>. Toggle scoping,
               obfuscation, and minification per project.</p>
           </a>
           <a href="/compatibility" class="card" style="text-decoration:none">

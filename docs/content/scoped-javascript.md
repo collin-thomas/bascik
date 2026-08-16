@@ -1,6 +1,6 @@
 # Scoped JavaScript
 
-Write `<script>` tags directly in your component HTML. Bascik automatically rewrites selector strings to match each instance's unique identifiers. Multiple instances of the same component on the same page stay completely independent.
+Write `<script>` tags directly in your component HTML. Bascik automatically rewrites selector strings to match each instance's unique identifiers. Multiple instances of the same component on the same page stay completely independent. TypeScript is supported too. See [TypeScript in Component Scripts](#typescript-in-component-scripts).
 
 ## See it in action
 
@@ -157,7 +157,35 @@ Script tags with a `type` other than `text/javascript` are left completely untou
 </script>
 ```
 
-> **Tip:** Disable JS scoping entirely with `scopeScriptBlocks: false` in [bascik.config.js](/configuration).
+> **Tip:** Disable JS scoping entirely with `scopeScriptBlocks: false` in [bascik.config.ts](/configuration).
+
+## TypeScript in Component Scripts
+
+Bascik ships plain JavaScript to the browser, so TypeScript in component `<script>` blocks must be stripped before the output is served. Node 24 exposes `stripTypeScriptTypes` from `node:module`. Wire it into the `minifyScripts` hook and every inline script body gets its types erased automatically:
+
+```ts
+// bascik.config.ts
+import { stripTypeScriptTypes } from 'node:module';
+import { defineConfig } from '@bascik/bascik/config';
+
+export const build = defineConfig({
+  minifyScripts: (js) => stripTypeScriptTypes(js),
+});
+```
+
+Component scripts can then use TypeScript annotations freely:
+
+```html
+<script>
+  const count = document.getElementById('count') as HTMLElement;
+  let n: number = 0;
+  count.addEventListener('click', () => { n++; count.textContent = String(n); });
+</script>
+```
+
+Bascik's scoping pipeline runs first (IIFE wrapping, selector rewriting), then `minifyScripts` strips the types. Scoped identifiers survive the process untouched because type annotations don't overlap with class names or selector strings.
+
+> **Erasable syntax only.** `stripTypeScriptTypes` removes annotations, interfaces, type aliases, `as` casts, and `!` non-null assertions. Non-erasable syntax (`enum`, parameter properties, namespaces with runtime code) requires a separate compile step with `tsc` or `esbuild` before the HTML is processed by Bascik.
 
 ## How Scoping Works
 

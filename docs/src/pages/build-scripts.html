@@ -7,7 +7,7 @@
     import { join } from 'node:path';
     import { pathToFileURL } from 'node:url';
     const { canonical } = await import(
-      pathToFileURL(join(process.cwd(), 'scripts/canonical.mjs')).href
+      pathToFileURL(join(process.cwd(), 'scripts/canonical.ts')).href
     );
     console.log(await canonical());
   </script>
@@ -15,7 +15,7 @@
     import { join } from 'node:path';
     import { pathToFileURL } from 'node:url';
     const { openGraph } = await import(
-      pathToFileURL(join(process.cwd(), 'scripts/open-graph.mjs')).href
+      pathToFileURL(join(process.cwd(), 'scripts/open-graph.ts')).href
     );
     console.log(await openGraph());
   </script>
@@ -23,7 +23,7 @@
     import { join } from 'node:path';
     import { pathToFileURL } from 'node:url';
     const { breadcrumbLd } = await import(
-      pathToFileURL(join(process.cwd(), 'scripts/breadcrumb-ld.mjs')).href
+      pathToFileURL(join(process.cwd(), 'scripts/breadcrumb-ld.ts')).href
     );
     console.log(await breadcrumbLd());
   </script>
@@ -48,7 +48,7 @@
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
           const { renderMdRange } = await import(
-            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
           );
           console.log(await renderMdRange('./content/build-scripts.md', { to: 'data-bascik-build' }));
         </script>
@@ -74,7 +74,7 @@
               <script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
-                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
                 console.log(await extractDemoBlock('./content/build-scripts.md', 'source-usage'));
               </script>
             </code-block>
@@ -84,7 +84,7 @@
               <script data-bascik-build>
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
-                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href);
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
                 console.log(await extractDemoBlock('./content/build-scripts.md', 'output-html'));
               </script>
             </code-block>
@@ -95,7 +95,7 @@
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
           const { renderMdRange } = await import(
-            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.mjs')).href
+            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
           );
           console.log(await renderMdRange('./content/build-scripts.md', { from: 'data-bascik-build' }, { stripDemoBlocks: true }));
         </script>
@@ -103,7 +103,7 @@
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
-          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.mjs')).href);
+          const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.ts')).href);
           console.log(renderPagination('/build-scripts'));
         </script>
 

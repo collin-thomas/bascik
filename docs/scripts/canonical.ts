@@ -2,7 +2,7 @@
  * Generates a <link rel="canonical"> tag for the current page.
  *
  * Reads context from env vars injected by bascik's build-script runner:
- *   BASCIK_SITE_URL  — the siteUrl from bascik.config.js
+ *   BASCIK_SITE_URL  — the siteUrl from bascik.config.ts
  *   BASCIK_PAGE_FILE — absolute path to the page file being built
  *   BASCIK_PAGES_DIR — absolute path to the configured pages directory
  *
@@ -11,11 +11,11 @@
  *   import { join } from 'node:path';
  *   import { pathToFileURL } from 'node:url';
  *   const { canonical } = await import(
- *     pathToFileURL(join(process.cwd(), 'scripts/canonical.mjs')).href
+ *     pathToFileURL(join(process.cwd(), 'scripts/canonical.ts')).href
  *   );
  *   console.log(await canonical());
  */
-export async function canonical(routeOverride) {
+export async function canonical(routeOverride?: string): Promise<string> {
   const siteUrl = (process.env.BASCIK_SITE_URL ?? '').replace(/\/$/, '');
   const pageFile = process.env.BASCIK_PAGE_FILE ?? '';
   const pagesDir = process.env.BASCIK_PAGES_DIR ?? '';

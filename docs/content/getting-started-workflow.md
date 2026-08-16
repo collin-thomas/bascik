@@ -3,7 +3,7 @@
 Once your first page is running, the next docs pages map cleanly to the next questions people usually have:
 
 - **[CLI / Command Line](/cli):** command output, watch behavior, `--check`, and production preview commands
-- **[Configuration](/configuration):** every `bascik.config.js` option in one place
+- **[Configuration](/configuration):** every `bascik.config.ts` option in one place
 - **[Scoped Styles](/scoped-styles):** how paired `.css` files and inline `<style>` tags are isolated per component
 
 ### A Small First Habit

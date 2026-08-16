@@ -5,14 +5,14 @@
  * Usage inside a <script data-bascik-build> block:
  *
  *   const { faqSchema } = await import(
- *     pathToFileURL(join(process.cwd(), 'scripts/faq-schema.mjs')).href
+ *     pathToFileURL(join(process.cwd(), 'scripts/faq-schema.ts')).href
  *   );
  *   console.log(await faqSchema('content/faq.md'));
  */
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-function stripMd(text) {
+function stripMd(text: string): string {
   return text
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')  // [text](url) → text
     .replace(/`([^`]+)`/g, '$1')               // `code` → code
@@ -20,12 +20,12 @@ function stripMd(text) {
     .replace(/\*([^*]+)\*/g, '$1');            // *italic* → italic
 }
 
-export async function faqSchema(mdPath) {
+export async function faqSchema(mdPath: string): Promise<string> {
   const md = await readFile(join(process.cwd(), mdPath), 'utf8');
 
   // Split on ## headings; first element is the preamble before any ##
   const sections = md.split(/^## /m).slice(1);
-  const pairs = [];
+  const pairs: Array<{ question: string; answer: string }> = [];
 
   for (const section of sections) {
     const newline = section.indexOf('\n');

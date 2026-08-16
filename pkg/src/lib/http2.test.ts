@@ -47,7 +47,7 @@ vi.mock("./config.js", () => ({
   shouldLog: vi.fn(() => true),
   BascikConfig: {
     cacheHttp: false,
-    isServe: false,
+    isProdServer: false,
     directory: { pages: "src/pages", components: "src/components" },
   },
 }));
@@ -82,7 +82,7 @@ vi.mock("./mime.js", () => ({
 
 // ─── Imports (after mocks) ────────────────────────────────────────────────────
 
-import { serveHttp2, _rateLimiter } from "./http2.js";
+import { startHttp2Server, _rateLimiter } from "./http2.js";
 import { mem } from "./mem.js";
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
@@ -157,9 +157,9 @@ const makePage = (overrides: Record<string, unknown> = {}) => ({
 // Server setup
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – server setup", () => {
+describe("startHttp2Server – server setup", () => {
   it("creates a secure server with key and cert", async () => {
-    await serveHttp2();
+    await startHttp2Server();
     expect(mockCreateSecureServer).toHaveBeenCalledWith(
       expect.objectContaining({
         key: expect.any(Buffer),
@@ -169,7 +169,7 @@ describe("serveHttp2 – server setup", () => {
   });
 
   it("sets maxConcurrentStreams: 250 in HTTP/2 settings", async () => {
-    await serveHttp2();
+    await startHttp2Server();
     expect(mockCreateSecureServer).toHaveBeenCalledWith(
       expect.objectContaining({
         settings: expect.objectContaining({ maxConcurrentStreams: 250 }),
@@ -178,13 +178,13 @@ describe("serveHttp2 – server setup", () => {
   });
 
   it("registers a stream event handler", async () => {
-    await serveHttp2();
+    await startHttp2Server();
     const registered = mockServer.on.mock.calls.map((c: any[]) => c[0]);
     expect(registered).toContain("stream");
   });
 
   it("calls server.listen", async () => {
-    await serveHttp2();
+    await startHttp2Server();
     expect(mockServer.listen).toHaveBeenCalledWith(
       8443,
       "localhost",
@@ -197,9 +197,9 @@ describe("serveHttp2 – server setup", () => {
 // Stream handler – method/path validation
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – stream handler", () => {
+describe("startHttp2Server – stream handler", () => {
   beforeEach(async () => {
-    await serveHttp2();
+    await startHttp2Server();
   });
 
   it("responds 405 for non-GET/HEAD methods", async () => {
@@ -359,9 +359,9 @@ describe("serveHttp2 – stream handler", () => {
 // Security headers
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – security headers", () => {
+describe("startHttp2Server – security headers", () => {
   beforeEach(async () => {
-    await serveHttp2();
+    await startHttp2Server();
   });
 
   const EXPECTED_SECURITY_HEADERS = {
@@ -418,9 +418,9 @@ describe("serveHttp2 – security headers", () => {
 // HEAD method
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – HEAD method", () => {
+describe("startHttp2Server – HEAD method", () => {
   beforeEach(async () => {
-    await serveHttp2();
+    await startHttp2Server();
   });
 
   it("responds 200 for HEAD on a page without a body", async () => {
@@ -464,9 +464,9 @@ describe("serveHttp2 – HEAD method", () => {
 // Content-Length and Vary headers
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – Content-Length and Vary", () => {
+describe("startHttp2Server – Content-Length and Vary", () => {
   beforeEach(async () => {
-    await serveHttp2();
+    await startHttp2Server();
   });
 
   it("sets content-length equal to buffer byte length for uncompressed pages", async () => {
@@ -521,9 +521,9 @@ describe("serveHttp2 – Content-Length and Vary", () => {
 // ETag and 304 Not Modified
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – ETag and conditional GET", () => {
+describe("startHttp2Server – ETag and conditional GET", () => {
   beforeEach(async () => {
-    await serveHttp2();
+    await startHttp2Server();
   });
 
   it("sets an ETag header on page responses", async () => {
@@ -631,9 +631,9 @@ describe("serveHttp2 – ETag and conditional GET", () => {
 // Path traversal protection
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – path traversal protection", () => {
+describe("startHttp2Server – path traversal protection", () => {
   beforeEach(async () => {
-    await serveHttp2();
+    await startHttp2Server();
   });
 
   it("returns 400 for a path traversal attempt in a static asset URL", async () => {
@@ -670,17 +670,17 @@ describe("serveHttp2 – path traversal protection", () => {
 // Rate limiting
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – rate limiting", () => {
+describe("startHttp2Server – rate limiting", () => {
   beforeEach(async () => {
-    // Rate limiting is isServe-only; enable it for this suite.
+    // Rate limiting is isProdServer-only; enable it for this suite.
     const { BascikConfig } = await import("./config.js");
-    (BascikConfig as any).isServe = true;
-    await serveHttp2();
+    (BascikConfig as any).isProdServer = true;
+    await startHttp2Server();
   });
 
   afterEach(async () => {
     const { BascikConfig } = await import("./config.js");
-    (BascikConfig as any).isServe = false;
+    (BascikConfig as any).isProdServer = false;
   });
 
   it("allows requests below the rate limit", async () => {
@@ -734,7 +734,7 @@ describe("serveHttp2 – rate limiting", () => {
 // Port auto-increment
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – port auto-increment", () => {
+describe("startHttp2Server – port auto-increment", () => {
   afterEach(() => {
     // Restore default listen behaviour so subsequent tests are unaffected.
     mockServer.listen.mockImplementation(
@@ -761,7 +761,7 @@ describe("serveHttp2 – port auto-increment", () => {
       },
     );
 
-    await serveHttp2();
+    await startHttp2Server();
 
     expect(mockServer.listen).toHaveBeenCalledTimes(2);
     expect(mockServer.listen).toHaveBeenNthCalledWith(1, 8443, "localhost", expect.any(Function));
@@ -773,7 +773,7 @@ describe("serveHttp2 – port auto-increment", () => {
 // Graceful shutdown
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – graceful shutdown", () => {
+describe("startHttp2Server – graceful shutdown", () => {
   const registeredHandlers: Map<string, (() => void)[]> = new Map();
 
   beforeEach(() => {
@@ -791,14 +791,14 @@ describe("serveHttp2 – graceful shutdown", () => {
   });
 
   it("registers SIGTERM and SIGINT handlers after the server starts", async () => {
-    await serveHttp2();
+    await startHttp2Server();
     const events = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.map((c: any[]) => c[0]);
     expect(events).toContain("SIGTERM");
     expect(events).toContain("SIGINT");
   });
 
   it("calls server.close() on SIGTERM", async () => {
-    await serveHttp2();
+    await startHttp2Server();
     const [, sigTermHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
       (c: any[]) => c[0] === "SIGTERM",
     ) as [string, () => void];
@@ -810,7 +810,7 @@ describe("serveHttp2 – graceful shutdown", () => {
   });
 
   it("calls server.close() on SIGINT", async () => {
-    await serveHttp2();
+    await startHttp2Server();
     const [, sigIntHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
       (c: any[]) => c[0] === "SIGINT",
     ) as [string, () => void];
@@ -822,7 +822,7 @@ describe("serveHttp2 – graceful shutdown", () => {
   });
 
   it("destroys open sessions on SIGINT so long-lived SSE streams do not block shutdown", async () => {
-    await serveHttp2();
+    await startHttp2Server();
 
     const [, sessionHandler] = mockServer.on.mock.calls.find(
       (c: any[]) => c[0] === "session",
@@ -846,7 +846,7 @@ describe("serveHttp2 – graceful shutdown", () => {
 // Cert auto-generation
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – cert generation", () => {
+describe("startHttp2Server – cert generation", () => {
   let mockAccess: ReturnType<typeof vi.fn>;
   let mockExecFile: ReturnType<typeof vi.fn>;
 
@@ -869,14 +869,14 @@ describe("serveHttp2 – cert generation", () => {
   });
 
   it("skips cert generation when cert files already exist", async () => {
-    await serveHttp2();
+    await startHttp2Server();
     expect(mockExecFile).not.toHaveBeenCalled();
   });
 
   it("runs mkcert when cert files are missing", async () => {
     mockAccess.mockRejectedValue(new Error("ENOENT"));
 
-    await serveHttp2();
+    await startHttp2Server();
 
     expect(mockExecFile).toHaveBeenCalledWith(
       "mkcert",
@@ -889,7 +889,7 @@ describe("serveHttp2 – cert generation", () => {
   it("passes augmented PATH to mkcert so Homebrew bin dirs are included", async () => {
     mockAccess.mockRejectedValue(new Error("ENOENT"));
 
-    await serveHttp2();
+    await startHttp2Server();
 
     const [, , opts] = mockExecFile.mock.calls[0] as [string, string[], { env: { PATH: string } }, ExecFileCb];
     expect(opts.env.PATH).toContain("/opt/homebrew/bin");
@@ -902,7 +902,7 @@ describe("serveHttp2 – cert generation", () => {
       .mockImplementationOnce(fail("mkcert not found"))
       .mockImplementationOnce(succeed);
 
-    await serveHttp2();
+    await startHttp2Server();
 
     expect(mockExecFile).toHaveBeenCalledTimes(2);
     expect(mockExecFile).toHaveBeenNthCalledWith(
@@ -920,7 +920,7 @@ describe("serveHttp2 – cert generation", () => {
       .mockImplementationOnce(succeed);
     const consoleSpy = vi.spyOn(console, "log");
 
-    await serveHttp2();
+    await startHttp2Server();
 
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining("mkcert not found or failed"),
@@ -932,14 +932,14 @@ describe("serveHttp2 – cert generation", () => {
 // SSE live-reload
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – SSE live-reload (/bascik-live-reload)", () => {
+describe("startHttp2Server – SSE live-reload (/bascik-live-reload)", () => {
   const mockEventEmitter = eventEmitter as unknown as {
     on: ReturnType<typeof vi.fn>;
     removeListener: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
-    await serveHttp2();
+    await startHttp2Server();
   });
 
   /** Fires the registered "transpiled" event listener for /bascik-live-reload. */
@@ -1040,14 +1040,14 @@ describe("serveHttp2 – SSE live-reload (/bascik-live-reload)", () => {
 
   it("responds 404 in --serve mode (SSE only runs in dev)", async () => {
     const { BascikConfig } = await import("./config.js");
-    (BascikConfig as any).isServe = true;
+    (BascikConfig as any).isProdServer = true;
     const handler = getStreamHandler()!;
     const stream = makeStream();
     await handler(stream, makeHeaders("/bascik-live-reload"));
     expect(stream.respond).toHaveBeenCalledWith(
       expect.objectContaining({ ":status": 404 }),
     );
-    (BascikConfig as any).isServe = false;
+    (BascikConfig as any).isProdServer = false;
   });
 });
 
@@ -1055,9 +1055,9 @@ describe("serveHttp2 – SSE live-reload (/bascik-live-reload)", () => {
 // onError helper – header/end error paths
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – onError: stream already has headers sent", () => {
+describe("startHttp2Server – onError: stream already has headers sent", () => {
   beforeEach(async () => {
-    await serveHttp2();
+    await startHttp2Server();
   });
 
   it("skips respond() when headersSent is true (headers already sent before exception)", async () => {
@@ -1092,9 +1092,9 @@ describe("serveHttp2 – onError: stream already has headers sent", () => {
 // fileStream error paths
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – fileStream error handling", () => {
+describe("startHttp2Server – fileStream error handling", () => {
   beforeEach(async () => {
-    await serveHttp2();
+    await startHttp2Server();
   });
 
   it("does nothing when fileStream emits an error after the stream is destroyed", async () => {
@@ -1169,12 +1169,12 @@ describe("serveHttp2 – fileStream error handling", () => {
 // logAccess – various skip conditions
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – logAccess skip conditions", () => {
+describe("startHttp2Server – logAccess skip conditions", () => {
   let consoleSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(async () => {
     consoleSpy = vi.spyOn(console, "log").mockImplementation(() => { });
-    await serveHttp2();
+    await startHttp2Server();
   });
 
   afterEach(() => {
@@ -1218,9 +1218,9 @@ describe("serveHttp2 – logAccess skip conditions", () => {
     (BascikConfig as any).devServer = { logging: { level: "info", requests: true } };
   });
 
-  it("uses serve.logging config when isServe is true", async () => {
+  it("uses serve.logging config when isProdServer is true", async () => {
     const { BascikConfig } = await import("./config.js");
-    (BascikConfig as any).isServe = true;
+    (BascikConfig as any).isProdServer = true;
     (BascikConfig as any).serve = { logging: { level: "info", requests: true } };
     mockMem.getPage.mockReturnValue(makePage());
     const handler = getStreamHandler()!;
@@ -1230,7 +1230,7 @@ describe("serveHttp2 – logAccess skip conditions", () => {
       String(c[0]).includes("GET"),
     );
     expect(accessLines.length).toBeGreaterThan(0);
-    (BascikConfig as any).isServe = false;
+    (BascikConfig as any).isProdServer = false;
   });
 });
 
@@ -1238,9 +1238,9 @@ describe("serveHttp2 – logAccess skip conditions", () => {
 // Query-string stripping and trailing-slash page lookup
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – query string and trailing-slash routing", () => {
+describe("startHttp2Server – query string and trailing-slash routing", () => {
   beforeEach(async () => {
-    await serveHttp2();
+    await startHttp2Server();
   });
 
   it("strips query string before looking up a page (path?q=1 → path)", async () => {
@@ -1288,11 +1288,11 @@ describe("serveHttp2 – query string and trailing-slash routing", () => {
 // Static asset cache-control when cacheHttp is enabled
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – static asset cache-control (cacheHttp=true)", () => {
+describe("startHttp2Server – static asset cache-control (cacheHttp=true)", () => {
   beforeEach(async () => {
     const { BascikConfig } = await import("./config.js");
     (BascikConfig as any).cacheHttp = true;
-    await serveHttp2();
+    await startHttp2Server();
   });
 
   afterEach(async () => {
@@ -1321,7 +1321,7 @@ describe("serveHttp2 – static asset cache-control (cacheHttp=true)", () => {
 // Port-in-use: non-EADDRINUSE error causes rejection
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – port bind: non-EADDRINUSE error rejects", () => {
+describe("startHttp2Server – port bind: non-EADDRINUSE error rejects", () => {
   afterEach(() => {
     mockServer.listen.mockImplementation(
       (_port: number, _hostname: string, cb?: () => void) => { cb?.(); },
@@ -1339,7 +1339,7 @@ describe("serveHttp2 – port bind: non-EADDRINUSE error rejects", () => {
         errorHandler(err);
       },
     );
-    await expect(serveHttp2()).rejects.toThrow("EACCES");
+    await expect(startHttp2Server()).rejects.toThrow("EACCES");
   });
 });
 
@@ -1347,9 +1347,9 @@ describe("serveHttp2 – port bind: non-EADDRINUSE error rejects", () => {
 // Server scripts: hasServerScripts=true path
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – server-scripts execution", () => {
+describe("startHttp2Server – server-scripts execution", () => {
   beforeEach(async () => {
-    await serveHttp2();
+    await startHttp2Server();
   });
 
   it("calls executeServerScripts and serves the result for pages with hasServerScripts=true", async () => {
@@ -1405,7 +1405,7 @@ describe("serveHttp2 – server-scripts execution", () => {
 // Custom cert configuration error
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – custom cert config error", () => {
+describe("startHttp2Server – custom cert config error", () => {
   it("throws when custom cert files are configured but missing", async () => {
     const { BascikConfig } = await import("./config.js");
     (BascikConfig as any).serve = {
@@ -1416,7 +1416,7 @@ describe("serveHttp2 – custom cert config error", () => {
     const { access } = await import("node:fs/promises");
     (access as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("ENOENT"));
 
-    await expect(serveHttp2()).rejects.toThrow("Custom TLS certificate files");
+    await expect(startHttp2Server()).rejects.toThrow("Custom TLS certificate files");
     (BascikConfig as any).serve = { port: 8443, hostname: "localhost" };
     (access as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
   });
@@ -1426,10 +1426,10 @@ describe("serveHttp2 – custom cert config error", () => {
 // Boot page (shown during initial dev-server startup)
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – boot page", () => {
+describe("startHttp2Server – boot page", () => {
   beforeEach(async () => {
     mockMem.isBooting = true;
-    await serveHttp2();
+    await startHttp2Server();
   });
 
   afterEach(() => {
@@ -1471,7 +1471,7 @@ describe("serveHttp2 – boot page", () => {
 
   it("serves a 404 (not the boot page) in --serve mode even when isBooting is true", async () => {
     const { BascikConfig } = await import("./config.js");
-    (BascikConfig as any).isServe = true;
+    (BascikConfig as any).isProdServer = true;
     mockMem.getPage.mockReturnValue(undefined);
     const handler = getStreamHandler()!;
     const stream = makeStream();
@@ -1479,7 +1479,7 @@ describe("serveHttp2 – boot page", () => {
     expect(stream.respond).toHaveBeenCalledWith(
       expect.objectContaining({ ":status": 404 }),
     );
-    (BascikConfig as any).isServe = false;
+    (BascikConfig as any).isProdServer = false;
   });
 
   it("sends no body for HEAD requests to the boot page", async () => {
@@ -1495,14 +1495,14 @@ describe("serveHttp2 – boot page", () => {
 // SSE boot-done event
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – SSE boot-done event", () => {
+describe("startHttp2Server – SSE boot-done event", () => {
   const mockEventEmitter = eventEmitter as unknown as {
     on: ReturnType<typeof vi.fn>;
     removeListener: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
-    await serveHttp2();
+    await startHttp2Server();
   });
 
   const fireBootDone = () => {
@@ -1560,14 +1560,14 @@ describe("serveHttp2 – SSE boot-done event", () => {
 // SSE destroyed-stream guards
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – SSE handlers do not write to a destroyed stream", () => {
+describe("startHttp2Server – SSE handlers do not write to a destroyed stream", () => {
   const mockEventEmitter = eventEmitter as unknown as {
     on: ReturnType<typeof vi.fn>;
     removeListener: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
-    await serveHttp2();
+    await startHttp2Server();
   });
 
   const fireEvent = (event: string, arg?: unknown) => {
@@ -1600,11 +1600,11 @@ describe("serveHttp2 – SSE handlers do not write to a destroyed stream", () =>
 // onError – ERR_HTTP2_INVALID_STREAM suppression
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("serveHttp2 – onError suppresses ERR_HTTP2_INVALID_STREAM", () => {
+describe("startHttp2Server – onError suppresses ERR_HTTP2_INVALID_STREAM", () => {
   let consoleSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(async () => {
-    await serveHttp2();
+    await startHttp2Server();
     consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
   });
 

@@ -14,7 +14,7 @@ Scaffolds a complete starter project in a new directory. Prompts for a project n
 ```text
 my-project/
   package.json
-  bascik.config.js
+  bascik.config.ts
   .gitignore
   .github/skills/bascik/SKILL.md
   .claude/skills/bascik/SKILL.md
@@ -207,6 +207,8 @@ bascik --build
 
 The output uses root-relative asset paths (for example `/css/styles.css`) and must be served by an HTTP server. Opening files directly with `file://` will break stylesheet and script loading.
 
+For guidance on deploying to static hosts or running the production server, see [Deploying](/resources/deploying).
+
 ## Production server
 
 `bascik --serve` starts the same HTTP/2 server used for development, but pointed at a pre-built `dist/` directory. Run `--build` first, then `--serve`:
@@ -223,11 +225,11 @@ The production server:
 
 ### Configuring the server
 
-Use the `serve` key in `bascik.config.js` to customize the server for both dev and production:
+Use the `serve` key in `bascik.config.ts` to customize the server for both dev and production:
 
-```js
-// bascik.config.js
-export const bascikConfig = {
+```ts
+// bascik.config.ts
+export default {
   serve: {
     port: 443,
     hostname: '0.0.0.0',   // bind all interfaces (needed in containers)

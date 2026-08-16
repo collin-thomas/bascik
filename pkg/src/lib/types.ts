@@ -66,10 +66,10 @@ export interface BascikConfigOptions {
    *              minified string.  Async functions are supported, which lets
    *              you plug in esbuild, terser, or any other tool:
    *
-   * ```js
-   * // bascik.config.js
+   * ```ts
+   * // bascik.config.ts
    * import { transform } from 'esbuild';
-   * export const buildOverrideConfig = {
+   * export const build = {
    *   minifyScripts: async (js) => (await transform(js, { minify: true })).code,
    * };
    * ```
@@ -160,7 +160,7 @@ export interface BascikConfigOptions {
    */
   buildScriptCache?: boolean;
   isBuild?: boolean;
-  isServe?: boolean;
+  isProdServer?: boolean;
   /**
    * Development server logging controls. These are separate from the normal
    * `console.warn`/`console.error` diagnostics and only affect the high-traffic
@@ -197,7 +197,7 @@ export interface BascikConfigOptions {
    * HTTP server configuration used in both dev and production (`bascik --serve`) modes.
    *
    * @example
-   * // bascik.config.js
+   * // bascik.config.ts
    * export const bascikConfig = {
    *   serve: {
    *     port: 443,

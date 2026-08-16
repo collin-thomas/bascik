@@ -8,7 +8,7 @@
  * Usage inside a <script data-bascik-build> block:
  *
  *   const { breadcrumbLd } = await import(
- *     pathToFileURL(join(process.cwd(), 'scripts/breadcrumb-ld.mjs')).href
+ *     pathToFileURL(join(process.cwd(), 'scripts/breadcrumb-ld.ts')).href
  *   );
  *   console.log(await breadcrumbLd());
  */
@@ -17,14 +17,14 @@ import { readFile } from 'node:fs/promises';
 // Sections that have their own index page (e.g. /internals, /switch)
 const SECTIONS_WITH_PAGE = new Set(['internals', 'switch']);
 
-const SECTION_LABELS = {
+const SECTION_LABELS: Record<string, string> = {
   internals: 'Internals',
   switch:    'Switch',
   recipes:   'Recipes',
   resources: 'Resources',
 };
 
-export async function breadcrumbLd() {
+export async function breadcrumbLd(): Promise<string> {
   const siteUrl = (process.env.BASCIK_SITE_URL ?? '').replace(/\/$/, '');
   const pageFile = process.env.BASCIK_PAGE_FILE ?? '';
   const pagesDir = process.env.BASCIK_PAGES_DIR ?? '';

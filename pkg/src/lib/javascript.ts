@@ -577,7 +577,7 @@ export const namespaceScriptTags = (
  * Strip block/line comments and collapse whitespace from a JS string.
  * String literals and template literals are copied verbatim so their content
  * is never altered.  This is the default minifier used when
- * `minifyScripts: true` is set in bascik.config.js.
+ * `minifyScripts: true` is set in bascik.config.ts.
  *
  * For production-quality output (dead-code elimination, identifier mangling,
  * etc.) configure `minifyScripts` with a custom function backed by esbuild,

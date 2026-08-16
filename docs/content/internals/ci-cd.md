@@ -16,13 +16,13 @@ on:
 
 It runs two parallel jobs across Node 24:
 
-**`test`** — unit tests with coverage:
+**`test`**: unit tests with coverage:
 
 ```sh
 yarn test:ci
 ```
 
-**`e2e`** — end-to-end Playwright tests against the built fixture site:
+**`e2e`**: end-to-end Playwright tests against the built fixture site:
 
 ```sh
 yarn build && yarn e2e
@@ -32,7 +32,7 @@ The `e2e` job installs only the Chromium browser via `playwright install --with-
 
 ## Release Workflow
 
-The release workflow (`.github/workflows/release.yml`) triggers on version tags. The two packages are **independently versioned and released** — pushing a tag only publishes the package that tag belongs to.
+The release workflow (`.github/workflows/release.yml`) triggers on version tags. The two packages are **independently versioned and released**; pushing a tag only publishes the package that tag belongs to.
 
 | Package | Tag format | Example |
 |---|---|---|
@@ -67,8 +67,8 @@ Both packages publish to the public npm registry using a granular access token s
 
 Two flags are always passed:
 
-- `--access public` — required for scoped packages (`@bascik/bascik`) and explicit for `create-bascik`. Both `package.json` files also declare `"publishConfig": { "access": "public" }` as a belt-and-suspenders default.
-- `--provenance` — generates a signed attestation on npmjs.com that links the published package to the exact GitHub Actions run that built it. This requires `id-token: write` permission on the job.
+- `--access public`: required for scoped packages (`@bascik/bascik`) and explicit for `create-bascik`. Both `package.json` files also declare `"publishConfig": { "access": "public" }` as a belt-and-suspenders default.
+- `--provenance`: generates a signed attestation on npmjs.com that links the published package to the exact GitHub Actions run that built it. This requires `id-token: write` permission on the job.
 
 ## Tagging a Release
 

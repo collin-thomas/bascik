@@ -31,7 +31,7 @@ describe("resolveCliAction", () => {
   });
 
   it("maps --serve to serve", () => {
-    expect(resolveCliAction(["--serve"])).toEqual({ action: "serve" });
+    expect(resolveCliAction(["--serve"])).toEqual({ action: "prodServer" });
   });
 
   it("maps --build to build", () => {

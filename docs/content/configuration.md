@@ -1,12 +1,14 @@
 # Configuration
 
-Create a `bascik.config.js` file in your project root to override any default settings.
+Create a `bascik.config.ts` file in your project root to override any default settings. Import `defineConfig` for full autocomplete and type checking on every option; your editor will surface valid values, flag typos, and show inline docs as you type. A plain `bascik.config.js` also works and takes precedence if both files exist.
 
 ## Full Example
 
-```js
-// bascik.config.js
-export const bascikConfig = {
+```ts
+// bascik.config.ts
+import { defineConfig } from '@bascik/bascik/config';
+
+export default defineConfig({
   directory: {
     pages: 'src/pages',
     components: 'src/components',
@@ -50,12 +52,12 @@ export const bascikConfig = {
       transpiles: true,
     },
   },
-};
+});
 
-export const buildOverrideConfig = {
+export const build = defineConfig({
   obfuscateAttributeNames: true,
   minifyStyles: true,
-};
+});
 ```
 
 ## Options Reference
@@ -135,19 +137,22 @@ Minify inline `<script>` content and `.js` static files in the build output. Acc
 - **`false`:** no minification.
 - **`(fn)`:** a custom async-capable function called for each script body. Use this to plug in esbuild, terser, or any other tool:
 
-```js
-// bascik.config.js
+```ts
+// bascik.config.ts
+import { defineConfig } from '@bascik/bascik/config';
 import { transform } from 'esbuild';
 
-export const buildOverrideConfig = {
+export const build = defineConfig({
   minifyScripts: async (js) => {
     const result = await transform(js, { minify: true, loader: 'js' });
     return result.code;
   },
-};
+});
 ```
 
 Only applies to inline scripts (those without a `src` attribute) and to `.js` files copied into `dist/`. Non-JS script types such as `application/ld+json` are always left untouched.
+
+To strip TypeScript from component scripts, pass Node's built-in `stripTypeScriptTypes` here. See [TypeScript in Component Scripts](/scoped-javascript#typescript-in-component-scripts).
 
 ### `obfuscateAttributeNames`
 
@@ -264,17 +269,19 @@ inlineStyles: true
 inlineStyles: ['src/pages/css/styles.css']
 ```
 
-This eliminates the render-blocking `<link rel="stylesheet">` request, the CSS arrives in the same HTTP response as the HTML. It pairs naturally with `buildOverrideConfig` to minify only in production:
+This eliminates the render-blocking `<link rel="stylesheet">` request, the CSS arrives in the same HTTP response as the HTML. It pairs naturally with `build` to minify only in production:
 
-```js
-export const bascikConfig = {
+```ts
+import { defineConfig } from '@bascik/bascik/config';
+
+export default defineConfig({
   inlineStyles: ['src/pages/css/styles.css'],
   minifyStyles: false,
-};
+});
 
-export const buildOverrideConfig = {
+export const build = defineConfig({
   minifyStyles: true,
-};
+});
 ```
 
 > **When to inline.** Stylesheets under ~15 KB (gzipped) are good candidates. Larger stylesheets are better loaded asynchronously or split into critical and non-critical parts.
@@ -301,7 +308,7 @@ buildScriptCache: true  // default
 buildScriptCache: false // disable for debugging
 ```
 
-Cache entries live in `node_modules/.cache/bascik/script-cache/`. The cache key covers the script content, dev/build mode, the current page path (`BASCIK_PAGE_FILE`), the site URL, and the content of any `content/*.md` or `scripts/*.mjs` files the script references as quoted path literals. This means the cache self-invalidates on a per-script basis: editing one Markdown file only invalidates scripts that reference that file.
+Cache entries live in `node_modules/.cache/bascik/script-cache/`. The cache key covers the script content, dev/build mode, the current page path (`BASCIK_PAGE_FILE`), the site URL, and the content of any `content/*.md` or `scripts/*.{mjs,js,ts}` files the script references as quoted path literals. This means the cache self-invalidates on a per-script basis: editing one Markdown file only invalidates scripts that reference that file.
 
 To bust the entire cache manually, for example after upgrading a build-time npm dependency whose output changed:
 
@@ -311,12 +318,12 @@ rm -rf node_modules/.cache/bascik/script-cache
 
 Set to `false` when debugging a script that reads external state not covered by the cache key (e.g. a live API call or a file referenced by a dynamic path).
 
-## `buildOverrideConfig`
+## `build`
 
-Exporting a second `buildOverrideConfig` object lets you set options that only apply during `bascik --build`, overriding the values in `bascikConfig`. A common pattern is to enable obfuscation and minification only in production:
+Exporting a `build` object lets you set options that apply during `bascik --build` and `bascik --serve` (production server), overriding the default export. A common pattern is to enable obfuscation and minification only in production:
 
 ```js
-export const buildOverrideConfig = {
+export const build = {
   obfuscateAttributeNames: true,
   minifyStyles: true,
   minifyScripts: true, // or a custom function for esbuild/terser
