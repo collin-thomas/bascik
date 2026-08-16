@@ -34,16 +34,24 @@ export const startExecDev = (): void => {
   if (!entries?.length) return;
   for (const entry of entries) {
     if (!entry.watch) continue;
-    runScript(entry.script).catch((err) =>
-      console.error('[bascik] exec error:', err),
-    );
+    let running = false;
+
+    // Non-blocking startup run — no reload needed on first run
+    running = true;
+    runScript(entry.script)
+      .catch((err) => console.error('[bascik] exec error:', err))
+      .finally(() => { running = false; });
+
     const patterns = Array.isArray(entry.watch) ? entry.watch : [entry.watch];
     chokidar
       .watch(patterns, { ignoreInitial: true, usePolling: true, interval: 100 })
       .on('all', () => {
+        if (running) return; // drop concurrent trigger
+        running = true;
         runScript(entry.script)
           .then(() => eventEmitter.emit('asset-changed'))
-          .catch((err) => console.error('[bascik] exec error:', err));
+          .catch((err) => console.error('[bascik] exec error:', err))
+          .finally(() => { running = false; });
       });
   }
 };

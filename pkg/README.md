@@ -98,8 +98,8 @@ export const bascikConfig = {
   directory: {
     pages: "src/pages", // default
     components: "src/components", // default
-    watch: [], // re-transpile all pages when these paths change in dev
   },
+  watch: [], // re-transpile all pages when these paths change in dev
 
   scopeScriptBlocks: true, // wrap scripts in IIFEs, rewrite selectors
   inheritAttributes: true, // forward non-bascik attrs onto the component root
@@ -176,10 +176,12 @@ Ensure the `NPM_TOKEN` secret is set in the repository settings (Settings → Se
 
 ```sh
 # For @bascik/bascik
-pnpm --filter @bascik/bascik build && npm publish --access public
+pnpm --filter @bascik/bascik build
+pnpm --filter @bascik/bascik exec npm publish --access public
 
 # For create-bascik
-pnpm --filter create-bascik build && npm publish --access public
+pnpm --filter create-bascik build
+pnpm --filter create-bascik exec npm publish --access public
 ```
 
 ---

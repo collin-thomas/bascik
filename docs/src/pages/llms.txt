@@ -1149,8 +1149,8 @@ export default defineConfig({
   directory: {
     pages: 'src/pages',
     components: 'src/components',
-    watch: ['scripts/', 'data/'],
   },
+  watch: ['scripts/', 'data/'],
 
   scopeScriptBlocks: true,
   inheritAttributes: true,
@@ -1387,6 +1387,20 @@ watch: ['scripts/', 'data/'],
 ```
 
 Has no effect during `bascik --build`.
+
+### `exec`
+
+Scripts to run as part of the build/dev lifecycle. Each entry has a `script` path (relative to the project root, run with the same `node` binary) and an optional `watch` array.
+
+- **With `watch`**: runs on dev startup (non-blocking) and re-runs whenever a watched file changes, followed by a live-reload. Also runs before pages during `--build`.
+- **Without `watch`**: build-only — skipped in dev.
+
+```js
+exec: [
+  { script: 'scripts/generate-search-index.ts', watch: ['content/'] },
+  { script: 'scripts/generate-llms-txt.ts' }, // build only
+]
+```
 
 ### `inlineStyles`
 

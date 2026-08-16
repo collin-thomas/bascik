@@ -169,6 +169,15 @@ describe("startExecDev", () => {
     expect(mockSpawn).toHaveBeenCalledWith(process.execPath, ["scripts/gen.ts"], expect.anything());
   });
 
+  it("does not emit asset-changed on startup run", async () => {
+    cfg.exec = [{ script: "scripts/gen.ts", watch: ["content/"] }];
+    startExecDev();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(mockEventEmit).not.toHaveBeenCalled();
+  });
+
   it("sets up a chokidar watcher for each watched entry", () => {
     cfg.exec = [
       { script: "scripts/a.ts", watch: ["content/"] },
@@ -190,16 +199,39 @@ describe("startExecDev", () => {
     cfg.exec = [{ script: "scripts/gen.ts", watch: ["content/"] }];
     startExecDev();
 
-    // Drain startup spawn
+    // Drain startup: close fires, catch pass-through, finally clears running
+    await Promise.resolve();
+    await Promise.resolve();
     await Promise.resolve();
 
     const watcher = getWatcher(0);
     watcher._handlers["all"]();
-    await Promise.resolve(); // close fires → promise resolves
-    await Promise.resolve(); // .then() fires → emit queued and runs
+    await Promise.resolve(); // close fires → .then(emit) queued
+    await Promise.resolve(); // emit fires
 
     expect(mockSpawn).toHaveBeenCalledTimes(2);
     expect(mockEventEmit).toHaveBeenCalledWith("asset-changed");
+  });
+
+  it("drops concurrent watch trigger while script is running", async () => {
+    cfg.exec = [{ script: "scripts/gen.ts", watch: ["content/"] }];
+    startExecDev();
+
+    // Drain startup so running = false
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve(); // 3 ticks: close → catch pass-through → finally
+
+    const watcher = getWatcher(0);
+    // Fire twice before first run completes
+    watcher._handlers["all"]();
+    watcher._handlers["all"](); // should be dropped
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    // startup + one watcher run (second dropped)
+    expect(mockSpawn).toHaveBeenCalledTimes(2);
   });
 
   it("logs an error but does not emit asset-changed when the re-run script fails", async () => {
@@ -208,7 +240,10 @@ describe("startExecDev", () => {
     cfg.exec = [{ script: "scripts/gen.ts", watch: ["content/"] }];
     startExecDev();
 
+    // Drain startup (exits with code 1, .catch logs, .finally clears flag)
     await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve(); // 3 ticks to clear running
 
     const watcher = getWatcher(0);
     watcher._handlers["all"]();

@@ -5,6 +5,8 @@
  *   exec: [{ script: 'scripts/generate-manifest.ts' }]
  *
  * That script writes `dist/exec-manifest.json` during `--build`.
+ * It also calls mkdir({ recursive: true }) first, so it works on a clean
+ * checkout where dist/ does not yet exist.
  * These tests verify the file is generated and served correctly.
  */
 import { test, expect } from '@playwright/test';

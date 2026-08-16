@@ -82,7 +82,7 @@ The `renderMd` helper (`docs/scripts/md-renderer.ts`) applies these transformati
 **Preferred workflow** — invoke the prompt file. It regenerates `llms.txt`, reads all docs content, updates SKILL.md with LLM judgment, then propagates everything in one shot:
 
 ```
-#pre-commit.prompt.md
+#pre-push.prompt.md
 ```
 
 Do not call `generate:llms` or `pnpm --filter bascik-docs generate:llms` individually — the prompt handles all of that.
@@ -166,7 +166,7 @@ The mapping is straightforward: `docs/content/topic.md` corresponds to `docs/src
 - Fixed or improved → update the Status and/or Notes of the existing row.
 - Intentionally unsupported → add a row with 🚫 and an explanation.
 
-After editing `compatibility.md`, run `#pre-commit.prompt.md` as usual.
+After editing `compatibility.md`, run `#pre-push.prompt.md` as usual.
 
 ## Keeping Docs in Sync with the Package
 
@@ -192,7 +192,7 @@ Then inspect the relevant `docs/dist/` output to confirm the pkg change has the 
 **When adding, removing, or significantly changing tests in `pkg/src/`:**
 
 - The testing docs (`docs/content/internals/testing.md`) describe the test approach, not an enumerated list of files — the "Test Files" section links to GitHub which is always current. You only need to update the prose if the testing *patterns* change (e.g. a new mock strategy, a new test runner, new helpers).
-- The coverage numbers shown on the testing page are read from `pkg/test-coverage.json` (unit tests) and `pkg/e2e-test-coverage.json` (E2E build-step coverage) at docs build time. After adding tests, run `#pre-commit.prompt.md` — it regenerates both coverage files as part of its Step 1.
+- The coverage numbers shown on the testing page are read from `pkg/test-coverage.json` (unit tests) and `pkg/e2e-test-coverage.json` (E2E build-step coverage) at docs build time. After adding tests, run `#pre-push.prompt.md` — it regenerates both coverage files as part of its Step 1.
 
 **When changing `pkg/src/lib/dev-server.md` (or adding to the live-reload / SSE / watch system):**
 Update `docs/content/internals/dev-server.md` to reflect the change. This page is the source of truth for how the dev server and watch system work.

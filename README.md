@@ -47,15 +47,15 @@ After any `pkg/src/` change, rebuild the package and the docs server will pick i
 Before committing changes that edited source code, tests, or any `docs/content/*.md`, run this custom prompt:
 
 ```sh
-/pre-commit
+/pre-push
 ```
 
 This regenerates `llms.txt`, updates `docs/src/pages/assets/SKILL.md` to reflect any new or changed content, copies it to `create/assets/SKILL.md`, and updates unit and E2E test coverage JSON files — all in one step.
 
 The prompt calls:
 
+- `pnpm --filter @bascik/bascik update-coverage`
+- `pnpm --filter @bascik/bascik update-e2e-coverage`
 - `pnpm --filter bascik-docs generate:llms`
 - The LLM updates the `SKILL.md` file based on the `llms.txt` file.
 - `pnpm --filter create-bascik prepack`
-- `pnpm --filter @bascik/bascik update-coverage`
-- `pnpm --filter @bascik/bascik update-e2e-coverage`

@@ -720,8 +720,8 @@ export default defineConfig({
   },
   watch: [], // re-transpile all pages when these paths change (dev only)
   exec: [
-    // scripts to run at build time (and in dev if watch is set)
-    // { script: 'scripts/generate-search-index.ts', watch: ['content/'] },
+    // { script: 'scripts/generate-search-index.ts', watch: ['content/'] }, // dev + build: runs on startup, re-runs on change
+    // { script: 'scripts/generate-llms-txt.ts' },                          // build-only: skipped in dev
   ],
   scopeScriptBlocks: true,
   inheritAttributes: true,
