@@ -213,6 +213,76 @@ Bascik also helps with one of the easy-to-miss SEO assets: once `siteUrl` is set
 
 Because every Bascik page is its own `.html` file, every page naturally gets its own `<title>` and `<meta name="description">`: the two most impactful SEO signals. There is no single-page-app router to work around.
 
+## Structured Data with JSON-LD
+
+Structured data tells search engines what your content *means*, not just what it says. Google uses it to generate **rich results**: FAQ dropdowns, breadcrumb trails, star ratings, article bylines, and product prices shown directly in the search listing before the user clicks.
+
+Add a `<script type="application/ld+json">` block to your `<head>` with the schema for your content type. Bascik never touches `application/ld+json` script blocks, so the JSON passes through exactly as written.
+
+**FAQ rich results** — turns your page's questions into expandable dropdowns in search results:
+
+```html
+<head>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is Bascik?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Bascik is a build tool that compiles reusable HTML components into plain HTML pages with no JavaScript runtime."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does Bascik add JavaScript to my pages?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. Bascik outputs plain HTML. The only JavaScript on any page is what you write yourself."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+```
+
+Other commonly useful types:
+
+```html
+<!-- BreadcrumbList: shows the page path in search results -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://yourdomain.com/" },
+    { "@type": "ListItem", "position": 2, "name": "Docs", "item": "https://yourdomain.com/docs/" },
+    { "@type": "ListItem", "position": 3, "name": "Getting Started" }
+  ]
+}
+</script>
+
+<!-- Article: shows author, date, and headline metadata -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Getting Started with Bascik",
+  "author": { "@type": "Person", "name": "Collin Thomas" },
+  "datePublished": "2025-01-01",
+  "dateModified": "2025-06-01"
+}
+</script>
+```
+
+Bascik's [build scripts](/build-scripts) are a natural fit for generating JSON-LD from data files. Read a JSON data source at build time and emit the `<script type="application/ld+json">` block — zero runtime cost, always up to date with your content.
+
+> **Validate before shipping.** Use [Google's Rich Results Test](https://search.google.com/test/rich-results) to confirm your structured data is valid and eligible for rich result types. Schema.org publishes the full type vocabulary at [schema.org](https://schema.org).
+
 ## Accessibility
 
 The Lighthouse accessibility audit checks for semantic HTML, sufficient color contrast, keyboard navigability, and ARIA usage. Because Bascik outputs real HTML, every accessibility technique the platform provides is available to you without a plugin or library.

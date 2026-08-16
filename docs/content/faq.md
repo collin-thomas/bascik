@@ -26,7 +26,7 @@ Bascik was created by [Collin Thomas](https://github.com/collin-thomas).
 
 ## Why did you build Bascik?
 
-I wanted the fastest websites and dashboards but I needed components. I just wanted to use the foundational languages and not have some abstraction layer, and I didn't want to have to learn a tool, and I didn't want JavaScript at runtime as a bottleneck.
+I started building Bascik in late 2022. I wanted the fastest websites and dashboards but I needed components. I just wanted to use the foundational languages and not have some abstraction layer, and I didn't want to have to learn a tool, and I didn't want JavaScript at runtime as a bottleneck.
 
 Components have always been a JavaScript thing. Web Components tried to make it native but it's still JavaScript, and there's always Shadow DOM or virtual DOM involved. We don't need any of that. You can write HTML, CSS, and JavaScript and use it in multiple places on a site, you just need to copy it and scope it. That's really all it is, just a bunch of regex to make it happen.
 
