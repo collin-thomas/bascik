@@ -8,16 +8,16 @@ All commands are run from the `pkg/` directory:
 
 ```sh
 # Interactive watch mode (re-runs on file changes)
-yarn test
+pnpm test
 
 # Single run (used in CI)
-yarn test:ci
+pnpm test:ci
 
 # Single run with full coverage report
-yarn test:coverage
+pnpm test:coverage
 
 # Run benchmarks
-yarn bench
+pnpm bench
 ```
 
 ## Running E2E Tests
@@ -25,13 +25,13 @@ yarn bench
 End-to-end tests are also run from `pkg/`:
 
 ```sh
-yarn e2e
+pnpm e2e
 ```
 
 This builds the fixture site (using the current `dist/`) and then runs Playwright against it. The first run requires the package to be built first:
 
 ```sh
-yarn build && yarn e2e
+pnpm build && pnpm e2e
 ```
 
 To run a specific test file or use the Playwright UI:
@@ -115,7 +115,7 @@ test.describe('my-feature-test page', () => {
 });
 ```
 
-> **Rebuild before testing.** Playwright tests run against `e2e/dist/`, which is built from the current `pkg/dist/`. If you change `pkg/src/`, run `yarn build` before `yarn e2e` so the fixture picks up the latest transpiler.
+> **Rebuild before testing.** Playwright tests run against `e2e/dist/`, which is built from the current `pkg/dist/`. If you change `pkg/src/`, run `pnpm build` before `pnpm e2e` so the fixture picks up the latest transpiler.
 
 
 
@@ -212,7 +212,7 @@ The package uses two tsconfig files:
 Run type checking without emitting output:
 
 ```sh
-yarn typecheck
+pnpm typecheck
 ```
 
 ## Contributing a Fix
@@ -220,6 +220,6 @@ yarn typecheck
 1. Fork the repository and create a branch.
 2. Make your changes in `pkg/src/`.
 3. Add or update tests in the paired `*.test.ts` file.
-4. Run `yarn test` and ensure all tests pass.
-5. Run `yarn typecheck` to confirm there are no TypeScript errors.
+4. Run `pnpm test` and ensure all tests pass.
+5. Run `pnpm typecheck` to confirm there are no TypeScript errors.
 6. Open a pull request against `main`.

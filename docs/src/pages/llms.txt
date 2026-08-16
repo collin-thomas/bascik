@@ -1378,16 +1378,12 @@ generate: {
 
 See [Sitemap & robots.txt](/sitemap) for a full walkthrough.
 
-### `directory.watch`
+### `watch`
 
 An array of directories or files that, when changed in dev mode, trigger a full re-transpile of all pages. Useful for utility scripts, data files, or image directories that pages depend on at build time.
 
 ```js
-directory: {
-  pages: 'src/pages',
-  components: 'src/components',
-  watch: ['scripts/', 'data/'],
-}
+watch: ['scripts/', 'data/'],
 ```
 
 Has no effect during `bascik --build`.
@@ -1608,7 +1604,7 @@ Pass a different name to use it as both the directory name and the site title. I
 
 ## Starting the Dev Server
 
-Run `npm run dev` (or `yarn dev`) to start the development server. Bascik serves your site over HTTP/2 at **https://localhost:8443** by default (the port auto-increments if 8443 is busy). It transpiles your pages, watches for changes, and live-reloads the browser on every save.
+Run `npm run dev` (or `pnpm dev`) to start the development server. Bascik serves your site over HTTP/2 at **https://localhost:8443** by default (the port auto-increments if 8443 is busy). It transpiles your pages, watches for changes, and live-reloads the browser on every save.
 
 SSL certificates are generated automatically on first run. Install [mkcert](https://github.com/FiloSottile/mkcert) for a trusted cert with no browser warning:
 
@@ -1637,7 +1633,7 @@ src/
 ```sh
 npm install @bascik/bascik
 # or
-yarn add @bascik/bascik
+pnpm add @bascik/bascik
 # or
 pnpm add @bascik/bascik
 ```
@@ -1827,13 +1823,13 @@ It runs two parallel jobs across Node 24:
 **`test`**: unit tests with coverage:
 
 ```sh
-yarn test:ci
+pnpm test:ci
 ```
 
 **`e2e`**: end-to-end Playwright tests against the built fixture site:
 
 ```sh
-yarn build && yarn e2e
+pnpm build && pnpm e2e
 ```
 
 The `e2e` job installs only the Chromium browser via `playwright install --with-deps chromium` before running. Both jobs have `permissions: contents: read` to enforce least privilege.
@@ -1911,7 +1907,7 @@ The `create/` folder is a small standalone package that scaffolds a fresh Bascik
 
 ## Why it is separate
 
-The repo root uses Yarn workspaces. The package code lives in `pkg/`, while the scaffold lives in `create/` and is installed like a normal Node tool.
+The repo root uses pnpm workspaces. The package code lives in `pkg/`, while the scaffold lives in `create/` and is installed like a normal Node tool.
 
 That split keeps the monorepo dev flow simple and keeps the generated project familiar for normal users.
 
@@ -1966,7 +1962,7 @@ After scaffolding, the CLI offers to run `npm install` and `npm run dev`. Both p
 
 ## Why the generated app uses npm
 
-The scaffold runs `npm install` and `npm run dev` so users do not need Yarn to get started. The repo itself uses Yarn workspaces for contributor work, but the generated site is designed to feel like a regular app from a standard Node CLI.
+The scaffold runs `npm install` and `npm run dev` so users do not need pnpm to get started. The repo itself uses pnpm workspaces for contributor work, but the generated site is designed to feel like a regular app from a standard Node CLI.
 
 ## Modifying the scaffold
 
@@ -1992,7 +1988,7 @@ Tests mock `fs/promises` and verify that every expected file is written with the
 
 ## Lockfiles and package managers
 
-Contributors use Yarn at the monorepo root with a single `yarn.lock`.
+Contributors use pnpm at the monorepo root with a single `pnpm-lock.yaml`.
 
 Generated projects intentionally use npm, and each generated project gets its own `package-lock.json`.
 
@@ -2003,7 +1999,7 @@ Generated projects intentionally use npm, and each generated project gets its ow
 From the repo root:
 
 ```sh
-yarn install
+pnpm install
 ```
 
 ### 2. Link the local scaffold
@@ -2109,7 +2105,7 @@ This inverted index powers selective re-transpilation. When a component file cha
 
 ### Open-page priority
 
-When a file change triggers a full re-transpile of all pages (e.g. a file in `directory.watch` changed), Bascik uses the `#openPages` set to sort the page list so currently-open pages are transpiled first. Those pages emit the `"transpiled"` event before the rest of the batch, which means the browser live-reload fires as soon as the visible page is ready rather than waiting for all pages to finish.
+When a file change triggers a full re-transpile of all pages (e.g. a file in `watch` changed), Bascik uses the `#openPages` set to sort the page list so currently-open pages are transpiled first. Those pages emit the `"transpiled"` event before the rest of the batch, which means the browser live-reload fires as soon as the visible page is ready rather than waiting for all pages to finish.
 
 The tracking lifecycle:
 1. An SSE connection opens at `/bascik-live-reload`; the server parses the `Referer` header and calls `mem.trackOpenPage(path)`.
@@ -2509,16 +2505,16 @@ All commands are run from the `pkg/` directory:
 
 ```sh
 # Interactive watch mode (re-runs on file changes)
-yarn test
+pnpm test
 
 # Single run (used in CI)
-yarn test:ci
+pnpm test:ci
 
 # Single run with full coverage report
-yarn test:coverage
+pnpm test:coverage
 
 # Run benchmarks
-yarn bench
+pnpm bench
 ```
 
 ## Running E2E Tests
@@ -2526,13 +2522,13 @@ yarn bench
 End-to-end tests are also run from `pkg/`:
 
 ```sh
-yarn e2e
+pnpm e2e
 ```
 
 This builds the fixture site (using the current `dist/`) and then runs Playwright against it. The first run requires the package to be built first:
 
 ```sh
-yarn build && yarn e2e
+pnpm build && pnpm e2e
 ```
 
 To run a specific test file or use the Playwright UI:
@@ -2616,7 +2612,7 @@ test.describe('my-feature-test page', () => {
 });
 ```
 
-> **Rebuild before testing.** Playwright tests run against `e2e/dist/`, which is built from the current `pkg/dist/`. If you change `pkg/src/`, run `yarn build` before `yarn e2e` so the fixture picks up the latest transpiler.
+> **Rebuild before testing.** Playwright tests run against `e2e/dist/`, which is built from the current `pkg/dist/`. If you change `pkg/src/`, run `pnpm build` before `pnpm e2e` so the fixture picks up the latest transpiler.
 
 
 
@@ -2713,7 +2709,7 @@ The package uses two tsconfig files:
 Run type checking without emitting output:
 
 ```sh
-yarn typecheck
+pnpm typecheck
 ```
 
 ## Contributing a Fix
@@ -2721,8 +2717,8 @@ yarn typecheck
 1. Fork the repository and create a branch.
 2. Make your changes in `pkg/src/`.
 3. Add or update tests in the paired `*.test.ts` file.
-4. Run `yarn test` and ensure all tests pass.
-5. Run `yarn typecheck` to confirm there are no TypeScript errors.
+4. Run `pnpm test` and ensure all tests pass.
+5. Run `pnpm typecheck` to confirm there are no TypeScript errors.
 6. Open a pull request against `main`.
 
 # Transpilation Pipeline
@@ -2891,31 +2887,31 @@ The `pkg/` directory is a self-contained TypeScript project with its own `packag
 
 ## Quick Start for Contributors
 
-You need Node.js v24 or later. Clone the repo and install dependencies from the root, yarn workspaces wires everything up in one step:
+You need Node.js v24 or later. Clone the repo and install dependencies from the root, pnpm workspaces wires everything up in one step:
 
 ```sh
 git clone https://github.com/collin-thomas/bascik.git
 cd bascik
-yarn install
+pnpm install
 ```
 
 Run the test suite:
 
 ```sh
-yarn workspace @bascik/bascik test
+pnpm --filter @bascik/bascik test
 ```
 
 Build the package (compiles TypeScript to `pkg/dist/`):
 
 ```sh
-yarn workspace @bascik/bascik build
+pnpm --filter @bascik/bascik build
 ```
 
 To work on the docs site with a live-reload dev server:
 
 ```sh
-yarn workspace @bascik/bascik build   # build pkg first
-yarn --cwd docs dev                   # https://localhost:8443
+pnpm --filter @bascik/bascik build   # build pkg first
+pnpm --filter bascik-docs dev        # https://localhost:8443
 ```
 
 After any `pkg/src/` change, rebuild the package and the docs server will pick it up automatically.
@@ -4788,8 +4784,8 @@ The extension does **not** warn on class names that only appear in JavaScript an
 From the repo root:
 
 ```sh
-yarn install
-yarn --cwd extensions/vscode-bascik compile
+pnpm install
+pnpm --filter bascik-vscode compile
 ```
 
 Then open the `extensions/vscode-bascik/` folder in VS Code and press F5. A `.vscode/launch.json` is already configured there, so VS Code will open an Extension Development Host window with the extension enabled.
@@ -8574,7 +8570,7 @@ The docs site uses this pattern for its search component. `search-logic.mjs` exp
 The `docs-search.html` component inlines them via the build-time pattern above. `search-logic.test.mjs` covers tier ordering guarantees, dominant-page grouping, deduplication, and edge cases like empty queries.
 
 ```sh
-yarn workspace bascik-docs test
+pnpm --filter bascik-docs test
 ```
 
 # Bascik vs Frameworks

@@ -134,5 +134,5 @@ The docs site uses this pattern for its search component. `search-logic.mjs` exp
 The `docs-search.html` component inlines them via the build-time pattern above. `search-logic.test.mjs` covers tier ordering guarantees, dominant-page grouping, deduplication, and edge cases like empty queries.
 
 ```sh
-yarn workspace bascik-docs test
+pnpm --filter bascik-docs test
 ```

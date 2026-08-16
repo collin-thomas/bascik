@@ -4,7 +4,7 @@ The `create/` folder is a small standalone package that scaffolds a fresh Bascik
 
 ## Why it is separate
 
-The repo root uses Yarn workspaces. The package code lives in `pkg/`, while the scaffold lives in `create/` and is installed like a normal Node tool.
+The repo root uses pnpm workspaces. The package code lives in `pkg/`, while the scaffold lives in `create/` and is installed like a normal Node tool.
 
 That split keeps the monorepo dev flow simple and keeps the generated project familiar for normal users.
 
@@ -59,7 +59,7 @@ After scaffolding, the CLI offers to run `npm install` and `npm run dev`. Both p
 
 ## Why the generated app uses npm
 
-The scaffold runs `npm install` and `npm run dev` so users do not need Yarn to get started. The repo itself uses Yarn workspaces for contributor work, but the generated site is designed to feel like a regular app from a standard Node CLI.
+The scaffold runs `npm install` and `npm run dev` so users do not need pnpm to get started. The repo itself uses pnpm workspaces for contributor work, but the generated site is designed to feel like a regular app from a standard Node CLI.
 
 ## Modifying the scaffold
 
@@ -85,7 +85,7 @@ Tests mock `fs/promises` and verify that every expected file is written with the
 
 ## Lockfiles and package managers
 
-Contributors use Yarn at the monorepo root with a single `yarn.lock`.
+Contributors use pnpm at the monorepo root with a single `pnpm-lock.yaml`.
 
 Generated projects intentionally use npm, and each generated project gets its own `package-lock.json`.
 
@@ -96,7 +96,7 @@ Generated projects intentionally use npm, and each generated project gets its ow
 From the repo root:
 
 ```sh
-yarn install
+pnpm install
 ```
 
 ### 2. Link the local scaffold

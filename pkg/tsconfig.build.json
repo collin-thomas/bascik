@@ -10,7 +10,7 @@
     "sourceMap": true,
     "removeComments": false,
     // Allow implicit any for the initial migration — add types incrementally
-    // 'yarn typecheck' (noEmit, strict) is the authoritative type-check pass
+    // 'pnpm typecheck' (noEmit, strict) is the authoritative type-check pass
     "noImplicitAny": false,
     "strictNullChecks": false,
     "lib": ["ES2025"]

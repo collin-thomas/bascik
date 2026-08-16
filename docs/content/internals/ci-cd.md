@@ -19,13 +19,13 @@ It runs two parallel jobs across Node 24:
 **`test`**: unit tests with coverage:
 
 ```sh
-yarn test:ci
+pnpm test:ci
 ```
 
 **`e2e`**: end-to-end Playwright tests against the built fixture site:
 
 ```sh
-yarn build && yarn e2e
+pnpm build && pnpm e2e
 ```
 
 The `e2e` job installs only the Chromium browser via `playwright install --with-deps chromium` before running. Both jobs have `permissions: contents: read` to enforce least privilege.

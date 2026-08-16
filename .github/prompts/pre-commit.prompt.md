@@ -10,8 +10,8 @@ Run this before committing. It handles all the housekeeping tasks that should ac
 If any unit tests in `pkg/src/` were added, removed, or significantly changed, regenerate the coverage JSON files:
 
 ```sh
-yarn workspace @bascik/bascik update-coverage
-yarn workspace @bascik/bascik update-e2e-coverage
+pnpm --filter @bascik/bascik update-coverage
+pnpm --filter @bascik/bascik update-e2e-coverage
 ```
 
 Skip this step if no tests were touched.
@@ -19,7 +19,7 @@ Skip this step if no tests were touched.
 ## Step 2 — Regenerate llms.txt
 
 ```sh
-yarn workspace bascik-docs generate:llms
+pnpm --filter bascik-docs generate:llms
 ```
 
 ## Step 3 — Understand the current SKILL.md structure
@@ -46,7 +46,7 @@ Do not rewrite sections that are already accurate. Only change what the docs rev
 ## Step 6 — Propagate to the create package
 
 ```sh
-yarn sync
+pnpm sync
 ```
 
 This regenerates `llms.txt` once more (picking up any doc changes since Step 2) and runs `create-bascik`'s `prepack` to copy the updated SKILL.md into `create/assets/SKILL.md`.

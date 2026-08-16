@@ -20,8 +20,7 @@
     "vitest": "^4.1.10"
   },
   "dependencies": {
-    "@bascik/bascik": "*",
-    "esbuild": "^0.28.1",
+    "@bascik/bascik": "workspace:*",
     "marked": "^18.0.7"
   }
 }

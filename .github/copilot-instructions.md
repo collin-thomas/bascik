@@ -85,12 +85,12 @@ The `renderMd` helper (`docs/scripts/md-renderer.ts`) applies these transformati
 #pre-commit.prompt.md
 ```
 
-Do not call `generate:llms`, `yarn sync`, or `yarn workspace bascik-docs generate:llms` individually — the prompt handles all of that.
+Do not call `generate:llms`, `pnpm sync`, or `pnpm --filter bascik-docs generate:llms` individually — the prompt handles all of that.
 
 **Shell-only fallback** (no SKILL.md update, just propagate after a manual edit):
 
 ```sh
-yarn sync
+pnpm sync
 ```
 
 These files must stay in sync. A content change that lands in `llms.txt` but not `SKILL.md` (or vice versa) means Copilot is working from stale guidance — which is how bugs like "use `querySelector` for per-instance elements" go undetected.
@@ -169,19 +169,19 @@ After editing `compatibility.md`, run `#pre-commit.prompt.md` as usual.
 
 ## Keeping Docs in Sync with the Package
 
-The repo uses **yarn workspaces**. `node_modules/@bascik/bascik` is a symlink to `pkg/`, so the docs always resolve the live source — no pack, no copy, no lock-file deletion needed.
+The repo uses **pnpm workspaces**. `node_modules/@bascik/bascik` is a symlink to `pkg/`, so the docs always resolve the live source — no pack, no copy, no lock-file deletion needed.
 
 Whenever `pkg/src/` is changed, propagate the change to the docs in two steps:
 
 ### 1. Rebuild the package
 ```sh
-yarn workspace @bascik/bascik build
+pnpm --filter @bascik/bascik build
 ```
 (or equivalently: `cd pkg && node_modules/.bin/tsc -p tsconfig.build.json`)
 
 ### 2. Rebuild and check the docs
 ```sh
-yarn --cwd docs bascik --build
+pnpm --filter bascik-docs build
 ```
 
 Then inspect the relevant `docs/dist/` output to confirm the pkg change has the intended effect.

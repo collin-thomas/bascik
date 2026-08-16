@@ -1,0 +1,7 @@
+packages:
+  - 'pkg'
+  - 'create'
+  - 'docs'
+  - 'extensions/vscode-bascik'
+allowBuilds:
+  esbuild: set this to true or false

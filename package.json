@@ -1,10 +1,11 @@
 {
   "private": true,
+  "packageManager": "pnpm@11.22.0",
   "engines": {
-    "node": ">=24.17.0"
+    "node": ">=24.17.0",
+    "pnpm": ">=11"
   },
-  "workspaces": ["pkg", "create", "docs", "extensions/vscode-bascik"],
   "scripts": {
-    "sync": "yarn workspace bascik-docs generate:llms && yarn workspace create-bascik prepack"
+    "sync": "pnpm --filter bascik-docs generate:llms && pnpm --filter create-bascik prepack"
   }
 }
