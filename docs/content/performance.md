@@ -12,8 +12,6 @@ Bascik inverts that relationship. Adding a new component adds zero JavaScript to
 
 > **Why Bascik wins by default.** Framework-rendered pages ship a JavaScript runtime, a hydration pass, and client-side routing logic before a single pixel of your content appears. Bascik ships none of that. The browser receives finished HTML. Every byte saved at the start compounds through every Core Web Vital metric.
 
----
-
 Hitting 100 across the board is achievable on any Bascik site. The techniques below are the complete playbook: standard HTML attributes and `<link>` tags that lock in each Lighthouse category. There are no build plugins, no dependencies, and no configuration — just patterns that work in every browser and stay effective as your site grows.
 
 ## Responsive Images with `srcset`
