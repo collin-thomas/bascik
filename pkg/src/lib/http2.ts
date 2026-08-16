@@ -546,15 +546,9 @@ export const startHttp2Server = async () => {
     if (shuttingDown) return;
     shuttingDown = true;
     console.log(`\nReceived ${signal}, shutting down gracefully…`);
-    // Destroy open sessions (including the SSE live-reload connection) so
-    // server.close() is not held open waiting for long-lived streams.
-    for (const session of openSessions) {
-      session.destroy();
-    }
-    server.close(() => process.exit(0));
-    // Exit cleanly if server.close() hasn't called back within 1 s.
-    // Using exit(0) so pnpm --filter doesn't report a spurious failure.
-    setTimeout(() => process.exit(0), 1_000).unref();
+    // Exit immediately so pnpm sees code=0 before it can SIGKILL the child.
+    // The OS closes all sockets; no need to wait for server.close().
+    process.exit(0);
   };
   process.setMaxListeners(process.getMaxListeners() + 2);
   process.once("SIGTERM", () => gracefulShutdown("SIGTERM"));

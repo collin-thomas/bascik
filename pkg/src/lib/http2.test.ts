@@ -797,7 +797,7 @@ describe("startHttp2Server – graceful shutdown", () => {
     expect(events).toContain("SIGINT");
   });
 
-  it("calls server.close() on SIGTERM", async () => {
+  it("calls process.exit(0) on SIGTERM", async () => {
     await startHttp2Server();
     const [, sigTermHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
       (c: any[]) => c[0] === "SIGTERM",
@@ -805,43 +805,11 @@ describe("startHttp2Server – graceful shutdown", () => {
 
     const mockExit = vi.spyOn(process, "exit").mockImplementation((_code?: string | number | null) => undefined as never);
     sigTermHandler();
-    expect(mockServer.close).toHaveBeenCalled();
+    expect(mockExit).toHaveBeenCalledWith(0);
     mockExit.mockRestore();
   });
 
-  it("calls server.close() on SIGINT", async () => {
-    await startHttp2Server();
-    const [, sigIntHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
-      (c: any[]) => c[0] === "SIGINT",
-    ) as [string, () => void];
-
-    const mockExit = vi.spyOn(process, "exit").mockImplementation((_code?: string | number | null) => undefined as never);
-    sigIntHandler();
-    expect(mockServer.close).toHaveBeenCalled();
-    mockExit.mockRestore();
-  });
-
-  it("destroys open sessions on SIGINT so long-lived SSE streams do not block shutdown", async () => {
-    await startHttp2Server();
-
-    const [, sessionHandler] = mockServer.on.mock.calls.find(
-      (c: any[]) => c[0] === "session",
-    ) as [string, (session: { destroy: ReturnType<typeof vi.fn>; once: ReturnType<typeof vi.fn> }) => void];
-
-    const mockSession = { destroy: vi.fn(), once: vi.fn(), on: vi.fn() };
-    sessionHandler(mockSession);
-
-    const [, sigIntHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
-      (c: any[]) => c[0] === "SIGINT",
-    ) as [string, () => void];
-
-    const mockExit = vi.spyOn(process, "exit").mockImplementation((_code?: string | number | null) => undefined as never);
-    sigIntHandler();
-    expect(mockSession.destroy).toHaveBeenCalled();
-    mockExit.mockRestore();
-  });
-
-  it("exits with code 0 when server.close() callback fires", async () => {
+  it("calls process.exit(0) on SIGINT", async () => {
     await startHttp2Server();
     const [, sigIntHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
       (c: any[]) => c[0] === "SIGINT",
@@ -853,7 +821,7 @@ describe("startHttp2Server – graceful shutdown", () => {
     mockExit.mockRestore();
   });
 
-  it("ignores a second signal call so server.close() is never called twice", async () => {
+  it("ignores a second signal so process.exit is only called once", async () => {
     await startHttp2Server();
     const [, sigIntHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
       (c: any[]) => c[0] === "SIGINT",
@@ -865,26 +833,8 @@ describe("startHttp2Server – graceful shutdown", () => {
     const mockExit = vi.spyOn(process, "exit").mockImplementation((_code?: string | number | null) => undefined as never);
     sigIntHandler();
     sigTermHandler(); // second signal during shutdown — must be a no-op
-    expect(mockServer.close).toHaveBeenCalledTimes(1);
+    expect(mockExit).toHaveBeenCalledTimes(1);
     mockExit.mockRestore();
-  });
-
-  it("fallback timeout exits with code 0, not 1", async () => {
-    vi.useFakeTimers();
-    // Prevent server.close() from calling its callback so the timeout fires.
-    mockServer.close.mockImplementation(() => { });
-    await startHttp2Server();
-    const [, sigIntHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
-      (c: any[]) => c[0] === "SIGINT",
-    ) as [string, () => void];
-
-    const mockExit = vi.spyOn(process, "exit").mockImplementation((_code?: string | number | null) => undefined as never);
-    sigIntHandler();
-    expect(mockExit).not.toHaveBeenCalled();
-    await vi.advanceTimersByTimeAsync(1_000);
-    expect(mockExit).toHaveBeenCalledWith(0);
-    mockExit.mockRestore();
-    vi.useRealTimers();
   });
 });
 
