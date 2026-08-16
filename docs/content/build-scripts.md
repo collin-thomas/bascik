@@ -169,6 +169,24 @@ Environment variables set in your shell or a `.env` file (loaded with a tool lik
 </script>
 ```
 
+## Script Caching
+
+Bascik caches build script output to `node_modules/.cache/bascik/script-cache/` so subsequent builds skip the Node.js subprocess entirely for unchanged scripts. The cache key is a SHA-256 hash of:
+
+- The script body
+- The contents of any local `scripts/` or `content/` files the script imports
+- The `isBuild` flag and `siteUrl`
+
+If a dependency file changes — because you edited it or switched branches — the cache entry is invalid and the script re-runs automatically. On a large site with many build scripts, the first build after a content change is slower; subsequent builds use the cache.
+
+To clear the cache manually (useful after a branch switch that changes shared scripts):
+
+```sh
+rm -rf node_modules/.cache/bascik/script-cache
+```
+
+To disable caching entirely, set `buildScriptCache: false` in your config. This is useful for scripts that read live external state not reflected in their source files.
+
 ## Limitations
 
 - **No streaming:** the full stdout of the script is collected before injection. You cannot stream HTML into the page incrementally.

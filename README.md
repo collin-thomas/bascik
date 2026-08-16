@@ -50,4 +50,12 @@ Before committing changes that edited source code, tests, or any `docs/content/*
 /pre-commit
 ```
 
-This regenerates `llms.txt`, updates `docs/src/pages/assets/SKILL.md` to reflect any new or changed content, copies it to `create/assets/SKILL.md`, and updates unit and E2E test coverage JSON files — all in one step. Don't call `yarn generate:llms` or `yarn sync` individually; the prompt handles everything.
+This regenerates `llms.txt`, updates `docs/src/pages/assets/SKILL.md` to reflect any new or changed content, copies it to `create/assets/SKILL.md`, and updates unit and E2E test coverage JSON files — all in one step.
+
+The prompt calls:
+
+- `yarn workspace bascik-docs generate:llms`
+- The LLM updates the `SKILL.md` file based on the `llms.txt` file.
+- `yarn workspace create-bascik prepack`
+- `yarn workspace @bascik/bascik update-coverage`
+- `yarn workspace @bascik/bascik update-e2e-coverage`

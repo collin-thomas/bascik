@@ -256,17 +256,58 @@ CSS custom properties declared in the file are also scoped. `var(--prop, fallbac
 }
 ```
 
-### Additional Supported CSS Features
-* `@property`: declaration names, matching `--name:` declarations, and `var(--name)` references are all scoped per component
-* `@starting-style`: class names and element selectors inside `@starting-style` blocks are scoped (both standalone and nested `.foo { @starting-style { } }` forms)
-* `@counter-style`: name is scoped; `list-style`, `list-style-type`, `counter()`, `counters()` references updated to match
-* `view-transition-name`: values scoped per component; matching `::view-transition-old/new/group/image-pair()` references updated; `none` and `auto` not scoped
-* `anchor-name` / `@position-try`: `anchor-name: --name` scoped per component; matching `position-anchor` and `@position-try` at-rule references in the same file updated to match
-* `@scope` (native CSS): class names in the `@scope (.selector)` argument, the optional `to` clause, and inside the block are all scoped normally
-* `:nth-child(An+B of .selector)`: class names in the `of` argument are scoped; works for `:nth-child` and `:nth-last-child`
+#### Using global design tokens in a component
+Define your design tokens once in a global stylesheet, then consume them inside any component. Because the component never declares those properties locally, Bascik leaves the `var()` references as-is and they resolve from the global stylesheet at render time.
 
-### CSS Scoping Limitations
-* `@font-face`: passed through untouched; declare in a shared global stylesheet to avoid duplicate injections when the component is used multiple times
+```css
+/* src/styles.css — design tokens, linked in every page <head> */
+:root {
+  --brand: #d3ff8d;
+  --card-bg: #1e2022;
+  --text-muted: #8d929e;
+}
+```
+
+```html
+<!-- src/components/brand-card.html -->
+<style>
+  .card {
+    padding: 24px 28px;
+    background: var(--card-bg); /* global — Bascik leaves untouched */
+    border-top: 3px solid var(--brand);
+    border-radius: 10px;
+  }
+  .card-label {
+    color: var(--text-muted);
+  }
+</style>
+<div class="card">
+  <p class="card-label" data-bascik-prop-label></p>
+  <div data-bascik-slot></div>
+</div>
+```
+
+```css
+/* dist/ output — class names scoped, var() refs preserved */
+.bascik__brand-card__card {
+  padding: 24px 28px;
+  background: var(--card-bg);
+  border-top: 3px solid var(--brand);
+  border-radius: 10px;
+}
+.bascik__brand-card__card-label {
+  color: var(--text-muted);
+}
+```
+
+### CSS Scoping Compatibility Notes
+* `@property`: `@property --name { }` declaration names are scoped along with any matching `--name:` declarations and `var(--name)` references in the same component
+* `@starting-style`: class names and element selectors inside `@starting-style` blocks are scoped by the same passes that handle other at-rules; both standalone `@starting-style { .foo { } }` and nested `.foo { @starting-style { } }` forms work
+* `@counter-style`: `@counter-style name { }` declaration names are scoped; references in `list-style`, `list-style-type`, `counter(counter, name)`, and `counters(counter, sep, name)` in the same CSS file are updated to match
+* `view-transition-name`: ✓ values are scoped per component (`bascik__<comp>__vtn__<name>`); matching `::view-transition-old/new/group/image-pair()` pseudo-element references in the same file are updated; `none` and `auto` are not scoped
+* `anchor-name` / `@position-try`: `anchor-name: --name` declarations are scoped per component; matching `position-anchor: --name` references and `@position-try --name { }` at-rules in the same CSS file are updated to match; only anchors declared in the component's own CSS are scoped
+* `:nth-child(An+B of .selector)`: class names in the `of <selector>` argument are scoped (same global `(?<=\.)` pass as `:is()`, `:where()`, `:has()`); works for `:nth-child` and `:nth-last-child`
+* `@font-face`: passed through untouched; declare in a shared stylesheet to avoid duplicate injections
 * `@import`: not followed; include CSS directly in the component file instead
 * Standalone attribute selectors (e.g. `[data-state]`) are not scoped and can leak globally; anchor with a scoped class: `.card[data-state]`
 * Element names inside `:is()`, `:where()`, and `:has()` are not converted; use class selectors inside those pseudo-classes instead
@@ -383,25 +424,29 @@ Component scripts can then use TypeScript annotations freely. Bascik's scoping p
 
 ## 5. Dynamic Runtime Class Scoping
 
-Class names used only in JavaScript (never in a `class="…"` HTML attribute) are automatically discovered and scoped. Bascik scans every `<script>` block for class-referencing JS patterns and adds any new class names to the scope map before the rewrite pass runs. You do not need any special workaround or scoping-helper element.
+For class names that are only toggled at runtime (e.g. via `classList.toggle`) and never appear in a `class="…"` HTML attribute, you must register the class somewhere in the component template HTML — even on a `hidden` element. If a class only appears inside a `<script>` block, Bascik scopes it on the CSS side but does not rewrite it on the JS side, producing a silent mismatch at runtime.
 
-**Patterns covered by JS-only class discovery:**
-* `classList.add/remove/toggle/contains/replace` arguments
-* `.className` tokens in `querySelector`, `querySelectorAll`, `closest`, `matches` selector strings
-* `el.className = "…"` and `el.className += "…"` space-separated tokens
-* `el.setAttribute("class", "…")` string literal values
+**Required pattern — hidden registration element:**
 
 ```html
-<!-- ✅ Works — btn--active is discovered from the classList.add call -->
-<!-- and scoped in both CSS and JS automatically -->
-<button class="btn"></button>
+<section class="card">
+  <div class="is-open" hidden></div>  <!-- registers is-open for both CSS and JS scoping -->
+  <p id="status">Panel closed</p>
+  <button id="toggle" type="button">Toggle</button>
+</section>
 <script>
-  const btn = document.getElementById('btn');
-  btn.addEventListener('click', () => btn.classList.add('btn--active'));
+  const toggle = document.getElementById('toggle');
+  const status = document.getElementById('status');
+  const card = document.querySelector('.card');
+
+  toggle.addEventListener('click', () => {
+    const isOpen = card.classList.toggle('is-open'); // rewritten correctly
+    status.textContent = isOpen ? 'Panel open' : 'Panel closed';
+  });
 </script>
 ```
 
-The only exception is `innerHTML` / `insertAdjacentHTML` HTML string scanning, which still only recognises class names that also appear in the HTML template.
+The hidden `<div class="is-open">` registers `is-open` in the HTML template so both the CSS and JS scoping passes see it. Without it, `classList.toggle('is-open')` would use the un-scoped name and never match the CSS — a silent runtime mismatch.
 
 ---
 
@@ -559,7 +604,7 @@ Each `<script data-bascik-build>` spawns a Node.js child process (~50–150 ms s
 
 **Cache key:** SHA-256 of the script content + dev/build mode + the current page path (`BASCIK_PAGE_FILE`) + the site URL + the full content of any `content/*.md` or `scripts/*.{mjs,js,ts}` files referenced as quoted path literals in the script. The page path is included so that scripts like `canonical.ts` that use `process.env.BASCIK_PAGE_FILE` get a separate cache entry per page. Changing a referenced file produces a new key and a cache miss for that script only; all other scripts keep their cached output.
 
-**To disable:** set `buildScriptCache: false` in `bascik.config.js` (useful when debugging a script that reads external state not tracked by the cache key).
+**To disable:** set `buildScriptCache: false` in your config (useful when debugging a script that reads external state not tracked by the cache key).
 
 **To bust the entire cache** (e.g. after upgrading a build-time npm dependency):
 
@@ -716,7 +761,7 @@ export default defineConfig({
   },
 });
 
-// Applied only during `bascik --build`, merged over bascikConfig
+// Applied only during `bascik --build` and `bascik --serve`.
 export const build = defineConfig({
   obfuscateAttributeNames: true,
   minifyStyles: true,
@@ -787,10 +832,11 @@ Then run `bascik init` to scaffold the starter files and folder structure, or ad
 ### CLI Commands
 
 ```sh
-bascik          # dev: transpile, start HTTP/2 server at https://localhost:8443, watch
-bascik --build  # production: transpile to dist/ only
-bascik --serve  # production server: serve a pre-built dist/ with HTTP/2
-bascik --check  # static analysis: validate pages and components without building
+bascik                        # dev: transpile, start HTTP/2 server at https://localhost:8443, watch
+bascik --build                # production: transpile to dist/ only
+bascik --build --log [path]   # write build output to a log file (default: .bascik/build.log)
+bascik --serve                # production server: serve a pre-built dist/ with HTTP/2
+bascik --check                # static analysis: validate pages and components without building
 ```
 
 **`bascik --serve`:** starts the HTTP/2 server against a pre-built `dist/` directory. **Only needed when the site uses `data-bascik-server` scripts** for per-request dynamic content (personalized dashboards, user-specific data, server-rendered pagination). Sites with no server scripts can be deployed to any static host with no runtime server required. Run `bascik --build` first, then `bascik --serve`. Unlike the dev server, `--serve` does not watch files or inject live-reload. `data-bascik-server` scripts execute per-request in both modes.
@@ -1211,7 +1257,8 @@ When generating code, pages, or components for a Bascik project, the following c
 6. **Dynamic Toggles:** Use `data-` attributes for runtime state that changes via JavaScript (e.g. `data-state="open"`). Scoped class names are assigned at build time and cannot be reliably looked up by JS string manipulation *unless* you utilize a scoping helper (Section 5).
 7. **Text Props:** Props accept text only. For rich HTML content, use slots.
 8. **Script Modules:** `<script type="module">` scripts are not wrapped in an IIFE, but their selectors are still rewritten.
-9. **Literal Tag Text Is Safe:** Component tag text inside `<script>`, `<style>`, or `<textarea>` content (e.g. `<my-card>` in a JSON-LD string or code example) is treated as text and never resolved into a component.
+9. **Non-JS Script Types:** Script tags with any `type` other than `text/javascript` (e.g. `type="application/json"`) are left completely untouched — no IIFE wrapping, no selector rewriting.
+10. **Literal Tag Text Is Safe:** Component tag text inside `<script>`, `<style>`, or `<textarea>` content (e.g. `<my-card>` in a JSON-LD string or code example) is treated as text and never resolved into a component.
 
 ---
 

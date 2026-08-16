@@ -347,6 +347,24 @@ Environment variables set in your shell or a `.env` file (loaded with a tool lik
 </script>
 ```
 
+## Script Caching
+
+Bascik caches build script output to `node_modules/.cache/bascik/script-cache/` so subsequent builds skip the Node.js subprocess entirely for unchanged scripts. The cache key is a SHA-256 hash of:
+
+- The script body
+- The contents of any local `scripts/` or `content/` files the script imports
+- The `isBuild` flag and `siteUrl`
+
+If a dependency file changes — because you edited it or switched branches — the cache entry is invalid and the script re-runs automatically. On a large site with many build scripts, the first build after a content change is slower; subsequent builds use the cache.
+
+To clear the cache manually (useful after a branch switch that changes shared scripts):
+
+```sh
+rm -rf node_modules/.cache/bascik/script-cache
+```
+
+To disable caching entirely, set `buildScriptCache: false` in your config. This is useful for scripts that read live external state not reflected in their source files.
+
 ## Limitations
 
 - **No streaming:** the full stdout of the script is collected before injection. You cannot stream HTML into the page incrementally.
@@ -1388,7 +1406,7 @@ inlineStyles: true
 inlineStyles: ['src/pages/css/styles.css']
 ```
 
-This eliminates the render-blocking `<link rel="stylesheet">` request, the CSS arrives in the same HTTP response as the HTML. It pairs naturally with `buildOverrideConfig` to minify only in production:
+This eliminates the render-blocking `<link rel="stylesheet">` request, the CSS arrives in the same HTTP response as the HTML. It pairs naturally with `build` to minify only in production:
 
 ```ts
 import { defineConfig } from '@bascik/bascik/config';
@@ -1427,7 +1445,7 @@ buildScriptCache: true  // default
 buildScriptCache: false // disable for debugging
 ```
 
-Cache entries live in `node_modules/.cache/bascik/script-cache/`. The cache key covers the script content, dev/build mode, the current page path (`BASCIK_PAGE_FILE`), the site URL, and the content of any `content/*.md` or `scripts/*.mjs` files the script references as quoted path literals. This means the cache self-invalidates on a per-script basis: editing one Markdown file only invalidates scripts that reference that file.
+Cache entries live in `node_modules/.cache/bascik/script-cache/`. The cache key covers the script content, dev/build mode, the current page path (`BASCIK_PAGE_FILE`), the site URL, and the content of any `content/*.md` or `scripts/*.{mjs,js,ts}` files the script references as quoted path literals. This means the cache self-invalidates on a per-script basis: editing one Markdown file only invalidates scripts that reference that file.
 
 To bust the entire cache manually, for example after upgrading a build-time npm dependency whose output changed:
 
@@ -1437,9 +1455,9 @@ rm -rf node_modules/.cache/bascik/script-cache
 
 Set to `false` when debugging a script that reads external state not covered by the cache key (e.g. a live API call or a file referenced by a dynamic path).
 
-## `buildOverrideConfig`
+## `build`
 
-Exporting a second `buildOverrideConfig` object lets you set options that apply during `bascik --build` and `bascik --serve` (production server), overriding the values in `bascikConfig`. A common pattern is to enable obfuscation and minification only in production:
+Exporting a `build` object lets you set options that apply during `bascik --build` and `bascik --serve` (production server), overriding the default export. A common pattern is to enable obfuscation and minification only in production:
 
 ```js
 export const build = {
@@ -1709,7 +1727,7 @@ All logic lives in `pkg/src/lib/`. Each file has a single, well-defined responsi
 | Module | Responsibility |
 |--------|----------------|
 | `config.ts` | Loads and merges `bascik.config.js`, default config, and build overrides into a single frozen `BascikConfig` object consumed everywhere else. |
-| `userConfig.ts` | Dynamically imports the user's `bascik.config.js` from `process.cwd()`, exporting `bascikConfig` and `buildOverrideConfig`. |
+| `userConfig.ts` | Dynamically imports the user's `bascik.config` from `process.cwd()`, exporting `config` and `buildConfig`. |
 | `processing.ts` | The core transpilation pipeline. Contains `pageProcessing` (page phase) and `recursivelyTranspile` (component phase), plus pipeline utility types. |
 | `components.ts` | Loads component HTML and CSS files from disk, detects component tags in HTML strings, extracts props/slots/attributes, and injects resolved content back. Tag detection masks `<script>`/`<style>`/`<textarea>` content so literal tag text (e.g. in JSON-LD strings) is never resolved. |
 | `javascript.ts` | The scoping transforms: `prefixElementAttribute` (rewrites HTML attributes, JS DOM selectors, and CSS) and `namespaceScriptTags` (wraps scripts in IIFEs). |
@@ -2551,15 +2569,17 @@ Tests then navigate to pages on that server and assert against the live browser 
 
 ## Fixture Design
 
-`obfuscateAttributeNames` is set to `false` in the fixture config so Playwright selectors can use readable scoped names:
+`obfuscateAttributeNames` is left at its default (`false`) in the fixture config so Playwright selectors can use readable scoped names like `bascik__my-comp__btn`. The only non-default values set are the site URL and the production server port:
 
-```js
-// pkg/e2e/bascik.config.js
-export default {
-  obfuscateAttributeNames: false,  // keeps names like bascik__my-comp__btn
-  scopeScriptBlocks: true,
-  scopeAttribute: { class: true, id: true, name: true },
-};
+```ts
+// pkg/e2e/bascik.config.ts
+import { defineConfig } from '@bascik/bascik/config';
+
+export default defineConfig({
+  siteUrl: 'http://localhost:4200',
+  useWorkers: true,
+  serve: { port: 9443 },
+});
 ```
 
 Each fixture page renders two or more instances of the component under test so isolation can be verified, changes to instance A must not affect instance B.
