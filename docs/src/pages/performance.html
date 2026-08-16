@@ -63,16 +63,57 @@
 
     @media (max-width: 600px) {
 
-      /* Reflow 1×4 score table to 2×2: flatten rows into grid items */
+      /* Reflow 1×4 score table to 2×2 with each label above its score */
       .docs-content table:first-of-type {
         display: grid;
         grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto auto auto;
       }
 
       .docs-content table:first-of-type thead,
       .docs-content table:first-of-type tbody,
       .docs-content table:first-of-type tr {
         display: contents;
+      }
+
+      .docs-content table:first-of-type th:nth-child(1) {
+        grid-row: 1;
+        grid-column: 1;
+      }
+
+      .docs-content table:first-of-type th:nth-child(2) {
+        grid-row: 1;
+        grid-column: 2;
+      }
+
+      .docs-content table:first-of-type th:nth-child(3) {
+        grid-row: 3;
+        grid-column: 1;
+      }
+
+      .docs-content table:first-of-type th:nth-child(4) {
+        grid-row: 3;
+        grid-column: 2;
+      }
+
+      .docs-content table:first-of-type td:nth-child(1) {
+        grid-row: 2;
+        grid-column: 1;
+      }
+
+      .docs-content table:first-of-type td:nth-child(2) {
+        grid-row: 2;
+        grid-column: 2;
+      }
+
+      .docs-content table:first-of-type td:nth-child(3) {
+        grid-row: 4;
+        grid-column: 1;
+      }
+
+      .docs-content table:first-of-type td:nth-child(4) {
+        grid-row: 4;
+        grid-column: 2;
       }
     }
 
