@@ -261,11 +261,14 @@ Always choose clear, unambiguous names. When something could be confused with an
 npx --prefix pkg tsc -p pkg/tsconfig.json --noEmit
 ```
 
-`create/` and `extensions/vscode-bascik/` have their own tsconfigs; check them when editing files in those packages:
+`create/`, `docs/`, and `extensions/vscode-bascik/` have their own tsconfigs; check them when editing files in those packages:
 
 ```sh
 npx --prefix create tsc -p create/tsconfig.json --noEmit
+npx --prefix pkg tsc -p docs/tsconfig.json --noEmit
 npx --prefix extensions/vscode-bascik tsc -p extensions/vscode-bascik/tsconfig.json --noEmit
 ```
+
+(`docs/` does not have its own typescript package — use `pkg`'s tsc for it.)
 
 Fix all errors before finishing. Do not suppress errors with `// @ts-ignore` or `as any` when a proper type fix is straightforward.

@@ -215,6 +215,12 @@ Run type checking without emitting output:
 pnpm typecheck
 ```
 
+The `docs/` package also has a `tsconfig.json` covering `docs/scripts/`. It uses the TypeScript from `pkg/` (docs has no own typescript package):
+
+```sh
+npx --prefix pkg tsc -p docs/tsconfig.json --noEmit
+```
+
 ## Contributing a Fix
 
 1. Fork the repository and create a branch.

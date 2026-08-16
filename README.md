@@ -36,6 +36,7 @@ pnpm install
 ```sh
 pnpm --filter @bascik/bascik build      # build the package (start here)
 pnpm --filter @bascik/bascik test       # unit tests in watch mode
+pnpm --filter @bascik/bascik typecheck  # TypeScript type check
 pnpm --filter @bascik/bascik e2e        # run e2e tests
 pnpm --filter bascik-docs dev           # start docs dev server
 ```
