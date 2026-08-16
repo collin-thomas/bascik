@@ -840,6 +840,52 @@ describe("startHttp2Server – graceful shutdown", () => {
     expect(mockSession.destroy).toHaveBeenCalled();
     mockExit.mockRestore();
   });
+
+  it("exits with code 0 when server.close() callback fires", async () => {
+    await startHttp2Server();
+    const [, sigIntHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
+      (c: any[]) => c[0] === "SIGINT",
+    ) as [string, () => void];
+
+    const mockExit = vi.spyOn(process, "exit").mockImplementation((_code?: string | number | null) => undefined as never);
+    sigIntHandler();
+    expect(mockExit).toHaveBeenCalledWith(0);
+    mockExit.mockRestore();
+  });
+
+  it("ignores a second signal call so server.close() is never called twice", async () => {
+    await startHttp2Server();
+    const [, sigIntHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
+      (c: any[]) => c[0] === "SIGINT",
+    ) as [string, () => void];
+    const [, sigTermHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
+      (c: any[]) => c[0] === "SIGTERM",
+    ) as [string, () => void];
+
+    const mockExit = vi.spyOn(process, "exit").mockImplementation((_code?: string | number | null) => undefined as never);
+    sigIntHandler();
+    sigTermHandler(); // second signal during shutdown — must be a no-op
+    expect(mockServer.close).toHaveBeenCalledTimes(1);
+    mockExit.mockRestore();
+  });
+
+  it("fallback timeout exits with code 0, not 1", async () => {
+    vi.useFakeTimers();
+    // Prevent server.close() from calling its callback so the timeout fires.
+    mockServer.close.mockImplementation(() => { });
+    await startHttp2Server();
+    const [, sigIntHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
+      (c: any[]) => c[0] === "SIGINT",
+    ) as [string, () => void];
+
+    const mockExit = vi.spyOn(process, "exit").mockImplementation((_code?: string | number | null) => undefined as never);
+    sigIntHandler();
+    expect(mockExit).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(mockExit).toHaveBeenCalledWith(0);
+    mockExit.mockRestore();
+    vi.useRealTimers();
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

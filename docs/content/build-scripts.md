@@ -177,7 +177,11 @@ Bascik caches build script output to `node_modules/.cache/bascik/script-cache/` 
 - The contents of any local `scripts/` or `content/` files the script imports
 - The `isBuild` flag and `siteUrl`
 
-If a dependency file changes (because you edited it or switched branches), the cache entry is invalid and the script re-runs automatically. On a large site with many build scripts, the first build after a content change is slower; subsequent builds use the cache.
+If a dependency file changes (because you edited it or switched branches), the cache entry is invalid and the script re-runs automatically.
+
+**How dependency tracking works.** Bascik does not instrument your script at runtime. Instead it statically scans the script source for quoted string literals that look like local file references — patterns matching `content/*.md` or `scripts/*.{mjs,js,ts}` — and hashes the content of each matched file into the cache key. If any of those files changes, the key changes and the cache misses. Paths computed at runtime (e.g. a variable built with string concatenation) are invisible to the scanner and will not be tracked. For those cases, set `buildScriptCache: false`. See [Build Script Output Cache](/internals/transpilation-pipeline#build-script-output-cache) in the internals docs for the full key specification.
+
+**Cold start vs. warm restarts.** The first time you start the dev server — or after clearing the cache — every script runs in full. On a site with many build scripts, this first build is noticeably slower. Once the cache is warm, restarting the dev server is much faster: scripts whose inputs haven't changed are served from disk in milliseconds instead of spawning a new Node.js process for each one.
 
 To clear the cache manually (useful after a branch switch that changes shared scripts):
 
@@ -185,7 +189,14 @@ To clear the cache manually (useful after a branch switch that changes shared sc
 rm -rf node_modules/.cache/bascik/script-cache
 ```
 
-To disable caching entirely, set `buildScriptCache: false` in your config. This is useful for scripts that read live external state not reflected in their source files.
+**Disable for scripts that read external state.** The cache key only covers files Bascik can watch: the script body and local `scripts/`/`content/` files. If a script fetches data from a source Bascik cannot watch — a live API, a database, a remote CMS, or a file referenced by a dynamic path computed at runtime — the cached output will go stale silently. Set `buildScriptCache: false` in your config for those scripts, or globally, so the script always runs fresh:
+
+```ts
+// bascik.config.ts
+export default defineConfig({
+  buildScriptCache: false,
+});
+```
 
 ## Limitations
 
