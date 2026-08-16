@@ -34,10 +34,10 @@ pnpm install
 ### Working on the package
 
 ```sh
-pnpm --filter @bascik/bascik build   # build the package (start here)
-pnpm --filter @bascik/bascik test    # run unit tests
-pnpm --filter @bascik/bascik e2e     # run e2e tests
-pnpm --filter bascik-docs dev        # start docs dev server
+pnpm --filter @bascik/bascik build      # build the package (start here)
+pnpm --filter @bascik/bascik test       # unit tests in watch mode
+pnpm --filter @bascik/bascik e2e        # run e2e tests
+pnpm --filter bascik-docs dev           # start docs dev server
 ```
 
 After any `pkg/src/` change, rebuild the package and the docs server will pick it up automatically (it watches for changes).

@@ -717,8 +717,12 @@ export default defineConfig({
   directory: {
     pages: "src/pages", // default
     components: "src/components", // default
-    watch: [], // re-transpile all pages when these paths change (dev only)
   },
+  watch: [], // re-transpile all pages when these paths change (dev only)
+  exec: [
+    // scripts to run at build time (and in dev if watch is set)
+    // { script: 'scripts/generate-search-index.ts', watch: ['content/'] },
+  ],
   scopeScriptBlocks: true,
   inheritAttributes: true,
   scopeAttribute: {
