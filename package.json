@@ -5,6 +5,9 @@
     "node": ">=24.17.0",
     "pnpm": ">=11"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  },
   "scripts": {
     "sync": "pnpm --filter bascik-docs generate:llms && pnpm --filter create-bascik prepack"
   }
