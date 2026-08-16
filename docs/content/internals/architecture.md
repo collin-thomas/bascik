@@ -33,7 +33,7 @@ All logic lives in `pkg/src/lib/`. Each file has a single, well-defined responsi
 
 | Module | Responsibility |
 |--------|----------------|
-| `config.ts` | Loads and merges `bascik.config.js`, default config, and build overrides into a single frozen `BascikConfig` object consumed everywhere else. |
+| `config.ts` | Loads and merges `bascik.config.ts`, default config, and build overrides into a single frozen `BascikConfig` object consumed everywhere else. |
 | `userConfig.ts` | Dynamically imports the user's `bascik.config` from `process.cwd()`, exporting `config` and `buildConfig`. |
 | `processing.ts` | The core transpilation pipeline. Contains `pageProcessing` (page phase) and `recursivelyTranspile` (component phase), plus pipeline utility types. |
 | `components.ts` | Loads component HTML and CSS files from disk, detects component tags in HTML strings, extracts props/slots/attributes, and injects resolved content back. Tag detection masks `<script>`/`<style>`/`<textarea>` content so literal tag text (e.g. in JSON-LD strings) is never resolved. |
@@ -105,7 +105,7 @@ The package ships as native ESM (`"type": "module"` in `package.json`). TypeScri
 
 ### CPU-aware worker pool (opt-in)
 
-When `useWorkers: true` is set in `bascik.config.js` (default `false`), `processAllPages()` creates `Math.min(os.cpus().length, pageCount)` worker threads via `worker-pool.ts` instead of transpiling sequentially on the main thread. Each worker is initialised once with the pre-computed `componentList` and `globalStylesHtml`, then reused for every page assigned to it. The main thread dispatches page paths through the pool's task queue and collects results to apply side effects (memory storage, event emission) after all workers complete.
+When `useWorkers: true` is set in `bascik.config.ts` (default `false`), `processAllPages()` creates `Math.min(os.cpus().length, pageCount)` worker threads via `worker-pool.ts` instead of transpiling sequentially on the main thread. Each worker is initialised once with the pre-computed `componentList` and `globalStylesHtml`, then reused for every page assigned to it. The main thread dispatches page paths through the pool's task queue and collects results to apply side effects (memory storage, event emission) after all workers complete.
 
 Spinning up the pool has a fixed cost, each worker loads the transpiler's module graph independently before it can process its first page. This pays for itself on larger sites with CPU-heavy per-page work, but for small sites (or sites whose slow parts are I/O-bound, like `<script data-bascik-build>` blocks) sequential transpilation on the main thread is often faster overall. See the [`useWorkers`](/configuration#useworkers) config option.
 

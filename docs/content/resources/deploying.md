@@ -73,9 +73,9 @@ See [Production Server](/server) for full documentation on server scripts and th
 
 ### Server configuration
 
-Configure the port and TLS in `bascik.config.js` before building:
+Configure the port and TLS in `bascik.config.ts` before building:
 
-```js
+```ts
 export default {
   serve: {
     port: 443,
@@ -107,7 +107,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY --from=build /app/dist ./dist
-COPY bascik.config.js .
+COPY bascik.config.ts .
 EXPOSE 8443
 CMD ["npx", "bascik", "--serve"]
 ```
@@ -129,7 +129,7 @@ Set the start command to `bascik --build && bascik --serve`, point the platform'
 
 ### VPS or bare metal
 
-Obtain a certificate (e.g. from Let's Encrypt via `certbot`) and point Bascik at it in `bascik.config.js`. Then create a systemd unit to keep the server running:
+Obtain a certificate (e.g. from Let's Encrypt via `certbot`) and point Bascik at it in `bascik.config.ts`. Then create a systemd unit to keep the server running:
 
 ```ini
 # /etc/systemd/system/my-site.service

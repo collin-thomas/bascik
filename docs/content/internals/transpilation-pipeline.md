@@ -13,7 +13,7 @@ Build scripts (`<script data-bascik-build>`) run **first**, before component res
 On startup (and whenever a component is added), the watch system calls `processAllPages()` instead of invoking `pageProcessing()` once per file. This avoids redundant I/O:
 
 1. **Hoist shared computation.** `listComponents()` and `resolveInlineStylesHtml()` each run **once**, in parallel, before any page is processed. The results are passed to every page rather than re-computed per page.
-2. **Transpile each page.** By default, pages are transpiled sequentially on the main thread. If `useWorkers: true` is set in `bascik.config.js`, a `WorkerPool` is created instead with `Math.min(os.cpus().length, pageCount)` workers, and each worker is initialised with the shared `componentList` and `globalStylesHtml` via `workerData`. The main thread dispatches page paths through the pool's queue and awaits all results. Worker startup has a fixed cost (each worker loads the transpiler's module graph independently), so this only pays off for larger sites or CPU-heavy per-page work, see the [`useWorkers`](/configuration#useworkers) config option.
+2. **Transpile each page.** By default, pages are transpiled sequentially on the main thread. If `useWorkers: true` is set in `bascik.config.ts`, a `WorkerPool` is created instead with `Math.min(os.cpus().length, pageCount)` workers, and each worker is initialised with the shared `componentList` and `globalStylesHtml` via `workerData`. The main thread dispatches page paths through the pool's queue and awaits all results. Worker startup has a fixed cost (each worker loads the transpiler's module graph independently), so this only pays off for larger sites or CPU-heavy per-page work, see the [`useWorkers`](/configuration#useworkers) config option.
 3. **Apply side effects on the main thread.** After transpilation completes, the main thread runs `mem.storePage()` and emits the `"transpiled"` event for each result. Brotli compression inside `storePage()` runs in the background and does not block the page from being marked ready or served.
 4. **Write to disk only in build mode.** In dev mode, pages are served entirely from the in-memory store, no `dist/` writes happen, so the server is ready as soon as memory is populated.
 
@@ -101,7 +101,7 @@ A fresh `instanceId` (a random 8-byte hex string) is generated for this occurren
 3. `prefixElementAttribute(c, "class", instanceId)`: scopes class names in HTML attributes, CSS, and JS selector calls.
 4. `namespaceScriptTags(c)`: wraps every inline `<script>` in an IIFE.
 
-Each step is skipped if disabled in `bascik.config.js`.
+Each step is skipped if disabled in `bascik.config.ts`.
 
 ### Step 2: Template resolution
 

@@ -212,10 +212,10 @@ npm install pg
 
 ## Server configuration
 
-Configure the production server in `bascik.config.js` under the `serve` key.
+Configure the production server in `bascik.config.ts` under the `serve` key.
 
-```js
-// bascik.config.js
+```ts
+// bascik.config.ts
 export default {
   cacheHttp: true,     // default in --serve; false in dev
   serve: {

@@ -12,7 +12,7 @@ The official Bascik documentation site — built with Bascik itself.
 | `/props`             | `data-bascik-prop-*` — injecting text values into component templates    |
 | `/scoped-styles`     | CSS file pairing, class scoping, element scoping, `@media`, `@keyframes` |
 | `/scoped-javascript` | IIFE isolation, ID/class selector rewriting, build/dev-only scripts      |
-| `/configuration`     | Full `bascik.config.js` reference with `buildOverrideConfig`             |
+| `/configuration`     | Full `bascik.config.ts` reference with `buildOverrideConfig`             |
 
 ## Components
 

@@ -157,7 +157,7 @@ Script tags with a `type` other than `text/javascript` are left completely untou
 </script>
 ```
 
-> **Tip:** Disable JS scoping entirely with `scopeScriptBlocks: false` in [bascik.config.js](/configuration).
+> **Tip:** Disable JS scoping entirely with `scopeScriptBlocks: false` in [bascik.config.ts](/configuration).
 
 ## TypeScript in Component Scripts
 

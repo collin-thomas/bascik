@@ -1,7 +1,7 @@
 /**
  * e2e tests for sitemap.xml and robots.txt generation.
  *
- * The e2e bascik.config.js includes `siteUrl: 'http://localhost:4200'`, which
+ * The e2e bascik.config.ts includes `siteUrl: 'http://localhost:4200'`, which
  * triggers Bascik to write dist/sitemap.xml and dist/robots.txt at the end of
  * `--build`. These tests verify the generated files are correct.
  *

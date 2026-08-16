@@ -104,7 +104,7 @@ export const generateSitemapFiles = async (): Promise<void> => {
 
   if (!BascikConfig.siteUrl) {
     console.warn(
-      "[bascik] generate: `siteUrl` is not set in bascik.config.js — skipping sitemap/robots generation. " +
+      "[bascik] generate: `siteUrl` is not set in bascik.config.ts — skipping sitemap/robots generation. " +
       "Set `siteUrl: 'https://example.com'` to enable.",
     );
     return;

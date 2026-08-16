@@ -68,7 +68,7 @@ src/
   components/  ← component .html (+ optional .css) files
 ```
 
-Both directories can be overridden in `bascik.config.js`.
+Both directories can be overridden in `bascik.config.ts`.
 
 ---
 
@@ -91,7 +91,7 @@ Full feature documentation lives at **[bascik.dev](https://bascik.dev)**.
 
 ## Configuration
 
-Create an optional `bascik.config.js` in the project root:
+Create an optional `bascik.config.ts` in the project root:
 
 ```js
 export const bascikConfig = {
@@ -295,7 +295,7 @@ For each custom tag found:
   │   c. prefixElementAttribute('class', instanceId)  ← also CSS  │
   │   d. namespaceScriptTags                          ← IIFE wrap  │
   │                                                               │
-  │   Each step is skipped if disabled in bascik.config.js.       │
+  │   Each step is skipped if disabled in bascik.config.ts.       │
   └───────────────────────────────────────────────────────────────┘
 
   ┌─ 2. TEMPLATE RESOLUTION ──────────────────────────────────────┐

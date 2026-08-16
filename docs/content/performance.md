@@ -12,7 +12,21 @@ Bascik inverts that relationship. Adding a new component adds zero JavaScript to
 
 > **Fast at any size and complexity.** Framework-rendered pages ship a JavaScript runtime, a hydration pass, and client-side routing logic before a single pixel of your content appears. Bascik ships none of that. The browser receives finished HTML. Every byte saved at the start compounds through every Core Web Vital metric.
 
-Hitting 100 across the board is achievable on any Bascik site. The techniques below are the complete playbook: standard HTML attributes and `<link>` tags that lock in each Lighthouse category. There are no build plugins, no dependencies, and no configuration. Just patterns that work in every browser and stay effective as your site grows.
+## What Bascik Does
+
+Bascik's performance story starts before any of the techniques on this page. The build step is intentionally small, and that small footprint is itself an optimization.
+
+**Zero runtime.** The most impactful thing Bascik does is what it does not add. No framework bundle, no hydration script, no client-side router. The only JavaScript on any page is what you wrote.
+
+**CSS deduplication.** When a component appears multiple times on a page, Bascik emits a single `<style>` block regardless of instance count. A page with fifty cards carries the same CSS weight as a page with one.
+
+**HTML minification.** HTML comments are stripped and excess whitespace is collapsed in every built page. Content inside `<pre>` blocks is left intact.
+
+**Script minification.** `minifyScripts` is `true` by default, stripping comments and whitespace from every inline `<script>` block and any `.js` static files copied to `dist/`. For identifier mangling and dead-code elimination, plug in esbuild (see [Minify JavaScript Output](#minify-javascript-output) below).
+
+**Inline styles.** Set `inlineStyles` in `bascik.config.ts` to inject a stylesheet directly into `<head>`, eliminating the render-blocking HTTP request for that file entirely. Pair it with `minifyStyles: true` to minify the injected CSS at build time.
+
+Hitting 100 across the board is achievable on any Bascik site. The techniques below cover the rest: standard HTML patterns with no build plugins, no dependencies, and no configuration required.
 
 ## Responsive Images with `srcset`
 
@@ -436,15 +450,17 @@ Keep inlined critical CSS to the minimum needed for above-the-fold visibility, t
 
 > **Bascik tip.** If your global stylesheet is small (under ~15 KB), skip the split entirely, set `inlineStyles` in your config and Bascik handles it automatically. Zero render-blocking requests, no FOUC, and production builds minify the injected CSS when `minifyStyles` is true:
 >
-> ```js
-> // bascik.config.js
-> export default {
->   inlineStyles: ['src/pages/css/styles.css'],
-> };
+> ```ts
+> // bascik.config.ts
+> import { defineConfig } from '@bascik/bascik/config';
 >
-> export const build = {
+> export default defineConfig({
+>   inlineStyles: ['src/pages/css/styles.css'],
+> });
+>
+> export const build = defineConfig({
 >   minifyStyles: true,
-> };
+> });
 > ```
 >
 > Once your stylesheet grows past roughly 15–20 KB (gzipped: ~4–5 KB), it is worth considering a linked external stylesheet instead. The tradeoff: the first page load pays one extra HTTP request, but every subsequent page in the session gets the file from the browser cache for free. If most of your traffic arrives from search and reads a single page, inline wins. If visitors typically navigate several pages per session, the cached external file pays off by page two. HTTP/2 reduces the penalty of the extra request significantly, but it does not eliminate it.
@@ -459,17 +475,18 @@ For maximum compression, identifier mangling, dead-code elimination, and tree-sh
 npm install --save-dev esbuild
 ```
 
-```js
-// bascik.config.js
+```ts
+// bascik.config.ts
+import { defineConfig } from '@bascik/bascik/config';
 import { transform } from 'esbuild';
 
-export const build = {
+export const build = defineConfig({
   minifyStyles: true,
   minifyScripts: async (js) => {
     const result = await transform(js, { minify: true, loader: 'js' });
     return result.code;
   },
-};
+});
 ```
 
 The function receives the raw JS string for each script block and must return the minified string. Async functions are fully supported, so any Promise-based minifier works. The built-in `true` mode is a safe fallback for projects that prefer to keep their toolchain dependency-free.
@@ -637,7 +654,7 @@ Here is a complete `<head>` combining every technique on this page. Copy it as a
   <link rel="preload" as="image" href="/images/hero.jpg" />
   <link rel="preload" as="font" href="/fonts/inter-var.woff2" type="font/woff2" crossorigin />
 
-  <!-- Styles: use inlineStyles in bascik.config.js to eliminate render-blocking requests -->
+  <!-- Styles: use inlineStyles in bascik.config.ts to eliminate render-blocking requests -->
 
   <!-- Prefetch likely next navigation -->
   <link rel="prefetch" href="/next-page" />

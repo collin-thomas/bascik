@@ -18,7 +18,7 @@ process.env.BASCIK_PROD_SERVER = isProdServer ? "1" : "0";
 
 // Applied on top of defaultConfig when --serve is active, before user config.
 // This means production-appropriate settings are on by default; users can still
-// override any of them in bascik.config.js.
+// override any of them in bascik.config.ts.
 const prodServerDefaultConfig: Partial<Omit<BascikConfigOptions, "isBuild" | "isProdServer">> = {
   cacheHttp: true,
 };

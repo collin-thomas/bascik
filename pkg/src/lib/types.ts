@@ -197,7 +197,7 @@ export interface BascikConfigOptions {
    * HTTP server configuration used in both dev and production (`bascik --serve`) modes.
    *
    * @example
-   * // bascik.config.js
+   * // bascik.config.ts
    * export const bascikConfig = {
    *   serve: {
    *     port: 443,

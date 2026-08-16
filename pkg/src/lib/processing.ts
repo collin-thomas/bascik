@@ -32,7 +32,7 @@
  * │     c. prefixElementAttribute('class') — scope class attrs, CSS       │
  * │        classes, element selectors, @keyframes, custom properties      │
  * │     d. namespaceScriptTags             — wrap scripts in IIFEs         │
- * │     (Each step is skipped if disabled in bascik.config.js.)           │
+ * │     (Each step is skipped if disabled in bascik.config.ts.)           │
  * │                                                                        │
  * │  2. TEMPLATE RESOLUTION                                                │
  * │     a. injectProps          — replace data-bascik-prop-* markers      │

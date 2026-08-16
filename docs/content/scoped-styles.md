@@ -209,7 +209,7 @@ Define your design tokens once in a global stylesheet, then consume them inside 
 
 ## Toggling Scoping
 
-All scoping can be controlled in [`bascik.config.js`](/configuration):
+All scoping can be controlled in [`bascik.config.ts`](/configuration):
 
 ```js
 export default {

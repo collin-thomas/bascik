@@ -225,10 +225,10 @@ The production server:
 
 ### Configuring the server
 
-Use the `serve` key in `bascik.config.js` to customize the server for both dev and production:
+Use the `serve` key in `bascik.config.ts` to customize the server for both dev and production:
 
-```js
-// bascik.config.js
+```ts
+// bascik.config.ts
 export default {
   serve: {
     port: 443,

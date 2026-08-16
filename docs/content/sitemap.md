@@ -4,8 +4,8 @@ Bascik generates a `sitemap.xml` and `robots.txt` automatically at build time. S
 
 Sitemap generation is on by default. To enable it, set `siteUrl` in your config:
 
-```js
-// bascik.config.js
+```ts
+// bascik.config.ts
 export default {
   siteUrl: 'https://example.com',
 };
