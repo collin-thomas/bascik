@@ -1,6 +1,6 @@
 # Configuration
 
-Create a `bascik.config.ts` file in your project root to override any default settings. Import `defineConfig` for full autocomplete and type checking on every option — your editor will surface valid values, flag typos, and show inline docs as you type. A plain `bascik.config.js` also works and takes precedence if both files exist.
+Create a `bascik.config.ts` file in your project root to override any default settings. Import `defineConfig` for full autocomplete and type checking on every option; your editor will surface valid values, flag typos, and show inline docs as you type. A plain `bascik.config.js` also works and takes precedence if both files exist.
 
 ## Full Example
 
@@ -152,7 +152,7 @@ export const build = defineConfig({
 
 Only applies to inline scripts (those without a `src` attribute) and to `.js` files copied into `dist/`. Non-JS script types such as `application/ld+json` are always left untouched.
 
-To strip TypeScript from component scripts, pass Node's built-in `stripTypeScriptTypes` here — see [TypeScript in Component Scripts](/scoped-javascript#typescript-in-component-scripts).
+To strip TypeScript from component scripts, pass Node's built-in `stripTypeScriptTypes` here. See [TypeScript in Component Scripts](/scoped-javascript#typescript-in-component-scripts).
 
 ### `obfuscateAttributeNames`
 

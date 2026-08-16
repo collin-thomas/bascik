@@ -21,7 +21,7 @@ On startup (and whenever a component is added), the watch system calls `processA
 
 The page phase prepares the source HTML document and orchestrates the component phase:
 
-1. **Execute build scripts.** Any `<script data-bascik-build>` blocks are run as Node.js ESM modules. Their stdout replaces the script tag. The result can contain component tags, these will be resolved in step 4. Output is cached on disk so unchanged scripts skip the child-process spawn on subsequent builds — see [Build Script Output Cache](#build-script-output-cache) below.
+1. **Execute build scripts.** Any `<script data-bascik-build>` blocks are run as Node.js ESM modules. Their stdout replaces the script tag. The result can contain component tags, these will be resolved in step 4. Output is cached on disk so unchanged scripts skip the child-process spawn on subsequent builds (see [Build Script Output Cache](#build-script-output-cache) below).
 2. **Extract body and head.** The inner content of `<body>` and `<head>` are extracted separately so component injection can happen in both zones independently.
 3. **Obtain component list.** On the multi-page startup path (`processAllPages`), the list is pre-computed once and passed in. On a single-page re-transpilation, it is loaded from `src/components/` at this point.
 4. **Run component phase.** `recursivelyTranspile` is called on both the body and head HTML strings. Each call returns a `TranspileResult` containing the resolved HTML and the list of components that were used.
@@ -70,7 +70,7 @@ If the script contains no detectable references, only items 1–5 contribute to 
 
 Because the content of every referenced file is hashed into the key, editing a content file produces a new key for any script that references it, giving a cache miss. Scripts on other pages that do not reference that file keep their old keys and continue to hit the cache.
 
-To bust the entire cache manually — for example after upgrading `marked` or another build-time dependency that `scripts/*.{mjs,js,ts}` files import — delete the cache directory:
+To bust the entire cache manually, for example after upgrading `marked` or another build-time dependency that `scripts/*.{mjs,js,ts}` files import, delete the cache directory:
 
 ```sh
 rm -rf node_modules/.cache/bascik/script-cache

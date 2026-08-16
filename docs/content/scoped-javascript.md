@@ -1,6 +1,6 @@
 # Scoped JavaScript
 
-Write `<script>` tags directly in your component HTML. Bascik automatically rewrites selector strings to match each instance's unique identifiers. Multiple instances of the same component on the same page stay completely independent. TypeScript is supported too — see [TypeScript in Component Scripts](#typescript-in-component-scripts).
+Write `<script>` tags directly in your component HTML. Bascik automatically rewrites selector strings to match each instance's unique identifiers. Multiple instances of the same component on the same page stay completely independent. TypeScript is supported too. See [TypeScript in Component Scripts](#typescript-in-component-scripts).
 
 ## See it in action
 
@@ -161,7 +161,7 @@ Script tags with a `type` other than `text/javascript` are left completely untou
 
 ## TypeScript in Component Scripts
 
-Bascik ships plain JavaScript to the browser, so TypeScript in component `<script>` blocks must be stripped before the output is served. Node 24 exposes `stripTypeScriptTypes` from `node:module` — wire it into the `minifyScripts` hook and every inline script body gets its types erased automatically:
+Bascik ships plain JavaScript to the browser, so TypeScript in component `<script>` blocks must be stripped before the output is served. Node 24 exposes `stripTypeScriptTypes` from `node:module`. Wire it into the `minifyScripts` hook and every inline script body gets its types erased automatically:
 
 ```ts
 // bascik.config.ts

@@ -276,7 +276,7 @@ Click the card to toggle its active state. Hover for the hover state. Both are i
 
 ### Source and output
 
-**Source** (`my-card.html` — CSS, HTML, and JS in one file):
+**Source** (`my-card.html`, CSS, HTML, and JS in one file):
 
 <!-- demo:source-usage -->
 ```html

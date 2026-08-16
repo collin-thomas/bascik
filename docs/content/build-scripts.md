@@ -28,7 +28,7 @@ Output in the compiled HTML:
 
 If a build script throws, Bascik logs a warning and replaces the script tag with an empty string. The build continues rather than aborting. Check your terminal output if content is missing from the page.
 
-One case that does hard-fail and abort the build: putting both `data-bascik-build` and `data-bascik-server` on the same `<script>` tag. That combination is never valid — a script runs at build time or at request time, not both. Bascik throws an error with the file name and line number. The VS Code extension also flags it as an error before you build.
+One case that does hard-fail and abort the build: putting both `data-bascik-build` and `data-bascik-server` on the same `<script>` tag. That combination is never valid: a script runs at build time or at request time, not both. Bascik throws an error with the file name and line number. The VS Code extension also flags it as an error before you build.
 
 ## Example: Reading a Markdown File
 
@@ -177,7 +177,7 @@ Bascik caches build script output to `node_modules/.cache/bascik/script-cache/` 
 - The contents of any local `scripts/` or `content/` files the script imports
 - The `isBuild` flag and `siteUrl`
 
-If a dependency file changes — because you edited it or switched branches — the cache entry is invalid and the script re-runs automatically. On a large site with many build scripts, the first build after a content change is slower; subsequent builds use the cache.
+If a dependency file changes (because you edited it or switched branches), the cache entry is invalid and the script re-runs automatically. On a large site with many build scripts, the first build after a content change is slower; subsequent builds use the cache.
 
 To clear the cache manually (useful after a branch switch that changes shared scripts):
 
@@ -191,7 +191,7 @@ To disable caching entirely, set `buildScriptCache: false` in your config. This 
 
 - **No streaming:** the full stdout of the script is collected before injection. You cannot stream HTML into the page incrementally.
 - **No HMR awareness:** in dev mode Bascik watches source files. If a build script reads an external file, changes to that file won't automatically re-trigger the script. Restart the dev server to re-run.
-- **ESM only:** Build scripts run as ES modules — use `import`/`export` syntax; `require()` is not available. Write helpers as `.ts` (preferred on Node 24), `.js`, or `.mjs`. The `.mjs` extension explicitly marks a file as ESM regardless of `package.json` settings; the "m" stands for "module." In a Bascik project with `"type": "module"` in `package.json` (the default), plain `.js` and `.ts` work identically, so `.mjs` is usually unnecessary.
+- **ESM only:** Build scripts run as ES modules. Use `import`/`export` syntax; `require()` is not available. Write helpers as `.ts` (preferred on Node 24), `.js`, or `.mjs`. The `.mjs` extension explicitly marks a file as ESM regardless of `package.json` settings; the "m" stands for "module." In a Bascik project with `"type": "module"` in `package.json` (the default), plain `.js` and `.ts` work identically, so `.mjs` is usually unnecessary.
 - **Node.js only:** browser globals like `window` and `document` are not available in build scripts.
 
 For per-request server-side rendering, see [Server scripts](/server).

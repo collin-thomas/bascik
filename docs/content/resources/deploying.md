@@ -6,9 +6,9 @@ Bascik's build output is a standard folder of static HTML, CSS, and JavaScript f
 
 Running `bascik --build` produces:
 
-- **HTML** — compiled pages with component tags resolved, scoped class names applied, and build-script output inlined
-- **CSS and JS** — as-is from your `src/pages/` asset folders
-- **Static assets** — images, fonts, and any other files copied unchanged
+- **HTML**: compiled pages with component tags resolved, scoped class names applied, and build-script output inlined
+- **CSS and JS**: as-is from your `src/pages/` asset folders
+- **Static assets**: images, fonts, and any other files copied unchanged
 
 The output uses root-relative paths (e.g. `/css/styles.css`). Files must be served from an HTTP server; opening them directly with `file://` will break asset loading.
 
@@ -69,7 +69,7 @@ bascik --serve   # start the HTTP/2 server; runs server scripts per request
 
 See [Production Server](/server) for full documentation on server scripts and the request context API.
 
-> **TLS is always on.** Bascik's server has no plaintext HTTP mode. Some cloud platforms terminate TLS at the edge and forward cleartext to the container — that is incompatible. Use a platform that either passes TLS through to the container, or run a reverse proxy in front of Bascik that forwards HTTPS.
+> **TLS is always on.** Bascik's server has no plaintext HTTP mode. Some cloud platforms terminate TLS at the edge and forward cleartext to the container, which is incompatible. Use a platform that either passes TLS through to the container, or run a reverse proxy in front of Bascik that forwards HTTPS.
 
 ### Server configuration
 

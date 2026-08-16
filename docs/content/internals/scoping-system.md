@@ -69,7 +69,7 @@ p { margin: 0; }
 <p class="bascik__site-nav__el__p">Content</p>
 ```
 
-`html`, `body`, and `head` are excluded from element-to-class conversion. Cross-boundary selectors like `html[data-theme="light"] .foo {}` are left with the root element name intact, so the scoped output is `html[data-theme="light"] .bascik__...__foo {}` — matching correctly when the document root carries a theme or state attribute.
+`html`, `body`, and `head` are excluded from element-to-class conversion. Cross-boundary selectors like `html[data-theme="light"] .foo {}` are left with the root element name intact, so the scoped output is `html[data-theme="light"] .bascik__...__foo {}`, which matches correctly when the document root carries a theme or state attribute.
 
 ### @keyframes
 
@@ -189,10 +189,10 @@ The CSS pass scopes every class name it finds in the `.css` file regardless of w
 
 To fix this, after the HTML attribute pass builds the initial class scope map, a second scan over every `<script>` block extracts class name string literals from all class-referencing JS patterns and adds any new names to the scope map before the JS rewrite runs:
 
-- `classList.add / remove / toggle / contains / replace` — every quoted argument
-- `querySelector / querySelectorAll / closest / matches` — every `.className` token in the selector string
-- `el.className = "…"` and `el.className += "…"` — every space-separated token
-- `el.setAttribute("class", "…")` — every space-separated token
+- `classList.add / remove / toggle / contains / replace`: every quoted argument
+- `querySelector / querySelectorAll / closest / matches`: every `.className` token in the selector string
+- `el.className = "…"` and `el.className += "…"`: every space-separated token
+- `el.setAttribute("class", "…")`: every space-separated token
 
 This means modifier classes like `btn--active` that are only ever toggled dynamically still get scoped correctly in both CSS and JS without any special annotation:
 

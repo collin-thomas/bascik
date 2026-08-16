@@ -40,13 +40,13 @@ Requests are dispatched in this order:
 
 ### Why in-memory beats streaming for HTML pages
 
-Static assets (CSS, JS, images) are served with `createReadStream().pipe(stream)` because they live on disk and streaming avoids loading them into memory twice. HTML pages work differently: every page is already fully materialized as a `Buffer` in `MemoryStore` from the moment it finishes transpiling. For an in-memory buffer there is no I/O to pipeline — the bottleneck that streaming exists to solve is absent. Sending the buffer directly with `stream.end(buf)` is a single syscall into the HTTP/2 framer, whereas piping through a `Readable` adds queue overhead for no gain. Pre-compressed brotli buffers follow the same pattern: `stream.end(page.compressedContent)` avoids per-request compression entirely.
+Static assets (CSS, JS, images) are served with `createReadStream().pipe(stream)` because they live on disk and streaming avoids loading them into memory twice. HTML pages work differently: every page is already fully materialized as a `Buffer` in `MemoryStore` from the moment it finishes transpiling. For an in-memory buffer there is no I/O to pipeline; the bottleneck that streaming exists to solve is absent. Sending the buffer directly with `stream.end(buf)` is a single syscall into the HTTP/2 framer, whereas piping through a `Readable` adds queue overhead for no gain. Pre-compressed brotli buffers follow the same pattern: `stream.end(page.compressedContent)` avoids per-request compression entirely.
 
 ### Boot page during initial startup
 
 The dev server binds its port concurrently with page transpilation. Any request that arrives before a page has been stored in `mem` would otherwise return a bare 404. Instead, Bascik serves a lightweight boot page: a spinner with a short "Building site..." label. The page carries no framework or external resources.
 
-The boot page connects to the normal `/bascik-live-reload` SSE endpoint. Because the Referer header contains the originally requested URL, the SSE handler tracks it the same way it tracks any open page. When that specific page finishes transpiling, the `"transpiled"` event fires and the SSE connection sends `reload` — the browser fetches the real page immediately without waiting for the rest of the project to finish. As a belt-and-suspenders measure, a `"boot-done"` event is emitted on the shared event emitter once `watchFiles()` resolves, which flushes any remaining boot-page connections (for example, a request to a path that does not exist yet). If the SSE connection itself fails before the page is ready, an `onerror` handler retries with a one-second `setTimeout`.
+The boot page connects to the normal `/bascik-live-reload` SSE endpoint. Because the Referer header contains the originally requested URL, the SSE handler tracks it the same way it tracks any open page. When that specific page finishes transpiling, the `"transpiled"` event fires and the SSE connection sends `reload`; the browser fetches the real page immediately without waiting for the rest of the project to finish. As a belt-and-suspenders measure, a `"boot-done"` event is emitted on the shared event emitter once `watchFiles()` resolves, which flushes any remaining boot-page connections (for example, a request to a path that does not exist yet). If the SSE connection itself fails before the page is ready, an `onerror` handler retries with a one-second `setTimeout`.
 
 The `isBooting` flag in `mem.ts` is set to `true` on module load and cleared (alongside the `"boot-done"` event) by `transpile.ts` immediately after `watchFiles()` resolves. Once the flag is cleared, unmatched paths fall through to the normal 404 path. The boot page is never served in `--serve` (production) mode.
 
@@ -71,8 +71,8 @@ This inverted index powers selective re-transpilation. When a component file cha
 When a file change triggers a full re-transpile of all pages (e.g. a file in `directory.watch` changed), Bascik uses the `#openPages` set to sort the page list so currently-open pages are transpiled first. Those pages emit the `"transpiled"` event before the rest of the batch, which means the browser live-reload fires as soon as the visible page is ready rather than waiting for all pages to finish.
 
 The tracking lifecycle:
-1. An SSE connection opens at `/bascik-live-reload` — the server parses the `Referer` header and calls `mem.trackOpenPage(path)`.
-2. The SSE stream closes (tab navigates away, browser closes) — the server calls `mem.untrackOpenPage(path)`.
+1. An SSE connection opens at `/bascik-live-reload`; the server parses the `Referer` header and calls `mem.trackOpenPage(path)`.
+2. The SSE stream closes (tab navigates away, browser closes); the server calls `mem.untrackOpenPage(path)`.
 3. `partitionByOpenPages` in `processing.ts` splits any page list into `[openPages, rest]` and the caller awaits open pages first.
 
 ### Brotli compression

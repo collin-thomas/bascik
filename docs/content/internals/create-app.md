@@ -12,8 +12,8 @@ That split keeps the monorepo dev flow simple and keeps the generated project fa
 
 The package has two source files with distinct responsibilities:
 
-- `create/src/scaffold.ts` — pure data and file-writing logic. All generated file content lives here as exported string constants and functions. No I/O beyond `fs/promises`. This is what the tests cover.
-- `create/src/index.ts` — the CLI entry point. Handles prompts, the `-y` flag, and spawns `npm install` / `npm run dev`. Not unit-tested.
+- `create/src/scaffold.ts`: pure data and file-writing logic. All generated file content lives here as exported string constants and functions. No I/O beyond `fs/promises`. This is what the tests cover.
+- `create/src/index.ts`: the CLI entry point. Handles prompts, the `-y` flag, and spawns `npm install` / `npm run dev`. Not unit-tested.
 
 Keeping them split means you can test every generated file without invoking the CLI or touching the filesystem.
 
@@ -70,7 +70,7 @@ cd create
 npm run build
 ```
 
-The `npm link` symlink points at the `create/` directory, so a fresh `dist/` is picked up immediately without relinking. `npm link` also runs `prepare`, which copies the latest SKILL.md from docs and rebuilds `dist/` — so the initial link after a fresh checkout needs no separate build step.
+The `npm link` symlink points at the `create/` directory, so a fresh `dist/` is picked up immediately without relinking. `npm link` also runs `prepare`, which copies the latest SKILL.md from docs and rebuilds `dist/`, so the initial link after a fresh checkout needs no separate build step.
 
 ## Tests
 
@@ -113,7 +113,7 @@ cd create && npm install && npm link && cd ..
 npx create-bascik my-site -y
 ```
 
-The `-y` flag skips both prompts. The npm install will print a 404 error for `@bascik/bascik` (not on npm yet), but the dev server starts anyway — the workspace `node_modules` symlink resolves the package. Command+Click the URL to open it in a browser.
+The `-y` flag skips both prompts. The npm install will print a 404 error for `@bascik/bascik` (not on npm yet), but the dev server starts anyway; the workspace `node_modules` symlink resolves the package. Command+Click the URL to open it in a browser.
 
 ```text
 Server running at https://localhost:8443
