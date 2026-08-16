@@ -85,12 +85,13 @@ The `renderMd` helper (`docs/scripts/md-renderer.ts`) applies these transformati
 #pre-commit.prompt.md
 ```
 
-Do not call `generate:llms`, `pnpm sync`, or `pnpm --filter bascik-docs generate:llms` individually — the prompt handles all of that.
+Do not call `generate:llms` or `pnpm --filter bascik-docs generate:llms` individually — the prompt handles all of that.
 
 **Shell-only fallback** (no SKILL.md update, just propagate after a manual edit):
 
 ```sh
-pnpm sync
+pnpm --filter bascik-docs generate:llms
+pnpm --filter create-bascik prepack
 ```
 
 These files must stay in sync. A content change that lands in `llms.txt` but not `SKILL.md` (or vice versa) means Copilot is working from stale guidance — which is how bugs like "use `querySelector` for per-instance elements" go undetected.

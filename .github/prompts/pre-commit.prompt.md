@@ -46,7 +46,8 @@ Do not rewrite sections that are already accurate. Only change what the docs rev
 ## Step 6 — Propagate to the create package
 
 ```sh
-pnpm sync
+pnpm --filter bascik-docs generate:llms
+pnpm --filter create-bascik prepack
 ```
 
 This regenerates `llms.txt` once more (picking up any doc changes since Step 2) and runs `create-bascik`'s `prepack` to copy the updated SKILL.md into `create/assets/SKILL.md`.
