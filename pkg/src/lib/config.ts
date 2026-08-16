@@ -40,8 +40,8 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild" | "isProdServer"
   directory: {
     pages: "src/pages",
     components: "src/components",
-    watch: [],
   },
+  watch: [],
   scopeScriptBlocks: true,
   inheritAttributes: true,
   scopeAttribute: {

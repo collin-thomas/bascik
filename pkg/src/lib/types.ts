@@ -53,16 +53,16 @@ export interface BascikConfigOptions {
   directory: {
     pages: string;
     components: string;
-    /**
-     * Extra directories or files to watch in dev mode. Any change inside these
-     * paths triggers a full re-transpile of all pages, just like a component
-     * change would. Has no effect during `bascik --build`.
-     *
-     * @example
-     * watch: ['scripts/', 'data/']
-     */
-    watch: string[];
   };
+  /**
+   * Extra directories or files to watch in dev mode. Any change inside these
+   * paths triggers a full re-transpile of all pages, just like a component
+   * change would. Has no effect during `bascik --build`.
+   *
+   * @example
+   * watch: ['scripts/', 'data/']
+   */
+  watch: string[];
   minifyStyles: boolean;
   /**
    * Minify inline `<script>` content and `.js` static files in the output.

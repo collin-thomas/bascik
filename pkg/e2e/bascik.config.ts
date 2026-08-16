@@ -8,6 +8,9 @@ export default defineConfig({
   useWorkers: true,
   obfuscateAttributeNames: false,
   minifyStyles: false,
+  exec: [
+    { script: 'scripts/generate-manifest.ts' },
+  ],
   serve: {
     port: 9443,
   },

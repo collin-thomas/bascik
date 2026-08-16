@@ -89,9 +89,9 @@ export const watchFiles = async () => {
     .on("unlink", async (path) => selectivelyProcessPages(path).catch(onWatchError));
 
   // Re-transpile all pages when user-specified extra paths change (dev only)
-  if (!BascikConfig.isBuild && BascikConfig.directory.watch.length) {
+  if (!BascikConfig.isBuild && BascikConfig.watch.length) {
     chokidar
-      .watch(BascikConfig.directory.watch, {
+      .watch(BascikConfig.watch, {
         ignoreInitial: true,
         persistent: true,
         usePolling: true,

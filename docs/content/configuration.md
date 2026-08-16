@@ -241,16 +241,12 @@ generate: {
 
 See [Sitemap & robots.txt](/sitemap) for a full walkthrough.
 
-### `directory.watch`
+### `watch`
 
 An array of directories or files that, when changed in dev mode, trigger a full re-transpile of all pages. Useful for utility scripts, data files, or image directories that pages depend on at build time.
 
 ```js
-directory: {
-  pages: 'src/pages',
-  components: 'src/components',
-  watch: ['scripts/', 'data/'],
-}
+watch: ['scripts/', 'data/'],
 ```
 
 Has no effect during `bascik --build`.
