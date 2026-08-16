@@ -541,22 +541,20 @@ export const startHttp2Server = async () => {
   server.on("error", (error) => console.error(error));
 
   // ── Graceful shutdown on SIGTERM / SIGINT ────────────────────────────────
+  let shuttingDown = false;
   const gracefulShutdown = (signal: string) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
     console.log(`\nReceived ${signal}, shutting down gracefully…`);
-    server.close((err) => {
-      if (err) console.error("Error closing server:", err);
-      process.exit(0);
-    });
     // Destroy open sessions (including the SSE live-reload connection) so
     // server.close() is not held open waiting for long-lived streams.
     for (const session of openSessions) {
       session.destroy();
     }
-    // Force exit if sessions haven't drained within 10 s.
-    setTimeout(() => {
-      console.error("Graceful shutdown timeout — forcing exit");
-      process.exit(1);
-    }, 10_000).unref();
+    server.close(() => process.exit(0));
+    // Exit cleanly if server.close() hasn't called back within 1 s.
+    // Using exit(0) so pnpm --filter doesn't report a spurious failure.
+    setTimeout(() => process.exit(0), 1_000).unref();
   };
   process.setMaxListeners(process.getMaxListeners() + 2);
   process.once("SIGTERM", () => gracefulShutdown("SIGTERM"));
