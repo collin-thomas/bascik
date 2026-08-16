@@ -169,6 +169,33 @@ Environment variables set in your shell or a `.env` file (loaded with a tool lik
 </script>
 ```
 
+## Concurrent Execution
+
+All build scripts on a page run concurrently. Bascik collects every `<script data-bascik-build>` tag at once and starts them all in parallel using `Promise.all`. A semaphore caps how many Node.js subprocesses are alive simultaneously based on available memory, but there is no document-order sequencing — script 4 can finish before script 1. The outputs are stitched back into the page in their original positions once all scripts have resolved, so the HTML order is always preserved.
+
+```html
+<!-- These four scripts all start at the same time. -->
+<head>
+  <script data-bascik-build>
+    const { canonical } = await import(…);
+    console.log(await canonical());        <!-- may finish 2nd -->
+  </script>
+  <script data-bascik-build>
+    const { openGraph } = await import(…);
+    console.log(await openGraph());        <!-- may finish 4th -->
+  </script>
+  <script data-bascik-build>
+    const { breadcrumbLd } = await import(…);
+    console.log(await breadcrumbLd());     <!-- may finish 1st -->
+  </script>
+  <script data-bascik-build>
+    const { articleSchema } = await import(…);
+    console.log(await articleSchema());    <!-- may finish 3rd -->
+  </script>
+</head>
+<!-- Output is always assembled in document order regardless of finish order. -->
+```
+
 ## Script Caching
 
 Bascik caches build script output to `node_modules/.cache/bascik/script-cache/` so subsequent builds skip the Node.js subprocess entirely for unchanged scripts. The cache key is a SHA-256 hash of:
