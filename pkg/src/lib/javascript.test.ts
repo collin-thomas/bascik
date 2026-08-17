@@ -518,13 +518,14 @@ describe("prefixElementAttribute – inline <style> tag scoping", () => {
       '<style>.btn { color: red; }</style><button class="btn">Click</button>',
     );
     const result = prefixElementAttribute(c, "class", "test1234");
-    expect(result.fileContent).toContain(`.${scopeClass("btn")}`);
+    expect(result.cssFileContent).toContain(`.${scopeClass("btn")}`);
+    expect(result.fileContent).toContain(`class="${scopeClass("btn")}"`);
   });
 
   it("scopes element selectors in an inline <style> tag and injects class", () => {
     const c = makeComponent("<style>p { color: red; }</style><p>hello</p>");
     const result = prefixElementAttribute(c, "class", "test1234");
-    expect(result.fileContent).toContain("bascik__my-comp__el__p");
+    expect(result.cssFileContent).toContain("bascik__my-comp__el__p");
     // Class should be injected into the <p> element
     expect(result.fileContent).toMatch(
       /<p\s[^>]*class="[^"]*bascik__my-comp__el__p/,
@@ -536,7 +537,7 @@ describe("prefixElementAttribute – inline <style> tag scoping", () => {
       "<style>\n  p { color: red; }\n</style><p>hello</p>",
     );
     const result = prefixElementAttribute(c, "class", "test1234");
-    expect(result.fileContent).toContain("bascik__my-comp__el__p");
+    expect(result.cssFileContent).toContain("bascik__my-comp__el__p");
     expect(result.fileContent).toMatch(
       /<p\s[^>]*class="[^"]*bascik__my-comp__el__p/,
     );
@@ -623,7 +624,7 @@ describe("prefixElementAttribute – CSS #id selector scoping", () => {
       '<style>#panel { display: none; }</style><div id="panel"></div>',
     );
     const result = prefixElementAttribute(c, "class", "test1234");
-    expect(result.fileContent).toContain(".bascik__my-comp__id__panel");
+    expect(result.cssFileContent).toContain(".bascik__my-comp__id__panel");
     expect(result.fileContent).toContain("bascik__my-comp__id__panel");
   });
 });

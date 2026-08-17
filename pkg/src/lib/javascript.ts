@@ -88,6 +88,7 @@ import {
   scopeCounterStyleNames,
   scopeAnchorNames,
   scopeInlineStyleTags,
+  extractInlineStyles,
   shieldCssStrings,
 } from "./styles.js";
 import type { BascikComponent } from "./types.js";
@@ -448,6 +449,20 @@ export const prefixElementAttribute = (
 
   // CSS
   if (attribute === "class") {
+    // Extract any inline <style> tags present in component.fileContent (e.g.
+    // for in-memory or dynamically constructed components) into cssFileContent
+    if (component.fileContent && component.fileContent.includes("<style")) {
+      const { html: cleanedHtml, css: inlineCss } = extractInlineStyles(
+        component.fileContent,
+      );
+      component.fileContent = cleanedHtml;
+      if (inlineCss) {
+        component.cssFileContent = component.cssFileContent
+          ? `${component.cssFileContent}\n${inlineCss}`
+          : inlineCss;
+      }
+    }
+
     // Collect element names and id names converted to classes from all CSS
     // sources so we can inject the generated classes into the HTML in one pass.
     let allElementClasses: string[] = [];

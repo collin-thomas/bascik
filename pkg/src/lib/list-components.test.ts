@@ -28,6 +28,7 @@ vi.mock("./file-system.js", () => ({
 
 vi.mock("./styles.js", () => ({
   getComponentCss: vi.fn(async () => ""),
+  extractInlineStyles: vi.fn((html: string) => ({ html, css: "" })),
 }));
 
 vi.mock("./build-scripts.js", () => ({

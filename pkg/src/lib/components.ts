@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { getComponentCss } from "./styles.js";
+import { getComponentCss, extractInlineStyles } from "./styles.js";
 import { deepReadDirFlat } from "./file-system.js";
 import { BascikConfig } from "./config.js";
 import { executeBuildScripts } from "./build-scripts.js";
@@ -160,13 +160,15 @@ export const listComponents = async (): Promise<ComponentList> => {
         // stays in its original position (minifyHtml moves <script> tags).
         const rawContent = fileContent.toString();
         const resolvedContent = await executeBuildScripts(rawContent, fileName);
+        const { html: cleanedContent, css: inlineCss } = extractInlineStyles(resolvedContent);
+        const combinedCss = [cssFileContent, inlineCss].filter(Boolean).join("\n");
         const component: BascikComponent = {
           name: componentName,
           fileName,
-          fileContent: minifyHtml(resolvedContent),
+          fileContent: minifyHtml(cleanedContent),
         };
-        if (cssFileContent) {
-          component.cssFileContent = cssFileContent;
+        if (combinedCss) {
+          component.cssFileContent = combinedCss;
         }
         return component;
       } catch (e) {

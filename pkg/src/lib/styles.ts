@@ -698,6 +698,72 @@ export const scopeAnchorNames = (
   return result;
 };
 
+// ─── Inline <style> Tag Extraction ───────────────────────────────────────────
+
+/**
+ * Extract the content of all `<style>` blocks from component HTML, returning
+ * the HTML without `<style>` tags and the extracted CSS string.
+ *
+ * Inner contents of raw-text/code elements (`<code>`, `<pre>`, `<script>`,
+ * `<textarea>`) are shielded so literal `<style>` tags in code examples are
+ * never extracted.
+ */
+export const extractInlineStyles = (
+  html: string,
+): { html: string; css: string } => {
+  if (!html || !html.includes("<style")) {
+    return { html, css: "" };
+  }
+
+  // Shield raw-text / code element contents so literal <style> tags in code examples
+  // or scripts are untouched.
+  const preserved: string[] = [];
+  let maskedHtml = html;
+  const skipTags = ["code", "pre", "script", "textarea"];
+  for (const tag of skipTags) {
+    const esc = tag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const attr = `(?:"[^"]*"|'[^']*'|[^>"'])*`;
+    maskedHtml = maskedHtml.replace(
+      new RegExp(`(<${esc}(?:\\b${attr})?>)([\\s\\S]*?)(<\\/${esc}>)`, "gi"),
+      (_match, open, inner, close) => {
+        preserved.push(inner);
+        return `${open}\x00BSKIP${preserved.length - 1}\x00${close}`;
+      },
+    );
+  }
+
+  const cssBlocks: string[] = [];
+  const cleanedHtml = maskedHtml.replace(
+    /(<style\b[^>]*>)([\s\S]*?)(<\/style>)/gi,
+    (_match, openTag: string, styleContent: string) => {
+      let css = removeCommentsFromCss(styleContent).trim();
+      if (!css) return "";
+      const mediaMatch = openTag.match(/\bmedia\s*=\s*["']?([^"'>]+)["']?/i);
+      if (
+        mediaMatch &&
+        mediaMatch[1].trim() &&
+        mediaMatch[1].toLowerCase() !== "all" &&
+        mediaMatch[1].toLowerCase() !== "screen"
+      ) {
+        css = `@media ${mediaMatch[1].trim()} {\n${css}\n}`;
+      }
+      cssBlocks.push(css);
+      return "";
+    },
+  );
+
+  // Restore preserved raw-text element contents
+  let finalHtml = cleanedHtml;
+  for (let i = preserved.length - 1; i >= 0; i--) {
+    finalHtml = finalHtml.split(`\x00BSKIP${i}\x00`).join(preserved[i]);
+  }
+
+  return {
+    html: finalHtml,
+    css: cssBlocks.join("\n"),
+  };
+};
+
 // ─── Inline <style> Tag Scoping ───────────────────────────────────────────────
 
 /**
