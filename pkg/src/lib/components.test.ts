@@ -700,6 +700,47 @@ describe("replaceNamedSlots – fallback content", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Boundary & Design Decisions Tests for HTML Component Parsing
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("getFirstComponent & replaceTag – HTML boundary design decisions", () => {
+  const componentList = {
+    "my-card": {
+      fileName: "components/my-card.html",
+      fileContent: '<div class="card">Card Body</div>',
+    },
+  };
+
+  it("removes HTML comments via minifyHtml so commented custom tags are not transpiled", () => {
+    const html = "<!-- <my-card></my-card> --><div>Real Content</div>";
+    const minified = minifyHtml(html);
+    const first = getFirstComponent(minified, componentList);
+    // Minification strips HTML comments, preventing commented tags from matching
+    expect(minified).not.toContain("<my-card>");
+    expect(first.name).toBeUndefined();
+  });
+
+  it("does not match custom component tags inside inline <script> blocks", () => {
+    const html = "<script>const html = '<my-card></my-card>';</script>";
+    const first = getFirstComponent(html, componentList);
+    expect(first.name).toBeUndefined();
+  });
+
+  it("does not match custom component tags inside inline <style> blocks", () => {
+    const html = "<style>/* <my-card></my-card> */</style>";
+    const first = getFirstComponent(html, componentList);
+    expect(first.name).toBeUndefined();
+  });
+
+  it("handles self-closing custom components gracefully", () => {
+    const html = "<div><my-card /></div>";
+    const first = getFirstComponent(html, componentList);
+    expect(first.name).toBe("my-card");
+    expect(first.content).toBe("<my-card />");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // B: Attribute inheritance
 // ─────────────────────────────────────────────────────────────────────────────
 

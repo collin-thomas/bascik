@@ -102,4 +102,37 @@ describe("startHttpServer", () => {
     res.end(undefined);
     expect(mockResMsg.end).toHaveBeenCalledWith();
   });
+
+  it("passes an onShutdown callback to startServerInstance that destroys open sockets", async () => {
+    let connectionCb: ((socket: any) => void) | undefined;
+    let shutdownCb: (() => void) | undefined;
+
+    mockServer.on.mockImplementation((event: string, cb: any) => {
+      if (event === "connection") connectionCb = cb;
+      return mockServer;
+    });
+
+    const { startServerInstance } = await import("./server.js");
+    (startServerInstance as any).mockImplementation(
+      async (_server: any, _protocol: string, onShutdown?: () => void) => {
+        shutdownCb = onShutdown;
+        return "http://localhost:8443";
+      },
+    );
+
+    await startHttpServer();
+
+    expect(connectionCb).toBeDefined();
+    expect(shutdownCb).toBeDefined();
+
+    const mockSocket = {
+      destroy: vi.fn(),
+      once: vi.fn(),
+    };
+
+    connectionCb!(mockSocket);
+    shutdownCb!();
+
+    expect(mockSocket.destroy).toHaveBeenCalled();
+  });
 });

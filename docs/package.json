@@ -5,7 +5,7 @@
   "type": "module",
   "author": "Collin Thomas",
   "engines": {
-    "node": ">=24.17.0"
+    "node": ">=22.18.0"
   },
   "scripts": {
     "dev": "bascik",

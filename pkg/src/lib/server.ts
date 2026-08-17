@@ -470,6 +470,12 @@ export const startServerInstance = async (
       } catch { }
     }
 
+    if (typeof (server as any).closeAllConnections === "function") {
+      try {
+        (server as any).closeAllConnections();
+      } catch { }
+    }
+
     // Close all registered handles (chokidar watchers, exec watchers).
     runShutdownHandlers().catch(() => { });
 

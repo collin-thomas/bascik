@@ -1814,4 +1814,30 @@ describe("startServerInstance signal handler cleanup", () => {
     processOnceSpy.mockRestore();
     processRemoveListenerSpy.mockRestore();
   });
+
+  it("calls closeAllConnections on server when gracefulShutdown is triggered", async () => {
+    let sigIntHandler: (() => void) | undefined;
+    vi.spyOn(process, "once").mockImplementation((event: string | symbol, listener: (...args: any[]) => void) => {
+      if (event === "SIGINT") sigIntHandler = listener as () => void;
+      return process;
+    });
+
+    const mockExit = vi.spyOn(process, "exit").mockImplementation((() => { }) as any);
+    const mockServerWithCloseAll: any = {
+      once: vi.fn().mockReturnThis(),
+      on: vi.fn().mockReturnThis(),
+      listen: vi.fn((_port: number, _host: string, cb?: () => void) => { cb?.(); return mockServerWithCloseAll; }),
+      close: vi.fn((cb?: (err?: Error) => void) => { cb?.(); }),
+      closeAllConnections: vi.fn(),
+      removeListener: vi.fn().mockReturnThis(),
+    };
+
+    await startServerInstance(mockServerWithCloseAll, "http");
+
+    expect(sigIntHandler).toBeDefined();
+    sigIntHandler!();
+
+    expect(mockServerWithCloseAll.closeAllConnections).toHaveBeenCalled();
+    mockExit.mockRestore();
+  });
 });

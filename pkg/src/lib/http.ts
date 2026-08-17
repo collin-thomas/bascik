@@ -44,10 +44,23 @@ export const startHttpServer = async (): Promise<string> => {
   const server = http.createServer();
   const handleRequest = createRequestHandler();
 
+  const openSockets = new Set<import("node:net").Socket>();
+  server.on("connection", (socket) => {
+    openSockets.add(socket);
+    socket.once("close", () => openSockets.delete(socket));
+  });
+
   server.on("request", async (reqMsg, resMsg) => {
     const { req, res } = adaptHttp1(reqMsg, resMsg);
     await handleRequest(req, res);
   });
 
-  return startServerInstance(server, "http");
+  return startServerInstance(server, "http", () => {
+    for (const socket of openSockets) {
+      try {
+        socket.destroy();
+      } catch { }
+    }
+    openSockets.clear();
+  });
 };

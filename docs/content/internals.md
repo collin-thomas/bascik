@@ -20,7 +20,7 @@ The `pkg/` directory is a self-contained TypeScript project with its own `packag
 
 ## Quick Start for Contributors
 
-You need Node.js v24 or later and Yarn 4. Clone the repo and install dependencies from the root, Yarn workspaces wires everything up in one step:
+You need Node.js v22.18 or later and Yarn 4. Clone the repo and install dependencies from the root, Yarn workspaces wires everything up in one step:
 
 ```sh
 git clone https://github.com/collin-thomas/bascik.git

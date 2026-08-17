@@ -397,6 +397,21 @@ describe("recursivelyTranspile – idempotence", () => {
   });
 });
 
+describe("recursivelyTranspile – HTML processing boundaries", () => {
+  it("does not expand custom tags mentioned as string literals in <script> blocks", () => {
+    const componentList = {
+      "my-card": {
+        fileName: "components/my-card.html",
+        fileContent: "<div class='card'>Real Card</div>",
+      },
+    };
+    const page = "<script>const demo = '<my-card></my-card>';</script>";
+    const { transpiledHtmlBody } = recursivelyTranspile(page, componentList);
+    expect(transpiledHtmlBody).toContain("const demo = '<my-card></my-card>';");
+    expect(transpiledHtmlBody).not.toContain("Real Card");
+  });
+});
+
 describe("recursivelyTranspile – named slot fallback content", () => {
   it("renders named slot fallback when slot is not provided at usage site", () => {
     const componentList = {

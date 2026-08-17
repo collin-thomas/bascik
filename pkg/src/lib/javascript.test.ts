@@ -1094,6 +1094,60 @@ describe("minifyJs", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Boundary & Design Decisions Tests for JS Scoping
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("prefixElementAttribute – JS regex scoping design decision boundaries", () => {
+  it("rewrites DOM query patterns inside JS line comments and block comments", () => {
+    const c = makeComponent(
+      '<button id="btn" class="card"></button>' +
+      '<script>' +
+      '// document.querySelector("#btn");\n' +
+      '/* document.getElementsByClassName("card") */\n' +
+      '</script>',
+    );
+    const resId = prefixElementAttribute(c, "id", "test1234");
+    const resClass = prefixElementAttribute(c, "class", "test1234");
+    expect(resId.fileContent).toContain(`querySelector("#${scope("btn")}")`);
+    expect(resClass.fileContent).toContain(`getElementsByClassName("${scopeClass("card")}")`);
+  });
+
+  it("preserves dynamic variable expressions in template literals without corrupting JavaScript", () => {
+    const c = makeComponent(
+      '<div id="panel" class="card"></div>' +
+      '<script>' +
+      'const myId = "panel";\n' +
+      'document.getElementById(`${myId}`);\n' +
+      'document.querySelector(`#${myId}`);\n' +
+      '</script>',
+    );
+    const resId = prefixElementAttribute(c, "id", "test1234");
+    // Dynamic expressions inside template literals stay evaluated at runtime as variable expressions
+    expect(resId.fileContent).toContain('document.getElementById(`${myId}`)');
+    expect(resId.fileContent).toContain('document.querySelector(`#${myId}`)');
+  });
+
+  it("does not rewrite variable parameters passed to getElementById or querySelector", () => {
+    const c = makeComponent(
+      '<div id="panel"></div>' +
+      '<script>' +
+      'function find(target) { return document.getElementById(target); }\n' +
+      '</script>',
+    );
+    const resId = prefixElementAttribute(c, "id", "test1234");
+    expect(resId.fileContent).toContain('document.getElementById(target)');
+  });
+
+  it("wraps multiple script blocks in IIFEs to enforce scope isolation", () => {
+    const html = '<script>var secret = "A";</script><script>const secret = "B";</script>';
+    const c = makeComponent(html);
+    const isolated = namespaceScriptTags(c);
+    expect(isolated.fileContent).toContain('var secret = "A";');
+    expect(isolated.fileContent).toContain('(function() {');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 describe("namespaceScriptTags – property-based fuzzing", () => {
   it("does not throw and every script is wrapped in an IIFE", () => {

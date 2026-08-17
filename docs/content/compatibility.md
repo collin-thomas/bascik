@@ -88,6 +88,7 @@ Bascik rewrites DOM selector references inside component `<script>` tags to matc
 | `<script type="application/json">` (and any non-JS type) | ✓     | Left completely untouched.                                                                                                                                                                                                                                  |
 | `<script data-bascik-build>`                             | ✓     | Executed at **transpile time** as a Node.js ESM module. The script's stdout is injected in place of the tag. Runs in both dev and build modes. Use `console.log()` / `process.stdout.write()` to output HTML. Top-level `import` and `await` are supported. |
 | Literal component tags inside `<script>`, `<style>`, or `<textarea>` | ✓     | Treated as text, never resolved into components. Safe to mention tags like `<my-card>` in JSON-LD strings, inline scripts, or code examples.                                                                                                              |
+| HTML comments containing component tags                  | ✓     | HTML comments (`<!-- <my-card> -->`) are stripped during HTML minification, so commented custom tags are never expanded into components.                                                                                                                |
 
 ### DOM Selector Rewriting
 

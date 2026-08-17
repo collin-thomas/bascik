@@ -14,7 +14,7 @@
   ],
   "bin": "dist/index.js",
   "engines": {
-    "node": ">=24.17.0"
+    "node": ">=22.18.0"
   },
   "publishConfig": {
     "access": "public"

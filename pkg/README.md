@@ -32,7 +32,7 @@ Bascik acts as a build-time find-and-replace: it resolves custom HTML tags to th
 
 ## Getting Started
 
-Requires **Node.js ≥ 24**.
+Requires **Node.js ≥ 22.18**.
 
 ```sh
 yarn add @bascik/bascik

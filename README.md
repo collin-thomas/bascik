@@ -23,7 +23,7 @@ Bascik is a build tool for HTML components. It scopes and assembles reusable HTM
 
 ## Development Setup
 
-Requires **Node.js ≥ 24** and **Yarn ≥ 4** (pinned to `yarn@4.6.0` in `package.json`). The repo uses Yarn workspaces — one install at the root wires everything up.
+Requires **Node.js ≥ 22.18** and **Yarn ≥ 4** (pinned to `yarn@4.6.0` in `package.json`). The repo uses Yarn workspaces, one install at the root wires everything up.
 
 ```sh
 corepack enable

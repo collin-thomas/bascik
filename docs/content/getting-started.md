@@ -1,6 +1,6 @@
 # Getting Started
 
-Bascik requires Node.js v24+. Get up and running in under five minutes.
+Bascik requires Node.js v22.18+. Get up and running in under five minutes.
 
 ## Quick Start
 

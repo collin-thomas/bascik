@@ -240,7 +240,7 @@ Read a JSON data file and render HTML markup from it:
 
 ## Example: Fetching at Build Time
 
-Node.js 24+ includes a global `fetch`. Use it to pull remote data at build time so the result is baked into the page:
+Node.js includes a global `fetch`. Use it to pull remote data at build time so the result is baked into the page:
 
 ```html
 <script data-bascik-build>
@@ -407,7 +407,7 @@ export default defineConfig({
 
 - **No streaming:** the full stdout of the script is collected before injection. You cannot stream HTML into the page incrementally.
 - **No HMR awareness:** in dev mode Bascik watches source files. If a build script reads an external file, changes to that file won't automatically re-trigger the script. Restart the dev server to re-run.
-- **ESM only:** Build scripts run as ES modules. Use `import`/`export` syntax; `require()` is not available. Write helpers as `.ts` (preferred on Node 24), `.js`, or `.mjs`. The `.mjs` extension explicitly marks a file as ESM regardless of `package.json` settings; the "m" stands for "module." In a Bascik project with `"type": "module"` in `package.json` (the default), plain `.js` and `.ts` work identically, so `.mjs` is usually unnecessary.
+- **ESM only:** Build scripts run as ES modules. Use `import`/`export` syntax; `require()` is not available. Write helpers as `.ts` (preferred on Node 22.18+), `.js`, or `.mjs`. The `.mjs` extension explicitly marks a file as ESM regardless of `package.json` settings; the "m" stands for "module." In a Bascik project with `"type": "module"` in `package.json` (the default), plain `.js` and `.ts` work identically, so `.mjs` is usually unnecessary.
 - **Node.js only:** browser globals like `window` and `document` are not available in build scripts.
 
 For per-request server-side rendering, see [Server scripts](/server).
@@ -793,6 +793,7 @@ Bascik rewrites DOM selector references inside component `<script>` tags to matc
 | `<script type="application/json">` (and any non-JS type) | ✓     | Left completely untouched.                                                                                                                                                                                                                                  |
 | `<script data-bascik-build>`                             | ✓     | Executed at **transpile time** as a Node.js ESM module. The script's stdout is injected in place of the tag. Runs in both dev and build modes. Use `console.log()` / `process.stdout.write()` to output HTML. Top-level `import` and `await` are supported. |
 | Literal component tags inside `<script>`, `<style>`, or `<textarea>` | ✓     | Treated as text, never resolved into components. Safe to mention tags like `<my-card>` in JSON-LD strings, inline scripts, or code examples.                                                                                                              |
+| HTML comments containing component tags                  | ✓     | HTML comments (`<!-- <my-card> -->`) are stripped during HTML minification, so commented custom tags are never expanded into components.                                                                                                                |
 
 ### DOM Selector Rewriting
 
@@ -1628,7 +1629,7 @@ When you need the detailed terminal output for dev mode, build mode, static chec
 
 # Getting Started
 
-Bascik requires Node.js v24+. Get up and running in under five minutes.
+Bascik requires Node.js v22.18+. Get up and running in under five minutes.
 
 ## Quick Start
 
@@ -2977,7 +2978,7 @@ The `pkg/` directory is a self-contained TypeScript project with its own `packag
 
 ## Quick Start for Contributors
 
-You need Node.js v24 or later and Yarn 4. Clone the repo and install dependencies from the root, Yarn workspaces wires everything up in one step:
+You need Node.js v22.18 or later and Yarn 4. Clone the repo and install dependencies from the root, Yarn workspaces wires everything up in one step:
 
 ```sh
 git clone https://github.com/collin-thomas/bascik.git
@@ -3783,7 +3784,7 @@ The Markdown is converted to HTML and baked into the static output. No CMS API c
 - Rewrites DOM selector calls (`getElementById`, `querySelector`, etc.) in component scripts to match scoped attribute names.
 - Wraps component scripts in IIFEs so variables do not leak between components.
 - Outputs a `dist/` directory of plain `.html` files with no framework runtime, no client-side JS added by Bascik itself.
-- Supports TypeScript natively; `bascik.config.ts`, build scripts, and helper modules run on Node 24 with no compiler step.
+- Supports TypeScript natively; `bascik.config.ts`, build scripts, and helper modules run on Node 22.18+ with no compiler step.
 
 ## What Bascik Does Not Do
 
@@ -5336,7 +5337,7 @@ Script tags with a `type` other than `text/javascript` are left completely untou
 
 ## TypeScript in Component Scripts
 
-Bascik ships plain JavaScript to the browser, so TypeScript in component `<script>` blocks must be stripped before the output is served. Node 24 exposes `stripTypeScriptTypes` from `node:module`. Wire it into the `minifyScripts` hook and every inline script body gets its types erased automatically:
+Bascik ships plain JavaScript to the browser, so TypeScript in component `<script>` blocks must be stripped before the output is served. Node 22.18+ exposes `stripTypeScriptTypes` from `node:module`. Wire it into the `minifyScripts` hook and every inline script body gets its types erased automatically:
 
 ```ts
 // bascik.config.ts
@@ -9042,7 +9043,7 @@ In Bascik, creating a component is creating a file. Name a file `my-nav.html` an
 
 CSS inside that file scopes itself to that component. Write `.card { padding: 20px; }` and Bascik rewrites it to something like `.bascik__my-card__card { padding: 20px; }` at build time. You never manage a namespace. You never worry about a class name colliding with another component. You write CSS the way you always have, it just works.
 
-JavaScript inside that file scopes itself too. Write `document.getElementById('count')` and Bascik rewrites it to target the scoped version of that element, so two instances of the same counter on one page stay completely isolated, not through Shadow DOM or any runtime trick, but because the selectors were rewritten before the browser ever saw them. TypeScript works here as well; `bascik.config.ts`, build scripts, and helper modules all run natively on Node 24 with no compiler step.
+JavaScript inside that file scopes itself too. Write `document.getElementById('count')` and Bascik rewrites it to target the scoped version of that element, so two instances of the same counter on one page stay completely isolated, not through Shadow DOM or any runtime trick, but because the selectors were rewritten before the browser ever saw them. TypeScript works here as well; `bascik.config.ts`, build scripts, and helper modules all run natively on Node 22.18+ with no compiler step.
 
 > Create a file. Use the tag. Everything inside it, HTML, CSS, JavaScript, stays contained. No imports. No exports. No configuration. No special syntax to learn.
 

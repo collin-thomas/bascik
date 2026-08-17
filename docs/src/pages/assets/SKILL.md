@@ -110,7 +110,7 @@ bascik/
 
 The `create/` folder is intentionally separate from `pkg/`. Contributor work in this monorepo uses Yarn 4 with `yarn.lock`, while generated projects intentionally use npm and receive their own `package-lock.json`. That split keeps contributor workflows Yarn-based while preserving the standard npm onboarding flow for generated apps.
 
-The editor package in `extensions/vscode-bascik/` is intentionally separate from `pkg/`. It provides command-click component resolution and warnings for patterns that are unsupported or risky under Bascik's scoping model. The rules are generated from the compatibility matrix in `docs/content/compatibility.md` via `docs/scripts/generate-compatibility-rules.mjs`, so the editor and the published capability table stay in sync automatically instead of drifting apart.
+The editor package in `extensions/vscode-bascik/` is intentionally separate from `pkg/`. It provides command-click component resolution and warnings for patterns that are unsupported or risky under Bascik's scoping model. The rules are generated from the compatibility matrix in `docs/content/compatibility.md` via `docs/scripts/generate-compatibility-rules.ts`, so the editor and the published capability table stay in sync automatically instead of drifting apart.
 
 The generator in `create/src/index.ts` validates input, then calls `create/src/scaffold.ts` to write the project files. The generated app is not coupled to the monorepo layout. It just uses the published `@bascik/bascik` package and then runs as a normal Bascik site.
 
@@ -306,10 +306,13 @@ Define your design tokens once in a global stylesheet, then consume them inside 
 * `@counter-style`: `@counter-style name { }` declaration names are scoped; references in `list-style`, `list-style-type`, `counter(counter, name)`, and `counters(counter, sep, name)` in the same CSS file are updated to match
 * `view-transition-name`: ✓ values are scoped per component (`bascik__<comp>__vtn__<name>`); matching `::view-transition-old/new/group/image-pair()` pseudo-element references in the same file are updated; `none` and `auto` are not scoped
 * `anchor-name` / `@position-try`: `anchor-name: --name` declarations are scoped per component; matching `position-anchor: --name` references and `@position-try --name { }` at-rules in the same CSS file are updated to match; only anchors declared in the component's own CSS are scoped
+* `@scope` (native): class names in `@scope (.foo)` argument and optional `to (.clause)` are scoped normally, and class names inside the `@scope` block are scoped
 * `:nth-child(An+B of .selector)`: class names in the `of <selector>` argument are scoped (same global `(?<=\.)` pass as `:is()`, `:where()`, `:has()`); works for `:nth-child` and `:nth-last-child`
 * `@font-face`: passed through untouched; declare in a shared stylesheet to avoid duplicate injections
 * `@import`: not followed; include CSS directly in the component file instead
-* Standalone attribute selectors (e.g. `[data-state]`) are not scoped and can leak globally; anchor with a scoped class: `.card[data-state]`
+* Standalone attribute selectors (e.g. `[data-state]`): not scoped and can leak globally; anchor with a scoped class: `.card[data-state]`
+* `[id]` selectors: `[id]` and `[id="..."]` attribute selectors in CSS are stripped at compile time because they cannot be scoped without DOM wrapping
+* Compound element selectors: `.class element {}` and `.class > element {}` are scoped (element converted to class and injected on matching HTML elements); patterns with two bare elements (`div p {}`) still require a class anchor on the left
 * Element names inside `:is()`, `:where()`, and `:has()` are not converted; use class selectors inside those pseudo-classes instead
 
 ---
@@ -357,6 +360,7 @@ DOM selectors in component scripts are rewritten to match scoped names:
 * `element.className = "cls"` or `"cls1 cls2"` or `+= " cls"`: setter forms; space-separated multi-class strings fully rewritten
 * `innerHTML` / `insertAdjacentHTML` string literals, known class names inside the HTML string are rewritten
 * `removeAttribute`, `hasAttribute`, `toggleAttribute`: take attribute names (not values), no rewriting needed
+* **JS-only class discovery:** class names referenced in `classList.*`, `.className` in selector strings, `el.className = "..."`, and `setAttribute("class", "...")` are automatically discovered and added to the class scope map before JS rewriting.
 
 ### Not Rewritten (known limitations)
 * `el.id = "value"`: property setter not rewritten; use `getElementById` then work from the reference
@@ -364,9 +368,14 @@ DOM selectors in component scripts are rewritten to match scoped names:
 * Template literals: `` el.className = `box ${state}` ``, not rewritten; use `classList.add/remove` instead
 * Template-literal replacement arguments in `classList.replace(oldName, \`${dynamic}\`)` are not rewritten safely; prefer `classList.add/remove/toggle` with static class names
 * `querySelector("[name='username']")`: attribute-selector form for `name`; use `getElementsByName` instead
+* `innerHTML` / `insertAdjacentHTML` string literals: scanning only recognizes class names that appear in the HTML template.
 
 ### Scoping Model
 `id` and `name` attributes are scoped **per-instance:** each use of a component generates a different `instanceId`, guaranteeing unique DOM IDs even when the same component appears multiple times on a page. `class` attributes are scoped to the component name only (no instanceId), so all instances share the same class names and CSS deduplication emits a single `<style>` block.
+
+Form inputs using `<input name="username">` receive per-instance scoped names (e.g. `bascik__comp__a1b2c3__username`), so `new FormData(form)` keys reflect the scoped name.
+
+Literal component tags inside `<script>`, `<style>`, `<textarea>`, or HTML comments (`<!-- <my-card> -->`) are treated as text and never resolved into components.
 
 ```
 class  →  bascik__<componentName>__<originalName>
@@ -422,31 +431,30 @@ Component scripts can then use TypeScript annotations freely. Bascik's scoping p
 
 ---
 
-## 5. Dynamic Runtime Class Scoping
+## 5. Dynamic Runtime Class Scoping & JS-Only Class Discovery
 
-For class names that are only toggled at runtime (e.g. via `classList.toggle`) and never appear in a `class="…"` HTML attribute, you must register the class somewhere in the component template HTML — even on a `hidden` element. If a class only appears inside a `<script>` block, Bascik scopes it on the CSS side but does not rewrite it on the JS side, producing a silent mismatch at runtime.
+Class names referenced in JavaScript (`classList.add/remove/toggle/replace`, `.className` in selector strings, `el.className = "..."`, and `setAttribute("class", "...")`) are automatically discovered by Bascik's JS scanner and added to the component's class scope map before the JS rewrite runs.
 
-**Required pattern — hidden registration element:**
+This means dynamic modifier classes (such as `is-open` or `btn--active`) that only appear inside a `<script>` block and never in a `class="..."` HTML attribute are scoped automatically in both CSS and JS without needing any template annotations.
 
 ```html
-<section class="card">
-  <div class="is-open" hidden></div>  <!-- registers is-open for both CSS and JS scoping -->
+<section class="card" id="card">
   <p id="status">Panel closed</p>
   <button id="toggle" type="button">Toggle</button>
 </section>
 <script>
   const toggle = document.getElementById('toggle');
   const status = document.getElementById('status');
-  const card = document.querySelector('.card');
+  const card = document.getElementById('card');
 
   toggle.addEventListener('click', () => {
-    const isOpen = card.classList.toggle('is-open'); // rewritten correctly
+    const isOpen = card.classList.toggle('is-open'); // is-open is automatically discovered and scoped in CSS and JS
     status.textContent = isOpen ? 'Panel open' : 'Panel closed';
   });
 </script>
 ```
 
-The hidden `<div class="is-open">` registers `is-open` in the HTML template so both the CSS and JS scoping passes see it. Without it, `classList.toggle('is-open')` would use the un-scoped name and never match the CSS — a silent runtime mismatch.
+The only exception is `innerHTML` / `insertAdjacentHTML` HTML string scanning, which only recognizes class names that appear as static `class="..."` attributes in the component HTML template.
 
 ---
 
@@ -581,8 +589,9 @@ Components work inside `<head>` to organize metadata:
 * CWD is the project root. Relative paths resolve from there.
 * Use `console.log()` or `process.stdout.write()` to output HTML.
 * Build scripts run before component resolution, so their output can contain component tags.
+* All build scripts on a page execute concurrently via `Promise.all` (capped by a memory semaphore), and output is assembled in document order once all scripts complete.
 * On error, the script tag is replaced with an empty string and a warning is logged.
-* **Hard error:** combining `data-bascik-build` and `data-bascik-server` on the same tag throws and aborts the build. A script runs at build time or at request time — not both.
+* **Hard error:** combining `data-bascik-build` and `data-bascik-server` on the same tag throws and aborts the build. A script runs at build time or at request time, not both.
 
 ### Build Script Environment Variables
 
@@ -880,7 +889,7 @@ npm create bascik@latest my-site -y
 
 This scaffolds the project, installs dependencies, and starts the dev server in one shot. You're live at **http://localhost:8080**. Pass a different name to use it as both the directory name and the site title. Omit the name to be prompted for one (defaulting to `bascik-app`). Drop `-y` to step through the install and dev server prompts manually.
 
-The scaffold creates a complete starter site: pages, components, global CSS, `bascik.config.ts`, and a `.gitignore`. When the dev server stops, the CLI prints a reminder:
+The scaffold creates a complete starter site: pages, components, global CSS, `bascik.config.ts`, `.gitignore`, and AI assistant skills at `.github/skills/bascik/SKILL.md` and `.claude/skills/bascik/SKILL.md`. When the dev server stops, the CLI prints a reminder:
 
 ```
 To start again:  cd my-site && npm run dev
@@ -952,7 +961,7 @@ When using a reverse proxy, forward `X-Real-IP` and any auth headers so `data-ba
 Bascik's CLI is designed to provide clean, minimal, and informative terminal output.
 
 #### 1. Starting the Dev Server
-When you start the dev server, Bascik starts the HTTP server concurrently with page transpilation so the server is already bound to its port by the time the last page finishes. The `Server running at` line prints immediately after the transpilation summary with no gap between them. Pages are served from memory with no disk I/O at request time in dev mode.
+When you start the dev server, Bascik starts the HTTP server concurrently with page transpilation so the server is already bound to its port by the time the last page finishes. The `Server running at` line prints immediately after the transpilation summary with no gap between them. Pages are served from memory with no disk I/O at request time in dev mode. If port 8080 is in use, Bascik automatically tries the next available port (8081, 8082, etc.).
 
 ```terminal
 transpiled: pages/getting-started.html

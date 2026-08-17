@@ -1454,6 +1454,15 @@ describe("CSS scoping idempotence – property-based", () => {
 });
 
 describe("shieldCssStrings – perfect round-trip", () => {
+  it("protects selector-like string literals in CSS content properties from class scoping", () => {
+    const originalCss = '.box::before { content: ".box #heading"; color: red; }';
+    const { css: shielded, restore } = shieldCssStrings(originalCss);
+    // Shielded form replaces the string content with a sentinel so class/id scoping does not match .box inside quotes
+    expect(shielded).not.toContain('".box #heading"');
+    const restored = restore(shielded);
+    expect(restored).toBe(originalCss);
+  });
+
   it("restore(shielded) is always byte-identical to the original CSS", () => {
     const cssArb = fc.constantFrom(
       ".nav a { color: white; }",
