@@ -53,7 +53,7 @@ test.describe('inline-style-test page', () => {
   test('component <style> tags are extracted to <head> and deduplicated', async ({ page }) => {
     const headStyleContent = await page.locator('head style').last().textContent();
     expect(headStyleContent).not.toBeNull();
-    const matches = headStyleContent!.match(/\.bascik__inline-style__card\b/g);
+    const matches = headStyleContent!.match(/\.bascik__inline-style__card\b(?!-)/g);
     expect(matches).not.toBeNull();
     expect(matches!).toHaveLength(1);
   });
