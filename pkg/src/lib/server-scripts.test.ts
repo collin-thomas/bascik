@@ -238,6 +238,21 @@ describe("executeServerScripts", () => {
     expect(result).toBe("<ul><li>Alice</li><li>Bob</li></ul>");
   });
 
+  it("handles concurrent calls without state corruption across global regex", async () => {
+    const html1 = "<div><script data-bascik-server>console.log('1')</script></div>";
+    const html2 = "<p>no scripts</p>";
+    resolveWith("<p>server 1</p>");
+    const promises = [
+      executeServerScripts(html1, baseRequest),
+      Promise.resolve().then(() => htmlHasServerScripts(html2)),
+      executeServerScripts(html1, baseRequest),
+    ];
+    const results = await Promise.all(promises);
+    expect(results[0]).toBe("<div><p>server 1</p></div>");
+    expect(results[1]).toBe(false);
+    expect(results[2]).toBe("<div><p>server 1</p></div>");
+  });
+
   it("propagates stderr from the script to process.stderr", async () => {
     const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
     mockExecFile.mockImplementation(

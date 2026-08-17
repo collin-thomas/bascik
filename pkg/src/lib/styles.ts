@@ -100,10 +100,14 @@ export const convertCssElementSelectorsToClasses = (
   //
   // Note: this pass only applies when CSS scoping has already run (Pass 1
   // rewrites `.foo` → `.bascik__comp__foo`, making the anchor available).
-  result = result.replace(
-    /(?<=bascik__[\w-]+\s+(?:[>+~]\s+)?)[a-z1-6]+(?!__)(?=[^{};)]*\{)/g,
-    toClass,
-  );
+  let previousResult: string;
+  do {
+    previousResult = result;
+    result = result.replace(
+      /(?<=bascik__[\w-]+\s+(?:[>+~]\s+)?)[a-z1-6]+(?!__)(?=[^{};)]*\{)/g,
+      toClass,
+    );
+  } while (result !== previousResult);
 
   return { css: result, elementsConvertedClasses };
 };
@@ -133,8 +137,13 @@ export const addElementClassesInHtml = (
       // not any nested child's class (which would cause the class to land
       // on the wrong element, e.g. <code> instead of <pre>).
       const openTag = elementHtml.match(new RegExp(`^<${element}[^>]*>`, "i"))?.[0] ?? "";
-      if (openTag.includes('class="')) {
+      if (/\bclass="/.test(openTag)) {
         return elementHtml.replace(/class=".*?(?=")/i, (classStr) => {
+          return `${classStr} ${bascikClassName}`;
+        });
+      }
+      if (/\bclass='/.test(openTag)) {
+        return elementHtml.replace(/class='.*?(?=')/i, (classStr) => {
           return `${classStr} ${bascikClassName}`;
         });
       }
@@ -280,13 +289,21 @@ export const addIdClassesInHtml = (
   idsConverted.forEach(({ idName, className }) => {
     const escaped = idName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     html = html.replace(
-      new RegExp(`(<[^>]+(?<=\\s)id="(?:[^"]*__)?${escaped}"[^>]*)>`, "gi"),
+      new RegExp(`(<[^>]+(?<=\\s)id=(?:"(?:[^"]*__)?${escaped}"|'(?:[^']*__)?${escaped}')[^>]*)>`, "gi"),
       (_: string, tagContent: string) => {
         if (/\bclass="/.test(tagContent)) {
           return (
             tagContent.replace(
               /\bclass="([^"]*)"/,
               (_: string, c: string) => `class="${c} ${className}"`,
+            ) + ">"
+          );
+        }
+        if (/\bclass='/.test(tagContent)) {
+          return (
+            tagContent.replace(
+              /\bclass='([^']*)'/,
+              (_: string, c: string) => `class='${c} ${className}'`,
             ) + ">"
           );
         }

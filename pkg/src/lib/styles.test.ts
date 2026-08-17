@@ -724,6 +724,15 @@ describe("convertCssElementSelectorsToClasses – descendant after scoped class"
     expect(css).toContain(".bascik__my-comp__el__p");
     expect(elementsConvertedClasses).toContain("p");
   });
+
+  it("converts 3-level descendant element selectors: div ul li { color: red; }", () => {
+    const pre = "div ul li { color: red; }";
+    const { css, elementsConvertedClasses } = convertCssElementSelectorsToClasses(pre, "my-comp");
+    expect(css).toContain(".bascik__my-comp__el__div");
+    expect(css).toContain(".bascik__my-comp__el__ul");
+    expect(css).toContain(".bascik__my-comp__el__li");
+    expect(elementsConvertedClasses).toEqual(expect.arrayContaining(["div", "ul", "li"]));
+  });
 });
 
 // ─── addElementClassesInHtml — multiline content ─────────────────────────────
@@ -747,6 +756,22 @@ describe("addElementClassesInHtml – element with classless child", () => {
     const html = '<pre><code class="cblock-body">content</code></pre>';
     const result = addElementClassesInHtml(html, "code-block", ["pre"]);
     expect(result).not.toContain('class="cblock-body bascik__');
+  });
+});
+
+describe("single-quoted HTML attributes in styles", () => {
+  it("appends element class to existing single-quoted class attribute", () => {
+    const html = "<pre class='code'>content</pre>";
+    const result = addElementClassesInHtml(html, "my-comp", ["pre"]);
+    expect(result).toBe("<pre class='code bascik__my-comp__el__pre'>content</pre>");
+  });
+
+  it("adds id class to single-quoted id attribute", () => {
+    const html = "<div id='main-box'>content</div>";
+    const result = addIdClassesInHtml(html, [
+      { idName: "main-box", className: "bascik__my-comp__id__main-box" },
+    ]);
+    expect(result).toContain('class="bascik__my-comp__id__main-box"');
   });
 });
 

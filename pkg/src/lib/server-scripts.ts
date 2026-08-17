@@ -69,8 +69,7 @@ export interface ServerRequest {
 // double-quoted value, a single-quoted value, or any non-quote, non->
 // character — this prevents a match when "data-bascik-server" appears only
 // inside an attribute value such as title="run data-bascik-server later".
-// Flag 'g' is required for matchAll; lastIndex is reset manually before each use.
-const SERVER_SCRIPT_RE =
+const createServerScriptRegex = (): RegExp =>
   /<script\b(?:[^>"']|"[^"]*"|'[^']*')*\sdata-bascik-server\b(?:[^>"']|"[^"]*"|'[^']*')*>([\s\S]*?)<\/script>/gi;
 
 // Strip ANSI terminal color sequences so server-side HTML injection never leaks
@@ -82,8 +81,7 @@ const stripAnsiEscapeCodes = (value: string): string =>
 
 /** Return `true` if `html` contains at least one `data-bascik-server` block. */
 export const htmlHasServerScripts = (html: string): boolean => {
-  SERVER_SCRIPT_RE.lastIndex = 0;
-  return SERVER_SCRIPT_RE.test(html);
+  return createServerScriptRegex().test(html);
 };
 
 /** Default execution timeout per server-script child process (ms). */
@@ -140,8 +138,7 @@ export const executeServerScripts = async (
   request: ServerRequest,
   timeoutMs: number = DEFAULT_SCRIPT_TIMEOUT_MS,
 ): Promise<string> => {
-  SERVER_SCRIPT_RE.lastIndex = 0;
-  const matches = [...html.matchAll(SERVER_SCRIPT_RE)];
+  const matches = [...html.matchAll(createServerScriptRegex())];
   if (matches.length === 0) return html;
 
   // Same temp-dir convention as build-scripts.ts: keeps script files inside

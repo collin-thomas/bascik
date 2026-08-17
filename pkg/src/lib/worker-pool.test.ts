@@ -85,6 +85,15 @@ describe("WorkerPool", () => {
     await pool.terminate();
   });
 
+  it("rejects in-flight task and respawns worker when worker exits unexpectedly", async () => {
+    const pool = makePool(1);
+    const promise = pool.run("task-a");
+    workers[0].emit("exit", 1);
+    await expect(promise).rejects.toThrow("Worker exited with code 1");
+    expect(WorkerMock).toHaveBeenCalledTimes(2);
+    await pool.terminate();
+  });
+
   it("queues tasks when all workers are busy, dispatching in order", async () => {
     const pool = makePool(1);
     const first = pool.run("task-1");

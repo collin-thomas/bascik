@@ -158,9 +158,8 @@ export const createRequestHandler = () => {
       }
 
       // Parse the request pathname once so routing decisions are never
-      // confused by a query string (e.g. /style.css?v=1 or /search?email=a@b.com).
-      const qIdx = req.path.indexOf("?");
-      const rawPathname = qIdx === -1 ? req.path : req.path.slice(0, qIdx);
+      // confused by query strings or fragments (e.g. /style.css?v=1 or /about#section).
+      const rawPathname = req.path.split(/[?#]/)[0];
       let pathname = rawPathname;
       try {
         pathname = decodeURIComponent(rawPathname);
@@ -369,6 +368,7 @@ export const createRequestHandler = () => {
       // ── Pages with server scripts: generated fresh each request ──────────
       // Server-script output is personalized per-request; always prevent caching.
       if (page.hasServerScripts) {
+        const qIdx = req.path.indexOf("?");
         const searchParams = Object.fromEntries(
           new URLSearchParams(qIdx === -1 ? "" : req.path.slice(qIdx + 1)),
         );

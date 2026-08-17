@@ -73,6 +73,13 @@ describe("buildSitemapXml", () => {
     expect(xml).not.toContain("//blog");
   });
 
+  it("strips trailing slash from base URL to prevent double slashes in sitemap", () => {
+    const xml = buildSitemapXml("https://example.com/", ["/", "/about"]);
+    expect(xml).toContain("<loc>https://example.com/</loc>");
+    expect(xml).toContain("<loc>https://example.com/about</loc>");
+    expect(xml).not.toContain("https://example.com//");
+  });
+
   it("XML-escapes the base URL", () => {
     const xml = buildSitemapXml("https://example.com/?a=1&b=2", ["/x"]);
     expect(xml).toContain("<loc>https://example.com/?a=1&amp;b=2/x</loc>");
@@ -129,6 +136,19 @@ describe("is404Page", () => {
 
   it("does not match the root index", () => {
     expect(is404Page("pages/index.html")).toBe(false);
+  });
+});
+
+describe("buildRobotsTxt", () => {
+  it("generates robots.txt pointing to sitemap", () => {
+    const robots = buildRobotsTxt("https://example.com");
+    expect(robots).toContain("Sitemap: https://example.com/sitemap.xml");
+  });
+
+  it("strips trailing slash from base URL in robots.txt", () => {
+    const robots = buildRobotsTxt("https://example.com/");
+    expect(robots).toContain("Sitemap: https://example.com/sitemap.xml");
+    expect(robots).not.toContain("//sitemap.xml");
   });
 });
 

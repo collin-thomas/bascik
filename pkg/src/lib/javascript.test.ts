@@ -44,6 +44,16 @@ describe("prefixElementAttribute – id (existing patterns)", () => {
     const result = prefixElementAttribute(c, "id", "test1234");
     expect(result.fileContent).toContain(`getElementById("${scope("btn")}")`);
   });
+
+  it("scopes single-quoted class and id attributes in HTML", () => {
+    const c = makeComponent(
+      "<div class='card' id='btn'></div><script>document.querySelector('.card'); document.getElementById('btn')</script>",
+    );
+    let result = prefixElementAttribute(c, "class", "test1234");
+    result = prefixElementAttribute(result, "id", "test1234");
+    expect(result.fileContent).toContain(`class='${scopeClass("card")}'`);
+    expect(result.fileContent).toContain(`id='${scope("btn")}'`);
+  });
 });
 
 describe("prefixElementAttribute – class with deduplicateCss: false", () => {

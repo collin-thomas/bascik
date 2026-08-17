@@ -1392,6 +1392,20 @@ describe("startHttp2Server – query string and trailing-slash routing", () => {
     );
   });
 
+  it("strips fragment/hash before looking up a page (path#section → path)", async () => {
+    const page = makePage({ relativePagePath: "pages/about.html" });
+    mockMem.getPage.mockReturnValue(undefined);
+    mockMem.getPageExact.mockImplementation((p: string) =>
+      p === "/about" ? page : undefined,
+    );
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/about#section", "GET"));
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({ ":status": 200 }),
+    );
+  });
+
   it("looks up trailing-slash variant when exact path has no match", async () => {
     const page = makePage({ relativePagePath: "pages/blog/index.html" });
     // Exact match for "/blog" fails, but "/blog/" succeeds

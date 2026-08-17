@@ -768,6 +768,16 @@ describe("mergeAttributesOntoRoot", () => {
     expect(result).not.toContain('id="override"');
   });
 
+  it("merges attribute even if root tag contains data- or prefix matching attribute", () => {
+    const html = '<input data-name="header" data-id="123" title="a name" />';
+    const result = mergeAttributesOntoRoot(html, {
+      name: "my-input",
+      id: "my-id",
+    });
+    expect(result).toContain('name="my-input"');
+    expect(result).toContain('id="my-id"');
+  });
+
   it("returns unchanged html when attrs is empty", () => {
     const html = "<nav><a>link</a></nav>";
     expect(mergeAttributesOntoRoot(html, {})).toBe(html);
