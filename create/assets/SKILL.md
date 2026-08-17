@@ -591,6 +591,7 @@ Build scripts receive these `process.env` variables:
 | Variable | Description |
 |---|---|
 | `BASCIK_PAGE_FILE` | Absolute path of the current page file (e.g. `/project/src/pages/about.html`). Use this to generate page-specific output like canonical URLs. |
+| `BASCIK_PAGES_DIR` | Absolute path to the configured pages directory. |
 | `BASCIK_BUILD` | `"1"` during `bascik --build`, `"0"` during dev. Use to produce different output per mode. |
 | `BASCIK_SITE_URL` | The `siteUrl` from `bascik.config.ts`, e.g. `"https://example.com"`. |
 
