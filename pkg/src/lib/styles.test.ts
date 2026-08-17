@@ -1532,4 +1532,30 @@ describe("extractInlineStyles", () => {
     expect(html).toBe('<div class="card">Hello</div>');
     expect(css).toBe("");
   });
+
+  it("handles empty or whitespace-only <style> tags cleanly", () => {
+    const input = '<style></style><style>   \n   </style><div class="box">Text</div>';
+    const { html, css } = extractInlineStyles(input);
+    expect(html).toBe('<div class="box">Text</div>');
+    expect(css).toBe("");
+  });
+
+  it("handles <style> tags with arbitrary attributes (e.g. data-bascik, type)", () => {
+    const input = '<style type="text/css" data-custom="123">.item { color: red; }</style><span class="item">X</span>';
+    const { html, css } = extractInlineStyles(input);
+    expect(html).toBe('<span class="item">X</span>');
+    expect(css).toBe(".item { color: red; }");
+  });
+
+  it("does not extract literal <style> tags inside <script> or <textarea> elements", () => {
+    const input =
+      '<script>const str = "<style>.fake { color: red; }</style>";</script>' +
+      '<textarea><style>.fake2 {}</style></textarea>' +
+      '<style>.real { color: green; }</style><div class="real">Hi</div>';
+    const { html, css } = extractInlineStyles(input);
+    expect(html).toContain('const str = "<style>.fake { color: red; }</style>";');
+    expect(html).toContain('<textarea><style>.fake2 {}</style></textarea>');
+    expect(html).not.toContain('<style>.real');
+    expect(css).toBe(".real { color: green; }");
+  });
 });

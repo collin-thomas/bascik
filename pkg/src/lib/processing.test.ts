@@ -1498,3 +1498,127 @@ describe("recursivelyTranspile – non-Error thrown in component processing", ()
     errorSpy.mockRestore();
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Y: transpilePage – inline component <style> extraction & head placement
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("transpilePage – inline component <style> extraction & deduplication", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (BascikConfig as Record<string, unknown>).inlineStyles = false;
+    (BascikConfig as Record<string, unknown>).isBuild = false;
+    (BascikConfig as Record<string, unknown>).scopeAttribute = { class: true, id: true, name: true };
+  });
+
+  afterEach(() => {
+    (BascikConfig as Record<string, unknown>).scopeAttribute = { class: false, id: false, name: false };
+  });
+
+  it("extracts inline <style> from component HTML, scopes it, places in <head>, and strips from <body>", async () => {
+    const pageHtml = "<!DOCTYPE html><html><head></head><body><comp-inline></comp-inline></body></html>";
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(pageHtml);
+
+    const componentList = {
+      "comp-inline": {
+        fileName: "components/comp-inline.html",
+        fileContent: '<style>.card { color: red; }</style><div class="card">Hello</div>',
+      },
+    };
+
+    const result = await transpilePage(PAGE_PATH, componentList);
+    expect(result).not.toBeNull();
+    const html = result!.distHtml;
+
+    // Body must contain the element with scoped class and NO <style> tag
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    expect(bodyMatch).not.toBeNull();
+    const bodyContent = bodyMatch![1];
+    expect(bodyContent).not.toContain("<style>");
+    expect(bodyContent).toContain("bascik__comp-inline__card");
+
+    // Head must contain the scoped style block
+    const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+    expect(headMatch).not.toBeNull();
+    const headContent = headMatch![1];
+    expect(headContent).toContain("<style>");
+    expect(headContent).toContain(".bascik__comp-inline__card");
+  });
+
+  it("deduplicates component CSS in <head> when a component with inline <style> is used multiple times", async () => {
+    const pageHtml = "<!DOCTYPE html><html><head></head><body><comp-multi></comp-multi><comp-multi></comp-multi></body></html>";
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(pageHtml);
+
+    const componentList = {
+      "comp-multi": {
+        fileName: "components/comp-multi.html",
+        fileContent: '<style>.btn { padding: 8px; }</style><button class="btn">Click</button>',
+      },
+    };
+
+    const result = await transpilePage(PAGE_PATH, componentList);
+    expect(result).not.toBeNull();
+    const html = result!.distHtml;
+
+    // Body should have zero <style> tags
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    expect(bodyMatch![1]).not.toContain("<style>");
+
+    // Head style block should contain the selector exactly once
+    const matches = html.match(/\.bascik__comp-multi__btn/g);
+    expect(matches).not.toBeNull();
+    expect(matches!.length).toBe(1);
+  });
+
+  it("merges inline <style> tags and companion .css file for the same component", async () => {
+    const pageHtml = "<!DOCTYPE html><html><head></head><body><comp-both></comp-both></body></html>";
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(pageHtml);
+
+    const componentList = {
+      "comp-both": {
+        fileName: "components/comp-both.html",
+        fileContent: '<style>.part1 { color: green; }</style><div class="part1 part2">Merged</div>',
+        cssFileContent: ".part2 { font-weight: bold; }",
+      },
+    };
+
+    const result = await transpilePage(PAGE_PATH, componentList);
+    expect(result).not.toBeNull();
+    const html = result!.distHtml;
+
+    // Head must contain both scoped rules
+    expect(html).toContain(".bascik__comp-both__part1");
+    expect(html).toContain(".bascik__comp-both__part2");
+
+    // Body must not contain any <style> tags
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    expect(bodyMatch![1]).not.toContain("<style>");
+  });
+
+  it("preserves literal <style> tags inside code blocks in components", async () => {
+    const pageHtml = "<!DOCTYPE html><html><head></head><body><comp-code-demo></comp-code-demo></body></html>";
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(pageHtml);
+
+    const componentList = {
+      "comp-code-demo": {
+        fileName: "components/comp-code-demo.html",
+        fileContent:
+          '<style>.real-style { border: 1px solid; }</style>' +
+          '<div class="real-style">' +
+          '<pre><code>&lt;style&gt;.demo { color: blue; }&lt;/style&gt;</code></pre>' +
+          '</div>',
+      },
+    };
+
+    const result = await transpilePage(PAGE_PATH, componentList);
+    expect(result).not.toBeNull();
+    const html = result!.distHtml;
+
+    // Head gets the real component style
+    expect(html).toContain(".bascik__comp-code-demo__real-style");
+
+    // Body preserves the code block
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    expect(bodyMatch![1]).toContain("<pre><code>&lt;style&gt;.demo { color: blue; }&lt;/style&gt;</code></pre>");
+  });
+});
