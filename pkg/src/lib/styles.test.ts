@@ -21,6 +21,7 @@ import {
   deduplicateCss,
   shieldCssStrings,
   getComponentCss,
+  extractInlineStyles,
 } from "./styles.js";
 
 const css = `
@@ -1489,5 +1490,83 @@ describe("shieldCssStrings – perfect round-trip", () => {
       }),
       { numRuns: 200 },
     );
+  });
+});
+
+describe("extractInlineStyles", () => {
+  it("extracts inline <style> tags and strips them from HTML", () => {
+    const input = '<style>.badge { color: red; }</style><span class="badge">Badge</span>';
+    const { html, css } = extractInlineStyles(input);
+    expect(html).toBe('<span class="badge">Badge</span>');
+    expect(css).toBe(".badge { color: red; }");
+  });
+
+  it("extracts multiple <style> tags and concatenates their CSS", () => {
+    const input =
+      '<style>.badge { color: red; }</style><style>.dot { width: 4px; }</style><span class="badge">Badge</span>';
+    const { html, css } = extractInlineStyles(input);
+    expect(html).toBe('<span class="badge">Badge</span>');
+    expect(css).toBe(".badge { color: red; }\n.dot { width: 4px; }");
+  });
+
+  it("does not extract literal <style> tags inside <code> or <pre> elements", () => {
+    const input =
+      '<pre><code>&lt;style&gt;.foo { color: blue; }&lt;/style&gt;</code></pre>' +
+      '<style>.bar { color: green; }</style><div class="bar">Text</div>';
+    const { html, css } = extractInlineStyles(input);
+    expect(html).toContain('<pre><code>&lt;style&gt;.foo { color: blue; }&lt;/style&gt;</code></pre>');
+    expect(html).not.toContain('<style>.bar');
+    expect(css).toBe(".bar { color: green; }");
+  });
+
+  it("wraps CSS in @media when <style media='...'> is present", () => {
+    const input = '<style media="(max-width: 600px)">.box { display: block; }</style><div class="box"></div>';
+    const { html, css } = extractInlineStyles(input);
+    expect(html).toBe('<div class="box"></div>');
+    expect(css).toBe("@media (max-width: 600px) {\n.box { display: block; }\n}");
+  });
+
+  it("returns unchanged HTML and empty CSS when no <style> tags are present", () => {
+    const input = '<div class="card">Hello</div>';
+    const { html, css } = extractInlineStyles(input);
+    expect(html).toBe('<div class="card">Hello</div>');
+    expect(css).toBe("");
+  });
+
+  it("handles empty or whitespace-only <style> tags cleanly", () => {
+    const input = '<style></style><style>   \n   </style><div class="box">Text</div>';
+    const { html, css } = extractInlineStyles(input);
+    expect(html).toBe('<div class="box">Text</div>');
+    expect(css).toBe("");
+  });
+
+  it("handles <style> tags with arbitrary attributes (e.g. data-bascik, type)", () => {
+    const input = '<style type="text/css" data-custom="123">.item { color: red; }</style><span class="item">X</span>';
+    const { html, css } = extractInlineStyles(input);
+    expect(html).toBe('<span class="item">X</span>');
+    expect(css).toBe(".item { color: red; }");
+  });
+
+  it("does not extract literal <style> tags inside <script> or <textarea> elements", () => {
+    const input =
+      '<script>const str = "<style>.fake { color: red; }</style>";</script>' +
+      '<textarea><style>.fake2 {}</style></textarea>' +
+      '<style>.real { color: green; }</style><div class="real">Hi</div>';
+    const { html, css } = extractInlineStyles(input);
+    expect(html).toContain('const str = "<style>.fake { color: red; }</style>";');
+    expect(html).toContain('<textarea><style>.fake2 {}</style></textarea>');
+    expect(html).not.toContain('<style>.real');
+    expect(css).toBe(".real { color: green; }");
+  });
+
+  it("extracts and combines multiple <style> tags from HTML", () => {
+    const input =
+      '<style>.primary { color: red; }</style>' +
+      '<div class="primary">Content</div>' +
+      '<style media="(min-width: 768px)">.primary { color: blue; }</style>';
+    const { html, css } = extractInlineStyles(input);
+    expect(html).toBe('<div class="primary">Content</div>');
+    expect(css).toContain(".primary { color: red; }");
+    expect(css).toContain("@media (min-width: 768px) {\n.primary { color: blue; }\n}");
   });
 });

@@ -45,11 +45,17 @@ test.describe('inline-style-test page', () => {
     await page.goto('/inline-style-test');
   });
 
-  test('inline style is scoped: no <style> tag inside the card div itself', async ({ page }) => {
-    // The <style> block precedes the .card div as a sibling; it should not be
-    // a descendant of the .card element.
-    const { a } = getInstances(page);
-    await expect(a.locator('style')).toHaveCount(0);
+  test('no component <style> tags remain in <body>', async ({ page }) => {
+    const bodyStyles = page.locator('body style');
+    await expect(bodyStyles).toHaveCount(0);
+  });
+
+  test('component <style> tags are extracted to <head> and deduplicated', async ({ page }) => {
+    const headStyleContent = await page.locator('head style').last().textContent();
+    expect(headStyleContent).not.toBeNull();
+    const matches = headStyleContent!.match(/\.bascik__inline-style__card\b(?!-)/g);
+    expect(matches).not.toBeNull();
+    expect(matches!).toHaveLength(1);
   });
 
   test('card has correct background color', async ({ page }) => {

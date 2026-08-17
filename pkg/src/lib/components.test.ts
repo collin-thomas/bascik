@@ -833,6 +833,24 @@ describe("mergeAttributesOntoRoot", () => {
     const html = "<nav><a>link</a></nav>";
     expect(mergeAttributesOntoRoot(html, {})).toBe(html);
   });
+
+  it("merges attributes onto the first element when multiple root elements exist", () => {
+    const html = '<header class="hdr">Header</header><main>Content</main>';
+    const result = mergeAttributesOntoRoot(html, { class: "custom", "data-test": "root" });
+    expect(result).toBe('<header class="hdr custom" data-test="root">Header</header><main>Content</main>');
+  });
+
+  it("skips leading HTML comments and whitespace to target the first root element", () => {
+    const html = '<!-- comment -->\n  <div class="card">Card</div>\n<aside>Sidebar</aside>';
+    const result = mergeAttributesOntoRoot(html, { class: "active" });
+    expect(result).toBe('<!-- comment -->\n  <div class="card active">Card</div>\n<aside>Sidebar</aside>');
+  });
+
+  it("skips leading <script> and <style> blocks to target the first root HTML element", () => {
+    const html = '<script>console.log(1);</script>\n  <div class="card">Card</div>\n<aside>Sidebar</aside>';
+    const result = mergeAttributesOntoRoot(html, { class: "active" });
+    expect(result).toBe('<script>console.log(1);</script>\n  <div class="card active">Card</div>\n<aside>Sidebar</aside>');
+  });
 });
 
 describe("getTag – multiline and complex attributes", () => {

@@ -138,10 +138,10 @@ function _transformMd(
     html = html.replace(/^<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>\n?/, '');
   }
 
-  // Add id attributes to h2 headings and wrap text in a copyable anchor link.
-  html = html.replace(/<h2>(.*?)<\/h2>/g, (_, text) => {
+  // Add id attributes to h2 and h3 headings and wrap text in a copyable anchor link.
+  html = html.replace(/<h([23])>(.*?)<\/h\1>/g, (_, level, text) => {
     const slug = text.replace(/<[^>]+>/g, '').toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
-    return `<h2 id="${slug}"><a class="anchor-link" href="#${slug}">${text}</a></h2>`;
+    return `<h${level} id="${slug}"><a class="anchor-link" href="#${slug}">${text}</a></h${level}>`;
   });
 
   // Convert <pre><code class="language-X"> → <code-block data-bascik-prop-lang="X">

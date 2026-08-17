@@ -88,6 +88,7 @@ import {
   scopeCounterStyleNames,
   scopeAnchorNames,
   scopeInlineStyleTags,
+  extractInlineStyles,
   shieldCssStrings,
 } from "./styles.js";
 import type { BascikComponent } from "./types.js";
@@ -448,6 +449,20 @@ export const prefixElementAttribute = (
 
   // CSS
   if (attribute === "class") {
+    // Extract any inline <style> tags present in component.fileContent (e.g.
+    // for in-memory or dynamically constructed components) into cssFileContent
+    if (component.fileContent && component.fileContent.includes("<style")) {
+      const { html: cleanedHtml, css: inlineCss } = extractInlineStyles(
+        component.fileContent,
+      );
+      component.fileContent = cleanedHtml;
+      if (inlineCss) {
+        component.cssFileContent = component.cssFileContent
+          ? `${component.cssFileContent}\n${inlineCss}`
+          : inlineCss;
+      }
+    }
+
     // Collect element names and id names converted to classes from all CSS
     // sources so we can inject the generated classes into the HTML in one pass.
     let allElementClasses: string[] = [];
@@ -579,139 +594,5 @@ export const namespaceScriptTags = (
 
 // ─── Built-in JS minifier ────────────────────────────────────────────────────
 
-/**
- * Strip block/line comments and collapse whitespace from a JS string.
- * String literals and template literals are copied verbatim so their content
- * is never altered.  This is the default minifier used when
- * `minifyScripts: true` is set in bascik.config.ts.
- *
- * For production-quality output (dead-code elimination, identifier mangling,
- * etc.) configure `minifyScripts` with a custom function backed by esbuild,
- * terser, or similar instead.
- */
-export const minifyJs = (js: string): string => {
-  // Collect segments: code regions get whitespace collapsed; literal regions
-  // (strings, template literals) are preserved exactly so their content is
-  // never altered by the post-processing regex passes.
-  type Segment = { literal: boolean; text: string };
-  const segments: Segment[] = [];
-  let codeAccum = "";
-  let i = 0;
-  const len = js.length;
+export { minifyJs } from "./js-minifier.js";
 
-  const flushCode = (): void => {
-    if (codeAccum) {
-      segments.push({ literal: false, text: codeAccum });
-      codeAccum = "";
-    }
-  };
-
-  while (i < len) {
-    const ch = js[i];
-
-    // Quoted string literals — flush code, collect literal verbatim
-    if (ch === '"' || ch === "'") {
-      flushCode();
-      const quote = ch;
-      let lit = ch;
-      i++;
-      while (i < len) {
-        const c = js[i];
-        if (c === "\\" && i + 1 < len) { lit += c + js[i + 1]; i += 2; continue; }
-        lit += c;
-        i++;
-        if (c === quote) break;
-      }
-      segments.push({ literal: true, text: lit });
-      continue;
-    }
-
-    // Template literals — flush code, collect literal verbatim
-    if (ch === "`") {
-      flushCode();
-      let lit = "`";
-      i++;
-      while (i < len) {
-        const c = js[i];
-        if (c === "\\" && i + 1 < len) { lit += c + js[i + 1]; i += 2; continue; }
-        lit += c;
-        i++;
-        if (c === "`") break;
-      }
-      segments.push({ literal: true, text: lit });
-      continue;
-    }
-
-    // Potential comment, division, or regex literal — all start with "/".
-    if (ch === "/") {
-      const next = js[i + 1];
-
-      // A regex literal can only appear where an *expression* is expected —
-      // i.e. the previous significant token is not an identifier, number,
-      // string-ending quote, `)`, `]`, or `}`.  Division, by contrast, always
-      // follows a value.  Use that to disambiguate `/` before deciding whether
-      // `//` or `/*` starts a comment.
-      const prevSignificant = codeAccum.replace(/\s+$/, "").slice(-1);
-      // `//` and `/*` can never open a regex literal — only a lone `/` can.
-      const couldBeRegex =
-        next !== "/" && next !== "*" && !/[\w)\]}"'`$]/.test(prevSignificant);
-
-      if (couldBeRegex) {
-        // Try to read a regex literal: /pattern/flags, honouring escapes and
-        // character classes so `/` inside `[/]` or after `\` doesn't end it.
-        let j = i + 1;
-        let inClass = false;
-        let closed = false;
-        while (j < len) {
-          const c = js[j];
-          if (c === "\\") { j += 2; continue; }
-          if (c === "[") inClass = true;
-          else if (c === "]") inClass = false;
-          else if (c === "/" && !inClass) { closed = true; j++; break; }
-          else if (c === "\n") break; // unterminated — not a regex
-          j++;
-        }
-        if (closed) {
-          // Consume flags
-          while (j < len && /[a-z]/i.test(js[j])) j++;
-          flushCode();
-          segments.push({ literal: true, text: js.slice(i, j) });
-          i = j;
-          continue;
-        }
-        // Not a valid regex — fall through and treat as division/operators.
-      }
-
-      if (next === "*") {
-        // Block comment: skip to */
-        i += 2;
-        while (i + 1 < len && !(js[i] === "*" && js[i + 1] === "/")) i++;
-        i += 2;
-        // Preserve a token boundary
-        if (codeAccum.length > 0 && !/\s$/.test(codeAccum)) codeAccum += " ";
-        continue;
-      }
-      if (next === "/") {
-        // Line comment: skip to end of line (the newline itself is kept)
-        i += 2;
-        while (i < len && js[i] !== "\n") i++;
-        continue;
-      }
-    }
-
-    codeAccum += ch;
-    i++;
-  }
-  flushCode();
-
-  return segments
-    .map(({ literal, text }) => {
-      if (literal) return text;
-      return text
-        .replace(/[ \t]+/g, " ")  // collapse runs of spaces/tabs
-        .replace(/ *\n */g, "\n") // trim spaces around newlines
-        .replace(/\n{2,}/g, "\n"); // collapse multiple blank lines
-    })
-    .join("")
-    .trim();
-};

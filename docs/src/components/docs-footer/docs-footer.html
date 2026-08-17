@@ -34,7 +34,7 @@
   </div>
 </footer>
 <script>
-  document.querySelectorAll('h2 .anchor-link').forEach(function (a) {
+  document.querySelectorAll('h2 .anchor-link, h3 .anchor-link').forEach(function (a) {
     a.addEventListener('click', function (e) {
       // Preserve standard link behaviors (new tab/window, context menu, etc.)
       if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;

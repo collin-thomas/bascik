@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { getComponentCss } from "./styles.js";
+import { getComponentCss, extractInlineStyles } from "./styles.js";
 import { deepReadDirFlat } from "./file-system.js";
 import { BascikConfig } from "./config.js";
 import { executeBuildScripts } from "./build-scripts.js";
@@ -160,13 +160,15 @@ export const listComponents = async (): Promise<ComponentList> => {
         // stays in its original position (minifyHtml moves <script> tags).
         const rawContent = fileContent.toString();
         const resolvedContent = await executeBuildScripts(rawContent, fileName);
+        const { html: cleanedContent, css: inlineCss } = extractInlineStyles(resolvedContent);
+        const combinedCss = [cssFileContent, inlineCss].filter(Boolean).join("\n");
         const component: BascikComponent = {
           name: componentName,
           fileName,
-          fileContent: minifyHtml(resolvedContent),
+          fileContent: minifyHtml(cleanedContent),
         };
-        if (cssFileContent) {
-          component.cssFileContent = cssFileContent;
+        if (combinedCss) {
+          component.cssFileContent = combinedCss;
         }
         return component;
       } catch (e) {
@@ -735,8 +737,8 @@ export const mergeAttributesOntoRoot = (
 ): string => {
   if (!Object.keys(attrs).length) return html;
   return html.replace(
-    /^(<[\w-]+)((?:\s[^>]*?)?)(\s*\/?>)/,
-    (_match: string, tagName: string, existing: string, close: string) => {
+    /^((?:\s*(?:<!--[\s\S]*?-->|<(?:script|style)\b(?:[^>"']|"[^"]*"|'[^']*')*>[\s\S]*?<\/(?:script|style)\s*>))*\s*)(<[a-zA-Z][\w-]*)((?:\s[^>]*?)?)(\s*\/?>)/i,
+    (_match: string, leading: string, tagName: string, existing: string, close: string) => {
       let attrStr = existing || "";
       const existingNames = new Set<string>();
       const attrRegex = /\s+([\w:-]+)(?:=("[^"]*"|'[^']*'|[^\s>]+))?/g;
@@ -764,7 +766,7 @@ export const mergeAttributesOntoRoot = (
           attrStr += ` ${name}="${value}"`;
         }
       }
-      return `${tagName}${attrStr}${close}`;
+      return `${leading}${tagName}${attrStr}${close}`;
     },
   );
 };

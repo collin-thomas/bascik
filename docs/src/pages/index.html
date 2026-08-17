@@ -46,7 +46,7 @@
     "@type": "SoftwareApplication",
     "name": "Bascik",
     "url": "https://bascik.dev",
-    "description": "A build tool for HTML components with automatic scoped CSS and JS. No runtime. No framework.",
+    "description": "A build tool for HTML components with automatic scoped CSS and JS. Zero runtime dependencies. No framework.",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "macOS, Windows, Linux",
     "offers": {
@@ -568,8 +568,8 @@
         <h1 class="hero-title">HTML components.<br><span class="text-accent">Zero runtime.</span></h1>
         <p class="hero-desc">Sometimes you just want to reuse a nav on every page without adopting a whole framework.
           Bascik is a build tool that solves exactly that. Create an HTML file and the filename becomes a tag you can
-          drop into any page. CSS and JS inside the file are scoped automatically, and the output is plain HTML with
-          zero JavaScript added.</p>
+          drop into any page. CSS and JS inside the file are scoped automatically, with zero runtime dependencies and
+          zero framework overhead.</p>
         <div class="hero-actions">
           <a href="/getting-started" class="btn btn-primary">Get Started →</a>
           <a href="/why-bascik" class="btn btn-ghost">Why Bascik</a>
@@ -579,7 +579,7 @@
         <pre
           class="install-command hero-quickstart"><code>npm create bascik@latest</code><button class="install-copy-btn" aria-label="Copy" title="Copy"><svg class="copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg class="copy-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg></button></pre>
         <ul class="hero-stats">
-          <li><strong>0 kB</strong> JS added to your output</li>
+          <li><strong>0 kB</strong> framework JS added</li>
           <li><a href="/performance"><strong>Lighthouse 100s</strong> out of the box</a></li>
           <li><strong>Nothing new</strong> to learn. Just HTML, CSS, JS</li>
         </ul>
@@ -761,8 +761,10 @@
           <div class="pillar">
             <p class="pillar-label">No JS added</p>
             <h3>Zero runtime footprint</h3>
-            <p>Bascik adds no JavaScript to your output. Every script in <code>dist/</code> was written by you. What you
-              ship is exactly what you wrote.</p>
+            <p>Bascik has zero runtime dependencies and adds no framework code to your output. Every script in
+              <code>dist/</code> was written by you. What you
+              ship is 100% plain HTML, CSS, and JS.
+            </p>
           </div>
           <div class="pillar">
             <p class="pillar-label">Build-time scoping</p>

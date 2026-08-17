@@ -6,6 +6,8 @@ Any attribute on a component usage tag that is not a Bascik-specific attribute (
 
 When Bascik transpiles a component, it reads the usage tag, extracts any inheritable attributes, and merges them onto the first element of the compiled output. The component template and the usage attributes are combined, classes are appended, all other attributes are forwarded:
 
+If a component template contains multiple root elements (for example, a heading followed by a paragraph), inherited attributes are merged onto the **first** root HTML element in the component template.
+
 The demo above shows the usage tag and component template separately under Source, then combines them under Output → HTML.
 
 ## Class Merging

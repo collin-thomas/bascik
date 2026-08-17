@@ -7,9 +7,15 @@ Scoped styles namespace a component's CSS at build time, keeping its selectors a
 You can define component CSS in either of these places:
 
 - a paired `.css` file next to the component HTML
-- an inline `<style>` tag inside the component HTML
+- one or more inline `<style>` tags inside the component HTML
 
-Use paired files for most components so the HTML and CSS stay easy to scan. Inline `<style>` tags are still fully supported when keeping a small component in one file is more convenient.
+Both approaches are fully equivalent in functionality. At build time, Bascik extracts inline `<style>` tags from component HTML files, applies the full scoping pipeline, deduplicates the CSS across all instances on the page, and injects the compiled styles into the page `<head>`. Component markup in the `<body>` stays clean with no `<style>` tags left behind.
+
+If a component contains multiple `<style>` tags or both a paired `.css` file and inline `<style>` tags, Bascik combines all stylesheets before scoping.
+
+> **Readability & Maintainability:** While Bascik supports multiple `<style>` tags in a single component file, using multiple `<style>` tags (or mixing an inline `<style>` tag with a companion `.css` file) is not recommended for readability and maintainability. Choose one stylesheet pattern per component.
+
+Use paired files for most components so the HTML and CSS stay easy to scan. Inline `<style>` tags are convenient when keeping a small component in a single file is preferred.
 
 ## CSS File Pairing
 
@@ -262,7 +268,56 @@ export default {
 };
 ```
 
-With `deduplicateCss: false`, class selectors behave like `id` selectors, scoped per instance, but Bascik emits a separate `<style>` block for every component instance. Use the `id`-based pattern above instead whenever possible; it works with the default settings and avoids extra style blocks.
+### `deduplicateCss` Trade-Off Comparison
+
+Setting `deduplicateCss` in `bascik.config.ts` controls whether class names are scoped per component type or per component instance.
+
+| Feature / Aspect | `deduplicateCss: true` (Default) | `deduplicateCss: false` |
+|---|---|---|
+| **Class Scoping Scheme** | `bascik__card__wrapper` (shared per component) | `bascik__card__a1b2c3d4__wrapper` (unique per instance) |
+| **CSS Payload** | Single `<style>` block per component type, zero CSS duplication | Multiplied `<style>` blocks (one block per component instance) |
+| **`querySelector('.cls')` Behavior** | Targets the first instance on the page | Targets the matching element inside that specific instance |
+| **Instance Isolation Model** | Use `id` + `getElementById()` for per-instance script isolation | Class selectors inherently isolate per instance |
+| **Best For** | Virtually all production sites and design systems | Migrating legacy or third-party code that relies on class queries |
+
+#### Side-by-Side Code Example
+
+Given two instances of `<my-card>` on the same page:
+
+```html
+<!-- Input Page HTML -->
+<my-card></my-card>
+<my-card></my-card>
+```
+
+**Output with `deduplicateCss: true` (Default, Shared Class Scope):**
+
+```html
+<!-- HTML Output: Shared classes, unique IDs -->
+<div class="bascik__my-card__wrapper" id="bascik__my-card__a1b2c3d4__root">...</div>
+<div class="bascik__my-card__wrapper" id="bascik__my-card__e5f6g7h8__root">...</div>
+
+<!-- CSS Output: Emitted once in <head> -->
+<style>
+  .bascik__my-card__wrapper { padding: 1rem; }
+</style>
+```
+
+**Output with `deduplicateCss: false` (Per-Instance Class Scope):**
+
+```html
+<!-- HTML Output: Unique classes per instance -->
+<div class="bascik__my-card__a1b2c3d4__wrapper" id="bascik__my-card__a1b2c3d4__root">...</div>
+<div class="bascik__my-card__e5f6g7h8__wrapper" id="bascik__my-card__e5f6g7h8__root">...</div>
+
+<!-- CSS Output: Emitted for every instance -->
+<style>
+  .bascik__my-card__a1b2c3d4__wrapper { padding: 1rem; }
+  .bascik__my-card__e5f6g7h8__wrapper { padding: 1rem; }
+</style>
+```
+
+Using the `id`-based pattern with `getElementById()` is recommended because it gives you per-instance JS isolation while keeping `deduplicateCss: true` for minimal CSS payload.
 
 ## How Scoping Works
 

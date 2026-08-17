@@ -12,7 +12,7 @@ Bascik makes this possible by injecting three environment variables into every `
 
 A build script reads these and computes whatever it needs, without the page knowing anything about the logic.
 
-## Canonical URL: The Simplest Example
+## Canonical URL Example
 
 A canonical URL tag tells search engines which URL is the authoritative version of a page. Every docs page on this site uses a shared `scripts/canonical.ts` that derives the URL from `BASCIK_PAGE_FILE`:
 

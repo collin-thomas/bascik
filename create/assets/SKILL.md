@@ -17,7 +17,7 @@ This file contains the **complete, centralized documentation and development ski
 * **Scopes CSS class names, element selectors, `@keyframes`, and CSS custom properties** per component so they never collide.
 * **Rewrites DOM selector calls** (`getElementById`, `querySelector`, etc.) in component scripts to match scoped attribute names.
 * **Wraps component scripts in IIFEs** so variables do not leak between components.
-* **Outputs a `dist/` directory of plain `.html` files:** no framework runtime, no client-side JS added by Bascik itself.
+* **Outputs a `dist/` directory of plain `.html` files** with zero runtime dependencies and no client-side JS added by Bascik itself.
 
 ### What Bascik Does NOT Do
 * It is not a JavaScript framework. There is no virtual DOM, no reactive state, no client-side routing.
@@ -189,13 +189,18 @@ src/components/
     alert-box.css
 ```
 
+### Multiple Root Elements
+Unlike other frameworks that require a single wrapper element or fragment, Bascik component templates support multiple top-level HTML elements in a single `.html` file. All root elements are inserted in order. If non-`data-bascik-*` attributes are passed on a usage tag, Bascik merges them onto the first root HTML element.
+
 **No restart needed.** The dev server watches the components directory. Drop a new `.html` (or paired `.css`) file in and all pages that use that tag are automatically re-transpiled and reloaded with no server restart required.
 
 ---
 
 ## 3. Scoped CSS
 
-Scoped CSS can live in either a paired `.css` file or an inline `<style>` tag inside component HTML. Both go through the same scoping pipeline.
+Scoped CSS can live in a paired `.css` file or one or more inline `<style>` tags inside component HTML. Both go through the same scoping pipeline.
+
+At build time, Bascik extracts all inline `<style>` blocks, combines them with any companion `.css` file, scopes them, and injects them into the document `<head>`. Using multiple `<style>` tags (or mixing them with a companion `.css` file) is supported but not recommended for readability and maintainability. Choose a single stylesheet pattern per component.
 
 Pair a `.css` file alongside the HTML in a same-named directory:
 
@@ -383,6 +388,15 @@ id     →  bascik__<componentName>__<instanceId>__<originalName>
 name   →  bascik__<componentName>__<instanceId>__<originalName>
 ```
 
+### Multiple Script Blocks
+Component templates can contain multiple `<script>` tags. Bascik processes each script tag according to its attributes:
+* **Client scripts:** Standard JavaScript blocks are each wrapped in an isolated IIFE `(function() { ... })();` when `scopeScriptBlocks` is enabled. If you include multiple client `<script>` tags in a single component, each runs in its own IIFE so local variables do not collide.
+* **Build scripts (`<script data-bascik-build>`):** Executed during build or dev time in Node.js to generate dynamic markup.
+* **Server scripts (`<script data-bascik-server>`):** Executed on the server at request time in Node.js.
+* **Data scripts (e.g. `type="application/ld+json"`):** Left untouched without IIFE wrapping or JavaScript minification.
+
+Recommended Pattern: Keeping separate, unrelated concerns in dedicated client `<script>` tags (like form validation and UI animation) is recommended for code readability and maintainability.
+
 ### Multiple Instances
 Using a component more than once works automatically, each use gets a different `instanceId`, so IDs never collide and each instance's scripts reference only its own elements.
 
@@ -405,13 +419,58 @@ Because class names are scoped to the component **name** (not per-instance), `qu
 </script>
 ```
 
-**Escape hatch:** Set `deduplicateCss: false` in `bascik.config.ts` to switch to per-instance class scoping. By default, all instances of the same component share identical scoped class names so Bascik emits one shared `<style>` block per component. With `deduplicateCss: false`, class selectors become unique per instance (like IDs), but Bascik emits a separate `<style>` block for each component instance. For most components, using an `id` to anchor the script is simpler.
+**Escape hatch:** Set `deduplicateCss: false` in `bascik.config.ts` to switch to per-instance class scoping. By default, all instances of the same component share identical scoped class names so Bascik emits one shared `<style>` block per component. With `deduplicateCss: false`, class selectors become unique per instance (like IDs), but Bascik emits a separate `<style>` block for each component instance.
 
-```js
-export default {
-  deduplicateCss: false, // each instance gets unique class names, one <style> per instance
-};
+### `deduplicateCss` Trade-Off Comparison
+
+Setting `deduplicateCss` in `bascik.config.ts` controls whether class names are scoped per component type or per component instance.
+
+| Feature or Aspect | `deduplicateCss: true` (Default) | `deduplicateCss: false` |
+|---|---|---|
+| **Class Scoping Scheme** | `bascik__card__wrapper` (shared per component) | `bascik__card__a1b2c3d4__wrapper` (unique per instance) |
+| **CSS Payload** | Single `<style>` block per component type, zero CSS duplication | Multiplied `<style>` blocks (one block per component instance) |
+| **`querySelector('.cls')` Behavior** | Targets the first instance on the page | Targets the matching element inside that specific instance |
+| **Instance Isolation Model** | Use `id` and `getElementById()` for per-instance script isolation | Class selectors inherently isolate per instance |
+| **Best For** | Virtually all production sites and design systems | Migrating legacy or third-party code that relies on class queries |
+
+#### Side-by-Side Code Example
+
+Given two instances of `<my-card>` on the same page:
+
+```html
+<!-- Input Page HTML -->
+<my-card></my-card>
+<my-card></my-card>
 ```
+
+**Output with `deduplicateCss: true` (Default, Shared Class Scope):**
+
+```html
+<!-- HTML Output: Shared classes, unique IDs -->
+<div class="bascik__my-card__wrapper" id="bascik__my-card__a1b2c3d4__root">...</div>
+<div class="bascik__my-card__wrapper" id="bascik__my-card__e5f6g7h8__root">...</div>
+
+<!-- CSS Output: Emitted once in <head> -->
+<style>
+  .bascik__my-card__wrapper { padding: 1rem; }
+</style>
+```
+
+**Output with `deduplicateCss: false` (Per-Instance Class Scope):**
+
+```html
+<!-- HTML Output: Unique classes per instance -->
+<div class="bascik__my-card__a1b2c3d4__wrapper" id="bascik__my-card__a1b2c3d4__root">...</div>
+<div class="bascik__my-card__e5f6g7h8__wrapper" id="bascik__my-card__e5f6g7h8__root">...</div>
+
+<!-- CSS Output: Emitted for every instance -->
+<style>
+  .bascik__my-card__a1b2c3d4__wrapper { padding: 1rem; }
+  .bascik__my-card__e5f6g7h8__wrapper { padding: 1rem; }
+</style>
+```
+
+Using the `id`-based pattern with `getElementById()` is recommended because it gives you per-instance JS isolation while keeping `deduplicateCss: true` for minimal CSS payload.
 
 ### TypeScript in Component Scripts
 
@@ -535,6 +594,8 @@ The `data-bascik-prop-*` marker is removed from compiled output, while the targe
 
 ### Attribute Inheritance
 Non-`data-bascik-*` attributes on a usage tag are merged onto the component's root element when `inheritAttributes` is `true` (the default). `id` is forwarded too unless the template root already defines its own `id`. Class names are appended, not replaced.
+
+If a component template contains multiple root elements, inherited attributes are merged onto the first root HTML element in the component template.
 
 ```html
 <!-- usage — attributes here are forwarded onto the component root -->

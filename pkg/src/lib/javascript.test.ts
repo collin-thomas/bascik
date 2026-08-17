@@ -518,13 +518,14 @@ describe("prefixElementAttribute – inline <style> tag scoping", () => {
       '<style>.btn { color: red; }</style><button class="btn">Click</button>',
     );
     const result = prefixElementAttribute(c, "class", "test1234");
-    expect(result.fileContent).toContain(`.${scopeClass("btn")}`);
+    expect(result.cssFileContent).toContain(`.${scopeClass("btn")}`);
+    expect(result.fileContent).toContain(`class="${scopeClass("btn")}"`);
   });
 
   it("scopes element selectors in an inline <style> tag and injects class", () => {
     const c = makeComponent("<style>p { color: red; }</style><p>hello</p>");
     const result = prefixElementAttribute(c, "class", "test1234");
-    expect(result.fileContent).toContain("bascik__my-comp__el__p");
+    expect(result.cssFileContent).toContain("bascik__my-comp__el__p");
     // Class should be injected into the <p> element
     expect(result.fileContent).toMatch(
       /<p\s[^>]*class="[^"]*bascik__my-comp__el__p/,
@@ -536,7 +537,7 @@ describe("prefixElementAttribute – inline <style> tag scoping", () => {
       "<style>\n  p { color: red; }\n</style><p>hello</p>",
     );
     const result = prefixElementAttribute(c, "class", "test1234");
-    expect(result.fileContent).toContain("bascik__my-comp__el__p");
+    expect(result.cssFileContent).toContain("bascik__my-comp__el__p");
     expect(result.fileContent).toMatch(
       /<p\s[^>]*class="[^"]*bascik__my-comp__el__p/,
     );
@@ -623,7 +624,7 @@ describe("prefixElementAttribute – CSS #id selector scoping", () => {
       '<style>#panel { display: none; }</style><div id="panel"></div>',
     );
     const result = prefixElementAttribute(c, "class", "test1234");
-    expect(result.fileContent).toContain(".bascik__my-comp__id__panel");
+    expect(result.cssFileContent).toContain(".bascik__my-comp__id__panel");
     expect(result.fileContent).toContain("bascik__my-comp__id__panel");
   });
 });
@@ -1028,72 +1029,6 @@ describe("property-based JS scoping fuzzing", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-describe("minifyJs", () => {
-  it("removes block comments", () => {
-    expect(minifyJs("/* hello */var x = 1;")).toBe("var x = 1;");
-  });
-
-  it("removes line comments", () => {
-    expect(minifyJs("var x = 1; // comment\nvar y = 2;")).toBe(
-      "var x = 1;\nvar y = 2;",
-    );
-  });
-
-  it("collapses multiple spaces and tabs to a single space", () => {
-    expect(minifyJs("var  x  =  1;")).toBe("var x = 1;");
-  });
-
-  it("collapses multiple blank lines to one", () => {
-    expect(minifyJs("var x = 1;\n\n\nvar y = 2;")).toBe(
-      "var x = 1;\nvar y = 2;",
-    );
-  });
-
-  it("preserves double-quoted strings verbatim", () => {
-    expect(minifyJs('var s = "hello  world"; // end')).toBe(
-      'var s = "hello  world";',
-    );
-  });
-
-  it("preserves single-quoted strings verbatim", () => {
-    expect(minifyJs("var s = 'hello  world';")).toBe("var s = 'hello  world';");
-  });
-
-  it("preserves strings that look like comments", () => {
-    expect(minifyJs('var url = "https://example.com";')).toBe(
-      'var url = "https://example.com";',
-    );
-  });
-
-  it("preserves template literals verbatim", () => {
-    expect(minifyJs("var s = `hello  world`;")).toBe("var s = `hello  world`;");
-  });
-
-  it("handles escape sequences in template literals", () => {
-    expect(minifyJs("var s = `he said \\`hi\\``;")).toBe("var s = `he said \\`hi\\``;");
-  });
-
-  it("handles escape sequences in strings", () => {
-    expect(minifyJs('var s = "he said \\"hi\\"";')).toBe(
-      'var s = "he said \\"hi\\"";',
-    );
-  });
-
-  it("adds a space after a block comment that abuts a token", () => {
-    const result = minifyJs("return/*x*/value;");
-    expect(result).toBe("return value;");
-  });
-
-  it("trims leading and trailing whitespace", () => {
-    expect(minifyJs("\n  var x = 1;  \n")).toBe("var x = 1;");
-  });
-
-  it("handles empty input", () => {
-    expect(minifyJs("")).toBe("");
-  });
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Boundary & Design Decisions Tests for JS Scoping
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1229,47 +1164,6 @@ describe("prefixElementAttribute – scoping completeness", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// minifyJs – regex literal preservation
-// ─────────────────────────────────────────────────────────────────────────────
-
-describe("minifyJs – regex literal handling", () => {
-  it("preserves a simple regex literal verbatim", () => {
-    // /abc/g follows '=' so it is unambiguously a regex, not division
-    expect(minifyJs("var re = /abc/g;")).toBe("var re = /abc/g;");
-  });
-
-  it("preserves a regex literal with flags", () => {
-    expect(minifyJs("var re = /hello world/gi;")).toBe("var re = /hello world/gi;");
-  });
-
-  it("does not confuse '/' in a character class with the closing delimiter", () => {
-    // /[/]/ — the '/' inside [...] is part of the character class, not the end
-    expect(minifyJs("var re = /[/]/;")).toBe("var re = /[/]/;");
-  });
-
-  it("preserves a regex with escape sequences", () => {
-    expect(minifyJs("var re = /a\\/b/;")).toBe("var re = /a\\/b/;");
-  });
-
-  it("treats '/' as division when regex is unterminated before newline", () => {
-    const result = minifyJs("var n = /foo\n/bar;");
-    expect(result).toBe("var n = /foo\n/bar;");
-  });
-
-  it("treats '/' as division (not regex start) after an identifier", () => {
-    // After 'a' the '/' is preceded by a word char → division, not regex
-    const result = minifyJs("var n = a/b;");
-    // The '/' is preserved as division; code is collapsed but not mangled
-    expect(result).toContain("/");
-    expect(result).not.toContain("/b/"); // must not re-interpret as regex
-  });
-
-  it("handles a regex that contains a block comment string verbatim", () => {
-    expect(minifyJs("var re = /\\/\\*/g;")).toBe("var re = /\\/\\*/g;");
-  });
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
 // namespaceScriptTags – explicit server-script shielding
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1296,6 +1190,33 @@ describe("namespaceScriptTags – data-bascik-server shielding", () => {
     const serverIdx = result.fileContent.indexOf("var server = 2;");
     const iffeAfterServer = result.fileContent.indexOf("(function()", serverIdx);
     expect(iffeAfterServer).toBe(-1);
+  });
+
+  it("wraps multiple client scripts in separate IIFEs", () => {
+    const c = {
+      name: "my-comp",
+      fileContent:
+        "<script>const a = 1;</script>" +
+        "<script>const b = 2;</script>",
+    };
+    const result = namespaceScriptTags(c);
+    const matches = result.fileContent.match(/\(function\(\)/g);
+    expect(matches).toHaveLength(2);
+    expect(result.fileContent).toContain("const a = 1;");
+    expect(result.fileContent).toContain("const b = 2;");
+  });
+
+  it("wraps client scripts while leaving JSON-LD and server scripts untouched", () => {
+    const c = {
+      name: "my-comp",
+      fileContent:
+        '<script type="application/ld+json">{"@type": "Organization"}</script>' +
+        "<script>const c = 3;</script>",
+    };
+    const result = namespaceScriptTags(c);
+    const matches = result.fileContent.match(/\(function\(\)/g);
+    expect(matches).toHaveLength(1);
+    expect(result.fileContent).toContain('{"@type": "Organization"}');
   });
 });
 

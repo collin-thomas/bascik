@@ -160,10 +160,54 @@ function createDiagnosticsForDocument(document: vscode.TextDocument): vscode.Dia
     }
 
     let styleMatch: RegExpExecArray | null;
-    while ((styleMatch = styleBlockRe.exec(text)) !== null) {
-      const openTag = styleMatch[1];
-      const styleBody = styleMatch[2] ?? '';
-      const styleBodyOffset = (styleMatch.index ?? 0) + openTag.length;
+    const hasCompanionCss = document.uri.scheme === 'file'
+      && document.uri.fsPath.toLowerCase().endsWith('.html')
+      && fs.existsSync(document.uri.fsPath.replace(/\.html$/i, '.css'));
+
+    const maskedText = text.replace(
+      /(<(code|pre|script|textarea)(?:[^>"']|"[^"]*"|'[^']*')*>)([\s\S]*?)(<\/\2\s*>)/gi,
+      (_m, open: string, _tag: string, content: string, close: string) =>
+        open + ' '.repeat(content.length) + close,
+    );
+
+    const styleMatches: RegExpExecArray[] = [];
+    while ((styleMatch = styleBlockRe.exec(maskedText)) !== null) {
+      styleMatches.push(styleMatch);
+    }
+
+    if (styleMatches.length > 1) {
+      for (let i = 1; i < styleMatches.length; i++) {
+        const match = styleMatches[i];
+        const openTag = match[1];
+        const start = document.positionAt(match.index ?? 0);
+        const end = document.positionAt((match.index ?? 0) + openTag.length);
+        const diag = new vscode.Diagnostic(
+          new vscode.Range(start, end),
+          'Component has multiple <style> tags. They will be combined at build time, but using multiple <style> tags in a single component file is not recommended for readability and maintainability.',
+          vscode.DiagnosticSeverity.Warning,
+        );
+        diag.source = 'bascik';
+        diagnostics.push(diag);
+      }
+    }
+
+    for (const match of styleMatches) {
+      const openTag = match[1];
+      const styleBody = match[2] ?? '';
+      const styleBodyOffset = (match.index ?? 0) + openTag.length;
+
+      if (hasCompanionCss) {
+        const start = document.positionAt(match.index ?? 0);
+        const end = document.positionAt((match.index ?? 0) + openTag.length);
+        const diag = new vscode.Diagnostic(
+          new vscode.Range(start, end),
+          'Component has both a companion .css file and an inline <style> tag. They will be combined at build time, but mixing both is not recommended for readability and maintainability.',
+          vscode.DiagnosticSeverity.Warning,
+        );
+        diag.source = 'bascik';
+        diagnostics.push(diag);
+      }
+
       addCompatibilityDiagnostics(styleBody, 'css', styleBodyOffset);
     }
   } else if (languageId === 'css') {

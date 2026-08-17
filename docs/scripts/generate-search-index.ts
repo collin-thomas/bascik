@@ -23,7 +23,7 @@ function stripMd(text: string): string {
     .replace(/<!--[\s\S]*?-->/g, '')
     .replace(/<!--/g, '')
     .replace(/-->/g, '')
-    .replace(/```[\s\S]*?```/gm, '')
+    .replace(/```[a-z0-9_-]*\n?([\s\S]*?)```/gi, '$1')
     .replace(/`([^`\n]+)`/g, '$1')
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
     .replace(/^#{1,6}\s+/gm, '')
@@ -58,7 +58,8 @@ function parseMd(md: string, navLabel: string, section: string, href: string): S
   const entries: SearchEntry[] = [];
 
   const h1Line = lines.find(l => /^# /.test(l));
-  const title = h1Line ? h1Line.slice(2).trim() : navLabel;
+  const rawTitle = h1Line ? h1Line.slice(2).trim() : navLabel;
+  const title = rawTitle.replace(/`([^`\n]+)`/g, '$1').replace(/\*\*([^*]+)\*\*/g, '$1');
 
   const sections: { heading: string | null; lines: string[] }[] = [];
   let cur: { heading: string | null; lines: string[] } = { heading: null, lines: [] };
@@ -66,21 +67,27 @@ function parseMd(md: string, navLabel: string, section: string, href: string): S
   for (const line of lines) {
     if (/^# /.test(line)) { pastH1 = true; continue; }
     if (!pastH1) continue;
-    if (/^## /.test(line)) {
+    if (/^#{2,3}\s+/.test(line)) {
       sections.push(cur);
-      cur = { heading: line.slice(3).trim(), lines: [] };
+      const rawHeading = line.replace(/^#{2,3}\s+/, '').trim();
+      const heading = rawHeading
+        .replace(/`([^`\n]+)`/g, '$1')
+        .replace(/\*\*([^*]+)\*\*/g, '$1')
+        .replace(/\*([^*\n]+)\*/g, '$1')
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1');
+      cur = { heading, lines: [] };
     } else {
       cur.lines.push(line);
     }
   }
   sections.push(cur);
 
-  const introText = stripMd(sections[0].lines.join('\n')).slice(0, 800);
+  const introText = stripMd(sections[0].lines.join('\n')).slice(0, 2000);
   entries.push({ title, navLabel, section, path: href, heading: null, text: introText });
 
   for (const sec of sections.slice(1)) {
     if (!sec.heading) continue;
-    const text = stripMd(sec.lines.join('\n')).slice(0, 800);
+    const text = stripMd(sec.lines.join('\n')).slice(0, 2000);
     const anchor = slugify(sec.heading);
     entries.push({ title, navLabel, section, path: `${href}#${anchor}`, heading: sec.heading, text });
   }

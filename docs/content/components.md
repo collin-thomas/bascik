@@ -294,3 +294,50 @@ src/components/
 Bascik derives the tag name from the `.html` filename, not the folder. `feature-card/feature-card.html` still produces `<feature-card>`.
 
 > **No restart needed.** The dev server watches `src/components/` for new and changed files. Drop in a new `.html` or `.css` file and all affected pages re-transpile and reload automatically.
+
+## Multiple Root Elements
+
+Unlike traditional JavaScript frameworks (such as React or Vue 2) that historically required a single root wrapper element or explicit fragment components, Bascik component templates naturally support **multiple top-level HTML elements** in a single `.html` file.
+
+```html
+<h2>Section Heading</h2>
+<p class="intro">Introductory paragraph text.</p>
+<div class="card">Card content</div>
+```
+
+When transpiled, all root-level elements are inserted directly into the page markup in order. No unnecessary wrapper `<div>` or `<Fragment>` tags are added to your rendered HTML. Bascik's scoping engine automatically handles CSS rules, class names, IDs, element selectors, and scripts across every element in the component template.
+
+> **Attribute Inheritance:** If non-`data-bascik-*` attributes are passed on a usage tag (such as `class="extra"` or `aria-label="Section"`), Bascik merges them onto the **first** root HTML element in the component template.
+
+## Multiple Style Blocks
+
+You can include multiple `<style>` blocks in a single component file. For example, you can organize styles into separate blocks for general layout, media queries, or themes.
+
+```html
+<style>
+  .card { padding: 16px; background: #1a1b1e; }
+</style>
+
+<div class="card">
+  <h3>Card Title</h3>
+</div>
+
+<style media="(min-width: 768px)">
+  .card { padding: 24px; }
+</style>
+```
+
+At build time, Bascik extracts every `<style>` block from the component file, combines them with any companion `.css` file, applies class and selector scoping, and injects the resulting CSS into the document `<head>`.
+
+> **Readability & Maintainability:** While Bascik supports multiple `<style>` tags in a single component file, using multiple `<style>` tags (or mixing an inline `<style>` tag with a companion `.css` file) is not recommended for readability and maintainability. Choose a single stylesheet pattern per component.
+
+## Multiple Script Blocks
+
+Component templates can also contain multiple `<script>` tags. Bascik handles each script according to its type and attributes:
+
+- **Client scripts:** Standard JavaScript blocks (without `data-bascik-server` or `data-bascik-build`) are each wrapped in an isolated IIFE `(function() { ... })();`. You can include multiple client scripts in a component template, and each receives its own scope so local variables do not bleed into other blocks.
+- **Build scripts (`<script data-bascik-build>`):** Executed during build or dev time in Node.js, replacing the tag with its stdout. Multiple build scripts execute concurrently.
+- **Server scripts (`<script data-bascik-server>`):** Executed on the server at request time in Node.js. They are not wrapped in browser IIFEs.
+- **Data scripts (e.g., `type="application/ld+json"`):** Preserved intact without IIFE wrapping or JavaScript minification.
+
+> **Clean Code Recommendation:** Using separate `<script>` tags for distinct, unrelated concerns within a component (for example, a modal controller vs. an analytics handler) is recommended for code readability and maintainability. Because Bascik wraps each client script in its own IIFE, local variables stay safely isolated without polluting a single monolithic script block. Avoid splitting closely related code for no reason, but use separate `<script>` tags whenever a component handles multiple independent interactive features.

@@ -19,6 +19,18 @@
 
 ---
 
+## Component Template Structure
+
+Bascik supports flexible HTML, CSS, and JavaScript structures inside `.html` component files.
+
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Multiple top-level HTML elements | ✓ | Supported naturally without requiring single wrapper elements or fragment tags. All root elements are inserted in order. Inherited usage attributes merge onto the first root HTML element. |
+| Multiple `<style>` blocks | ✓ | Extracted and combined with any companion `.css` file before scoping and deduplication. *Note:* Using multiple `<style>` tags in a single component file is supported but not recommended for readability and maintainability. |
+| Multiple `<script>` blocks | ✓ | Client `<script>` blocks are each wrapped in an independent IIFE. Recommended for clean, maintainable code when separating unrelated logic within a component. Build (`data-bascik-build`), server (`data-bascik-server`), and data scripts (e.g. `type="application/ld+json"`) are processed according to their script type. |
+
+---
+
 ## CSS Scoping
 
 CSS scoping applies to `.css` files paired with a component's HTML file. Place the `.css` file in the same directory as the component and give it the same base name.
@@ -42,7 +54,7 @@ CSS scoping applies to `.css` files paired with a component's HTML file. Place t
 | Multiple `animation:` values                       | `animation: a 1s, b 2s`                 | ✓     | Both keyframe name references are scoped when an `animation:` shorthand lists more than one animation.                                                                                                                                                                                    |
 | Child / sibling combinators                        | `.a > .b`, `.a + .b`, `.a ~ .b`         | ✓     | All class names on both sides of `>`, `+`, and `~` are scoped.                                                                                                                                                                                                                            |
 | `:is()` / `:where()` / `:has()` with class args   | `:is(.foo, .bar) {}`                    | ✓     | Class names inside `:is()`, `:where()`, and `:has()` are scoped normally. Element names inside these functions are **not** converted (see below).                                                                                                                                          |
-| Inline `<style>` in component HTML                 | `<style>.foo {}</style>`                | ✓     | Full CSS scoping pipeline applied to inline `<style>` blocks, class names, element selectors, `@keyframes`, `@layer`, `@container`, and custom properties are all scoped.                                                                                                                |
+| Inline `<style>` in component HTML                 | `<style>.foo {}</style>`                | ✓     | Full CSS scoping pipeline applied to inline `<style>` blocks. Extracted from component HTML into component CSS, deduplicated across component instances, and injected into page `<head>`. |
 | CSS `#id` selector                                 | `#btn {}`                               | ✓     | Converted to a component-scoped class selector (`.bascik__comp__id__btn {}`) using a context-aware lookahead that correctly distinguishes selector position from hex colour values. The generated class is injected onto the HTML element. Specificity drops from (0,1,0,0) to (0,0,1,0). |
 | `[id]` / `[id="…"]` attribute selector             | `[id] {}`                               | ✕     | Stripped at compile time. Attribute-selector forms cannot be scoped without DOM wrapping.                                                                                                                                                                                                 |
 | Attribute selector                                 | `[data-foo="bar"] {}`                   | △     | Passed through untouched, not scoped. Will apply globally. Avoid in component CSS or use a class-based selector alongside it.                                                                                                                                                            |
