@@ -81,7 +81,7 @@ The `renderMd` helper (`docs/scripts/md-renderer.ts`) applies these transformati
 
 **Do not run `#pre-push.prompt.md` or pre-push scripts automatically.** The user handles running pre-push steps.
 
-Note: `llms.txt` is generated automatically by Bascik via `exec` in `docs/bascik.config.ts` whenever `docs/content/` changes.
+Note: `llms.txt` and search index are generated automatically when running `yarn docs:build` (or during dev server via `exec` in `docs/bascik.config.ts`).
 
 If manually updating or propagating `SKILL.md` when specifically requested:
 

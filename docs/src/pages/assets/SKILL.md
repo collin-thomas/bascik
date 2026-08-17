@@ -415,7 +415,7 @@ export default {
 
 ### TypeScript in Component Scripts
 
-Bascik ships plain JavaScript to the browser, so TypeScript in component `<script>` blocks must be stripped before output is served. Wire Node 24's built-in `stripTypeScriptTypes` into the `minifyScripts` hook:
+Bascik ships plain JavaScript to the browser, so TypeScript in component `<script>` blocks must be stripped before output is served. Wire Node 22.18+'s built-in `stripTypeScriptTypes` into the `minifyScripts` hook:
 
 ```ts
 // bascik.config.ts
@@ -799,7 +799,7 @@ export default defineConfig({
   },
   watch: [], // re-transpile all pages when these paths change (dev only)
   exec: [
-    // { script: 'scripts/generate-search-index.ts', watch: ['content/'] }, // dev + build: runs on startup, re-runs on change
+    // { script: 'scripts/generate-search-index.ts', watch: ['content/'] }, // runs sequentially in array order before page transpilation during --build; in dev, runs on startup and watched file changes
     // { script: 'scripts/generate-llms-txt.ts' },                          // build-only: skipped in dev
   ],
   scopeScriptBlocks: true,

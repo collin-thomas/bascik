@@ -94,6 +94,8 @@ export interface BascikConfigOptions {
   /**
    * Scripts to run as part of the build/dev lifecycle.
    *
+   * Entries execute sequentially in array order before page transpilation.
+   *
    * - `script`: path to the script (relative to project root), run with the
    *   same `node` binary that started bascik.
    * - `watch`: one or more directories/files to watch. When present, the
