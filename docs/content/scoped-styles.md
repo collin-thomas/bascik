@@ -262,7 +262,56 @@ export default {
 };
 ```
 
-With `deduplicateCss: false`, class selectors behave like `id` selectors, scoped per instance, but Bascik emits a separate `<style>` block for every component instance. Use the `id`-based pattern above instead whenever possible; it works with the default settings and avoids extra style blocks.
+### `deduplicateCss` Trade-Off Comparison
+
+Setting `deduplicateCss` in `bascik.config.ts` controls whether class names are scoped per component type or per component instance.
+
+| Feature / Aspect | `deduplicateCss: true` (Default) | `deduplicateCss: false` |
+|---|---|---|
+| **Class Scoping Scheme** | `bascik__card__wrapper` (shared per component) | `bascik__card__a1b2c3d4__wrapper` (unique per instance) |
+| **CSS Payload** | Single `<style>` block per component type, zero CSS duplication | Multiplied `<style>` blocks (one block per component instance) |
+| **`querySelector('.cls')` Behavior** | Targets the first instance on the page | Targets the matching element inside that specific instance |
+| **Instance Isolation Model** | Use `id` + `getElementById()` for per-instance script isolation | Class selectors inherently isolate per instance |
+| **Best For** | Virtually all production sites and design systems | Migrating legacy or third-party code that relies on class queries |
+
+#### Side-by-Side Code Example
+
+Given two instances of `<my-card>` on the same page:
+
+```html
+<!-- Input Page HTML -->
+<my-card></my-card>
+<my-card></my-card>
+```
+
+**Output with `deduplicateCss: true` (Default, Shared Class Scope):**
+
+```html
+<!-- HTML Output: Shared classes, unique IDs -->
+<div class="bascik__my-card__wrapper" id="bascik__my-card__a1b2c3d4__root">...</div>
+<div class="bascik__my-card__wrapper" id="bascik__my-card__e5f6g7h8__root">...</div>
+
+<!-- CSS Output: Emitted once in <head> -->
+<style>
+  .bascik__my-card__wrapper { padding: 1rem; }
+</style>
+```
+
+**Output with `deduplicateCss: false` (Per-Instance Class Scope):**
+
+```html
+<!-- HTML Output: Unique classes per instance -->
+<div class="bascik__my-card__a1b2c3d4__wrapper" id="bascik__my-card__a1b2c3d4__root">...</div>
+<div class="bascik__my-card__e5f6g7h8__wrapper" id="bascik__my-card__e5f6g7h8__root">...</div>
+
+<!-- CSS Output: Emitted for every instance -->
+<style>
+  .bascik__my-card__a1b2c3d4__wrapper { padding: 1rem; }
+  .bascik__my-card__e5f6g7h8__wrapper { padding: 1rem; }
+</style>
+```
+
+Using the `id`-based pattern with `getElementById()` is recommended because it gives you per-instance JS isolation while keeping `deduplicateCss: true` for minimal CSS payload.
 
 ## How Scoping Works
 

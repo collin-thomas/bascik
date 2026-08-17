@@ -111,7 +111,7 @@ When `false`, every instance gets its own unique per-instance class names (the s
 deduplicateCss: true // default
 ```
 
-> **Choosing `false`:** Use per-instance class scoping when a component's JavaScript needs to use class selectors to locate its own root element and you have multiple instances of that component on the same page. For most components, using an `id` attribute to anchor the script (which is always per-instance) is a simpler alternative.
+> **Choosing `false`:** Use per-instance class scoping when a component's JavaScript needs to use class selectors to locate its own root element and you have multiple instances of that component on the same page. For a full side-by-side trade-off breakdown and output code comparison, see [Class Selectors in Component Scripts](/scoped-styles#deduplicatecss-trade-off-comparison).
 
 ### `skipTranspilingElementContents`
 
