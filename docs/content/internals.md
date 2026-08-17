@@ -45,7 +45,7 @@ To work on the docs site with a live-reload dev server:
 
 ```sh
 yarn pkg:build   # build pkg first
-yarn docs:dev     # https://localhost:8443
+yarn docs:dev     # http://localhost:8080
 ```
 
 After any `pkg/src/` change, rebuild the package and the docs server will pick it up automatically.

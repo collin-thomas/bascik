@@ -484,14 +484,14 @@ Install dependencies now? (Y/n)
 Start the dev server after install? (Y/n)
 ```
 
-Select **Y** for both and you're live at `https://localhost:8443` with no extra commands.
+Select **Y** for both and you're live at `http://localhost:8080` with no extra commands.
 
 ## CLI reference
 
 ```sh
-bascik          # dev: transpile, start HTTPS dev server, watch
+bascik          # dev: transpile, start plaintext HTTP dev server, watch
 bascik --build  # production: transpile to dist/ only
-bascik --serve  # production server: serve a pre-built dist/ with HTTP/2
+bascik --serve  # production server: serve a pre-built dist/ with HTTP
 bascik --check  # static analysis: validate pages and components without building
 bascik --build --log [path]  # optional build log; defaults to .bascik/build.log
 ```
@@ -509,38 +509,27 @@ The terminal output still stays as the primary log, and the file is an optional 
 
 ## Starting the dev server
 
-When you run `bascik`, Bascik transpiles your pages, generates local TLS certificates if needed, starts the built-in HTTP/2 server, and begins watching for changes.
+When you run `bascik`, Bascik transpiles your pages, starts the built-in HTTP server, and begins watching for changes. By default, it runs over unencrypted plaintext HTTP on port `8080` for zero-friction setup.
 
 Typical output:
 
 ```terminal
-SSL: generated trusted certs via mkcert (run `mkcert -install` once if you haven't)
-
 transpiled: pages/getting-started.html
 transpiled: pages/index.html
 transpiled: pages/about.html
 
 ✓ 3 pages transpiled in 45ms
-Server running at https://localhost:8443
+Server running at http://localhost:8080
 ```
 
-If [mkcert](https://github.com/FiloSottile/mkcert) is not installed, Bascik falls back to a self-signed certificate:
+If port `8080` is already in use, Bascik automatically tries the next available port:
 
 ```terminal
-SSL: self-signed cert generated (install mkcert for no browser warning)
-transpiled: pages/index.html
-✓ 1 page transpiled in 18ms
-Server running at https://localhost:8443
+Port 8080 is in use, trying 8081…
+Server running at http://localhost:8081
 ```
 
-If port `8443` is already in use, Bascik automatically tries the next available port:
-
-```terminal
-Port 8443 is in use, trying 8444…
-Server running at https://localhost:8444
-```
-
-Certs are generated once and reused on subsequent starts. Delete `bascik-privkey.pem` and `bascik-cert.pem` to regenerate them.
+If you explicitly configure the server to run with TLS (`enableTls: true` in `bascik.config.ts`), Bascik will serve over HTTPS (default port `8443`) and generate local TLS certificates if needed via `mkcert` or `openssl` fallback.
 
 ## Watching for file changes
 
@@ -650,7 +639,7 @@ For guidance on deploying to static hosts or running the production server, see 
 
 ## Production server
 
-`bascik --serve` starts the same HTTP/2 server used for development, but pointed at a pre-built `dist/` directory. Run `--build` first, then `--serve`:
+`bascik --serve` starts the same HTTP server used for development, but pointed at a pre-built `dist/` directory. Run `--build` first, then `--serve`:
 
 ```sh
 bascik --build && bascik --serve
@@ -670,22 +659,22 @@ Use the `serve` key in `bascik.config.ts` to customize the server for both dev a
 // bascik.config.ts
 export default {
   serve: {
-    port: 443,
+    port: 8080,
     hostname: '0.0.0.0',   // bind all interfaces (needed in containers)
-    keyFile: '/etc/ssl/site.key',
-    certFile: '/etc/ssl/site.crt',
+    enableTls: false,      // set to true to run over encrypted HTTP/2 (HTTPS)
   },
 };
 ```
 
 | Option | Default | Description |
 |---|---|---|
-| `port` | `8443` | TCP port to listen on |
+| `port` | `8080` (HTTP) / `8443` (HTTPS) | TCP port to listen on |
 | `hostname` | `"localhost"` | Hostname or IP to bind to |
-| `keyFile` | auto-generated | Path to a PEM private key. Omit to use the auto-generated cert. |
-| `certFile` | auto-generated | Path to a PEM certificate. Omit to use the auto-generated cert. |
+| `enableTls` | `false` | Enable TLS (HTTPS) and serve over HTTP/2. |
+| `keyFile` | auto-generated | Path to a PEM private key when TLS is enabled. |
+| `certFile` | auto-generated | Path to a PEM certificate when TLS is enabled. |
 
-When `keyFile` / `certFile` are omitted, Bascik generates certificates automatically using `mkcert` (if installed) or `openssl` as a fallback.
+When `enableTls` is true and `keyFile` / `certFile` are omitted, Bascik generates certificates automatically using `mkcert` (if installed) or `openssl` as a fallback.
 
 To preview the production build with a third-party HTTP server:
 
@@ -1378,14 +1367,15 @@ Use `level: 'warn'` or `level: 'silent'` to suppress the high-volume status line
 
 ### `serve`
 
-Configure the HTTP/2 server started by `bascik --serve` and `bascik` (dev mode). `port`, `hostname`, `keyFile`, and `certFile` are read in both modes. `bascik --build` does not start a server and ignores this block.
+Configure the HTTP server started by `bascik --serve` and `bascik` (dev mode). `port`, `hostname`, `enableTls`, `keyFile`, and `certFile` are read in both modes. `bascik --build` does not start a server and ignores this block.
 
 ```js
 serve: {
-  port: 8443,              // default
+  port: 8080,              // default (8080 for HTTP, 8443 for HTTPS)
   hostname: 'localhost',   // default; set '0.0.0.0' to bind all interfaces
-  keyFile: 'bascik-privkey.pem',  // path to TLS private key
-  certFile: 'bascik-cert.pem',    // path to TLS certificate
+  enableTls: false,        // default; set true for encrypted HTTP/2 (HTTPS)
+  keyFile: 'bascik-privkey.pem',  // path to TLS private key when enableTls: true
+  certFile: 'bascik-cert.pem',    // path to TLS certificate when enableTls: true
   logging: {
     level: 'info',        // silent | error | warn | info | debug
     requests: true,       // log each request as 'GET / ... 200 17ms'
@@ -1648,7 +1638,7 @@ The fastest way to start a new Bascik project with no prompts, just a running si
 npm create bascik@latest my-site -y
 ```
 
-That scaffolds the project, installs dependencies, and starts the dev server in one shot. You're live at **https://localhost:8443**.
+That scaffolds the project, installs dependencies, and starts the dev server in one shot. You're live at **http://localhost:8080**.
 
 Pass a different name to use it as both the directory name and the site title. If you omit the name, the tool prompts for one (defaulting to `bascik-app`). Drop `-y` to step through the install and dev server prompts manually.
 
@@ -1656,9 +1646,9 @@ Pass a different name to use it as both the directory name and the site title. I
 
 ## Starting the Dev Server
 
-Run `npm run dev` (or `yarn dev` / `pnpm dev`) to start the development server. Bascik serves your site over HTTP/2 at **https://localhost:8443** by default (the port auto-increments if 8443 is busy). It transpiles your pages, watches for changes, and live-reloads the browser on every save.
+Run `npm run dev` (or `yarn dev` / `pnpm dev`) to start the development server. Bascik serves your site over HTTP/1.1 at **http://localhost:8080** by default (the port auto-increments if 8080 is busy). It transpiles your pages, watches for changes, and live-reloads the browser on every save.
 
-SSL certificates are generated automatically on first run. Install [mkcert](https://github.com/FiloSottile/mkcert) for a trusted cert with no browser warning:
+If you opt into secure local HTTPS with HTTP/2 (`enableTls: true` in your `bascik.config.ts`), SSL certificates are generated automatically on first run. Install [mkcert](https://github.com/FiloSottile/mkcert) for a trusted cert with no browser warning:
 
 ```sh
 # macOS
@@ -1764,7 +1754,7 @@ if (args.includes("--check")) {
 await import("./transpile.js");
 ```
 
-`transpile.ts` handles the normal dev and build flow. In build mode it awaits `watchFiles()` and exits. In dev mode it starts TLS cert generation (`pki.ts`) and the HTTP/2 server (`http2.ts`) concurrently with `watchFiles()`, so the server is already bound to its port by the time transpilation finishes. `serveHttp2()` returns the origin URL; `transpile.ts` prints `Server running at …` immediately after the transpilation summary line.
+`transpile.ts` handles the normal dev and build flow. In build mode it awaits `watchFiles()` and exits. In dev mode it starts `server.ts` concurrently with `watchFiles()`, so the server is already bound to its port by the time transpilation finishes. `startServer()` orchestrates loading either `http.ts` or `http2.ts` based on `BascikConfig.serve.enableTls` and returns the origin URL; `transpile.ts` prints `Server running at …` immediately after the transpilation summary line.
 
 The dynamic `import()` calls are intentional: they avoid loading modules when not needed (`init` and `--check` exit before reaching `transpile.ts`; `--build` never starts the server).
 
@@ -1786,7 +1776,10 @@ All logic lives in `pkg/src/lib/`. Each file has a single, well-defined responsi
 | `check.ts` | Static analysis for `bascik --check`. Scans all pages and components for unresolved custom tags (errors) and unused component files (warnings). Exits with code 1 when errors are found so it can gate CI pipelines. |
 | `sitemap.ts` | Generates `dist/sitemap.xml` and `dist/robots.txt` at the end of a build when `siteUrl` is configured and `generate.sitemap` / `generate.robots` are enabled (both default to `true`). |
 | `watch.ts` | Sets up chokidar watchers for pages, components, and static assets. Triggers full or selective re-transpilation on file events. |
-| `http2.ts` | The development HTTP/2 server on `https://localhost:8443`. Serves transpiled pages from the memory store, static assets from disk, and the live-reload SSE endpoint. |
+| `server.ts` | Server orchestrator. Dispatches requests to `http.ts` or `http2.ts` based on `BascikConfig.serve.enableTls`, runs shared request handlers, and manages server instances. |
+| `http.ts` | Plaintext HTTP/1.1 server (`node:http`) used by default in development and cleartext environments. |
+| `http2.ts` | TLS-enabled HTTP/2 server (`node:http2`) used when `enableTls: true` is configured. |
+| `serve.ts` | Production server entrypoint (`bascik --serve`). Pre-loads pre-rendered `dist/` HTML into `mem.ts` and boots `server.ts`. |
 | `mem.ts` | In-memory page store. Stores brotli-compressed page buffers keyed by HTTP path, and maintains a reverse index mapping each component name to the set of pages that use it. |
 | `worker-pool.ts` | Generic fixed-size thread pool. Spawns N workers once, dispatches tasks via a queue, and reuses workers across calls to avoid per-task spawn overhead. |
 | `page-worker.ts` | Worker thread entry point. Receives a page path, calls `transpilePage()` (pure computation, no side effects), and posts the result back to the pool. |
@@ -1807,6 +1800,8 @@ index.ts
   │     └── init.ts
   ├── (--check only)
   │     └── check.ts ← components.ts, file-system.ts
+  ├── (--serve / prod server)
+  │     └── serve.ts → server.ts
   └── transpile.ts
         ├── config.ts ← userConfig.ts ← bascik.config.js
         ├── watch.ts
@@ -1821,9 +1816,13 @@ index.ts
         │           │     └── (transpilePage - no side effects)
         │           ├── mem.ts ← paths.ts
         │           └── events.ts
-        └── (dev only, concurrent with watch.ts)
-              ├── pki.ts
-              └── http2.ts ← mem.ts, events.ts, paths.ts, mime.ts
+        └── (dev server, concurrent with watch.ts)
+              └── server.ts
+                    ├── (if enableTls: true)
+                    │     ├── pki.ts
+                    │     └── http2.ts ← mem.ts, events.ts, paths.ts, mime.ts
+                    └── (default HTTP/1.1)
+                          └── http.ts ← mem.ts, events.ts, paths.ts, mime.ts
 ```
 
 ## Key Design Decisions
@@ -2057,7 +2056,7 @@ This automatically builds `create-bascik` (copying the latest `SKILL.md` from `d
 The `-y` flag skips both prompts. The npm install will print a 404 error for `@bascik/bascik` (not on npm yet), but the dev server starts anyway; the workspace `node_modules` symlink resolves the package. Command+Click the URL to open it in a browser.
 
 ```text
-Server running at https://localhost:8443
+Server running at http://localhost:8080
 ```
 
 ## Cleanup after local testing
@@ -2075,35 +2074,64 @@ If you are still actively iterating on the generator, leaving it linked is fine.
 
 # Dev Server
 
-Bascik's development server is a TLS-enabled HTTP/2 server built on Node.js built-ins. It serves transpiled pages from an in-memory store, static assets from disk, and broadcasts live-reload events via Server-Sent Events.
+Bascik's development server serves transpiled pages from an in-memory store, static assets from disk, and broadcasts live-reload events via Server-Sent Events. By default, it runs over plaintext HTTP/1.1 for zero-friction local development, with opt-in support for TLS-enabled HTTP/2.
 
-## Why HTTP/2?
+## Server Architecture (`server.ts`, `http.ts`, `http2.ts`)
 
-HTTP/2 requires TLS. Using it for development means the protocol between the dev server and the browser matches production deployments on modern static hosts, eliminating a class of "works in dev, breaks in prod" issues around protocol-level behaviour. It also means no special handling is needed for assets that load over HTTP/2 in production.
+Bascik separates protocol setup from request routing using a modular 4-tier design:
+
+```text
+       [transpile.ts / serve.ts]
+                  │
+                  ▼ (startServer)
+         [server.ts Orchestrator]
+                  │
+         ┌────────┴────────┐
+         │ (enableTls:     │ (enableTls:
+         │  false)         │  true)
+         ▼                 ▼
+     [http.ts]          [pki.ts Cert Gen]
+  (HTTP/1.1 Server)        │
+         │                 ▼
+         │             [http2.ts]
+         │          (HTTP/2 Server)
+         │                 │
+         └────────┬────────┘
+                  ▼
+   [server.ts: createRequestHandler]
+                  │
+                  ▼ (Serves HTML & static files)
+     [mem.ts / dist/ directory]
+```
+
+1. **`server.ts`**: The central server orchestrator. It contains the unified `createRequestHandler()` pipeline and `startServerInstance()` port binder, plus the top-level `startServer()` dispatcher.
+2. **`http.ts`**: Standard unencrypted HTTP/1.1 server (`node:http`). Wraps `http.IncomingMessage` / `http.ServerResponse` into Bascik's request context.
+3. **`http2.ts`**: Opt-in encrypted HTTP/2 server (`node:http2`). Wraps `ServerHttp2Stream` into Bascik's request context.
+4. **`pki.ts`**: Generates self-signed TLS certificates when `enableTls: true` is set and certificate files do not exist.
+
+## Why Plaintext HTTP/1.1 by Default?
+
+Plaintext HTTP/1.1 works everywhere without certificate warnings, browser bypass prompts, or platform trust setup. Browsers and local development tools (such as VS Code's integrated Simple Browser) connect instantly.
+
+If you need production HTTP/2 protocol parity, enable TLS in `bascik.config.ts`:
+
+```ts
+export default {
+  serve: {
+    enableTls: true, // Dev server boots over https://localhost:8443 (HTTP/2)
+  },
+};
+```
 
 ## TLS Certificate Generation (`pki.ts`)
 
-On first run, Bascik generates a self-signed certificate valid for 100 years and writes two files to the project root:
+When `enableTls: true` is configured, Bascik checks for local certificate files (`bascik-cert.pem` and `bascik-privkey.pem`). If missing, it attempts to generate CA-trusted certs via `mkcert` or falls back to OpenSSL self-signed certs.
 
-- `bascik-cert.pem`: the certificate
-- `bascik-privkey.pem`: the private key
-
-On subsequent runs, both files are checked for existence and generation is skipped if they are present. The generation strategy differs by platform:
-
-- **macOS / Linux:** a single `openssl req` command generates both files, including a `subjectAltName` extension for `localhost` and `127.0.0.1`.
-- **Windows:** PowerShell's `New-SelfSignedCertificate` creates the cert in the Windows certificate store, then OpenSSL extracts the PEM files from a temporary PFX export.
-
-Because the cert is self-signed, browsers will show a security warning on first visit. Trust the cert once in the browser and the warning will not reappear.
+On subsequent runs, both files are checked for existence and generation is skipped if they are present.
 
 <div class="callout">
-<p>These files are generated per-project, not globally. If you delete them, they are regenerated on the next <code>bascik</code> invocation.</p>
+<p>These files are generated per-project, not globally. If you delete them, they are regenerated on the next <code>bascik</code> invocation when TLS is enabled.</p>
 </div>
-
-## The HTTP/2 Server (`http2.ts`)
-
-The server starts binding its port concurrently with page transpilation. `serveHttp2()` returns the origin URL once the port is bound; `transpile.ts` prints `Server running at …` immediately after the transpilation summary line, with no gap between them.
-
-The server listens on `https://localhost:8443` and handles all requests on a single `"stream"` event handler. Only `GET` requests are accepted; all other methods receive a `405 Method Not Allowed` response.
 
 ### Request routing
 
@@ -2974,7 +3002,7 @@ To work on the docs site with a live-reload dev server:
 
 ```sh
 yarn pkg:build   # build pkg first
-yarn docs:dev     # https://localhost:8443
+yarn docs:dev     # http://localhost:8080
 ```
 
 After any `pkg/src/` change, rebuild the package and the docs server will pick it up automatically.
@@ -4936,12 +4964,12 @@ If your site uses `data-bascik-server` scripts for per-request dynamic content, 
 
 ```sh
 bascik --build   # compile to dist/
-bascik --serve   # start the HTTP/2 server; runs server scripts per request
+bascik --serve   # start the HTTP server; runs server scripts per request
 ```
 
 See [Production Server](/server) for full documentation on server scripts and the request context API.
 
-> **TLS is always on.** Bascik's server has no plaintext HTTP mode. Some cloud platforms terminate TLS at the edge and forward cleartext to the container, which is incompatible. Use a platform that either passes TLS through to the container, or run a reverse proxy in front of Bascik that forwards HTTPS.
+> **Plaintext HTTP by default.** Bascik's server runs as a plaintext HTTP/1.1 server by default on port `8080`. Most cloud platforms (Heroku, Fly.io, AWS ECS, Render, etc.) terminate TLS at the edge and forward cleartext HTTP to your container. If your platform passes TLS through to the container or you want HTTP/2, set `enableTls: true` under `serve` in your `bascik.config.ts`.
 
 ### Server configuration
 
@@ -4950,10 +4978,9 @@ Configure the port and TLS in `bascik.config.ts` before building:
 ```ts
 export default {
   serve: {
-    port: 443,
+    port: 8080,
     hostname: '0.0.0.0',    // bind all interfaces; required in containers
-    keyFile: '/etc/ssl/site.key',
-    certFile: '/etc/ssl/site.crt',
+    enableTls: false,       // set to true for TLS-enabled HTTP/2
   },
 };
 ```
@@ -4980,11 +5007,11 @@ COPY package*.json ./
 RUN npm ci
 COPY --from=build /app/dist ./dist
 COPY bascik.config.ts .
-EXPOSE 8443
+EXPOSE 8080
 CMD ["npx", "bascik", "--serve"]
 ```
 
-To supply a real certificate, mount it at runtime:
+If `enableTls: true` is set, you can supply a real certificate by mounting it at runtime:
 
 ```sh
 docker run -p 8443:8443 \
@@ -6167,10 +6194,11 @@ Configure the production server in `bascik.config.ts` under the `serve` key.
 export default {
   cacheHttp: true,     // default in --serve; false in dev
   serve: {
-    port: 8443,         // default
+    port: 8080,         // default (8080 for HTTP, 8443 for HTTPS)
     hostname: 'localhost',  // default; use '0.0.0.0' to bind all interfaces
-    keyFile: 'bascik-privkey.pem',  // default; path to your TLS private key
-    certFile: 'bascik-cert.pem',    // default; path to your TLS certificate
+    enableTls: false,   // default; set to true for encrypted HTTP/2 (HTTPS)
+    keyFile: 'bascik-privkey.pem',  // path to your TLS private key when enableTls: true
+    certFile: 'bascik-cert.pem',    // path to your TLS certificate when enableTls: true
     logging: {
       level: 'info',   // silent | error | warn | info | debug
       requests: true,  // log each request line
@@ -6198,7 +6226,7 @@ Requests for a path that has no matching page fall through to the `404` page if 
 | Transpile pages to `dist/` | ✓ | ✕ (reads existing `dist/`) |
 | Watch source files for changes | ✕ | ✕ |
 | Live-reload SSE | ✕ | ✕ |
-| HTTP/2 server | ✕ | ✓ |
+| Built-in HTTP server | ✕ | ✓ |
 | Brotli compression | ✕ | ✓ |
 | HTTP caching (ETags, 304) | ✕ | ✓ (default; see `cacheHttp`) |
 | Rate limiting | ✕ | ✓ (per-IP) |
@@ -6229,7 +6257,7 @@ In `--serve` mode the server enforces a per-IP request limit of **500 requests p
 
 ### Graceful shutdown
 
-The server listens for `SIGTERM` and `SIGINT` in both dev and production. On either signal it stops accepting new connections, destroys all open HTTP/2 sessions (including any live-reload SSE connections in dev), and exits once in-flight requests finish. If draining takes longer than 10 seconds, the process force-exits. This means `systemd` stop, `docker stop`, and Kubernetes pod eviction all wait for requests to complete before the process ends.
+The server listens for `SIGTERM` and `SIGINT` in both dev and production. On either signal it stops accepting new connections, destroys open HTTP/2 sessions (if running in HTTPS mode) and live-reload SSE connections, and exits once in-flight requests finish. If draining takes longer than 10 seconds, the process force-exits. This means `systemd` stop, `docker stop`, and Kubernetes pod eviction all wait for requests to complete before the process ends.
 
 ### Path traversal protection
 

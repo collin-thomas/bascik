@@ -824,7 +824,8 @@ export default defineConfig({
     },
   },
   serve: {
-    port: 8443,           // default
+    enableTls: false,     // default; set true for HTTP/2 HTTPS
+    port: 8080,           // default (8080 HTTP, 8443 HTTPS)
     hostname: 'localhost', // use '0.0.0.0' to bind all interfaces (containers/proxies)
     keyFile: '/etc/ssl/site.key',  // optional: provide your own TLS cert
     certFile: '/etc/ssl/site.crt', // optional: provide your own TLS cert

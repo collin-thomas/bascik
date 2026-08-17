@@ -203,14 +203,15 @@ Use `level: 'warn'` or `level: 'silent'` to suppress the high-volume status line
 
 ### `serve`
 
-Configure the HTTP/2 server started by `bascik --serve` and `bascik` (dev mode). `port`, `hostname`, `keyFile`, and `certFile` are read in both modes. `bascik --build` does not start a server and ignores this block.
+Configure the HTTP server started by `bascik --serve` and `bascik` (dev mode). `port`, `hostname`, `enableTls`, `keyFile`, and `certFile` are read in both modes. `bascik --build` does not start a server and ignores this block.
 
 ```js
 serve: {
-  port: 8443,              // default
+  port: 8080,              // default (8080 for HTTP, 8443 for HTTPS)
   hostname: 'localhost',   // default; set '0.0.0.0' to bind all interfaces
-  keyFile: 'bascik-privkey.pem',  // path to TLS private key
-  certFile: 'bascik-cert.pem',    // path to TLS certificate
+  enableTls: false,        // default; set true for encrypted HTTP/2 (HTTPS)
+  keyFile: 'bascik-privkey.pem',  // path to TLS private key when enableTls: true
+  certFile: 'bascik-cert.pem',    // path to TLS certificate when enableTls: true
   logging: {
     level: 'info',        // silent | error | warn | info | debug
     requests: true,       // log each request as 'GET / ... 200 17ms'

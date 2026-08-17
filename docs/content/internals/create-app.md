@@ -102,7 +102,7 @@ This automatically builds `create-bascik` (copying the latest `SKILL.md` from `d
 The `-y` flag skips both prompts. The npm install will print a 404 error for `@bascik/bascik` (not on npm yet), but the dev server starts anyway; the workspace `node_modules` symlink resolves the package. Command+Click the URL to open it in a browser.
 
 ```text
-Server running at https://localhost:8443
+Server running at http://localhost:8080
 ```
 
 ## Cleanup after local testing

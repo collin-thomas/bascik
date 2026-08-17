@@ -31,7 +31,7 @@ Run `yarn install` from the **repo root** (not this directory). The repo uses Ya
 corepack enable
 yarn install
 yarn pkg:build                       # build the package first
-yarn docs:dev                        # dev server at https://localhost:8443
+yarn docs:dev                        # dev server at http://localhost:8080
 yarn docs:build                      # write dist/
 ```
 
