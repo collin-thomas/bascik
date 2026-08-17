@@ -660,6 +660,75 @@ Use wrapper descendant selectors for generated slot content:
 
 Do not rely on a bare `h2 {}` component rule for Markdown passed through a slot. Bare element rules are transformed before slot content is inserted; a scoped wrapper selector continues to match the generated descendants.
 
+### Page-Aware Scripts
+
+Some pages need content that is specific to the current page, such as a canonical URL in the head, an Open Graph image, a structured-data block, or even a page-specific sidebar. Hardcoding those values in every page file works. However, a shared script is easier to maintain. You can change the logic once and every page picks it up automatically.
+
+Bascik makes this possible by injecting three environment variables into every `data-bascik-build` subprocess: `BASCIK_PAGE_FILE`, `BASCIK_PAGES_DIR`, and `BASCIK_SITE_URL` (described in the Environment Variables table above).
+
+#### Canonical URL Example
+
+A canonical URL tag tells search engines which URL is the authoritative version of a page. Every docs page on this site uses a shared `scripts/canonical.ts` that derives the URL from `BASCIK_PAGE_FILE`:
+
+```ts
+// scripts/canonical.ts
+export async function canonical(): Promise<string> {
+  const siteUrl = (process.env.BASCIK_SITE_URL ?? '').replace(/\/$/, '');
+  const pageFile = process.env.BASCIK_PAGE_FILE ?? '';
+  const pagesDir = process.env.BASCIK_PAGES_DIR ?? '';
+
+  if (!siteUrl || !pageFile || !pagesDir) return '';
+
+  const relPath = pageFile.slice(pagesDir.length).replace(/^[\\/]/, '').replace(/\\/g, '/');
+  const withoutExt = relPath.replace(/\.html$/, '');
+  const route = withoutExt === 'index' ? '' : withoutExt.replace(/\/index$/, '/');
+  const urlPath = route ? `/${route}` : '/';
+
+  return `<link rel="canonical" href="${siteUrl}${urlPath}" />`;
+}
+```
+
+Use it from any page's `<head>`:
+
+```html
+<head>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { canonical } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/canonical.ts')).href
+    );
+    console.log(await canonical());
+  </script>
+</head>
+```
+
+#### Reading the Page's Own HTML
+
+For richer outputs, including Open Graph tags or JSON-LD structured data, a script can also read the page file itself to extract metadata. `BASCIK_PAGE_FILE` is an absolute path, so `readFile` works directly:
+
+```ts
+// scripts/article-schema.ts (simplified)
+import { readFile } from 'node:fs/promises';
+
+export async function articleSchema(): Promise<string> {
+  const pageFile = process.env.BASCIK_PAGE_FILE ?? '';
+  const siteUrl = (process.env.BASCIK_SITE_URL ?? '').replace(/\/$/, '');
+  if (!pageFile || !siteUrl) return '';
+
+  const html = await readFile(pageFile, 'utf8');
+  const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/);
+  const descMatch = html.match(/<meta\s+name="description"\s+content="([^"]+)"/);
+  if (!titleMatch || !descMatch) return '';
+
+  const headline = titleMatch[1].trim();
+  const description = descMatch[1].trim();
+  // ... compute url, build schema object, return JSON-LD script tag
+}
+```
+
+The script runs on the source HTML before any other build scripts have fired, so `<title>` and `<meta name="description">` are always present as written.
+
 ### data-bascik-dev
 
 Tag a browser script with `data-bascik-dev` to mark it as dev-only. In development the attribute is stripped and the script runs normally in the browser. In production builds (`bascik --build`) the entire script tag is removed.
@@ -1201,6 +1270,27 @@ The `extensions/vscode-bascik/` package provides editor tooling:
 * **Rules generated from the compatibility matrix:** `docs/scripts/generate-compatibility-rules.mjs` reads `docs/content/compatibility.md` and writes the warning rules, so editor diagnostics stay in sync with the documented capability table automatically.
 
 To install locally: open `extensions/vscode-bascik/` in VS Code and press F5.
+
+---
+
+## 16. Lighthouse 100s & Performance
+
+Bascik gives you an enormous head start on Lighthouse scores. Because it outputs plain HTML with zero framework runtime, you begin every page with near-perfect scores. Reaching 100 across all four Lighthouse categories is a matter of applying a small, well-known set of HTML patterns.
+
+### What Bascik Does
+* **Zero runtime:** The most impactful thing Bascik does is what it does not add: no framework bundle, no hydration script, and no client-side router. The only JavaScript on any page is what you wrote.
+* **CSS deduplication:** When a component appears multiple times on a page, Bascik emits a single `<style>` block regardless of instance count.
+* **HTML minification:** HTML comments are stripped and excess whitespace is collapsed in every built page. Content inside `<pre>` blocks is left intact.
+* **Script minification:** `minifyScripts` is `true` by default, stripping comments and whitespace.
+* **Inline styles:** Set `inlineStyles` in `bascik.config.ts` to inject a stylesheet directly into `<head>`, eliminating the render-blocking HTTP request.
+
+### Performance Patterns for Developers
+* **Responsive Images (`srcset`):** Avoid sending oversized images. Use `srcset` density or width descriptors, and always include explicit `width` and `height` attributes to prevent Cumulative Layout Shift (CLS).
+* **Lazy Loading (`loading="lazy"`):** Add `loading="lazy"` to below-the-fold images and iframes. Do not lazy-load above-the-fold hero images.
+* **Preloading (`<link rel="preload">`):** Preload critical first-render assets, such as your hero image, critical web fonts, or early stylesheets.
+* **Prefetching (`<link rel="prefetch">`):** Fetch resources or future pages during idle time if a navigation is highly likely.
+* **Preconnect / DNS Prefetch:** For critical third-party domains, resolve DNS and negotiate connections early using `dns-prefetch` and `preconnect`.
+* **Async and Deferred Scripts:** Use `defer` for scripts that need the DOM ready, and `async` for fully independent scripts like analytics.
 
 ---
 
