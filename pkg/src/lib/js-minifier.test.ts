@@ -146,6 +146,42 @@ describe("minifyJs – statement separation (ASI)", () => {
     const input = "try {\n  a()\n} catch (e) {\n  b()\n} finally {\n  c()\n}";
     expect(minifyJs(input)).toBe("try{a()}catch(e){b()}finally{c()}");
   });
+
+  it("does NOT insert semicolon if next line starts with a ternary or optional chain", () => {
+    const input = "var label = e.heading\n  ? esc(e.navLabel)\n  : esc(e.navLabel)";
+    expect(minifyJs(input)).toBe("var label=e.heading?esc(e.navLabel):esc(e.navLabel)");
+
+    const input2 = "foo\n  ?.bar()";
+    expect(minifyJs(input2)).toBe("foo?.bar()");
+  });
+
+  it("does NOT insert semicolon if next line starts with a binary operator", () => {
+    const inputPlus = "const a = b\n  + c";
+    expect(minifyJs(inputPlus)).toBe("const a=b+c");
+
+    const inputMinus = "const a = b\n  - c";
+    expect(minifyJs(inputMinus)).toBe("const a=b-c");
+
+    const inputMult = "const a = b\n  * c";
+    expect(minifyJs(inputMult)).toBe("const a=b*c");
+
+    const inputDiv = "const a = b/\n  c";
+    expect(minifyJs(inputDiv)).toBe("const a=b/c");
+
+    const inputLogicalAnd = "const a = b\n  && c";
+    expect(minifyJs(inputLogicalAnd)).toBe("const a=b&&c");
+
+    const inputLogicalOr = "const a = b\n  || c";
+    expect(minifyJs(inputLogicalOr)).toBe("const a=b||c");
+  });
+
+  it("inserts semicolon before prefix ++ or -- operators on next line", () => {
+    const inputPlusPlus = "foo()\n++x";
+    expect(minifyJs(inputPlusPlus)).toBe("foo();++x");
+
+    const inputMinusMinus = "foo()\n--x";
+    expect(minifyJs(inputMinusMinus)).toBe("foo();--x");
+  });
 });
 
 describe("minifyJs – word token and keyword boundaries", () => {
