@@ -8,7 +8,7 @@ Add it once, and your AI assistant can accurately answer questions about Bascik,
 
 ## Download
 
-The skill file is served from this site:
+Download [SKILL.md](https://bascik.dev/assets/SKILL.md) directly, or copy the URL:
 
 ```text
 https://bascik.dev/assets/SKILL.md

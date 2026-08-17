@@ -716,6 +716,8 @@ Lighthouse 13.3 introduced a new **Agentic Browsing** category that audits how w
 
 **`llms.txt` follows recommendations.** Lighthouse checks that the `llms.txt` file at the root of a site is a valid Markdown file with at least one H1 heading. Bascik's docs generate `llms.txt` from the same content Markdown files that drive the pages, so it is always valid.
 
+> **llms.txt reference.** The [`llms.txt` specification](https://llmstxt.org/) defines the standard Markdown index format for LLMs and AI agents.
+
 > **Bascik sites score 3/3 on Agentic Browsing without any configuration.** Correct HTML, zero layout shift, and a well-formed `llms.txt` are natural properties of a statically built site. Frameworks that hydrate on the client introduce layout shift during hydration and often produce an accessibility tree that differs from the initial server-rendered HTML, both of which hurt this score.
 
 ## The Kitchen Sink: Complete Head Template

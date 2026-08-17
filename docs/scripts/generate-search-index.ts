@@ -104,4 +104,3 @@ for (const { section, pages } of NAV) {
 const outPath = join(docsDir, 'dist/assets/search-index.json');
 await mkdir(dirname(outPath), { recursive: true });
 await writeFile(outPath, JSON.stringify(entries));
-console.log(`search index: ${entries.length} entries → dist/assets/search-index.json`);

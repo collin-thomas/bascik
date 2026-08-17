@@ -14,7 +14,7 @@ The process is the same regardless of source framework:
 6. **Replace client-side routing with static pages:** one `.html` file per route in `src/pages/`.
 7. **Keep genuinely interactive JS:** event listeners, fetch calls, animations stay as plain `<script>` tags. Remove React-specific hooks and state management.
 
-> **Using AI to switch:** Give the LLM the source files plus the `llms.txt` at the root of this repo. The file contains a complete reference of Bascik's component format, scoping rules, and constraints, enough for most LLMs to perform the transformation without needing to look up anything else.
+> **Using AI to switch:** Give the LLM the source files plus the `SKILL.md` file (served at `/assets/SKILL.md` or in `.github/skills/bascik/SKILL.md`). The file contains a complete reference of Bascik's component format, scoping rules, and constraints, enough for most LLMs to perform the transformation without needing to look up anything else.
 
 ## What Maps to What
 

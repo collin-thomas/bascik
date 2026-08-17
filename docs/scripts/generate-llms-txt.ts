@@ -2,9 +2,9 @@
 /**
  * generate-llms-txt.ts
  *
- * Reads all Markdown files from content/ in filename order,
- * concatenates them, and writes the result to src/pages/llms.txt so
- * that bascik copies it to dist/llms.txt and serves it at /llms.txt.
+ * Generates docs/src/pages/llms.txt following the llms.txt (v2) specification.
+ * It reads the docs structure from nav.ts, extracts brief page descriptions
+ * from content Markdown files, and outputs a structured index file.
  *
  * Usage (from docs/):
  *   node scripts/generate-llms-txt.ts
@@ -13,44 +13,102 @@
  *   yarn workspace bascik-docs generate:llms
  */
 
-import { readdir, readFile, writeFile } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { readFile, writeFile } from 'node:fs/promises';
+import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { NAV } from './nav.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const docsDir = join(__dirname, '..');
-const contentDir = join(docsDir, 'content');
+const docsDir = resolve(__dirname, '..');
 const outputFile = join(docsDir, 'src', 'pages', 'llms.txt');
+const siteUrl = 'https://bascik.dev';
 
-/** Recursively collect all .md files under a directory, sorted by path. */
-async function collectMdFiles(dir: string): Promise<string[]> {
-  const entries = await readdir(dir, { withFileTypes: true });
-  const files: string[] = [];
-  for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
-    const fullPath = join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...await collectMdFiles(fullPath));
-    } else if (entry.name.endsWith('.md')) {
-      files.push(fullPath);
-    }
-  }
-  return files;
+function stripMd(text: string): string {
+  return text
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/```[\s\S]*?```/gm, '')
+    .replace(/`([^`\n]+)`/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*\n]+)\*/g, '$1')
+    .replace(/^>\s*/gm, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
-/** Files to exclude from llms.txt (legal/meta content that isn't useful to LLMs). */
-const EXCLUDE = new Set(['license.md']);
+async function readMd(href: string): Promise<string | null> {
+  const standard = join(docsDir, 'content', href.slice(1) + '.md');
+  try { return await readFile(standard, 'utf8'); } catch { }
+  const base = join(docsDir, 'content', href.split('/').pop()! + '.md');
+  try { return await readFile(base, 'utf8'); } catch { }
+  return null;
+}
 
-const mdFiles = (await collectMdFiles(contentDir)).filter(
-  f => !EXCLUDE.has(f.split('/').pop()!)
-);
+function extractDescription(md: string): string {
+  const lines = md.split('\n');
+  let pastH1 = false;
+  const paragraphLines: string[] = [];
 
-const sections = await Promise.all(
-  mdFiles.map(f => readFile(f, 'utf8'))
-);
+  for (const line of lines) {
+    if (/^# /.test(line)) {
+      pastH1 = true;
+      continue;
+    }
+    if (!pastH1) continue;
+    if (/^#{2,6}\s+/.test(line)) break;
+    if (/<!--\s*demo:/.test(line)) break;
+    if (/^```/.test(line)) break;
 
-const output = sections.map(s => s.trimEnd()).join('\n\n') + '\n';
+    const trimmed = line.trim();
+    if (trimmed.length > 0) {
+      paragraphLines.push(trimmed);
+      if (paragraphLines.join(' ').length > 200) break;
+    } else if (paragraphLines.length > 0) {
+      break;
+    }
+  }
 
+  const raw = paragraphLines.join(' ');
+  const cleaned = stripMd(raw);
+  if (!cleaned) return '';
+
+  const sentenceMatch = cleaned.match(/.*?[.!?](?:\s|$)/);
+  let summary = sentenceMatch ? sentenceMatch[0].trim() : cleaned;
+  if (summary.length > 180) {
+    summary = summary.slice(0, 177) + '...';
+  }
+  return summary;
+}
+
+const lines: string[] = [];
+
+lines.push('# Bascik');
+lines.push('');
+lines.push('> Bascik is a build tool for HTML components. It scopes and assembles reusable HTML component files into plain HTML pages at build time. It adds zero JavaScript to the output. You write HTML, CSS, and JavaScript; Bascik scopes and assembles them.');
+lines.push('');
+lines.push('Bascik resolves custom HTML tags to component source HTML, scopes CSS and JavaScript, rewrites DOM selectors, and outputs plain static HTML pages with zero framework runtime.');
+lines.push('');
+lines.push('For the complete, centralized developer reference and AI assistant instructions, see [SKILL.md](https://bascik.dev/assets/SKILL.md).');
+lines.push('');
+
+for (const { section, pages } of NAV) {
+  lines.push(`## ${section}`);
+  lines.push('');
+  for (const { href, label } of pages) {
+    const md = await readMd(href);
+    const desc = md ? extractDescription(md) : '';
+    const url = `${siteUrl}${href}`;
+    const descSuffix = desc ? `: ${desc}` : '';
+    lines.push(`- [${label}](${url})${descSuffix}`);
+  }
+  lines.push('');
+}
+
+lines.push('## Optional');
+lines.push('');
+lines.push('- [Complete Skill File](https://bascik.dev/assets/SKILL.md): Complete centralized developer reference and skill guide for LLMs and AI assistants');
+lines.push('');
+
+const output = lines.join('\n');
 await writeFile(outputFile, output, 'utf8');
-
-console.log(`Wrote ${outputFile} from ${mdFiles.length} section(s):`);
-mdFiles.forEach(f => console.log(`  ${f.replace(docsDir + '/', '')}`));

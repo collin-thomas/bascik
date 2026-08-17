@@ -8,7 +8,7 @@ This file applies to all work inside `/docs/`. Read it before creating or editin
 
 The Markdown files serve three purposes simultaneously:
 1. They are the canonical source for the rendered docs page (via `data-bascik-build`)
-2. They feed `llms.txt` (via `docs/scripts/generate-llms-txt.ts`)
+2. They feed `llms.txt` (generated automatically via `exec` in `docs/bascik.config.ts`)
 3. They feed `SKILL.md` (the Copilot skill file at `docs/src/pages/assets/SKILL.md`, served at `/assets/SKILL.md`)
 
 **When adding or updating docs content:**
@@ -77,20 +77,19 @@ The `renderMd` helper (`docs/scripts/md-renderer.ts`) applies these transformati
 - Callout/tip boxes: Markdown blockquote (`> **Label.** body text`)
 - No inline HTML in MD files — keep MD pure Markdown
 
-## Updating llms.txt, SKILL.md, and create/assets/SKILL.md
+## Updating SKILL.md and create/assets/SKILL.md
 
 **Do not run `#pre-push.prompt.md` or pre-push scripts automatically.** The user handles running pre-push steps.
 
-Do not call `docs:generate:llms` or `yarn docs:generate:llms` automatically.
+Note: `llms.txt` is generated automatically by Bascik via `exec` in `docs/bascik.config.ts` whenever `docs/content/` changes.
 
-If manually updating or generating files when specifically requested:
+If manually updating or propagating `SKILL.md` when specifically requested:
 
 ```sh
-yarn docs:generate:llms
 yarn create:prepack
 ```
 
-These files must stay in sync. A content change that lands in `llms.txt` but not `SKILL.md` (or vice versa) means Copilot is working from stale guidance, which is how bugs like "use `querySelector` for per-instance elements" go undetected.
+These files must stay in sync. A content change that lands in `docs/content/*.md` but not `SKILL.md` (or vice versa) means Copilot is working from stale guidance, which is how bugs like "use `querySelector` for per-instance elements" go undetected.
 
 ## Sidebar
 
@@ -193,7 +192,7 @@ Then inspect the relevant `docs/dist/` output to confirm the pkg change has the 
 Update `docs/content/internals/dev-server.md` to reflect the change. This page is the source of truth for how the dev server and watch system work.
 
 **General principle:** the three files that must stay in sync are `llms.txt`, `SKILL.md`, and the relevant `docs/content/internals/*.md`. The copilot-instructions file is the enforcement mechanism — add notes here when a new sync relationship is created.
-
+files that must stay in sync are `SKILL.md`
 ## License Source of Truth
 
 The license lives in **three places** that must stay in sync:
