@@ -80,4 +80,20 @@ describe("adaptHttp2", () => {
     res.end(undefined);
     expect(mockStream.end).toHaveBeenCalledWith();
   });
+
+  it("attaches error event listener to the stream to prevent unhandled error crashes", () => {
+    const mockStream: any = {
+      headersSent: false,
+      destroyed: false,
+      session: { socket: { remoteAddress: "127.0.0.1" } },
+      respond: vi.fn(),
+      write: vi.fn(),
+      end: vi.fn(),
+      close: vi.fn(),
+      on: vi.fn(),
+    };
+
+    adaptHttp2(mockStream, { ":method": "GET", ":path": "/" });
+    expect(mockStream.on).toHaveBeenCalledWith("error", expect.any(Function));
+  });
 });

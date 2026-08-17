@@ -160,13 +160,22 @@ export const createRequestHandler = () => {
       // Parse the request pathname once so routing decisions are never
       // confused by a query string (e.g. /style.css?v=1 or /search?email=a@b.com).
       const qIdx = req.path.indexOf("?");
-      const pathname = qIdx === -1 ? req.path : req.path.slice(0, qIdx);
+      const rawPathname = qIdx === -1 ? req.path : req.path.slice(0, qIdx);
+      let pathname = rawPathname;
+      try {
+        pathname = decodeURIComponent(rawPathname);
+      } catch {
+        responseStatus = 400;
+        res.respond(400, { ...SECURITY_HEADERS });
+        res.end("Bad Request");
+        return;
+      }
 
       // ── Static asset (has extension, not .html) ──────────────────────────
       const ext = extname(pathname).toLowerCase();
       if (ext && !ext.match(/^\.htm.*$/)) {
         // Path traversal guard: resolved path must stay inside dist/
-        const safePath = pathname.slice(1); // strip leading /
+        const safePath = pathname.replace(/^\/+/, ""); // strip leading slashes
         const fullPath = resolve(distDir, safePath);
         if (!fullPath.startsWith(distDir + sep)) {
           responseStatus = 400;
@@ -238,12 +247,8 @@ export const createRequestHandler = () => {
         return;
       }
 
-      // ── Reject dot-paths that are not file extensions (e.g. /img.dir/dog) ─
-      if (pathname.split(".").length > 1) {
-        responseStatus = 404;
-        res.respond(404, { ...SECURITY_HEADERS });
-        return res.end();
-      }
+      // Normalize pathname for page lookup (e.g. /about.html -> /about)
+      const cleanPathname = pathname.replace(/\.html$/i, "");
 
       // ── Live-reload SSE ──────────────────────────────────────────────────
       if (pathname === "/bascik-live-reload") {
@@ -313,12 +318,20 @@ export const createRequestHandler = () => {
       }
 
       // ── In-memory page lookup ────────────────────────────────────────────
-      // Try the literal path first, then the trailing-slash toggle so that
-      // `/blog` and `/blog/` both resolve a page stored as `pages/blog/index.html`.
-      const page =
+      // Try the literal path first, then cleanPathname (stripping .html), and trailing-slash
+      // toggle so that `/blog` and `/blog/` both resolve a page stored as `pages/blog/index.html`.
+      const exactPage =
         mem.getPageExact(pathname) ??
-        mem.getPageExact(pathname.endsWith("/") ? pathname.slice(0, -1) : `${pathname}/`) ??
-        mem.getPage(pathname);
+        mem.getPageExact(cleanPathname) ??
+        mem.getPageExact(cleanPathname.endsWith("/") ? cleanPathname.slice(0, -1) : `${cleanPathname}/`);
+
+      if (!exactPage && pathname.split(".").length > 1) {
+        responseStatus = 404;
+        res.respond(404, { ...SECURITY_HEADERS });
+        return res.end();
+      }
+
+      const page = exactPage ?? mem.getPage(pathname);
 
       if (!page) {
         // During the initial transpile, serve a boot page instead of 404.

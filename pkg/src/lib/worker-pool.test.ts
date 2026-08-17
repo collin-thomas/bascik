@@ -118,6 +118,22 @@ describe("WorkerPool", () => {
       await pool.terminate();
     });
 
+    it("dispatches queued tasks to replacement worker when a worker crashes", async () => {
+      const pool = makePool(1);
+      const running = pool.run("task-1");
+      const queued = pool.run("task-2");
+      // task-2 is in queue because pool size is 1 and worker 0 is processing task-1
+      const crash = new Error("worker crashed on task-1");
+      workers[0].emit("error", crash);
+      await expect(running).rejects.toThrow("worker crashed on task-1");
+
+      // Replacement worker 1 should automatically be dispatched queued task-2
+      expect(workers[1].postMessage).toHaveBeenCalledWith("task-2");
+      completeWith(workers[1], "queued-done");
+      await expect(queued).resolves.toBe("queued-done");
+      await pool.terminate();
+    });
+
     it("does not spawn a replacement for a worker erroring after terminate()", async () => {
       const pool = makePool(1);
       const terminatePromise = pool.terminate();

@@ -374,6 +374,48 @@ describe("startHttp2Server – stream handler", () => {
     expect(fakeFileStream.pipe).toHaveBeenCalledWith(stream);
   });
 
+  it("decodes URL-encoded spaces in static asset paths", async () => {
+    const fakeFileStream = { on: vi.fn().mockReturnThis(), pipe: vi.fn() };
+    mockCreateReadStream.mockReturnValue(fakeFileStream);
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/my%20style.css", "GET"));
+    expect(mockStat).toHaveBeenCalledWith(expect.stringContaining("my style.css"));
+  });
+
+  it("handles double-slash leading paths safely within dist", async () => {
+    const fakeFileStream = { on: vi.fn().mockReturnThis(), pipe: vi.fn() };
+    mockCreateReadStream.mockReturnValue(fakeFileStream);
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("//assets/app.js", "GET"));
+    expect(mockStat).toHaveBeenCalledWith(expect.stringContaining("assets/app.js"));
+  });
+
+  it("responds 400 Bad Request for malformed percent-encoded URIs", async () => {
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/%ff", "GET"));
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({ ":status": 400 }),
+    );
+  });
+
+  it("serves in-memory pages with dots in path like /v1.0/about", async () => {
+    mockMem.getPageExact.mockImplementation((p: string) => {
+      if (p === "/v1.0/about") {
+        return { relativePagePath: "pages/v1.0/about.html", content: Buffer.from("<h1>v1.0</h1>") };
+      }
+      return undefined;
+    });
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/v1.0/about", "GET"));
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({ ":status": 200 }),
+    );
+  });
+
   it("treats uppercase .HTML extensions like lowercase (no static-file lookup)", async () => {
     const handler = getStreamHandler()!;
     const stream = makeStream();

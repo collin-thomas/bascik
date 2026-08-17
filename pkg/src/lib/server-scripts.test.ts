@@ -184,6 +184,22 @@ describe("executeServerScripts", () => {
     expect(result).toBe("<span>&copy; 2026 Built with Bascik</span>");
   });
 
+  it("handles multiple identical server script blocks accurately without replacement collision", async () => {
+    resolveWith("hello\n");
+    const html =
+      "<div><script data-bascik-server>console.log('hello')</script></div>" +
+      "<div><script data-bascik-server>console.log('hello')</script></div>";
+    const result = await executeServerScripts(html, baseRequest);
+    expect(result).toBe("<div>hello\n</div><div>hello\n</div>");
+  });
+
+  it("preserves literal dollar patterns in output ($1, $&, $') without regex expansion", async () => {
+    resolveWith("Price: $100 for $& items ($1)\n");
+    const html = "<p><script data-bascik-server>console.log('Price')</script></p>";
+    const result = await executeServerScripts(html, baseRequest);
+    expect(result).toBe("<p>Price: $100 for $& items ($1)\n</p>");
+  });
+
   it("processes multiple server scripts in parallel", async () => {
     mockExecFile
       .mockImplementationOnce(

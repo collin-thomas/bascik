@@ -23,6 +23,11 @@ export const adaptHttp2 = (stream: ServerHttp2Stream, headers: IncomingHttpHeade
     remoteIp = (stream as any).session?.socket?.remoteAddress ?? "unknown";
   } catch { }
 
+  stream.on("error", (err) => {
+    if (isNetworkResetError(err)) return;
+    console.error("[bascik] HTTP/2 stream error:", err);
+  });
+
   const req: BascikRequest = {
     method: headers[":method"] as string ?? "GET",
     path: headers[":path"] as string,

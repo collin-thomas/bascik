@@ -150,40 +150,55 @@ export const executeServerScripts = async (
   await mkdir(tempDir, { recursive: true });
 
   // Run at most MAX_CONCURRENT_SCRIPTS child processes at a time.
-  const results: Array<{ fullTag: string; output: string }> = [];
-  for (let i = 0; i < matches.length; i += MAX_CONCURRENT_SCRIPTS) {
-    const batch = matches.slice(i, i + MAX_CONCURRENT_SCRIPTS);
-    const batchResults = await Promise.all(
-      batch.map(async (match) => {
-        const [fullTag, scriptContent] = match;
+  interface ScriptJob {
+    fullTag: string;
+    scriptContent: string;
+    index: number;
+    length: number;
+    output?: string;
+  }
+
+  const scriptJobs: ScriptJob[] = matches.map((match) => ({
+    fullTag: match[0],
+    scriptContent: match[1],
+    index: match.index!,
+    length: match[0].length,
+  }));
+
+  for (let i = 0; i < scriptJobs.length; i += MAX_CONCURRENT_SCRIPTS) {
+    const batch = scriptJobs.slice(i, i + MAX_CONCURRENT_SCRIPTS);
+    await Promise.all(
+      batch.map(async (job) => {
         const tmpPath = join(
           tempDir,
           `server-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
         );
         try {
-          await writeFile(tmpPath, scriptContent.trim(), "utf8");
+          await writeFile(tmpPath, job.scriptContent.trim(), "utf8");
           const { stdout, stderr } = await runModule(tmpPath, request, timeoutMs);
           if (stderr) process.stderr.write(stderr);
-          return { fullTag, output: stripAnsiEscapeCodes(stdout) };
+          job.output = stripAnsiEscapeCodes(stdout);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           console.warn(
             `[bascik] server script error at "${request.path}":\n${msg}`,
           );
-          return { fullTag, output: "" };
+          job.output = "";
         } finally {
           await unlink(tmpPath).catch(() => { });
         }
       }),
     );
-    results.push(...batchResults);
   }
 
   let result = html;
-  for (const { fullTag, output } of results) {
-    // Use a function replacement so that `$` characters in `output` (e.g.
-    // `$&`, `$1` from code examples) are never interpreted as special patterns.
-    result = result.replace(fullTag, () => output);
+  // Sort from last match to first match so earlier string indices remain valid
+  const sortedJobs = scriptJobs.slice().sort((a, b) => b.index - a.index);
+  for (const job of sortedJobs) {
+    result =
+      result.slice(0, job.index) +
+      (job.output ?? "") +
+      result.slice(job.index + job.length);
   }
   return result;
 };

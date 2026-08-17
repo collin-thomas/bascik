@@ -52,14 +52,14 @@ export class WorkerPool<Task, Result> {
       if (!this.#terminated) this.#spawn();
     });
     this.#workers.push(worker);
-    this.#idleWorkers.push(worker);
+    this.#dispatch(worker);
   }
 
   /** Remove a worker from every tracking structure (best-effort terminate). */
   #retire(worker: Worker): void {
     this.#workers = this.#workers.filter((w) => w !== worker);
     this.#idleWorkers = this.#idleWorkers.filter((w) => w !== worker);
-    worker.terminate().catch(() => {});
+    worker.terminate().catch(() => { });
   }
 
   run(task: Task): Promise<Result> {

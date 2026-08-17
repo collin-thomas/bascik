@@ -10,10 +10,14 @@ if (BascikConfig.isBuild) {
 } else {
   startExecDev();
   const { startServer } = await import("./lib/server.js");
-  const serverReady = startServer();
+  const serverReady = startServer().catch((err) => {
+    console.error("Server startup failed:", err);
+    process.exit(1);
+  });
 
   await watchFiles();
   mem.setBootingDone();
   eventEmitter.emit("boot-done");
-  console.log(`Server running at ${await serverReady}`);
+  const url = await serverReady;
+  if (url) console.log(`Server running at ${url}`);
 }
