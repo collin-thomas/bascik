@@ -83,7 +83,7 @@ const adaptHttp2 = (stream: ServerHttp2Stream, headers: IncomingHttpHeaders): { 
   let remoteIp = "unknown";
   try {
     remoteIp = (stream as any).session?.socket?.remoteAddress ?? "unknown";
-  } catch {}
+  } catch { }
 
   const req: BascikRequest = {
     method: headers[":method"] as string ?? "GET",
