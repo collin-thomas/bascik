@@ -8,7 +8,7 @@
 - Scopes CSS class names, element selectors, `@keyframes`, and CSS custom properties per component so they never collide.
 - Rewrites DOM selector calls (`getElementById`, `querySelector`, etc.) in component scripts to match scoped attribute names.
 - Wraps component scripts in IIFEs so variables do not leak between components.
-- Outputs a `dist/` directory of plain `.html` files with no framework runtime, no client-side JS added by Bascik itself.
+- Outputs a `dist/` directory of plain `.html` files with zero runtime dependencies and no client-side JS added by Bascik itself.
 - Supports TypeScript natively; `bascik.config.ts`, build scripts, and helper modules run on Node 22.18+ with no compiler step.
 
 ## What Bascik Does Not Do
