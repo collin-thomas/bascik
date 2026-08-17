@@ -873,24 +873,6 @@ describe("startHttp2Server – graceful shutdown", () => {
     expect(mockExit).toHaveBeenCalledWith(0);
     mockExit.mockRestore();
   });
-
-  it("exits with code 0 if server.close callback does not fire immediately (fallback timeout)", async () => {
-    vi.useFakeTimers();
-    mockServer.close.mockImplementation(() => { }); // don't invoke callback
-    await startHttp2Server();
-    const [, sigIntHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
-      (c: any[]) => c[0] === "SIGINT",
-    ) as [string, () => void];
-
-    const mockExit = vi.spyOn(process, "exit").mockImplementation((_code?: string | number | null) => undefined as never);
-    sigIntHandler();
-    expect(mockExit).not.toHaveBeenCalled();
-    await vi.advanceTimersByTimeAsync(1_000);
-    expect(mockExit).toHaveBeenCalledWith(0);
-    mockExit.mockRestore();
-    mockServer.close.mockImplementation((cb?: (err?: Error) => void) => { cb?.(); });
-    vi.useRealTimers();
-  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

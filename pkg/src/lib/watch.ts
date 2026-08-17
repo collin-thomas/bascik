@@ -32,6 +32,8 @@ export const watchFiles = async () => {
         return !!(stats?.isFile() && !hasFileExt);
       },
       persistent: !BascikConfig.isBuild,
+      usePolling: true,
+      interval: 100,
     })
     .on("add", (path) => copyReplicatePath(path, "dist").catch(onWatchError))
     .on("change", async (path) => {
@@ -55,6 +57,8 @@ export const watchFiles = async () => {
         ignored: (path: string, stats?: Stats): boolean =>
           !!(stats?.isFile() && !path.endsWith(".html")),
         persistent: !BascikConfig.isBuild,
+        usePolling: true,
+        interval: 100,
       })
       .on("add", (path) => {
         if (initialScanDone) pageProcessing(path).catch(onWatchError);
@@ -78,6 +82,8 @@ export const watchFiles = async () => {
       },
       ignoreInitial: true,
       persistent: !BascikConfig.isBuild,
+      usePolling: true,
+      interval: 100,
     })
     // If you add a component, how will we know what pages to update unless we go and look
     .on("add", async () => processAllPages().catch(onWatchError))
@@ -91,6 +97,8 @@ export const watchFiles = async () => {
       .watch(BascikConfig.watch, {
         ignoreInitial: true,
         persistent: true,
+        usePolling: true,
+        interval: 100,
       })
       .on("add", async (path) => selectivelyProcessPagesForWatchPath(path).catch(onWatchError))
       .on("change", async (path) => selectivelyProcessPagesForWatchPath(path).catch(onWatchError))

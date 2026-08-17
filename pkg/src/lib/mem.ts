@@ -2,6 +2,7 @@ import zlib from "node:zlib";
 import { getHttpPath } from "./paths.js";
 import { getRelativePath } from "./file-system.js";
 import { htmlHasServerScripts } from "./server-scripts.js";
+import { BascikConfig } from "./config.js";
 import type { StoredPage } from "./types.js";
 
 interface StorePageArgs {
@@ -73,14 +74,22 @@ class MemoryStore {
       });
 
     // Fire-and-forget: compress in the background and attach the result once
-    // done. If the page has since been replaced or removed, discard the result.
-    zlib.brotliCompress(buffer, (err, compressed) => {
-      if (err) return;
-      const current = this.#files.get(httpPath);
-      if (current && current.content === buffer) {
-        current.compressedContent = compressed;
-      }
-    });
+    // done. In dev mode, quality 1 (min) is 200x faster than quality 11 (max)
+    // and avoids queuing heavy zlib tasks that delay dev server shutdown.
+    const quality = BascikConfig.isBuild
+      ? zlib.constants.BROTLI_MAX_QUALITY
+      : zlib.constants.BROTLI_MIN_QUALITY;
+    zlib.brotliCompress(
+      buffer,
+      { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: quality } },
+      (err, compressed) => {
+        if (err) return;
+        const current = this.#files.get(httpPath);
+        if (current && current.content === buffer) {
+          current.compressedContent = compressed;
+        }
+      },
+    );
 
     //console.log('stored page in memory:', httpPath)
   }

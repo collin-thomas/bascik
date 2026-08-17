@@ -560,17 +560,16 @@ export const startHttp2Server = async () => {
     if (shuttingDown) return;
     shuttingDown = true;
     console.log(`\nReceived ${signal}, shutting down gracefully…`);
-    // Destroy sessions so server.close() completes immediately.
-    for (const session of openSessions) session.destroy();
+    // Destroy open sessions and underlying sockets so streams close immediately.
+    for (const session of openSessions) {
+      session.socket?.destroy();
+      session.destroy();
+    }
+    openSessions.clear();
     // Close all registered handles (chokidar watchers, exec watchers).
     runShutdownHandlers().catch(() => { });
-    const timer = setTimeout(() => process.exit(0), 1000);
-    timer.unref();
-    server.close((err) => {
-      clearTimeout(timer);
-      if (err) console.error("[bascik] Error closing server:", err);
-      process.exit(0);
-    });
+    server.close();
+    process.exit(0);
   };
   process.setMaxListeners(process.getMaxListeners() + 2);
   process.once("SIGTERM", () => gracefulShutdown("SIGTERM"));

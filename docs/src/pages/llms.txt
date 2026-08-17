@@ -2241,11 +2241,9 @@ The boot page connects to the normal `/bascik-live-reload` SSE endpoint. Because
 
 The `isBooting` flag in `mem.ts` is set to `true` on module load and cleared (alongside the `"boot-done"` event) by `transpile.ts` immediately after `watchFiles()` resolves. Once the flag is cleared, unmatched paths fall through to the normal 404 path. The boot page is never served in `--serve` (production) mode.
 
-### Error handling
+### Graceful shutdown
 
-
-
-The server registers `process.once` handlers for `SIGTERM` and `SIGINT`. On either signal it calls `server.close()` to stop accepting new connections, then immediately destroys all tracked HTTP/2 sessions. Destroying sessions closes the live-reload SSE stream (which would otherwise hold the process open indefinitely), so the process exits cleanly as soon as in-flight requests finish. A 10-second safety timeout force-exits if anything still hasn’t drained.
+The server registers `process.once` handlers for `SIGTERM` and `SIGINT`. On either signal it stops accepting new connections, destroys all tracked HTTP/2 sessions and their underlying sockets, closes all chokidar watchers, and exits immediately (`process.exit(0)`). Destroying sessions closes the live-reload SSE stream (which would otherwise hold the process open indefinitely), so the process exits cleanly without delay.
 
 ## In-Memory Page Store (`mem.ts`)
 
@@ -2268,7 +2266,7 @@ The tracking lifecycle:
 
 ### Brotli compression
 
-Pages are brotli-compressed asynchronously (`zlib.brotliCompress`) when stored. All in-flight compression calls for a given batch of pages run concurrently via `Promise.all`, so startup cost scales with the slowest single page rather than the sum. The compressed buffer is served pre-compressed when the client sends `Accept-Encoding: br`, avoiding per-request compression.
+Pages are brotli-compressed asynchronously (`zlib.brotliCompress`) when stored in memory. In development mode, compression uses minimum quality (`BROTLI_MIN_QUALITY = 1`) so background compression is instantaneous and avoids queuing heavy C++ threadpool tasks that could delay process exit. In production builds, maximum quality (`BROTLI_MAX_QUALITY = 11`) is used. The compressed buffer is served pre-compressed when the client sends `Accept-Encoding: br`, avoiding per-request compression.
 
 ## Watch System (`watch.ts`)
 
