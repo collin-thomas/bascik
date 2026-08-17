@@ -842,6 +842,26 @@ describe("startHttp2Server – graceful shutdown", () => {
     mockExit.mockRestore();
   });
 
+  it("destroys open sessions on SIGINT so long-lived SSE streams do not block shutdown", async () => {
+    await startHttp2Server();
+
+    const [, sessionHandler] = mockServer.on.mock.calls.find(
+      (c: any[]) => c[0] === "session",
+    ) as [string, (session: { destroy: ReturnType<typeof vi.fn>; once: ReturnType<typeof vi.fn> }) => void];
+
+    const mockSession = { destroy: vi.fn(), once: vi.fn(), on: vi.fn() };
+    sessionHandler(mockSession);
+
+    const [, sigIntHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
+      (c: any[]) => c[0] === "SIGINT",
+    ) as [string, () => void];
+
+    const mockExit = vi.spyOn(process, "exit").mockImplementation((_code?: string | number | null) => undefined as never);
+    sigIntHandler();
+    expect(mockSession.destroy).toHaveBeenCalled();
+    mockExit.mockRestore();
+  });
+
   it("exits with code 0 on SIGINT", async () => {
     await startHttp2Server();
     const [, sigIntHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
@@ -852,6 +872,24 @@ describe("startHttp2Server – graceful shutdown", () => {
     sigIntHandler();
     expect(mockExit).toHaveBeenCalledWith(0);
     mockExit.mockRestore();
+  });
+
+  it("exits with code 0 if server.close callback does not fire immediately (fallback timeout)", async () => {
+    vi.useFakeTimers();
+    mockServer.close.mockImplementation(() => { }); // don't invoke callback
+    await startHttp2Server();
+    const [, sigIntHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
+      (c: any[]) => c[0] === "SIGINT",
+    ) as [string, () => void];
+
+    const mockExit = vi.spyOn(process, "exit").mockImplementation((_code?: string | number | null) => undefined as never);
+    sigIntHandler();
+    expect(mockExit).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(mockExit).toHaveBeenCalledWith(0);
+    mockExit.mockRestore();
+    mockServer.close.mockImplementation((cb?: (err?: Error) => void) => { cb?.(); });
+    vi.useRealTimers();
   });
 });
 
