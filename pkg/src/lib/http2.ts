@@ -541,8 +541,17 @@ export const startHttp2Server = async () => {
     openSessions.clear();
     // Close all registered handles (chokidar watchers, exec watchers).
     runShutdownHandlers().catch(() => { });
-    server.close();
-    process.exit(0);
+
+    server.close((err) => {
+      if (err) console.error("Error closing server:", err);
+      process.exit(0);
+    });
+
+    // Force exit if sessions or connections haven't drained within 10 s.
+    setTimeout(() => {
+      console.error("Graceful shutdown timeout — forcing exit");
+      process.exit(1);
+    }, 10_000).unref();
   };
   process.setMaxListeners(process.getMaxListeners() + 2);
   process.once("SIGTERM", () => gracefulShutdown("SIGTERM"));

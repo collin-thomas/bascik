@@ -24,7 +24,7 @@ export const PACKAGE_JSON = (name: string): string =>
         build: "bascik --build",
       },
       dependencies: {
-        "@bascik/bascik": "latest",
+        "@bascik/bascik": "file:../pkg",
       },
     },
     null,

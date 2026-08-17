@@ -11,6 +11,10 @@ export const LIVE_RELOAD_SCRIPT = `
   (function() {
     var wasConnected = false;
     var source;
+    var retryCount = 0;
+    var maxRetries = 5;
+    var retryTimeout = null;
+
     function connect() {
       if (source) return;
       source = new EventSource("/bascik-live-reload");
@@ -18,6 +22,7 @@ export const LIVE_RELOAD_SCRIPT = `
         if (e.data === 'reload') {
           window.location.reload();
         } else if (e.data === 'connected') {
+          retryCount = 0;
           if (wasConnected) {
             window.location.reload();
           }
@@ -27,9 +32,17 @@ export const LIVE_RELOAD_SCRIPT = `
       source.onerror = function() {
         source.close();
         source = null;
+        if (retryCount < maxRetries) {
+          var delay = Math.pow(2, retryCount) * 1000;
+          retryCount++;
+          if (retryTimeout) clearTimeout(retryTimeout);
+          retryTimeout = setTimeout(connect, delay);
+        }
       };
     }
     function instantConnect() {
+      retryCount = 0;
+      if (retryTimeout) clearTimeout(retryTimeout);
       if (!source) {
         connect();
       }
@@ -38,7 +51,10 @@ export const LIVE_RELOAD_SCRIPT = `
     document.addEventListener('visibilitychange', function() {
       if (document.visibilityState === 'visible') instantConnect();
     });
-    window.addEventListener('beforeunload', function() { if (source) source.close(); });
+    window.addEventListener('beforeunload', function() {
+      if (retryTimeout) clearTimeout(retryTimeout);
+      if (source) source.close();
+    });
     connect();
   })();
 </script>

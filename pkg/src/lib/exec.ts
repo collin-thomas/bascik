@@ -35,23 +35,43 @@ export const startExecDev = (): void => {
   for (const entry of entries) {
     if (!entry.watch) continue;
     let running = false;
+    let pending = false;
+
+    const triggerRun = () => {
+      if (running) {
+        pending = true;
+        return;
+      }
+      running = true;
+      runScript(entry.script)
+        .then(() => eventEmitter.emit('asset-changed'))
+        .catch((err) => console.error('[bascik] exec error:', err))
+        .finally(() => {
+          running = false;
+          if (pending) {
+            pending = false;
+            triggerRun();
+          }
+        });
+    };
 
     // Non-blocking startup run — no reload needed on first run
     running = true;
     runScript(entry.script)
       .catch((err) => console.error('[bascik] exec error:', err))
-      .finally(() => { running = false; });
+      .finally(() => {
+        running = false;
+        if (pending) {
+          pending = false;
+          triggerRun();
+        }
+      });
 
     const patterns = Array.isArray(entry.watch) ? entry.watch : [entry.watch];
     const watcher = chokidar
       .watch(patterns, { ignoreInitial: true })
       .on('all', () => {
-        if (running) return; // drop concurrent trigger
-        running = true;
-        runScript(entry.script)
-          .then(() => eventEmitter.emit('asset-changed'))
-          .catch((err) => console.error('[bascik] exec error:', err))
-          .finally(() => { running = false; });
+        triggerRun();
       });
     registerShutdownHandler(() => watcher.close());
   }
