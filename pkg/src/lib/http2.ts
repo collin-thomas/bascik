@@ -564,12 +564,13 @@ export const startHttp2Server = async () => {
     for (const session of openSessions) session.destroy();
     // Close all registered handles (chokidar watchers, exec watchers).
     runShutdownHandlers().catch(() => { });
+    const timer = setTimeout(() => process.exit(0), 1000);
+    timer.unref();
     server.close((err) => {
+      clearTimeout(timer);
       if (err) console.error("[bascik] Error closing server:", err);
       process.exit(0);
     });
-    // Fallback force exit if server.close() hasn't called back within 1s.
-    setTimeout(() => process.exit(0), 1000).unref();
   };
   process.setMaxListeners(process.getMaxListeners() + 2);
   process.once("SIGTERM", () => gracefulShutdown("SIGTERM"));
