@@ -729,6 +729,23 @@ describe("startHttp2Server – rate limiting", () => {
       expect.objectContaining({ ":status": 200 }),
     );
   });
+
+  it("handles empty/missing remoteIp safely in rate limiting without throwing", async () => {
+    mockMem.getPage.mockReturnValue(makePage());
+    const handler = getStreamHandler()!;
+
+    // Stream with a null session socket/remoteAddress or throwing socket should resolve remoteIp as "unknown"
+    const badStream1 = { ...makeStream(), session: { socket: null } };
+    await expect(handler(badStream1, makeHeaders("/about", "GET"))).resolves.not.toThrow();
+
+    const badStream2 = {
+      ...makeStream(),
+      get session() {
+        throw new Error("ERR_HTTP2_NO_SOCKET_MANIPULATION");
+      },
+    };
+    await expect(handler(badStream2, makeHeaders("/about", "GET"))).resolves.not.toThrow();
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -253,7 +253,10 @@ export const startHttp2Server = async () => {
 
         // ── Rate limiting ────────────────────────────────────────────────────
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const remoteIp = (stream as any).session?.socket?.remoteAddress ?? "unknown";
+        let remoteIp = "unknown";
+        try {
+          remoteIp = (stream as any).session?.socket?.remoteAddress ?? "unknown";
+        } catch { }
         if (BascikConfig.isProdServer && isRateLimited(remoteIp)) {
           responseStatus = 429;
           stream.respond({ ":status": 429, "retry-after": String(RATE_WINDOW_MS / 1000), ...SECURITY_HEADERS });
@@ -562,8 +565,9 @@ export const startHttp2Server = async () => {
     console.log(`\nReceived ${signal}, shutting down gracefully…`);
     // Destroy open sessions and underlying sockets so streams close immediately.
     for (const session of openSessions) {
-      session.socket?.destroy();
-      session.destroy();
+      try {
+        session.destroy();
+      } catch { }
     }
     openSessions.clear();
     // Close all registered handles (chokidar watchers, exec watchers).

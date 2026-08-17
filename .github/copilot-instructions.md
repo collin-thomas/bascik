@@ -79,22 +79,18 @@ The `renderMd` helper (`docs/scripts/md-renderer.ts`) applies these transformati
 
 ## Updating llms.txt, SKILL.md, and create/assets/SKILL.md
 
-**Preferred workflow** — invoke the prompt file. It regenerates `llms.txt`, reads all docs content, updates SKILL.md with LLM judgment, then propagates everything in one shot:
+**Do not run `#pre-push.prompt.md` or pre-push scripts automatically.** The user handles running pre-push steps.
 
-```
-#pre-push.prompt.md
-```
+Do not call `docs:generate:llms` or `yarn docs:generate:llms` automatically.
 
-Do not call `docs:generate:llms` or `yarn docs:generate:llms` individually — the prompt handles all of that.
-
-**Shell-only fallback** (no SKILL.md update, just propagate after a manual edit):
+If manually updating or generating files when specifically requested:
 
 ```sh
 yarn docs:generate:llms
 yarn create:prepack
 ```
 
-These files must stay in sync. A content change that lands in `llms.txt` but not `SKILL.md` (or vice versa) means Copilot is working from stale guidance — which is how bugs like "use `querySelector` for per-instance elements" go undetected.
+These files must stay in sync. A content change that lands in `llms.txt` but not `SKILL.md` (or vice versa) means Copilot is working from stale guidance, which is how bugs like "use `querySelector` for per-instance elements" go undetected.
 
 ## Sidebar
 
@@ -162,11 +158,11 @@ The mapping is straightforward: `docs/content/topic.md` corresponds to `docs/src
 
 `docs/content/compatibility.md` tracks which CSS and JavaScript patterns Bascik's scoping engine handles. **Whenever a CSS or JS scoping capability is added, changed, or fixed**, update the relevant table row (or add a new one) in that file before finishing the task.
 
-- New capability → add a row with ✅ and a concise Notes entry.
-- Fixed or improved → update the Status and/or Notes of the existing row.
-- Intentionally unsupported → add a row with 🚫 and an explanation.
+- New capability: add a row with ✅ and a concise Notes entry.
+- Fixed or improved: update the Status and/or Notes of the existing row.
+- Intentionally unsupported: add a row with 🚫 and an explanation.
 
-After editing `compatibility.md`, run `#pre-push.prompt.md` as usual.
+After editing `compatibility.md`, run `#pre-push.prompt.md` is NOT required. The user handles running pre-push steps.
 
 ## Keeping Docs in Sync with the Package
 
@@ -190,8 +186,8 @@ Then inspect the relevant `docs/dist/` output to confirm the pkg change has the 
 
 **When adding, removing, or significantly changing tests in `pkg/src/`:**
 
-- The testing docs (`docs/content/internals/testing.md`) describe the test approach, not an enumerated list of files — the "Test Files" section links to GitHub which is always current. You only need to update the prose if the testing *patterns* change (e.g. a new mock strategy, a new test runner, new helpers).
-- The coverage numbers shown on the testing page are read from `pkg/test-coverage.json` (unit tests) and `pkg/e2e-test-coverage.json` (E2E build-step coverage) at docs build time. After adding tests, run `#pre-push.prompt.md` — it regenerates both coverage files as part of its Step 1.
+- The testing docs (`docs/content/internals/testing.md`) describe the test approach, not an enumerated list of files. The "Test Files" section links to GitHub which is always current. You only need to update the prose if the testing *patterns* change (e.g. a new mock strategy, a new test runner, new helpers).
+- The coverage numbers shown on the testing page are read from `pkg/test-coverage.json` (unit tests) and `pkg/e2e-test-coverage.json` (E2E build-step coverage) at docs build time. Do not run `#pre-push.prompt.md` or pre-push scripts automatically after adding tests. The user handles running pre-push steps.
 
 **When changing `pkg/src/lib/dev-server.md` (or adding to the live-reload / SSE / watch system):**
 Update `docs/content/internals/dev-server.md` to reflect the change. This page is the source of truth for how the dev server and watch system work.
