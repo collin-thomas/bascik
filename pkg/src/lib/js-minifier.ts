@@ -233,14 +233,14 @@ export const minifyJs = (js: string): string => {
 
         // Do NOT insert semicolon if next line starts with closing/continuation structures
         const startsWithContinuation =
-          /^(else|catch|finally|while|instanceof|in|of|,|;|:|\)|\}|\]|\.)/.test(line);
+          /^(else|catch|finally|while|instanceof|in|of|,|;|:|\)|\}|\]|\.|\?|\*|%|\^|<|>|=|\+(?!\+)|\-(?!\-)|&|\|)/.test(line);
 
         if (!endsWithOpenControl && !startsWithContinuation && !/[;{}:,]\s*$/.test(prevLine)) {
           needsSemicolon = true;
         }
       } else if (lastChar === "}") {
         // After }, insert semicolon unless followed by control continuation (else, catch, finally, while, etc.)
-        if (!/^(else|catch|finally|while|,|;|:|\)|\}|\]|\.)/.test(line)) {
+        if (!/^(else|catch|finally|while|instanceof|in|of|,|;|:|\)|\}|\]|\.|\?|\*|%|\^|<|>|=|\+(?!\+)|\-(?!\-)|&|\|)/.test(line)) {
           needsSemicolon = true;
         }
       }
