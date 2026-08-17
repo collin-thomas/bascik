@@ -108,7 +108,7 @@ bascik/
   extensions/   ← editor tooling, including the VS Code extension for component navigation and scoping checks
 ```
 
-The `create/` folder is intentionally separate from `pkg/`. Contributor work in this monorepo uses pnpm with the single root `pnpm-lock.yaml`, while generated projects intentionally use npm and receive their own `package-lock.json`. That split keeps contributor workflows pnpm-only while preserving the standard npm onboarding flow for generated apps.
+The `create/` folder is intentionally separate from `pkg/`. Contributor work in this monorepo uses Yarn 4 with `yarn.lock`, while generated projects intentionally use npm and receive their own `package-lock.json`. That split keeps contributor workflows Yarn-based while preserving the standard npm onboarding flow for generated apps.
 
 The editor package in `extensions/vscode-bascik/` is intentionally separate from `pkg/`. It provides command-click component resolution and warnings for patterns that are unsupported or risky under Bascik's scoping model. The rules are generated from the compatibility matrix in `docs/content/compatibility.md` via `docs/scripts/generate-compatibility-rules.mjs`, so the editor and the published capability table stay in sync automatically instead of drifting apart.
 
@@ -1091,10 +1091,10 @@ Bascik has two test suites, both run from `pkg/`.
 ### Unit Tests (Vitest)
 
 ```sh
-pnpm test          # watch mode
-pnpm test:ci       # single run (CI)
-pnpm test:coverage # with coverage report
-pnpm bench         # benchmarks
+yarn pkg:test          # watch mode
+yarn pkg:test:ci       # single run (CI)
+yarn pkg:test:coverage # with coverage report
+yarn pkg:bench         # benchmarks
 ```
 
 Each `pkg/src/lib/*.ts` module has a paired `*.test.ts`. Because modules depend on `BascikConfig` (a singleton), unit tests use `vi.mock('../config.ts', ...)` to stub configuration, then import the module under test **after** the mock call.
@@ -1102,7 +1102,7 @@ Each `pkg/src/lib/*.ts` module has a paired `*.test.ts`. Because modules depend 
 ### End-to-End Tests (Playwright)
 
 ```sh
-pnpm build && pnpm e2e   # build package first, then run all e2e tests
+yarn pkg:build && yarn pkg:e2e   # build package first, then run all e2e tests
 ```
 
 The e2e suite lives in `pkg/e2e/`. Playwright's `webServer` hook:
@@ -1161,8 +1161,8 @@ export default defineConfig({
 Two GitHub Actions workflows handle all automation.
 
 **CI** (`.github/workflows/ci.yml`) — runs on every push to `main` and every PR, two parallel jobs on Node 24:
-- `test`: runs `pnpm test:ci` (unit tests with coverage)
-- `e2e`: builds the package (`pnpm build`), installs Chromium via `playwright install --with-deps chromium`, then runs `pnpm e2e` (Playwright tests)
+- `test`: runs `yarn pkg:test:ci` (unit tests with coverage)
+- `e2e`: builds the package (`yarn pkg:build`), installs Chromium via `playwright install --with-deps chromium`, then runs `yarn pkg:e2e` (Playwright tests)
 - Both jobs have `permissions: contents: read`
 
 **Release** (`.github/workflows/release.yml`) — triggers on version tags:

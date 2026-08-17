@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 import chokidar from 'chokidar';
 import { BascikConfig } from './config.js';
-import { eventEmitter } from './events.js';
+import { eventEmitter, registerShutdownHandler } from './events.js';
 
 const runScript = (scriptPath: string): Promise<void> =>
   new Promise((resolve, reject) => {
@@ -43,7 +43,7 @@ export const startExecDev = (): void => {
       .finally(() => { running = false; });
 
     const patterns = Array.isArray(entry.watch) ? entry.watch : [entry.watch];
-    chokidar
+    const watcher = chokidar
       .watch(patterns, { ignoreInitial: true })
       .on('all', () => {
         if (running) return; // drop concurrent trigger
@@ -53,5 +53,6 @@ export const startExecDev = (): void => {
           .catch((err) => console.error('[bascik] exec error:', err))
           .finally(() => { running = false; });
       });
+    registerShutdownHandler(() => watcher.close());
   }
 };

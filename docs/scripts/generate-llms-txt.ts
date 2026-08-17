@@ -9,8 +9,8 @@
  * Usage (from docs/):
  *   node scripts/generate-llms-txt.ts
  *
- * Or via pnpm workspace script:
- *   pnpm --filter bascik-docs generate:llms
+ * Or via Yarn workspace script:
+ *   yarn workspace bascik-docs generate:llms
  */
 
 import { readdir, readFile, writeFile } from 'node:fs/promises';

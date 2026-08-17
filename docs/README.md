@@ -24,20 +24,21 @@ The official Bascik documentation site — built with Bascik itself.
 
 ## Development
 
-Run `pnpm install` from the **repo root** (not this directory). The repo uses pnpm workspaces, so `@bascik/bascik` is symlinked directly to `pkg/` — no pack step needed.
+Run `yarn install` from the **repo root** (not this directory). The repo uses Yarn workspaces, so `@bascik/bascik` is symlinked directly to `pkg/` — no pack step needed.
 
 ```sh
 # from repo root
-pnpm install
-pnpm --filter @bascik/bascik build   # build the package first
-pnpm --filter bascik-docs dev        # dev server at https://localhost:8443
-pnpm --filter bascik-docs build      # write dist/
+corepack enable
+yarn install
+yarn pkg:build                       # build the package first
+yarn docs:dev                        # dev server at https://localhost:8443
+yarn docs:build                      # write dist/
 ```
 
 ## Package Development (linked source)
 
 ```sh
-pnpm --filter bascik-docs pkg-dev   # watches pkg source directly via --watch-path
+yarn workspace bascik-docs pkg-dev   # watches pkg source directly via --watch-path
 ```
 
 ## Design

@@ -144,7 +144,7 @@ The `if:` condition on each workflow job ensures only the relevant package is pu
 
 1. **Update version** in `pkg/package.json` following [Semantic Versioning](https://semver.org/).
 2. **Update `CHANGELOG.md`** — move entries from `[Unreleased]` to the new version with today's date.
-3. **Run tests locally** — `pnpm --filter @bascik/bascik test:ci`.
+3. **Run tests locally** — `yarn pkg:test:ci`.
 4. **Commit and tag**:
    ```sh
    git add pkg/package.json CHANGELOG.md
@@ -158,7 +158,7 @@ The `if:` condition on each workflow job ensures only the relevant package is pu
 
 1. **Update version** in `create/package.json`.
 2. **Update `CHANGELOG.md`** if applicable.
-3. **Run tests locally** — `pnpm --filter create-bascik test:ci`.
+3. **Run tests locally** — `yarn workspace create-bascik test:ci`.
 4. **Commit and tag**:
    ```sh
    git add create/package.json
@@ -176,36 +176,36 @@ Ensure the `NPM_TOKEN` secret is set in the repository settings (Settings → Se
 
 ```sh
 # For @bascik/bascik
-pnpm --filter @bascik/bascik build
-pnpm --filter @bascik/bascik exec npm publish --access public
+yarn pkg:build
+yarn workspace @bascik/bascik npm publish --access public
 
 # For create-bascik
-pnpm --filter create-bascik build
-pnpm --filter create-bascik exec npm publish --access public
+yarn create:build
+yarn workspace create-bascik npm publish --access public
 ```
 
 ---
 
 ## Development
 
-Requires Node.js ≥ 24. Run `pnpm install` from the repo root.
+Requires Node.js ≥ 24. Run `yarn install` from the repo root.
 
 ```sh
-pnpm --filter @bascik/bascik build       # compile dist/
-pnpm --filter @bascik/bascik test --run  # unit tests, single run
-pnpm --filter @bascik/bascik test:ci     # unit tests + coverage summary (used in CI)
-pnpm --filter @bascik/bascik e2e         # E2E tests
-pnpm --filter @bascik/bascik typecheck   # JSDoc/TypeScript type check
-pnpm --filter @bascik/bascik bench       # micro-benchmarks
+yarn pkg:build        # compile dist/
+yarn pkg:test --run   # unit tests, single run
+yarn pkg:test:ci      # unit tests + coverage summary (used in CI)
+yarn pkg:e2e          # E2E tests
+yarn pkg:typecheck    # JSDoc/TypeScript type check
+yarn pkg:bench        # micro-benchmarks
 ```
 
 ### Tests
 
 ```sh
-pnpm --filter @bascik/bascik test          # watch mode
-pnpm --filter @bascik/bascik test --run    # single run
-pnpm --filter @bascik/bascik test:ci       # single run + coverage summary (used in CI)
-pnpm --filter @bascik/bascik test:coverage # full coverage report → coverage/
+yarn pkg:test           # watch mode
+yarn pkg:test --run     # single run
+yarn pkg:test:ci        # single run + coverage summary (used in CI)
+yarn pkg:test:coverage  # full coverage report → coverage/
 ```
 
 ### Type checking (JSDoc + checkJs)
@@ -213,7 +213,7 @@ pnpm --filter @bascik/bascik test:coverage # full coverage report → coverage/
 The source is plain JavaScript with JSDoc type annotations. TypeScript's compiler checks them without a build step:
 
 ```sh
-pnpm --filter @bascik/bascik typecheck
+yarn pkg:typecheck
 ```
 
 This runs `tsc --noEmit` using `tsconfig.json` (`checkJs: true`, `strict: true`). Fix any reported errors before opening a PR.
@@ -223,7 +223,7 @@ This runs `tsc --noEmit` using `tsconfig.json` (`checkJs: true`, `strict: true`)
 Repeatable micro-benchmarks for the transpile pipeline (powered by vitest bench):
 
 ```sh
-pnpm --filter @bascik/bascik bench
+yarn pkg:bench
 ```
 
 **Baseline numbers (Node.js 24, Apple M-series):**
@@ -240,7 +240,7 @@ pnpm --filter @bascik/bascik bench
 | `recursivelyTranspile` — 50 components | ~1.45K  | ~691µs       |
 | `deduplicateCss` — 20 entries          | ~1.4M   | ~0.7µs       |
 
-Run `pnpm bench` after any change to the hot paths to catch regressions.
+Run `yarn bench` after any change to the hot paths to catch regressions.
 
 ---
 
@@ -366,7 +366,7 @@ const buildScopingPipeline = (instanceId: string): ComponentTransform[] =>
 
 1. Fork the repo and create a branch from `main`.
 2. Write tests for new functionality (TDD preferred).
-3. Run `pnpm --filter @bascik/bascik test --run` and `pnpm --filter @bascik/bascik typecheck` — both must pass.
-4. Run `pnpm --filter @bascik/bascik bench` if touching the transpile pipeline — include numbers in the PR description.
+3. Run `yarn pkg:test --run` and `yarn pkg:typecheck` — both must pass.
+4. Run `yarn pkg:bench` if touching the transpile pipeline — include numbers in the PR description.
 5. Update `CHANGELOG.md` under `[Unreleased]`.
 6. Open a PR against `main`.

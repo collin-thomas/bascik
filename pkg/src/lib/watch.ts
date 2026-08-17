@@ -14,13 +14,16 @@ import {
 } from "./file-system.js";
 import { BascikConfig } from "./config.js";
 import { MIME_MAP } from "./mime.js";
-import { eventEmitter } from "./events.js";
+import { eventEmitter, registerShutdownHandler } from "./events.js";
 
 export const watchFiles = async () => {
   const onWatchError = (err: unknown) => console.error("[bascik] watch error:", err);
+  const watchers: ReturnType<typeof chokidar.watch>[] = [];
+  const w = <T extends ReturnType<typeof chokidar.watch>>(watcher: T) => { watchers.push(watcher); return watcher; };
+  if (!BascikConfig.isBuild) registerShutdownHandler(() => Promise.all(watchers.map(watcher => watcher.close())).then(() => { }));
 
   // Copy non-page files
-  chokidar
+  w(chokidar
     .watch([BascikConfig.directory.pages], {
       ignored: (path: string, stats?: Stats): boolean => {
         const hasFileExt = Array.from(MIME_MAP.keys()).some((ext) =>
@@ -41,12 +44,12 @@ export const watchFiles = async () => {
       } catch (err) { onWatchError(err); }
     })
     .on("unlink", (path) => deleteDistFile(path).catch(onWatchError))
-    .on("unlinkDir", (path) => deleteDistDir(path).catch(onWatchError));
+    .on("unlinkDir", (path) => deleteDistDir(path).catch(onWatchError)));
 
   // Transpile pages as they change
   let initialScanDone = false;
   await new Promise<void>((resolve, reject) => {
-    chokidar
+    w(chokidar
       .watch([BascikConfig.directory.pages], {
         // only watch html files
         ignored: (path: string, stats?: Stats): boolean =>
@@ -62,11 +65,11 @@ export const watchFiles = async () => {
       .on("ready", () => {
         initialScanDone = true;
         processAllPages().then(() => resolve()).catch(reject);
-      });
+      }));
   });
 
   // Transpile pages if components change
-  chokidar
+  w(chokidar
     .watch([BascikConfig.directory.components], {
       ignored: (path: string, stats?: Stats): boolean => {
         return !!(
@@ -80,17 +83,17 @@ export const watchFiles = async () => {
     .on("add", async () => processAllPages().catch(onWatchError))
     // For changes and deletion of components we can be selective
     .on("change", async (path) => selectivelyProcessPages(path).catch(onWatchError))
-    .on("unlink", async (path) => selectivelyProcessPages(path).catch(onWatchError));
+    .on("unlink", async (path) => selectivelyProcessPages(path).catch(onWatchError)));
 
   // Re-transpile all pages when user-specified extra paths change (dev only)
   if (!BascikConfig.isBuild && BascikConfig.watch.length) {
-    chokidar
+    w(chokidar
       .watch(BascikConfig.watch, {
         ignoreInitial: true,
         persistent: true,
       })
       .on("add", async (path) => selectivelyProcessPagesForWatchPath(path).catch(onWatchError))
       .on("change", async (path) => selectivelyProcessPagesForWatchPath(path).catch(onWatchError))
-      .on("unlink", async () => processAllPages().catch(onWatchError));
+      .on("unlink", async () => processAllPages().catch(onWatchError)));
   }
 };

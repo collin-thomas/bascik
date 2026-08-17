@@ -68,7 +68,7 @@ const {
 
 vi.mock("node:child_process", () => ({ spawn: mockSpawn }));
 vi.mock("chokidar", () => ({ default: { watch: mockWatch } }));
-vi.mock("./events.js", () => ({ eventEmitter: { emit: mockEventEmit } }));
+vi.mock("./events.js", () => ({ eventEmitter: { emit: mockEventEmit }, registerShutdownHandler: vi.fn() }));
 
 vi.mock("./config.js", () => ({
   BascikConfig: { exec: undefined },

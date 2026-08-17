@@ -1,8 +1,30 @@
 {
   "private": true,
-  "packageManager": "pnpm@11.22.0",
+  "packageManager": "yarn@4.6.0",
+  "workspaces": [
+    "pkg",
+    "create",
+    "docs",
+    "extensions/vscode-bascik"
+  ],
   "engines": {
-    "node": ">=24.17.0",
-    "pnpm": ">=11"
+    "node": ">=24.17.0"
+  },
+  "scripts": {
+    "pkg:build": "yarn workspace @bascik/bascik build",
+    "pkg:test": "yarn workspace @bascik/bascik test",
+    "pkg:test:ci": "yarn workspace @bascik/bascik test:ci",
+    "pkg:test:coverage": "yarn workspace @bascik/bascik test:coverage",
+    "pkg:typecheck": "yarn workspace @bascik/bascik typecheck",
+    "pkg:e2e": "yarn workspace @bascik/bascik e2e",
+    "pkg:bench": "yarn workspace @bascik/bascik bench",
+    "docs:build": "yarn workspace bascik-docs build",
+    "docs:update-coverage": "yarn workspace @bascik/bascik update-coverage",
+    "docs:update-e2e-coverage": "yarn workspace @bascik/bascik update-e2e-coverage",
+    "docs:dev": "yarn workspace bascik-docs dev",
+    "docs:generate:llms": "yarn workspace bascik-docs generate:llms",
+    "create:build": "yarn workspace create-bascik build",
+    "create:prepack": "yarn workspace create-bascik prepack",
+    "create:test-site": "yarn create:build && node create/dist/index.js my-site -y"
   }
 }

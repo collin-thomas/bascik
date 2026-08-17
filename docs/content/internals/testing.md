@@ -4,34 +4,34 @@ Bascik has two separate test suites: **unit tests** (Vitest) that verify individ
 
 ## Running Unit Tests
 
-All commands are run from the `pkg/` directory:
+All commands can be run from the repository root:
 
 ```sh
 # Interactive watch mode (re-runs on file changes)
-pnpm test
+yarn pkg:test
 
 # Single run (used in CI)
-pnpm test:ci
+yarn pkg:test:ci
 
 # Single run with full coverage report
-pnpm test:coverage
+yarn pkg:test:coverage
 
 # Run benchmarks
-pnpm bench
+yarn pkg:bench
 ```
 
 ## Running E2E Tests
 
-End-to-end tests are also run from `pkg/`:
+End-to-end tests are run via:
 
 ```sh
-pnpm e2e
+yarn pkg:e2e
 ```
 
 This builds the fixture site (using the current `dist/`) and then runs Playwright against it. The first run requires the package to be built first:
 
 ```sh
-pnpm build && pnpm e2e
+yarn pkg:build && yarn pkg:e2e
 ```
 
 To run a specific test file or use the Playwright UI:
@@ -115,7 +115,7 @@ test.describe('my-feature-test page', () => {
 });
 ```
 
-> **Rebuild before testing.** Playwright tests run against `e2e/dist/`, which is built from the current `pkg/dist/`. If you change `pkg/src/`, run `pnpm build` before `pnpm e2e` so the fixture picks up the latest transpiler.
+> **Rebuild before testing.** Playwright tests run against `e2e/dist/`, which is built from the current `pkg/dist/`. If you change `pkg/src/`, run `yarn build` before `yarn e2e` so the fixture picks up the latest transpiler.
 
 
 
@@ -212,7 +212,7 @@ The package uses two tsconfig files:
 Run type checking without emitting output:
 
 ```sh
-pnpm typecheck
+yarn typecheck
 ```
 
 The `docs/` package also has a `tsconfig.json` covering `docs/scripts/`. It uses the TypeScript from `pkg/` (docs has no own typescript package):
@@ -226,6 +226,6 @@ npx --prefix pkg tsc -p docs/tsconfig.json --noEmit
 1. Fork the repository and create a branch.
 2. Make your changes in `pkg/src/`.
 3. Add or update tests in the paired `*.test.ts` file.
-4. Run `pnpm test` and ensure all tests pass.
-5. Run `pnpm typecheck` to confirm there are no TypeScript errors.
+4. Run `yarn test` and ensure all tests pass.
+5. Run `yarn typecheck` to confirm there are no TypeScript errors.
 6. Open a pull request against `main`.

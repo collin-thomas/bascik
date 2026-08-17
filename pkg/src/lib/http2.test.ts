@@ -57,6 +57,7 @@ vi.mock("./events.js", () => ({
     on: vi.fn(),
     removeListener: vi.fn(),
   },
+  runShutdownHandlers: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("./server-scripts.js", () => ({
@@ -797,31 +798,35 @@ describe("startHttp2Server – graceful shutdown", () => {
     expect(events).toContain("SIGINT");
   });
 
-  it("calls process.exit(0) on SIGTERM", async () => {
+  it("calls server.close() and runShutdownHandlers on SIGTERM", async () => {
     await startHttp2Server();
     const [, sigTermHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
       (c: any[]) => c[0] === "SIGTERM",
     ) as [string, () => void];
 
+    const { runShutdownHandlers } = await import("./events.js");
     const mockExit = vi.spyOn(process, "exit").mockImplementation((_code?: string | number | null) => undefined as never);
     sigTermHandler();
-    expect(mockExit).toHaveBeenCalledWith(0);
+    expect(mockServer.close).toHaveBeenCalled();
+    expect(runShutdownHandlers).toHaveBeenCalled();
     mockExit.mockRestore();
   });
 
-  it("calls process.exit(0) on SIGINT", async () => {
+  it("calls server.close() and runShutdownHandlers on SIGINT", async () => {
     await startHttp2Server();
     const [, sigIntHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
       (c: any[]) => c[0] === "SIGINT",
     ) as [string, () => void];
 
+    const { runShutdownHandlers } = await import("./events.js");
     const mockExit = vi.spyOn(process, "exit").mockImplementation((_code?: string | number | null) => undefined as never);
     sigIntHandler();
-    expect(mockExit).toHaveBeenCalledWith(0);
+    expect(mockServer.close).toHaveBeenCalled();
+    expect(runShutdownHandlers).toHaveBeenCalled();
     mockExit.mockRestore();
   });
 
-  it("ignores a second signal so process.exit is only called once", async () => {
+  it("ignores a second signal so shutdown runs only once", async () => {
     await startHttp2Server();
     const [, sigIntHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
       (c: any[]) => c[0] === "SIGINT",
@@ -833,7 +838,19 @@ describe("startHttp2Server – graceful shutdown", () => {
     const mockExit = vi.spyOn(process, "exit").mockImplementation((_code?: string | number | null) => undefined as never);
     sigIntHandler();
     sigTermHandler(); // second signal during shutdown — must be a no-op
-    expect(mockExit).toHaveBeenCalledTimes(1);
+    expect(mockServer.close).toHaveBeenCalledTimes(1);
+    mockExit.mockRestore();
+  });
+
+  it("exits with code 0 on SIGINT", async () => {
+    await startHttp2Server();
+    const [, sigIntHandler] = (process.once as ReturnType<typeof vi.spyOn>).mock.calls.find(
+      (c: any[]) => c[0] === "SIGINT",
+    ) as [string, () => void];
+
+    const mockExit = vi.spyOn(process, "exit").mockImplementation((_code?: string | number | null) => undefined as never);
+    sigIntHandler();
+    expect(mockExit).toHaveBeenCalledWith(0);
     mockExit.mockRestore();
   });
 });

@@ -20,28 +20,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Use Node.js 24
         uses: actions/setup-node@v4
         with:
           node-version: 24
           registry-url: 'https://registry.npmjs.org'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 11.22.0
-          run_install: false
+          cache: 'yarn'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Run tests
-        working-directory: pkg
-        run: pnpm test:ci
+        run: yarn pkg:test:ci
 
       - name: Build
-        working-directory: pkg
-        run: pnpm build
+        run: yarn pkg:build
 
       - name: Publish to npm
         working-directory: pkg
@@ -60,28 +56,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Use Node.js 24
         uses: actions/setup-node@v4
         with:
           node-version: 24
           registry-url: 'https://registry.npmjs.org'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 11.22.0
-          run_install: false
+          cache: 'yarn'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Run tests
         working-directory: create
-        run: pnpm test:ci
+        run: yarn test:ci
 
       - name: Build
         working-directory: create
-        run: pnpm build
+        run: yarn build
 
       - name: Publish to npm
         working-directory: create

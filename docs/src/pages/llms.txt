@@ -347,6 +347,33 @@ Environment variables set in your shell or a `.env` file (loaded with a tool lik
 </script>
 ```
 
+## Concurrent Execution
+
+All build scripts on a page run concurrently. Bascik collects every `<script data-bascik-build>` tag at once and starts them all in parallel using `Promise.all`. A semaphore caps how many Node.js subprocesses are alive simultaneously based on available memory, but there is no document-order sequencing — script 4 can finish before script 1. The outputs are stitched back into the page in their original positions once all scripts have resolved, so the HTML order is always preserved.
+
+```html
+<!-- These four scripts all start at the same time. -->
+<head>
+  <script data-bascik-build>
+    const { canonical } = await import(…);
+    console.log(await canonical());        <!-- may finish 2nd -->
+  </script>
+  <script data-bascik-build>
+    const { openGraph } = await import(…);
+    console.log(await openGraph());        <!-- may finish 4th -->
+  </script>
+  <script data-bascik-build>
+    const { breadcrumbLd } = await import(…);
+    console.log(await breadcrumbLd());     <!-- may finish 1st -->
+  </script>
+  <script data-bascik-build>
+    const { articleSchema } = await import(…);
+    console.log(await articleSchema());    <!-- may finish 3rd -->
+  </script>
+</head>
+<!-- Output is always assembled in document order regardless of finish order. -->
+```
+
 ## Script Caching
 
 Bascik caches build script output to `node_modules/.cache/bascik/script-cache/` so subsequent builds skip the Node.js subprocess entirely for unchanged scripts. The cache key is a SHA-256 hash of:
@@ -355,7 +382,11 @@ Bascik caches build script output to `node_modules/.cache/bascik/script-cache/` 
 - The contents of any local `scripts/` or `content/` files the script imports
 - The `isBuild` flag and `siteUrl`
 
-If a dependency file changes (because you edited it or switched branches), the cache entry is invalid and the script re-runs automatically. On a large site with many build scripts, the first build after a content change is slower; subsequent builds use the cache.
+If a dependency file changes (because you edited it or switched branches), the cache entry is invalid and the script re-runs automatically.
+
+**How dependency tracking works.** Bascik does not instrument your script at runtime. Instead it statically scans the script source for quoted string literals that look like local file references — patterns matching `content/*.md` or `scripts/*.{mjs,js,ts}` — and hashes the content of each matched file into the cache key. If any of those files changes, the key changes and the cache misses. Paths computed at runtime (e.g. a variable built with string concatenation) are invisible to the scanner and will not be tracked. For those cases, set `buildScriptCache: false`. See [Build Script Output Cache](/internals/transpilation-pipeline#build-script-output-cache) in the internals docs for the full key specification.
+
+**Cold start vs. warm restarts.** The first time you start the dev server — or after clearing the cache — every script runs in full. On a site with many build scripts, this first build is noticeably slower. Once the cache is warm, restarting the dev server is much faster: scripts whose inputs haven't changed are served from disk in milliseconds instead of spawning a new Node.js process for each one.
 
 To clear the cache manually (useful after a branch switch that changes shared scripts):
 
@@ -363,7 +394,14 @@ To clear the cache manually (useful after a branch switch that changes shared sc
 rm -rf node_modules/.cache/bascik/script-cache
 ```
 
-To disable caching entirely, set `buildScriptCache: false` in your config. This is useful for scripts that read live external state not reflected in their source files.
+**Disable for scripts that read external state.** The cache key only covers files Bascik can watch: the script body and local `scripts/`/`content/` files. If a script fetches data from a source Bascik cannot watch — a live API, a database, a remote CMS, or a file referenced by a dynamic path computed at runtime — the cached output will go stale silently. Set `buildScriptCache: false` in your config for those scripts, or globally, so the script always runs fresh:
+
+```ts
+// bascik.config.ts
+export default defineConfig({
+  buildScriptCache: false,
+});
+```
 
 ## Limitations
 
@@ -1517,7 +1555,7 @@ Bascik was created by [Collin Thomas](https://github.com/collin-thomas).
 
 ## Why did you build Bascik?
 
-I wanted the fastest websites and dashboards but I needed components. I just wanted to use the foundational languages and not have some abstraction layer, and I didn't want to have to learn a tool, and I didn't want JavaScript at runtime as a bottleneck.
+I started building Bascik in late 2022. I wanted the fastest websites and dashboards but I needed components. I just wanted to use the foundational languages and not have some abstraction layer, and I didn't want to have to learn a tool, and I didn't want JavaScript at runtime as a bottleneck.
 
 Components have always been a JavaScript thing. Web Components tried to make it native but it's still JavaScript, and there's always Shadow DOM or virtual DOM involved. We don't need any of that. You can write HTML, CSS, and JavaScript and use it in multiple places on a site, you just need to copy it and scope it. That's really all it is, just a bunch of regex to make it happen.
 
@@ -1618,7 +1656,7 @@ Pass a different name to use it as both the directory name and the site title. I
 
 ## Starting the Dev Server
 
-Run `npm run dev` (or `pnpm dev`) to start the development server. Bascik serves your site over HTTP/2 at **https://localhost:8443** by default (the port auto-increments if 8443 is busy). It transpiles your pages, watches for changes, and live-reloads the browser on every save.
+Run `npm run dev` (or `yarn dev` / `pnpm dev`) to start the development server. Bascik serves your site over HTTP/2 at **https://localhost:8443** by default (the port auto-increments if 8443 is busy). It transpiles your pages, watches for changes, and live-reloads the browser on every save.
 
 SSL certificates are generated automatically on first run. Install [mkcert](https://github.com/FiloSottile/mkcert) for a trusted cert with no browser warning:
 
@@ -1647,7 +1685,7 @@ src/
 ```sh
 npm install @bascik/bascik
 # or
-pnpm add @bascik/bascik
+yarn add @bascik/bascik
 # or
 pnpm add @bascik/bascik
 ```
@@ -1700,6 +1738,122 @@ Components work inside `<head>`:
   <site-meta></site-meta>
 </head>
 ```
+
+# Page-Aware Head Scripts
+
+Some `<head>` tags need values that are specific to the current page: a canonical URL, an Open Graph image, a structured-data block. Hardcoding those values in every page file works, but a shared build script is easier to maintain — you change the logic once and every page picks it up automatically.
+
+Bascik makes this possible by injecting three environment variables into every `data-bascik-build` subprocess:
+
+| Variable | Value |
+|---|---|
+| `BASCIK_PAGE_FILE` | Absolute path to the HTML file currently being transpiled |
+| `BASCIK_PAGES_DIR` | Absolute path to the configured pages directory |
+| `BASCIK_SITE_URL` | The `siteUrl` from `bascik.config.ts` |
+
+A build script reads these and computes whatever it needs — without the page knowing anything about the logic.
+
+## Canonical URL: The Simplest Example
+
+A canonical URL tag tells search engines which URL is the authoritative version of a page. Every docs page on this site uses a shared `scripts/canonical.ts` that derives the URL from `BASCIK_PAGE_FILE`:
+
+```ts
+// scripts/canonical.ts
+export async function canonical(): Promise<string> {
+  const siteUrl = (process.env.BASCIK_SITE_URL ?? '').replace(/\/$/, '');
+  const pageFile = process.env.BASCIK_PAGE_FILE ?? '';
+  const pagesDir = process.env.BASCIK_PAGES_DIR ?? '';
+
+  if (!siteUrl || !pageFile || !pagesDir) return '';
+
+  // Convert the absolute file path to a root-relative route
+  const relPath = pageFile
+    .slice(pagesDir.length)
+    .replace(/^[\\/]/, '')
+    .replace(/\\/g, '/');
+
+  const withoutExt = relPath.replace(/\.html$/, '');
+  // index files map to the parent path
+  const route = withoutExt === 'index' ? '' : withoutExt.replace(/\/index$/, '/');
+  const urlPath = route ? `/${route}` : '/';
+
+  return `<link rel="canonical" href="${siteUrl}${urlPath}" />`;
+}
+```
+
+Use it from any page's `<head>`:
+
+```html
+<head>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { canonical } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/canonical.ts')).href
+    );
+    console.log(await canonical());
+  </script>
+</head>
+```
+
+`src/pages/getting-started.html` emits:
+
+```html
+<link rel="canonical" href="https://yourdomain.com/getting-started" />
+```
+
+`src/pages/internals/architecture.html` emits:
+
+```html
+<link rel="canonical" href="https://yourdomain.com/internals/architecture" />
+```
+
+The script block is identical on every page. Bascik injects a different `BASCIK_PAGE_FILE` for each, so the output is always specific to that page.
+
+## Reading the Page's Own HTML
+
+For richer outputs — Open Graph tags, JSON-LD structured data — a script can also read the page file itself to extract metadata. `BASCIK_PAGE_FILE` is an absolute path, so `readFile` works directly:
+
+```ts
+// scripts/article-schema.ts (simplified)
+import { readFile } from 'node:fs/promises';
+
+export async function articleSchema(): Promise<string> {
+  const pageFile = process.env.BASCIK_PAGE_FILE ?? '';
+  const pagesDir = process.env.BASCIK_PAGES_DIR ?? '';
+  const siteUrl = (process.env.BASCIK_SITE_URL ?? '').replace(/\/$/, '');
+  if (!pageFile || !siteUrl) return '';
+
+  // Read the page's own source HTML to extract its title and description
+  const html = await readFile(pageFile, 'utf8');
+  const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/);
+  const descMatch = html.match(/<meta\s+name="description"\s+content="([^"]+)"/);
+  if (!titleMatch || !descMatch) return '';
+
+  const headline = titleMatch[1].trim();
+  const description = descMatch[1].trim();
+
+  // ... compute url, build schema object, return JSON-LD script tag
+}
+```
+
+The script runs on the source HTML (before any other build scripts have fired), so `<title>` and `<meta name="description">` are always present as written.
+
+> **One catch: build order.** `data-bascik-build` scripts on the same page run in document order. If one script generates content that another script should read (such as a title generated by a build script), the second script will see the original source, not the output of the first. For metadata like `<title>` and `<meta name="description">` that are hardcoded in the page, this is never an issue.
+
+## The Pattern in Practice
+
+Any head tag that should be consistent across every page but derived from per-page values is a good fit for this pattern:
+
+| Output | What to read from the page |
+|---|---|
+| `<link rel="canonical">` | Derived from file path alone — no file read needed |
+| Open Graph tags | `<title>`, `<meta name="description">` |
+| `TechArticle` JSON-LD | `<title>`, `<meta name="description">` |
+| `BreadcrumbList` JSON-LD | File path, page `<title>` |
+| `FAQPage` JSON-LD | The content Markdown file (not the HTML page) |
+
+Write the script once in `scripts/`, add the same 8-line build script block to each page, and every page gets the right output automatically.
 
 # Architecture
 
@@ -1837,13 +1991,13 @@ It runs two parallel jobs across Node 24:
 **`test`**: unit tests with coverage:
 
 ```sh
-pnpm test:ci
+yarn pkg:test:ci
 ```
 
 **`e2e`**: end-to-end Playwright tests against the built fixture site:
 
 ```sh
-pnpm build && pnpm e2e
+yarn pkg:build && yarn pkg:e2e
 ```
 
 The `e2e` job installs only the Chromium browser via `playwright install --with-deps chromium` before running. Both jobs have `permissions: contents: read` to enforce least privilege.
@@ -1921,7 +2075,7 @@ The `create/` folder is a small standalone package that scaffolds a fresh Bascik
 
 ## Why it is separate
 
-The repo root uses pnpm workspaces. The package code lives in `pkg/`, while the scaffold lives in `create/` and is installed like a normal Node tool.
+The repo root uses Yarn workspaces. The package code lives in `pkg/`, while the scaffold lives in `create/` and is installed like a normal Node tool.
 
 That split keeps the monorepo dev flow simple and keeps the generated project familiar for normal users.
 
@@ -1976,7 +2130,7 @@ After scaffolding, the CLI offers to run `npm install` and `npm run dev`. Both p
 
 ## Why the generated app uses npm
 
-The scaffold runs `npm install` and `npm run dev` so users do not need pnpm to get started. The repo itself uses pnpm workspaces for contributor work, but the generated site is designed to feel like a regular app from a standard Node CLI.
+The scaffold runs `npm install` and `npm run dev` so users do not need Yarn or pnpm to get started. The repo itself uses Yarn workspaces for contributor work, but the generated site is designed to feel like a regular app from a standard Node CLI.
 
 ## Modifying the scaffold
 
@@ -2002,33 +2156,19 @@ Tests mock `fs/promises` and verify that every expected file is written with the
 
 ## Lockfiles and package managers
 
-Contributors use pnpm at the monorepo root with a single `pnpm-lock.yaml`.
+Contributors use Yarn at the monorepo root with `yarn.lock`.
 
 Generated projects intentionally use npm, and each generated project gets its own `package-lock.json`.
 
 ## Testing create app locally
 
-### 1. Install the repo
-
-From the repo root:
+From the repo root, run:
 
 ```sh
-pnpm install
+yarn create:test-site
 ```
 
-### 2. Link the local scaffold
-
-```sh
-cd create && npm install && npm link && cd ..
-```
-
-`npm link` runs the `prepare` script, which copies the latest SKILL.md from `docs/` and rebuilds `dist/` automatically. No separate build step is needed.
-
-### 3. Create a test site
-
-```sh
-npx create-bascik my-site -y
-```
+This automatically builds `create-bascik` (copying the latest `SKILL.md` from `docs/`), runs the scaffolding CLI to create `my-site/`, installs its dependencies, and starts the dev server.
 
 The `-y` flag skips both prompts. The npm install will print a 404 error for `@bascik/bascik` (not on npm yet), but the dev server starts anyway; the workspace `node_modules` symlink resolves the package. Command+Click the URL to open it in a browser.
 
@@ -2515,34 +2655,34 @@ Bascik has two separate test suites: **unit tests** (Vitest) that verify individ
 
 ## Running Unit Tests
 
-All commands are run from the `pkg/` directory:
+All commands can be run from the repository root:
 
 ```sh
 # Interactive watch mode (re-runs on file changes)
-pnpm test
+yarn pkg:test
 
 # Single run (used in CI)
-pnpm test:ci
+yarn pkg:test:ci
 
 # Single run with full coverage report
-pnpm test:coverage
+yarn pkg:test:coverage
 
 # Run benchmarks
-pnpm bench
+yarn pkg:bench
 ```
 
 ## Running E2E Tests
 
-End-to-end tests are also run from `pkg/`:
+End-to-end tests are run via:
 
 ```sh
-pnpm e2e
+yarn pkg:e2e
 ```
 
 This builds the fixture site (using the current `dist/`) and then runs Playwright against it. The first run requires the package to be built first:
 
 ```sh
-pnpm build && pnpm e2e
+yarn pkg:build && yarn pkg:e2e
 ```
 
 To run a specific test file or use the Playwright UI:
@@ -2626,7 +2766,7 @@ test.describe('my-feature-test page', () => {
 });
 ```
 
-> **Rebuild before testing.** Playwright tests run against `e2e/dist/`, which is built from the current `pkg/dist/`. If you change `pkg/src/`, run `pnpm build` before `pnpm e2e` so the fixture picks up the latest transpiler.
+> **Rebuild before testing.** Playwright tests run against `e2e/dist/`, which is built from the current `pkg/dist/`. If you change `pkg/src/`, run `yarn build` before `yarn e2e` so the fixture picks up the latest transpiler.
 
 
 
@@ -2723,7 +2863,13 @@ The package uses two tsconfig files:
 Run type checking without emitting output:
 
 ```sh
-pnpm typecheck
+yarn typecheck
+```
+
+The `docs/` package also has a `tsconfig.json` covering `docs/scripts/`. It uses the TypeScript from `pkg/` (docs has no own typescript package):
+
+```sh
+npx --prefix pkg tsc -p docs/tsconfig.json --noEmit
 ```
 
 ## Contributing a Fix
@@ -2731,8 +2877,8 @@ pnpm typecheck
 1. Fork the repository and create a branch.
 2. Make your changes in `pkg/src/`.
 3. Add or update tests in the paired `*.test.ts` file.
-4. Run `pnpm test` and ensure all tests pass.
-5. Run `pnpm typecheck` to confirm there are no TypeScript errors.
+4. Run `yarn test` and ensure all tests pass.
+5. Run `yarn typecheck` to confirm there are no TypeScript errors.
 6. Open a pull request against `main`.
 
 # Transpilation Pipeline
@@ -2901,31 +3047,32 @@ The `pkg/` directory is a self-contained TypeScript project with its own `packag
 
 ## Quick Start for Contributors
 
-You need Node.js v24 or later. Clone the repo and install dependencies from the root, pnpm workspaces wires everything up in one step:
+You need Node.js v24 or later and Yarn 4. Clone the repo and install dependencies from the root, Yarn workspaces wires everything up in one step:
 
 ```sh
 git clone https://github.com/collin-thomas/bascik.git
 cd bascik
-pnpm install
+corepack enable
+yarn install
 ```
 
 Run the test suite:
 
 ```sh
-pnpm --filter @bascik/bascik test
+yarn pkg:test
 ```
 
 Build the package (compiles TypeScript to `pkg/dist/`):
 
 ```sh
-pnpm --filter @bascik/bascik build
+yarn pkg:build
 ```
 
 To work on the docs site with a live-reload dev server:
 
 ```sh
-pnpm --filter @bascik/bascik build   # build pkg first
-pnpm --filter bascik-docs dev        # https://localhost:8443
+yarn pkg:build   # build pkg first
+yarn docs:dev     # https://localhost:8443
 ```
 
 After any `pkg/src/` change, rebuild the package and the docs server will pick it up automatically.
@@ -3887,6 +4034,8 @@ Sending a 2400 px image to a 375 px phone is one of the most common performance 
 
 Always include explicit `width` and `height` attributes. The browser uses them to reserve layout space before the image loads, which eliminates Cumulative Layout Shift (CLS), a Core Web Vital that Lighthouse measures directly.
 
+> **MDN reference.** The [`srcset` attribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/srcset) and [`sizes` attribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/sizes) on MDN cover the full selection syntax and every valid descriptor.
+
 ## Lazy Loading
 
 The browser only needs to fetch images and iframes that are currently visible. Adding `loading="lazy"` defers off-screen resources until the user scrolls near them, reducing initial page weight and improving Largest Contentful Paint (LCP) for the above-the-fold content.
@@ -3908,6 +4057,8 @@ The browser only needs to fetch images and iframes that are currently visible. A
 ```
 
 Do **not** apply `loading="lazy"` to your hero image or any image visible without scrolling. The browser will already prioritize it, adding lazy loading to a critical image delays it and hurts your LCP score.
+
+> **MDN reference.** [`loading="lazy"`](https://developer.mozilla.org/en-US/docs/Web/Performance/Lazy_loading) on MDN covers deferred loading for both images and iframes, including browser thresholds and compatibility.
 
 ## Preloading Critical Assets
 
@@ -3934,6 +4085,8 @@ Do **not** apply `loading="lazy"` to your hero image or any image visible withou
 
 Only preload what you actually use on the current page. Preloading resources that are never consumed triggers a Lighthouse warning and wastes bandwidth.
 
+> **MDN reference.** [`<link rel="preload">`](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/preload) on MDN documents every valid `as` value, CORS handling, and browser support notes.
+
 ## Prefetching the Next Page
 
 `<link rel="prefetch">` fetches a resource during idle time and caches it for a future navigation. When you know the user is very likely to go to a specific page next, like the next step of a checkout flow or the top item in your navigation, prefetch it and the navigation will feel instant.
@@ -3949,6 +4102,8 @@ Only preload what you actually use on the current page. Preloading resources tha
 ```
 
 Prefetch is low-priority and only runs during idle time, so it never competes with resources the current page needs. It is safe to add for any high-confidence next-page prediction.
+
+> **MDN reference.** [`<link rel="prefetch">`](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/prefetch) on MDN describes the priority model, browser support, and interaction with the HTTP cache.
 
 ## DNS Prefetch & Preconnect
 
@@ -3968,6 +4123,8 @@ Every external domain requires a DNS lookup, a TCP handshake, and a TLS negotiat
 ```
 
 Use `preconnect` sparingly, each open connection consumes browser resources. Reserve it for origins you will definitely hit within the first few seconds of the page load. Use `dns-prefetch` as the lightweight fallback for everything else.
+
+> **MDN reference.** [`<link rel="preconnect">`](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/preconnect) and [`rel="dns-prefetch"`](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/dns-prefetch) on MDN detail the connection phases each hint triggers and when to prefer one over the other.
 
 ## Async and Deferred Scripts
 
@@ -3990,6 +4147,8 @@ A plain `<script src="…">` tag blocks HTML parsing while the browser fetches a
 ```
 
 Because Bascik adds no runtime scripts of its own, every `<script>` tag in your output is one you wrote. You have complete control over load order and execution timing from the first character of every page.
+
+> **MDN reference.** The [`<script>` element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script#attributes) on MDN lists every attribute including `defer`, `async`, and `type`, with execution-order notes and browser compatibility.
 
 ## SEO: The Essential Head Tags
 
@@ -4027,6 +4186,76 @@ Bascik also helps with one of the easy-to-miss SEO assets: once `siteUrl` is set
 ```
 
 Because every Bascik page is its own `.html` file, every page naturally gets its own `<title>` and `<meta name="description">`: the two most impactful SEO signals. There is no single-page-app router to work around.
+
+## Structured Data with JSON-LD
+
+Structured data tells search engines what your content *means*, not just what it says. Google uses it to generate **rich results**: FAQ dropdowns, breadcrumb trails, star ratings, article bylines, and product prices shown directly in the search listing before the user clicks.
+
+Add a `<script type="application/ld+json">` block to your `<head>` with the schema for your content type. Bascik never touches `application/ld+json` script blocks, so the JSON passes through exactly as written.
+
+**FAQ rich results** — turns your page's questions into expandable dropdowns in search results:
+
+```html
+<head>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is Bascik?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Bascik is a build tool that compiles reusable HTML components into plain HTML pages with no JavaScript runtime."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does Bascik add JavaScript to my pages?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. Bascik outputs plain HTML. The only JavaScript on any page is what you write yourself."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+```
+
+Other commonly useful types:
+
+```html
+<!-- BreadcrumbList: shows the page path in search results -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://yourdomain.com/" },
+    { "@type": "ListItem", "position": 2, "name": "Docs", "item": "https://yourdomain.com/docs/" },
+    { "@type": "ListItem", "position": 3, "name": "Getting Started" }
+  ]
+}
+</script>
+
+<!-- Article: shows author, date, and headline metadata -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Getting Started with Bascik",
+  "author": { "@type": "Person", "name": "Collin Thomas" },
+  "datePublished": "2025-01-01",
+  "dateModified": "2025-06-01"
+}
+</script>
+```
+
+Bascik's [build scripts](/build-scripts) are a natural fit for generating JSON-LD from data files. Read a JSON data source at build time and emit the `<script type="application/ld+json">` block — zero runtime cost, always up to date with your content.
+
+> **Validate before shipping.** Use [Google's Rich Results Test](https://search.google.com/test/rich-results) to confirm your structured data is valid and eligible for rich result types. Schema.org publishes the full type vocabulary at [schema.org](https://schema.org).
 
 ## Accessibility
 
@@ -4121,6 +4350,8 @@ body {
 
 `font-display: swap` ensures text is visible immediately using the fallback font, then swaps to your custom font once it loads. The metric-override `@font-face` makes the fallback font's dimensions closely match your custom font, minimizing CLS during the swap.
 
+> **MDN reference.** [`@font-face`](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face) documents the full descriptor set including variable font ranges, and [`font-display`](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display) covers every swap strategy with timing diagrams.
+
 ## Real-World Benchmarks: McMaster-Carr and Bring a Trailer
 
 Two of the fastest content-heavy sites on the internet share a core philosophy: ship finished HTML and let the browser do what it was designed to do.
@@ -4179,6 +4410,8 @@ If your host does not support CDN transforms, use `<picture>` to offer WebP with
 
 Browsers that support WebP choose the `<source>`; others fall back to the `<img>` src automatically.
 
+> **MDN reference.** The [`<picture>` element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/picture) on MDN covers art direction, format selection with `<source>`, and fallback behavior.
+
 ## `aspect-ratio` CSS: Layout Stability Before Images Load
 
 Explicit `width` and `height` attributes reserve image space before the network responds. The `aspect-ratio` CSS property extends that reservation to any container, useful when images are CSS backgrounds, when you use `object-fit` to fill flex cells, or when you need a stable skeleton layout while lazy-loading dozens of images.
@@ -4229,6 +4462,8 @@ Bring a Trailer pins every auction thumbnail to a `470×318` ratio. The page ske
 
 The shimmer disappears the moment the image loads (since `<img>` renders over the background). The result: a polished loading experience with zero JavaScript and zero layout shift.
 
+> **MDN reference.** [`aspect-ratio`](https://developer.mozilla.org/en-US/docs/Web/CSS/aspect-ratio) on MDN covers the full syntax including keyword values and browser compatibility.
+
 ## `content-visibility: auto` for Long Catalog Pages
 
 McMaster-Carr lists hundreds of product categories on its homepage. Bring a Trailer streams dozens of auction cards. For pages with long repeating content, `content-visibility: auto` tells the browser to skip layout and paint for off-screen sections entirely, rendering each chunk on demand as the user scrolls.
@@ -4248,6 +4483,8 @@ McMaster-Carr lists hundreds of product categories on its homepage. Bring a Trai
 On a page with 100 cards, this can reduce initial rendering time by 50–70% because the browser only paints what is visible. Set `contain-intrinsic-size` close to the real rendered height of one item, the browser will correct it after the first render cycle.
 
 > **Test scroll behavior carefully.** Hidden sections use estimated heights, which can cause minor scroll-position drift if `contain-intrinsic-size` is far from the actual height. Measure in DevTools before shipping.
+
+> **MDN reference.** [`content-visibility`](https://developer.mozilla.org/en-US/docs/Web/CSS/content-visibility) and [`contain-intrinsic-size`](https://developer.mozilla.org/en-US/docs/Web/CSS/contain-intrinsic-size) on MDN cover the full syntax, browser support, and sizing recommendations.
 
 ## Inline Critical CSS
 
@@ -4405,6 +4642,8 @@ body:has(.nav-details[open]) {
 
 > **`body:has()`** is supported in Chrome 105+, Firefox 121+, and Safari 15.4+. It is the CSS-only solution to the previously JS-only problem of locking the page scroll behind an open overlay.
 
+> **MDN reference.** [`<details>` and `<summary>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/details) on MDN document the `open` attribute, keyboard behavior, and accessibility semantics. The [`:has()` pseudo-class](https://developer.mozilla.org/en-US/docs/Web/CSS/:has) covers the CSS parent selector and browser support.
+
 ### Modal Dialogs: `<dialog>`
 
 The `<dialog>` element provides a native modal with backdrop, focus trapping, and Escape-to-close, behaviors that previously required hundreds of lines of JavaScript to implement correctly:
@@ -4428,6 +4667,8 @@ dialog::backdrop {
 ```
 
 The `onclick` inline handlers are one-liners, not a script file. `<dialog>` handles focus management, keyboard dismissal, and `aria-modal` automatically.
+
+> **MDN reference.** The [`<dialog>` element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog) on MDN covers `showModal()`, `close()`, `returnValue`, the `::backdrop` pseudo-element, and browser compatibility.
 
 ### The Decision Framework
 
@@ -4798,8 +5039,8 @@ The extension does **not** warn on class names that only appear in JavaScript an
 From the repo root:
 
 ```sh
-pnpm install
-pnpm --filter bascik-vscode compile
+yarn install
+yarn workspace bascik-vscode compile
 ```
 
 Then open the `extensions/vscode-bascik/` folder in VS Code and press F5. A `.vscode/launch.json` is already configured there, so VS Code will open an Extension Development Host window with the extension enabled.
@@ -8584,7 +8825,7 @@ The docs site uses this pattern for its search component. `search-logic.mjs` exp
 The `docs-search.html` component inlines them via the build-time pattern above. `search-logic.test.mjs` covers tier ordering guarantees, dominant-page grouping, deduplication, and edge cases like empty queries.
 
 ```sh
-pnpm --filter bascik-docs test
+yarn workspace bascik-docs test
 ```
 
 # Bascik vs Frameworks

@@ -9,7 +9,7 @@ import http2 from "node:http2";
 import type { ServerHttp2Stream, IncomingHttpHeaders } from "node:http2";
 import { mem } from "./mem.js";
 import { BascikConfig, shouldLog } from "./config.js";
-import { eventEmitter } from "./events.js";
+import { eventEmitter, runShutdownHandlers } from "./events.js";
 import { getHttpPath } from "./paths.js";
 import { MIME_MAP } from "./mime.js";
 import { createReadStream } from "node:fs";
@@ -178,9 +178,20 @@ export const startHttp2Server = async () => {
   | Runtime bugs per page |                          | x                          |
   ``` 
   */
+  const isNetworkResetError = (err: unknown): boolean => {
+    const code = (err as NodeJS.ErrnoException)?.code;
+    return (
+      code === "ECONNRESET" ||
+      code === "EPIPE" ||
+      code === "ECANCELED" ||
+      code === "ERR_HTTP2_STREAM_CANCEL" ||
+      code === "ERR_HTTP2_INVALID_STREAM"
+    );
+  };
+
   const onError = (error: unknown, stream: ServerHttp2Stream): void => {
     // Client disconnected mid-request — not a server bug, nothing to respond to.
-    if ((error as NodeJS.ErrnoException).code === "ERR_HTTP2_INVALID_STREAM") return;
+    if (isNetworkResetError(error)) return;
     try {
       if (!stream.headersSent) {
         if ((error as NodeJS.ErrnoException).code === "ENOENT") {
@@ -207,7 +218,10 @@ export const startHttp2Server = async () => {
     openSessions.add(session);
     session.once("close", () => openSessions.delete(session));
     // Prevent unhandled 'error' event crashes from protocol-level session errors.
-    session.on("error", (err) => console.error("[bascik] HTTP/2 session error:", err));
+    session.on("error", (err) => {
+      if (isNetworkResetError(err)) return;
+      console.error("[bascik] HTTP/2 session error:", err);
+    });
   });
 
   server.on(
@@ -546,8 +560,13 @@ export const startHttp2Server = async () => {
     if (shuttingDown) return;
     shuttingDown = true;
     console.log(`\nReceived ${signal}, shutting down gracefully…`);
-    // Exit immediately so pnpm sees code=0 before it can SIGKILL the child.
-    // The OS closes all sockets; no need to wait for server.close().
+    // Destroy sessions so server.close() completes immediately.
+    for (const session of openSessions) session.destroy();
+    server.close();
+    // Close all registered handles (chokidar watchers, exec watchers).
+    runShutdownHandlers().catch(() => { });
+    // Exit immediately with code 0 so process managers see clean success (code 0)
+    // before signal handlers treat non-exit as an error.
     process.exit(0);
   };
   process.setMaxListeners(process.getMaxListeners() + 2);

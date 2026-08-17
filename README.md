@@ -23,10 +23,11 @@ Bascik is a build tool for HTML components. It scopes and assembles reusable HTM
 
 ## Development Setup
 
-Requires **Node.js ≥ 24**. The repo uses pnpm workspaces — one install at the root wires everything up.
+Requires **Node.js ≥ 24** and **Yarn ≥ 4** (pinned to `yarn@4.6.0` in `package.json`). The repo uses Yarn workspaces — one install at the root wires everything up.
 
 ```sh
-pnpm install
+corepack enable
+yarn install
 ```
 
 `node_modules/@bascik/bascik` is symlinked directly to `pkg/`, so changes to `pkg/src/` are immediately available to the docs site after a rebuild — no pack or reinstall step.
@@ -34,11 +35,11 @@ pnpm install
 ### Working on the package
 
 ```sh
-pnpm --filter @bascik/bascik build      # build the package (start here)
-pnpm --filter @bascik/bascik test       # unit tests in watch mode
-pnpm --filter @bascik/bascik typecheck  # TypeScript type check
-pnpm --filter @bascik/bascik e2e        # run e2e tests
-pnpm --filter bascik-docs dev           # start docs dev server
+yarn pkg:build      # build the package (start here)
+yarn pkg:typecheck  # TypeScript type check
+yarn pkg:e2e        # run e2e tests
+yarn pkg:test       # unit tests in watch mode
+yarn docs:dev       # start docs dev server
 ```
 
 After any `pkg/src/` change, rebuild the package and the docs server will pick it up automatically (it watches for changes).
@@ -55,8 +56,8 @@ This regenerates `llms.txt`, updates `docs/src/pages/assets/SKILL.md` to reflect
 
 The prompt calls:
 
-- `pnpm --filter @bascik/bascik update-coverage`
-- `pnpm --filter @bascik/bascik update-e2e-coverage`
-- `pnpm --filter bascik-docs generate:llms`
+- `yarn docs:update-coverage`
+- `yarn docs:update-e2e-coverage`
+- `yarn docs:generate:llms`
 - The LLM updates the `SKILL.md` file based on the `llms.txt` file.
-- `pnpm --filter create-bascik prepack`
+- `yarn create:prepack`

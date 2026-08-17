@@ -85,13 +85,13 @@ The `renderMd` helper (`docs/scripts/md-renderer.ts`) applies these transformati
 #pre-push.prompt.md
 ```
 
-Do not call `generate:llms` or `pnpm --filter bascik-docs generate:llms` individually — the prompt handles all of that.
+Do not call `docs:generate:llms` or `yarn docs:generate:llms` individually — the prompt handles all of that.
 
 **Shell-only fallback** (no SKILL.md update, just propagate after a manual edit):
 
 ```sh
-pnpm --filter bascik-docs generate:llms
-pnpm --filter create-bascik prepack
+yarn docs:generate:llms
+yarn create:prepack
 ```
 
 These files must stay in sync. A content change that lands in `llms.txt` but not `SKILL.md` (or vice versa) means Copilot is working from stale guidance — which is how bugs like "use `querySelector` for per-instance elements" go undetected.
@@ -170,19 +170,18 @@ After editing `compatibility.md`, run `#pre-push.prompt.md` as usual.
 
 ## Keeping Docs in Sync with the Package
 
-The repo uses **pnpm workspaces**. `node_modules/@bascik/bascik` is a symlink to `pkg/`, so the docs always resolve the live source — no pack, no copy, no lock-file deletion needed.
+The repo uses **Yarn workspaces**. `node_modules/@bascik/bascik` is a symlink to `pkg/`, so the docs always resolve the live source — no pack, no copy, no lock-file deletion needed.
 
 Whenever `pkg/src/` is changed, propagate the change to the docs in two steps:
 
 ### 1. Rebuild the package
 ```sh
-pnpm --filter @bascik/bascik build
+yarn pkg:build
 ```
-(or equivalently: `cd pkg && node_modules/.bin/tsc -p tsconfig.build.json`)
 
 ### 2. Rebuild and check the docs
 ```sh
-pnpm --filter bascik-docs build
+yarn docs:build
 ```
 
 Then inspect the relevant `docs/dist/` output to confirm the pkg change has the intended effect.
@@ -227,6 +226,17 @@ This project runs on **Node 24**. Node natively strips TypeScript types — no t
 **Practical implication:** `data-bascik-build` and `data-bascik-server` scripts can import `.ts` helper files and Node handles them natively. Bascik does not need to add its own type-stripping layer for server-side or build-time scripts.
 
 ## Agent Environment Notes
+
+### Use Root Scripts or `yarn workspace <pkg> <script>`
+
+Commands can be run directly from the root using helper scripts (`yarn build`, `yarn dev`, `yarn test`, `yarn typecheck`, `yarn pkg:build`, `yarn docs:dev`, etc.) or using `yarn workspace <pkg> <script>`.
+
+The repo uses **Modern Yarn 4** (`yarn@4.6.0`) with `nodeLinker: node-modules`. Ctrl+C on interactive watch mode commands exits cleanly with code 0/130 and zero `ELIFECYCLE` error messages.
+
+```sh
+yarn test       # vitest watch mode (@bascik/bascik)
+yarn docs:dev   # docs dev server (bascik-docs)
+```
 
 ### VS Code Sandbox — Commands That Need Network Will Hang
 

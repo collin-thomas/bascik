@@ -117,6 +117,7 @@ vi.mock("./mime.js", () => ({
 
 vi.mock("./events.js", () => ({
   eventEmitter: { emit: mockEventEmit },
+  registerShutdownHandler: vi.fn(),
 }));
 
 // ─── Imports (after mocks) ────────────────────────────────────────────────────

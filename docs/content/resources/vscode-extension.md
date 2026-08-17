@@ -18,8 +18,8 @@ The extension does **not** warn on class names that only appear in JavaScript an
 From the repo root:
 
 ```sh
-pnpm install
-pnpm --filter bascik-vscode compile
+yarn install
+yarn workspace bascik-vscode compile
 ```
 
 Then open the `extensions/vscode-bascik/` folder in VS Code and press F5. A `.vscode/launch.json` is already configured there, so VS Code will open an Extension Development Host window with the extension enabled.

@@ -18,7 +18,7 @@ Pass a different name to use it as both the directory name and the site title. I
 
 ## Starting the Dev Server
 
-Run `npm run dev` (or `pnpm dev`) to start the development server. Bascik serves your site over HTTP/2 at **https://localhost:8443** by default (the port auto-increments if 8443 is busy). It transpiles your pages, watches for changes, and live-reloads the browser on every save.
+Run `npm run dev` (or `yarn dev` / `pnpm dev`) to start the development server. Bascik serves your site over HTTP/2 at **https://localhost:8443** by default (the port auto-increments if 8443 is busy). It transpiles your pages, watches for changes, and live-reloads the browser on every save.
 
 SSL certificates are generated automatically on first run. Install [mkcert](https://github.com/FiloSottile/mkcert) for a trusted cert with no browser warning:
 
@@ -47,7 +47,7 @@ src/
 ```sh
 npm install @bascik/bascik
 # or
-pnpm add @bascik/bascik
+yarn add @bascik/bascik
 # or
 pnpm add @bascik/bascik
 ```
