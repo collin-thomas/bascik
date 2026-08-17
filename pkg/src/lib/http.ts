@@ -27,7 +27,7 @@ export const adaptHttp1 = (reqMsg: http.IncomingMessage, resMsg: http.ServerResp
     },
     write(chunk) { return resMsg.write(chunk); },
     end(chunk) {
-      if (arguments.length === 0) {
+      if (arguments.length === 0 || chunk === undefined) {
         resMsg.end();
       } else {
         resMsg.end(chunk);

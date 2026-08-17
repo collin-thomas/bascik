@@ -80,4 +80,26 @@ describe("startHttpServer", () => {
     res.end("ending");
     expect(mockResMsg.end).toHaveBeenCalledWith("ending");
   });
+
+  it("calls resMsg.end with no arguments when chunk is undefined", () => {
+    const mockReqMsg: any = {
+      method: "HEAD",
+      url: "/home",
+      headers: {},
+      socket: { remoteAddress: "127.0.0.1" },
+    };
+    const mockResMsg: any = {
+      headersSent: false,
+      destroyed: false,
+      writeHead: vi.fn(),
+      write: vi.fn(),
+      end: vi.fn(),
+      destroy: vi.fn(),
+      on: vi.fn(),
+    };
+
+    const { res } = adaptHttp1(mockReqMsg, mockResMsg);
+    res.end(undefined);
+    expect(mockResMsg.end).toHaveBeenCalledWith();
+  });
 });

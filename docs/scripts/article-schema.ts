@@ -22,7 +22,9 @@ export async function articleSchema(): Promise<string> {
 
   const html = await readFile(pageFile, 'utf8');
   const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/);
-  const descMatch = html.match(/<meta\s+name="description"\s+content="([^"]+)"/);
+  const descMatch =
+    html.match(/<meta\b[^>]*\bname=["']description["'][^>]*\bcontent=["']([^"']+)["']/i) ||
+    html.match(/<meta\b[^>]*\bcontent=["']([^"']+)["'][^>]*\bname=["']description["']/i);
   if (!titleMatch || !descMatch) return '';
 
   const headline = titleMatch[1].trim();

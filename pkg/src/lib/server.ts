@@ -472,8 +472,15 @@ export const startServerInstance = async (
     }, 10_000).unref();
   };
   process.setMaxListeners(process.getMaxListeners() + 2);
-  process.once("SIGTERM", () => gracefulShutdown("SIGTERM"));
-  process.once("SIGINT", () => gracefulShutdown("SIGINT"));
+  const sigtermHandler = () => gracefulShutdown("SIGTERM");
+  const sigintHandler = () => gracefulShutdown("SIGINT");
+  process.once("SIGTERM", sigtermHandler);
+  process.once("SIGINT", sigintHandler);
+
+  server.once("close", () => {
+    process.removeListener("SIGTERM", sigtermHandler);
+    process.removeListener("SIGINT", sigintHandler);
+  });
 
   return origin;
 };

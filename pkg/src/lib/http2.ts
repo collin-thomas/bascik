@@ -43,7 +43,7 @@ export const adaptHttp2 = (stream: ServerHttp2Stream, headers: IncomingHttpHeade
     },
     write(chunk) { return stream.write(chunk); },
     end(chunk) {
-      if (arguments.length === 0) {
+      if (arguments.length === 0 || chunk === undefined) {
         stream.end();
       } else {
         stream.end(chunk);

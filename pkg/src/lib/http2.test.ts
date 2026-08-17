@@ -43,7 +43,7 @@ vi.mock("./config.js", () => ({
   },
 }));
 
-import { startHttp2Server } from "./http2.js";
+import { startHttp2Server, adaptHttp2 } from "./http2.js";
 
 describe("startHttp2Server", () => {
   beforeEach(() => {
@@ -53,5 +53,31 @@ describe("startHttp2Server", () => {
   it("creates a secure HTTP/2 server", async () => {
     await startHttp2Server();
     expect(mockCreateSecureServer).toHaveBeenCalled();
+  });
+});
+
+describe("adaptHttp2", () => {
+  it("adapts stream and headers and calls stream.end with no arguments when chunk is undefined", () => {
+    const mockStream: any = {
+      headersSent: false,
+      destroyed: false,
+      session: { socket: { remoteAddress: "127.0.0.1" } },
+      respond: vi.fn(),
+      write: vi.fn(),
+      end: vi.fn(),
+      close: vi.fn(),
+      on: vi.fn(),
+    };
+
+    const { req, res } = adaptHttp2(mockStream, { ":method": "GET", ":path": "/api" });
+    expect(req.method).toBe("GET");
+    expect(req.path).toBe("/api");
+    expect(req.remoteIp).toBe("127.0.0.1");
+
+    res.respond(200, { "content-type": "application/json" });
+    expect(mockStream.respond).toHaveBeenCalledWith({ ":status": 200, "content-type": "application/json" });
+
+    res.end(undefined);
+    expect(mockStream.end).toHaveBeenCalledWith();
   });
 });

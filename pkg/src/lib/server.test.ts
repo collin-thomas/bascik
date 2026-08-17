@@ -93,7 +93,7 @@ vi.mock("./mime.js", () => ({
 // ─── Imports (after mocks) ────────────────────────────────────────────────────
 
 import { startHttp2Server } from "./http2.js";
-import { _rateLimiter } from "./server.js";
+import { _rateLimiter, startServerInstance } from "./server.js";
 import { mem } from "./mem.js";
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
@@ -477,7 +477,7 @@ describe("startHttp2Server – HEAD method", () => {
       expect.objectContaining({ ":status": 200 }),
     );
     // HEAD must not send a body
-    expect(stream.end).toHaveBeenCalledWith(undefined);
+    expect(stream.end).toHaveBeenCalledWith();
   });
 
   it("includes Content-Length in HEAD response", async () => {
@@ -1491,7 +1491,7 @@ describe("startHttp2Server – server-scripts execution", () => {
     const handler = getStreamHandler()!;
     const stream = makeStream();
     await handler(stream, makeHeaders("/greeting", "HEAD"));
-    expect(stream.end).toHaveBeenCalledWith(undefined);
+    expect(stream.end).toHaveBeenCalledWith();
   });
 });
 
@@ -1582,7 +1582,7 @@ describe("startHttp2Server – boot page", () => {
     const handler = getStreamHandler()!;
     const stream = makeStream();
     await handler(stream, makeHeaders("/about", "HEAD"));
-    expect(stream.end).toHaveBeenCalledWith(undefined);
+    expect(stream.end).toHaveBeenCalledWith();
   });
 });
 
@@ -1718,5 +1718,44 @@ describe("startHttp2Server – onError suppresses ERR_HTTP2_INVALID_STREAM", () 
     stream.respond.mockImplementationOnce(() => { throw invalidStreamErr; });
     await handler(stream, makeHeaders("/about", "GET"));
     expect(consoleSpy).not.toHaveBeenCalled();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// startServerInstance – Signal Listener Cleanup
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("startServerInstance signal handler cleanup", () => {
+  it("attaches process signal handlers on start and removes them when server closes", async () => {
+    const processOnceSpy = vi.spyOn(process, "once");
+    const processRemoveListenerSpy = vi.spyOn(process, "removeListener");
+
+    let closeCb: (() => void) | undefined;
+    const mockServer: any = {
+      once: vi.fn((event: string, cb: any) => {
+        if (event === "close") closeCb = cb;
+        return mockServer;
+      }),
+      listen: vi.fn((_port: number, _host: string, cb?: () => void) => {
+        cb?.();
+        return mockServer;
+      }),
+      on: vi.fn().mockReturnThis(),
+      removeListener: vi.fn().mockReturnThis(),
+    };
+
+    await startServerInstance(mockServer, "http");
+
+    expect(processOnceSpy).toHaveBeenCalledWith("SIGTERM", expect.any(Function));
+    expect(processOnceSpy).toHaveBeenCalledWith("SIGINT", expect.any(Function));
+
+    expect(closeCb).toBeDefined();
+    closeCb?.();
+
+    expect(processRemoveListenerSpy).toHaveBeenCalledWith("SIGTERM", expect.any(Function));
+    expect(processRemoveListenerSpy).toHaveBeenCalledWith("SIGINT", expect.any(Function));
+
+    processOnceSpy.mockRestore();
+    processRemoveListenerSpy.mockRestore();
   });
 });
