@@ -14,38 +14,7 @@ import { getHttpPath } from "./paths.js";
 import { MIME_MAP } from "./mime.js";
 import { createReadStream } from "node:fs";
 import { executeServerScripts, DEFAULT_SCRIPT_TIMEOUT_MS } from "./server-scripts.js";
-
-// ─── Dev-server boot page (shown while the initial transpile is in progress) ──
-const BOOT_PAGE_HTML = Buffer.from(`<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Building site\u2026</title>
-<style>
-body{display:flex;align-items:center;justify-content:center;height:100vh;margin:0;
-font-family:system-ui,sans-serif;background:#0f0f0f;color:#ccc}
-.box{text-align:center}
-.spinner{width:36px;height:36px;border:3px solid #333;border-top-color:#888;
-border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 1rem}
-@keyframes spin{to{transform:rotate(360deg)}}
-p{margin:0;font-size:.875rem;opacity:.5}
-</style>
-</head>
-<body>
-<div class="box">
-  <div class="spinner"></div>
-  <p>Building site\u2026</p>
-</div>
-<script>
-(function(){
-  var es=new EventSource('/bascik-live-reload?boot=1');
-  es.onmessage=function(e){if(e.data==='reload')location.reload()};
-  es.onerror=function(){es.close();setTimeout(function(){location.reload()},1000)};
-})();
-</script>
-</body>
-</html>`);
+import { BOOT_PAGE_HTML } from "./boot-page.js";
 
 // ─── Security headers sent on every response ──────────────────────────────────
 const SECURITY_HEADERS: Record<string, string> = {

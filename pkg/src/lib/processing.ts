@@ -67,6 +67,7 @@ import {
   deepReadDirFlat,
 } from "./file-system.js";
 import { getHttpPath } from "./paths.js";
+import { LIVE_RELOAD_SCRIPT } from "./live-reload.js";
 import {
   listComponents,
   invalidateComponentListCache,
@@ -130,45 +131,6 @@ export const getFilePosition = (
   }
   return null;
 };
-
-const liveReloadScript = `
-<script>
-  (function() {
-    var wasConnected = false;
-    var source;
-    function connect() {
-      if (source) return;
-      source = new EventSource("/bascik-live-reload");
-      source.onmessage = function(e) {
-        if (e.data === 'reload') {
-          window.location.reload();
-        } else if (e.data === 'connected') {
-          if (wasConnected) {
-            // Server restarted, reload to pick up fresh build output.
-            window.location.reload();
-          }
-          wasConnected = true;
-        }
-      };
-      source.onerror = function() {
-        source.close();
-        source = null;
-      };
-    }
-    function instantConnect() {
-      if (!source) {
-        connect();
-      }
-    }
-    window.addEventListener('focus', instantConnect);
-    document.addEventListener('visibilitychange', function() {
-      if (document.visibilityState === 'visible') instantConnect();
-    });
-    window.addEventListener('beforeunload', function() { if (source) source.close(); });
-    connect();
-  })();
-</script>
-`;
 
 const resolveInlineStyles = async (): Promise<string[]> => {
   if (BascikConfig.inlineStyles === true) {
@@ -708,7 +670,7 @@ export const transpilePage = async (
   }
 
   if (!BascikConfig.isBuild) {
-    transpiledHtmlBody = `${transpiledHtmlBody}${liveReloadScript}`;
+    transpiledHtmlBody = `${transpiledHtmlBody}${LIVE_RELOAD_SCRIPT}`;
   }
 
   // Minify the body AFTER component resolution so that <pre> blocks from resolved
