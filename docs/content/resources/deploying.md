@@ -69,7 +69,7 @@ bascik --serve   # start the HTTP/2 server; runs server scripts per request
 
 See [Production Server](/server) for full documentation on server scripts and the request context API.
 
-> **TLS is always on.** Bascik's server has no plaintext HTTP mode. Some cloud platforms terminate TLS at the edge and forward cleartext to the container, which is incompatible. Use a platform that either passes TLS through to the container, or run a reverse proxy in front of Bascik that forwards HTTPS.
+> **TLS is on by default.** By default, Bascik's server runs as a TLS-enabled HTTP/2 server. If your cloud platform terminates TLS at the edge and forwards cleartext (HTTP/1.1) to your container, you can disable TLS by setting `disableTls: true` under `serve` in your `bascik.config.ts`.
 
 ### Server configuration
 
@@ -82,6 +82,7 @@ export default {
     hostname: '0.0.0.0',    // bind all interfaces; required in containers
     keyFile: '/etc/ssl/site.key',
     certFile: '/etc/ssl/site.crt',
+    disableTls: false,      // set to true for plaintext HTTP/1.1 instead of TLS HTTP/2
   },
 };
 ```

@@ -28,7 +28,15 @@ Because the cert is self-signed, browsers will show a security warning on first 
 
 The server starts binding its port concurrently with page transpilation. `serveHttp2()` returns the origin URL once the port is bound; `transpile.ts` prints `Server running at …` immediately after the transpilation summary line, with no gap between them.
 
-The server listens on `https://localhost:8443` and handles all requests on a single `"stream"` event handler. Only `GET` requests are accepted; all other methods receive a `405 Method Not Allowed` response.
+The server listens on `https://localhost:8443` (or `http://localhost:8443` if `disableTls` is configured) and handles all requests on a single stream or request event handler. Only `GET` requests are accepted; all other methods receive a `405 Method Not Allowed` response.
+
+### Plaintext HTTP Mode
+
+If `BascikConfig.serve.disableTls` is set to `true` (either in `bascik.config.ts` or via options), the dev server skips TLS certificate generation and starts a plaintext `http.Server` running HTTP/1.1 instead of `http2.Http2SecureServer`. This is extremely useful for:
+1. Local development environments where self-signed SSL certificate warnings cannot be easily bypassed (such as VS Code's integrated Simple Browser).
+2. Cloud platforms (like Heroku, AWS ECS/Fargate, Fly.io, Render, etc.) that terminate TLS at the edge/load balancer and forward plaintext HTTP to the container.
+
+To handle both HTTP/2 secure streams and HTTP/1.1 plaintext requests cleanly, Bascik wraps both underlying response structures (`ServerHttp2Stream` and `http.ServerResponse`) in a unified, lightweight `BascikResponse` interface. This allows request routing and processing logic to remain completely agnostic of the transport protocol.
 
 ### Request routing
 

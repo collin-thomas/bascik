@@ -74,6 +74,7 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild" | "isProdServer"
   serve: {
     port: 8443,
     hostname: "localhost",
+    disableTls: false,
     logging: {
       level: "info",
       requests: true,

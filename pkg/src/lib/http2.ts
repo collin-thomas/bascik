@@ -7,6 +7,7 @@ import { extname, resolve, sep } from "node:path";
 import { createHash } from "node:crypto";
 import http2 from "node:http2";
 import type { ServerHttp2Stream, IncomingHttpHeaders } from "node:http2";
+import http from "node:http";
 import { mem } from "./mem.js";
 import { BascikConfig, shouldLog } from "./config.js";
 import { eventEmitter, runShutdownHandlers } from "./events.js";
@@ -60,81 +61,179 @@ setInterval(() => {
   }
 }, RATE_WINDOW_MS).unref();
 
+export interface BascikRequest {
+  method: string;
+  path?: string;
+  headers: Record<string, string | string[] | undefined>;
+  remoteIp: string;
+}
+
+export interface BascikResponse {
+  headersSent: boolean;
+  destroyed: boolean;
+  writable: NodeJS.WritableStream;
+  respond(status: number, headers: Record<string, string | number>): void;
+  write(chunk: string | Buffer): boolean;
+  end(chunk?: string | Buffer): void;
+  close(code?: number): void;
+  on(event: "close", cb: () => void): void;
+}
+
+const adaptHttp2 = (stream: ServerHttp2Stream, headers: IncomingHttpHeaders): { req: BascikRequest; res: BascikResponse } => {
+  let remoteIp = "unknown";
+  try {
+    remoteIp = (stream as any).session?.socket?.remoteAddress ?? "unknown";
+  } catch {}
+
+  const req: BascikRequest = {
+    method: headers[":method"] as string ?? "GET",
+    path: headers[":path"] as string,
+    headers: headers as Record<string, string | string[] | undefined>,
+    remoteIp,
+  };
+
+  const res: BascikResponse = {
+    get headersSent() { return stream.headersSent; },
+    get destroyed() { return stream.destroyed; },
+    writable: stream,
+    respond(status, headers) {
+      const respHeaders: Record<string, string | number> = { ...headers };
+      if (":status" in respHeaders) {
+        delete respHeaders[":status"];
+      }
+      stream.respond({ ":status": status, ...respHeaders });
+    },
+    write(chunk) { return stream.write(chunk); },
+    end(chunk) {
+      if (arguments.length === 0) {
+        stream.end();
+      } else {
+        stream.end(chunk);
+      }
+    },
+    close(code) { stream.close(code); },
+    on(event, cb) { stream.on(event, cb); },
+  };
+
+  return { req, res };
+};
+
+const adaptHttp1 = (reqMsg: http.IncomingMessage, resMsg: http.ServerResponse): { req: BascikRequest; res: BascikResponse } => {
+  const req: BascikRequest = {
+    method: reqMsg.method ?? "GET",
+    path: reqMsg.url,
+    headers: reqMsg.headers,
+    remoteIp: reqMsg.socket.remoteAddress ?? "unknown",
+  };
+
+  const res: BascikResponse = {
+    get headersSent() { return resMsg.headersSent; },
+    get destroyed() { return resMsg.destroyed; },
+    writable: resMsg,
+    respond(status, headers) {
+      const respHeaders: Record<string, any> = { ...headers };
+      if (":status" in respHeaders) {
+        delete respHeaders[":status"];
+      }
+      resMsg.writeHead(status, respHeaders);
+    },
+    write(chunk) { return resMsg.write(chunk); },
+    end(chunk) {
+      if (arguments.length === 0) {
+        resMsg.end();
+      } else {
+        resMsg.end(chunk);
+      }
+    },
+    close() { resMsg.destroy(); },
+    on(event, cb) { resMsg.on(event, cb); },
+  };
+
+  return { req, res };
+};
+
 export const startHttp2Server = async () => {
   const hostname = BascikConfig.serve?.hostname ?? "localhost";
   const startPort = BascikConfig.serve?.port ?? 8443;
   const distDir = resolve(process.cwd(), "dist");
   let origin = "";
 
-  const usingCustomCerts = !!(BascikConfig.serve?.keyFile || BascikConfig.serve?.certFile);
-  const keyPath = resolve(process.cwd(), BascikConfig.serve?.keyFile ?? "bascik-privkey.pem");
-  const certPath = resolve(process.cwd(), BascikConfig.serve?.certFile ?? "bascik-cert.pem");
+  const disableTls = !!BascikConfig.serve?.disableTls;
+  let server: http2.Http2SecureServer | http.Server;
 
-  // Auto-generate certs if they don't exist yet.
-  // mkcert produces a CA-trusted cert (no browser warning).
-  // openssl is the self-signed fallback (browser will warn).
-  // Custom certificate paths must already exist — Bascik will not overwrite them.
-  const certsPresent = await Promise.all([access(keyPath), access(certPath)])
-    .then(() => true)
-    .catch(() => false);
+  if (disableTls) {
+    server = http.createServer();
+  } else {
+    const usingCustomCerts = !!(BascikConfig.serve?.keyFile || BascikConfig.serve?.certFile);
+    const keyPath = resolve(process.cwd(), BascikConfig.serve?.keyFile ?? "bascik-privkey.pem");
+    const certPath = resolve(process.cwd(), BascikConfig.serve?.certFile ?? "bascik-cert.pem");
 
-  if (!certsPresent) {
-    if (usingCustomCerts) {
-      throw new Error(
-        "Custom TLS certificate files are configured but could not be found.\n" +
-        `  keyFile:  ${keyPath}\n` +
-        `  certFile: ${certPath}\n` +
-        "Ensure both files exist before starting the server.",
-      );
-    }
-    // Augment PATH so mkcert is found even when launched from VS Code or
-    // other environments that don't source the user's shell profile.
-    const env = {
-      ...process.env,
-      PATH: [
-        process.env.PATH,
-        "/opt/homebrew/bin",   // Apple Silicon Homebrew
-        "/usr/local/bin",      // Intel Homebrew / manual installs
-      ].filter(Boolean).join(":"),
-    };
+    // Auto-generate certs if they don't exist yet.
+    // mkcert produces a CA-trusted cert (no browser warning).
+    // openssl is the self-signed fallback (browser will warn).
+    // Custom certificate paths must already exist — Bascik will not overwrite them.
+    const certsPresent = await Promise.all([access(keyPath), access(certPath)])
+      .then(() => true)
+      .catch(() => false);
 
-    try {
-      await execFile("mkcert", [
-        "-key-file", keyPath,
-        "-cert-file", certPath,
-        "localhost", "127.0.0.1", "::1",
-      ], { env });
-      console.log("SSL: generated trusted certs via mkcert (run `mkcert -install` once if you haven't)");
-    } catch (mkcertErr) {
-      console.log(`SSL: mkcert not found or failed (${(mkcertErr as Error).message?.split("\n")[0]}), falling back to openssl`);
-      try {
-        await execFile("openssl", [
-          "req", "-x509", "-newkey", "rsa:2048",
-          "-keyout", keyPath,
-          "-out", certPath,
-          "-days", "365",
-          "-nodes",
-          "-subj", "/CN=localhost",
-        ]);
-        console.log("SSL: self-signed cert generated (install mkcert for no browser warning)");
-      } catch {
+    if (!certsPresent) {
+      if (usingCustomCerts) {
         throw new Error(
-          "Could not generate SSL certificates.\n" +
-          "Install mkcert (recommended) or openssl, then restart the dev server.\n" +
-          "  brew install mkcert && mkcert -install",
+          "Custom TLS certificate files are configured but could not be found.\n" +
+          `  keyFile:  ${keyPath}\n` +
+          `  certFile: ${certPath}\n` +
+          "Ensure both files exist before starting the server.",
         );
       }
+      // Augment PATH so mkcert is found even when launched from VS Code or
+      // other environments that don't source the user's shell profile.
+      const env = {
+        ...process.env,
+        PATH: [
+          process.env.PATH,
+          "/opt/homebrew/bin",   // Apple Silicon Homebrew
+          "/usr/local/bin",      // Intel Homebrew / manual installs
+        ].filter(Boolean).join(":"),
+      };
+
+      try {
+        await execFile("mkcert", [
+          "-key-file", keyPath,
+          "-cert-file", certPath,
+          "localhost", "127.0.0.1", "::1",
+        ], { env });
+        console.log("SSL: generated trusted certs via mkcert (run `mkcert -install` once if you haven't)");
+      } catch (mkcertErr) {
+        console.log(`SSL: mkcert not found or failed (${(mkcertErr as Error).message?.split("\n")[0]}), falling back to openssl`);
+        try {
+          await execFile("openssl", [
+            "req", "-x509", "-newkey", "rsa:2048",
+            "-keyout", keyPath,
+            "-out", certPath,
+            "-days", "365",
+            "-nodes",
+            "-subj", "/CN=localhost",
+          ]);
+          console.log("SSL: self-signed cert generated (install mkcert for no browser warning)");
+        } catch {
+          throw new Error(
+            "Could not generate SSL certificates.\n" +
+            "Install mkcert (recommended) or openssl, then restart the dev server.\n" +
+            "  brew install mkcert && mkcert -install",
+          );
+        }
+      }
     }
+
+    const key = await readFile(keyPath);
+    const cert = await readFile(certPath);
+
+    server = http2.createSecureServer({
+      key,
+      cert,
+      settings: { maxConcurrentStreams: 250 },
+    });
   }
-
-  const key = await readFile(keyPath);
-  const cert = await readFile(certPath);
-
-  const server = http2.createSecureServer({
-    key,
-    cert,
-    settings: { maxConcurrentStreams: 250 },
-  });
 
   /*
   ```
@@ -158,348 +257,353 @@ export const startHttp2Server = async () => {
     );
   };
 
-  const onError = (error: unknown, stream: ServerHttp2Stream): void => {
+  const onError = (error: unknown, res: BascikResponse): void => {
     // Client disconnected mid-request — not a server bug, nothing to respond to.
     if (isNetworkResetError(error)) return;
     try {
-      if (!stream.headersSent) {
+      if (!res.headersSent) {
         if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-          stream.respond({ ":status": 404, ...SECURITY_HEADERS });
+          res.respond(404, { ...SECURITY_HEADERS });
         } else {
-          stream.respond({ ":status": 500, ...SECURITY_HEADERS });
+          res.respond(500, { ...SECURITY_HEADERS });
         }
       }
     } catch (respondErr) {
-      console.error("Error responding to stream:", respondErr);
+      console.error("Error responding to stream/request:", respondErr);
     }
 
     try {
-      stream.end();
+      res.end();
     } catch (endErr) {
-      console.error("Error ending stream:", endErr);
+      console.error("Error ending stream/request:", endErr);
     }
 
-    console.error("Stream error:", error);
+    console.error("Request/Stream error:", error);
   };
 
   const openSessions = new Set<http2.ServerHttp2Session>();
-  server.on("session", (session: http2.ServerHttp2Session) => {
-    openSessions.add(session);
-    session.once("close", () => openSessions.delete(session));
-    // Prevent unhandled 'error' event crashes from protocol-level session errors.
-    session.on("error", (err) => {
-      if (isNetworkResetError(err)) return;
-      console.error("[bascik] HTTP/2 session error:", err);
+  if (!disableTls) {
+    (server as http2.Http2SecureServer).on("session", (session: http2.ServerHttp2Session) => {
+      openSessions.add(session);
+      session.once("close", () => openSessions.delete(session));
+      // Prevent unhandled 'error' event crashes from protocol-level session errors.
+      session.on("error", (err) => {
+        if (isNetworkResetError(err)) return;
+        console.error("[bascik] HTTP/2 session error:", err);
+      });
     });
-  });
+  }
 
-  server.on(
-    "stream",
-    async (stream: ServerHttp2Stream, headers: IncomingHttpHeaders) => {
-      const startMs = Date.now();
-      let responseStatus = 0;
+  const handleRequest = async (req: BascikRequest, res: BascikResponse) => {
+    const startMs = Date.now();
+    let responseStatus = 0;
 
-      const logAccess = () => {
-        if (responseStatus === 0) return;
-        const logging = BascikConfig.isProdServer
-          ? (BascikConfig.serve?.logging ?? { level: "info", requests: true })
-          : (BascikConfig.devServer?.logging ?? { level: "info", requests: true });
-        if (logging.requests === false) return;
-        if (!shouldLog(logging.level ?? "info", "info")) return;
-        const elapsed = Date.now() - startMs;
-        const method = headers[":method"] ?? "-";
-        const path = headers[":path"] ?? "-";
-        // Skip noisy SSE keep-alive pings
-        if (path === "/bascik-live-reload") return;
-        console.log(`${method} ${path} ${responseStatus} ${elapsed}ms`);
-      };
+    const logAccess = () => {
+      if (responseStatus === 0) return;
+      const logging = BascikConfig.isProdServer
+        ? (BascikConfig.serve?.logging ?? { level: "info", requests: true })
+        : (BascikConfig.devServer?.logging ?? { level: "info", requests: true });
+      if (logging.requests === false) return;
+      if (!shouldLog(logging.level ?? "info", "info")) return;
+      const elapsed = Date.now() - startMs;
+      const method = req.method;
+      const path = req.path;
+      // Skip noisy SSE keep-alive pings
+      if (path === "/bascik-live-reload") return;
+      console.log(`${method} ${path} ${responseStatus} ${elapsed}ms`);
+    };
 
-      try {
-        const req = {
-          path: headers[":path"] as string | undefined,
-          method: headers[":method"] as string | undefined,
-        };
+    try {
+      // ── Rate limiting ────────────────────────────────────────────────────
+      if (BascikConfig.isProdServer && isRateLimited(req.remoteIp)) {
+        responseStatus = 429;
+        res.respond(429, { "retry-after": String(RATE_WINDOW_MS / 1000), ...SECURITY_HEADERS });
+        res.end("Too Many Requests");
+        return;
+      }
 
-        // ── Rate limiting ────────────────────────────────────────────────────
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let remoteIp = "unknown";
-        try {
-          remoteIp = (stream as any).session?.socket?.remoteAddress ?? "unknown";
-        } catch { }
-        if (BascikConfig.isProdServer && isRateLimited(remoteIp)) {
-          responseStatus = 429;
-          stream.respond({ ":status": 429, "retry-after": String(RATE_WINDOW_MS / 1000), ...SECURITY_HEADERS });
-          stream.end("Too Many Requests");
-          return;
-        }
+      // ── Method guard: GET and HEAD only ──────────────────────────────────
+      const isHead = req.method === "HEAD";
+      if (req.method !== "GET" && !isHead) {
+        responseStatus = 405;
+        res.respond(405, { "allow": "GET, HEAD", ...SECURITY_HEADERS });
+        res.end("Method Not Allowed");
+        return;
+      }
 
-        // ── Method guard: GET and HEAD only ──────────────────────────────────
-        const isHead = req.method === "HEAD";
-        if (req.method !== "GET" && !isHead) {
-          responseStatus = 405;
-          stream.respond({ ":status": 405, "allow": "GET, HEAD", ...SECURITY_HEADERS });
-          stream.end("Method Not Allowed");
-          return;
-        }
+      if (!req.path) {
+        responseStatus = 400;
+        res.respond(400, { ...SECURITY_HEADERS });
+        return res.end();
+      }
 
-        if (!req.path) {
+      // Parse the request pathname once so routing decisions are never
+      // confused by a query string (e.g. /style.css?v=1 or /search?email=a@b.com).
+      const qIdx = req.path.indexOf("?");
+      const pathname = qIdx === -1 ? req.path : req.path.slice(0, qIdx);
+
+      // ── Static asset (has extension, not .html) ──────────────────────────
+      const ext = extname(pathname).toLowerCase();
+      if (ext && !ext.match(/^\.htm.*$/)) {
+        // Path traversal guard: resolved path must stay inside dist/
+        const safePath = pathname.slice(1); // strip leading /
+        const fullPath = resolve(distDir, safePath);
+        if (!fullPath.startsWith(distDir + sep)) {
           responseStatus = 400;
-          stream.respond({ ":status": 400, ...SECURITY_HEADERS });
-          return stream.end();
-        }
-
-        // Parse the request pathname once so routing decisions are never
-        // confused by a query string (e.g. /style.css?v=1 or /search?email=a@b.com).
-        const qIdx = req.path.indexOf("?");
-        const pathname = qIdx === -1 ? req.path : req.path.slice(0, qIdx);
-
-        // ── Static asset (has extension, not .html) ──────────────────────────
-        const ext = extname(pathname).toLowerCase();
-        if (ext && !ext.match(/^\.htm.*$/)) {
-          // Path traversal guard: resolved path must stay inside dist/
-          const safePath = pathname.slice(1); // strip leading /
-          const fullPath = resolve(distDir, safePath);
-          if (!fullPath.startsWith(distDir + sep)) {
-            responseStatus = 400;
-            stream.respond({ ":status": 400, ...SECURITY_HEADERS });
-            stream.end("Bad Request");
-            return;
-          }
-
-          // Stat gives us size (for Content-Length) + mtime (for ETag) in one syscall.
-          let fileStat: Awaited<ReturnType<typeof stat>>;
-          try {
-            fileStat = await stat(fullPath);
-          } catch (err) {
-            responseStatus = (err as NodeJS.ErrnoException).code === "ENOENT" ? 404 : 500;
-            stream.respond({ ":status": responseStatus, ...SECURITY_HEADERS });
-            stream.end(responseStatus === 404 ? "Not Found" : "Internal Server Error");
-            return;
-          }
-
-          const etag = makeStatEtag(fileStat.mtimeMs, fileStat.size);
-          if (BascikConfig.cacheHttp !== false && headers["if-none-match"] === etag) {
-            responseStatus = 304;
-            stream.respond({ ":status": 304, etag, ...SECURITY_HEADERS });
-            stream.end();
-            return;
-          }
-
-          const staticHeaders: Record<string, string | number> = {
-            "content-type": MIME_MAP.get(ext) ?? (MIME_MAP.get("octet-stream") as string),
-            "content-length": fileStat.size,
-            ":status": 200,
-            ...SECURITY_HEADERS,
-          };
-          if (BascikConfig.cacheHttp !== false) {
-            staticHeaders["etag"] = etag;
-            staticHeaders["cache-control"] = "public, max-age=3600";
-          } else {
-            staticHeaders["cache-control"] = "no-store";
-          }
-
-          if (isHead) {
-            responseStatus = 200;
-            stream.respond(staticHeaders);
-            stream.end();
-            return;
-          }
-
-          const fileStream = createReadStream(fullPath);
-
-          fileStream.on("error", (err) => {
-            if (stream.destroyed) return;
-            if (stream.headersSent) {
-              // Headers already went out on "open" — a second respond() would
-              // throw ERR_HTTP2_HEADERS_SENT.  Abort the stream instead.
-              stream.close(http2.constants.NGHTTP2_INTERNAL_ERROR);
-              return;
-            }
-            responseStatus = (err as NodeJS.ErrnoException).code === "ENOENT" ? 404 : 500;
-            stream.respond({ ":status": responseStatus, ...SECURITY_HEADERS });
-            stream.end(responseStatus === 404 ? "Not Found" : "Internal Server Error");
-          });
-
-          fileStream.on("open", () => {
-            if (stream.destroyed) { fileStream.destroy(); return; }
-            responseStatus = 200;
-            stream.respond(staticHeaders);
-            fileStream.pipe(stream);
-          });
-
+          res.respond(400, { ...SECURITY_HEADERS });
+          res.end("Bad Request");
           return;
         }
 
-        // ── Reject dot-paths that are not file extensions (e.g. /img.dir/dog) ─
-        if (pathname.split(".").length > 1) {
-          responseStatus = 404;
-          stream.respond({ ":status": 404, ...SECURITY_HEADERS });
-          return stream.end();
-        }
-
-        // ── Live-reload SSE ──────────────────────────────────────────────────
-        if (pathname === "/bascik-live-reload") {
-          // Disable in production serve mode.
-          if (BascikConfig.isProdServer) {
-            responseStatus = 404;
-            stream.respond({ ":status": 404, ...SECURITY_HEADERS });
-            return stream.end();
-          }
-
-          const isBootReloadConnection = new URL(req.path, origin).searchParams.get("boot") === "1";
-
-          responseStatus = 200;
-          stream.respond({
-            "content-type": "text/event-stream",
-            "cache-control": "no-cache",
-            ...SECURITY_HEADERS,
-          });
-
-          stream.write(`data: connected\n\n`);
-
-          // Parse the referer once at connection time for path-matching and open-page tracking.
-          let openPagePath: string | null = null;
-          try {
-            if (headers.referer) openPagePath = new URL(headers.referer as string).pathname;
-          } catch { }
-          if (openPagePath) mem.trackOpenPage(openPagePath);
-
-          const eventHandler = ({
-            relativePagePath,
-          }: {
-            relativePagePath: string;
-          }) => {
-            if (stream.destroyed) return;
-            if (openPagePath) {
-              const httpPath = getHttpPath(relativePagePath);
-              // Normalize trailing slashes: browsers may omit the trailing slash on index routes.
-              const strip = (p: string) => p.replace(/\/$/, "") || "/";
-              if (strip(openPagePath) !== strip(httpPath)) return;
-            }
-            stream.write(`data: reload\n\n`);
-          };
-
-          const assetChangedHandler = () => {
-            if (stream.destroyed) return;
-            stream.write(`data: reload\n\n`);
-          };
-
-          // Reload boot pages immediately when the initial scan finishes.
-          const bootDoneHandler = () => { if (stream.destroyed) return; stream.write(`data: reload\n\n`); };
-
-          eventEmitter.on("transpiled", eventHandler);
-          eventEmitter.on("asset-changed", assetChangedHandler);
-          eventEmitter.on("boot-done", bootDoneHandler);
-
-          if (isBootReloadConnection && !mem.isBooting && !stream.destroyed) {
-            stream.write(`data: reload\n\n`);
-          }
-
-          stream.on("close", () => {
-            if (openPagePath) mem.untrackOpenPage(openPagePath);
-            eventEmitter.removeListener("transpiled", eventHandler);
-            eventEmitter.removeListener("asset-changed", assetChangedHandler);
-            eventEmitter.removeListener("boot-done", bootDoneHandler);
-          });
+        // Stat gives us size (for Content-Length) + mtime (for ETag) in one syscall.
+        let fileStat: Awaited<ReturnType<typeof stat>>;
+        try {
+          fileStat = await stat(fullPath);
+        } catch (err) {
+          responseStatus = (err as NodeJS.ErrnoException).code === "ENOENT" ? 404 : 500;
+          res.respond(responseStatus, { ...SECURITY_HEADERS });
+          res.end(responseStatus === 404 ? "Not Found" : "Internal Server Error");
           return;
         }
 
-        // ── In-memory page lookup ────────────────────────────────────────────
-        const reqUrl = `${origin}${req.path}`;
-        // Try the literal path first, then the trailing-slash toggle so that
-        // `/blog` and `/blog/` both resolve a page stored as `pages/blog/index.html`.
-        const page =
-          mem.getPageExact(pathname) ??
-          mem.getPageExact(pathname.endsWith("/") ? pathname.slice(0, -1) : `${pathname}/`) ??
-          mem.getPage(pathname);
-
-        if (!page) {
-          // During the initial transpile, serve a boot page instead of 404.
-          // The boot page connects to the SSE endpoint and reloads automatically
-          // when its specific page is transpiled or when boot finishes entirely.
-          if (mem.isBooting && !BascikConfig.isProdServer) {
-            responseStatus = 200;
-            stream.respond({ ":status": 200, "content-type": "text/html; charset=utf-8", "cache-control": "no-store", ...SECURITY_HEADERS });
-            return stream.end(isHead ? undefined : BOOT_PAGE_HTML);
-          }
-          responseStatus = 404;
-          stream.respond({ ":status": 404, ...SECURITY_HEADERS });
-          return stream.end("Not Found");
+        const etag = makeStatEtag(fileStat.mtimeMs, fileStat.size);
+        if (BascikConfig.cacheHttp !== false && req.headers["if-none-match"] === etag) {
+          responseStatus = 304;
+          res.respond(304, { etag, ...SECURITY_HEADERS });
+          res.end();
+          return;
         }
 
-        // A page is the 404 page only when its resolved HTTP path is exactly
-        // /404 — `pages/blog/404.html` (a page *about* 404s) must not match.
-        const is404Page = getHttpPath(page.relativePagePath) === "/404";
-
-        responseStatus = is404Page ? 404 : 200;
-
-        const responseHeaders: Record<string, string | number> = {
-          "content-type": "text/html; charset=utf-8",
-          "vary": "Accept-Encoding",
-          ":status": responseStatus,
+        const staticHeaders: Record<string, string | number> = {
+          "content-type": MIME_MAP.get(ext) ?? (MIME_MAP.get("octet-stream") as string),
+          "content-length": fileStat.size,
           ...SECURITY_HEADERS,
         };
-
-        if (BascikConfig.cacheHttp === false) {
-          responseHeaders["cache-control"] =
-            "no-store, no-cache, must-revalidate, proxy-revalidate";
-          responseHeaders["pragma"] = "no-cache";
-          responseHeaders["expires"] = "0";
+        if (BascikConfig.cacheHttp !== false) {
+          staticHeaders["etag"] = etag;
+          staticHeaders["cache-control"] = "public, max-age=3600";
+        } else {
+          staticHeaders["cache-control"] = "no-store";
         }
 
-        // ── Pages with server scripts: generated fresh each request ──────────
-        // Server-script output is personalized per-request; always prevent caching.
-        if (page.hasServerScripts) {
-          const searchParams = Object.fromEntries(
-            new URLSearchParams(qIdx === -1 ? "" : req.path.slice(qIdx + 1)),
-          );
-          const requestHeaders: Record<string, string> = {};
-          for (const [k, v] of Object.entries(headers)) {
-            if (k.startsWith(":")) continue; // skip HTTP/2 pseudo-headers
-            requestHeaders[k] = Array.isArray(v) ? v.join(", ") : (v ?? "");
+        if (isHead) {
+          responseStatus = 200;
+          res.respond(200, staticHeaders);
+          res.end();
+          return;
+        }
+
+        const fileStream = createReadStream(fullPath);
+
+        fileStream.on("error", (err) => {
+          if (res.destroyed) return;
+          if (res.headersSent) {
+            // Headers already went out on "open" — a second respond() would
+            // throw ERR_HTTP2_HEADERS_SENT.  Abort the stream instead.
+            res.close(http2.constants?.NGHTTP2_INTERNAL_ERROR);
+            return;
           }
-          const html = await executeServerScripts(page.content.toString(), {
-            path: pathname,
-            method: req.method ?? "GET",
-            headers: requestHeaders,
-            searchParams,
-          }, BascikConfig.serve?.scriptTimeout ?? DEFAULT_SCRIPT_TIMEOUT_MS);
-          const htmlBuf = Buffer.from(html);
-          responseHeaders["cache-control"] = "private, no-store";
-          responseHeaders["content-length"] = htmlBuf.byteLength;
-          stream.respond(responseHeaders);
-          return stream.end(isHead ? undefined : htmlBuf);
-        }
+          responseStatus = (err as NodeJS.ErrnoException).code === "ENOENT" ? 404 : 500;
+          res.respond(responseStatus, { ...SECURITY_HEADERS });
+          res.end(responseStatus === 404 ? "Not Found" : "Internal Server Error");
+        });
 
-        // ── ETag + conditional GET (skip for no-store pages) ─────────────────
-        const etag = makeEtag(page.content);
-        if (BascikConfig.cacheHttp !== false && headers["if-none-match"] === etag) {
-          responseStatus = 304;
-          stream.respond({ ":status": 304, etag, ...SECURITY_HEADERS });
-          return stream.end();
-        }
-        responseHeaders["etag"] = etag;
+        fileStream.on("open", () => {
+          if (res.destroyed) { fileStream.destroy(); return; }
+          responseStatus = 200;
+          res.respond(200, staticHeaders);
+          fileStream.pipe(res.writable);
+        });
 
-        // ── Brotli or uncompressed ────────────────────────────────────────────
-        const acceptEncoding = headers["accept-encoding"] ?? "";
-
-        if (/\bbr\b/.test(acceptEncoding) && page.compressedContent) {
-          responseHeaders["content-encoding"] = "br";
-          responseHeaders["content-length"] = page.compressedContent.byteLength;
-          stream.respond(responseHeaders);
-          return stream.end(isHead ? undefined : page.compressedContent);
-        }
-
-        responseHeaders["content-length"] = page.content.byteLength;
-        stream.respond(responseHeaders);
-        return stream.end(isHead ? undefined : page.content);
-      } catch (error) {
-        onError(error, stream);
-      } finally {
-        logAccess();
+        return;
       }
-    },
-  );
+
+      // ── Reject dot-paths that are not file extensions (e.g. /img.dir/dog) ─
+      if (pathname.split(".").length > 1) {
+        responseStatus = 404;
+        res.respond(404, { ...SECURITY_HEADERS });
+        return res.end();
+      }
+
+      // ── Live-reload SSE ──────────────────────────────────────────────────
+      if (pathname === "/bascik-live-reload") {
+        // Disable in production serve mode.
+        if (BascikConfig.isProdServer) {
+          responseStatus = 404;
+          res.respond(404, { ...SECURITY_HEADERS });
+          return res.end();
+        }
+
+        const isBootReloadConnection = new URL(req.path, origin).searchParams.get("boot") === "1";
+
+        responseStatus = 200;
+        res.respond(200, {
+          "content-type": "text/event-stream",
+          "cache-control": "no-cache",
+          ...SECURITY_HEADERS,
+        });
+
+        res.write(`data: connected\n\n`);
+
+        // Parse the referer once at connection time for path-matching and open-page tracking.
+        let openPagePath: string | null = null;
+        try {
+          if (req.headers.referer) openPagePath = new URL(req.headers.referer as string).pathname;
+        } catch { }
+        if (openPagePath) mem.trackOpenPage(openPagePath);
+
+        const eventHandler = ({
+          relativePagePath,
+        }: {
+          relativePagePath: string;
+        }) => {
+          if (res.destroyed) return;
+          if (openPagePath) {
+            const httpPath = getHttpPath(relativePagePath);
+            // Normalize trailing slashes: browsers may omit the trailing slash on index routes.
+            const strip = (p: string) => p.replace(/\/$/, "") || "/";
+            if (strip(openPagePath) !== strip(httpPath)) return;
+          }
+          res.write(`data: reload\n\n`);
+        };
+
+        const assetChangedHandler = () => {
+          if (res.destroyed) return;
+          res.write(`data: reload\n\n`);
+        };
+
+        // Reload boot pages immediately when the initial scan finishes.
+        const bootDoneHandler = () => { if (res.destroyed) return; res.write(`data: reload\n\n`); };
+
+        eventEmitter.on("transpiled", eventHandler);
+        eventEmitter.on("asset-changed", assetChangedHandler);
+        eventEmitter.on("boot-done", bootDoneHandler);
+
+        if (isBootReloadConnection && !mem.isBooting && !res.destroyed) {
+          res.write(`data: reload\n\n`);
+        }
+
+        res.on("close", () => {
+          if (openPagePath) mem.untrackOpenPage(openPagePath);
+          eventEmitter.removeListener("transpiled", eventHandler);
+          eventEmitter.removeListener("asset-changed", assetChangedHandler);
+          eventEmitter.removeListener("boot-done", bootDoneHandler);
+        });
+        return;
+      }
+
+      // ── In-memory page lookup ────────────────────────────────────────────
+      const reqUrl = `${origin}${req.path}`;
+      // Try the literal path first, then the trailing-slash toggle so that
+      // `/blog` and `/blog/` both resolve a page stored as `pages/blog/index.html`.
+      const page =
+        mem.getPageExact(pathname) ??
+        mem.getPageExact(pathname.endsWith("/") ? pathname.slice(0, -1) : `${pathname}/`) ??
+        mem.getPage(pathname);
+
+      if (!page) {
+        // During the initial transpile, serve a boot page instead of 404.
+        // The boot page connects to the SSE endpoint and reloads automatically
+        // when its specific page is transpiled or when boot finishes entirely.
+        if (mem.isBooting && !BascikConfig.isProdServer) {
+          responseStatus = 200;
+          res.respond(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", ...SECURITY_HEADERS });
+          return res.end(isHead ? undefined : BOOT_PAGE_HTML);
+        }
+        responseStatus = 404;
+        res.respond(404, { ...SECURITY_HEADERS });
+        return res.end("Not Found");
+      }
+
+      // A page is the 404 page only when its resolved HTTP path is exactly
+      // /404 — `pages/blog/404.html` (a page *about* 404s) must not match.
+      const is404Page = getHttpPath(page.relativePagePath) === "/404";
+
+      responseStatus = is404Page ? 404 : 200;
+
+      const responseHeaders: Record<string, string | number> = {
+        "content-type": "text/html; charset=utf-8",
+        "vary": "Accept-Encoding",
+        ...SECURITY_HEADERS,
+      };
+
+      if (BascikConfig.cacheHttp === false) {
+        responseHeaders["cache-control"] =
+          "no-store, no-cache, must-revalidate, proxy-revalidate";
+        responseHeaders["pragma"] = "no-cache";
+        responseHeaders["expires"] = "0";
+      }
+
+      // ── Pages with server scripts: generated fresh each request ──────────
+      // Server-script output is personalized per-request; always prevent caching.
+      if (page.hasServerScripts) {
+        const searchParams = Object.fromEntries(
+          new URLSearchParams(qIdx === -1 ? "" : req.path.slice(qIdx + 1)),
+        );
+        const requestHeaders: Record<string, string> = {};
+        for (const [k, v] of Object.entries(req.headers)) {
+          if (k.startsWith(":")) continue; // skip HTTP/2 pseudo-headers
+          requestHeaders[k] = Array.isArray(v) ? v.join(", ") : (v ?? "");
+        }
+        const html = await executeServerScripts(page.content.toString(), {
+          path: pathname,
+          method: req.method ?? "GET",
+          headers: requestHeaders,
+          searchParams,
+        }, BascikConfig.serve?.scriptTimeout ?? DEFAULT_SCRIPT_TIMEOUT_MS);
+        const htmlBuf = Buffer.from(html);
+        responseHeaders["cache-control"] = "private, no-store";
+        responseHeaders["content-length"] = htmlBuf.byteLength;
+        res.respond(responseStatus, responseHeaders);
+        return res.end(isHead ? undefined : htmlBuf);
+      }
+
+      // ── ETag + conditional GET (skip for no-store pages) ─────────────────
+      const etag = makeEtag(page.content);
+      if (BascikConfig.cacheHttp !== false && req.headers["if-none-match"] === etag) {
+        responseStatus = 304;
+        res.respond(304, { etag, ...SECURITY_HEADERS });
+        return res.end();
+      }
+      responseHeaders["etag"] = etag;
+
+      // ── Brotli or uncompressed ────────────────────────────────────────────
+      const rawAcceptEncoding = req.headers["accept-encoding"] ?? "";
+      const acceptEncoding = Array.isArray(rawAcceptEncoding)
+        ? rawAcceptEncoding.join(", ")
+        : rawAcceptEncoding;
+
+      if (/\bbr\b/.test(acceptEncoding) && page.compressedContent) {
+        responseHeaders["content-encoding"] = "br";
+        responseHeaders["content-length"] = page.compressedContent.byteLength;
+        res.respond(responseStatus, responseHeaders);
+        return res.end(isHead ? undefined : page.compressedContent);
+      }
+
+      responseHeaders["content-length"] = page.content.byteLength;
+      res.respond(responseStatus, responseHeaders);
+      return res.end(isHead ? undefined : page.content);
+    } catch (error) {
+      onError(error, res);
+    } finally {
+      logAccess();
+    }
+  };
+
+  if (disableTls) {
+    server.on("request", async (reqMsg, resMsg) => {
+      const { req, res } = adaptHttp1(reqMsg, resMsg);
+      await handleRequest(req, res);
+    });
+  } else {
+    (server as http2.Http2SecureServer).on(
+      "stream",
+      async (stream, headers) => {
+        const { req, res } = adaptHttp2(stream, headers);
+        await handleRequest(req, res);
+      }
+    );
+  }
 
   // Find the first available port, incrementing if the preferred one is in use.
   await new Promise<void>((resolve, reject) => {
@@ -515,7 +619,7 @@ export const startHttp2Server = async () => {
       server.once("error", errorHandler);
       server.listen(p, hostname, () => {
         server.removeListener("error", errorHandler);
-        origin = `https://${hostname}:${p}`;
+        origin = `${disableTls ? "http" : "https"}://${hostname}:${p}`;
         resolve();
       });
     };
