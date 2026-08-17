@@ -1298,6 +1298,33 @@ describe("namespaceScriptTags – data-bascik-server shielding", () => {
     const iffeAfterServer = result.fileContent.indexOf("(function()", serverIdx);
     expect(iffeAfterServer).toBe(-1);
   });
+
+  it("wraps multiple client scripts in separate IIFEs", () => {
+    const c = {
+      name: "my-comp",
+      fileContent:
+        "<script>const a = 1;</script>" +
+        "<script>const b = 2;</script>",
+    };
+    const result = namespaceScriptTags(c);
+    const matches = result.fileContent.match(/\(function\(\)/g);
+    expect(matches).toHaveLength(2);
+    expect(result.fileContent).toContain("const a = 1;");
+    expect(result.fileContent).toContain("const b = 2;");
+  });
+
+  it("wraps client scripts while leaving JSON-LD and server scripts untouched", () => {
+    const c = {
+      name: "my-comp",
+      fileContent:
+        '<script type="application/ld+json">{"@type": "Organization"}</script>' +
+        "<script>const c = 3;</script>",
+    };
+    const result = namespaceScriptTags(c);
+    const matches = result.fileContent.match(/\(function\(\)/g);
+    expect(matches).toHaveLength(1);
+    expect(result.fileContent).toContain('{"@type": "Organization"}');
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

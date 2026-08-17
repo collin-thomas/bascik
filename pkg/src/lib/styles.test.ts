@@ -1558,4 +1558,15 @@ describe("extractInlineStyles", () => {
     expect(html).not.toContain('<style>.real');
     expect(css).toBe(".real { color: green; }");
   });
+
+  it("extracts and combines multiple <style> tags from HTML", () => {
+    const input =
+      '<style>.primary { color: red; }</style>' +
+      '<div class="primary">Content</div>' +
+      '<style media="(min-width: 768px)">.primary { color: blue; }</style>';
+    const { html, css } = extractInlineStyles(input);
+    expect(html).toBe('<div class="primary">Content</div>');
+    expect(css).toContain(".primary { color: red; }");
+    expect(css).toContain("@media (min-width: 768px) {\n.primary { color: blue; }\n}");
+  });
 });

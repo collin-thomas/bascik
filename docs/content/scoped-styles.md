@@ -7,9 +7,13 @@ Scoped styles namespace a component's CSS at build time, keeping its selectors a
 You can define component CSS in either of these places:
 
 - a paired `.css` file next to the component HTML
-- an inline `<style>` tag inside the component HTML
+- one or more inline `<style>` tags inside the component HTML
 
-Use paired files for most components so the HTML and CSS stay easy to scan. Inline `<style>` tags are still fully supported when keeping a small component in one file is more convenient.
+Both approaches are fully equivalent in functionality. At build time, Bascik extracts inline `<style>` tags from component HTML files, applies the full scoping pipeline, deduplicates the CSS across all instances on the page, and injects the compiled styles into the page `<head>`. Component markup in the `<body>` stays clean with no `<style>` tags left behind.
+
+If a component contains multiple `<style>` tags or both a paired `.css` file and inline `<style>` tags, Bascik combines all stylesheets before scoping.
+
+Use paired files for most components so the HTML and CSS stay easy to scan. Inline `<style>` tags are convenient when keeping a small component in a single file is preferred.
 
 ## CSS File Pairing
 

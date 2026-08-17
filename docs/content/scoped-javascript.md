@@ -14,6 +14,15 @@ A component script looks like ordinary JavaScript. Declare `id` on any element y
 
 Open Source → JS in the counter demo to see ordinary event listeners and `getElementById` calls. Output → JS shows the rewritten selectors and instance wrapper that Bascik generates.
 
+## Multiple Script Blocks
+
+Component templates can contain multiple `<script>` tags. Bascik processes each script tag according to its attributes:
+
+- **Client scripts:** Standard JavaScript blocks are each wrapped in an isolated IIFE `(function() { ... })();` when `scopeScriptBlocks` is enabled. If you include multiple client `<script>` tags in a single component, each runs in its own IIFE so local variables do not collide.
+- **Build scripts (`<script data-bascik-build>`):** Executed during build/dev time in Node.js to generate dynamic markup.
+- **Server scripts (`<script data-bascik-server>`):** Executed on the server at request time in Node.js.
+- **Data scripts (e.g. `type="application/ld+json"`):** Left untouched without IIFE wrapping or minification.
+
 ## Multiple Instances
 
 Place the same component on a page more than once and each instance runs independently with no extra work needed:

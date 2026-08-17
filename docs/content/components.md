@@ -294,3 +294,46 @@ src/components/
 Bascik derives the tag name from the `.html` filename, not the folder. `feature-card/feature-card.html` still produces `<feature-card>`.
 
 > **No restart needed.** The dev server watches `src/components/` for new and changed files. Drop in a new `.html` or `.css` file and all affected pages re-transpile and reload automatically.
+
+## Multiple Root Elements
+
+Component templates in Bascik are not restricted to a single container element. You can place multiple top-level HTML elements inside a single `.html` component file.
+
+```html
+<h2>Section Heading</h2>
+<p class="intro">Introductory paragraph text.</p>
+<div class="card">Card content</div>
+```
+
+When transpiled, all root-level elements are inserted directly into the page markup in order. Bascik scopes CSS rules, class names, IDs, element selectors, and scripts across all elements in the component file automatically.
+
+If non-`data-bascik-*` attributes are passed on a usage tag (such as `class="extra"` or `aria-label="Section"`), attribute inheritance merges them onto the **first** root HTML element in the component template.
+
+## Multiple Style Blocks
+
+You can include multiple `<style>` blocks in a single component file. For example, you can organize styles into separate blocks for general layout, media queries, or themes.
+
+```html
+<style>
+  .card { padding: 16px; background: #1a1b1e; }
+</style>
+
+<div class="card">
+  <h3>Card Title</h3>
+</div>
+
+<style media="(min-width: 768px)">
+  .card { padding: 24px; }
+</style>
+```
+
+At build time, Bascik extracts every `<style>` block from the component file, combines them with any companion `.css` file, applies class and selector scoping, and injects the resulting CSS into the document `<head>`.
+
+## Multiple Script Blocks
+
+Component templates can also contain multiple `<script>` tags. Bascik handles each script according to its type and attributes:
+
+- **Client scripts:** Standard JavaScript blocks (without `data-bascik-server` or `data-bascik-build`) are each wrapped in an isolated IIFE `(function() { ... })();`. You can include multiple client scripts in a component template, and each receives its own scope so local variables do not bleed into other blocks.
+- **Build scripts (`<script data-bascik-build>`):** Executed during build or dev time in Node.js, replacing the tag with its stdout. Multiple build scripts execute concurrently.
+- **Server scripts (`<script data-bascik-server>`):** Executed on the server at request time in Node.js. They are not wrapped in browser IIFEs.
+- **Data scripts (e.g., `type="application/ld+json"`):** Preserved intact without IIFE wrapping or JavaScript minification.

@@ -168,10 +168,21 @@ function createDiagnosticsForDocument(document) {
             }
         }
         let styleMatch;
-        while ((styleMatch = styleBlockRe.exec(text)) !== null) {
+        const hasCompanionCss = document.uri.scheme === 'file'
+            && document.uri.fsPath.toLowerCase().endsWith('.html')
+            && fs.existsSync(document.uri.fsPath.replace(/\.html$/i, '.css'));
+        const maskedText = text.replace(/(<(code|pre|script|textarea)(?:[^>"']|"[^"]*"|'[^']*')*>)([\s\S]*?)(<\/\2\s*>)/gi, (_m, open, _tag, content, close) => open + ' '.repeat(content.length) + close);
+        while ((styleMatch = styleBlockRe.exec(maskedText)) !== null) {
             const openTag = styleMatch[1];
             const styleBody = styleMatch[2] ?? '';
             const styleBodyOffset = (styleMatch.index ?? 0) + openTag.length;
+            if (hasCompanionCss) {
+                const start = document.positionAt(styleMatch.index ?? 0);
+                const end = document.positionAt((styleMatch.index ?? 0) + openTag.length);
+                const diag = new vscode.Diagnostic(new vscode.Range(start, end), 'Component has both a companion .css file and an inline <style> tag. They will be combined at build time, but mixing both is not recommended for readability and maintainability.', vscode.DiagnosticSeverity.Warning);
+                diag.source = 'bascik';
+                diagnostics.push(diag);
+            }
             addCompatibilityDiagnostics(styleBody, 'css', styleBodyOffset);
         }
     }
