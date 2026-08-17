@@ -562,12 +562,14 @@ export const startHttp2Server = async () => {
     console.log(`\nReceived ${signal}, shutting down gracefully…`);
     // Destroy sessions so server.close() completes immediately.
     for (const session of openSessions) session.destroy();
-    server.close();
     // Close all registered handles (chokidar watchers, exec watchers).
     runShutdownHandlers().catch(() => { });
-    // Exit immediately with code 0 so process managers see clean success (code 0)
-    // before signal handlers treat non-exit as an error.
-    process.exit(0);
+    server.close((err) => {
+      if (err) console.error("[bascik] Error closing server:", err);
+      process.exit(0);
+    });
+    // Fallback force exit if server.close() hasn't called back within 1s.
+    setTimeout(() => process.exit(0), 1000).unref();
   };
   process.setMaxListeners(process.getMaxListeners() + 2);
   process.once("SIGTERM", () => gracefulShutdown("SIGTERM"));
