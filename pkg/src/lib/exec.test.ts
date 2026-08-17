@@ -8,6 +8,7 @@ const {
   mockWatch,
   getWatcher,
   mockEventEmit,
+  mockRegisterShutdownHandler,
   resetMocks,
 } = vi.hoisted(() => {
   let nextExitCode = 0;
@@ -28,7 +29,7 @@ const {
 
   const mockSpawn = vi.fn(makeProcess);
 
-  const watchers: { on: ReturnType<typeof vi.fn>; _handlers: Record<string, (...args: unknown[]) => void> }[] = [];
+  const watchers: { on: ReturnType<typeof vi.fn>; close: ReturnType<typeof vi.fn>; _handlers: Record<string, (...args: unknown[]) => void> }[] = [];
 
   const makeWatcher = () => {
     const _handlers: Record<string, (...args: unknown[]) => void> = {};
@@ -37,6 +38,7 @@ const {
         _handlers[event] = cb;
         return w;
       }),
+      close: vi.fn(),
       _handlers,
     };
     watchers.push(w);
@@ -45,12 +47,14 @@ const {
 
   const mockWatch = vi.fn(makeWatcher);
   const mockEventEmit = vi.fn();
+  const mockRegisterShutdownHandler = vi.fn();
 
   const resetMocks = () => {
     nextExitCode = 0;
     mockSpawn.mockReset().mockImplementation(makeProcess);
     mockWatch.mockReset().mockImplementation(makeWatcher);
     mockEventEmit.mockReset();
+    mockRegisterShutdownHandler.mockReset();
     watchers.length = 0;
   };
 
@@ -60,6 +64,7 @@ const {
     mockWatch,
     getWatcher: (i: number) => watchers[i],
     mockEventEmit,
+    mockRegisterShutdownHandler,
     resetMocks,
   };
 });
@@ -68,7 +73,7 @@ const {
 
 vi.mock("node:child_process", () => ({ spawn: mockSpawn }));
 vi.mock("chokidar", () => ({ default: { watch: mockWatch } }));
-vi.mock("./events.js", () => ({ eventEmitter: { emit: mockEventEmit }, registerShutdownHandler: vi.fn() }));
+vi.mock("./events.js", () => ({ eventEmitter: { emit: mockEventEmit }, registerShutdownHandler: mockRegisterShutdownHandler }));
 
 vi.mock("./config.js", () => ({
   BascikConfig: { exec: undefined },
@@ -263,5 +268,15 @@ describe("startExecDev", () => {
     expect(mockEventEmit).not.toHaveBeenCalled();
     expect(consoleSpy).toHaveBeenCalled();
     consoleSpy.mockRestore();
+  });
+
+  it("registers a shutdown handler that closes the watcher", () => {
+    cfg.exec = [{ script: "scripts/gen.ts", watch: ["content/"] }];
+    startExecDev();
+    expect(mockRegisterShutdownHandler).toHaveBeenCalledTimes(1);
+    const shutdownFn = mockRegisterShutdownHandler.mock.calls[0][0];
+    const watcher = getWatcher(0);
+    shutdownFn();
+    expect(watcher.close).toHaveBeenCalledTimes(1);
   });
 });

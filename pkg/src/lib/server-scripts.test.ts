@@ -193,6 +193,25 @@ describe("executeServerScripts", () => {
     expect(result).toBe("<div>hello\n</div><div>hello\n</div>");
   });
 
+  it("writes stderr to process.stderr when script emits stderr", async () => {
+    const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+    mockExecFile.mockImplementationOnce(
+      (
+        _cmd: unknown,
+        _args: unknown,
+        _opts: unknown,
+        cb: (err: null, stdout: string, stderr: string) => void,
+      ) => {
+        cb(null, "out", "warning in script\n");
+      },
+    );
+    const html = "<script data-bascik-server>console.warn('warning')</script>";
+    const result = await executeServerScripts(html, baseRequest);
+    expect(result).toBe("out");
+    expect(stderrSpy).toHaveBeenCalledWith("warning in script\n");
+    stderrSpy.mockRestore();
+  });
+
   it("preserves literal dollar patterns in output ($1, $&, $') without regex expansion", async () => {
     resolveWith("Price: $100 for $& items ($1)\n");
     const html = "<p><script data-bascik-server>console.log('Price')</script></p>";

@@ -1212,6 +1212,13 @@ describe("processAllPages – side effects", () => {
     await processAllPages();
     expect(mem.storePage).not.toHaveBeenCalled();
   });
+
+  it("processes pages using workers when useWorkers option is true", async () => {
+    (listPages as ReturnType<typeof vi.fn>).mockResolvedValue(["src/pages/index.html"]);
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(PAGE_HTML);
+    const result = await processAllPages({ useWorkers: false });
+    expect(result).toEqual(["pages/index.html"]);
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -502,7 +502,8 @@ export const processAllPages = async (options?: { useWorkers?: boolean }) => {
   let results: (TranspilePageResult | null)[];
 
   if (useWorkers && pageList.length > 0) {
-    const workerUrl = new URL("./page-worker.js", import.meta.url);
+    const workerExt = import.meta.url.endsWith(".ts") ? ".ts" : ".js";
+    const workerUrl = new URL(`./page-worker${workerExt}`, import.meta.url);
     const poolSize = Math.min(cpus().length, pageList.length);
     const pool = new WorkerPool<string, TranspilePageResult | null>(
       fileURLToPath(workerUrl),

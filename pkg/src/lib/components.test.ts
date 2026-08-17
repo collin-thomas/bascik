@@ -20,6 +20,8 @@ import {
   extractDefaultSlotContent,
   extractInheritableAttributes,
   mergeAttributesOntoRoot,
+  listComponents,
+  invalidateComponentListCache,
 } from "./components.js";
 
 describe("extractScriptTags", () => {
@@ -652,6 +654,14 @@ describe("extractDefaultSlotContent", () => {
       '<div data-bascik-slot="a"><span>a</span></div>' +
       "\n";
     expect(extractDefaultSlotContent(inner)).toBe("<p>main</p>");
+  });
+});
+
+describe("listComponents", () => {
+  it("invalidates cache and builds component list", async () => {
+    invalidateComponentListCache();
+    const result = await listComponents();
+    expect(typeof result).toBe("object");
   });
 });
 

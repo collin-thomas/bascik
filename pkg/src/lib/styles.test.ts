@@ -20,6 +20,7 @@ import {
   addIdClassesInHtml,
   deduplicateCss,
   shieldCssStrings,
+  getComponentCss,
 } from "./styles.js";
 
 const css = `
@@ -200,6 +201,21 @@ describe("getCssClasses", () => {
       "}",
       ".home.logo {\n    background-color: #d3ff8d;\n  }",
     ]);
+  });
+});
+
+describe("addIdClassesInHtml", () => {
+  it("adds id class to element with single-quoted class attribute", () => {
+    const html = "<div id=\"btn\" class='btn-base'></div>";
+    const result = addIdClassesInHtml(html, [{ idName: "btn", className: "bascik__my-comp__id__btn" }]);
+    expect(result).toContain("class='btn-base bascik__my-comp__id__btn'");
+  });
+});
+
+describe("getComponentCss", () => {
+  it("returns undefined for invalid inputs or when css file is not found", async () => {
+    expect(await getComponentCss("", [])).toBeUndefined();
+    expect(await getComponentCss("components/nav.html", ["components/other.css"])).toBeUndefined();
   });
 });
 

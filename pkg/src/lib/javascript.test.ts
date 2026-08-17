@@ -1069,6 +1069,10 @@ describe("minifyJs", () => {
     expect(minifyJs("var s = `hello  world`;")).toBe("var s = `hello  world`;");
   });
 
+  it("handles escape sequences in template literals", () => {
+    expect(minifyJs("var s = `he said \\`hi\\``;")).toBe("var s = `he said \\`hi\\``;");
+  });
+
   it("handles escape sequences in strings", () => {
     expect(minifyJs('var s = "he said \\"hi\\"";')).toBe(
       'var s = "he said \\"hi\\"";',
@@ -1191,6 +1195,11 @@ describe("minifyJs – regex literal handling", () => {
 
   it("preserves a regex with escape sequences", () => {
     expect(minifyJs("var re = /a\\/b/;")).toBe("var re = /a\\/b/;");
+  });
+
+  it("treats '/' as division when regex is unterminated before newline", () => {
+    const result = minifyJs("var n = /foo\n/bar;");
+    expect(result).toBe("var n = /foo\n/bar;");
   });
 
   it("treats '/' as division (not regex start) after an identifier", () => {
