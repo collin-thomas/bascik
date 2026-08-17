@@ -841,20 +841,12 @@ describe("pageProcessing – live-reload script injection", () => {
     expect(writtenContent).not.toContain("/bascik-live-reload");
   });
 
-  it("includes reconnection logic (regression: onerror used to close without retrying)", async () => {
+  it("includes reconnection logic using focus and visibilitychange listeners", async () => {
     await pageProcessing(PAGE_PATH, {});
     const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    // setTimeout reconnect must be present
-    expect(pageContent).toContain("setTimeout(connect");
-    // wasConnected flag must be present for reload-on-reconnect logic
+    expect(pageContent).toContain("addEventListener('focus'");
+    expect(pageContent).toContain("visibilitychange");
     expect(pageContent).toContain("wasConnected");
-  });
-
-  it("does not contain the old broken onerror that only warned and never reconnected", async () => {
-    await pageProcessing(PAGE_PATH, {});
-    const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    expect(pageContent).not.toContain("Connection Lost");
-    expect(pageContent).not.toContain("console.warn");
   });
 
   it("uses addEventListener for beforeunload instead of window.onbeforeunload", async () => {

@@ -137,13 +137,14 @@ const liveReloadScript = `
     var wasConnected = false;
     var source;
     function connect() {
+      if (source) return;
       source = new EventSource("/bascik-live-reload");
       source.onmessage = function(e) {
         if (e.data === 'reload') {
           window.location.reload();
         } else if (e.data === 'connected') {
           if (wasConnected) {
-            // Server restarted — reload to pick up fresh build output.
+            // Server restarted, reload to pick up fresh build output.
             window.location.reload();
           }
           wasConnected = true;
@@ -151,9 +152,18 @@ const liveReloadScript = `
       };
       source.onerror = function() {
         source.close();
-        setTimeout(connect, 1500);
+        source = null;
       };
     }
+    function instantConnect() {
+      if (!source) {
+        connect();
+      }
+    }
+    window.addEventListener('focus', instantConnect);
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'visible') instantConnect();
+    });
     window.addEventListener('beforeunload', function() { if (source) source.close(); });
     connect();
   })();
