@@ -2121,7 +2121,7 @@ Static assets (CSS, JS, images) are served with `createReadStream().pipe(stream)
 
 The dev server binds its port concurrently with page transpilation. Any request that arrives before a page has been stored in `mem` would otherwise return a bare 404. Instead, Bascik serves a lightweight boot page: a spinner with a short "Building site..." label. The page carries no framework or external resources.
 
-The boot page connects to the normal `/bascik-live-reload` SSE endpoint. Because the Referer header contains the originally requested URL, the SSE handler tracks it the same way it tracks any open page. When that specific page finishes transpiling, the `"transpiled"` event fires and the SSE connection sends `reload`; the browser fetches the real page immediately without waiting for the rest of the project to finish. As a belt-and-suspenders measure, a `"boot-done"` event is emitted on the shared event emitter once `watchFiles()` resolves, which flushes any remaining boot-page connections (for example, a request to a path that does not exist yet). If the SSE connection itself fails before the page is ready, an `onerror` handler retries with a one-second `setTimeout`.
+The boot page connects to the normal `/bascik-live-reload` SSE endpoint. Because the Referer header contains the originally requested URL, the SSE handler tracks it the same way it tracks any open page. When that specific page finishes transpiling, the `"transpiled"` event fires and the SSE connection sends `reload`; the browser fetches the real page immediately without waiting for the rest of the project to finish. As a belt-and-suspenders measure, a `"boot-done"` event is emitted on the shared event emitter once `watchFiles()` resolves, which flushes any remaining boot-page connections (for example, a request to a path that does not exist yet). If the SSE connection itself fails before the page is ready, the `onerror` handler closes the stream and sets it to null, relying on the `focus` and `visibilitychange` listeners to reconnect instantly as soon as the user interacts with or switches back to the tab.
 
 The `isBooting` flag in `mem.ts` is set to `true` on module load and cleared (alongside the `"boot-done"` event) by `transpile.ts` immediately after `watchFiles()` resolves. Once the flag is cleared, unmatched paths fall through to the normal 404 path. The boot page is never served in `--serve` (production) mode.
 
@@ -2179,17 +2179,37 @@ The live-reload mechanism uses Server-Sent Events (SSE) rather than WebSockets t
 
 ```js
 (function() {
-  const eventSource = new EventSource("/bascik-live-reload");
-  eventSource.onmessage = function(event) {
-    if (event.data === 'reload') {
-      window.location.reload();
+  var wasConnected = false;
+  var source;
+  function connect() {
+    if (source) return;
+    source = new EventSource("/bascik-live-reload");
+    source.onmessage = function(e) {
+      if (e.data === 'reload') {
+        window.location.reload();
+      } else if (e.data === 'connected') {
+        if (wasConnected) {
+          window.location.reload();
+        }
+        wasConnected = true;
+      }
+    };
+    source.onerror = function() {
+      source.close();
+      source = null;
+    };
+  }
+  function instantConnect() {
+    if (!source) {
+      connect();
     }
-  };
-  eventSource.onerror = function() {
-    eventSource.close();
-    console.warn('Live-Reload Connection Lost');
-  };
-  window.onbeforeunload = function () { eventSource.close(); };
+  }
+  window.addEventListener('focus', instantConnect);
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') instantConnect();
+  });
+  window.addEventListener('beforeunload', function() { if (source) source.close(); });
+  connect();
 })();
 ```
 
