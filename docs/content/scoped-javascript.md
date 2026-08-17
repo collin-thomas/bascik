@@ -23,6 +23,8 @@ Component templates can contain multiple `<script>` tags. Bascik processes each 
 - **Server scripts (`<script data-bascik-server>`):** Executed on the server at request time in Node.js.
 - **Data scripts (e.g. `type="application/ld+json"`):** Left untouched without IIFE wrapping or minification.
 
+> **Recommended Pattern:** Keeping separate, unrelated logic in dedicated `<script>` tags (such as one script block for form validation and another for UI animation) is recommended for clean, readable code. You don't need to break code into tiny scripts arbitrarily, but isolating independent concerns into separate script blocks keeps your component's JavaScript organized and prevents variable name collisions.
+
 ## Multiple Instances
 
 Place the same component on a page more than once and each instance runs independently with no extra work needed:

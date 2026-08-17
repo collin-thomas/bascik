@@ -737,7 +737,7 @@ export const mergeAttributesOntoRoot = (
 ): string => {
   if (!Object.keys(attrs).length) return html;
   return html.replace(
-    /^((?:\s*<!--[\s\S]*?-->)*\s*)(<[\w-]+)((?:\s[^>]*?)?)(\s*\/?>)/,
+    /^((?:\s*(?:<!--[\s\S]*?-->|<(?:script|style)\b(?:[^>"']|"[^"]*"|'[^']*')*>[\s\S]*?<\/(?:script|style)\s*>))*\s*)(<[a-zA-Z][\w-]*)((?:\s[^>]*?)?)(\s*\/?>)/i,
     (_match: string, leading: string, tagName: string, existing: string, close: string) => {
       let attrStr = existing || "";
       const existingNames = new Set<string>();

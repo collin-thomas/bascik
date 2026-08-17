@@ -1683,6 +1683,38 @@ describe("transpilePage – inline component <style> extraction & deduplication"
     expect(html).toContain('.bascik__comp-multi-styles__box');
   });
 
+  it("correctly handles a component with leading <script>, multiple root elements, and attribute inheritance", async () => {
+    const pageHtml = '<!DOCTYPE html><html><head></head><body><comp-script-multi class="active-card" id="card-1"></comp-script-multi></body></html>';
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(pageHtml);
+
+    const componentList = {
+      "comp-script-multi": {
+        fileName: "components/comp-script-multi.html",
+        fileContent:
+          '<script>console.log("init");</script>' +
+          '<div class="card-head">Header</div>' +
+          '<div class="card-body">Body</div>',
+      },
+    };
+
+    const result = await transpilePage(PAGE_PATH, componentList);
+    expect(result).not.toBeNull();
+    const html = result!.distHtml;
+
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    expect(bodyMatch).not.toBeNull();
+    const body = bodyMatch![1];
+
+    // Script tag is present and wrapped in IIFE
+    expect(body).toContain('(function()');
+    expect(body).toContain('console.log("init")');
+
+    // Inherited class and id are merged onto the first HTML element (<div class="card-head">), NOT the <script> tag
+    expect(body).not.toContain('<script class=');
+    expect(body).toContain('id="card-1"');
+    expect(body).toContain('class="bascik__comp-script-multi__card-head active-card"');
+  });
+
   it("handles components with multiple <script> tags", async () => {
     const pageHtml = '<!DOCTYPE html><html><head></head><body><comp-multi-scripts></comp-multi-scripts></body></html>';
     (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(pageHtml);

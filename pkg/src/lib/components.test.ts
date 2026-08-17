@@ -845,6 +845,12 @@ describe("mergeAttributesOntoRoot", () => {
     const result = mergeAttributesOntoRoot(html, { class: "active" });
     expect(result).toBe('<!-- comment -->\n  <div class="card active">Card</div>\n<aside>Sidebar</aside>');
   });
+
+  it("skips leading <script> and <style> blocks to target the first root HTML element", () => {
+    const html = '<script>console.log(1);</script>\n  <div class="card">Card</div>\n<aside>Sidebar</aside>';
+    const result = mergeAttributesOntoRoot(html, { class: "active" });
+    expect(result).toBe('<script>console.log(1);</script>\n  <div class="card active">Card</div>\n<aside>Sidebar</aside>');
+  });
 });
 
 describe("getTag – multiline and complex attributes", () => {

@@ -13,6 +13,8 @@ Both approaches are fully equivalent in functionality. At build time, Bascik ext
 
 If a component contains multiple `<style>` tags or both a paired `.css` file and inline `<style>` tags, Bascik combines all stylesheets before scoping.
 
+> **Readability & Maintainability:** While Bascik supports multiple `<style>` tags in a single component file, using multiple `<style>` tags (or mixing an inline `<style>` tag with a companion `.css` file) is not recommended for readability and maintainability. Choose one stylesheet pattern per component.
+
 Use paired files for most components so the HTML and CSS stay easy to scan. Inline `<style>` tags are convenient when keeping a small component in a single file is preferred.
 
 ## CSS File Pairing

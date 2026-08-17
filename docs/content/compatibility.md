@@ -19,6 +19,18 @@
 
 ---
 
+## Component Template Structure
+
+Bascik supports flexible HTML, CSS, and JavaScript structures inside `.html` component files.
+
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Multiple top-level HTML elements | ✓ | Supported naturally without requiring single wrapper elements or fragment tags. All root elements are inserted in order. Inherited usage attributes merge onto the first root HTML element. |
+| Multiple `<style>` blocks | ✓ | Extracted and combined with any companion `.css` file before scoping and deduplication. *Note:* Using multiple `<style>` tags in a single component file is supported but not recommended for readability and maintainability. |
+| Multiple `<script>` blocks | ✓ | Client `<script>` blocks are each wrapped in an independent IIFE. Recommended for clean, maintainable code when separating unrelated logic within a component. Build (`data-bascik-build`), server (`data-bascik-server`), and data scripts (e.g. `type="application/ld+json"`) are processed according to their script type. |
+
+---
+
 ## CSS Scoping
 
 CSS scoping applies to `.css` files paired with a component's HTML file. Place the `.css` file in the same directory as the component and give it the same base name.

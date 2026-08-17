@@ -1,0 +1,33 @@
+<style>
+  .multi-header {
+    color: #065f46;
+    font-size: 1.2rem;
+  }
+
+  .multi-body {
+    padding: 12px;
+    background: #f0fdf4;
+  }
+
+  .multi-footer {
+    font-size: 0.8rem;
+    color: #15803d;
+  }
+</style>
+<header class="multi-header" id="header-el">
+  <h3 data-bascik-prop-title>Default Title</h3>
+</header>
+<div class="multi-body" id="body-el">
+  <div data-bascik-slot>Default Body Content</div>
+</div>
+<footer class="multi-footer" id="footer-el">
+  <button id="toggle-btn" type="button">Toggle</button>
+  <span id="status-span">Active</span>
+</footer>
+<script>
+  const btn = document.getElementById('toggle-btn');
+  const status = document.getElementById('status-span');
+  btn.addEventListener('click', () => {
+    status.textContent = status.textContent === 'Active' ? 'Paused' : 'Active';
+  });
+</script>
