@@ -140,13 +140,15 @@ const BUILD_SCRIPT_TIMEOUT = 60_000;
 export const SCRIPT_CACHE_VERSION = 2;
 
 // Extract relative paths the script depends on from quoted string literals:
-//   './content/foo.md'  or  'scripts/md-renderer.mjs'
+//   './content/foo.md', 'scripts/md-renderer.mjs', './data/items.json'
 export const extractScriptDeps = (script: string): string[] => {
   const seen = new Set<string>();
   for (const m of script.matchAll(
-    /['`"]((?:\.\/)?(?:content|scripts)\/[^'`"\n]+\.(?:md|mjs|js|ts))['`"]/g,
+    /['`"]((?:\.{1,2}\/|[a-zA-Z0-9_$-]+\/)[^'`"\n:]+\.(?:md|mjs|js|jsx|ts|tsx|json|yaml|yml|css|html|txt|csv|svg))['`"]/g,
   )) {
-    seen.add(m[1]);
+    if (!m[1].includes("://")) {
+      seen.add(m[1]);
+    }
   }
   return [...seen];
 };

@@ -22,6 +22,7 @@
     "docs:update-coverage": "yarn workspace @bascik/bascik update-coverage",
     "docs:update-e2e-coverage": "yarn workspace @bascik/bascik update-e2e-coverage",
     "docs:dev": "yarn workspace bascik-docs dev",
+    "docs:test": "yarn workspace bascik-docs test",
     "docs:generate:llms": "yarn workspace bascik-docs generate:llms",
     "create:build": "yarn workspace create-bascik build",
     "create:prepack": "yarn workspace create-bascik prepack",

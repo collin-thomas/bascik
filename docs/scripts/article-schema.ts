@@ -33,7 +33,10 @@ export async function articleSchema(): Promise<string> {
   const relPath = pageFile.startsWith(pagesDir)
     ? pageFile.slice(pagesDir.length).replace(/^[\\/]/, '').replace(/\\/g, '/')
     : '';
-  const url = `${siteUrl}/${relPath.replace(/\.html$/, '').replace(/\/index$/, '')}`;
+  const withoutExt = relPath.replace(/\.html$/, '');
+  const routePath = withoutExt === 'index' ? '' : withoutExt.replace(/\/index$/, '/');
+  const urlPath = routePath ? `/${routePath}` : '/';
+  const url = `${siteUrl}${urlPath}`;
 
   const schema = {
     '@context': 'https://schema.org',

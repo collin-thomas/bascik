@@ -1,6 +1,8 @@
 export const getHttpPath = (pagePath: string): string => {
   return (
     pagePath
+      // Normalise Windows path separators
+      .replace(/\\/g, "/")
       // Remove pages dir
       .replace(/^pages/, "")
       // Remove file ext

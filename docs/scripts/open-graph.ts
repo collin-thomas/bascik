@@ -33,7 +33,7 @@ function extractDescription(html: string): string {
   while ((m = metaRe.exec(html)) !== null) {
     const attrs = m[1];
     if (/name\s*=\s*["']description["']/i.test(attrs)) {
-      const cm = /content\s*=\s*"([^"]+)"/i.exec(attrs);
+      const cm = /content\s*=\s*["']([^"']+)["']/i.exec(attrs);
       if (cm) return cm[1].trim();
     }
   }
