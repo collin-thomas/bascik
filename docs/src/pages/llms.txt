@@ -2591,10 +2591,10 @@ To run a specific test file or use the Playwright UI:
 
 ```sh
 # Run only CSS scoping tests
-node_modules/.bin/playwright test --config e2e/playwright.config.ts e2e/tests/css-scoping.test.ts
+npx playwright test --config e2e/playwright.config.ts e2e/tests/css-scoping.test.ts
 
 # Open the Playwright UI for interactive debugging
-node_modules/.bin/playwright test --config e2e/playwright.config.ts --ui
+npx playwright test --config e2e/playwright.config.ts --ui
 ```
 
 ## How the E2E Suite Works
