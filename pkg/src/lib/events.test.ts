@@ -47,7 +47,7 @@ describe("eventEmitter", () => {
 
   it("registers and executes shutdown handlers", async () => {
     const fn1 = vi.fn();
-    const fn2 = vi.fn(async () => {});
+    const fn2 = vi.fn(async () => { });
     registerShutdownHandler(fn1);
     registerShutdownHandler(fn2);
     await runShutdownHandlers();
