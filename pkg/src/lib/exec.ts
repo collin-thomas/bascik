@@ -44,11 +44,7 @@ export const startExecDev = (): void => {
 
     const patterns = Array.isArray(entry.watch) ? entry.watch : [entry.watch];
     const watcher = chokidar
-      .watch(patterns, {
-        ignoreInitial: true,
-        usePolling: true,
-        interval: 100,
-      })
+      .watch(patterns, { ignoreInitial: true })
       .on('all', () => {
         if (running) return; // drop concurrent trigger
         running = true;
