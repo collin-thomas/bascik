@@ -166,6 +166,12 @@ describe("watchFiles – watcher setup", () => {
     expect(mockWatch).toHaveBeenCalledTimes(3);
   });
 
+  it("configures native persistent watching in dev mode without polling", async () => {
+    await watchFiles();
+    expect(mockWatch.mock.calls[0][1]).toMatchObject({ persistent: true });
+    expect(mockWatch.mock.calls[0][1]).not.toHaveProperty("usePolling");
+  });
+
   it("watches the pages directory for asset copying", async () => {
     await watchFiles();
     expect(mockWatch.mock.calls[0][0]).toContain("/project/src/pages");

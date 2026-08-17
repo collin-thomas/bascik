@@ -2270,7 +2270,7 @@ Pages are brotli-compressed asynchronously (`zlib.brotliCompress`) when stored i
 
 ## Watch System (`watch.ts`)
 
-Three separate chokidar watchers are started by `watchFiles()`. All watchers use polling mode (`usePolling: true`) to avoid hitting OS file-descriptor limits on large projects.
+Three separate chokidar watchers are started by `watchFiles()`. All watchers use native OS file system events for fast, efficient file-change detection.
 
 ### Watcher 1: Static assets
 
