@@ -271,7 +271,7 @@ describe("buildOverrideConfig.serve merge", () => {
   });
 
   it("falls back to the default serve config when nothing overrides it", () => {
-    expect(BascikConfig.serve?.port).toBe(8443);
+    expect(BascikConfig.serve?.port).toBeUndefined();
     expect(BascikConfig.serve?.hostname).toBe("localhost");
     expect(BascikConfig.serve?.logging?.level).toBe("info");
     expect(BascikConfig.serve?.logging?.requests).toBe(true);

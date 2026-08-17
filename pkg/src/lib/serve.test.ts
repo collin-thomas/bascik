@@ -4,12 +4,12 @@ import { join } from "node:path";
 import { mem } from "./mem.js";
 import { serveProduction } from "./serve.js";
 
-const { startHttp2ServerMock } = vi.hoisted(() => ({
-  startHttp2ServerMock: vi.fn().mockResolvedValue(undefined),
+const { startServerMock } = vi.hoisted(() => ({
+  startServerMock: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock("./http2.js", () => ({
-  startHttp2Server: startHttp2ServerMock,
+vi.mock("./server.js", () => ({
+  startServer: startServerMock,
 }));
 
 describe("serveProduction", () => {
@@ -17,7 +17,7 @@ describe("serveProduction", () => {
   let originalCwd: string;
 
   beforeEach(async () => {
-    startHttp2ServerMock.mockClear();
+    startServerMock.mockClear();
     originalCwd = process.cwd();
     workDir = join(originalCwd, `.serve-test-${process.pid}-${Date.now()}`);
     await mkdir(join(workDir, "dist"), { recursive: true });
@@ -35,19 +35,19 @@ describe("serveProduction", () => {
       /could not read dist\/ directory/,
     );
     await expect(serveProduction()).rejects.toThrow(/bascik --build/);
-    expect(startHttp2ServerMock).not.toHaveBeenCalled();
+    expect(startServerMock).not.toHaveBeenCalled();
   });
 
   it("warns but still serves when dist/ contains no HTML pages", async () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => { });
+    const log = vi.spyOn(console, "log").mockImplementation(() => { });
 
     await serveProduction();
 
     expect(warn).toHaveBeenCalledWith(
       expect.stringContaining("no HTML pages found"),
     );
-    expect(startHttp2ServerMock).toHaveBeenCalledOnce();
+    expect(startServerMock).toHaveBeenCalledOnce();
     warn.mockRestore();
     log.mockRestore();
   });
@@ -62,11 +62,11 @@ describe("serveProduction", () => {
     );
     // Non-HTML files must be ignored
     await writeFile(join(workDir, "dist", "styles.css"), "body{}");
-    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const log = vi.spyOn(console, "log").mockImplementation(() => { });
 
     await serveProduction();
 
-    expect(startHttp2ServerMock).toHaveBeenCalledOnce();
+    expect(startServerMock).toHaveBeenCalledOnce();
 
     const home = mem.getPageExact("/");
     const about = mem.getPageExact("/about");
@@ -87,7 +87,7 @@ describe("serveProduction", () => {
 
   it("uses singular 'page' in the log message when exactly one page is loaded", async () => {
     await writeFile(join(workDir, "dist", "index.html"), "<h1>only</h1>");
-    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const log = vi.spyOn(console, "log").mockImplementation(() => { });
 
     await serveProduction();
 

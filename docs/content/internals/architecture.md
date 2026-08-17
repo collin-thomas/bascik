@@ -23,7 +23,7 @@ if (args.includes("--check")) {
 await import("./transpile.js");
 ```
 
-`transpile.ts` handles the normal dev and build flow. In build mode it awaits `watchFiles()` and exits. In dev mode it starts TLS cert generation (`pki.ts`) and the HTTP/2 server (`http2.ts`) concurrently with `watchFiles()`, so the server is already bound to its port by the time transpilation finishes. `serveHttp2()` returns the origin URL; `transpile.ts` prints `Server running at …` immediately after the transpilation summary line.
+`transpile.ts` handles the normal dev and build flow. In build mode it awaits `watchFiles()` and exits. In dev mode it starts `server.ts` concurrently with `watchFiles()`, so the server is already bound to its port by the time transpilation finishes. `startServer()` orchestrates loading either `http.ts` or `http2.ts` based on `BascikConfig.serve.enableTls` and returns the origin URL; `transpile.ts` prints `Server running at …` immediately after the transpilation summary line.
 
 The dynamic `import()` calls are intentional: they avoid loading modules when not needed (`init` and `--check` exit before reaching `transpile.ts`; `--build` never starts the server).
 
@@ -45,7 +45,10 @@ All logic lives in `pkg/src/lib/`. Each file has a single, well-defined responsi
 | `check.ts` | Static analysis for `bascik --check`. Scans all pages and components for unresolved custom tags (errors) and unused component files (warnings). Exits with code 1 when errors are found so it can gate CI pipelines. |
 | `sitemap.ts` | Generates `dist/sitemap.xml` and `dist/robots.txt` at the end of a build when `siteUrl` is configured and `generate.sitemap` / `generate.robots` are enabled (both default to `true`). |
 | `watch.ts` | Sets up chokidar watchers for pages, components, and static assets. Triggers full or selective re-transpilation on file events. |
-| `http2.ts` | The development HTTP/2 server on `https://localhost:8443`. Serves transpiled pages from the memory store, static assets from disk, and the live-reload SSE endpoint. |
+| `server.ts` | Server orchestrator. Dispatches requests to `http.ts` or `http2.ts` based on `BascikConfig.serve.enableTls`, runs shared request handlers, and manages server instances. |
+| `http.ts` | Plaintext HTTP/1.1 server (`node:http`) used by default in development and cleartext environments. |
+| `http2.ts` | TLS-enabled HTTP/2 server (`node:http2`) used when `enableTls: true` is configured. |
+| `serve.ts` | Production server entrypoint (`bascik --serve`). Pre-loads pre-rendered `dist/` HTML into `mem.ts` and boots `server.ts`. |
 | `mem.ts` | In-memory page store. Stores brotli-compressed page buffers keyed by HTTP path, and maintains a reverse index mapping each component name to the set of pages that use it. |
 | `worker-pool.ts` | Generic fixed-size thread pool. Spawns N workers once, dispatches tasks via a queue, and reuses workers across calls to avoid per-task spawn overhead. |
 | `page-worker.ts` | Worker thread entry point. Receives a page path, calls `transpilePage()` (pure computation, no side effects), and posts the result back to the pool. |
@@ -66,6 +69,8 @@ index.ts
   │     └── init.ts
   ├── (--check only)
   │     └── check.ts ← components.ts, file-system.ts
+  ├── (--serve / prod server)
+  │     └── serve.ts → server.ts
   └── transpile.ts
         ├── config.ts ← userConfig.ts ← bascik.config.js
         ├── watch.ts
@@ -80,9 +85,13 @@ index.ts
         │           │     └── (transpilePage - no side effects)
         │           ├── mem.ts ← paths.ts
         │           └── events.ts
-        └── (dev only, concurrent with watch.ts)
-              ├── pki.ts
-              └── http2.ts ← mem.ts, events.ts, paths.ts, mime.ts
+        └── (dev server, concurrent with watch.ts)
+              └── server.ts
+                    ├── (if enableTls: true)
+                    │     ├── pki.ts
+                    │     └── http2.ts ← mem.ts, events.ts, paths.ts, mime.ts
+                    └── (default HTTP/1.1)
+                          └── http.ts ← mem.ts, events.ts, paths.ts, mime.ts
 ```
 
 ## Key Design Decisions

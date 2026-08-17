@@ -1,42 +1,63 @@
 # Dev Server
 
-Bascik's development server is a TLS-enabled HTTP/2 server built on Node.js built-ins. It serves transpiled pages from an in-memory store, static assets from disk, and broadcasts live-reload events via Server-Sent Events.
+Bascik's development server serves transpiled pages from an in-memory store, static assets from disk, and broadcasts live-reload events via Server-Sent Events. By default, it runs over plaintext HTTP/1.1 for zero-friction local development, with opt-in support for TLS-enabled HTTP/2.
 
-## Why HTTP/2?
+## Server Architecture (`server.ts`, `http.ts`, `http2.ts`)
 
-HTTP/2 requires TLS. Using it for development means the protocol between the dev server and the browser matches production deployments on modern static hosts, eliminating a class of "works in dev, breaks in prod" issues around protocol-level behaviour. It also means no special handling is needed for assets that load over HTTP/2 in production.
+Bascik separates protocol setup from request routing using a modular 4-tier design:
+
+```text
+       [transpile.ts / serve.ts]
+                  │
+                  ▼ (startServer)
+         [server.ts Orchestrator]
+                  │
+         ┌────────┴────────┐
+         │ (enableTls:     │ (enableTls:
+         │  false)         │  true)
+         ▼                 ▼
+     [http.ts]          [pki.ts Cert Gen]
+  (HTTP/1.1 Server)        │
+         │                 ▼
+         │             [http2.ts]
+         │          (HTTP/2 Server)
+         │                 │
+         └────────┬────────┘
+                  ▼
+   [server.ts: createRequestHandler]
+                  │
+                  ▼ (Serves HTML & static files)
+     [mem.ts / dist/ directory]
+```
+
+1. **`server.ts`**: The central server orchestrator. It contains the unified `createRequestHandler()` pipeline and `startServerInstance()` port binder, plus the top-level `startServer()` dispatcher.
+2. **`http.ts`**: Standard unencrypted HTTP/1.1 server (`node:http`). Wraps `http.IncomingMessage` / `http.ServerResponse` into Bascik's request context.
+3. **`http2.ts`**: Opt-in encrypted HTTP/2 server (`node:http2`). Wraps `ServerHttp2Stream` into Bascik's request context.
+4. **`pki.ts`**: Generates self-signed TLS certificates when `enableTls: true` is set and certificate files do not exist.
+
+## Why Plaintext HTTP/1.1 by Default?
+
+Plaintext HTTP/1.1 works everywhere without certificate warnings, browser bypass prompts, or platform trust setup. Browsers and local development tools (such as VS Code's integrated Simple Browser) connect instantly.
+
+If you need production HTTP/2 protocol parity, enable TLS in `bascik.config.ts`:
+
+```ts
+export default {
+  serve: {
+    enableTls: true, // Dev server boots over https://localhost:8443 (HTTP/2)
+  },
+};
+```
 
 ## TLS Certificate Generation (`pki.ts`)
 
-On first run, Bascik generates a self-signed certificate valid for 100 years and writes two files to the project root:
+When `enableTls: true` is configured, Bascik checks for local certificate files (`bascik-cert.pem` and `bascik-privkey.pem`). If missing, it attempts to generate CA-trusted certs via `mkcert` or falls back to OpenSSL self-signed certs.
 
-- `bascik-cert.pem`: the certificate
-- `bascik-privkey.pem`: the private key
-
-On subsequent runs, both files are checked for existence and generation is skipped if they are present. The generation strategy differs by platform:
-
-- **macOS / Linux:** a single `openssl req` command generates both files, including a `subjectAltName` extension for `localhost` and `127.0.0.1`.
-- **Windows:** PowerShell's `New-SelfSignedCertificate` creates the cert in the Windows certificate store, then OpenSSL extracts the PEM files from a temporary PFX export.
-
-Because the cert is self-signed, browsers will show a security warning on first visit. Trust the cert once in the browser and the warning will not reappear.
+On subsequent runs, both files are checked for existence and generation is skipped if they are present.
 
 <div class="callout">
-<p>These files are generated per-project, not globally. If you delete them, they are regenerated on the next <code>bascik</code> invocation.</p>
+<p>These files are generated per-project, not globally. If you delete them, they are regenerated on the next <code>bascik</code> invocation when TLS is enabled.</p>
 </div>
-
-## The HTTP/2 Server (`http2.ts`)
-
-The server starts binding its port concurrently with page transpilation. `serveHttp2()` returns the origin URL once the port is bound; `transpile.ts` prints `Server running at …` immediately after the transpilation summary line, with no gap between them.
-
-The server listens on `https://localhost:8443` (or `http://localhost:8443` if `disableTls` is configured) and handles all requests on a single stream or request event handler. Only `GET` requests are accepted; all other methods receive a `405 Method Not Allowed` response.
-
-### Plaintext HTTP Mode
-
-If `BascikConfig.serve.disableTls` is set to `true` (either in `bascik.config.ts` or via options), the dev server skips TLS certificate generation and starts a plaintext `http.Server` running HTTP/1.1 instead of `http2.Http2SecureServer`. This is extremely useful for:
-1. Local development environments where self-signed SSL certificate warnings cannot be easily bypassed (such as VS Code's integrated Simple Browser).
-2. Cloud platforms (like Heroku, AWS ECS/Fargate, Fly.io, Render, etc.) that terminate TLS at the edge/load balancer and forward plaintext HTTP to the container.
-
-To handle both HTTP/2 secure streams and HTTP/1.1 plaintext requests cleanly, Bascik wraps both underlying response structures (`ServerHttp2Stream` and `http.ServerResponse`) in a unified, lightweight `BascikResponse` interface. This allows request routing and processing logic to remain completely agnostic of the transport protocol.
 
 ### Request routing
 
