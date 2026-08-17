@@ -212,13 +212,13 @@ h2 {
   padding-top: 40px;
   scroll-margin-top: var(--anchor-scroll-offset);
 }
-h2 .anchor-link { color: inherit; text-decoration: none; }
-h2 .anchor-link::after { content: ' #'; opacity: 0; color: var(--text-muted); font-weight: 400; transition: opacity .15s; }
-h2:hover .anchor-link::after { opacity: 1; }
-h2:focus-within .anchor-link::after { opacity: 1; }
-h2 .anchor-link.copied::after { content: ' ✓'; opacity: 1; color: var(--accent); }
+h2 .anchor-link, h3 .anchor-link { color: inherit; text-decoration: none; }
+h2 .anchor-link::after, h3 .anchor-link::after { content: ' #'; opacity: 0; color: var(--text-muted); font-weight: 400; transition: opacity .15s; }
+h2:hover .anchor-link::after, h3:hover .anchor-link::after { opacity: 1; }
+h2:focus-within .anchor-link::after, h3:focus-within .anchor-link::after { opacity: 1; }
+h2 .anchor-link.copied::after, h3 .anchor-link.copied::after { content: ' ✓'; opacity: 1; color: var(--accent); }
 h2:first-of-type { border-top: none; padding-top: 0; margin-top: 32px; }
-h3 { font-size: 1.05rem; margin: 28px 0 8px; }
+h3 { font-size: 1.05rem; margin: 28px 0 8px; scroll-margin-top: var(--anchor-scroll-offset); }
 p  { margin-top: 0; color: var(--text-muted); }
 
 a { color: var(--accent-fg); text-decoration: none; transition: opacity .15s; }

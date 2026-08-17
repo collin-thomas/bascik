@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { tokens, basePath, score, snippet, buildResults } from './search-logic.mjs';
+import { tokens, basePath, score, snippet, buildResults } from './search-logic.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -16,13 +16,13 @@ const entry = (overrides) => ({
 
 // Small representative index for buildResults integration tests
 const MOCK_INDEX = [
-  entry({ navLabel: 'Props', heading: null,           text: 'Define and use props.',          path: '/props' }),
-  entry({ navLabel: 'Props', heading: 'Passing Props', text: 'How to pass props.',             path: '/props#passing-props' }),
-  entry({ navLabel: 'Props', heading: 'Defaults',      text: 'Default prop values.',           path: '/props#defaults' }),
-  entry({ navLabel: 'Slots', heading: null,            text: 'About slots and content.',       path: '/slots' }),
-  entry({ navLabel: 'Slots', heading: 'Named Slots',   text: 'Named slot usage.',              path: '/slots#named-slots' }),
-  entry({ navLabel: 'Configuration', heading: null,   text: 'Config file options.',            path: '/config' }),
-  entry({ navLabel: 'Configuration', heading: 'Output Dir', text: 'Where output goes.',       path: '/config#output-dir' }),
+  entry({ navLabel: 'Props', heading: null, text: 'Define and use props.', path: '/props' }),
+  entry({ navLabel: 'Props', heading: 'Passing Props', text: 'How to pass props.', path: '/props#passing-props' }),
+  entry({ navLabel: 'Props', heading: 'Defaults', text: 'Default prop values.', path: '/props#defaults' }),
+  entry({ navLabel: 'Slots', heading: null, text: 'About slots and content.', path: '/slots' }),
+  entry({ navLabel: 'Slots', heading: 'Named Slots', text: 'Named slot usage.', path: '/slots#named-slots' }),
+  entry({ navLabel: 'Configuration', heading: null, text: 'Config file options.', path: '/config' }),
+  entry({ navLabel: 'Configuration', heading: 'Output Dir', text: 'Where output goes.', path: '/config#output-dir' }),
 ];
 
 // ---------------------------------------------------------------------------
@@ -138,7 +138,7 @@ describe('score', () => {
       const q = 'foo';
       const toks = tokens(q);
       const nl = score(entry({ navLabel: 'Foo' }), q, toks);
-      const h  = score(entry({ navLabel: 'Other Page', heading: 'Foo' }), q, toks);
+      const h = score(entry({ navLabel: 'Other Page', heading: 'Foo' }), q, toks);
       expect(nl).toBeGreaterThan(h);
     });
 
@@ -238,5 +238,47 @@ describe('buildResults', () => {
     const results = buildResults(MOCK_INDEX, q, tokens(q), 13);
     const paths = results.map(r => r.path);
     expect(new Set(paths).size).toBe(paths.length);
+  });
+
+  it('handles mixed-case queries and matches case-insensitively', () => {
+    const query = 'DeduplicateCss';
+    const q = query.toLowerCase().trim();
+    const toks = tokens(q);
+    const testIndex = [
+      entry({ navLabel: 'Configuration', heading: 'deduplicateCss', text: 'Set deduplicateCss in bascik.config.ts.', path: '/config#deduplicatecss' }),
+      entry({ navLabel: 'Scoped Styles', heading: 'deduplicateCss Trade-Off Comparison', text: 'Side-by-side comparison of deduplicateCss: true vs false.', path: '/scoped-styles#deduplicatecss-trade-off-comparison' }),
+      entry({ navLabel: 'Scoped Styles', heading: 'Class Selectors in Component Scripts', text: 'If you need class selectors unique per instance, set deduplicateCss: false.', path: '/scoped-styles#class-selectors' }),
+      entry({ navLabel: 'Scoping System', heading: 'CSS Deduplication', text: 'deduplicateCss receives the list of used components.', path: '/internals/scoping-system#css-deduplication' }),
+    ];
+
+    const results = buildResults(testIndex, q, toks, 13);
+    expect(results.length).toBe(4);
+
+    // Heading matches (score 400+) come before text-only matches (score 80)
+    const navLabels = results.map(r => r.navLabel);
+    expect(navLabels).toContain('Scoped Styles');
+    expect(navLabels).toContain('Configuration');
+    expect(navLabels).toContain('Scoping System');
+
+    // Heading matches should rank before text-only matches
+    expect(results[0].heading).toBe('deduplicateCss');
+    expect(results[1].heading).toBe('deduplicateCss Trade-Off Comparison');
+    expect(results[2].heading).toBe('Class Selectors in Component Scripts');
+    expect(results[3].heading).toBe('CSS Deduplication');
+  });
+
+  it('opens up to searching page content when page names/headings do not fill result limit', () => {
+    const query = 'unique instance';
+    const q = query.toLowerCase().trim();
+    const toks = tokens(q);
+    const testIndex = [
+      entry({ navLabel: 'Props', heading: 'Overview', text: 'Passing props.', path: '/props' }),
+      entry({ navLabel: 'Scoped Styles', heading: 'Overview', text: 'Each instance gets unique instance id class names.', path: '/scoped-styles' }),
+      entry({ navLabel: 'Scoped JavaScript', heading: 'Overview', text: 'Unique instance state.', path: '/scoped-javascript' }),
+    ];
+
+    const results = buildResults(testIndex, q, toks, 13);
+    expect(results.length).toBe(2);
+    expect(results.map(r => r.navLabel)).toEqual(['Scoped Styles', 'Scoped JavaScript']);
   });
 });

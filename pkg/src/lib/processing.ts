@@ -84,7 +84,8 @@ import {
   extractInheritableAttributes,
   mergeAttributesOntoRoot,
 } from "./components.js";
-import { namespaceScriptTags, prefixElementAttribute, minifyJs } from "./javascript.js";
+import { namespaceScriptTags, prefixElementAttribute } from "./javascript.js";
+import { minifyJs } from "./js-minifier.js";
 import { deduplicateCss, minifyCss } from "./styles.js";
 import { executeBuildScripts } from "./build-scripts.js";
 import { getUniqueId } from "./names.js";

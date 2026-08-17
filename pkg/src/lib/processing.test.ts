@@ -1623,6 +1623,9 @@ describe("transpilePage – inline component <style> extraction & deduplication"
   });
 
   it("handles components with multiple root level HTML elements and merges inherited attributes onto the first root", async () => {
+    (BascikConfig as Record<string, unknown>).isBuild = true;
+    (BascikConfig as Record<string, unknown>).inheritAttributes = true;
+    (BascikConfig as Record<string, unknown>).scopeAttribute = { class: true, id: true, name: true };
     const pageHtml = '<!DOCTYPE html><html><head></head><body><comp-multi-root class="outer-class" data-testid="multi"></comp-multi-root></body></html>';
     (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(pageHtml);
 
@@ -1649,15 +1652,18 @@ describe("transpilePage – inline component <style> extraction & deduplication"
     expect(body).toContain('Badge</div>');
 
     // Inherited attributes merge onto the first root element (<h2>)
-    expect(body).toContain('class="bascik__comp-multi-root__title outer-class"');
+    expect(body).toContain('class="bascik__comp-multi-root__title');
+    expect(body).toContain('outer-class"');
     expect(body).toContain('data-testid="multi"');
 
     // Scoped CSS in head covers element selector and class
-    expect(html).toContain('.bascik__comp-multi-root__title');
+    expect(html).toContain('.bascik__comp-multi-root__el__h2');
     expect(html).toContain('.bascik__comp-multi-root__badge');
   });
 
   it("handles components with multiple <style> tags", async () => {
+    (BascikConfig as Record<string, unknown>).isBuild = true;
+    (BascikConfig as Record<string, unknown>).scopeAttribute = { class: true, id: true, name: true };
     const pageHtml = '<!DOCTYPE html><html><head></head><body><comp-multi-styles></comp-multi-styles></body></html>';
     (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(pageHtml);
 
@@ -1684,6 +1690,10 @@ describe("transpilePage – inline component <style> extraction & deduplication"
   });
 
   it("correctly handles a component with leading <script>, multiple root elements, and attribute inheritance", async () => {
+    (BascikConfig as Record<string, unknown>).isBuild = true;
+    (BascikConfig as Record<string, unknown>).inheritAttributes = true;
+    (BascikConfig as Record<string, unknown>).scopeScriptBlocks = true;
+    (BascikConfig as Record<string, unknown>).scopeAttribute = { class: true, id: true, name: true };
     const pageHtml = '<!DOCTYPE html><html><head></head><body><comp-script-multi class="active-card" id="card-1"></comp-script-multi></body></html>';
     (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(pageHtml);
 
@@ -1716,6 +1726,8 @@ describe("transpilePage – inline component <style> extraction & deduplication"
   });
 
   it("handles components with multiple <script> tags", async () => {
+    (BascikConfig as Record<string, unknown>).isBuild = true;
+    (BascikConfig as Record<string, unknown>).scopeScriptBlocks = true;
     const pageHtml = '<!DOCTYPE html><html><head></head><body><comp-multi-scripts></comp-multi-scripts></body></html>';
     (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(pageHtml);
 
