@@ -1,5 +1,5 @@
 /**
- * boot-page.ts — In-memory dev-server boot page.
+ * boot-page.ts: In-memory dev-server boot page.
  *
  * Shown while the initial transpile/build is in progress. The page
  * connects to the live-reload endpoint and reloads automatically once

@@ -219,7 +219,7 @@ Structured data tells search engines what your content *means*, not just what it
 
 Add a `<script type="application/ld+json">` block to your `<head>` with the schema for your content type. Bascik never touches `application/ld+json` script blocks, so the JSON passes through exactly as written.
 
-**FAQ rich results** — turns your page's questions into expandable dropdowns in search results:
+**FAQ rich results**: turns your page's questions into expandable dropdowns in search results:
 
 ```html
 <head>
@@ -279,7 +279,7 @@ Other commonly useful types:
 </script>
 ```
 
-Bascik's [build scripts](/build-scripts) are a natural fit for generating JSON-LD from data files. Read a JSON data source at build time and emit the `<script type="application/ld+json">` block — zero runtime cost, always up to date with your content.
+Bascik's [build scripts](/build-scripts) are a natural fit for generating JSON-LD from data files. Read a JSON data source at build time and emit the `<script type="application/ld+json">` block with zero runtime cost, always up to date with your content.
 
 > **Validate before shipping.** Use [Google's Rich Results Test](https://search.google.com/test/rich-results) to confirm your structured data is valid and eligible for rich result types. Schema.org publishes the full type vocabulary at [schema.org](https://schema.org).
 

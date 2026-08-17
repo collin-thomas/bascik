@@ -116,7 +116,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   _rateLimiter.clear();
   mockMem.isBooting = false;
-  // No exact-match pages by default — http2 falls back to mem.getPage (mocked per-test).
+  // No exact-match pages by default: http2 falls back to mem.getPage (mocked per-test).
   mockMem.getPageExact.mockReturnValue(undefined);
 });
 
@@ -420,7 +420,7 @@ describe("startHttp2Server – stream handler", () => {
     const handler = getStreamHandler()!;
     const stream = makeStream();
     await handler(stream, makeHeaders("/index.HTML", "GET"));
-    // Must follow the same route as /index.html — rejected as a dot-path,
+    // Must follow the same route as /index.html: rejected as a dot-path,
     // never stat()'d on disk as a static asset.
     expect(mockStat).not.toHaveBeenCalled();
     expect(stream.respond).toHaveBeenCalledWith(
@@ -660,7 +660,7 @@ describe("startHttp2Server – ETag and conditional GET", () => {
     const respondCall = stream1.respond.mock.calls[0][0] as Record<string, unknown>;
     const etag = respondCall["etag"] as string;
 
-    // Second request with matching ETag — should still return 200 because cacheHttp is false
+    // Second request with matching ETag: should still return 200 because cacheHttp is false
     mockMem.getPage.mockReturnValue(page);
     const stream2 = makeStream();
     await handler(stream2, makeHeaders("/about", "GET", "", undefined, { "if-none-match": etag }));
@@ -940,7 +940,7 @@ describe("startHttp2Server – graceful shutdown", () => {
 
     const mockExit = vi.spyOn(process, "exit").mockImplementation((_code?: string | number | null) => undefined as never);
     sigIntHandler();
-    sigTermHandler(); // second signal during shutdown — must be a no-op
+    sigTermHandler(); // second signal during shutdown: must be a no-op
     expect(mockServer.close).toHaveBeenCalledTimes(1);
     mockExit.mockRestore();
   });
@@ -1099,7 +1099,7 @@ describe("startHttp2Server – SSE live-reload (/bascik-live-reload)", () => {
   it("sends reload when Referer header is absent (regression: was silently dropped)", async () => {
     const handler = getStreamHandler()!;
     const stream = makeStream();
-    // No referer header — simulates Safari, privacy extensions, or no-referrer policy.
+    // No referer header: simulates Safari, privacy extensions, or no-referrer policy.
     await handler(stream, makeHeaders("/bascik-live-reload", "GET", "", undefined));
     fireTranspiled("pages/about.html");
     expect(stream.write).toHaveBeenCalledWith("data: reload\n\n");

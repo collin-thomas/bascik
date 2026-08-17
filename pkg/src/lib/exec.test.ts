@@ -113,7 +113,7 @@ describe("runExecOnBuild", () => {
     expect(mockSpawn).toHaveBeenNthCalledWith(2, process.execPath, ["scripts/b.ts"], expect.objectContaining({ stdio: "inherit" }));
   });
 
-  it("runs scripts sequentially — second does not start until first resolves", async () => {
+  it("runs scripts sequentially: second does not start until first resolves", async () => {
     const order: string[] = [];
     const scripts = ["a.ts", "b.ts"];
     let call = 0;

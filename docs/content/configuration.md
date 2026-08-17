@@ -257,7 +257,7 @@ Has no effect during `bascik --build`.
 Scripts to run as part of the build/dev lifecycle. Each entry has a `script` path (relative to the project root, run with the same `node` binary) and an optional `watch` array.
 
 - **With `watch`**: runs on dev startup (non-blocking) and re-runs whenever a watched file changes, followed by a live-reload. Also runs before pages during `--build`.
-- **Without `watch`**: build-only — skipped in dev.
+- **Without `watch`**: build-only, skipped in dev.
 
 ```js
 exec: [

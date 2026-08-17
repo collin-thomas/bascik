@@ -94,9 +94,9 @@ export interface BascikConfigOptions {
   /**
    * Scripts to run as part of the build/dev lifecycle.
    *
-   * - `script` — path to the script (relative to project root), run with the
+   * - `script`: path to the script (relative to project root), run with the
    *   same `node` binary that started bascik.
-   * - `watch` — one or more directories/files to watch. When present, the
+   * - `watch`: one or more directories/files to watch. When present, the
    *   script is run on dev startup (non-blocking) and re-run whenever a
    *   watched file changes (followed by a live-reload). Omit for build-only
    *   scripts that should not run during dev.

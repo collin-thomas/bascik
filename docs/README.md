@@ -24,7 +24,7 @@ The official Bascik documentation site — built with Bascik itself.
 
 ## Development
 
-Run `yarn install` from the **repo root** (not this directory). The repo uses Yarn workspaces, so `@bascik/bascik` is symlinked directly to `pkg/` — no pack step needed.
+Run `yarn install` from the **repo root** (not this directory). The repo uses Yarn workspaces, so `@bascik/bascik` is symlinked directly to `pkg/`, so no pack step is needed.
 
 ```sh
 # from repo root

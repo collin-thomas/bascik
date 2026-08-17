@@ -1,5 +1,5 @@
 /**
- * live-reload.ts — Injected client-side live-reload script.
+ * live-reload.ts: Injected client-side live-reload script.
  *
  * Appended to HTML pages in dev mode. Connects to the SSE endpoint
  * and reloads the page on transpilation or hot asset updates.

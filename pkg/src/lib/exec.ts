@@ -55,7 +55,7 @@ export const startExecDev = (): void => {
         });
     };
 
-    // Non-blocking startup run — no reload needed on first run
+    // Non-blocking startup run: no reload needed on first run
     running = true;
     runScript(entry.script)
       .catch((err) => console.error('[bascik] exec error:', err))

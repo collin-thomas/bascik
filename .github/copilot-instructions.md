@@ -165,7 +165,7 @@ After editing `compatibility.md`, run `#pre-push.prompt.md` is NOT required. The
 
 ## Keeping Docs in Sync with the Package
 
-The repo uses **Yarn workspaces**. `node_modules/@bascik/bascik` is a symlink to `pkg/`, so the docs always resolve the live source — no pack, no copy, no lock-file deletion needed.
+The repo uses **Yarn workspaces**. `node_modules/@bascik/bascik` is a symlink to `pkg/`, so the docs always resolve the live source, with no pack, copy, or lock-file deletion needed.
 
 Whenever `pkg/src/` is changed, propagate the change to the docs in two steps:
 
@@ -197,20 +197,20 @@ files that must stay in sync are `SKILL.md`
 
 The license lives in **three places** that must stay in sync:
 
-- `docs/content/license.md` — the web-formatted version rendered at `https://bascik.dev/license`
-- `LICENSE` (repo root) — plain-text version; **required** for GitHub license detection and as the `prepack` source
-- `pkg/LICENSE` and `create/LICENSE` — copies for the npm tarballs; synced automatically on publish via the `prepack` script in each `package.json`
+- `docs/content/license.md`: the web-formatted version rendered at `https://bascik.dev/license`
+- `LICENSE` (repo root): plain-text version; **required** for GitHub license detection and as the `prepack` source
+- `pkg/LICENSE` and `create/LICENSE`: copies for the npm tarballs; synced automatically on publish via the `prepack` script in each `package.json`
 
 **When updating the license terms:**
 1. Edit `docs/content/license.md` (the human-readable web version)
 2. Mirror those changes to the root `LICENSE` (same terms, plain-text format)
 3. Run `cp LICENSE pkg/LICENSE && cp LICENSE create/LICENSE` to sync the package copies immediately
 
-Do **not** delete the root `LICENSE` — GitHub reads it for repo-level license detection. Do not edit `pkg/LICENSE` or `create/LICENSE` directly; they are derived files.
+Do **not** delete the root `LICENSE`: GitHub reads it for repo-level license detection. Do not edit `pkg/LICENSE` or `create/LICENSE` directly; they are derived files.
 
 ## Node 24 — Native TypeScript Support
 
-This project runs on **Node 24**. Node natively strips TypeScript types — no transpiler or extra flags needed for erasable syntax.
+This project runs on **Node 24**. Node natively strips TypeScript types, with no transpiler or extra flags needed for erasable syntax.
 
 - `node example.ts` works directly (Node 22.18+ with only erasable syntax, no flags required).
 - Erasable syntax: type annotations, interfaces, type aliases, `import type`. These are stripped at runtime.
@@ -274,6 +274,6 @@ npx --prefix pkg tsc -p docs/tsconfig.json --noEmit
 npx --prefix extensions/vscode-bascik tsc -p extensions/vscode-bascik/tsconfig.json --noEmit
 ```
 
-(`docs/` does not have its own typescript package — use `pkg`'s tsc for it.)
+(`docs/` does not have its own typescript package, so use `pkg`'s tsc for it.)
 
 Fix all errors before finishing. Do not suppress errors with `// @ts-ignore` or `as any` when a proper type fix is straightforward.

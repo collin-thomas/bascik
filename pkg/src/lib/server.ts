@@ -23,7 +23,7 @@ export const SECURITY_HEADERS: Record<string, string> = {
 export const makeEtag = (buf: Buffer): string =>
   `"${createHash("sha1").update(buf).digest("base64url").slice(0, 27)}"`;
 
-// Weak stat-based ETag for static files — no extra file read needed
+// Weak stat-based ETag for static files: no extra file read needed
 export const makeStatEtag = (mtimeMs: number, size: number): string =>
   `W/"${mtimeMs.toString(36)}-${fileStatSizeToString(size)}"`;
 
@@ -36,7 +36,7 @@ export const RATE_MAX_REQUESTS = 500;
 
 interface RateEntry { count: number; windowStart: number; }
 
-/** Exported for test cleanup only — do not use in production code. */
+/** Exported for test cleanup only, do not use in production code. */
 export const _rateLimiter = new Map<string, RateEntry>();
 
 export const isRateLimited = (ip: string): boolean => {
@@ -88,7 +88,7 @@ export const isNetworkResetError = (err: unknown): boolean => {
 };
 
 export const onError = (error: unknown, res: BascikResponse): void => {
-  // Client disconnected mid-request — not a server bug, nothing to respond to.
+  // Client disconnected mid-request: not a server bug, nothing to respond to.
   if (isNetworkResetError(error)) return;
   try {
     if (!res.headersSent) {
@@ -226,7 +226,7 @@ export const createRequestHandler = () => {
         fileStream.on("error", (err) => {
           if (res.destroyed) return;
           if (res.headersSent) {
-            // Headers already went out on "open" — a second respond() would
+            // Headers already went out on "open", so a second respond() would
             // throw ERR_HTTP2_HEADERS_SENT. Abort the stream instead.
             res.close(2); // NGHTTP2_INTERNAL_ERROR equivalent
             return;
@@ -347,7 +347,7 @@ export const createRequestHandler = () => {
       }
 
       // A page is the 404 page only when its resolved HTTP path is exactly
-      // /404 — `pages/blog/404.html` (a page *about* 404s) must not match.
+      // /404 (`pages/blog/404.html`, a page about 404s, must not match).
       const is404Page = getHttpPath(page.relativePagePath) === "/404";
 
       responseStatus = is404Page ? 404 : 200;
@@ -486,7 +486,7 @@ export const startServerInstance = async (
 
     // Force exit if sessions or connections haven't drained within 10 s.
     setTimeout(() => {
-      console.error("Graceful shutdown timeout — forcing exit");
+      console.error("Graceful shutdown timeout: forcing exit");
       process.exit(1);
     }, 10_000).unref();
   };

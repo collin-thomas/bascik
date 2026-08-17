@@ -129,7 +129,7 @@ export const buildOverrideConfig = {
 ## Publishing
 
 This repo has two independently versioned packages, each released by pushing a git tag.
-The [Release workflow](../.github/workflows/release.yml) builds and publishes automatically — `dist/` is **not** committed to git.
+The [Release workflow](../.github/workflows/release.yml) builds and publishes automatically, and `dist/` is **not** committed to git.
 
 ### Tag scheme
 
@@ -144,7 +144,7 @@ The `if:` condition on each workflow job ensures only the relevant package is pu
 
 1. **Update version** in `pkg/package.json` following [Semantic Versioning](https://semver.org/).
 2. **Update `CHANGELOG.md`** — move entries from `[Unreleased]` to the new version with today's date.
-3. **Run tests locally** — `yarn pkg:test:ci`.
+3. **Run tests locally** with `yarn pkg:test:ci`.
 4. **Commit and tag**:
    ```sh
    git add pkg/package.json CHANGELOG.md
@@ -158,7 +158,7 @@ The `if:` condition on each workflow job ensures only the relevant package is pu
 
 1. **Update version** in `create/package.json`.
 2. **Update `CHANGELOG.md`** if applicable.
-3. **Run tests locally** — `yarn workspace create-bascik test:ci`.
+3. **Run tests locally** with `yarn workspace create-bascik test:ci`.
 4. **Commit and tag**:
    ```sh
    git add create/package.json
@@ -366,7 +366,7 @@ const buildScopingPipeline = (instanceId: string): ComponentTransform[] =>
 
 1. Fork the repo and create a branch from `main`.
 2. Write tests for new functionality (TDD preferred).
-3. Run `yarn pkg:test --run` and `yarn pkg:typecheck` — both must pass.
-4. Run `yarn pkg:bench` if touching the transpile pipeline — include numbers in the PR description.
+3. Run `yarn pkg:test --run` and `yarn pkg:typecheck` (both must pass).
+4. Run `yarn pkg:bench` if touching the transpile pipeline, including numbers in the PR description.
 5. Update `CHANGELOG.md` under `[Unreleased]`.
 6. Open a PR against `main`.
