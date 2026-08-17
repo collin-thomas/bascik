@@ -60,6 +60,8 @@ Sending a 2400 px image to a 375 px phone is one of the most common performance 
 
 Always include explicit `width` and `height` attributes. The browser uses them to reserve layout space before the image loads, which eliminates Cumulative Layout Shift (CLS), a Core Web Vital that Lighthouse measures directly.
 
+> **MDN reference.** The [`srcset` attribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/srcset) and [`sizes` attribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/sizes) on MDN cover the full selection syntax and every valid descriptor.
+
 ## Lazy Loading
 
 The browser only needs to fetch images and iframes that are currently visible. Adding `loading="lazy"` defers off-screen resources until the user scrolls near them, reducing initial page weight and improving Largest Contentful Paint (LCP) for the above-the-fold content.
@@ -81,6 +83,8 @@ The browser only needs to fetch images and iframes that are currently visible. A
 ```
 
 Do **not** apply `loading="lazy"` to your hero image or any image visible without scrolling. The browser will already prioritize it, adding lazy loading to a critical image delays it and hurts your LCP score.
+
+> **MDN reference.** [`loading="lazy"`](https://developer.mozilla.org/en-US/docs/Web/Performance/Lazy_loading) on MDN covers deferred loading for both images and iframes, including browser thresholds and compatibility.
 
 ## Preloading Critical Assets
 
@@ -107,6 +111,8 @@ Do **not** apply `loading="lazy"` to your hero image or any image visible withou
 
 Only preload what you actually use on the current page. Preloading resources that are never consumed triggers a Lighthouse warning and wastes bandwidth.
 
+> **MDN reference.** [`<link rel="preload">`](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/preload) on MDN documents every valid `as` value, CORS handling, and browser support notes.
+
 ## Prefetching the Next Page
 
 `<link rel="prefetch">` fetches a resource during idle time and caches it for a future navigation. When you know the user is very likely to go to a specific page next, like the next step of a checkout flow or the top item in your navigation, prefetch it and the navigation will feel instant.
@@ -122,6 +128,8 @@ Only preload what you actually use on the current page. Preloading resources tha
 ```
 
 Prefetch is low-priority and only runs during idle time, so it never competes with resources the current page needs. It is safe to add for any high-confidence next-page prediction.
+
+> **MDN reference.** [`<link rel="prefetch">`](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/prefetch) on MDN describes the priority model, browser support, and interaction with the HTTP cache.
 
 ## DNS Prefetch & Preconnect
 
@@ -141,6 +149,8 @@ Every external domain requires a DNS lookup, a TCP handshake, and a TLS negotiat
 ```
 
 Use `preconnect` sparingly, each open connection consumes browser resources. Reserve it for origins you will definitely hit within the first few seconds of the page load. Use `dns-prefetch` as the lightweight fallback for everything else.
+
+> **MDN reference.** [`<link rel="preconnect">`](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/preconnect) and [`rel="dns-prefetch"`](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/dns-prefetch) on MDN detail the connection phases each hint triggers and when to prefer one over the other.
 
 ## Async and Deferred Scripts
 
@@ -163,6 +173,8 @@ A plain `<script src="…">` tag blocks HTML parsing while the browser fetches a
 ```
 
 Because Bascik adds no runtime scripts of its own, every `<script>` tag in your output is one you wrote. You have complete control over load order and execution timing from the first character of every page.
+
+> **MDN reference.** The [`<script>` element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script#attributes) on MDN lists every attribute including `defer`, `async`, and `type`, with execution-order notes and browser compatibility.
 
 ## SEO: The Essential Head Tags
 
@@ -200,6 +212,76 @@ Bascik also helps with one of the easy-to-miss SEO assets: once `siteUrl` is set
 ```
 
 Because every Bascik page is its own `.html` file, every page naturally gets its own `<title>` and `<meta name="description">`: the two most impactful SEO signals. There is no single-page-app router to work around.
+
+## Structured Data with JSON-LD
+
+Structured data tells search engines what your content *means*, not just what it says. Google uses it to generate **rich results**: FAQ dropdowns, breadcrumb trails, star ratings, article bylines, and product prices shown directly in the search listing before the user clicks.
+
+Add a `<script type="application/ld+json">` block to your `<head>` with the schema for your content type. Bascik never touches `application/ld+json` script blocks, so the JSON passes through exactly as written.
+
+**FAQ rich results**: turns your page's questions into expandable dropdowns in search results:
+
+```html
+<head>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is Bascik?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Bascik is a build tool that compiles reusable HTML components into plain HTML pages with no JavaScript runtime."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does Bascik add JavaScript to my pages?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No. Bascik outputs plain HTML. The only JavaScript on any page is what you write yourself."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+```
+
+Other commonly useful types:
+
+```html
+<!-- BreadcrumbList: shows the page path in search results -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://yourdomain.com/" },
+    { "@type": "ListItem", "position": 2, "name": "Docs", "item": "https://yourdomain.com/docs/" },
+    { "@type": "ListItem", "position": 3, "name": "Getting Started" }
+  ]
+}
+</script>
+
+<!-- Article: shows author, date, and headline metadata -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Getting Started with Bascik",
+  "author": { "@type": "Person", "name": "Collin Thomas" },
+  "datePublished": "2025-01-01",
+  "dateModified": "2025-06-01"
+}
+</script>
+```
+
+Bascik's [build scripts](/build-scripts) are a natural fit for generating JSON-LD from data files. Read a JSON data source at build time and emit the `<script type="application/ld+json">` block with zero runtime cost, always up to date with your content.
+
+> **Validate before shipping.** Use [Google's Rich Results Test](https://search.google.com/test/rich-results) to confirm your structured data is valid and eligible for rich result types. Schema.org publishes the full type vocabulary at [schema.org](https://schema.org).
 
 ## Accessibility
 
@@ -294,6 +376,8 @@ body {
 
 `font-display: swap` ensures text is visible immediately using the fallback font, then swaps to your custom font once it loads. The metric-override `@font-face` makes the fallback font's dimensions closely match your custom font, minimizing CLS during the swap.
 
+> **MDN reference.** [`@font-face`](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face) documents the full descriptor set including variable font ranges, and [`font-display`](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display) covers every swap strategy with timing diagrams.
+
 ## Real-World Benchmarks: McMaster-Carr and Bring a Trailer
 
 Two of the fastest content-heavy sites on the internet share a core philosophy: ship finished HTML and let the browser do what it was designed to do.
@@ -352,6 +436,8 @@ If your host does not support CDN transforms, use `<picture>` to offer WebP with
 
 Browsers that support WebP choose the `<source>`; others fall back to the `<img>` src automatically.
 
+> **MDN reference.** The [`<picture>` element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/picture) on MDN covers art direction, format selection with `<source>`, and fallback behavior.
+
 ## `aspect-ratio` CSS: Layout Stability Before Images Load
 
 Explicit `width` and `height` attributes reserve image space before the network responds. The `aspect-ratio` CSS property extends that reservation to any container, useful when images are CSS backgrounds, when you use `object-fit` to fill flex cells, or when you need a stable skeleton layout while lazy-loading dozens of images.
@@ -402,6 +488,8 @@ Bring a Trailer pins every auction thumbnail to a `470×318` ratio. The page ske
 
 The shimmer disappears the moment the image loads (since `<img>` renders over the background). The result: a polished loading experience with zero JavaScript and zero layout shift.
 
+> **MDN reference.** [`aspect-ratio`](https://developer.mozilla.org/en-US/docs/Web/CSS/aspect-ratio) on MDN covers the full syntax including keyword values and browser compatibility.
+
 ## `content-visibility: auto` for Long Catalog Pages
 
 McMaster-Carr lists hundreds of product categories on its homepage. Bring a Trailer streams dozens of auction cards. For pages with long repeating content, `content-visibility: auto` tells the browser to skip layout and paint for off-screen sections entirely, rendering each chunk on demand as the user scrolls.
@@ -421,6 +509,8 @@ McMaster-Carr lists hundreds of product categories on its homepage. Bring a Trai
 On a page with 100 cards, this can reduce initial rendering time by 50–70% because the browser only paints what is visible. Set `contain-intrinsic-size` close to the real rendered height of one item, the browser will correct it after the first render cycle.
 
 > **Test scroll behavior carefully.** Hidden sections use estimated heights, which can cause minor scroll-position drift if `contain-intrinsic-size` is far from the actual height. Measure in DevTools before shipping.
+
+> **MDN reference.** [`content-visibility`](https://developer.mozilla.org/en-US/docs/Web/CSS/content-visibility) and [`contain-intrinsic-size`](https://developer.mozilla.org/en-US/docs/Web/CSS/contain-intrinsic-size) on MDN cover the full syntax, browser support, and sizing recommendations.
 
 ## Inline Critical CSS
 
@@ -578,6 +668,8 @@ body:has(.nav-details[open]) {
 
 > **`body:has()`** is supported in Chrome 105+, Firefox 121+, and Safari 15.4+. It is the CSS-only solution to the previously JS-only problem of locking the page scroll behind an open overlay.
 
+> **MDN reference.** [`<details>` and `<summary>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/details) on MDN document the `open` attribute, keyboard behavior, and accessibility semantics. The [`:has()` pseudo-class](https://developer.mozilla.org/en-US/docs/Web/CSS/:has) covers the CSS parent selector and browser support.
+
 ### Modal Dialogs: `<dialog>`
 
 The `<dialog>` element provides a native modal with backdrop, focus trapping, and Escape-to-close, behaviors that previously required hundreds of lines of JavaScript to implement correctly:
@@ -602,6 +694,8 @@ dialog::backdrop {
 
 The `onclick` inline handlers are one-liners, not a script file. `<dialog>` handles focus management, keyboard dismissal, and `aria-modal` automatically.
 
+> **MDN reference.** The [`<dialog>` element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog) on MDN covers `showModal()`, `close()`, `returnValue`, the `::backdrop` pseudo-element, and browser compatibility.
+
 ### The Decision Framework
 
 When building any interactive feature, work through this checklist before writing JavaScript:
@@ -621,6 +715,8 @@ Lighthouse 13.3 introduced a new **Agentic Browsing** category that audits how w
 **Cumulative Layout Shift is 0.** When content moves after load, agents that have already built a representation of the page are working from stale coordinates. Because Bascik ships finished HTML with explicit `width` and `height` on every image and no client-side rendering pass, there is nothing left to shift.
 
 **`llms.txt` follows recommendations.** Lighthouse checks that the `llms.txt` file at the root of a site is a valid Markdown file with at least one H1 heading. Bascik's docs generate `llms.txt` from the same content Markdown files that drive the pages, so it is always valid.
+
+> **llms.txt reference.** The [`llms.txt` specification](https://llmstxt.org/) defines the standard Markdown index format for LLMs and AI agents.
 
 > **Bascik sites score 3/3 on Agentic Browsing without any configuration.** Correct HTML, zero layout shift, and a well-formed `llms.txt` are natural properties of a statically built site. Frameworks that hydrate on the client introduce layout shift during hydration and often produce an accessibility tree that differs from the initial server-rendered HTML, both of which hurt this score.
 

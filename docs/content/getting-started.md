@@ -1,6 +1,6 @@
 # Getting Started
 
-Bascik requires Node.js v24+. Get up and running in under five minutes.
+Bascik requires Node.js v22.18+. Get up and running in under five minutes.
 
 ## Quick Start
 
@@ -10,7 +10,7 @@ The fastest way to start a new Bascik project with no prompts, just a running si
 npm create bascik@latest my-site -y
 ```
 
-That scaffolds the project, installs dependencies, and starts the dev server in one shot. You're live at **https://localhost:8443**.
+That scaffolds the project, installs dependencies, and starts the dev server in one shot. You're live at **http://localhost:8080**.
 
 Pass a different name to use it as both the directory name and the site title. If you omit the name, the tool prompts for one (defaulting to `bascik-app`). Drop `-y` to step through the install and dev server prompts manually.
 
@@ -18,9 +18,9 @@ Pass a different name to use it as both the directory name and the site title. I
 
 ## Starting the Dev Server
 
-Run `npm run dev` (or `yarn dev`) to start the development server. Bascik serves your site over HTTP/2 at **https://localhost:8443** by default (the port auto-increments if 8443 is busy). It transpiles your pages, watches for changes, and live-reloads the browser on every save.
+Run `npm run dev` (or `yarn dev` / `pnpm dev`) to start the development server. Bascik serves your site over HTTP/1.1 at **http://localhost:8080** by default (the port auto-increments if 8080 is busy). It transpiles your pages, watches for changes, and live-reloads the browser on every save.
 
-SSL certificates are generated automatically on first run. Install [mkcert](https://github.com/FiloSottile/mkcert) for a trusted cert with no browser warning:
+If you opt into secure local HTTPS with HTTP/2 (`enableTls: true` in your `bascik.config.ts`), SSL certificates are generated automatically on first run. Install [mkcert](https://github.com/FiloSottile/mkcert) for a trusted cert with no browser warning:
 
 ```sh
 # macOS

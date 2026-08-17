@@ -20,6 +20,8 @@ import {
   extractDefaultSlotContent,
   extractInheritableAttributes,
   mergeAttributesOntoRoot,
+  listComponents,
+  invalidateComponentListCache,
 } from "./components.js";
 
 describe("extractScriptTags", () => {
@@ -655,6 +657,14 @@ describe("extractDefaultSlotContent", () => {
   });
 });
 
+describe("listComponents", () => {
+  it("invalidates cache and builds component list", async () => {
+    invalidateComponentListCache();
+    const result = await listComponents();
+    expect(typeof result).toBe("object");
+  });
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // H: Named slot fallback content
 // ─────────────────────────────────────────────────────────────────────────────
@@ -686,6 +696,47 @@ describe("replaceNamedSlots – fallback content", () => {
     expect(result).toContain("<h1>custom-a</h1>");
     expect(result).toContain("<p>fallback-b</p>");
     expect(result).not.toContain("fallback-a");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Boundary & Design Decisions Tests for HTML Component Parsing
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("getFirstComponent & replaceTag – HTML boundary design decisions", () => {
+  const componentList = {
+    "my-card": {
+      fileName: "components/my-card.html",
+      fileContent: '<div class="card">Card Body</div>',
+    },
+  };
+
+  it("removes HTML comments via minifyHtml so commented custom tags are not transpiled", () => {
+    const html = "<!-- <my-card></my-card> --><div>Real Content</div>";
+    const minified = minifyHtml(html);
+    const first = getFirstComponent(minified, componentList);
+    // Minification strips HTML comments, preventing commented tags from matching
+    expect(minified).not.toContain("<my-card>");
+    expect(first.name).toBeUndefined();
+  });
+
+  it("does not match custom component tags inside inline <script> blocks", () => {
+    const html = "<script>const html = '<my-card></my-card>';</script>";
+    const first = getFirstComponent(html, componentList);
+    expect(first.name).toBeUndefined();
+  });
+
+  it("does not match custom component tags inside inline <style> blocks", () => {
+    const html = "<style>/* <my-card></my-card> */</style>";
+    const first = getFirstComponent(html, componentList);
+    expect(first.name).toBeUndefined();
+  });
+
+  it("handles self-closing custom components gracefully", () => {
+    const html = "<div><my-card /></div>";
+    const first = getFirstComponent(html, componentList);
+    expect(first.name).toBe("my-card");
+    expect(first.content).toBe("<my-card />");
   });
 });
 
@@ -766,6 +817,16 @@ describe("mergeAttributesOntoRoot", () => {
     // Should not override existing id
     expect(result).toContain('id="main-nav"');
     expect(result).not.toContain('id="override"');
+  });
+
+  it("merges attribute even if root tag contains data- or prefix matching attribute", () => {
+    const html = '<input data-name="header" data-id="123" title="a name" />';
+    const result = mergeAttributesOntoRoot(html, {
+      name: "my-input",
+      id: "my-id",
+    });
+    expect(result).toContain('name="my-input"');
+    expect(result).toContain('id="my-id"');
   });
 
   it("returns unchanged html when attrs is empty", () => {

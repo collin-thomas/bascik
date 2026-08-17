@@ -20,6 +20,7 @@ import {
   addIdClassesInHtml,
   deduplicateCss,
   shieldCssStrings,
+  getComponentCss,
 } from "./styles.js";
 
 const css = `
@@ -200,6 +201,21 @@ describe("getCssClasses", () => {
       "}",
       ".home.logo {\n    background-color: #d3ff8d;\n  }",
     ]);
+  });
+});
+
+describe("addIdClassesInHtml", () => {
+  it("adds id class to element with single-quoted class attribute", () => {
+    const html = "<div id=\"btn\" class='btn-base'></div>";
+    const result = addIdClassesInHtml(html, [{ idName: "btn", className: "bascik__my-comp__id__btn" }]);
+    expect(result).toContain("class='btn-base bascik__my-comp__id__btn'");
+  });
+});
+
+describe("getComponentCss", () => {
+  it("returns undefined for invalid inputs or when css file is not found", async () => {
+    expect(await getComponentCss("", [])).toBeUndefined();
+    expect(await getComponentCss("components/nav.html", ["components/other.css"])).toBeUndefined();
   });
 });
 
@@ -724,6 +740,15 @@ describe("convertCssElementSelectorsToClasses – descendant after scoped class"
     expect(css).toContain(".bascik__my-comp__el__p");
     expect(elementsConvertedClasses).toContain("p");
   });
+
+  it("converts 3-level descendant element selectors: div ul li { color: red; }", () => {
+    const pre = "div ul li { color: red; }";
+    const { css, elementsConvertedClasses } = convertCssElementSelectorsToClasses(pre, "my-comp");
+    expect(css).toContain(".bascik__my-comp__el__div");
+    expect(css).toContain(".bascik__my-comp__el__ul");
+    expect(css).toContain(".bascik__my-comp__el__li");
+    expect(elementsConvertedClasses).toEqual(expect.arrayContaining(["div", "ul", "li"]));
+  });
 });
 
 // ─── addElementClassesInHtml — multiline content ─────────────────────────────
@@ -747,6 +772,22 @@ describe("addElementClassesInHtml – element with classless child", () => {
     const html = '<pre><code class="cblock-body">content</code></pre>';
     const result = addElementClassesInHtml(html, "code-block", ["pre"]);
     expect(result).not.toContain('class="cblock-body bascik__');
+  });
+});
+
+describe("single-quoted HTML attributes in styles", () => {
+  it("appends element class to existing single-quoted class attribute", () => {
+    const html = "<pre class='code'>content</pre>";
+    const result = addElementClassesInHtml(html, "my-comp", ["pre"]);
+    expect(result).toBe("<pre class='code bascik__my-comp__el__pre'>content</pre>");
+  });
+
+  it("adds id class to single-quoted id attribute", () => {
+    const html = "<div id='main-box'>content</div>";
+    const result = addIdClassesInHtml(html, [
+      { idName: "main-box", className: "bascik__my-comp__id__main-box" },
+    ]);
+    expect(result).toContain('class="bascik__my-comp__id__main-box"');
   });
 });
 
@@ -1413,6 +1454,15 @@ describe("CSS scoping idempotence – property-based", () => {
 });
 
 describe("shieldCssStrings – perfect round-trip", () => {
+  it("protects selector-like string literals in CSS content properties from class scoping", () => {
+    const originalCss = '.box::before { content: ".box #heading"; color: red; }';
+    const { css: shielded, restore } = shieldCssStrings(originalCss);
+    // Shielded form replaces the string content with a sentinel so class/id scoping does not match .box inside quotes
+    expect(shielded).not.toContain('".box #heading"');
+    const restored = restore(shielded);
+    expect(restored).toBe(originalCss);
+  });
+
   it("restore(shielded) is always byte-identical to the original CSS", () => {
     const cssArb = fc.constantFrom(
       ".nav a { color: white; }",

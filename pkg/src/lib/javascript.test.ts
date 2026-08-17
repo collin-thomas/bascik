@@ -44,6 +44,16 @@ describe("prefixElementAttribute – id (existing patterns)", () => {
     const result = prefixElementAttribute(c, "id", "test1234");
     expect(result.fileContent).toContain(`getElementById("${scope("btn")}")`);
   });
+
+  it("scopes single-quoted class and id attributes in HTML", () => {
+    const c = makeComponent(
+      "<div class='card' id='btn'></div><script>document.querySelector('.card'); document.getElementById('btn')</script>",
+    );
+    let result = prefixElementAttribute(c, "class", "test1234");
+    result = prefixElementAttribute(result, "id", "test1234");
+    expect(result.fileContent).toContain(`class='${scopeClass("card")}'`);
+    expect(result.fileContent).toContain(`id='${scope("btn")}'`);
+  });
 });
 
 describe("prefixElementAttribute – class with deduplicateCss: false", () => {
@@ -1059,6 +1069,10 @@ describe("minifyJs", () => {
     expect(minifyJs("var s = `hello  world`;")).toBe("var s = `hello  world`;");
   });
 
+  it("handles escape sequences in template literals", () => {
+    expect(minifyJs("var s = `he said \\`hi\\``;")).toBe("var s = `he said \\`hi\\``;");
+  });
+
   it("handles escape sequences in strings", () => {
     expect(minifyJs('var s = "he said \\"hi\\"";')).toBe(
       'var s = "he said \\"hi\\"";',
@@ -1076,6 +1090,60 @@ describe("minifyJs", () => {
 
   it("handles empty input", () => {
     expect(minifyJs("")).toBe("");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Boundary & Design Decisions Tests for JS Scoping
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("prefixElementAttribute – JS regex scoping design decision boundaries", () => {
+  it("rewrites DOM query patterns inside JS line comments and block comments", () => {
+    const c = makeComponent(
+      '<button id="btn" class="card"></button>' +
+      '<script>' +
+      '// document.querySelector("#btn");\n' +
+      '/* document.getElementsByClassName("card") */\n' +
+      '</script>',
+    );
+    const resId = prefixElementAttribute(c, "id", "test1234");
+    const resClass = prefixElementAttribute(c, "class", "test1234");
+    expect(resId.fileContent).toContain(`querySelector("#${scope("btn")}")`);
+    expect(resClass.fileContent).toContain(`getElementsByClassName("${scopeClass("card")}")`);
+  });
+
+  it("preserves dynamic variable expressions in template literals without corrupting JavaScript", () => {
+    const c = makeComponent(
+      '<div id="panel" class="card"></div>' +
+      '<script>' +
+      'const myId = "panel";\n' +
+      'document.getElementById(`${myId}`);\n' +
+      'document.querySelector(`#${myId}`);\n' +
+      '</script>',
+    );
+    const resId = prefixElementAttribute(c, "id", "test1234");
+    // Dynamic expressions inside template literals stay evaluated at runtime as variable expressions
+    expect(resId.fileContent).toContain('document.getElementById(`${myId}`)');
+    expect(resId.fileContent).toContain('document.querySelector(`#${myId}`)');
+  });
+
+  it("does not rewrite variable parameters passed to getElementById or querySelector", () => {
+    const c = makeComponent(
+      '<div id="panel"></div>' +
+      '<script>' +
+      'function find(target) { return document.getElementById(target); }\n' +
+      '</script>',
+    );
+    const resId = prefixElementAttribute(c, "id", "test1234");
+    expect(resId.fileContent).toContain('document.getElementById(target)');
+  });
+
+  it("wraps multiple script blocks in IIFEs to enforce scope isolation", () => {
+    const html = '<script>var secret = "A";</script><script>const secret = "B";</script>';
+    const c = makeComponent(html);
+    const isolated = namespaceScriptTags(c);
+    expect(isolated.fileContent).toContain('var secret = "A";');
+    expect(isolated.fileContent).toContain('(function() {');
   });
 });
 
@@ -1181,6 +1249,11 @@ describe("minifyJs – regex literal handling", () => {
 
   it("preserves a regex with escape sequences", () => {
     expect(minifyJs("var re = /a\\/b/;")).toBe("var re = /a\\/b/;");
+  });
+
+  it("treats '/' as division when regex is unterminated before newline", () => {
+    const result = minifyJs("var n = /foo\n/bar;");
+    expect(result).toBe("var n = /foo\n/bar;");
   });
 
   it("treats '/' as division (not regex start) after an identifier", () => {

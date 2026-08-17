@@ -170,11 +170,13 @@ export const deepReadDirFlat = async (
 };
 
 export const getDirectoryPath = (pagePath: string): string => {
-  return pagePath.split(/[\/]/).slice(1, -1).join("/");
+  const normalized = pagePath.replace(/\\/g, "/");
+  return normalized.split("/").slice(1, -1).join("/");
 };
 
 export const getDistPagePath = (pagePath: string): string => {
-  const pathParts = pagePath.split(/[\/]/);
+  const normalized = pagePath.replace(/\\/g, "/");
+  const pathParts = normalized.split("/");
   pathParts[0] = "dist";
   return pathParts.join("/");
 };
@@ -185,14 +187,13 @@ export const getDistPagePath = (pagePath: string): string => {
  * asset unlinkDir — resolves the same way regardless of whether the watcher
  * handed us an absolute or relative path.
  */
-const toDistPath = (srcPath: string): string => {
-  // Absolute path (from chokidar) → pages/…-relative, then swap the prefix.
+export const toDistPath = (srcPath: string): string => {
   const normalizedSrc = srcPath.replace(/\\/g, "/");
-  const pagesDir = BascikConfig.directory.pages.replace(/\\/g, "/");
-  const rel = normalizedSrc.startsWith(pagesDir)
-    ? getRelativePath(srcPath, "pages")
-    : normalizedSrc;
-  // rel is like "pages/css/x.css" — swap the leading "pages/" for "dist/".
+  if (normalizedSrc.startsWith("dist/")) return normalizedSrc;
+  if (normalizedSrc.includes("/dist/")) {
+    return `dist/${normalizedSrc.split("/dist/")[1]}`;
+  }
+  const rel = getRelativePath(srcPath, "pages");
   return rel.replace(/^pages[\/]/, "dist/");
 };
 

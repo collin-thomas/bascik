@@ -1,0 +1,49 @@
+<div class="boundary-wrapper">
+  <button id="boundary-btn" class="boundary-box">Click Me</button>
+  <div id="boundary-output" class="boundary-output">Ready</div>
+  <code class="boundary-code">data-bascik-prop-sample="literal"</code>
+</div>
+
+<style>
+  .boundary-wrapper {
+    padding: 1rem;
+    border: 1px solid #ccc;
+    margin-bottom: 1rem;
+  }
+
+  .boundary-box {
+    background-color: #f0f0f0;
+    padding: 0.5rem 1rem;
+  }
+
+  .boundary-box::before {
+    content: ".boundary-box #boundary-btn";
+  }
+
+  .boundary-active {
+    color: green;
+    font-weight: bold;
+  }
+</style>
+
+<script>
+  // document.querySelector("#boundary-btn");
+  /* document.getElementsByClassName("boundary-box"); */
+
+  const btn = document.querySelector("#boundary-btn");
+  const out = document.querySelector("#boundary-output");
+
+  if (btn && out) {
+    btn.addEventListener("click", () => {
+      btn.classList.add("boundary-active");
+
+      // Static scoped query works
+      out.textContent = "Clicked Successfully";
+
+      // Dynamic variable lookup is intentionally unsupported at build time
+      const targetId = "boundary-output";
+      const dynamicEl = document.getElementById(`${targetId}`);
+      out.setAttribute("data-dynamic-unscoped", String(dynamicEl === null));
+    });
+  }
+</script>

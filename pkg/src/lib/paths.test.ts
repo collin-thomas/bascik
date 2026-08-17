@@ -30,4 +30,11 @@ describe("getHttpPath", () => {
     // path containing 'pages' elsewhere should not be affected
     expect(getHttpPath("pages/pages-about.html")).toBe("/pages-about");
   });
+
+  it("handles Windows backslash path separators", () => {
+    expect(getHttpPath("pages\\index.html")).toBe("/");
+    expect(getHttpPath("pages\\about.html")).toBe("/about");
+    expect(getHttpPath("pages\\blog\\post.html")).toBe("/blog/post");
+    expect(getHttpPath("pages\\sub\\index.html")).toBe("/sub/");
+  });
 });

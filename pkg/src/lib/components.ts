@@ -738,6 +738,13 @@ export const mergeAttributesOntoRoot = (
     /^(<[\w-]+)((?:\s[^>]*?)?)(\s*\/?>)/,
     (_match: string, tagName: string, existing: string, close: string) => {
       let attrStr = existing || "";
+      const existingNames = new Set<string>();
+      const attrRegex = /\s+([\w:-]+)(?:=("[^"]*"|'[^']*'|[^\s>]+))?/g;
+      let match: RegExpExecArray | null;
+      while ((match = attrRegex.exec(attrStr)) !== null) {
+        existingNames.add(match[1].toLowerCase());
+      }
+
       for (const [name, value] of Object.entries(attrs)) {
         if (name === "class" && value) {
           if (/class="/.test(attrStr)) {
@@ -753,7 +760,7 @@ export const mergeAttributesOntoRoot = (
           } else {
             attrStr += ` class="${value}"`;
           }
-        } else if (value !== undefined && !attrStr.includes(` ${name}`)) {
+        } else if (value !== undefined && !existingNames.has(name.toLowerCase())) {
           attrStr += ` ${name}="${value}"`;
         }
       }

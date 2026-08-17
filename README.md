@@ -23,9 +23,10 @@ Bascik is a build tool for HTML components. It scopes and assembles reusable HTM
 
 ## Development Setup
 
-Requires **Node.js ≥ 24**. The repo uses yarn workspaces — one install at the root wires everything up.
+Requires **Node.js ≥ 22.18** and **Yarn ≥ 4** (pinned to `yarn@4.6.0` in `package.json`). The repo uses Yarn workspaces, one install at the root wires everything up.
 
 ```sh
+corepack enable
 yarn install
 ```
 
@@ -34,10 +35,11 @@ yarn install
 ### Working on the package
 
 ```sh
-yarn workspace @bascik/bascik build   # build the package (start here)
-yarn workspace @bascik/bascik test    # run unit tests
-yarn workspace @bascik/bascik e2e     # run e2e tests
-yarn workspace bascik-docs dev        # start docs dev server
+yarn pkg:build      # build the package (start here)
+yarn pkg:typecheck  # TypeScript type check
+yarn pkg:e2e        # run e2e tests
+yarn pkg:test       # unit tests in watch mode
+yarn docs:dev       # start docs dev server
 ```
 
 After any `pkg/src/` change, rebuild the package and the docs server will pick it up automatically (it watches for changes).
@@ -47,15 +49,15 @@ After any `pkg/src/` change, rebuild the package and the docs server will pick i
 Before committing changes that edited source code, tests, or any `docs/content/*.md`, run this custom prompt:
 
 ```sh
-/pre-commit
+/pre-push
 ```
 
-This regenerates `llms.txt`, updates `docs/src/pages/assets/SKILL.md` to reflect any new or changed content, copies it to `create/assets/SKILL.md`, and updates unit and E2E test coverage JSON files — all in one step.
+This updates test coverage JSON files, builds docs (generating `llms.txt` and search index), updates `docs/src/pages/assets/SKILL.md` to reflect any new or changed content, and copies it to `create/assets/SKILL.md` — all in one step.
 
 The prompt calls:
 
-- `yarn workspace bascik-docs generate:llms`
-- The LLM updates the `SKILL.md` file based on the `llms.txt` file.
-- `yarn workspace create-bascik prepack`
-- `yarn workspace @bascik/bascik update-coverage`
-- `yarn workspace @bascik/bascik update-e2e-coverage`
+- `yarn docs:update-coverage`
+- `yarn docs:update-e2e-coverage`
+- `yarn docs:build`
+- The LLM updates the `SKILL.md` file based on changes in `docs/content/`.
+- `yarn create:prepack`

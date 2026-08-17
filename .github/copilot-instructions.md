@@ -8,7 +8,7 @@ This file applies to all work inside `/docs/`. Read it before creating or editin
 
 The Markdown files serve three purposes simultaneously:
 1. They are the canonical source for the rendered docs page (via `data-bascik-build`)
-2. They feed `llms.txt` (via `docs/scripts/generate-llms-txt.ts`)
+2. They feed `llms.txt` (generated automatically via `exec` in `docs/bascik.config.ts`)
 3. They feed `SKILL.md` (the Copilot skill file at `docs/src/pages/assets/SKILL.md`, served at `/assets/SKILL.md`)
 
 **When adding or updating docs content:**
@@ -77,23 +77,19 @@ The `renderMd` helper (`docs/scripts/md-renderer.ts`) applies these transformati
 - Callout/tip boxes: Markdown blockquote (`> **Label.** body text`)
 - No inline HTML in MD files — keep MD pure Markdown
 
-## Updating llms.txt, SKILL.md, and create/assets/SKILL.md
+## Updating SKILL.md and create/assets/SKILL.md
 
-**Preferred workflow** — invoke the prompt file. It regenerates `llms.txt`, reads all docs content, updates SKILL.md with LLM judgment, then propagates everything in one shot:
+**Do not run `#pre-push.prompt.md` or pre-push scripts automatically.** The user handles running pre-push steps.
 
-```
-#pre-commit.prompt.md
-```
+Note: `llms.txt` and search index are generated automatically when running `yarn docs:build` (or during dev server via `exec` in `docs/bascik.config.ts`).
 
-Do not call `generate:llms`, `yarn sync`, or `yarn workspace bascik-docs generate:llms` individually — the prompt handles all of that.
-
-**Shell-only fallback** (no SKILL.md update, just propagate after a manual edit):
+If manually updating or propagating `SKILL.md` when specifically requested:
 
 ```sh
-yarn sync
+yarn create:prepack
 ```
 
-These files must stay in sync. A content change that lands in `llms.txt` but not `SKILL.md` (or vice versa) means Copilot is working from stale guidance — which is how bugs like "use `querySelector` for per-instance elements" go undetected.
+These files must stay in sync. A content change that lands in `docs/content/*.md` but not `SKILL.md` (or vice versa) means Copilot is working from stale guidance, which is how bugs like "use `querySelector` for per-instance elements" go undetected.
 
 ## Sidebar
 
@@ -161,27 +157,26 @@ The mapping is straightforward: `docs/content/topic.md` corresponds to `docs/src
 
 `docs/content/compatibility.md` tracks which CSS and JavaScript patterns Bascik's scoping engine handles. **Whenever a CSS or JS scoping capability is added, changed, or fixed**, update the relevant table row (or add a new one) in that file before finishing the task.
 
-- New capability → add a row with ✅ and a concise Notes entry.
-- Fixed or improved → update the Status and/or Notes of the existing row.
-- Intentionally unsupported → add a row with 🚫 and an explanation.
+- New capability: add a row with ✅ and a concise Notes entry.
+- Fixed or improved: update the Status and/or Notes of the existing row.
+- Intentionally unsupported: add a row with 🚫 and an explanation.
 
-After editing `compatibility.md`, run `#pre-commit.prompt.md` as usual.
+After editing `compatibility.md`, run `#pre-push.prompt.md` is NOT required. The user handles running pre-push steps.
 
 ## Keeping Docs in Sync with the Package
 
-The repo uses **yarn workspaces**. `node_modules/@bascik/bascik` is a symlink to `pkg/`, so the docs always resolve the live source — no pack, no copy, no lock-file deletion needed.
+The repo uses **Yarn workspaces**. `node_modules/@bascik/bascik` is a symlink to `pkg/`, so the docs always resolve the live source, with no pack, copy, or lock-file deletion needed.
 
 Whenever `pkg/src/` is changed, propagate the change to the docs in two steps:
 
 ### 1. Rebuild the package
 ```sh
-yarn workspace @bascik/bascik build
+yarn pkg:build
 ```
-(or equivalently: `cd pkg && node_modules/.bin/tsc -p tsconfig.build.json`)
 
 ### 2. Rebuild and check the docs
 ```sh
-yarn --cwd docs bascik --build
+yarn docs:build
 ```
 
 Then inspect the relevant `docs/dist/` output to confirm the pkg change has the intended effect.
@@ -190,32 +185,32 @@ Then inspect the relevant `docs/dist/` output to confirm the pkg change has the 
 
 **When adding, removing, or significantly changing tests in `pkg/src/`:**
 
-- The testing docs (`docs/content/internals/testing.md`) describe the test approach, not an enumerated list of files — the "Test Files" section links to GitHub which is always current. You only need to update the prose if the testing *patterns* change (e.g. a new mock strategy, a new test runner, new helpers).
-- The coverage numbers shown on the testing page are read from `pkg/test-coverage.json` (unit tests) and `pkg/e2e-test-coverage.json` (E2E build-step coverage) at docs build time. After adding tests, run `#pre-commit.prompt.md` — it regenerates both coverage files as part of its Step 1.
+- The testing docs (`docs/content/internals/testing.md`) describe the test approach, not an enumerated list of files. The "Test Files" section links to GitHub which is always current. You only need to update the prose if the testing *patterns* change (e.g. a new mock strategy, a new test runner, new helpers).
+- The coverage numbers shown on the testing page are read from `pkg/test-coverage.json` (unit tests) and `pkg/e2e-test-coverage.json` (E2E build-step coverage) at docs build time. Do not run `#pre-push.prompt.md` or pre-push scripts automatically after adding tests. The user handles running pre-push steps.
 
 **When changing `pkg/src/lib/dev-server.md` (or adding to the live-reload / SSE / watch system):**
 Update `docs/content/internals/dev-server.md` to reflect the change. This page is the source of truth for how the dev server and watch system work.
 
 **General principle:** the three files that must stay in sync are `llms.txt`, `SKILL.md`, and the relevant `docs/content/internals/*.md`. The copilot-instructions file is the enforcement mechanism — add notes here when a new sync relationship is created.
-
+files that must stay in sync are `SKILL.md`
 ## License Source of Truth
 
 The license lives in **three places** that must stay in sync:
 
-- `docs/content/license.md` — the web-formatted version rendered at `https://bascik.dev/license`
-- `LICENSE` (repo root) — plain-text version; **required** for GitHub license detection and as the `prepack` source
-- `pkg/LICENSE` and `create/LICENSE` — copies for the npm tarballs; synced automatically on publish via the `prepack` script in each `package.json`
+- `docs/content/license.md`: the web-formatted version rendered at `https://bascik.dev/license`
+- `LICENSE` (repo root): plain-text version; **required** for GitHub license detection and as the `prepack` source
+- `pkg/LICENSE` and `create/LICENSE`: copies for the npm tarballs; synced automatically on publish via the `prepack` script in each `package.json`
 
 **When updating the license terms:**
 1. Edit `docs/content/license.md` (the human-readable web version)
 2. Mirror those changes to the root `LICENSE` (same terms, plain-text format)
 3. Run `cp LICENSE pkg/LICENSE && cp LICENSE create/LICENSE` to sync the package copies immediately
 
-Do **not** delete the root `LICENSE` — GitHub reads it for repo-level license detection. Do not edit `pkg/LICENSE` or `create/LICENSE` directly; they are derived files.
+Do **not** delete the root `LICENSE`: GitHub reads it for repo-level license detection. Do not edit `pkg/LICENSE` or `create/LICENSE` directly; they are derived files.
 
 ## Node 24 — Native TypeScript Support
 
-This project runs on **Node 24**. Node natively strips TypeScript types — no transpiler or extra flags needed for erasable syntax.
+This project runs on **Node 24**. Node natively strips TypeScript types, with no transpiler or extra flags needed for erasable syntax.
 
 - `node example.ts` works directly (Node 22.18+ with only erasable syntax, no flags required).
 - Erasable syntax: type annotations, interfaces, type aliases, `import type`. These are stripped at runtime.
@@ -226,6 +221,17 @@ This project runs on **Node 24**. Node natively strips TypeScript types — no t
 **Practical implication:** `data-bascik-build` and `data-bascik-server` scripts can import `.ts` helper files and Node handles them natively. Bascik does not need to add its own type-stripping layer for server-side or build-time scripts.
 
 ## Agent Environment Notes
+
+### Use Root Scripts or `yarn workspace <pkg> <script>`
+
+Commands can be run directly from the root using helper scripts (`yarn build`, `yarn dev`, `yarn test`, `yarn typecheck`, `yarn pkg:build`, `yarn docs:dev`, etc.) or using `yarn workspace <pkg> <script>`.
+
+The repo uses **Modern Yarn 4** (`yarn@4.6.0`) with `nodeLinker: node-modules`. Ctrl+C on interactive watch mode commands exits cleanly with code 0/130 and zero `ELIFECYCLE` error messages.
+
+```sh
+yarn test       # vitest watch mode (@bascik/bascik)
+yarn docs:dev   # docs dev server (bascik-docs)
+```
 
 ### VS Code Sandbox — Commands That Need Network Will Hang
 
@@ -260,11 +266,14 @@ Always choose clear, unambiguous names. When something could be confused with an
 npx --prefix pkg tsc -p pkg/tsconfig.json --noEmit
 ```
 
-`create/` and `extensions/vscode-bascik/` have their own tsconfigs; check them when editing files in those packages:
+`create/`, `docs/`, and `extensions/vscode-bascik/` have their own tsconfigs; check them when editing files in those packages:
 
 ```sh
 npx --prefix create tsc -p create/tsconfig.json --noEmit
+npx --prefix pkg tsc -p docs/tsconfig.json --noEmit
 npx --prefix extensions/vscode-bascik tsc -p extensions/vscode-bascik/tsconfig.json --noEmit
 ```
+
+(`docs/` does not have its own typescript package, so use `pkg`'s tsc for it.)
 
 Fix all errors before finishing. Do not suppress errors with `// @ts-ignore` or `as any` when a proper type fix is straightforward.

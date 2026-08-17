@@ -12,8 +12,8 @@ export default defineConfig({
   directory: {
     pages: 'src/pages',
     components: 'src/components',
-    watch: ['scripts/', 'data/'],
   },
+  watch: ['scripts/', 'data/'],
 
   scopeScriptBlocks: true,
   inheritAttributes: true,
@@ -203,14 +203,15 @@ Use `level: 'warn'` or `level: 'silent'` to suppress the high-volume status line
 
 ### `serve`
 
-Configure the HTTP/2 server started by `bascik --serve` and `bascik` (dev mode). `port`, `hostname`, `keyFile`, and `certFile` are read in both modes. `bascik --build` does not start a server and ignores this block.
+Configure the HTTP server started by `bascik --serve` and `bascik` (dev mode). `port`, `hostname`, `enableTls`, `keyFile`, and `certFile` are read in both modes. `bascik --build` does not start a server and ignores this block.
 
 ```js
 serve: {
-  port: 8443,              // default
+  port: 8080,              // default (8080 for HTTP, 8443 for HTTPS)
   hostname: 'localhost',   // default; set '0.0.0.0' to bind all interfaces
-  keyFile: 'bascik-privkey.pem',  // path to TLS private key
-  certFile: 'bascik-cert.pem',    // path to TLS certificate
+  enableTls: false,        // default; set true for encrypted HTTP/2 (HTTPS)
+  keyFile: 'bascik-privkey.pem',  // path to TLS private key when enableTls: true
+  certFile: 'bascik-cert.pem',    // path to TLS certificate when enableTls: true
   logging: {
     level: 'info',        // silent | error | warn | info | debug
     requests: true,       // log each request as 'GET / ... 200 17ms'
@@ -241,19 +242,29 @@ generate: {
 
 See [Sitemap & robots.txt](/sitemap) for a full walkthrough.
 
-### `directory.watch`
+### `watch`
 
 An array of directories or files that, when changed in dev mode, trigger a full re-transpile of all pages. Useful for utility scripts, data files, or image directories that pages depend on at build time.
 
 ```js
-directory: {
-  pages: 'src/pages',
-  components: 'src/components',
-  watch: ['scripts/', 'data/'],
-}
+watch: ['scripts/', 'data/'],
 ```
 
 Has no effect during `bascik --build`.
+
+### `exec`
+
+Scripts to run as part of the build/dev lifecycle. Entries execute sequentially in array order before page transpilation during `--build`. Each entry has a `script` path (relative to the project root, run with the same `node` binary) and an optional `watch` array.
+
+- **With `watch`**: runs on dev startup (non-blocking) and re-runs whenever a watched file changes, followed by a live-reload. Also runs before pages during `--build`.
+- **Without `watch`**: build-only, skipped in dev.
+
+```js
+exec: [
+  { script: 'scripts/generate-search-index.ts', watch: ['content/'] },
+  { script: 'scripts/generate-llms-txt.ts' }, // build only
+]
+```
 
 ### `inlineStyles`
 

@@ -219,10 +219,11 @@ Configure the production server in `bascik.config.ts` under the `serve` key.
 export default {
   cacheHttp: true,     // default in --serve; false in dev
   serve: {
-    port: 8443,         // default
+    port: 8080,         // default (8080 for HTTP, 8443 for HTTPS)
     hostname: 'localhost',  // default; use '0.0.0.0' to bind all interfaces
-    keyFile: 'bascik-privkey.pem',  // default; path to your TLS private key
-    certFile: 'bascik-cert.pem',    // default; path to your TLS certificate
+    enableTls: false,   // default; set to true for encrypted HTTP/2 (HTTPS)
+    keyFile: 'bascik-privkey.pem',  // path to your TLS private key when enableTls: true
+    certFile: 'bascik-cert.pem',    // path to your TLS certificate when enableTls: true
     logging: {
       level: 'info',   // silent | error | warn | info | debug
       requests: true,  // log each request line
@@ -250,7 +251,7 @@ Requests for a path that has no matching page fall through to the `404` page if 
 | Transpile pages to `dist/` | ✓ | ✕ (reads existing `dist/`) |
 | Watch source files for changes | ✕ | ✕ |
 | Live-reload SSE | ✕ | ✕ |
-| HTTP/2 server | ✕ | ✓ |
+| Built-in HTTP server | ✕ | ✓ |
 | Brotli compression | ✕ | ✓ |
 | HTTP caching (ETags, 304) | ✕ | ✓ (default; see `cacheHttp`) |
 | Rate limiting | ✕ | ✓ (per-IP) |
@@ -281,7 +282,7 @@ In `--serve` mode the server enforces a per-IP request limit of **500 requests p
 
 ### Graceful shutdown
 
-The server listens for `SIGTERM` and `SIGINT` in both dev and production. On either signal it stops accepting new connections, destroys all open HTTP/2 sessions (including any live-reload SSE connections in dev), and exits once in-flight requests finish. If draining takes longer than 10 seconds, the process force-exits. This means `systemd` stop, `docker stop`, and Kubernetes pod eviction all wait for requests to complete before the process ends.
+The server listens for `SIGTERM` and `SIGINT` in both dev and production. On either signal it stops accepting new connections, destroys open HTTP/2 sessions (if running in HTTPS mode) and live-reload SSE connections, and exits once in-flight requests finish. If draining takes longer than 10 seconds, the process force-exits. This means `systemd` stop, `docker stop`, and Kubernetes pod eviction all wait for requests to complete before the process ends.
 
 ### Path traversal protection
 

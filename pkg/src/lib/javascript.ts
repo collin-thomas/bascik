@@ -185,20 +185,26 @@ export const prefixElementAttribute = (
   }
 
   // Use [\s\n\r\t] or \s to handle newlines before the attribute name
-  const regexp = new RegExp(`(?<=\\s${attribute}=")[\\s\\S]+?(?=")`, "gm");
-  const scopedAttrsHtml = component.fileContent.replace(regexp, (match) => {
-    if (!match) return "";
-    return match
-      .replace(/  +/g, " ")
-      .split(" ")
-      .map((attributeName) => {
-        const name = `bascik__${scopeKey}__${attributeName}`;
-        const obfuscatedAttributeName = obfuscateAttributeName(name);
-        attributesToReplace.push({ attributeName, obfuscatedAttributeName });
-        return obfuscatedAttributeName;
-      })
-      .join(" ");
-  });
+  const attrRegexp = new RegExp(`(\\s${attribute}=)("[^"]*"|'[^']*')`, "gm");
+  const scopedAttrsHtml = component.fileContent.replace(
+    attrRegexp,
+    (fullMatch, prefix, quotedVal) => {
+      const quote = quotedVal[0];
+      const match = quotedVal.slice(1, -1);
+      if (!match) return fullMatch;
+      const newInner = match
+        .replace(/  +/g, " ")
+        .split(" ")
+        .map((attributeName: string) => {
+          const name = `bascik__${scopeKey}__${attributeName}`;
+          const obfuscatedAttributeName = obfuscateAttributeName(name);
+          attributesToReplace.push({ attributeName, obfuscatedAttributeName });
+          return obfuscatedAttributeName;
+        })
+        .join(" ");
+      return `${prefix}${quote}${newInner}${quote}`;
+    },
+  );
 
   // Discover class names used only in JS (never in a class= attr).
   // The CSS pass scopes every class name it finds, so JS-only classes would

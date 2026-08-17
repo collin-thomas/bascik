@@ -62,7 +62,7 @@ Read a JSON data file and render HTML markup from it:
 
 ## Example: Fetching at Build Time
 
-Node.js 24+ includes a global `fetch`. Use it to pull remote data at build time so the result is baked into the page:
+Node.js includes a global `fetch`. Use it to pull remote data at build time so the result is baked into the page:
 
 ```html
 <script data-bascik-build>
@@ -169,6 +169,33 @@ Environment variables set in your shell or a `.env` file (loaded with a tool lik
 </script>
 ```
 
+## Concurrent Execution
+
+All build scripts on a page run concurrently. Bascik collects every `<script data-bascik-build>` tag at once and starts them all in parallel using `Promise.all`. A semaphore caps how many Node.js subprocesses are alive simultaneously based on available memory, but there is no document-order sequencing, so script 4 can finish before script 1. The outputs are stitched back into the page in their original positions once all scripts have resolved, so the HTML order is always preserved.
+
+```html
+<!-- These four scripts all start at the same time. -->
+<head>
+  <script data-bascik-build>
+    const { canonical } = await import(…);
+    console.log(await canonical());        <!-- may finish 2nd -->
+  </script>
+  <script data-bascik-build>
+    const { openGraph } = await import(…);
+    console.log(await openGraph());        <!-- may finish 4th -->
+  </script>
+  <script data-bascik-build>
+    const { breadcrumbLd } = await import(…);
+    console.log(await breadcrumbLd());     <!-- may finish 1st -->
+  </script>
+  <script data-bascik-build>
+    const { articleSchema } = await import(…);
+    console.log(await articleSchema());    <!-- may finish 3rd -->
+  </script>
+</head>
+<!-- Output is always assembled in document order regardless of finish order. -->
+```
+
 ## Script Caching
 
 Bascik caches build script output to `node_modules/.cache/bascik/script-cache/` so subsequent builds skip the Node.js subprocess entirely for unchanged scripts. The cache key is a SHA-256 hash of:
@@ -177,7 +204,11 @@ Bascik caches build script output to `node_modules/.cache/bascik/script-cache/` 
 - The contents of any local `scripts/` or `content/` files the script imports
 - The `isBuild` flag and `siteUrl`
 
-If a dependency file changes (because you edited it or switched branches), the cache entry is invalid and the script re-runs automatically. On a large site with many build scripts, the first build after a content change is slower; subsequent builds use the cache.
+If a dependency file changes (because you edited it or switched branches), the cache entry is invalid and the script re-runs automatically.
+
+**How dependency tracking works.** Bascik does not instrument your script at runtime. Instead it statically scans the script source for quoted string literals that look like local file references, patterns matching `content/*.md` or `scripts/*.{mjs,js,ts}`, and hashes the content of each matched file into the cache key. If any of those files changes, the key changes and the cache misses. Paths computed at runtime (e.g. a variable built with string concatenation) are invisible to the scanner and will not be tracked. For those cases, set `buildScriptCache: false`. See [Build Script Output Cache](/internals/transpilation-pipeline#build-script-output-cache) in the internals docs for the full key specification.
+
+**Cold start vs. warm restarts.** The first time you start the dev server, or after clearing the cache, every script runs in full. On a site with many build scripts, this first build is noticeably slower. Once the cache is warm, restarting the dev server is much faster: scripts whose inputs haven't changed are served from disk in milliseconds instead of spawning a new Node.js process for each one.
 
 To clear the cache manually (useful after a branch switch that changes shared scripts):
 
@@ -185,13 +216,20 @@ To clear the cache manually (useful after a branch switch that changes shared sc
 rm -rf node_modules/.cache/bascik/script-cache
 ```
 
-To disable caching entirely, set `buildScriptCache: false` in your config. This is useful for scripts that read live external state not reflected in their source files.
+**Disable for scripts that read external state.** The cache key only covers files Bascik can watch: the script body and local `scripts/`/`content/` files. If a script fetches data from a source Bascik cannot watch, such as a live API, a database, a remote CMS, or a file referenced by a dynamic path computed at runtime, the cached output will go stale silently. Set `buildScriptCache: false` in your config for those scripts, or globally, so the script always runs fresh:
+
+```ts
+// bascik.config.ts
+export default defineConfig({
+  buildScriptCache: false,
+});
+```
 
 ## Limitations
 
 - **No streaming:** the full stdout of the script is collected before injection. You cannot stream HTML into the page incrementally.
 - **No HMR awareness:** in dev mode Bascik watches source files. If a build script reads an external file, changes to that file won't automatically re-trigger the script. Restart the dev server to re-run.
-- **ESM only:** Build scripts run as ES modules. Use `import`/`export` syntax; `require()` is not available. Write helpers as `.ts` (preferred on Node 24), `.js`, or `.mjs`. The `.mjs` extension explicitly marks a file as ESM regardless of `package.json` settings; the "m" stands for "module." In a Bascik project with `"type": "module"` in `package.json` (the default), plain `.js` and `.ts` work identically, so `.mjs` is usually unnecessary.
+- **ESM only:** Build scripts run as ES modules. Use `import`/`export` syntax; `require()` is not available. Write helpers as `.ts` (preferred on Node 22.18+), `.js`, or `.mjs`. The `.mjs` extension explicitly marks a file as ESM regardless of `package.json` settings; the "m" stands for "module." In a Bascik project with `"type": "module"` in `package.json` (the default), plain `.js` and `.ts` work identically, so `.mjs` is usually unnecessary.
 - **Node.js only:** browser globals like `window` and `document` are not available in build scripts.
 
 For per-request server-side rendering, see [Server scripts](/server).

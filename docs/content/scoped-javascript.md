@@ -161,7 +161,7 @@ Script tags with a `type` other than `text/javascript` are left completely untou
 
 ## TypeScript in Component Scripts
 
-Bascik ships plain JavaScript to the browser, so TypeScript in component `<script>` blocks must be stripped before the output is served. Node 24 exposes `stripTypeScriptTypes` from `node:module`. Wire it into the `minifyScripts` hook and every inline script body gets its types erased automatically:
+Bascik ships plain JavaScript to the browser, so TypeScript in component `<script>` blocks must be stripped before the output is served. Node 22.18+ exposes `stripTypeScriptTypes` from `node:module`. Wire it into the `minifyScripts` hook and every inline script body gets its types erased automatically:
 
 ```ts
 // bascik.config.ts

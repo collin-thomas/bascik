@@ -1,34 +1,63 @@
 # Dev Server
 
-Bascik's development server is a TLS-enabled HTTP/2 server built on Node.js built-ins. It serves transpiled pages from an in-memory store, static assets from disk, and broadcasts live-reload events via Server-Sent Events.
+Bascik's development server serves transpiled pages from an in-memory store, static assets from disk, and broadcasts live-reload events via Server-Sent Events. By default, it runs over plaintext HTTP/1.1 for zero-friction local development, with opt-in support for TLS-enabled HTTP/2.
 
-## Why HTTP/2?
+## Server Architecture (`server.ts`, `http.ts`, `http2.ts`)
 
-HTTP/2 requires TLS. Using it for development means the protocol between the dev server and the browser matches production deployments on modern static hosts, eliminating a class of "works in dev, breaks in prod" issues around protocol-level behaviour. It also means no special handling is needed for assets that load over HTTP/2 in production.
+Bascik separates protocol setup from request routing using a modular 4-tier design:
+
+```text
+       [transpile.ts / serve.ts]
+                  │
+                  ▼ (startServer)
+         [server.ts Orchestrator]
+                  │
+         ┌────────┴────────┐
+         │ (enableTls:     │ (enableTls:
+         │  false)         │  true)
+         ▼                 ▼
+     [http.ts]          [pki.ts Cert Gen]
+  (HTTP/1.1 Server)        │
+         │                 ▼
+         │             [http2.ts]
+         │          (HTTP/2 Server)
+         │                 │
+         └────────┬────────┘
+                  ▼
+   [server.ts: createRequestHandler]
+                  │
+                  ▼ (Serves HTML & static files)
+     [mem.ts / dist/ directory]
+```
+
+1. **`server.ts`**: The central server orchestrator. It contains the unified `createRequestHandler()` pipeline and `startServerInstance()` port binder, plus the top-level `startServer()` dispatcher.
+2. **`http.ts`**: Standard unencrypted HTTP/1.1 server (`node:http`). Wraps `http.IncomingMessage` / `http.ServerResponse` into Bascik's request context.
+3. **`http2.ts`**: Opt-in encrypted HTTP/2 server (`node:http2`). Wraps `ServerHttp2Stream` into Bascik's request context.
+4. **`pki.ts`**: Generates self-signed TLS certificates when `enableTls: true` is set and certificate files do not exist.
+
+## Why Plaintext HTTP/1.1 by Default?
+
+Plaintext HTTP/1.1 works everywhere without certificate warnings, browser bypass prompts, or platform trust setup. Browsers and local development tools (such as VS Code's integrated Simple Browser) connect instantly.
+
+If you need production HTTP/2 protocol parity, enable TLS in `bascik.config.ts`:
+
+```ts
+export default {
+  serve: {
+    enableTls: true, // Dev server boots over https://localhost:8443 (HTTP/2)
+  },
+};
+```
 
 ## TLS Certificate Generation (`pki.ts`)
 
-On first run, Bascik generates a self-signed certificate valid for 100 years and writes two files to the project root:
+When `enableTls: true` is configured, Bascik checks for local certificate files (`bascik-cert.pem` and `bascik-privkey.pem`). If missing, it attempts to generate CA-trusted certs via `mkcert` or falls back to OpenSSL self-signed certs.
 
-- `bascik-cert.pem`: the certificate
-- `bascik-privkey.pem`: the private key
-
-On subsequent runs, both files are checked for existence and generation is skipped if they are present. The generation strategy differs by platform:
-
-- **macOS / Linux:** a single `openssl req` command generates both files, including a `subjectAltName` extension for `localhost` and `127.0.0.1`.
-- **Windows:** PowerShell's `New-SelfSignedCertificate` creates the cert in the Windows certificate store, then OpenSSL extracts the PEM files from a temporary PFX export.
-
-Because the cert is self-signed, browsers will show a security warning on first visit. Trust the cert once in the browser and the warning will not reappear.
+On subsequent runs, both files are checked for existence and generation is skipped if they are present.
 
 <div class="callout">
-<p>These files are generated per-project, not globally. If you delete them, they are regenerated on the next <code>bascik</code> invocation.</p>
+<p>These files are generated per-project, not globally. If you delete them, they are regenerated on the next <code>bascik</code> invocation when TLS is enabled.</p>
 </div>
-
-## The HTTP/2 Server (`http2.ts`)
-
-The server starts binding its port concurrently with page transpilation. `serveHttp2()` returns the origin URL once the port is bound; `transpile.ts` prints `Server running at …` immediately after the transpilation summary line, with no gap between them.
-
-The server listens on `https://localhost:8443` and handles all requests on a single `"stream"` event handler. Only `GET` requests are accepted; all other methods receive a `405 Method Not Allowed` response.
 
 ### Request routing
 
@@ -46,15 +75,13 @@ Static assets (CSS, JS, images) are served with `createReadStream().pipe(stream)
 
 The dev server binds its port concurrently with page transpilation. Any request that arrives before a page has been stored in `mem` would otherwise return a bare 404. Instead, Bascik serves a lightweight boot page: a spinner with a short "Building site..." label. The page carries no framework or external resources.
 
-The boot page connects to the normal `/bascik-live-reload` SSE endpoint. Because the Referer header contains the originally requested URL, the SSE handler tracks it the same way it tracks any open page. When that specific page finishes transpiling, the `"transpiled"` event fires and the SSE connection sends `reload`; the browser fetches the real page immediately without waiting for the rest of the project to finish. As a belt-and-suspenders measure, a `"boot-done"` event is emitted on the shared event emitter once `watchFiles()` resolves, which flushes any remaining boot-page connections (for example, a request to a path that does not exist yet). If the SSE connection itself fails before the page is ready, an `onerror` handler retries with a one-second `setTimeout`.
+The boot page connects to the normal `/bascik-live-reload` SSE endpoint. Because the Referer header contains the originally requested URL, the SSE handler tracks it the same way it tracks any open page. When that specific page finishes transpiling, the `"transpiled"` event fires and the SSE connection sends `reload`; the browser fetches the real page immediately without waiting for the rest of the project to finish. As a belt-and-suspenders measure, a `"boot-done"` event is emitted on the shared event emitter once `watchFiles()` resolves, which flushes any remaining boot-page connections (for example, a request to a path that does not exist yet). If the SSE connection itself fails before the page is ready, the `onerror` handler closes the stream and sets it to null, relying on the `focus` and `visibilitychange` listeners to reconnect instantly as soon as the user interacts with or switches back to the tab.
 
 The `isBooting` flag in `mem.ts` is set to `true` on module load and cleared (alongside the `"boot-done"` event) by `transpile.ts` immediately after `watchFiles()` resolves. Once the flag is cleared, unmatched paths fall through to the normal 404 path. The boot page is never served in `--serve` (production) mode.
 
-### Error handling
+### Graceful shutdown
 
-
-
-The server registers `process.once` handlers for `SIGTERM` and `SIGINT`. On either signal it calls `server.close()` to stop accepting new connections, then immediately destroys all tracked HTTP/2 sessions. Destroying sessions closes the live-reload SSE stream (which would otherwise hold the process open indefinitely), so the process exits cleanly as soon as in-flight requests finish. A 10-second safety timeout force-exits if anything still hasn’t drained.
+The server registers `process.once` handlers for `SIGTERM` and `SIGINT`. On either signal it stops accepting new connections, destroys all tracked HTTP/2 sessions and their underlying sockets, closes all chokidar watchers, and exits immediately (`process.exit(0)`). Destroying sessions closes the live-reload SSE stream (which would otherwise hold the process open indefinitely), so the process exits cleanly without delay.
 
 ## In-Memory Page Store (`mem.ts`)
 
@@ -68,7 +95,7 @@ This inverted index powers selective re-transpilation. When a component file cha
 
 ### Open-page priority
 
-When a file change triggers a full re-transpile of all pages (e.g. a file in `directory.watch` changed), Bascik uses the `#openPages` set to sort the page list so currently-open pages are transpiled first. Those pages emit the `"transpiled"` event before the rest of the batch, which means the browser live-reload fires as soon as the visible page is ready rather than waiting for all pages to finish.
+When a file change triggers a full re-transpile of all pages (e.g. a file in `watch` changed), Bascik uses the `#openPages` set to sort the page list so currently-open pages are transpiled first. Those pages emit the `"transpiled"` event before the rest of the batch, which means the browser live-reload fires as soon as the visible page is ready rather than waiting for all pages to finish.
 
 The tracking lifecycle:
 1. An SSE connection opens at `/bascik-live-reload`; the server parses the `Referer` header and calls `mem.trackOpenPage(path)`.
@@ -77,11 +104,11 @@ The tracking lifecycle:
 
 ### Brotli compression
 
-Pages are brotli-compressed asynchronously (`zlib.brotliCompress`) when stored. All in-flight compression calls for a given batch of pages run concurrently via `Promise.all`, so startup cost scales with the slowest single page rather than the sum. The compressed buffer is served pre-compressed when the client sends `Accept-Encoding: br`, avoiding per-request compression.
+Pages are brotli-compressed asynchronously (`zlib.brotliCompress`) when stored in memory. In development mode, compression uses minimum quality (`BROTLI_MIN_QUALITY = 1`) so background compression is instantaneous and avoids queuing heavy C++ threadpool tasks that could delay process exit. In production builds, maximum quality (`BROTLI_MAX_QUALITY = 11`) is used. The compressed buffer is served pre-compressed when the client sends `Accept-Encoding: br`, avoiding per-request compression.
 
 ## Watch System (`watch.ts`)
 
-Three separate chokidar watchers are started by `watchFiles()`. All watchers use polling mode (`usePolling: true`) to avoid hitting OS file-descriptor limits on large projects.
+Three separate chokidar watchers are started by `watchFiles()`. All watchers use native OS file system events for fast, efficient file-change detection.
 
 ### Watcher 1: Static assets
 
@@ -106,17 +133,37 @@ The live-reload mechanism uses Server-Sent Events (SSE) rather than WebSockets t
 
 ```js
 (function() {
-  const eventSource = new EventSource("/bascik-live-reload");
-  eventSource.onmessage = function(event) {
-    if (event.data === 'reload') {
-      window.location.reload();
+  var wasConnected = false;
+  var source;
+  function connect() {
+    if (source) return;
+    source = new EventSource("/bascik-live-reload");
+    source.onmessage = function(e) {
+      if (e.data === 'reload') {
+        window.location.reload();
+      } else if (e.data === 'connected') {
+        if (wasConnected) {
+          window.location.reload();
+        }
+        wasConnected = true;
+      }
+    };
+    source.onerror = function() {
+      source.close();
+      source = null;
+    };
+  }
+  function instantConnect() {
+    if (!source) {
+      connect();
     }
-  };
-  eventSource.onerror = function() {
-    eventSource.close();
-    console.warn('Live-Reload Connection Lost');
-  };
-  window.onbeforeunload = function () { eventSource.close(); };
+  }
+  window.addEventListener('focus', instantConnect);
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') instantConnect();
+  });
+  window.addEventListener('beforeunload', function() { if (source) source.close(); });
+  connect();
 })();
 ```
 

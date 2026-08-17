@@ -78,7 +78,8 @@ export const is404Page = (relativePath: string): boolean =>
  * Build the XML sitemap string from an array of URL paths.
  */
 export const buildSitemapXml = (baseUrl: string, urlPaths: string[]): string => {
-  const safeBase = escapeXml(baseUrl);
+  const normalizedBase = baseUrl.replace(/\/+$/, "");
+  const safeBase = escapeXml(normalizedBase);
   const urls = urlPaths
     .map((p) => `  <url>\n    <loc>${safeBase}${escapeXml(p)}</loc>\n  </url>`)
     .join("\n");
@@ -89,7 +90,8 @@ export const buildSitemapXml = (baseUrl: string, urlPaths: string[]): string => 
  * Build the robots.txt string pointing at the sitemap.
  */
 export const buildRobotsTxt = (baseUrl: string): string => {
-  return `User-agent: *\nAllow: /\n\nSitemap: ${baseUrl}/sitemap.xml\n`;
+  const normalizedBase = baseUrl.replace(/\/+$/, "");
+  return `User-agent: *\nAllow: /\n\nSitemap: ${normalizedBase}/sitemap.xml\n`;
 };
 
 /**

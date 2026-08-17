@@ -7,6 +7,7 @@ import {
   getDirectoryPath,
   getDistPagePath,
   getRelativePath,
+  toDistPath,
   deleteDistFile,
   deleteDistDir,
   createDir,
@@ -156,20 +157,54 @@ describe("getDistPagePath", () => {
     const result = getDistPagePath(pagePath);
     expect(result).toEqual(expectedDistPath);
   });
+
+  it("handles Windows backslash paths", () => {
+    expect(getDistPagePath("pages\\blog\\post.html")).toBe("dist/blog/post.html");
+    expect(getDirectoryPath("pages\\blog\\post.html")).toBe("blog");
+  });
+});
+
+describe("toDistPath", () => {
+  it("resolves relative pages paths to dist paths", () => {
+    expect(toDistPath("pages/about.html")).toBe("dist/about.html");
+    expect(toDistPath("pages/css/styles.css")).toBe("dist/css/styles.css");
+  });
+
+  it("resolves absolute pages paths to dist paths", () => {
+    expect(toDistPath("/workspace/project/pages/about.html")).toBe("dist/about.html");
+    expect(toDistPath("/workspace/project/pages/css/styles.css")).toBe("dist/css/styles.css");
+  });
+
+  it("resolves Windows backslash paths to dist paths", () => {
+    expect(toDistPath("pages\\css\\styles.css")).toBe("dist/css/styles.css");
+    expect(toDistPath("C:\\workspace\\project\\pages\\about.html")).toBe("dist/about.html");
+  });
+
+  it("preserves paths that are already inside dist", () => {
+    expect(toDistPath("dist/about.html")).toBe("dist/about.html");
+    expect(toDistPath("/workspace/project/dist/css/styles.css")).toBe("dist/css/styles.css");
+  });
 });
 
 describe("deleteDistFile", () => {
-  it("logs relative Bascik paths for page deletions", async () => {
+  it("logs relative Bascik paths for page deletions and calls rm on dist path", async () => {
     const pagePath = "/workspace/project/pages/about.html";
     await deleteDistFile(pagePath);
+    expect(rm).toHaveBeenCalledWith("dist/about.html");
     expect(console.log).toHaveBeenCalledWith("deleted file: pages/about.html");
+  });
+
+  it("deletes dist files when passed Windows backslash paths", async () => {
+    await deleteDistFile("pages\\about.html");
+    expect(rm).toHaveBeenCalledWith("dist/about.html");
   });
 });
 
 describe("deleteDistDir", () => {
-  it("logs relative Bascik paths for directory deletions", async () => {
+  it("logs relative Bascik paths for directory deletions and calls rm on dist dir", async () => {
     const dirPath = "/workspace/project/pages/assets";
     await deleteDistDir(dirPath);
+    expect(rm).toHaveBeenCalledWith("dist/assets", { recursive: true, force: true });
     expect(console.log).toHaveBeenCalledWith("deleted dir: pages/assets");
   });
 });

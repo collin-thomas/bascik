@@ -45,14 +45,14 @@ Install dependencies now? (Y/n)
 Start the dev server after install? (Y/n)
 ```
 
-Select **Y** for both and you're live at `https://localhost:8443` with no extra commands.
+Select **Y** for both and you're live at `http://localhost:8080` with no extra commands.
 
 ## CLI reference
 
 ```sh
-bascik          # dev: transpile, start HTTPS dev server, watch
+bascik          # dev: transpile, start plaintext HTTP dev server, watch
 bascik --build  # production: transpile to dist/ only
-bascik --serve  # production server: serve a pre-built dist/ with HTTP/2
+bascik --serve  # production server: serve a pre-built dist/ with HTTP
 bascik --check  # static analysis: validate pages and components without building
 bascik --build --log [path]  # optional build log; defaults to .bascik/build.log
 ```
@@ -70,38 +70,27 @@ The terminal output still stays as the primary log, and the file is an optional 
 
 ## Starting the dev server
 
-When you run `bascik`, Bascik transpiles your pages, generates local TLS certificates if needed, starts the built-in HTTP/2 server, and begins watching for changes.
+When you run `bascik`, Bascik transpiles your pages, starts the built-in HTTP server, and begins watching for changes. By default, it runs over unencrypted plaintext HTTP on port `8080` for zero-friction setup.
 
 Typical output:
 
 ```terminal
-SSL: generated trusted certs via mkcert (run `mkcert -install` once if you haven't)
-
 transpiled: pages/getting-started.html
 transpiled: pages/index.html
 transpiled: pages/about.html
 
 ✓ 3 pages transpiled in 45ms
-Server running at https://localhost:8443
+Server running at http://localhost:8080
 ```
 
-If [mkcert](https://github.com/FiloSottile/mkcert) is not installed, Bascik falls back to a self-signed certificate:
+If port `8080` is already in use, Bascik automatically tries the next available port:
 
 ```terminal
-SSL: self-signed cert generated (install mkcert for no browser warning)
-transpiled: pages/index.html
-✓ 1 page transpiled in 18ms
-Server running at https://localhost:8443
+Port 8080 is in use, trying 8081…
+Server running at http://localhost:8081
 ```
 
-If port `8443` is already in use, Bascik automatically tries the next available port:
-
-```terminal
-Port 8443 is in use, trying 8444…
-Server running at https://localhost:8444
-```
-
-Certs are generated once and reused on subsequent starts. Delete `bascik-privkey.pem` and `bascik-cert.pem` to regenerate them.
+If you explicitly configure the server to run with TLS (`enableTls: true` in `bascik.config.ts`), Bascik will serve over HTTPS (default port `8443`) and generate local TLS certificates if needed via `mkcert` or `openssl` fallback.
 
 ## Watching for file changes
 
@@ -211,7 +200,7 @@ For guidance on deploying to static hosts or running the production server, see 
 
 ## Production server
 
-`bascik --serve` starts the same HTTP/2 server used for development, but pointed at a pre-built `dist/` directory. Run `--build` first, then `--serve`:
+`bascik --serve` starts the same HTTP server used for development, but pointed at a pre-built `dist/` directory. Run `--build` first, then `--serve`:
 
 ```sh
 bascik --build && bascik --serve
@@ -231,22 +220,22 @@ Use the `serve` key in `bascik.config.ts` to customize the server for both dev a
 // bascik.config.ts
 export default {
   serve: {
-    port: 443,
+    port: 8080,
     hostname: '0.0.0.0',   // bind all interfaces (needed in containers)
-    keyFile: '/etc/ssl/site.key',
-    certFile: '/etc/ssl/site.crt',
+    enableTls: false,      // set to true to run over encrypted HTTP/2 (HTTPS)
   },
 };
 ```
 
 | Option | Default | Description |
 |---|---|---|
-| `port` | `8443` | TCP port to listen on |
+| `port` | `8080` (HTTP) / `8443` (HTTPS) | TCP port to listen on |
 | `hostname` | `"localhost"` | Hostname or IP to bind to |
-| `keyFile` | auto-generated | Path to a PEM private key. Omit to use the auto-generated cert. |
-| `certFile` | auto-generated | Path to a PEM certificate. Omit to use the auto-generated cert. |
+| `enableTls` | `false` | Enable TLS (HTTPS) and serve over HTTP/2. |
+| `keyFile` | auto-generated | Path to a PEM private key when TLS is enabled. |
+| `certFile` | auto-generated | Path to a PEM certificate when TLS is enabled. |
 
-When `keyFile` / `certFile` are omitted, Bascik generates certificates automatically using `mkcert` (if installed) or `openssl` as a fallback.
+When `enableTls` is true and `keyFile` / `certFile` are omitted, Bascik generates certificates automatically using `mkcert` (if installed) or `openssl` as a fallback.
 
 To preview the production build with a third-party HTTP server:
 

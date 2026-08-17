@@ -79,7 +79,7 @@ describe("PACKAGE_JSON", () => {
 
   it("includes @bascik/bascik as a dependency", () => {
     const pkg = JSON.parse(PACKAGE_JSON("my-app"));
-    expect(pkg.dependencies["@bascik/bascik"]).toBeDefined();
+    expect(pkg.dependencies["@bascik/bascik"]).toBe("file:../pkg");
   });
 
   it("uses the supplied name", () => {

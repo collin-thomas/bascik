@@ -12,11 +12,9 @@
     "src/",
     "README.md"
   ],
-  "bin": {
-    "create-bascik": "dist/index.js"
-  },
+  "bin": "dist/index.js",
   "engines": {
-    "node": ">=24.17.0"
+    "node": ">=22.18.0"
   },
   "publishConfig": {
     "access": "public"
@@ -28,11 +26,11 @@
     "vitest": "^4.1.10"
   },
   "scripts": {
-    "build": "node_modules/.bin/tsc -p tsconfig.build.json",
-    "prepare": "mkdir -p assets && ([ -f ../docs/src/pages/assets/SKILL.md ] && cp ../docs/src/pages/assets/SKILL.md assets/SKILL.md || true) && node_modules/.bin/tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json",
+    "prepare": "mkdir -p assets && ([ -f ../docs/src/pages/assets/SKILL.md ] && cp ../docs/src/pages/assets/SKILL.md assets/SKILL.md || true) && tsc -p tsconfig.build.json",
     "prepack": "cp ../LICENSE LICENSE && mkdir -p assets && cp ../docs/src/pages/assets/SKILL.md assets/SKILL.md",
     "test": "vitest",
     "test:ci": "vitest run",
-    "typecheck": "node_modules/.bin/tsc --noEmit"
+    "typecheck": "tsc --noEmit"
   }
 }

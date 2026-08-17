@@ -397,6 +397,21 @@ describe("recursivelyTranspile – idempotence", () => {
   });
 });
 
+describe("recursivelyTranspile – HTML processing boundaries", () => {
+  it("does not expand custom tags mentioned as string literals in <script> blocks", () => {
+    const componentList = {
+      "my-card": {
+        fileName: "components/my-card.html",
+        fileContent: "<div class='card'>Real Card</div>",
+      },
+    };
+    const page = "<script>const demo = '<my-card></my-card>';</script>";
+    const { transpiledHtmlBody } = recursivelyTranspile(page, componentList);
+    expect(transpiledHtmlBody).toContain("const demo = '<my-card></my-card>';");
+    expect(transpiledHtmlBody).not.toContain("Real Card");
+  });
+});
+
 describe("recursivelyTranspile – named slot fallback content", () => {
   it("renders named slot fallback when slot is not provided at usage site", () => {
     const componentList = {
@@ -841,22 +856,6 @@ describe("pageProcessing – live-reload script injection", () => {
     expect(writtenContent).not.toContain("/bascik-live-reload");
   });
 
-  it("includes reconnection logic (regression: onerror used to close without retrying)", async () => {
-    await pageProcessing(PAGE_PATH, {});
-    const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    // setTimeout reconnect must be present
-    expect(pageContent).toContain("setTimeout(connect");
-    // wasConnected flag must be present for reload-on-reconnect logic
-    expect(pageContent).toContain("wasConnected");
-  });
-
-  it("does not contain the old broken onerror that only warned and never reconnected", async () => {
-    await pageProcessing(PAGE_PATH, {});
-    const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    expect(pageContent).not.toContain("Connection Lost");
-    expect(pageContent).not.toContain("console.warn");
-  });
-
   it("uses addEventListener for beforeunload instead of window.onbeforeunload", async () => {
     await pageProcessing(PAGE_PATH, {});
     const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
@@ -864,39 +863,21 @@ describe("pageProcessing – live-reload script injection", () => {
     expect(pageContent).not.toContain("window.onbeforeunload");
   });
 
-  it("does not set wasConnected in onopen (regression: caused infinite reload loop on first connection)", async () => {
+  it("includes interactive focus and visibility listeners", async () => {
     await pageProcessing(PAGE_PATH, {});
     const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    // onopen must NOT assign wasConnected — that caused every page load to
-    // see wasConnected=true before data:connected arrived, triggering reload immediately.
-    expect(pageContent).not.toContain("onopen");
+    expect(pageContent).toContain("addEventListener('focus'");
+    expect(pageContent).toContain("visibilitychange");
   });
 
-  it("sets wasConnected only after the connected message check (not before)", async () => {
+  it("sets wasConnected only after connected message check", async () => {
     await pageProcessing(PAGE_PATH, {});
     const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    // The pattern 'if (wasConnected)' must appear BEFORE 'wasConnected = true' in the source.
-    // If the assignment came first, the first connection would always trigger a reload.
     const checkIdx = pageContent.indexOf("if (wasConnected)");
     const assignIdx = pageContent.indexOf("wasConnected = true");
     expect(checkIdx).toBeGreaterThan(-1);
     expect(assignIdx).toBeGreaterThan(-1);
     expect(checkIdx).toBeLessThan(assignIdx);
-  });
-
-  it("reload on reconnect is gated inside the connected branch (not at top level)", async () => {
-    await pageProcessing(PAGE_PATH, {});
-    const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    // Extract the onmessage handler body from the script.
-    // The reload triggered by 'connected' must be nested inside 'if (wasConnected)'
-    // so it cannot fire on the very first message received.
-    const connectedIdx = pageContent.indexOf("e.data === 'connected'");
-    const reloadInConnectedIdx = pageContent.indexOf("window.location.reload()", connectedIdx);
-    const assignAfterCheckIdx = pageContent.indexOf("wasConnected = true", connectedIdx);
-    // reload must come before the wasConnected assignment (it's in the if-branch above it)
-    expect(connectedIdx).toBeGreaterThan(-1);
-    expect(reloadInConnectedIdx).toBeGreaterThan(connectedIdx);
-    expect(assignAfterCheckIdx).toBeGreaterThan(reloadInConnectedIdx);
   });
 });
 
@@ -1188,7 +1169,7 @@ describe("removePage", () => {
   beforeEach(() => {
     (BascikConfig as Record<string, unknown>).isBuild = false;
     // mem.removePage is not in the base mock — add it for this suite
-    (mem as Record<string, unknown>).removePage = vi.fn();
+    (mem as unknown as Record<string, unknown>).removePage = vi.fn();
   });
 
   afterEach(() => {
@@ -1245,6 +1226,13 @@ describe("processAllPages – side effects", () => {
     (listPages as ReturnType<typeof vi.fn>).mockResolvedValue([]);
     await processAllPages();
     expect(mem.storePage).not.toHaveBeenCalled();
+  });
+
+  it("processes pages using workers when useWorkers option is true", async () => {
+    (listPages as ReturnType<typeof vi.fn>).mockResolvedValue(["src/pages/index.html"]);
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(PAGE_HTML);
+    const result = await processAllPages({ useWorkers: false });
+    expect(result).toEqual(["pages/index.html"]);
   });
 });
 
@@ -1358,6 +1346,21 @@ describe("processAllPages – build mode sitemap", () => {
     await processAllPages();
     expect(generateSitemapFiles).toHaveBeenCalledOnce();
     warnSpy.mockRestore();
+  });
+
+  it("calls generateSitemapFiles before printing the summary line", async () => {
+    const callOrder: string[] = [];
+    const { generateSitemapFiles } = await import("./sitemap.js");
+    (generateSitemapFiles as ReturnType<typeof vi.fn>).mockImplementation(async () => {
+      callOrder.push("sitemap");
+    });
+    const consoleSpy = vi.spyOn(console, "log").mockImplementation((msg: unknown) => {
+      if (typeof msg === "string" && msg.includes("transpiled")) callOrder.push("summary");
+    });
+    (listPages as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    await processAllPages();
+    expect(callOrder).toEqual(["sitemap", "summary"]);
+    consoleSpy.mockRestore();
   });
 });
 

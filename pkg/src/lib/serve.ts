@@ -93,6 +93,6 @@ const loadDistIntoMemory = async (): Promise<void> => {
  */
 export const serveProduction = async (): Promise<void> => {
   await loadDistIntoMemory();
-  const { startHttp2Server } = await import("./http2.js");
-  await startHttp2Server();
+  const { startServer } = await import("./server.js");
+  await startServer();
 };

@@ -27,6 +27,14 @@
     );
     console.log(await breadcrumbLd());
   </script>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { articleSchema } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/article-schema.ts')).href
+    );
+    console.log(await articleSchema());
+  </script>
   <meta name="description"
     content="Bascik uses Vitest for unit tests, coverage, and benchmarks. All test files live alongside the source files they exercise." />
   <title>Testing - Bascik Developer Guide</title>
@@ -92,7 +100,7 @@
                   </tr>
                 </tbody>
               </table>
-              <p style="font-size:.8rem;color:var(--text-muted);margin-top:-.5rem">Regenerate with <code>yarn workspace @bascik/bascik update-coverage</code></p>
+              <p style="font-size:.8rem;color:var(--text-muted);margin-top:-.5rem">Regenerate with <code>yarn docs:update-coverage</code></p>
             `);
           } catch {
             // coverage file not present; fall back to heading only
@@ -146,7 +154,7 @@
                   </tr>
                 </tbody>
               </table>
-              <p style="font-size:.8rem;color:var(--text-muted);margin-top:-.5rem">Regenerate with <code>yarn workspace @bascik/bascik update-e2e-coverage</code></p>
+              <p style="font-size:.8rem;color:var(--text-muted);margin-top:-.5rem">Regenerate with <code>yarn docs:update-e2e-coverage</code></p>
             `);
           } catch {
             // e2e coverage file not present; skip

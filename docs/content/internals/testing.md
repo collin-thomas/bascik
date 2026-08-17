@@ -4,44 +4,44 @@ Bascik has two separate test suites: **unit tests** (Vitest) that verify individ
 
 ## Running Unit Tests
 
-All commands are run from the `pkg/` directory:
+All commands can be run from the repository root:
 
 ```sh
 # Interactive watch mode (re-runs on file changes)
-yarn test
+yarn pkg:test
 
 # Single run (used in CI)
-yarn test:ci
+yarn pkg:test:ci
 
 # Single run with full coverage report
-yarn test:coverage
+yarn pkg:test:coverage
 
 # Run benchmarks
-yarn bench
+yarn pkg:bench
 ```
 
 ## Running E2E Tests
 
-End-to-end tests are also run from `pkg/`:
+End-to-end tests are run via:
 
 ```sh
-yarn e2e
+yarn pkg:e2e
 ```
 
 This builds the fixture site (using the current `dist/`) and then runs Playwright against it. The first run requires the package to be built first:
 
 ```sh
-yarn build && yarn e2e
+yarn pkg:build && yarn pkg:e2e
 ```
 
 To run a specific test file or use the Playwright UI:
 
 ```sh
 # Run only CSS scoping tests
-node_modules/.bin/playwright test --config e2e/playwright.config.ts e2e/tests/css-scoping.test.ts
+npx playwright test --config e2e/playwright.config.ts e2e/tests/css-scoping.test.ts
 
 # Open the Playwright UI for interactive debugging
-node_modules/.bin/playwright test --config e2e/playwright.config.ts --ui
+npx playwright test --config e2e/playwright.config.ts --ui
 ```
 
 ## How the E2E Suite Works
@@ -213,6 +213,12 @@ Run type checking without emitting output:
 
 ```sh
 yarn typecheck
+```
+
+The `docs/` package also has a `tsconfig.json` covering `docs/scripts/`. It uses the TypeScript from `pkg/` (docs has no own typescript package):
+
+```sh
+npx --prefix pkg tsc -p docs/tsconfig.json --noEmit
 ```
 
 ## Contributing a Fix

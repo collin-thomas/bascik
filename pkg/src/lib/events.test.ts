@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import EventEmitter from "node:events";
-import { eventEmitter } from "./events.js";
+import { eventEmitter, registerShutdownHandler, runShutdownHandlers } from "./events.js";
 
 describe("eventEmitter", () => {
   it("is an EventEmitter instance", () => {
@@ -43,5 +43,15 @@ describe("eventEmitter", () => {
       relativePagePath: "pages/index.html",
     });
     eventEmitter.removeListener("transpiled", handler);
+  });
+
+  it("registers and executes shutdown handlers", async () => {
+    const fn1 = vi.fn();
+    const fn2 = vi.fn(async () => { });
+    registerShutdownHandler(fn1);
+    registerShutdownHandler(fn2);
+    await runShutdownHandlers();
+    expect(fn1).toHaveBeenCalledTimes(1);
+    expect(fn2).toHaveBeenCalledTimes(1);
   });
 });

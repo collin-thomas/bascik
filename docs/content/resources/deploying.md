@@ -64,12 +64,12 @@ If your site uses `data-bascik-server` scripts for per-request dynamic content, 
 
 ```sh
 bascik --build   # compile to dist/
-bascik --serve   # start the HTTP/2 server; runs server scripts per request
+bascik --serve   # start the HTTP server; runs server scripts per request
 ```
 
 See [Production Server](/server) for full documentation on server scripts and the request context API.
 
-> **TLS is always on.** Bascik's server has no plaintext HTTP mode. Some cloud platforms terminate TLS at the edge and forward cleartext to the container, which is incompatible. Use a platform that either passes TLS through to the container, or run a reverse proxy in front of Bascik that forwards HTTPS.
+> **Plaintext HTTP by default.** Bascik's server runs as a plaintext HTTP/1.1 server by default on port `8080`. Most cloud platforms (Heroku, Fly.io, AWS ECS, Render, etc.) terminate TLS at the edge and forward cleartext HTTP to your container. If your platform passes TLS through to the container or you want HTTP/2, set `enableTls: true` under `serve` in your `bascik.config.ts`.
 
 ### Server configuration
 
@@ -78,10 +78,9 @@ Configure the port and TLS in `bascik.config.ts` before building:
 ```ts
 export default {
   serve: {
-    port: 443,
+    port: 8080,
     hostname: '0.0.0.0',    // bind all interfaces; required in containers
-    keyFile: '/etc/ssl/site.key',
-    certFile: '/etc/ssl/site.crt',
+    enableTls: false,       // set to true for TLS-enabled HTTP/2
   },
 };
 ```
@@ -108,11 +107,11 @@ COPY package*.json ./
 RUN npm ci
 COPY --from=build /app/dist ./dist
 COPY bascik.config.ts .
-EXPOSE 8443
+EXPOSE 8080
 CMD ["npx", "bascik", "--serve"]
 ```
 
-To supply a real certificate, mount it at runtime:
+If `enableTls: true` is set, you can supply a real certificate by mounting it at runtime:
 
 ```sh
 docker run -p 8443:8443 \

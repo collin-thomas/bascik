@@ -184,6 +184,41 @@ describe("executeServerScripts", () => {
     expect(result).toBe("<span>&copy; 2026 Built with Bascik</span>");
   });
 
+  it("handles multiple identical server script blocks accurately without replacement collision", async () => {
+    resolveWith("hello\n");
+    const html =
+      "<div><script data-bascik-server>console.log('hello')</script></div>" +
+      "<div><script data-bascik-server>console.log('hello')</script></div>";
+    const result = await executeServerScripts(html, baseRequest);
+    expect(result).toBe("<div>hello\n</div><div>hello\n</div>");
+  });
+
+  it("writes stderr to process.stderr when script emits stderr", async () => {
+    const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+    mockExecFile.mockImplementationOnce(
+      (
+        _cmd: unknown,
+        _args: unknown,
+        _opts: unknown,
+        cb: (err: null, stdout: string, stderr: string) => void,
+      ) => {
+        cb(null, "out", "warning in script\n");
+      },
+    );
+    const html = "<script data-bascik-server>console.warn('warning')</script>";
+    const result = await executeServerScripts(html, baseRequest);
+    expect(result).toBe("out");
+    expect(stderrSpy).toHaveBeenCalledWith("warning in script\n");
+    stderrSpy.mockRestore();
+  });
+
+  it("preserves literal dollar patterns in output ($1, $&, $') without regex expansion", async () => {
+    resolveWith("Price: $100 for $& items ($1)\n");
+    const html = "<p><script data-bascik-server>console.log('Price')</script></p>";
+    const result = await executeServerScripts(html, baseRequest);
+    expect(result).toBe("<p>Price: $100 for $& items ($1)\n</p>");
+  });
+
   it("processes multiple server scripts in parallel", async () => {
     mockExecFile
       .mockImplementationOnce(
@@ -220,6 +255,21 @@ describe("executeServerScripts", () => {
     const html = "<ul><script data-bascik-server>makeList()</script></ul>";
     const result = await executeServerScripts(html, baseRequest);
     expect(result).toBe("<ul><li>Alice</li><li>Bob</li></ul>");
+  });
+
+  it("handles concurrent calls without state corruption across global regex", async () => {
+    const html1 = "<div><script data-bascik-server>console.log('1')</script></div>";
+    const html2 = "<p>no scripts</p>";
+    resolveWith("<p>server 1</p>");
+    const promises = [
+      executeServerScripts(html1, baseRequest),
+      Promise.resolve().then(() => htmlHasServerScripts(html2)),
+      executeServerScripts(html1, baseRequest),
+    ];
+    const results = await Promise.all(promises);
+    expect(results[0]).toBe("<div><p>server 1</p></div>");
+    expect(results[1]).toBe(false);
+    expect(results[2]).toBe("<div><p>server 1</p></div>");
   });
 
   it("propagates stderr from the script to process.stderr", async () => {

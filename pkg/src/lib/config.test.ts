@@ -27,7 +27,7 @@ describe("defaultConfig", () => {
     // initBascikConfig shallow-copies defaultConfig so directory is mutated to absolute paths
     expect(defaultConfig.directory.pages).toMatch(/src[/\\]pages$/);
     expect(defaultConfig.directory.components).toMatch(/src[/\\]components$/);
-    expect(defaultConfig.directory.watch).toEqual([]);
+    expect(defaultConfig.watch).toEqual([]);
   });
 
   it("has minifyStyles: false (dev default — production default comes from buildDefaultConfig)", () => {
@@ -86,7 +86,7 @@ describe("BascikConfig", () => {
     expect(Object.isFrozen(BascikConfig.scopeAttribute)).toBe(true);
     expect(Object.isFrozen(BascikConfig.generate)).toBe(true);
     expect(Object.isFrozen(BascikConfig.serve)).toBe(true);
-    expect(Object.isFrozen(BascikConfig.directory.watch)).toBe(true);
+    expect(Object.isFrozen(BascikConfig.watch)).toBe(true);
     expect(Object.isFrozen(BascikConfig.skipTranspilingElementContents)).toBe(
       true,
     );
@@ -116,7 +116,7 @@ describe("BascikConfig", () => {
     expect(BascikConfig.directory.components).toMatch(
       /[/\\]src[/\\]components$/,
     );
-    expect(BascikConfig.directory.watch).toEqual([]);
+    expect(BascikConfig.watch).toEqual([]);
   });
 });
 
@@ -271,7 +271,7 @@ describe("buildOverrideConfig.serve merge", () => {
   });
 
   it("falls back to the default serve config when nothing overrides it", () => {
-    expect(BascikConfig.serve?.port).toBe(8443);
+    expect(BascikConfig.serve?.port).toBeUndefined();
     expect(BascikConfig.serve?.hostname).toBe("localhost");
     expect(BascikConfig.serve?.logging?.level).toBe("info");
     expect(BascikConfig.serve?.logging?.requests).toBe(true);

@@ -108,9 +108,9 @@ bascik/
   extensions/   ← editor tooling, including the VS Code extension for component navigation and scoping checks
 ```
 
-The `create/` folder is intentionally separate from `pkg/`. Contributor work in this monorepo uses Yarn with the single root `yarn.lock`, while generated projects intentionally use npm and receive their own `package-lock.json`. That split keeps contributor workflows Yarn-only while preserving the standard npm onboarding flow for generated apps.
+The `create/` folder is intentionally separate from `pkg/`. Contributor work in this monorepo uses Yarn 4 with `yarn.lock`, while generated projects intentionally use npm and receive their own `package-lock.json`. That split keeps contributor workflows Yarn-based while preserving the standard npm onboarding flow for generated apps.
 
-The editor package in `extensions/vscode-bascik/` is intentionally separate from `pkg/`. It provides command-click component resolution and warnings for patterns that are unsupported or risky under Bascik's scoping model. The rules are generated from the compatibility matrix in `docs/content/compatibility.md` via `docs/scripts/generate-compatibility-rules.mjs`, so the editor and the published capability table stay in sync automatically instead of drifting apart.
+The editor package in `extensions/vscode-bascik/` is intentionally separate from `pkg/`. It provides command-click component resolution and warnings for patterns that are unsupported or risky under Bascik's scoping model. The rules are generated from the compatibility matrix in `docs/content/compatibility.md` via `docs/scripts/generate-compatibility-rules.ts`, so the editor and the published capability table stay in sync automatically instead of drifting apart.
 
 The generator in `create/src/index.ts` validates input, then calls `create/src/scaffold.ts` to write the project files. The generated app is not coupled to the monorepo layout. It just uses the published `@bascik/bascik` package and then runs as a normal Bascik site.
 
@@ -306,10 +306,13 @@ Define your design tokens once in a global stylesheet, then consume them inside 
 * `@counter-style`: `@counter-style name { }` declaration names are scoped; references in `list-style`, `list-style-type`, `counter(counter, name)`, and `counters(counter, sep, name)` in the same CSS file are updated to match
 * `view-transition-name`: ✓ values are scoped per component (`bascik__<comp>__vtn__<name>`); matching `::view-transition-old/new/group/image-pair()` pseudo-element references in the same file are updated; `none` and `auto` are not scoped
 * `anchor-name` / `@position-try`: `anchor-name: --name` declarations are scoped per component; matching `position-anchor: --name` references and `@position-try --name { }` at-rules in the same CSS file are updated to match; only anchors declared in the component's own CSS are scoped
+* `@scope` (native): class names in `@scope (.foo)` argument and optional `to (.clause)` are scoped normally, and class names inside the `@scope` block are scoped
 * `:nth-child(An+B of .selector)`: class names in the `of <selector>` argument are scoped (same global `(?<=\.)` pass as `:is()`, `:where()`, `:has()`); works for `:nth-child` and `:nth-last-child`
 * `@font-face`: passed through untouched; declare in a shared stylesheet to avoid duplicate injections
 * `@import`: not followed; include CSS directly in the component file instead
-* Standalone attribute selectors (e.g. `[data-state]`) are not scoped and can leak globally; anchor with a scoped class: `.card[data-state]`
+* Standalone attribute selectors (e.g. `[data-state]`): not scoped and can leak globally; anchor with a scoped class: `.card[data-state]`
+* `[id]` selectors: `[id]` and `[id="..."]` attribute selectors in CSS are stripped at compile time because they cannot be scoped without DOM wrapping
+* Compound element selectors: `.class element {}` and `.class > element {}` are scoped (element converted to class and injected on matching HTML elements); patterns with two bare elements (`div p {}`) still require a class anchor on the left
 * Element names inside `:is()`, `:where()`, and `:has()` are not converted; use class selectors inside those pseudo-classes instead
 
 ---
@@ -357,6 +360,7 @@ DOM selectors in component scripts are rewritten to match scoped names:
 * `element.className = "cls"` or `"cls1 cls2"` or `+= " cls"`: setter forms; space-separated multi-class strings fully rewritten
 * `innerHTML` / `insertAdjacentHTML` string literals, known class names inside the HTML string are rewritten
 * `removeAttribute`, `hasAttribute`, `toggleAttribute`: take attribute names (not values), no rewriting needed
+* **JS-only class discovery:** class names referenced in `classList.*`, `.className` in selector strings, `el.className = "..."`, and `setAttribute("class", "...")` are automatically discovered and added to the class scope map before JS rewriting.
 
 ### Not Rewritten (known limitations)
 * `el.id = "value"`: property setter not rewritten; use `getElementById` then work from the reference
@@ -364,9 +368,14 @@ DOM selectors in component scripts are rewritten to match scoped names:
 * Template literals: `` el.className = `box ${state}` ``, not rewritten; use `classList.add/remove` instead
 * Template-literal replacement arguments in `classList.replace(oldName, \`${dynamic}\`)` are not rewritten safely; prefer `classList.add/remove/toggle` with static class names
 * `querySelector("[name='username']")`: attribute-selector form for `name`; use `getElementsByName` instead
+* `innerHTML` / `insertAdjacentHTML` string literals: scanning only recognizes class names that appear in the HTML template.
 
 ### Scoping Model
 `id` and `name` attributes are scoped **per-instance:** each use of a component generates a different `instanceId`, guaranteeing unique DOM IDs even when the same component appears multiple times on a page. `class` attributes are scoped to the component name only (no instanceId), so all instances share the same class names and CSS deduplication emits a single `<style>` block.
+
+Form inputs using `<input name="username">` receive per-instance scoped names (e.g. `bascik__comp__a1b2c3__username`), so `new FormData(form)` keys reflect the scoped name.
+
+Literal component tags inside `<script>`, `<style>`, `<textarea>`, or HTML comments (`<!-- <my-card> -->`) are treated as text and never resolved into components.
 
 ```
 class  →  bascik__<componentName>__<originalName>
@@ -406,7 +415,7 @@ export default {
 
 ### TypeScript in Component Scripts
 
-Bascik ships plain JavaScript to the browser, so TypeScript in component `<script>` blocks must be stripped before output is served. Wire Node 24's built-in `stripTypeScriptTypes` into the `minifyScripts` hook:
+Bascik ships plain JavaScript to the browser, so TypeScript in component `<script>` blocks must be stripped before output is served. Wire Node 22.18+'s built-in `stripTypeScriptTypes` into the `minifyScripts` hook:
 
 ```ts
 // bascik.config.ts
@@ -422,31 +431,30 @@ Component scripts can then use TypeScript annotations freely. Bascik's scoping p
 
 ---
 
-## 5. Dynamic Runtime Class Scoping
+## 5. Dynamic Runtime Class Scoping & JS-Only Class Discovery
 
-For class names that are only toggled at runtime (e.g. via `classList.toggle`) and never appear in a `class="…"` HTML attribute, you must register the class somewhere in the component template HTML — even on a `hidden` element. If a class only appears inside a `<script>` block, Bascik scopes it on the CSS side but does not rewrite it on the JS side, producing a silent mismatch at runtime.
+Class names referenced in JavaScript (`classList.add/remove/toggle/replace`, `.className` in selector strings, `el.className = "..."`, and `setAttribute("class", "...")`) are automatically discovered by Bascik's JS scanner and added to the component's class scope map before the JS rewrite runs.
 
-**Required pattern — hidden registration element:**
+This means dynamic modifier classes (such as `is-open` or `btn--active`) that only appear inside a `<script>` block and never in a `class="..."` HTML attribute are scoped automatically in both CSS and JS without needing any template annotations.
 
 ```html
-<section class="card">
-  <div class="is-open" hidden></div>  <!-- registers is-open for both CSS and JS scoping -->
+<section class="card" id="card">
   <p id="status">Panel closed</p>
   <button id="toggle" type="button">Toggle</button>
 </section>
 <script>
   const toggle = document.getElementById('toggle');
   const status = document.getElementById('status');
-  const card = document.querySelector('.card');
+  const card = document.getElementById('card');
 
   toggle.addEventListener('click', () => {
-    const isOpen = card.classList.toggle('is-open'); // rewritten correctly
+    const isOpen = card.classList.toggle('is-open'); // is-open is automatically discovered and scoped in CSS and JS
     status.textContent = isOpen ? 'Panel open' : 'Panel closed';
   });
 </script>
 ```
 
-The hidden `<div class="is-open">` registers `is-open` in the HTML template so both the CSS and JS scoping passes see it. Without it, `classList.toggle('is-open')` would use the un-scoped name and never match the CSS — a silent runtime mismatch.
+The only exception is `innerHTML` / `insertAdjacentHTML` HTML string scanning, which only recognizes class names that appear as static `class="..."` attributes in the component HTML template.
 
 ---
 
@@ -581,8 +589,9 @@ Components work inside `<head>` to organize metadata:
 * CWD is the project root. Relative paths resolve from there.
 * Use `console.log()` or `process.stdout.write()` to output HTML.
 * Build scripts run before component resolution, so their output can contain component tags.
+* All build scripts on a page execute concurrently via `Promise.all` (capped by a memory semaphore), and output is assembled in document order once all scripts complete.
 * On error, the script tag is replaced with an empty string and a warning is logged.
-* **Hard error:** combining `data-bascik-build` and `data-bascik-server` on the same tag throws and aborts the build. A script runs at build time or at request time — not both.
+* **Hard error:** combining `data-bascik-build` and `data-bascik-server` on the same tag throws and aborts the build. A script runs at build time or at request time, not both.
 
 ### Build Script Environment Variables
 
@@ -591,6 +600,7 @@ Build scripts receive these `process.env` variables:
 | Variable | Description |
 |---|---|
 | `BASCIK_PAGE_FILE` | Absolute path of the current page file (e.g. `/project/src/pages/about.html`). Use this to generate page-specific output like canonical URLs. |
+| `BASCIK_PAGES_DIR` | Absolute path to the configured pages directory. |
 | `BASCIK_BUILD` | `"1"` during `bascik --build`, `"0"` during dev. Use to produce different output per mode. |
 | `BASCIK_SITE_URL` | The `siteUrl` from `bascik.config.ts`, e.g. `"https://example.com"`. |
 
@@ -659,6 +669,75 @@ Use wrapper descendant selectors for generated slot content:
 
 Do not rely on a bare `h2 {}` component rule for Markdown passed through a slot. Bare element rules are transformed before slot content is inserted; a scoped wrapper selector continues to match the generated descendants.
 
+### Page-Aware Scripts
+
+Some pages need content that is specific to the current page, such as a canonical URL in the head, an Open Graph image, a structured-data block, or even a page-specific sidebar. Hardcoding those values in every page file works. However, a shared script is easier to maintain. You can change the logic once and every page picks it up automatically.
+
+Bascik makes this possible by injecting three environment variables into every `data-bascik-build` subprocess: `BASCIK_PAGE_FILE`, `BASCIK_PAGES_DIR`, and `BASCIK_SITE_URL` (described in the Environment Variables table above).
+
+#### Canonical URL Example
+
+A canonical URL tag tells search engines which URL is the authoritative version of a page. Every docs page on this site uses a shared `scripts/canonical.ts` that derives the URL from `BASCIK_PAGE_FILE`:
+
+```ts
+// scripts/canonical.ts
+export async function canonical(): Promise<string> {
+  const siteUrl = (process.env.BASCIK_SITE_URL ?? '').replace(/\/$/, '');
+  const pageFile = process.env.BASCIK_PAGE_FILE ?? '';
+  const pagesDir = process.env.BASCIK_PAGES_DIR ?? '';
+
+  if (!siteUrl || !pageFile || !pagesDir) return '';
+
+  const relPath = pageFile.slice(pagesDir.length).replace(/^[\\/]/, '').replace(/\\/g, '/');
+  const withoutExt = relPath.replace(/\.html$/, '');
+  const route = withoutExt === 'index' ? '' : withoutExt.replace(/\/index$/, '/');
+  const urlPath = route ? `/${route}` : '/';
+
+  return `<link rel="canonical" href="${siteUrl}${urlPath}" />`;
+}
+```
+
+Use it from any page's `<head>`:
+
+```html
+<head>
+  <script data-bascik-build>
+    import { join } from 'node:path';
+    import { pathToFileURL } from 'node:url';
+    const { canonical } = await import(
+      pathToFileURL(join(process.cwd(), 'scripts/canonical.ts')).href
+    );
+    console.log(await canonical());
+  </script>
+</head>
+```
+
+#### Reading the Page's Own HTML
+
+For richer outputs, including Open Graph tags or JSON-LD structured data, a script can also read the page file itself to extract metadata. `BASCIK_PAGE_FILE` is an absolute path, so `readFile` works directly:
+
+```ts
+// scripts/article-schema.ts (simplified)
+import { readFile } from 'node:fs/promises';
+
+export async function articleSchema(): Promise<string> {
+  const pageFile = process.env.BASCIK_PAGE_FILE ?? '';
+  const siteUrl = (process.env.BASCIK_SITE_URL ?? '').replace(/\/$/, '');
+  if (!pageFile || !siteUrl) return '';
+
+  const html = await readFile(pageFile, 'utf8');
+  const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/);
+  const descMatch = html.match(/<meta\s+name="description"\s+content="([^"]+)"/);
+  if (!titleMatch || !descMatch) return '';
+
+  const headline = titleMatch[1].trim();
+  const description = descMatch[1].trim();
+  // ... compute url, build schema object, return JSON-LD script tag
+}
+```
+
+The script runs on the source HTML before any other build scripts have fired, so `<title>` and `<meta name="description">` are always present as written.
+
 ### data-bascik-dev
 
 Tag a browser script with `data-bascik-dev` to mark it as dev-only. In development the attribute is stripped and the script runs normally in the browser. In production builds (`bascik --build`) the entire script tag is removed.
@@ -717,8 +796,12 @@ export default defineConfig({
   directory: {
     pages: "src/pages", // default
     components: "src/components", // default
-    watch: [], // re-transpile all pages when these paths change (dev only)
   },
+  watch: [], // re-transpile all pages when these paths change (dev only)
+  exec: [
+    // { script: 'scripts/generate-search-index.ts', watch: ['content/'] }, // runs sequentially in array order before page transpilation during --build; in dev, runs on startup and watched file changes
+    // { script: 'scripts/generate-llms-txt.ts' },                          // build-only: skipped in dev
+  ],
   scopeScriptBlocks: true,
   inheritAttributes: true,
   scopeAttribute: {
@@ -750,7 +833,8 @@ export default defineConfig({
     },
   },
   serve: {
-    port: 8443,           // default
+    enableTls: false,     // default; set true for HTTP/2 HTTPS
+    port: 8080,           // default (8080 HTTP, 8443 HTTPS)
     hostname: 'localhost', // use '0.0.0.0' to bind all interfaces (containers/proxies)
     keyFile: '/etc/ssl/site.key',  // optional: provide your own TLS cert
     certFile: '/etc/ssl/site.crt', // optional: provide your own TLS cert
@@ -803,9 +887,9 @@ The zero-friction way to start a new Bascik project:
 npm create bascik@latest my-site -y
 ```
 
-This scaffolds the project, installs dependencies, and starts the dev server in one shot. You're live at **https://localhost:8443**. Pass a different name to use it as both the directory name and the site title. Omit the name to be prompted for one (defaulting to `bascik-app`). Drop `-y` to step through the install and dev server prompts manually.
+This scaffolds the project, installs dependencies, and starts the dev server in one shot. You're live at **http://localhost:8080**. Pass a different name to use it as both the directory name and the site title. Omit the name to be prompted for one (defaulting to `bascik-app`). Drop `-y` to step through the install and dev server prompts manually.
 
-The scaffold creates a complete starter site: pages, components, global CSS, `bascik.config.ts`, and a `.gitignore`. When the dev server stops, the CLI prints a reminder:
+The scaffold creates a complete starter site: pages, components, global CSS, `bascik.config.ts`, `.gitignore`, and AI assistant skills at `.github/skills/bascik/SKILL.md` and `.claude/skills/bascik/SKILL.md`. When the dev server stops, the CLI prints a reminder:
 
 ```
 To start again:  cd my-site && npm run dev
@@ -832,10 +916,10 @@ Then run `bascik init` to scaffold the starter files and folder structure, or ad
 ### CLI Commands
 
 ```sh
-bascik                        # dev: transpile, start HTTP/2 server at https://localhost:8443, watch
+bascik                        # dev: transpile, start plaintext HTTP server at http://localhost:8080, watch
 bascik --build                # production: transpile to dist/ only
 bascik --build --log [path]   # write build output to a log file (default: .bascik/build.log)
-bascik --serve                # production server: serve a pre-built dist/ with HTTP/2
+bascik --serve                # production server: serve a pre-built dist/ with HTTP
 bascik --check                # static analysis: validate pages and components without building
 ```
 
@@ -846,14 +930,15 @@ bascik --check                # static analysis: validate pages and components w
 export default {
   cacheHttp: true,       // default in --serve; false in dev
   serve: {
-    port: 8443,            // default
+    port: 8080,            // default (8080 HTTP, 8443 HTTPS)
     hostname: 'localhost', // set '0.0.0.0' to bind all interfaces
+    enableTls: false,      // default; set true for HTTP/2 HTTPS
     keyFile: 'bascik-privkey.pem',
     certFile: 'bascik-cert.pem',
   },
 };
 ```
-TLS certs are generated automatically (mkcert if available, openssl fallback) when `keyFile`/`certFile` are absent. Provide your own certs from a public CA for production.
+When `enableTls: true` is set, TLS certs are generated automatically (mkcert if available, openssl fallback) when `keyFile`/`certFile` are absent. Provide your own certs from a public CA for production.
 
 **`cacheHttp`:** defaults to `true` in `--serve` and `false` in the dev server. When `true`: pages receive `ETag` headers and the server returns `304 Not Modified` for unchanged content; static assets get `Cache-Control: public, max-age=3600`. Set `false` if a CDN manages caching externally.
 
@@ -861,16 +946,14 @@ TLS certs are generated automatically (mkcert if available, openssl fallback) wh
 * **Security headers:** every response includes `x-content-type-options: nosniff`, `x-frame-options: SAMEORIGIN`, `referrer-policy: strict-origin-when-cross-origin`, `permissions-policy: interest-cohort=()`.
 * **URL routing (dev and production):** pages are served at their filename without the `.html` extension. `dist/about.html` is at `/about`, `dist/blog/post.html` is at `/blog/post`, `dist/index.html` is at `/`. Unmatched paths fall through to `/404` if a `dist/404.html` exists.
 * **Rate limiting:** 500 requests per 10 seconds per IP. Clients over the limit get `429 Too Many Requests` with `Retry-After`. Not active in the dev server. When behind a reverse proxy the limit applies to the proxy's IP; use the proxy's own rate limiting for per-client control.
-* **Graceful shutdown:** SIGTERM and SIGINT stop accepting connections, destroy all open HTTP/2 sessions (including the live-reload SSE connection), and drain in-flight requests before exiting. Force-exits after 10 seconds if anything hasn't drained.
+* **Graceful shutdown:** SIGTERM and SIGINT stop accepting connections, destroy all open sessions and live-reload SSE connections, and drain in-flight requests before exiting. Force-exits after 10 seconds if anything hasn't drained.
 * **Path traversal protection:** static asset URLs are validated against `dist/`; requests that escape with `/../` sequences get `400 Bad Request`.
 
-**Deployment:** Bascik's server always uses TLS; there is no cleartext HTTP mode. Platforms that terminate TLS at the edge and send cleartext to the container (Cloud Run default, most PaaS) need end-to-end TLS enabled so HTTPS reaches the container. Key patterns:
+**Deployment:** Bascik's server runs over unencrypted HTTP/1.1 by default. Edge platforms (Heroku, Fly.io, AWS ECS, Render) that terminate TLS at the load balancer can forward cleartext HTTP directly to the container. Key patterns:
 
-* **VPS / dedicated**: bind `hostname: '0.0.0.0'`, supply Let's Encrypt certs via `keyFile`/`certFile`, run as a `systemd` service.
-* **Docker**: multi-stage build (build stage: `npx bascik --build`; serve stage: `npx bascik --serve`). Mount real certs at runtime via volume.
-* **Google Cloud Run**: deploy the Docker image with `--port 8443`, then enable **End-to-end encryption (HTTP/2)** in the service settings. Cloud Run will not verify Bascik's container cert.
-* **Fly.io**: set `internal_port = 8443` in `fly.toml`; Fly proxies HTTPS to the container without verifying the container cert.
-* **nginx / Caddy reverse proxy**: proxy to `https://localhost:8443` with TLS verification disabled for the backend leg (`proxy_ssl_verify off` in nginx; `tls_insecure_skip_verify` in Caddy transport). The proxy holds the public CA cert; Bascik holds a self-signed cert.
+* **VPS / dedicated**: bind `hostname: '0.0.0.0'`, supply Let's Encrypt certs via `keyFile`/`certFile` with `enableTls: true`, run as a `systemd` service.
+* **Docker**: multi-stage build (build stage: `npx bascik --build`; serve stage: `npx bascik --serve`).
+* **PaaS (Railway, Render, Fly.io)**: set start command to `bascik --build && bascik --serve` and bind port `8080`.
 
 When using a reverse proxy, forward `X-Real-IP` and any auth headers so `data-bascik-server` scripts receive them via `headers` in `BASCIK_REQUEST`.
 
@@ -878,7 +961,7 @@ When using a reverse proxy, forward `X-Real-IP` and any auth headers so `data-ba
 Bascik's CLI is designed to provide clean, minimal, and informative terminal output.
 
 #### 1. Starting the Dev Server
-When you start the dev server, Bascik starts TLS cert generation and the HTTP/2 server concurrently with page transpilation so the server is already bound to its port by the time the last page finishes. The `Server running at` line prints immediately after the transpilation summary with no gap between them. Pages are served from memory with no disk I/O at request time in dev mode.
+When you start the dev server, Bascik starts the HTTP server concurrently with page transpilation so the server is already bound to its port by the time the last page finishes. The `Server running at` line prints immediately after the transpilation summary with no gap between them. Pages are served from memory with no disk I/O at request time in dev mode. If port 8080 is in use, Bascik automatically tries the next available port (8081, 8082, etc.).
 
 ```terminal
 transpiled: pages/getting-started.html
@@ -886,7 +969,7 @@ transpiled: pages/index.html
 transpiled: pages/about.html
 
 ✓ 3 pages transpiled in 45ms
-Server running at https://localhost:8443
+Server running at http://localhost:8080
 ```
 
 On startup, Bascik computes the full component list and global styles **once**, then transpiles all pages. By default pages transpile sequentially on the main thread; setting `useWorkers: true` in `bascik.config.ts` distributes them across a pool of CPU-core worker threads instead. Worker startup has a fixed cost (each worker loads the transpiler's module graph independently), so `useWorkers` is opt-in and best suited to larger sites or CPU-heavy per-page work, small sites are usually faster with the sequential default. Brotli compression for each page runs in the background after storage and does not block the page from being marked ready or served; the server falls back to serving uncompressed content for any request that arrives before compression finishes. The server becomes ready as soon as memory is populated; no writes to `dist/` happen during dev mode.
@@ -1087,10 +1170,10 @@ Bascik has two test suites, both run from `pkg/`.
 ### Unit Tests (Vitest)
 
 ```sh
-yarn test          # watch mode
-yarn test:ci       # single run (CI)
-yarn test:coverage # with coverage report
-yarn bench         # benchmarks
+yarn pkg:test          # watch mode
+yarn pkg:test:ci       # single run (CI)
+yarn pkg:test:coverage # with coverage report
+yarn pkg:bench         # benchmarks
 ```
 
 Each `pkg/src/lib/*.ts` module has a paired `*.test.ts`. Because modules depend on `BascikConfig` (a singleton), unit tests use `vi.mock('../config.ts', ...)` to stub configuration, then import the module under test **after** the mock call.
@@ -1098,7 +1181,7 @@ Each `pkg/src/lib/*.ts` module has a paired `*.test.ts`. Because modules depend 
 ### End-to-End Tests (Playwright)
 
 ```sh
-yarn build && yarn e2e   # build package first, then run all e2e tests
+yarn pkg:build && yarn pkg:e2e   # build package first, then run all e2e tests
 ```
 
 The e2e suite lives in `pkg/e2e/`. Playwright's `webServer` hook:
@@ -1157,8 +1240,8 @@ export default defineConfig({
 Two GitHub Actions workflows handle all automation.
 
 **CI** (`.github/workflows/ci.yml`) — runs on every push to `main` and every PR, two parallel jobs on Node 24:
-- `test`: runs `yarn test:ci` (unit tests with coverage)
-- `e2e`: builds the package (`yarn build`), installs Chromium via `playwright install --with-deps chromium`, then runs `yarn e2e` (Playwright tests)
+- `test`: runs `yarn pkg:test:ci` (unit tests with coverage)
+- `e2e`: builds the package (`yarn pkg:build`), installs Chromium via `playwright install --with-deps chromium`, then runs `yarn pkg:e2e` (Playwright tests)
 - Both jobs have `permissions: contents: read`
 
 **Release** (`.github/workflows/release.yml`) — triggers on version tags:
@@ -1196,6 +1279,27 @@ The `extensions/vscode-bascik/` package provides editor tooling:
 * **Rules generated from the compatibility matrix:** `docs/scripts/generate-compatibility-rules.mjs` reads `docs/content/compatibility.md` and writes the warning rules, so editor diagnostics stay in sync with the documented capability table automatically.
 
 To install locally: open `extensions/vscode-bascik/` in VS Code and press F5.
+
+---
+
+## 16. Lighthouse 100s & Performance
+
+Bascik gives you an enormous head start on Lighthouse scores. Because it outputs plain HTML with zero framework runtime, you begin every page with near-perfect scores. Reaching 100 across all four Lighthouse categories is a matter of applying a small, well-known set of HTML patterns.
+
+### What Bascik Does
+* **Zero runtime:** The most impactful thing Bascik does is what it does not add: no framework bundle, no hydration script, and no client-side router. The only JavaScript on any page is what you wrote.
+* **CSS deduplication:** When a component appears multiple times on a page, Bascik emits a single `<style>` block regardless of instance count.
+* **HTML minification:** HTML comments are stripped and excess whitespace is collapsed in every built page. Content inside `<pre>` blocks is left intact.
+* **Script minification:** `minifyScripts` is `true` by default, stripping comments and whitespace.
+* **Inline styles:** Set `inlineStyles` in `bascik.config.ts` to inject a stylesheet directly into `<head>`, eliminating the render-blocking HTTP request.
+
+### Performance Patterns for Developers
+* **Responsive Images (`srcset`):** Avoid sending oversized images. Use `srcset` density or width descriptors, and always include explicit `width` and `height` attributes to prevent Cumulative Layout Shift (CLS).
+* **Lazy Loading (`loading="lazy"`):** Add `loading="lazy"` to below-the-fold images and iframes. Do not lazy-load above-the-fold hero images.
+* **Preloading (`<link rel="preload">`):** Preload critical first-render assets, such as your hero image, critical web fonts, or early stylesheets.
+* **Prefetching (`<link rel="prefetch">`):** Fetch resources or future pages during idle time if a navigation is highly likely.
+* **Preconnect / DNS Prefetch:** For critical third-party domains, resolve DNS and negotiate connections early using `dns-prefetch` and `preconnect`.
+* **Async and Deferred Scripts:** Use `defer` for scripts that need the DOM ready, and `async` for fully independent scripts like analytics.
 
 ---
 

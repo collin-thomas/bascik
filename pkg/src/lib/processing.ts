@@ -67,6 +67,7 @@ import {
   deepReadDirFlat,
 } from "./file-system.js";
 import { getHttpPath } from "./paths.js";
+import { LIVE_RELOAD_SCRIPT } from "./live-reload.js";
 import {
   listComponents,
   invalidateComponentListCache,
@@ -130,35 +131,6 @@ export const getFilePosition = (
   }
   return null;
 };
-
-const liveReloadScript = `
-<script>
-  (function() {
-    var wasConnected = false;
-    var source;
-    function connect() {
-      source = new EventSource("/bascik-live-reload");
-      source.onmessage = function(e) {
-        if (e.data === 'reload') {
-          window.location.reload();
-        } else if (e.data === 'connected') {
-          if (wasConnected) {
-            // Server restarted — reload to pick up fresh build output.
-            window.location.reload();
-          }
-          wasConnected = true;
-        }
-      };
-      source.onerror = function() {
-        source.close();
-        setTimeout(connect, 1500);
-      };
-    }
-    window.addEventListener('beforeunload', function() { if (source) source.close(); });
-    connect();
-  })();
-</script>
-`;
 
 const resolveInlineStyles = async (): Promise<string[]> => {
   if (BascikConfig.inlineStyles === true) {
@@ -530,7 +502,8 @@ export const processAllPages = async (options?: { useWorkers?: boolean }) => {
   let results: (TranspilePageResult | null)[];
 
   if (useWorkers && pageList.length > 0) {
-    const workerUrl = new URL("./page-worker.js", import.meta.url);
+    const workerExt = import.meta.url.endsWith(".ts") ? ".ts" : ".js";
+    const workerUrl = new URL(`./page-worker${workerExt}`, import.meta.url);
     const poolSize = Math.min(cpus().length, pageList.length);
     const pool = new WorkerPool<string, TranspilePageResult | null>(
       fileURLToPath(workerUrl),
@@ -569,13 +542,14 @@ export const processAllPages = async (options?: { useWorkers?: boolean }) => {
 
   const count = results.filter(Boolean).length;
   const elapsed = Math.round(performance.now() - start);
-  console.log(
-    `\n✓ ${count} page${count !== 1 ? "s" : ""} transpiled in ${elapsed}ms`,
-  );
 
   if (BascikConfig.isBuild) {
     await generateSitemapFiles();
   }
+
+  console.log(
+    `\n✓ ${count} page${count !== 1 ? "s" : ""} transpiled in ${elapsed}ms`,
+  );
 
   return results.map((r) => r?.relativePagePath ?? null);
 };
@@ -697,7 +671,7 @@ export const transpilePage = async (
   }
 
   if (!BascikConfig.isBuild) {
-    transpiledHtmlBody = `${transpiledHtmlBody}${liveReloadScript}`;
+    transpiledHtmlBody = `${transpiledHtmlBody}${LIVE_RELOAD_SCRIPT}`;
   }
 
   // Minify the body AFTER component resolution so that <pre> blocks from resolved

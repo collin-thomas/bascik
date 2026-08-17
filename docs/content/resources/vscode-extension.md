@@ -19,7 +19,7 @@ From the repo root:
 
 ```sh
 yarn install
-yarn --cwd extensions/vscode-bascik compile
+yarn workspace bascik-vscode compile
 ```
 
 Then open the `extensions/vscode-bascik/` folder in VS Code and press F5. A `.vscode/launch.json` is already configured there, so VS Code will open an Extension Development Host window with the extension enabled.

@@ -399,6 +399,18 @@ describe("extractScriptDeps", () => {
     expect(deps).toContain("scripts/md-renderer.mjs");
     expect(deps).toContain("./content/intro.md");
   });
+
+  it("extracts non-content/scripts paths like json, yaml, ts, and css files in other directories", () => {
+    const script = `
+      import data from './data/items.json';
+      import config from '../shared/config.yaml';
+      import utils from 'src/utils/helpers.ts';
+    `;
+    const deps = extractScriptDeps(script);
+    expect(deps).toContain("./data/items.json");
+    expect(deps).toContain("../shared/config.yaml");
+    expect(deps).toContain("src/utils/helpers.ts");
+  });
 });
 
 // ─── script output cache ─────────────────────────────────────────────────────

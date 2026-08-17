@@ -69,8 +69,7 @@ export interface ServerRequest {
 // double-quoted value, a single-quoted value, or any non-quote, non->
 // character — this prevents a match when "data-bascik-server" appears only
 // inside an attribute value such as title="run data-bascik-server later".
-// Flag 'g' is required for matchAll; lastIndex is reset manually before each use.
-const SERVER_SCRIPT_RE =
+const createServerScriptRegex = (): RegExp =>
   /<script\b(?:[^>"']|"[^"]*"|'[^']*')*\sdata-bascik-server\b(?:[^>"']|"[^"]*"|'[^']*')*>([\s\S]*?)<\/script>/gi;
 
 // Strip ANSI terminal color sequences so server-side HTML injection never leaks
@@ -82,8 +81,7 @@ const stripAnsiEscapeCodes = (value: string): string =>
 
 /** Return `true` if `html` contains at least one `data-bascik-server` block. */
 export const htmlHasServerScripts = (html: string): boolean => {
-  SERVER_SCRIPT_RE.lastIndex = 0;
-  return SERVER_SCRIPT_RE.test(html);
+  return createServerScriptRegex().test(html);
 };
 
 /** Default execution timeout per server-script child process (ms). */
@@ -140,8 +138,7 @@ export const executeServerScripts = async (
   request: ServerRequest,
   timeoutMs: number = DEFAULT_SCRIPT_TIMEOUT_MS,
 ): Promise<string> => {
-  SERVER_SCRIPT_RE.lastIndex = 0;
-  const matches = [...html.matchAll(SERVER_SCRIPT_RE)];
+  const matches = [...html.matchAll(createServerScriptRegex())];
   if (matches.length === 0) return html;
 
   // Same temp-dir convention as build-scripts.ts: keeps script files inside
@@ -150,40 +147,55 @@ export const executeServerScripts = async (
   await mkdir(tempDir, { recursive: true });
 
   // Run at most MAX_CONCURRENT_SCRIPTS child processes at a time.
-  const results: Array<{ fullTag: string; output: string }> = [];
-  for (let i = 0; i < matches.length; i += MAX_CONCURRENT_SCRIPTS) {
-    const batch = matches.slice(i, i + MAX_CONCURRENT_SCRIPTS);
-    const batchResults = await Promise.all(
-      batch.map(async (match) => {
-        const [fullTag, scriptContent] = match;
+  interface ScriptJob {
+    fullTag: string;
+    scriptContent: string;
+    index: number;
+    length: number;
+    output?: string;
+  }
+
+  const scriptJobs: ScriptJob[] = matches.map((match) => ({
+    fullTag: match[0],
+    scriptContent: match[1],
+    index: match.index!,
+    length: match[0].length,
+  }));
+
+  for (let i = 0; i < scriptJobs.length; i += MAX_CONCURRENT_SCRIPTS) {
+    const batch = scriptJobs.slice(i, i + MAX_CONCURRENT_SCRIPTS);
+    await Promise.all(
+      batch.map(async (job) => {
         const tmpPath = join(
           tempDir,
           `server-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
         );
         try {
-          await writeFile(tmpPath, scriptContent.trim(), "utf8");
+          await writeFile(tmpPath, job.scriptContent.trim(), "utf8");
           const { stdout, stderr } = await runModule(tmpPath, request, timeoutMs);
           if (stderr) process.stderr.write(stderr);
-          return { fullTag, output: stripAnsiEscapeCodes(stdout) };
+          job.output = stripAnsiEscapeCodes(stdout);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           console.warn(
             `[bascik] server script error at "${request.path}":\n${msg}`,
           );
-          return { fullTag, output: "" };
+          job.output = "";
         } finally {
           await unlink(tmpPath).catch(() => { });
         }
       }),
     );
-    results.push(...batchResults);
   }
 
   let result = html;
-  for (const { fullTag, output } of results) {
-    // Use a function replacement so that `$` characters in `output` (e.g.
-    // `$&`, `$1` from code examples) are never interpreted as special patterns.
-    result = result.replace(fullTag, () => output);
+  // Sort from last match to first match so earlier string indices remain valid
+  const sortedJobs = scriptJobs.slice().sort((a, b) => b.index - a.index);
+  for (const job of sortedJobs) {
+    result =
+      result.slice(0, job.index) +
+      (job.output ?? "") +
+      result.slice(job.index + job.length);
   }
   return result;
 };

@@ -59,7 +59,7 @@ After scaffolding, the CLI offers to run `npm install` and `npm run dev`. Both p
 
 ## Why the generated app uses npm
 
-The scaffold runs `npm install` and `npm run dev` so users do not need Yarn to get started. The repo itself uses Yarn workspaces for contributor work, but the generated site is designed to feel like a regular app from a standard Node CLI.
+The scaffold runs `npm install` and `npm run dev` so users do not need Yarn or pnpm to get started. The repo itself uses Yarn workspaces for contributor work, but the generated site is designed to feel like a regular app from a standard Node CLI.
 
 ## Modifying the scaffold
 
@@ -85,38 +85,24 @@ Tests mock `fs/promises` and verify that every expected file is written with the
 
 ## Lockfiles and package managers
 
-Contributors use Yarn at the monorepo root with a single `yarn.lock`.
+Contributors use Yarn at the monorepo root with `yarn.lock`.
 
 Generated projects intentionally use npm, and each generated project gets its own `package-lock.json`.
 
 ## Testing create app locally
 
-### 1. Install the repo
-
-From the repo root:
+From the repo root, run:
 
 ```sh
-yarn install
+yarn create:test-site
 ```
 
-### 2. Link the local scaffold
-
-```sh
-cd create && npm install && npm link && cd ..
-```
-
-`npm link` runs the `prepare` script, which copies the latest SKILL.md from `docs/` and rebuilds `dist/` automatically. No separate build step is needed.
-
-### 3. Create a test site
-
-```sh
-npx create-bascik my-site -y
-```
+This automatically builds `create-bascik` (copying the latest `SKILL.md` from `docs/`), runs the scaffolding CLI to create `my-site/`, installs its dependencies, and starts the dev server.
 
 The `-y` flag skips both prompts. The npm install will print a 404 error for `@bascik/bascik` (not on npm yet), but the dev server starts anyway; the workspace `node_modules` symlink resolves the package. Command+Click the URL to open it in a browser.
 
 ```text
-Server running at https://localhost:8443
+Server running at http://localhost:8080
 ```
 
 ## Cleanup after local testing

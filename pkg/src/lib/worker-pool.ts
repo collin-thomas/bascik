@@ -51,15 +51,24 @@ export class WorkerPool<Task, Result> {
       this.#retire(worker);
       if (!this.#terminated) this.#spawn();
     });
+    worker.on("exit", (code) => {
+      if (code !== 0 && this.#workers.includes(worker)) {
+        const job = this.#pending.get(worker);
+        this.#pending.delete(worker);
+        job?.reject(new Error(`Worker exited with code ${code}`));
+        this.#retire(worker);
+        if (!this.#terminated) this.#spawn();
+      }
+    });
     this.#workers.push(worker);
-    this.#idleWorkers.push(worker);
+    this.#dispatch(worker);
   }
 
   /** Remove a worker from every tracking structure (best-effort terminate). */
   #retire(worker: Worker): void {
     this.#workers = this.#workers.filter((w) => w !== worker);
     this.#idleWorkers = this.#idleWorkers.filter((w) => w !== worker);
-    worker.terminate().catch(() => {});
+    worker.terminate().catch(() => { });
   }
 
   run(task: Task): Promise<Result> {

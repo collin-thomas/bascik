@@ -19,8 +19,8 @@ const SECTIONS_WITH_PAGE = new Set(['internals', 'switch']);
 
 const SECTION_LABELS: Record<string, string> = {
   internals: 'Internals',
-  switch:    'Switch',
-  recipes:   'Recipes',
+  switch: 'Switch',
+  recipes: 'Recipes',
   resources: 'Resources',
 };
 
@@ -49,7 +49,7 @@ export async function breadcrumbLd(): Promise<string> {
   const sectionLabel = SECTION_LABELS[section]
     ?? (section[0].toUpperCase() + section.slice(1));
 
-  const items = [
+  const items: Array<{ '@type': string; position: number; name: string; item?: string }> = [
     { '@type': 'ListItem', position: 1, name: 'Bascik', item: `${siteUrl}/` },
   ];
 

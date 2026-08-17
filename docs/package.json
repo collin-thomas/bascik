@@ -5,23 +5,22 @@
   "type": "module",
   "author": "Collin Thomas",
   "engines": {
-    "node": ">=24.17.0"
+    "node": ">=22.18.0"
   },
   "scripts": {
     "dev": "bascik",
-    "build": "node scripts/generate-search-index.ts && bascik --build",
+    "build": "bascik --build",
     "pkg-dev": "node --inspect --watch-path=./bascik.config.ts --watch-path=../../pkg/src ../../pkg/src/transpile.ts",
     "generate:llms": "node scripts/generate-llms-txt.ts",
     "generate:search": "node scripts/generate-search-index.ts",
-    "sync": "node scripts/generate-llms-txt.ts && cp src/pages/assets/SKILL.md ../create/assets/SKILL.md",
     "test": "vitest run"
   },
   "devDependencies": {
+    "@types/node": "^24.0.0",
     "vitest": "^4.1.10"
   },
   "dependencies": {
-    "@bascik/bascik": "*",
-    "esbuild": "^0.28.1",
+    "@bascik/bascik": "workspace:*",
     "marked": "^18.0.7"
   }
 }

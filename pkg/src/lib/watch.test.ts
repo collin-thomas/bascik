@@ -102,8 +102,8 @@ vi.mock("./config.js", () => ({
     directory: {
       pages: "/project/src/pages",
       components: "/project/src/components",
-      watch: [],
     },
+    watch: [],
     isBuild: false,
   },
 }));
@@ -117,6 +117,7 @@ vi.mock("./mime.js", () => ({
 
 vi.mock("./events.js", () => ({
   eventEmitter: { emit: mockEventEmit },
+  registerShutdownHandler: vi.fn(),
 }));
 
 // ─── Imports (after mocks) ────────────────────────────────────────────────────
@@ -163,6 +164,12 @@ describe("watchFiles – watcher setup", () => {
   it("calls chokidar.watch three times", async () => {
     await watchFiles();
     expect(mockWatch).toHaveBeenCalledTimes(3);
+  });
+
+  it("configures native persistent watching in dev mode without polling", async () => {
+    await watchFiles();
+    expect(mockWatch.mock.calls[0][1]).toMatchObject({ persistent: true });
+    expect(mockWatch.mock.calls[0][1]).not.toHaveProperty("usePolling");
   });
 
   it("watches the pages directory for asset copying", async () => {
@@ -458,10 +465,10 @@ describe("watchFiles – isBuild = true", () => {
   });
 
   it("does not create the extra watch watcher even when watch paths are set", async () => {
-    (BascikConfig as any).directory.watch = ["/extra/path"];
+    (BascikConfig as any).watch = ["/extra/path"];
     await watchFiles();
     expect(mockWatch).toHaveBeenCalledTimes(3);
-    (BascikConfig as any).directory.watch = [];
+    (BascikConfig as any).watch = [];
   });
 });
 
@@ -471,19 +478,19 @@ describe("watchFiles – isBuild = true", () => {
 
 describe("watchFiles – extra watch paths (watcher 3)", () => {
   beforeEach(async () => {
-    (BascikConfig as any).directory.watch = ["/extra/watch/path"];
+    (BascikConfig as any).watch = ["/extra/watch/path"];
     await watchFiles();
   });
 
   afterEach(() => {
-    (BascikConfig as any).directory.watch = [];
+    (BascikConfig as any).watch = [];
   });
 
   it("creates a fourth watcher when watch paths are set", () => {
     expect(mockWatch).toHaveBeenCalledTimes(4);
   });
 
-  it("watches BascikConfig.directory.watch paths", () => {
+  it("watches BascikConfig.watch paths", () => {
     expect(mockWatch.mock.calls[3][0]).toEqual(["/extra/watch/path"]);
   });
 

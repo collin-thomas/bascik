@@ -132,7 +132,7 @@ function _transformMd(
     md = md.replace(/<!--\s*demo:[\w-]+\s*-->\n```[\w-]*\n[\s\S]*?\n```/g, '').trim();
   }
 
-  let html = marked(md);
+  let html = marked.parse(md, { async: false });
   // Optionally strip the first heading (h1–h6)
   if (skipFirstHeading) {
     html = html.replace(/^<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>\n?/, '');

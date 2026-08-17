@@ -1,5 +1,12 @@
 // Central TypeScript types for the Bascik transpile pipeline
 
+export interface ExecEntry {
+  /** Path to the script (relative to project root). */
+  script: string;
+  /** File/directory globs that trigger a re-run in dev. Omit for build-only scripts. */
+  watch?: string | string[];
+}
+
 export interface BascikComponent {
   name: string;
   /** Set during file loading; not required for in-test component objects */
@@ -46,16 +53,16 @@ export interface BascikConfigOptions {
   directory: {
     pages: string;
     components: string;
-    /**
-     * Extra directories or files to watch in dev mode. Any change inside these
-     * paths triggers a full re-transpile of all pages, just like a component
-     * change would. Has no effect during `bascik --build`.
-     *
-     * @example
-     * watch: ['scripts/', 'data/']
-     */
-    watch: string[];
   };
+  /**
+   * Extra directories or files to watch in dev mode. Any change inside these
+   * paths triggers a full re-transpile of all pages, just like a component
+   * change would. Has no effect during `bascik --build`.
+   *
+   * @example
+   * watch: ['scripts/', 'data/']
+   */
+  watch: string[];
   minifyStyles: boolean;
   /**
    * Minify inline `<script>` content and `.js` static files in the output.
@@ -84,6 +91,25 @@ export interface BascikConfigOptions {
    * Defaults to ["code"].
    */
   skipTranspilingElementContents: string[];
+  /**
+   * Scripts to run as part of the build/dev lifecycle.
+   *
+   * Entries execute sequentially in array order before page transpilation.
+   *
+   * - `script`: path to the script (relative to project root), run with the
+   *   same `node` binary that started bascik.
+   * - `watch`: one or more directories/files to watch. When present, the
+   *   script is run on dev startup (non-blocking) and re-run whenever a
+   *   watched file changes (followed by a live-reload). Omit for build-only
+   *   scripts that should not run during dev.
+   *
+   * @example
+   * exec: [
+   *   { script: 'scripts/generate-search-index.ts', watch: ['content/'] },
+   *   { script: 'scripts/generate-llms-txt.ts' },
+   * ]
+   */
+  exec?: ExecEntry[];
   /**
    * Control which files are generated in `dist/` during `bascik --build`.
    */
@@ -221,6 +247,8 @@ export interface BascikConfigOptions {
     keyFile?: string;
     /** Path to a TLS certificate file (PEM). Auto-generated when omitted. */
     certFile?: string;
+    /** Enable TLS (HTTPS) and serve over HTTP/2. Defaults to `false` (plain HTTP/1.1 is default). */
+    enableTls?: boolean;
     /**
      * Maximum execution time (ms) for each `data-bascik-server` child process.
      * Scripts that exceed this deadline are killed and their output is dropped.
