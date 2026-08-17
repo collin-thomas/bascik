@@ -824,7 +824,8 @@ export default defineConfig({
     },
   },
   serve: {
-    port: 8443,           // default
+    enableTls: false,     // default; set true for HTTP/2 HTTPS
+    port: 8080,           // default (8080 HTTP, 8443 HTTPS)
     hostname: 'localhost', // use '0.0.0.0' to bind all interfaces (containers/proxies)
     keyFile: '/etc/ssl/site.key',  // optional: provide your own TLS cert
     certFile: '/etc/ssl/site.crt', // optional: provide your own TLS cert
@@ -877,7 +878,7 @@ The zero-friction way to start a new Bascik project:
 npm create bascik@latest my-site -y
 ```
 
-This scaffolds the project, installs dependencies, and starts the dev server in one shot. You're live at **https://localhost:8443**. Pass a different name to use it as both the directory name and the site title. Omit the name to be prompted for one (defaulting to `bascik-app`). Drop `-y` to step through the install and dev server prompts manually.
+This scaffolds the project, installs dependencies, and starts the dev server in one shot. You're live at **http://localhost:8080**. Pass a different name to use it as both the directory name and the site title. Omit the name to be prompted for one (defaulting to `bascik-app`). Drop `-y` to step through the install and dev server prompts manually.
 
 The scaffold creates a complete starter site: pages, components, global CSS, `bascik.config.ts`, and a `.gitignore`. When the dev server stops, the CLI prints a reminder:
 
@@ -906,10 +907,10 @@ Then run `bascik init` to scaffold the starter files and folder structure, or ad
 ### CLI Commands
 
 ```sh
-bascik                        # dev: transpile, start HTTP/2 server at https://localhost:8443, watch
+bascik                        # dev: transpile, start plaintext HTTP server at http://localhost:8080, watch
 bascik --build                # production: transpile to dist/ only
 bascik --build --log [path]   # write build output to a log file (default: .bascik/build.log)
-bascik --serve                # production server: serve a pre-built dist/ with HTTP/2
+bascik --serve                # production server: serve a pre-built dist/ with HTTP
 bascik --check                # static analysis: validate pages and components without building
 ```
 
@@ -920,14 +921,15 @@ bascik --check                # static analysis: validate pages and components w
 export default {
   cacheHttp: true,       // default in --serve; false in dev
   serve: {
-    port: 8443,            // default
+    port: 8080,            // default (8080 HTTP, 8443 HTTPS)
     hostname: 'localhost', // set '0.0.0.0' to bind all interfaces
+    enableTls: false,      // default; set true for HTTP/2 HTTPS
     keyFile: 'bascik-privkey.pem',
     certFile: 'bascik-cert.pem',
   },
 };
 ```
-TLS certs are generated automatically (mkcert if available, openssl fallback) when `keyFile`/`certFile` are absent. Provide your own certs from a public CA for production.
+When `enableTls: true` is set, TLS certs are generated automatically (mkcert if available, openssl fallback) when `keyFile`/`certFile` are absent. Provide your own certs from a public CA for production.
 
 **`cacheHttp`:** defaults to `true` in `--serve` and `false` in the dev server. When `true`: pages receive `ETag` headers and the server returns `304 Not Modified` for unchanged content; static assets get `Cache-Control: public, max-age=3600`. Set `false` if a CDN manages caching externally.
 
@@ -935,16 +937,14 @@ TLS certs are generated automatically (mkcert if available, openssl fallback) wh
 * **Security headers:** every response includes `x-content-type-options: nosniff`, `x-frame-options: SAMEORIGIN`, `referrer-policy: strict-origin-when-cross-origin`, `permissions-policy: interest-cohort=()`.
 * **URL routing (dev and production):** pages are served at their filename without the `.html` extension. `dist/about.html` is at `/about`, `dist/blog/post.html` is at `/blog/post`, `dist/index.html` is at `/`. Unmatched paths fall through to `/404` if a `dist/404.html` exists.
 * **Rate limiting:** 500 requests per 10 seconds per IP. Clients over the limit get `429 Too Many Requests` with `Retry-After`. Not active in the dev server. When behind a reverse proxy the limit applies to the proxy's IP; use the proxy's own rate limiting for per-client control.
-* **Graceful shutdown:** SIGTERM and SIGINT stop accepting connections, destroy all open HTTP/2 sessions (including the live-reload SSE connection), and drain in-flight requests before exiting. Force-exits after 10 seconds if anything hasn't drained.
+* **Graceful shutdown:** SIGTERM and SIGINT stop accepting connections, destroy all open sessions and live-reload SSE connections, and drain in-flight requests before exiting. Force-exits after 10 seconds if anything hasn't drained.
 * **Path traversal protection:** static asset URLs are validated against `dist/`; requests that escape with `/../` sequences get `400 Bad Request`.
 
-**Deployment:** Bascik's server always uses TLS; there is no cleartext HTTP mode. Platforms that terminate TLS at the edge and send cleartext to the container (Cloud Run default, most PaaS) need end-to-end TLS enabled so HTTPS reaches the container. Key patterns:
+**Deployment:** Bascik's server runs over unencrypted HTTP/1.1 by default. Edge platforms (Heroku, Fly.io, AWS ECS, Render) that terminate TLS at the load balancer can forward cleartext HTTP directly to the container. Key patterns:
 
-* **VPS / dedicated**: bind `hostname: '0.0.0.0'`, supply Let's Encrypt certs via `keyFile`/`certFile`, run as a `systemd` service.
-* **Docker**: multi-stage build (build stage: `npx bascik --build`; serve stage: `npx bascik --serve`). Mount real certs at runtime via volume.
-* **Google Cloud Run**: deploy the Docker image with `--port 8443`, then enable **End-to-end encryption (HTTP/2)** in the service settings. Cloud Run will not verify Bascik's container cert.
-* **Fly.io**: set `internal_port = 8443` in `fly.toml`; Fly proxies HTTPS to the container without verifying the container cert.
-* **nginx / Caddy reverse proxy**: proxy to `https://localhost:8443` with TLS verification disabled for the backend leg (`proxy_ssl_verify off` in nginx; `tls_insecure_skip_verify` in Caddy transport). The proxy holds the public CA cert; Bascik holds a self-signed cert.
+* **VPS / dedicated**: bind `hostname: '0.0.0.0'`, supply Let's Encrypt certs via `keyFile`/`certFile` with `enableTls: true`, run as a `systemd` service.
+* **Docker**: multi-stage build (build stage: `npx bascik --build`; serve stage: `npx bascik --serve`).
+* **PaaS (Railway, Render, Fly.io)**: set start command to `bascik --build && bascik --serve` and bind port `8080`.
 
 When using a reverse proxy, forward `X-Real-IP` and any auth headers so `data-bascik-server` scripts receive them via `headers` in `BASCIK_REQUEST`.
 
@@ -952,7 +952,7 @@ When using a reverse proxy, forward `X-Real-IP` and any auth headers so `data-ba
 Bascik's CLI is designed to provide clean, minimal, and informative terminal output.
 
 #### 1. Starting the Dev Server
-When you start the dev server, Bascik starts TLS cert generation and the HTTP/2 server concurrently with page transpilation so the server is already bound to its port by the time the last page finishes. The `Server running at` line prints immediately after the transpilation summary with no gap between them. Pages are served from memory with no disk I/O at request time in dev mode.
+When you start the dev server, Bascik starts the HTTP server concurrently with page transpilation so the server is already bound to its port by the time the last page finishes. The `Server running at` line prints immediately after the transpilation summary with no gap between them. Pages are served from memory with no disk I/O at request time in dev mode.
 
 ```terminal
 transpiled: pages/getting-started.html
@@ -960,7 +960,7 @@ transpiled: pages/index.html
 transpiled: pages/about.html
 
 ✓ 3 pages transpiled in 45ms
-Server running at https://localhost:8443
+Server running at http://localhost:8080
 ```
 
 On startup, Bascik computes the full component list and global styles **once**, then transpiles all pages. By default pages transpile sequentially on the main thread; setting `useWorkers: true` in `bascik.config.ts` distributes them across a pool of CPU-core worker threads instead. Worker startup has a fixed cost (each worker loads the transpiler's module graph independently), so `useWorkers` is opt-in and best suited to larger sites or CPU-heavy per-page work, small sites are usually faster with the sequential default. Brotli compression for each page runs in the background after storage and does not block the page from being marked ready or served; the server falls back to serving uncompressed content for any request that arrives before compression finishes. The server becomes ready as soon as memory is populated; no writes to `dist/` happen during dev mode.
