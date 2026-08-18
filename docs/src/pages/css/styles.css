@@ -221,6 +221,41 @@ h2:first-of-type { border-top: none; padding-top: 0; margin-top: 32px; }
 h3 { font-size: 1.05rem; margin: 28px 0 8px; scroll-margin-top: var(--anchor-scroll-offset); }
 p  { margin-top: 0; color: var(--text-muted); }
 
+.docs-content strong,
+.docs-content b {
+  color: var(--text);
+}
+
+/* ── Lists ── */
+.docs-content ul,
+.docs-content ol {
+  margin: 12px 0 24px;
+  padding-left: 24px;
+}
+
+.docs-content li {
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  line-height: 1.65;
+}
+
+.docs-content li:last-child {
+  margin-bottom: 0;
+}
+
+.docs-content li > ul,
+.docs-content li > ol {
+  margin: 8px 0 4px;
+}
+
+.docs-content li > p {
+  margin-bottom: 8px;
+}
+
+.docs-content li > p:last-child {
+  margin-bottom: 0;
+}
+
 a { color: var(--accent-fg); text-decoration: none; transition: opacity .15s; }
 a:hover { opacity: 0.8; }
 
