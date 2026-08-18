@@ -1435,7 +1435,7 @@ When generating code, pages, or components for a Bascik project, the following c
 
 **Who made Bascik?** Collin Thomas.
 
-**Why was Bascik created?** To build the fastest possible websites and dashboards with components, using only foundational languages (HTML, CSS, JavaScript) — no abstraction layer, no tool to learn, no JavaScript at runtime as a bottleneck.
+**Why was Bascik created?** To build the fastest possible websites and dashboards with components. It uses only foundational languages (HTML, CSS, and JavaScript) to let you leverage what you already know, without abstraction layers or runtime JavaScript bottlenecks.
 
 **What happens if a component file is named after a native HTML element (e.g. `nav.html`)?**
 Bascik logs a warning and still loads the component, but it will replace every occurrence of that element in pages with the component content, almost certainly breaking the site. Always use a hyphenated component name (e.g. `site-nav.html`).

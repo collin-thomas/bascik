@@ -295,6 +295,17 @@ Bascik derives the tag name from the `.html` filename, not the folder. `feature-
 
 > **No restart needed.** The dev server watches `src/components/` for new and changed files. Drop in a new `.html` or `.css` file and all affected pages re-transpile and reload automatically.
 
+## File Structure Flexibility
+
+Bascik gives you complete freedom to structure your components however you prefer. You can mix and match different layouts across your project depending on the size and complexity of each component:
+
+1. **HTML-only file:** Just a `.html` file inside `src/components/`. No CSS/JS files needed.
+2. **Single-file component:** An `.html` file inside `src/components/` containing both your markup and `<style>`/`<script>` blocks.
+3. **Companion files in the root:** An `.html` file and a `.css` file side-by-side in `src/components/` (e.g. `src/components/my-card.html` and `src/components/my-card.css`).
+4. **Subfolder organization:** A folder inside `src/components/` containing the matching files (e.g. `src/components/my-card/my-card.html` and `src/components/my-card/my-card.css`).
+
+You can choose any of these arrangements at any time. There is **no functionality or performance difference** between them. At build time, Bascik treats them identically, extracting and scoping your styles and bundling them into the page's final compiled output.
+
 ## Multiple Root Elements
 
 Unlike traditional JavaScript frameworks (such as React or Vue 2) that historically required a single root wrapper element or explicit fragment components, Bascik component templates naturally support **multiple top-level HTML elements** in a single `.html` file.
@@ -308,6 +319,20 @@ Unlike traditional JavaScript frameworks (such as React or Vue 2) that historica
 When transpiled, all root-level elements are inserted directly into the page markup in order. No unnecessary wrapper `<div>` or `<Fragment>` tags are added to your rendered HTML. Bascik's scoping engine automatically handles CSS rules, class names, IDs, element selectors, and scripts across every element in the component template.
 
 > **Attribute Inheritance:** If non-`data-bascik-*` attributes are passed on a usage tag (such as `class="extra"` or `aria-label="Section"`), Bascik merges them onto the **first** root HTML element in the component template.
+
+## Void / Self-Closing Component Tags
+
+When utilizing your components inside pages or other components, you can use standard opening and closing tags, or you can use self-closing/void syntax:
+
+```html
+<!-- Standard paired tags -->
+<site-nav></site-nav>
+
+<!-- Void (self-closing) syntax -->
+<site-nav />
+```
+
+If your component does not use a `<slot>` to accept inner children, you can choose to use it as a void/self-closing component. Both forms are fully supported and compile to the exact same output, with no difference in behavior or performance. You can choose whichever style matches your personal preference or project guidelines.
 
 ## Multiple Style Blocks
 

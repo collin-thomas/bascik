@@ -287,9 +287,9 @@ describe("scaffold", () => {
     expect(dirs.some((d) => d.includes("site-meta"))).toBe(true);
   });
 
-  it("writes all 20 expected files", async () => {
+  it("writes all 16 expected files", async () => {
     await scaffold("my-app", "/tmp");
-    expect(mockWriteFile.mock.calls.length).toBe(20);
+    expect(mockWriteFile.mock.calls.length).toBe(16);
   });
 
   it("writes SKILL.md into .github/skills/bascik and .claude/skills/bascik", async () => {

@@ -272,6 +272,8 @@ export default {
 
 Setting `deduplicateCss` in `bascik.config.ts` controls whether class names are scoped per component type or per component instance.
 
+> **Go deeper.** To understand how Bascik collects, scopes, and compiles CSS blocks at the parser level, check out the [CSS Deduplication internals guide](/internals/scoping-system#css-deduplication).
+
 | Feature / Aspect | `deduplicateCss: true` (Default) | `deduplicateCss: false` |
 |---|---|---|
 | **Class Scoping Scheme** | `bascik__card__wrapper` (shared per component) | `bascik__card__a1b2c3d4__wrapper` (unique per instance) |

@@ -73,7 +73,7 @@ CSS inside that file scopes itself to that component. Write `.card { padding: 20
 
 JavaScript inside that file scopes itself too. Write `document.getElementById('count')` and Bascik rewrites it to target the scoped version of that element, so two instances of the same counter on one page stay completely isolated, not through Shadow DOM or any runtime trick, but because the selectors were rewritten before the browser ever saw them. TypeScript works here as well; `bascik.config.ts`, build scripts, and helper modules all run natively on Node 22.18+ with no compiler step.
 
-> Create a file. Use the tag. Everything inside it, HTML, CSS, JavaScript, stays contained. No imports. No exports. No configuration. No special syntax to learn.
+> Create a file. Use the tag. Everything inside it, HTML, CSS, JavaScript, stays contained. No imports. No exports. No configuration. Use what you know, and use what the browser knows.
 
 ## The Platform Caught Up
 
