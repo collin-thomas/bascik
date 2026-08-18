@@ -41,9 +41,9 @@ export const NAV: NavSection[] = [
   },
   {
     section: 'Reference', pages: [
+      { href: '/faq', label: 'FAQ' },
       { href: '/cli', label: 'CLI / Command Line' },
       { href: '/configuration', label: 'Configuration' },
-      { href: '/faq', label: 'FAQ' },
       { href: '/compatibility', label: 'Scoping Compatibility' },
       { href: '/deploying', label: 'Deploying' },
     ]

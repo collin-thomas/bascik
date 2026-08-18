@@ -28,9 +28,9 @@ For the complete, centralized developer reference and AI assistant instructions,
 
 ## Reference
 
+- [FAQ](https://bascik.dev/faq): Answers to common questions about Bascik.
 - [CLI / Command Line](https://bascik.dev/cli): Bascik features a simple, fast, and highly informative CLI for both development and production building.
 - [Configuration](https://bascik.dev/configuration): Bascik is completely zero configuration by default.
-- [FAQ](https://bascik.dev/faq): Answers to common questions about Bascik.
 - [Scoping Compatibility](https://bascik.dev/compatibility): Legend
 - [Deploying](https://bascik.dev/deploying): Bascik's build output is a standard folder of static HTML, CSS, and JavaScript files.
 
