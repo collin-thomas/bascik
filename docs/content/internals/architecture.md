@@ -48,10 +48,12 @@ All logic lives in `pkg/src/lib/`. Each file has a single, well-defined responsi
 | `cli.ts` | Command-line argument parser for the `bascik` binary, resolving CLI flags into actions that `index.ts` can execute. |
 | `components.ts` | Loads component HTML and CSS files from disk, detects component tags in HTML strings, extracts props/slots/attributes, and injects resolved content back. Tag detection masks `<script>`/`<style>`/`<textarea>` content so literal tag text is never resolved. |
 | `config.ts` | Loads and merges `bascik.config.ts`, default config, and build overrides into a single frozen `BascikConfig` object consumed everywhere else. |
+| `css-minifier.ts` | Built-in CSS minifier that collapses whitespace, strips comments, and compresses component `<style>` blocks and global `.css` files. |
 | `defineConfig.ts` | Provides the `defineConfig` helper function to offer autocomplete and type safety when writing `bascik.config.ts`. |
 | `events.ts` | A simple Node.js `EventEmitter` shared between the watch system, processing pipeline, and HTTP servers to signal live-reload and build events. |
 | `exec.ts` | Runs commands from the `exec` configuration list sequentially on build or during file-watching changes. |
 | `file-system.ts` | File-system helpers: recursive directory listing, path resolution between source and dist, copying static assets. |
+| `html-minifier.ts` | Built-in HTML minifier that strips HTML comments and collapses unnecessary whitespace between tags in production builds. |
 | `http.ts` | Plaintext HTTP/1.1 server (`node:http`) used by default in development and cleartext environments. |
 | `http2.ts` | TLS-enabled HTTP/2 server (`node:http2`) used when `enableTls: true` is configured. |
 | `init.ts` | Bootstraps a new Bascik project via `bascik init`. Creates `src/pages/index.html`, `src/components/`, and `bascik.config.js`, and patches `package.json` with `"type": "module"` and dev/build scripts. |
@@ -88,7 +90,7 @@ index.ts
   ├── (--serve / prod server)
   │     └── serve.ts → server.ts
   └── transpile.ts
-        ├── config.ts ← userConfig.ts ← bascik.config.js
+        ├── config.ts ← userConfig.ts ← bascik.config.ts / bascik.config.js
         ├── watch.ts
         │     └── processing.ts
         │           ├── components.ts ← file-system.ts
@@ -96,6 +98,7 @@ index.ts
         │           │     ├── styles.ts
         │           │     └── names.ts
         │           ├── styles.ts
+        │           ├── html-minifier.ts, css-minifier.ts, js-minifier.ts
         │           ├── build-scripts.ts
         │           ├── worker-pool.ts → page-worker.ts
         │           │     └── (transpilePage - no side effects)
@@ -105,9 +108,9 @@ index.ts
               └── server.ts
                     ├── (if enableTls: true)
                     │     ├── pki.ts
-                    │     └── http2.ts ← mem.ts, events.ts, paths.ts, mime.ts
+                    │     └── http2.ts ← server-scripts.ts, mem.ts, events.ts, paths.ts, mime.ts
                     └── (default HTTP/1.1)
-                          └── http.ts ← mem.ts, events.ts, paths.ts, mime.ts
+                          └── http.ts ← server-scripts.ts, mem.ts, events.ts, paths.ts, mime.ts
 ```
 
 ## Key Design Decisions

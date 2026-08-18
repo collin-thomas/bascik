@@ -768,7 +768,7 @@
           <div class="pillar">
             <p class="pillar-label">Build-time scoping</p>
             <h3>No CSS collisions. Ever.</h3>
-            <p>Class names and DOM selectors are rewritten at build time. No CSS-in-JS, no BEM discipline, no global
+            <p>Class names and DOM selectors are rewritten at build time. No CSS-in-JS, no naming collisions, no global
               namespace to manage.</p>
           </div>
           <div class="pillar">
@@ -790,6 +790,12 @@
           reference.</p>
 
         <div class="grid-3">
+          <a href="/components" class="card" style="text-decoration:none">
+            <p class="section-label">Core</p>
+            <h3 style="margin-bottom:6px">Components</h3>
+            <p style="margin:0;font-size:0.875rem">Build UI with reusable HTML components. No imports or registration
+              needed—just write the custom tag.</p>
+          </a>
           <a href="/scoped-styles" class="card" style="text-decoration:none">
             <p class="section-label">CSS</p>
             <h3 style="margin-bottom:6px">Scoped Styles</h3>
@@ -806,17 +812,10 @@
           </a>
           <a href="/slots" class="card" style="text-decoration:none">
             <p class="section-label">Slots</p>
-            <h3 style="margin-bottom:6px">Default &amp; Named Slots</h3>
+            <h3 style="margin-bottom:6px">Slots</h3>
             <p style="margin:0;font-size:0.875rem">Pass inner HTML into components. Named slots target specific zones
               with
               fallback content supported.</p>
-          </a>
-          <a href="/props" class="card" style="text-decoration:none">
-            <p class="section-label">Props</p>
-            <h3 style="margin-bottom:6px">Component Props</h3>
-            <p style="margin:0;font-size:0.875rem">Inject text values via <code>data-bascik-prop-*</code> attributes,
-              with no
-              runtime and no special syntax.</p>
           </a>
           <a href="/build-scripts" class="card" style="text-decoration:none">
             <p class="section-label">Build</p>
@@ -832,12 +831,11 @@
             <p style="margin:0;font-size:0.875rem">Override defaults in <code>bascik.config.ts</code>. Toggle scoping,
               obfuscation, and minification per project.</p>
           </a>
-          <a href="/compatibility" class="card" style="text-decoration:none">
-            <p class="section-label">Reference</p>
-            <h3 style="margin-bottom:6px">Scoping Compatibility</h3>
-            <p style="margin:0;font-size:0.875rem">A complete audit of which CSS selectors and JS DOM patterns are
-              scoped,
-              partial, or unsupported.</p>
+          <a href="/performance" class="card" style="text-decoration:none">
+            <p class="section-label">Speed</p>
+            <h3 style="margin-bottom:6px">Lighthouse 100s</h3>
+            <p style="margin:0;font-size:0.875rem">Zero runtime dependencies and zero added JS payload for instant load
+              times and perfect scores.</p>
           </a>
           <a href="/switch" class="card" style="text-decoration:none">
             <p class="section-label">Switching</p>
