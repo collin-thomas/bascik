@@ -17,7 +17,7 @@ vi.mock("./config.js", () => ({
     directory: { components: "src/components" },
     obfuscateAttributeNames: false,
     deduplicateCss: true,
-    minifyStyles: false,
+    minify: { html: false, css: false, js: false },
     skipTranspilingElementContents: [],
   },
 }));

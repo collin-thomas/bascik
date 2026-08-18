@@ -95,4 +95,21 @@ Third content.
     const result = await extractDemoBlock(mdFile, 'missing-marker');
     expect(result).toContain('<!-- demo:missing-marker not found');
   });
+
+  it('renderMd gracefully handles ENOENT for missing files', async () => {
+    const result = await renderMd(join(tempDir, 'non-existent.md'));
+    expect(result).toContain('callout');
+    expect(result).toContain('File not found:');
+  });
+
+  it('renderMdRange gracefully handles ENOENT for missing files', async () => {
+    const result = await renderMdRange(join(tempDir, 'non-existent.md'), { from: 'Start' });
+    expect(result).toContain('callout');
+    expect(result).toContain('File not found:');
+  });
+
+  it('extractDemoBlock gracefully handles ENOENT for missing files', async () => {
+    const result = await extractDemoBlock(join(tempDir, 'non-existent.md'), 'demo');
+    expect(result).toContain('<!-- [md-renderer] File not found:');
+  });
 });

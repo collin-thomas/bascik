@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-  <docs-head></docs-head>
+  <docs-head />
   <script data-bascik-build>
     import { join } from 'node:path';
     import { pathToFileURL } from 'node:url';
@@ -39,11 +39,18 @@
     content="A complete audit of which CSS and JavaScript patterns Bascik's build-time scoping engine supports, with notes on known edge cases." />
   <title>Bascik Scoping Compatibility - Bascik Docs</title>
   <style>
+    .compat-table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 16px 0 32px;
+    }
+
     .compat-table {
       width: 100%;
       border-collapse: collapse;
       font-size: 0.88rem;
-      margin: 16px 0 32px;
+      margin: 0;
     }
 
     .compat-table th {
@@ -117,12 +124,12 @@
 
 <body>
 
-  <docs-nav></docs-nav>
+  <docs-nav />
 
   <div class="container">
     <div class="docs-layout">
 
-      <docs-sidebar></docs-sidebar>
+      <docs-sidebar />
 
       <main class="docs-content">
         <p class="section-label">Reference</p>
@@ -135,12 +142,14 @@
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
           );
           let html = await renderMd('./content/compatibility.md');
-          html = html.replace(/<table>/g, '<table class="compat-table">');
           html = html
-            .replace(/<td>\s*✓\s*<\/td>/g, '<td class="badge-ok">✓</td>')
-            .replace(/<td>\s*△\s*<\/td>/g, '<td class="badge-partial">△</td>')
-            .replace(/<td>\s*✕\s*<\/td>/g, '<td class="badge-no">✕</td>')
-            .replace(/<td>\s*–\s*<\/td>/g, '<td class="badge-intentional">–</td>')
+            .replace(/<table>/g, '<div class="compat-table-wrapper"><table class="compat-table">')
+            .replace(/<\/table>/g, '</table></div>');
+          html = html
+            .replace(/td>\s*✓\s*<\/td/g, 'td class="badge-ok">✓</td')
+            .replace(/td>\s*△\s*<\/td/g, 'td class="badge-partial">△</td')
+            .replace(/td>\s*✕\s*<\/td/g, 'td class="badge-no">✕</td')
+            .replace(/td>\s*–\s*<\/td/g, 'td class="badge-intentional">–</td')
             .replace(/<li>✓ /g, '<li><span class="badge-ok">✓</span> ')
             .replace(/<li>△ /g, '<li><span class="badge-partial">△</span> ')
             .replace(/<li>– /g, '<li><span class="badge-intentional">–</span> ')
@@ -159,7 +168,7 @@
     </div>
   </div>
 
-  <docs-footer></docs-footer>
+  <docs-footer />
 </body>
 
 </html>

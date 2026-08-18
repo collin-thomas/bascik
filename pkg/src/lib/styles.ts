@@ -136,7 +136,7 @@ export const addElementClassesInHtml = (
       // Check only the element's own opening tag for a class attribute,
       // not any nested child's class (which would cause the class to land
       // on the wrong element, e.g. <code> instead of <pre>).
-      const openTag = elementHtml.match(new RegExp(`^<${element}[^>]*>`, "i"))?.[0] ?? "";
+      const openTag = elementHtml.match(new RegExp(`^<${element}\\b[^>]*>`, "i"))?.[0] ?? "";
       if (/\bclass="/.test(openTag)) {
         return elementHtml.replace(/class=".*?(?=")/i, (classStr) => {
           return `${classStr} ${bascikClassName}`;
@@ -148,7 +148,7 @@ export const addElementClassesInHtml = (
         });
       }
       return elementHtml.replace(
-        new RegExp(`<${element}`, "i"),
+        new RegExp(`<${element}\\b`, "i"),
         `<${element} class="${bascikClassName}"`,
       );
     };
@@ -156,7 +156,7 @@ export const addElementClassesInHtml = (
     if (VOID_ELEMENTS.has(element)) {
       // Void elements: match the standalone opening tag (no closing tag).
       componentHtml = componentHtml.replace(
-        new RegExp(`<${element}(\\s[^>]*?)?\\/?>`, "gis"),
+        new RegExp(`<${element}\\b(\\s[^>]*?)?\\/?>`, "gis"),
         (tag) => injectClass(tag),
       );
       return;
@@ -165,7 +165,7 @@ export const addElementClassesInHtml = (
     // Find all the instances of that element in the component.
     // The `s` (dotAll) flag lets `.` match newlines for multi-line element content.
     componentHtml = componentHtml.replace(
-      new RegExp(`<${element}[^>]*>([\\s\\S]*?)<\\/${element}>`, "gis"),
+      new RegExp(`<${element}\\b[^>]*>([\\s\\S]*?)<\\/${element}\\b>`, "gis"),
       (elementHtml: string) => injectClass(elementHtml),
     );
   });
@@ -350,23 +350,7 @@ export const removeCommentsFromCss = (css: string): string => {
   );
 };
 
-/**
- * Minify a CSS string: strip comments, collapse whitespace, and remove
- * spaces around structural characters (`{`, `}`, `:`, `;`, `,`).
- *
- * String literals and `url()` contents are preserved verbatim — whitespace
- * and punctuation inside them (e.g. `content: "a: b; c"`, `[title="a  b"]`,
- * `url(data:...)`) is never altered.
- */
-export const minifyCss = (css: string): string => {
-  const { css: shielded, restore } = shieldCssStrings(removeCommentsFromCss(css));
-  const minified = shielded
-    .replace(/\n/g, " ")
-    .replace(/\s\s+/g, " ")
-    .replace(/\s*([{}:;,])\s*/g, "$1")
-    .trim();
-  return restore(minified);
-};
+export { minifyCss } from "./css-minifier.js";
 
 export const getComponentCss = async (
   htmlFileName: string,

@@ -60,7 +60,7 @@ Next.js is a React meta-framework that adds routing, server-side rendering, stat
 
 Many teams reach for Next.js on content sites, landing pages, and documentation portals because it is familiar and well-supported. The tradeoff is that every page ships 80+ KB or more of React runtime regardless of whether the page uses any client-side reactivity. Its conventions also gradually pull projects toward client-side patterns even for pages that were always static, and auditing what actually reaches the browser gets harder over time.
 
-For a lot of what people build, that is simply more framework than the project needs. Bascik is built for exactly this kind of work. You write plain HTML, CSS, and JavaScript. Components are reused at build time. The output is a dist folder of static files you can open and verify file by file. There is no runtime to load, nothing to hydrate, and no React model to learn. Google's Core Web Vitals (LCP, INP, CLS) are directly affected by JavaScript that blocks rendering; Bascik's output has none of that overhead.
+For a lot of what people build, that is simply more framework than the project needs. Bascik is built for exactly this kind of work. You write plain HTML, CSS, and JavaScript. Components are reused at build time. The output is a dist folder of static files you can open and verify file by file. There is no runtime to load, nothing to hydrate, letting you write the standard HTML, CSS, and JavaScript you already know. Google's Core Web Vitals (LCP, INP, CLS) are directly affected by JavaScript that blocks rendering; Bascik's output has none of that overhead.
 
 **What Bascik offers for these projects:**
 
@@ -76,7 +76,7 @@ Bascik overlaps with them at the output level, all of these tools can ship plain
 
 ## The Key Difference
 
-| Tool | Runtime shipped | Components or API to learn | Attribute / source syntax | Requires server |
+| Tool | Runtime shipped | Component model or APIs required | Attribute / source syntax | Requires server |
 | --- | ---: | --- | --- | --- |
 | **Bascik** | None | Only the components you create, plus slots and props | Standards-valid `data-bascik-*` attributes, consumed at build time | No |
 | **Next.js** | 80–100+ KB (React + hydration) | React component model, routing, and Next.js conventions | JSX, React hooks, Next.js file conventions | No (SSG) / Yes (SSR) |

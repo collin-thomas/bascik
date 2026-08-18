@@ -21,6 +21,12 @@ process.env.BASCIK_PROD_SERVER = isProdServer ? "1" : "0";
 // override any of them in bascik.config.ts.
 const prodServerDefaultConfig: Partial<Omit<BascikConfigOptions, "isBuild" | "isProdServer">> = {
   cacheHttp: true,
+  minify: {
+    html: true,
+    css: true,
+    js: true,
+  },
+  obfuscateAttributeNames: true,
 };
 
 // Applied on top of defaultConfig (and prodServerDefaultConfig) when --build is
@@ -31,8 +37,11 @@ const prodServerDefaultConfig: Partial<Omit<BascikConfigOptions, "isBuild" | "is
 export const buildDefaultConfig: Partial<
   Omit<BascikConfigOptions, "isBuild" | "isProdServer">
 > = {
-  minifyStyles: true,
-  minifyScripts: true,
+  minify: {
+    html: true,
+    css: true,
+    js: true,
+  },
   obfuscateAttributeNames: true,
 };
 
@@ -51,8 +60,11 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild" | "isProdServer"
   },
   skipTranspilingElementContents: ["code"],
   deduplicateCss: true,
-  minifyStyles: false,
-  minifyScripts: false,
+  minify: {
+    html: false,
+    css: false,
+    js: false,
+  },
   obfuscateAttributeNames: false,
   cacheHttp: false,
   generate: {
@@ -62,6 +74,7 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild" | "isProdServer"
   inlineStyles: false,
   useWorkers: false,
   buildScriptCache: true,
+  onScriptError: "error",
   devServer: {
     logging: {
       level: "info",
@@ -99,7 +112,7 @@ export const shouldLog = (
  * `serve`) would remain mutable at runtime.
  */
 const deepFreeze = <T>(value: T): Readonly<T> => {
-  // Only freeze plain objects/arrays. Functions (e.g. a custom `minifyScripts`
+  // Only freeze plain objects/arrays. Functions (e.g. a custom `minify.js`
   // implementation) are left untouched — freezing a function would break any
   // internal state it carries, and functions hold no mutable config values.
   if (
@@ -117,11 +130,20 @@ const deepFreeze = <T>(value: T): Readonly<T> => {
 };
 
 type ConfigInput = Partial<
-  Omit<BascikConfigOptions, "isBuild" | "isProdServer" | "directory" | "scopeAttribute" | "generate">
+  Omit<
+    BascikConfigOptions,
+    | "isBuild"
+    | "isProdServer"
+    | "directory"
+    | "scopeAttribute"
+    | "generate"
+    | "minify"
+  >
 > & {
   directory?: Partial<BascikConfigOptions["directory"]>;
   scopeAttribute?: Partial<BascikConfigOptions["scopeAttribute"]>;
   generate?: Partial<BascikConfigOptions["generate"]>;
+  minify?: Partial<BascikConfigOptions["minify"]>;
 };
 
 /**
@@ -145,6 +167,23 @@ export const initBascikConfig = (
     userConfig.directory ?? {};
   const buildDirectory: Partial<BascikConfigOptions["directory"]> =
     buildOverride.directory ?? {};
+
+  const userMinify = userConfig.minify ?? {};
+  const buildMinify = buildOverride.minify ?? {};
+
+  const baseMinify = {
+    ...defaultConfig.minify,
+    ...((isBuild || isProdServer)
+      ? (isBuild ? buildDefaultConfig.minify : prodServerDefaultConfig.minify)
+      : {}),
+  };
+
+  const minify = {
+    ...baseMinify,
+    ...userMinify,
+    ...((isBuild || isProdServer) ? buildMinify : {}),
+  };
+
   const BascikConfig: BascikConfigOptions = {
     ...defaultConfig,
     ...(isProdServer ? prodServerDefaultConfig : {}),
@@ -166,6 +205,7 @@ export const initBascikConfig = (
       ...(userConfig.generate ?? {}),
       ...((isBuild || isProdServer) ? (buildOverride.generate ?? {}) : {}),
     },
+    minify,
     devServer: {
       ...defaultConfig.devServer,
       ...(userConfig.devServer ?? {}),

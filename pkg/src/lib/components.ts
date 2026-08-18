@@ -3,6 +3,7 @@ import { getComponentCss, extractInlineStyles } from "./styles.js";
 import { deepReadDirFlat } from "./file-system.js";
 import { BascikConfig } from "./config.js";
 import { executeBuildScripts } from "./build-scripts.js";
+import { minifyHtml } from "./html-minifier.js";
 import type { BascikComponent, ComponentList } from "./types.js";
 
 // Warn if a component name shadows a native HTML element
@@ -387,51 +388,7 @@ export const getTag = (
 // HTML minification
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const extractScriptTags = (htmlString: string): string => {
-  const html = htmlString.replace(/<!--[\s\S]*?-->/g, "");
-  const pattern = new RegExp(`<script[^>]*>([\\s\\S]*?)<\\/script>`, "gi");
-  const arr = [...html.matchAll(pattern)];
-  if (!arr.length) return "";
-  return arr
-    .map((script) => script[0])
-    .join("\n")
-    .trim();
-};
-
-export const minifyHtml = (htmlString: string): string => {
-  let html = htmlString.replace(/<!--[\s\S]*?-->/g, "");
-  const scriptTags = extractScriptTags(html);
-  if (scriptTags) {
-    const pattern = new RegExp(`<script[^>]*>([\\s\\S]*?)<\\/script>`, "gi");
-    html = html.replace(pattern, "").trim();
-  }
-  // Preserve content of whitespace-sensitive elements before collapsing whitespace.
-  // Without this, code inside <pre> blocks has its newlines and indentation stripped,
-  // breaking the visual display of code examples in the browser.
-  const preserved: string[] = [];
-  html = html.replace(
-    /<(pre|textarea)([ \t][^>]*)?>[\s\S]*?<\/\1>/gi,
-    (match) => {
-      preserved.push(match);
-      return `\x00P${preserved.length - 1}\x00`;
-    },
-  );
-  html = html.replace(/\n/g, "").replace(/>\s+</g, "><").replace(/\s\s+/g, " ");
-  if (preserved.length) {
-    // Collapse any whitespace that landed between a tag boundary and a placeholder
-    // after newline removal (e.g. "<div> \x00P0\x00 <" → "<div>\x00P0\x00<").
-    html = html.replace(/>\s+(\x00P\d+\x00)/g, ">$1");
-    html = html.replace(/(\x00P\d+\x00)\s+</g, "$1<");
-    html = html.replace(
-      /\x00P(\d+)\x00/g,
-      (_: string, i: string) => preserved[parseInt(i, 10)],
-    );
-  }
-  if (scriptTags) {
-    html += `\n${scriptTags}`;
-  }
-  return html;
-};
+export { minifyHtml, extractScriptTags } from "./html-minifier.js";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 

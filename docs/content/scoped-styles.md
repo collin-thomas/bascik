@@ -6,8 +6,8 @@ Scoped styles namespace a component's CSS at build time, keeping its selectors a
 
 You can define component CSS in either of these places:
 
-- a paired `.css` file next to the component HTML
 - one or more inline `<style>` tags inside the component HTML
+- a paired `.css` file next to the component HTML
 
 Both approaches are fully equivalent in functionality. At build time, Bascik extracts inline `<style>` tags from component HTML files, applies the full scoping pipeline, deduplicates the CSS across all instances on the page, and injects the compiled styles into the page `<head>`. Component markup in the `<body>` stays clean with no `<style>` tags left behind.
 
@@ -48,7 +48,7 @@ This component combines a class, an ID selector, bare `h3` and `p` selectors, a 
 
 <!-- demo:scope-lab-usage -->
 ```html
-<scope-lab></scope-lab>
+<scope-lab />
 ```
 
 <!-- demo:scope-lab-html -->
@@ -272,6 +272,8 @@ export default {
 
 Setting `deduplicateCss` in `bascik.config.ts` controls whether class names are scoped per component type or per component instance.
 
+> **Go deeper.** To understand how Bascik collects, scopes, and compiles CSS blocks at the parser level, check out the [CSS Deduplication internals guide](/internals/scoping-system#css-deduplication).
+
 | Feature / Aspect | `deduplicateCss: true` (Default) | `deduplicateCss: false` |
 |---|---|---|
 | **Class Scoping Scheme** | `bascik__card__wrapper` (shared per component) | `bascik__card__a1b2c3d4__wrapper` (unique per instance) |
@@ -383,8 +385,32 @@ Click the card to toggle its active state. Hover for the hover state. Both are i
 <!-- demo:output-html -->
 ```html
 <style>
-  .bascik__my-card__card { ... }
-  .bascik__my-card__card .bascik__my-card__active { ... }
+  .bascik__my-card__card {
+    padding: 26px 28px;
+    background: #242628;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 10px;
+  }
+  .bascik__my-card__card .bascik__my-card__el__h3 {
+    margin: 0 0 8px;
+    color: #f0f1f2;
+  }
+  .bascik__my-card__card .bascik__my-card__el__p {
+    margin: 0;
+    color: #8d929e;
+  }
+  .bascik__my-card__card:hover {
+    border-color: rgba(211, 255, 141, 0.35);
+    box-shadow: 0 0 0 1px rgba(211, 255, 141, 0.12);
+  }
+  .bascik__my-card__card.bascik__my-card__active {
+    background: rgba(211, 255, 141, 0.07);
+    border-color: rgba(211, 255, 141, 0.5);
+    box-shadow: 0 0 0 1px rgba(211, 255, 141, 0.25), 0 0 20px rgba(211, 255, 141, 0.08);
+  }
+  .bascik__my-card__card.bascik__my-card__active .bascik__my-card__el__h3 {
+    color: #d3ff8d;
+  }
 </style>
 <div class="bascik__my-card__card" id="bascik__my-card__a1b__card">
   <h3>Isolated Styles</h3>

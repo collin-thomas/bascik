@@ -20,7 +20,13 @@ export async function articleSchema(): Promise<string> {
   const siteUrl = (process.env.BASCIK_SITE_URL ?? '').replace(/\/$/, '');
   if (!pageFile || !siteUrl) return '';
 
-  const html = await readFile(pageFile, 'utf8');
+  let html: string;
+  try {
+    html = await readFile(pageFile, 'utf8');
+  } catch (err) {
+    console.warn(`[article-schema] Warning: Could not read page file "${pageFile}": ${(err as Error).message}`);
+    return '';
+  }
   const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/);
   const descMatch =
     html.match(/<meta\b[^>]*\bname=["']description["'][^>]*\bcontent=["']([^"']+)["']/i) ||

@@ -7,7 +7,9 @@ export default defineConfig({
   siteUrl: 'http://localhost:4200',
   useWorkers: true,
   obfuscateAttributeNames: false,
-  minifyStyles: false,
+  minify: {
+    css: false,
+  },
   exec: [
     { script: 'scripts/generate-manifest.ts' },
   ],

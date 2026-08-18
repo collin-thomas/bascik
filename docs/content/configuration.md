@@ -1,6 +1,21 @@
 # Configuration
 
-Create a `bascik.config.ts` file in your project root to override any default settings. Import `defineConfig` for full autocomplete and type checking on every option; your editor will surface valid values, flag typos, and show inline docs as you type. A plain `bascik.config.js` also works and takes precedence if both files exist.
+Bascik is **completely zero configuration** by default. You do not need a config file of any kind to start building. Running `bascik` or `bascik --build` works immediately right out of the box, resolving components, scoping CSS and JS, minifying files, and managing routing using sensible, production ready defaults. 
+
+However, Bascik is also **highly configurable** for both development and production. Rather than forcing a single architectural opinion on your project, Bascik is designed to put control directly in your hands. Whenever a technical choice involves trade-offs, Bascik exposes fine-grained preferences so you can tailor the build pipeline to your exact workflow.
+
+To override any default behaviors, create a `bascik.config.ts` file in your project root. Import `defineConfig` for full autocomplete and type checking on every option. Your editor will surface valid values, flag typos, and show inline docs as you type. A plain `bascik.config.js` also works and takes precedence if both files exist.
+
+## The Power of Preference
+
+Here are just a few ways Bascik puts architectural choices back in your hands:
+
+- **Style Deduplication (`deduplicateCss`):** Choose between clean, single-definition scoped stylesheets for optimal payload sizes, or individual per-instance styling for seamless local script querying.
+- **Custom Minification (`minify`):** Toggle HTML, CSS, and JS minifiers independently. You can even plug in your own custom async minifiers (like esbuild or terser) or configure Node's built-in type stripper for native TypeScript compilation.
+- **Granular Attribute Scoping (`scopeAttribute`):** Control exactly which attributes (classes, IDs, or name attributes) are scoped. If you are using Tailwind CSS, you can disable class scoping entirely while keeping ID scoping active.
+- **Parallel Builds (`useWorkers`):** Optimize build speeds on larger sites by opting into a multi-core CPU worker pool, or stick to main-thread processing for smaller projects.
+- **Error Behavior (`onScriptError`):** Choose whether to halt the entire build on template script errors, or output inline compiler warnings and keep going.
+- **Environment Overrides (`build`):** Easily define production-only overrides (such as obfuscating attribute names or inlining stylesheets) while keeping development logs detailed and verbose.
 
 ## Full Example
 
@@ -25,10 +40,12 @@ export default defineConfig({
   skipTranspilingElementContents: ['code'],
 
   deduplicateCss: true,
-  minifyStyles: true,
+  minify: {
+    html: true,
+    css: true,
+    js: true,
+  },
   inlineStyles: ['src/pages/css/styles.css'],
-
-  minifyScripts: true,
 
   obfuscateAttributeNames: true,
 
@@ -56,7 +73,11 @@ export default defineConfig({
 
 export const build = defineConfig({
   obfuscateAttributeNames: true,
-  minifyStyles: true,
+  minify: {
+    html: true,
+    css: true,
+    js: true,
+  },
 });
 ```
 
@@ -64,14 +85,16 @@ export const build = defineConfig({
 
 ### `directory`
 
-Paths to your pages and components directories. Relative to the project root.
+Paths to your pages and components directories, relative to the project root.
 
 ```js
 directory: {
-  pages: 'src/pages',      // default
-  components: 'src/components', // default
+  pages: 'src/pages',           // default — HTML routes, static assets, and subfolders
+  components: 'src/components', // default — component .html and .css templates
 }
 ```
+
+> **Asset Mirroring:** Any subfolders and non-`.html` files inside `pages` (such as `css/`, `js/`, `images/`, `fonts/`) are automatically copied to `dist/` preserving their folder structure. CSS and JS files in `pages` are minified during build when `minify.css` / `minify.js` are enabled.
 
 ### `scopeScriptBlocks`
 
@@ -111,7 +134,7 @@ When `false`, every instance gets its own unique per-instance class names (the s
 deduplicateCss: true // default
 ```
 
-> **Choosing `false`:** Use per-instance class scoping when a component's JavaScript needs to use class selectors to locate its own root element and you have multiple instances of that component on the same page. For a full side-by-side trade-off breakdown and output code comparison, see [Class Selectors in Component Scripts](/scoped-styles#deduplicatecss-trade-off-comparison).
+> **Further Reading & Trade-offs:** For a full side-by-side trade-off breakdown, visual comparison of generated HTML/CSS payloads, and script-querying guides, see the [deduplicateCss Trade-Off Comparison on the Scoped Styles page](/scoped-styles#deduplicatecss-trade-off-comparison).
 
 ### `skipTranspilingElementContents`
 
@@ -125,17 +148,19 @@ skipTranspilingElementContents: ['code'] // default
 
 Set to an empty array to disable the protection entirely, or extend the list for other elements whose contents should be preserved as-is.
 
-### `minifyStyles`
+### `minify`
 
-Collapse whitespace and newlines in the injected `<style>` block. Defaults to `true`.
+Configure minification toggles for HTML, CSS, and JS outputs. All three default to `false` in dev mode and `true` during `bascik --build` and `bascik --serve`.
 
-### `minifyScripts`
+```js
+minify: {
+  html: true, // strip HTML comments and collapse whitespace
+  css: true,  // collapse whitespace in component <style> blocks and .css files
+  js: true,   // strip comments/whitespace in inline <script> tags and .js files
+}
+```
 
-Minify inline `<script>` content and `.js` static files in the build output. Accepts three forms:
-
-- **`true`** (default), built-in minifier: strips block and line comments, collapses whitespace. String and template literals are preserved verbatim.
-- **`false`:** no minification.
-- **`(fn)`:** a custom async-capable function called for each script body. Use this to plug in esbuild, terser, or any other tool:
+The `js` property also accepts a custom async-capable minifier function to plug in esbuild or terser:
 
 ```ts
 // bascik.config.ts
@@ -143,16 +168,20 @@ import { defineConfig } from '@bascik/bascik/config';
 import { transform } from 'esbuild';
 
 export const build = defineConfig({
-  minifyScripts: async (js) => {
-    const result = await transform(js, { minify: true, loader: 'js' });
-    return result.code;
+  minify: {
+    html: true,
+    css: true,
+    js: async (code) => {
+      const result = await transform(code, { minify: true, loader: 'js' });
+      return result.code;
+    },
   },
 });
 ```
 
 Only applies to inline scripts (those without a `src` attribute) and to `.js` files copied into `dist/`. Non-JS script types such as `application/ld+json` are always left untouched.
 
-To strip TypeScript from component scripts, pass Node's built-in `stripTypeScriptTypes` here. See [TypeScript in Component Scripts](/scoped-javascript#typescript-in-component-scripts).
+To strip TypeScript from component scripts, pass Node's built-in `stripTypeScriptTypes` to `minify.js`. See [TypeScript in Component Scripts](/scoped-javascript#typescript-in-component-scripts).
 
 ### `obfuscateAttributeNames`
 
@@ -268,7 +297,7 @@ exec: [
 
 ### `inlineStyles`
 
-Controls which global stylesheets Bascik reads and injects as `<style>` tags into every page's `<head>` during transpilation. When `minifyStyles` is true the content is minified before injection. Global styles are placed before component styles so component rules take precedence.
+Controls which global stylesheets Bascik reads and injects as `<style>` tags into every page's `<head>` during transpilation. When `minify.css` is true the content is minified before injection. Global styles are placed before component styles so component rules take precedence.
 
 - `false`: inline nothing
 - `true`: inline every `.css` file under `directory.pages`
@@ -287,11 +316,11 @@ import { defineConfig } from '@bascik/bascik/config';
 
 export default defineConfig({
   inlineStyles: ['src/pages/css/styles.css'],
-  minifyStyles: false,
+  minify: { css: false },
 });
 
 export const build = defineConfig({
-  minifyStyles: true,
+  minify: { css: true },
 });
 ```
 
@@ -329,6 +358,18 @@ rm -rf node_modules/.cache/bascik/script-cache
 
 Set to `false` when debugging a script that reads external state not covered by the cache key (e.g. a live API call or a file referenced by a dynamic path).
 
+### `onScriptError`
+
+Action to take when a `<script data-bascik-build>` or `<script data-bascik-server>` block fails to execute.
+
+- `"error"` (default): Log a detailed compilation error with line and column numbers to `console.error` and continue transpilation, replacing the script tag's output with an empty string.
+- `"warn"`: Log a detailed warning to `console.warn` and continue transpilation, replacing the script tag's output with an empty string.
+- `"halt"`: Throw an error and halt compilation immediately, aborting the build or request.
+
+```js
+onScriptError: "error" // default
+```
+
 ## `build`
 
 Exporting a `build` object lets you set options that apply during `bascik --build` and `bascik --serve` (production server), overriding the default export. A common pattern is to enable obfuscation and minification only in production:
@@ -336,7 +377,10 @@ Exporting a `build` object lets you set options that apply during `bascik --buil
 ```js
 export const build = {
   obfuscateAttributeNames: true,
-  minifyStyles: true,
-  minifyScripts: true, // or a custom function for esbuild/terser
+  minify: {
+    html: true,
+    css: true,
+    js: true,
+  },
 };
 ```

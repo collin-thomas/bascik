@@ -22,9 +22,9 @@ Bascik's performance story starts before any of the techniques on this page. The
 
 **HTML minification.** HTML comments are stripped and excess whitespace is collapsed in every built page. Content inside `<pre>` blocks is left intact.
 
-**Script minification.** `minifyScripts` is `true` by default, stripping comments and whitespace from every inline `<script>` block and any `.js` static files copied to `dist/`. For identifier mangling and dead-code elimination, plug in esbuild (see [Minify JavaScript Output](#minify-javascript-output) below).
+**Script minification.** `minify.js` is `true` by default, stripping comments and whitespace from every inline `<script>` block and any `.js` static files copied to `dist/`. For identifier mangling and dead-code elimination, plug in esbuild (see [Minify JavaScript Output](#minify-javascript-output) below).
 
-**Inline styles.** Set `inlineStyles` in `bascik.config.ts` to inject a stylesheet directly into `<head>`, eliminating the render-blocking HTTP request for that file entirely. Pair it with `minifyStyles: true` to minify the injected CSS at build time.
+**Inline styles.** Set `inlineStyles` in `bascik.config.ts` to inject a stylesheet directly into `<head>`, eliminating the render-blocking HTTP request for that file entirely. Pair it with `minify.css: true` to minify the injected CSS at build time.
 
 Hitting 100 across the board is achievable on any Bascik site. The techniques below cover the rest: standard HTML patterns with no build plugins, no dependencies, and no configuration required.
 
@@ -538,7 +538,7 @@ The `onload` trick converts the preloaded asset into a live stylesheet the momen
 
 Keep inlined critical CSS to the minimum needed for above-the-fold visibility, typically 1–5 KB of minified CSS covering the header, hero section, and primary navigation.
 
-> **Bascik tip.** If your global stylesheet is small (under ~15 KB), skip the split entirely, set `inlineStyles` in your config and Bascik handles it automatically. Zero render-blocking requests, no FOUC, and production builds minify the injected CSS when `minifyStyles` is true:
+> **Bascik tip.** If your global stylesheet is small (under ~15 KB), skip the split entirely, set `inlineStyles` in your config and Bascik handles it automatically. Zero render-blocking requests, no FOUC, and production builds minify the injected CSS when `minify.css` is true:
 >
 > ```ts
 > // bascik.config.ts
@@ -549,7 +549,7 @@ Keep inlined critical CSS to the minimum needed for above-the-fold visibility, t
 > });
 >
 > export const build = defineConfig({
->   minifyStyles: true,
+>   minify: { css: true },
 > });
 > ```
 >
@@ -557,9 +557,9 @@ Keep inlined critical CSS to the minimum needed for above-the-fold visibility, t
 
 ## Minify JavaScript Output
 
-Bascik's `minifyScripts` option strips comments and collapses whitespace from every inline `<script>` block and any `.js` files copied into `dist/`. It is `true` by default, so production builds are already smaller without any configuration.
+Bascik's `minify.js` option strips comments and collapses whitespace from every inline `<script>` block and any `.js` files copied into `dist/`. It is `true` by default, so production builds are already smaller without any configuration.
 
-For maximum compression, identifier mangling, dead-code elimination, and tree-shaking, point `minifyScripts` at esbuild's `transform` API. esbuild has zero npm dependencies (it ships as a single native binary) and is typically 10–100× faster than alternatives:
+For maximum compression, identifier mangling, dead-code elimination, and tree-shaking, point `minify.js` at esbuild's `transform` API. esbuild has zero npm dependencies (it ships as a single native binary) and is typically 10–100× faster than alternatives:
 
 ```sh
 npm install --save-dev esbuild
@@ -571,10 +571,12 @@ import { defineConfig } from '@bascik/bascik/config';
 import { transform } from 'esbuild';
 
 export const build = defineConfig({
-  minifyStyles: true,
-  minifyScripts: async (js) => {
-    const result = await transform(js, { minify: true, loader: 'js' });
-    return result.code;
+  minify: {
+    css: true,
+    js: async (js) => {
+      const result = await transform(js, { minify: true, loader: 'js' });
+      return result.code;
+    },
   },
 });
 ```

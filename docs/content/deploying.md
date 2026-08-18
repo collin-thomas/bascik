@@ -12,6 +12,16 @@ Running `bascik --build` produces:
 
 The output uses root-relative paths (e.g. `/css/styles.css`). Files must be served from an HTTP server; opening them directly with `file://` will break asset loading.
 
+### Previewing static builds locally
+
+To preview your static build locally before deploying, run a lightweight HTTP server in `dist/`:
+
+```sh
+npx http-server dist
+```
+
+Then open `http://localhost:8080` in your browser to inspect your production site.
+
 ## Static hosting
 
 For most Bascik sites, `dist/` is the deployable artifact. If your site has no `data-bascik-server` scripts, you only need a static host.

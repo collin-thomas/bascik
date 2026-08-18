@@ -297,4 +297,4 @@ On first start, Bascik looks for `bascik-cert.pem` and `bascik-privkey.pem` in t
 
 To use your own certificates (e.g. from Let's Encrypt), set `keyFile` and `certFile` in the `serve` config block and Bascik will use them instead of generating new ones.
 
-> **Deploying.** For guidance on running the production server in containers, on a VPS, or behind a reverse proxy, see [Deploying](/resources/deploying).
+> **Deploying.** For guidance on running the production server in containers, on a VPS, or behind a reverse proxy, see [Deploying](/deploying).

@@ -48,6 +48,7 @@ import { execFile } from "node:child_process";
 import { writeFile, unlink, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import os from "node:os";
+import { BascikConfig } from "./config.js";
 
 /** Request context passed to every `data-bascik-server` script. */
 export interface ServerRequest {
@@ -177,9 +178,15 @@ export const executeServerScripts = async (
           job.output = stripAnsiEscapeCodes(stdout);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
-          console.warn(
-            `[bascik] server script error at "${request.path}":\n${msg}`,
-          );
+          const errorMsg = `[bascik] server script error at "${request.path}":\n${msg}`;
+          const behavior = BascikConfig.onScriptError ?? "error";
+          if (behavior === "halt") {
+            throw new Error(errorMsg);
+          } else if (behavior === "error") {
+            console.error(errorMsg);
+          } else {
+            console.warn(errorMsg);
+          }
           job.output = "";
         } finally {
           await unlink(tmpPath).catch(() => { });

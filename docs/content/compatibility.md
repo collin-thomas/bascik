@@ -73,7 +73,7 @@ CSS scoping applies to `.css` files paired with a component's HTML file. Place t
 | ------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------ |
 | CSS deduplication         | ✓     | When a component is used multiple times on a page, its CSS is injected only once.                                        |
 | `obfuscateAttributeNames` | ✓     | In production builds, verbose names like `bascik__site-nav__a1b2c3__logo` are hashed to short strings (e.g. `ba1b2c3d`). |
-| `minifyStyles`            | ✓     | Whitespace in the compiled `<style>` block is collapsed.                                                                 |
+| `minify.css`              | ✓     | Whitespace in the compiled `<style>` block is collapsed.                                                                 |
 | Comments                  | ✓     | Stripped before processing.                                                                                              |
 | SVG elements in component HTML | ✓ | `class` attributes on SVG elements (`<svg>`, `<circle>`, `<path>`, `<rect>`, etc.) are scoped with the same pipeline as HTML elements. JS `classList` and `querySelector` calls targeting SVG children are rewritten. |
 | `@font-face`              | △     | Passed through untouched, the `font-family` name is not scoped. Both the declaration and all usage sites remain unmodified, so the font resolves correctly within the page. Declare `@font-face` in a shared global stylesheet rather than a component `.css` file to avoid duplicate declarations when a component is used multiple times. |

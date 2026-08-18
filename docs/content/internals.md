@@ -57,4 +57,4 @@ After any `pkg/src/` change, rebuild the package and the docs server will pick i
 - [Transpilation Pipeline](/internals/transpilation-pipeline), the two-phase page and component pipeline that turns source HTML into deployable output.
 - [Scoping System](/internals/scoping-system), how IDs, class names, CSS, and JavaScript references are namespaced per component instance.
 - [Dev Server](/internals/dev-server), the HTTP/2 server, TLS certificate generation, memory store, live reload, and watch system.
-- [Testing](/internals/testing), running tests, coverage, writing new tests, and the benchmarking suite.
+- [Testing Internals](/internals/testing), running tests, coverage, writing new tests, and the benchmarking suite.

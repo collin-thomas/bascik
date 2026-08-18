@@ -30,15 +30,42 @@ mkcert -install   # only needed once per machine
 
 After running `mkcert -install`, restart the dev server. See the [CLI page](/cli) for more details on SSL certificate setup and browser-specific gotchas.
 
-## Folder Structure
+## Folder Structure & Static Assets
 
-Bascik looks for two directories by default. Both can be overridden in [bascik.config.ts](/configuration).
+Bascik looks for two main directories by default. Both can be customized in [bascik.config.ts](/configuration).
 
 ```text
 src/
-  components/  ← component .html and .css files
-  pages/       ← one .html file per route
+  components/           ← component .html (+ optional .css) templates
+  pages/                ← HTML routes, static assets, and subfolders
+    index.html          → dist/index.html
+    about.html          → dist/about.html
+    404.html            → dist/404.html
+    css/
+      styles.css        → dist/css/styles.css (auto-minified)
+    js/
+      main.js           → dist/js/main.js (auto-minified)
+    images/
+      logo.svg          → dist/images/logo.svg
+      hero.webp         → dist/images/hero.webp
+    blog/
+      first-post.html   → dist/blog/first-post.html
 ```
+
+### Subdirectories and Assets in `src/pages/`
+
+You can create **any folder structure** and place **any asset type** inside `src/pages/`. Bascik treats `src/pages/` as the single unified source tree for both page routes and static files:
+
+- **HTML files (`.html`)**: Transpiled by Bascik (resolving component tags, scoping CSS and JS, executing build scripts) and emitted to `dist/` at the matching path.
+- **CSS files (`.css`)**: Copied to `dist/` preserving their folder structure. Automatically minified during `bascik --build` when `minify.css` is enabled (the default).
+- **JavaScript files (`.js`)**: Copied to `dist/` preserving their folder structure. Automatically minified during `bascik --build` when `minify.js` is enabled (the default).
+- **Static assets (images, fonts, PDFs, JSON, etc.)**: Any non-`.html` file (such as `.png`, `.jpg`, `.svg`, `.webp`, `.woff2`, `.pdf`) is copied as-is to `dist/` maintaining its exact subfolder structure.
+
+No asset pipelines, passthrough copy configuration, or public folder settings are required.
+
+### Custom 404 Page
+
+Create `src/pages/404.html` to define a custom error page. During development (`npm run dev`), Bascik's server automatically serves `404.html` for any missing route. On build (`bascik --build`), it outputs to `dist/404.html`, which static hosts like GitHub Pages, Netlify, Cloudflare Pages, and Vercel pick up automatically.
 
 ## Manual Setup
 

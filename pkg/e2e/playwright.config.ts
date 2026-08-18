@@ -18,7 +18,7 @@ export default defineConfig({
   webServer: {
     // 1. Build the fixture site using the current pkg dist.
     // 2. Serve dist/ with the minimal static file server.
-    command: `node ${pkgDir}/dist/index.js --build && node server.mjs 4200`,
+    command: `node ${pkgDir}/dist/index.js --build && node server.ts 4200`,
     cwd: e2eDir,
     url: 'http://localhost:4200/scope-test',
     reuseExistingServer: false,

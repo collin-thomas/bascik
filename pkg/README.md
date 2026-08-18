@@ -109,7 +109,11 @@ export const bascikConfig = {
     name: true, // scope name attribute values
   },
 
-  minifyStyles: true, // collapse whitespace in compiled <style> block
+  minify: {
+    html: false,
+    css: true,
+    js: false,
+  },
   inlineStyles: false, // false | true | ['src/pages/css/styles.css']
   obfuscateAttributeNames: true, // hash class/id names to short hex strings
   cacheHttp: false, // HTTP cache headers on dev server responses
@@ -118,7 +122,11 @@ export const bascikConfig = {
 // Options applied only during `bascik --build`, merged over bascikConfig
 export const buildOverrideConfig = {
   obfuscateAttributeNames: true,
-  minifyStyles: true,
+  minify: {
+    html: true,
+    css: true,
+    js: true,
+  },
 };
 ```
 

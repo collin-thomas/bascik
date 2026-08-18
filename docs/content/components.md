@@ -8,7 +8,7 @@ The simplest component is just markup. No CSS, no JavaScript required.
 
 <!-- demo:source-usage-hello -->
 ```html
-<hello-card></hello-card>
+<hello-card />
 ```
 
 <!-- demo:source-html-hello -->
@@ -33,10 +33,36 @@ The simplest component is just markup. No CSS, no JavaScript required.
 
 <!-- demo:output-css-hello -->
 ```css
-.bascik__hello-card__hello-card { ... }
-.bascik__hello-card__hello-card-kicker { ... }
-.bascik__hello-card__hello-card-title { ... }
-.bascik__hello-card__hello-card-body { ... }
+.bascik__hello-card__hello-card {
+  width: min(100%, 32rem);
+  padding: 24px;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
+  border-radius: 6px;
+}
+
+.bascik__hello-card__hello-card-kicker {
+  margin: 0 0 10px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.bascik__hello-card__hello-card-title {
+  margin: 0 0 8px;
+  color: var(--text);
+  font-size: 1.1rem;
+}
+
+.bascik__hello-card__hello-card-body {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
 ```
 
 Components can appear in other components too. If `site-layout.html` uses `<page-footer></page-footer>`, every page that uses `<site-layout>` gets the footer automatically.
@@ -47,7 +73,7 @@ Add a `<style>` block to style the component inline. Bascik scopes the CSS to th
 
 <!-- demo:source-usage-badge -->
 ```html
-<comp-badge></comp-badge>
+<comp-badge />
 ```
 
 <!-- demo:source-html-badge -->
@@ -88,8 +114,25 @@ Add a `<style>` block to style the component inline. Bascik scopes the CSS to th
 
 <!-- demo:output-css-badge -->
 ```css
-.bascik__comp-badge__badge { ... }
-.bascik__comp-badge__badge-dot { ... }
+.bascik__comp-badge__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #d1fae5;
+  color: #065f46;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.bascik__comp-badge__badge-dot {
+  width: 6px;
+  height: 6px;
+  background: #10b981;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
 ```
 
 > **More on the next page.** [Scoped Styles](/scoped-styles) covers exactly how class names and selectors are namespaced and what CSS patterns are supported.
@@ -100,7 +143,7 @@ Add a `<script>` block for interactive behavior. Use `id` on any element you nee
 
 <!-- demo:source-usage-toggle -->
 ```html
-<comp-toggle></comp-toggle>
+<comp-toggle />
 ```
 
 <!-- demo:source-html-toggle -->
@@ -149,9 +192,30 @@ btn.addEventListener('click', () => {
 
 <!-- demo:output-css-toggle -->
 ```css
-.bascik__comp-toggle__toggle-wrap { ... }
-.bascik__comp-toggle__toggle-wrap .bascik__comp-toggle__el__p { ... }
-.bascik__comp-toggle__toggle-wrap .bascik__comp-toggle__el__button { ... }
+.bascik__comp-toggle__toggle-wrap {
+  padding: 24px;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  max-width: 420px;
+}
+
+.bascik__comp-toggle__toggle-wrap .bascik__comp-toggle__el__p {
+  color: var(--text-muted);
+  margin: 0 0 16px;
+}
+
+.bascik__comp-toggle__toggle-wrap .bascik__comp-toggle__el__button {
+  display: inline-block;
+  padding: 8px 18px;
+  background: var(--accent);
+  color: #18191b;
+  border: none;
+  border-radius: var(--r-sm);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
 ```
 
 > **See also.** [Scoped JavaScript](/scoped-javascript) explains how Bascik rewrites selectors so multiple instances of the same component on the same page stay fully independent.
@@ -162,7 +226,7 @@ All three can live in a single file. A `<style>` block, the markup, and a `<scri
 
 <!-- demo:source-usage-alert -->
 ```html
-<comp-alert></comp-alert>
+<comp-alert />
 ```
 
 <!-- demo:source-html-alert -->
@@ -221,14 +285,37 @@ All three can live in a single file. A `<style>` block, the markup, and a `<scri
 
 <!-- demo:output-css-alert -->
 ```css
-.bascik__comp-alert__alert { ... }
-.bascik__comp-alert__alert-body { ... }
-.bascik__comp-alert__alert-close { ... }
+.bascik__comp-alert__alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  background: #fffbeb;
+}
+
+.bascik__comp-alert__alert-body {
+  flex: 1;
+  margin: 0;
+  font-size: 0.9rem;
+  color: #92400e;
+}
+
+.bascik__comp-alert__alert-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #b45309;
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 0;
+}
 ```
 
-## Separate CSS Files
+## Companion CSS Files
 
-As a component grows, moving the CSS into its own file keeps things readable. Create a `.css` file with the same base name alongside the `.html` file. Both approaches are fully equivalent; Bascik applies the same scoping either way.
+Choosing between inline `<style>` blocks and companion `.css` files is a matter of personal preference. Create a `.css` file with the same base name alongside the `.html` file if you prefer to keep your styles separate. Both approaches are fully equivalent; Bascik applies the same scoping either way.
 
 <!-- demo:source-usage-card -->
 ```html
@@ -274,10 +361,26 @@ As a component grows, moving the CSS into its own file keeps things readable. Cr
 
 <!-- demo:output-css-card -->
 ```css
-.bascik__feature-card__fcard { ... }
-.bascik__feature-card__fcard h3 { ... }
-.bascik__feature-card__fcard p { ... }
-.bascik__feature-card__fcard:hover { ... }
+.bascik__feature-card__fcard {
+  padding: 24px;
+  background: #242628;
+  border: 1px solid #3a3d40;
+  border-radius: 10px;
+}
+
+.bascik__feature-card__fcard .bascik__feature-card__el__h3 {
+  color: #f0f1f2;
+}
+
+.bascik__feature-card__fcard .bascik__feature-card__el__p {
+  font-size: 0.875rem;
+  color: #8d929e;
+}
+
+.bascik__feature-card__fcard:hover {
+  border-color: rgba(211,255,141,0.35);
+  box-shadow: 0 0 0 1px rgba(211,255,141,0.12);
+}
 ```
 
 ## Subfolder Layout
@@ -295,6 +398,17 @@ Bascik derives the tag name from the `.html` filename, not the folder. `feature-
 
 > **No restart needed.** The dev server watches `src/components/` for new and changed files. Drop in a new `.html` or `.css` file and all affected pages re-transpile and reload automatically.
 
+## File Structure Flexibility
+
+Bascik gives you complete freedom to structure your components however you prefer. You can mix and match different layouts across your project depending on the size and complexity of each component:
+
+1. **HTML-only file:** Just a `.html` file inside `src/components/`. No CSS/JS files needed.
+2. **Single-file component:** An `.html` file inside `src/components/` containing both your markup and `<style>`/`<script>` blocks.
+3. **Companion files in the root:** An `.html` file and a `.css` file side-by-side in `src/components/` (e.g. `src/components/my-card.html` and `src/components/my-card.css`).
+4. **Subfolder organization:** A folder inside `src/components/` containing the matching files (e.g. `src/components/my-card/my-card.html` and `src/components/my-card/my-card.css`).
+
+You can choose any of these arrangements at any time. There is **no functionality or performance difference** between them. At build time, Bascik treats them identically, extracting and scoping your styles and bundling them into the page's final compiled output.
+
 ## Multiple Root Elements
 
 Unlike traditional JavaScript frameworks (such as React or Vue 2) that historically required a single root wrapper element or explicit fragment components, Bascik component templates naturally support **multiple top-level HTML elements** in a single `.html` file.
@@ -308,6 +422,20 @@ Unlike traditional JavaScript frameworks (such as React or Vue 2) that historica
 When transpiled, all root-level elements are inserted directly into the page markup in order. No unnecessary wrapper `<div>` or `<Fragment>` tags are added to your rendered HTML. Bascik's scoping engine automatically handles CSS rules, class names, IDs, element selectors, and scripts across every element in the component template.
 
 > **Attribute Inheritance:** If non-`data-bascik-*` attributes are passed on a usage tag (such as `class="extra"` or `aria-label="Section"`), Bascik merges them onto the **first** root HTML element in the component template.
+
+## Void / Self-Closing Component Tags
+
+When utilizing your components inside pages or other components, you can use standard opening and closing tags, or you can use self-closing/void syntax:
+
+```html
+<!-- Standard paired tags -->
+<site-nav></site-nav>
+
+<!-- Void (self-closing) syntax -->
+<site-nav />
+```
+
+If your component does not use a `<slot>` to accept inner children, you can choose to use it as a void/self-closing component. Both forms are fully supported and compile to the exact same output, with no difference in behavior or performance. You can choose whichever style matches your personal preference or project guidelines.
 
 ## Multiple Style Blocks
 

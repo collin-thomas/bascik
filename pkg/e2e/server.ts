@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 const port = Number(process.argv[2] ?? 4200);
 const distDir = join(fileURLToPath(import.meta.url), '..', 'dist');
 
-const mime = {
+const mime: Record<string, string> = {
   '.html': 'text/html',
   '.css': 'text/css',
   '.js': 'application/javascript',
@@ -18,7 +18,8 @@ const mime = {
 };
 
 createServer((req, res) => {
-  let p = join(distDir, req.url === '/' ? 'index.html' : req.url);
+  const url = req.url ?? '/';
+  let p = join(distDir, url === '/' ? 'index.html' : url);
   if (!p.endsWith('.html') && existsSync(p + '.html')) p += '.html';
   if (!existsSync(p)) {
     res.writeHead(404, { 'Content-Type': 'text/plain' });

@@ -277,7 +277,14 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
         const lines = prefix.split(/\r?\n/);
         errorMsg += ` in "${getRelativePath(filePath, "pages")}" at (line ${lines.length}, column ${lines[lines.length - 1].length + 1})`;
       }
-      console.warn(`${errorMsg}:\n${msg}`);
+      const behavior = BascikConfig.onScriptError ?? "error";
+      if (behavior === "halt") {
+        throw new Error(`${errorMsg}:\n${msg}`);
+      } else if (behavior === "error") {
+        console.error(`${errorMsg}:\n${msg}`);
+      } else {
+        console.warn(`${errorMsg}:\n${msg}`);
+      }
       return { fullTag, index, output: "" };
     } finally {
       await unlink(tmpPath).catch(() => { });

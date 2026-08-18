@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-  <docs-head></docs-head>
+  <docs-head />
   <script data-bascik-build>
     import { join } from 'node:path';
     import { pathToFileURL } from 'node:url';
@@ -37,17 +37,17 @@
   </script>
   <meta name="description"
     content="Bascik uses Vitest for unit tests, coverage, and benchmarks. All test files live alongside the source files they exercise." />
-  <title>Testing - Bascik Developer Guide</title>
+  <title>Testing Internals - Bascik Developer Guide</title>
 </head>
 
 <body>
 
-  <docs-nav></docs-nav>
+  <docs-nav />
 
   <div class="container">
     <div class="docs-layout">
 
-      <docs-sidebar></docs-sidebar>
+      <docs-sidebar />
 
       <main class="docs-content">
         <p class="section-label">Internals</p>
@@ -65,7 +65,7 @@
               return `<span style="display:inline-block;width:100px;height:8px;background:rgba(255,255,255,0.08);border-radius:2px;vertical-align:middle;margin-right:6px;overflow:hidden"><span style="display:block;width:${pct}px;height:100%;background:${color};border-radius:2px"></span></span>`;
             };
             console.log(`
-              <h1>Testing</h1>
+              <h1>Testing Internals</h1>
               <p style="color:var(--text-muted);font-size:.92rem;margin-bottom:1rem">Bascik has two separate test suites: <strong>unit tests</strong> (Vitest) that verify individual library modules, and <strong>end-to-end tests</strong> (Playwright) that build and browser-test the full transpilation pipeline against a fixture site.</p>
               <h2>Unit Test Coverage</h2>
               <p style="color:var(--text-muted);font-size:.92rem;margin-bottom:1rem">Line, function, and branch coverage from the Vitest unit test suite. CLI entry points (<code>index.ts</code>, <code>transpile.ts</code>, <code>page-worker.ts</code>) are excluded — they run only in E2E tests below.</p>
@@ -187,7 +187,7 @@
     </div>
   </div>
 
-  <docs-footer></docs-footer>
+  <docs-footer />
 
 </body>
 

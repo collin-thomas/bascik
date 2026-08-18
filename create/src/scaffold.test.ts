@@ -132,6 +132,11 @@ describe("SITE_HEADER_HTML", () => {
     expect(SITE_HEADER_HTML).toContain("data-bascik-prop-brand");
   });
 
+  it("interpolates SITE_HEADER_CSS inside style block without escaping", () => {
+    expect(SITE_HEADER_HTML).toContain(".header {");
+    expect(SITE_HEADER_HTML).not.toContain("${SITE_HEADER_CSS}");
+  });
+
   it("contains nav links to all three pages", () => {
     expect(SITE_HEADER_HTML).toContain('href="/"');
     expect(SITE_HEADER_HTML).toContain('href="/about"');
@@ -163,6 +168,11 @@ describe("SITE_FOOTER_HTML", () => {
     expect(SITE_FOOTER_HTML).toContain("data-bascik-prop-brand");
   });
 
+  it("interpolates SITE_FOOTER_CSS inside style block without escaping", () => {
+    expect(SITE_FOOTER_HTML).toContain(".footer {");
+    expect(SITE_FOOTER_HTML).not.toContain("${SITE_FOOTER_CSS}");
+  });
+
   it("uses a build-time script for the year", () => {
     expect(SITE_FOOTER_HTML).toContain("data-bascik-build");
     expect(SITE_FOOTER_HTML).toContain("getFullYear");
@@ -177,6 +187,11 @@ describe("SITE_FOOTER_CSS", () => {
 });
 
 describe("MY_COUNTER_HTML", () => {
+  it("interpolates MY_COUNTER_CSS inside style block without escaping", () => {
+    expect(MY_COUNTER_HTML).toContain(".counter {");
+    expect(MY_COUNTER_HTML).not.toContain("${MY_COUNTER_CSS}");
+  });
+
   it("uses id-based DOM lookups for instance safety", () => {
     expect(MY_COUNTER_HTML).toContain("getElementById");
     expect(MY_COUNTER_HTML).not.toContain("querySelector(");
@@ -193,6 +208,11 @@ describe("MY_COUNTER_HTML", () => {
 });
 
 describe("FEAT_CARD_HTML", () => {
+  it("interpolates FEAT_CARD_CSS inside style block without escaping", () => {
+    expect(FEAT_CARD_HTML).toContain(".fcard {");
+    expect(FEAT_CARD_HTML).not.toContain("${FEAT_CARD_CSS}");
+  });
+
   it("defines three slot zones: header, default, and footer", () => {
     expect(FEAT_CARD_HTML).toContain('data-bascik-slot="header"');
     expect(FEAT_CARD_HTML).toContain("data-bascik-slot>");
@@ -229,10 +249,10 @@ describe("page templates", () => {
   it("indexPage contains hero, features, and counter demo", () => {
     const html = indexPage("My App");
     expect(html).toContain("hero");
-    expect(html).toContain("<my-counter>");
+    expect(html).toContain("<my-counter />");
     expect(html).toContain("<site-header");
     expect(html).toContain("<site-footer");
-    expect(html).toContain("<site-meta>");
+    expect(html).toContain("<site-meta />");
   });
 
   it("aboutPage contains two feature cards", () => {
@@ -264,7 +284,7 @@ describe("page templates", () => {
 
   it("all pages use site-meta head component", () => {
     for (const fn of [indexPage, aboutPage, contactPage, notFoundPage]) {
-      expect(fn("x")).toContain("<site-meta>");
+      expect(fn("x")).toContain("<site-meta />");
     }
   });
 });
@@ -287,9 +307,9 @@ describe("scaffold", () => {
     expect(dirs.some((d) => d.includes("site-meta"))).toBe(true);
   });
 
-  it("writes all 20 expected files", async () => {
+  it("writes all 16 expected files", async () => {
     await scaffold("my-app", "/tmp");
-    expect(mockWriteFile.mock.calls.length).toBe(20);
+    expect(mockWriteFile.mock.calls.length).toBe(16);
   });
 
   it("writes SKILL.md into .github/skills/bascik and .claude/skills/bascik", async () => {

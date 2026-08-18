@@ -33,7 +33,7 @@ Place default content inside the marker and it renders whenever the component ta
   <p>Custom content replaces the fallback.</p>
 </simple-slot-card>
 
-<simple-slot-card></simple-slot-card>
+<simple-slot-card />
 ```
 
 <!-- demo:basic-slot-output-html -->

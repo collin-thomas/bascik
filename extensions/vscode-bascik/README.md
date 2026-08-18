@@ -17,6 +17,33 @@ npm run watch     # recompiles on save
 
 Open `extensions/vscode-bascik/` as the workspace root in VS Code and press **F5** to launch an Extension Development Host with the extension loaded.
 
+## Testing
+
+The extension uses `@vscode/test-cli` and `@vscode/test-electron` to run integration tests inside an Extension Development Host instance.
+
+### Running tests
+
+From the repository root:
+
+```sh
+yarn ext:test
+```
+
+Or from the extension directory:
+
+```sh
+cd extensions/vscode-bascik
+npm test
+```
+
+### Test structure
+
+- **Unit tests** (`src/test/rules.test.ts`): verify CSS and JS scoping compatibility rule matching logic.
+- **Integration tests** (`src/test/extension.test.ts`): verify extension activation, component definition provider navigation, and diagnostics generation inside a real VS Code environment using the `test-fixtures/sample-workspace` fixture.
+- **Test configuration** (`.vscode-test.cjs`): configures test files, workspace fixtures, and Mocha settings.
+
+For more details on VS Code extension testing architecture, see the [VS Code Extension Testing documentation](https://code.visualstudio.com/api/working-with-extensions/testing-extension).
+
 ## Implementation
 
 The extension uses:

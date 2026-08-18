@@ -24,11 +24,59 @@ Output in the compiled HTML:
 
 > **A few rules to know:** Top-level `import` and `await` are supported. Paths are relative to the project root (where you run `bascik`). Write output with `console.log()`. Runs during both dev and production builds. Component tags in the output are resolved normally, so your build script can emit `<my-card>` and it will be transpiled.
 
-## Error Handling
+## How Error Handling Works
 
-If a build script throws, Bascik logs a warning and replaces the script tag with an empty string. The build continues rather than aborting. Check your terminal output if content is missing from the page.
+Build scripts run as isolated Node.js ESM modules during transpilation. When a build script throws an exception, such as a missing file (`ENOENT`), a syntax error, or a failed network request, Bascik intercepts the error and reports it cleanly without crashing the dev server or CLI runner.
 
-One case that does hard-fail and abort the build: putting both `data-bascik-build` and `data-bascik-server` on the same `<script>` tag. That combination is never valid: a script runs at build time or at request time, not both. Bascik throws an error with the file name and line number. The VS Code extension also flags it as an error before you build.
+### Terminal Error Formatting
+
+When a script fails, Bascik prints the page file path along with the exact line and column number of the `<script data-bascik-build>` tag, followed by the error message or stack trace:
+
+```text
+[bascik] build script error in "pages/deploying.html" at (line 14, column 3):
+ENOENT: no such file or directory, open './content/deploying.md'
+```
+
+### Configuring Error Behavior
+
+You can control how script failures affect your build using the `onScriptError` option in `bascik.config.ts`:
+
+```ts
+// bascik.config.ts
+export default {
+  onScriptError: 'error', // 'error' | 'warn' | 'halt'
+};
+```
+
+Bascik supports three error modes:
+
+- `'error'` (default): Logs the error to `stderr` and replaces the failing script tag with an empty string. Transpilation continues for all other pages.
+- `'warn'`: Logs a warning to `stderr` and replaces the script tag with an empty string.
+- `'halt'`: Throws an exception and immediately stops the build. This is recommended for CI/CD pipelines so broken build scripts fail the build step.
+
+### Conflict Errors
+
+One combination always hard-fails regardless of `onScriptError`: putting both `data-bascik-build` and `data-bascik-server` on the same `<script>` tag. A script can run at build time or at request time, but not both. Bascik throws an error with the file name and line position. The VS Code extension also highlights this as an error as you type.
+
+### Best Practices for Resilient Scripts
+
+When your build scripts read local files or fetch remote data, wrap file and network operations in `try / catch` blocks. Returning fallback markup or logging a warning keeps your page layout intact even if an external resource is temporarily missing:
+
+```ts
+// scripts/md-renderer.ts
+import { readFile } from 'node:fs/promises';
+import { marked } from 'marked';
+
+export async function renderMd(filePath: string): Promise<string> {
+  try {
+    const md = await readFile(filePath, 'utf8');
+    return marked(md);
+  } catch (err) {
+    console.warn(`[md-renderer] Could not read ${filePath}: ${(err as Error).message}`);
+    return `<div class="callout"><p><strong>File not found:</strong> <code>${filePath}</code></p></div>`;
+  }
+}
+```
 
 ## Example: Reading a Markdown File
 

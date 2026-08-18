@@ -192,33 +192,6 @@ export const SITE_META_HTML = `<meta charset="UTF-8" />
 <link rel="stylesheet" href="/css/styles.css" />
 `;
 
-/** Sticky top nav with logo (brand prop) and mobile hamburger. */
-export const SITE_HEADER_HTML = `<header class="header">
-  <div class="container">
-    <nav class="nav">
-      <a href="/" class="logo" data-bascik-prop-brand>My Site</a>
-      <button id="nav-toggle" class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-      <ul id="nav-menu" class="nav-menu">
-        <li><a href="/">Home</a></li>
-        <li><a href="/about">About</a></li>
-        <li><a href="/contact">Contact</a></li>
-      </ul>
-    </nav>
-  </div>
-</header>
-<script>
-  var toggle = document.getElementById('nav-toggle');
-  var menu = document.getElementById('nav-menu');
-  toggle.addEventListener('click', function () {
-    var open = toggle.getAttribute('aria-expanded') === 'true';
-    toggle.setAttribute('aria-expanded', String(!open));
-    menu.classList.toggle('is-open');
-  });
-</script>
-`;
-
 export const SITE_HEADER_CSS = `.header {
   position: sticky;
   top: 0;
@@ -306,22 +279,33 @@ export const SITE_HEADER_CSS = `.header {
 }
 `;
 
-/** Footer with brand prop and build-time year. */
-export const SITE_FOOTER_HTML = `<footer class="footer">
+/** Sticky top nav with logo (brand prop) and mobile hamburger. */
+export const SITE_HEADER_HTML = `<style>
+${SITE_HEADER_CSS}</style>
+<header class="header">
   <div class="container">
-    <div class="footer-inner">
-      <span class="footer-copy">
-        &copy; <script data-bascik-build>console.log(new Date().getFullYear())</script>
-        <span data-bascik-prop-brand>My Site</span>
-      </span>
-      <nav class="footer-nav" aria-label="Footer navigation">
-        <a href="/">Home</a>
-        <a href="/about">About</a>
-        <a href="/contact">Contact</a>
-      </nav>
-    </div>
+    <nav class="nav">
+      <a href="/" class="logo" data-bascik-prop-brand>My Site</a>
+      <button id="nav-toggle" class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <ul id="nav-menu" class="nav-menu">
+        <li><a href="/">Home</a></li>
+        <li><a href="/about">About</a></li>
+        <li><a href="/contact">Contact</a></li>
+      </ul>
+    </nav>
   </div>
-</footer>
+</header>
+<script>
+  var toggle = document.getElementById('nav-toggle');
+  var menu = document.getElementById('nav-menu');
+  toggle.addEventListener('click', function () {
+    var open = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!open));
+    menu.classList.toggle('is-open');
+  });
+</script>
 `;
 
 export const SITE_FOOTER_CSS = `.footer {
@@ -356,15 +340,24 @@ export const SITE_FOOTER_CSS = `.footer {
 }
 `;
 
-/**
- * Card component demonstrating named slots.
- * Slots: header (label/icon area), default (title + body), footer (actions).
- */
-export const FEAT_CARD_HTML = `<article class="fcard">
-  <div class="fcard-header" data-bascik-slot="header"></div>
-  <div class="fcard-body" data-bascik-slot></div>
-  <div class="fcard-footer" data-bascik-slot="footer"></div>
-</article>
+/** Footer with brand prop and build-time year. */
+export const SITE_FOOTER_HTML = `<style>
+${SITE_FOOTER_CSS}</style>
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <span class="footer-copy">
+        &copy; <script data-bascik-build>console.log(new Date().getFullYear())</script>
+        <span data-bascik-prop-brand>My Site</span>
+      </span>
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+      </nav>
+    </div>
+  </div>
+</footer>
 `;
 
 export const FEAT_CARD_CSS = `.fcard {
@@ -404,24 +397,17 @@ export const FEAT_CARD_CSS = `.fcard {
 .fcard-footer:empty { display: none; }
 `;
 
-/** Interactive counter — two instances on a page stay fully independent. */
-export const MY_COUNTER_HTML = `<div class="counter">
-  <button id="btn-dec" class="btn btn-ghost">−</button>
-  <span id="count-val" class="count-val">0</span>
-  <button id="btn-inc" class="btn btn-primary">+</button>
-</div>
-<script>
-  (function () {
-    var count = 0;
-    var val = document.getElementById('count-val');
-    document.getElementById('btn-dec').addEventListener('click', function () {
-      val.textContent = --count;
-    });
-    document.getElementById('btn-inc').addEventListener('click', function () {
-      val.textContent = ++count;
-    });
-  }());
-</script>
+/**
+ * Card component demonstrating named slots.
+ * Slots: header (label/icon area), default (title + body), footer (actions).
+ */
+export const FEAT_CARD_HTML = `<style>
+${FEAT_CARD_CSS}</style>
+<article class="fcard">
+  <div class="fcard-header" data-bascik-slot="header"></div>
+  <div class="fcard-body" data-bascik-slot></div>
+  <div class="fcard-footer" data-bascik-slot="footer"></div>
+</article>
 `;
 
 export const MY_COUNTER_CSS = `.counter {
@@ -453,6 +439,28 @@ export const MY_COUNTER_CSS = `.counter {
 }
 `;
 
+/** Interactive counter — two instances on a page stay fully independent. */
+export const MY_COUNTER_HTML = `<style>
+${MY_COUNTER_CSS}</style>
+<div class="counter">
+  <button id="btn-dec" class="btn btn-ghost">−</button>
+  <span id="count-val" class="count-val">0</span>
+  <button id="btn-inc" class="btn btn-primary">+</button>
+</div>
+<script>
+  (function () {
+    var count = 0;
+    var val = document.getElementById('count-val');
+    document.getElementById('btn-dec').addEventListener('click', function () {
+      val.textContent = --count;
+    });
+    document.getElementById('btn-inc').addEventListener('click', function () {
+      val.textContent = ++count;
+    });
+  }());
+</script>
+`;
+
 // ─── Pages ───────────────────────────────────────────────────────────────────
 
 const pageShell = (
@@ -463,14 +471,14 @@ const pageShell = (
 <html lang="en">
 <head>
   <title>${title}</title>
-  <site-meta></site-meta>
+  <site-meta />
 </head>
 <body>
-  <site-header data-bascik-prop-brand="${brand}"></site-header>
+  <site-header data-bascik-prop-brand="${brand}" />
   <main>
 ${body}
   </main>
-  <site-footer data-bascik-prop-brand="${brand}"></site-footer>
+  <site-footer data-bascik-prop-brand="${brand}" />
 </body>
 </html>
 `;
@@ -522,8 +530,8 @@ export const indexPage = (brand: string): string =>
         <h2>Counter component</h2>
         <p>Each instance holds its own state. Place the same component twice — they stay independent.</p>
         <div style="display:flex;gap:48px;flex-wrap:wrap;margin-top:24px;">
-          <my-counter></my-counter>
-          <my-counter></my-counter>
+          <my-counter />
+          <my-counter />
         </div>
       </div>
     </section>`);
@@ -651,12 +659,8 @@ export async function scaffold(
     // Components
     writeFile(join(root, "src", "components", "site-meta", "site-meta.html"), SITE_META_HTML, "utf8"),
     writeFile(join(root, "src", "components", "site-header", "site-header.html"), SITE_HEADER_HTML, "utf8"),
-    writeFile(join(root, "src", "components", "site-header", "site-header.css"), SITE_HEADER_CSS, "utf8"),
     writeFile(join(root, "src", "components", "site-footer", "site-footer.html"), SITE_FOOTER_HTML, "utf8"),
-    writeFile(join(root, "src", "components", "site-footer", "site-footer.css"), SITE_FOOTER_CSS, "utf8"),
     writeFile(join(root, "src", "components", "feat-card", "feat-card.html"), FEAT_CARD_HTML, "utf8"),
-    writeFile(join(root, "src", "components", "feat-card", "feat-card.css"), FEAT_CARD_CSS, "utf8"),
     writeFile(join(root, "src", "components", "my-counter", "my-counter.html"), MY_COUNTER_HTML, "utf8"),
-    writeFile(join(root, "src", "components", "my-counter", "my-counter.css"), MY_COUNTER_CSS, "utf8"),
   ]);
 }

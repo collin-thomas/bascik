@@ -47,7 +47,13 @@ export async function openGraph(): Promise<string> {
 
   if (!siteUrl || !pageFile || !pagesDir) return '';
 
-  const html = await readFile(pageFile, 'utf8');
+  let html: string;
+  try {
+    html = await readFile(pageFile, 'utf8');
+  } catch (err) {
+    console.warn(`[open-graph] Warning: Could not read page file "${pageFile}": ${(err as Error).message}`);
+    return '';
+  }
   const title = extractTitle(html);
   const description = extractDescription(html);
 

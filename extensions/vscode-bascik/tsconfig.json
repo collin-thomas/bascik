@@ -10,7 +10,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "types": ["node", "vscode"]
+    "types": ["node", "vscode", "mocha"]
   },
   "include": ["src/**/*.ts"]
 }

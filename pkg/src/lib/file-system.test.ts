@@ -26,7 +26,7 @@ vi.mock("./config.js", () => ({
       pages: "pages",
       components: "components",
     },
-    minifyStyles: false,
+    minify: { css: false, js: false, html: false },
     devServer: {
       logging: {
         level: "info",
@@ -232,11 +232,11 @@ describe("copyReplicatePath – CSS minification", () => {
   beforeEach(() => {
     vi.mocked(readFile).mockReset();
     vi.mocked(writeFile).mockReset();
-    (BascikConfig as any).minifyStyles = true;
+    (BascikConfig as any).minify = { css: true, js: false, html: false };
   });
 
   afterEach(() => {
-    (BascikConfig as any).minifyStyles = false;
+    (BascikConfig as any).minify = { css: false, js: false, html: false };
   });
 
   it("writes minified CSS to dest when source and dest hashes differ", async () => {
@@ -268,7 +268,7 @@ describe("copyReplicatePath – CSS minification", () => {
     expect(writeFile).not.toHaveBeenCalled();
   });
 
-  it("uses writeFile (not copyFile) for CSS files when minifyStyles is enabled", async () => {
+  it("uses writeFile (not copyFile) for CSS files when minify.css is enabled", async () => {
     const { copyFile } = await import("node:fs/promises");
     vi.mocked(readFile)
       .mockResolvedValueOnce(".a { color: red; }" as any)
@@ -404,11 +404,11 @@ describe("copyReplicatePath – JS minification", () => {
   });
 
   afterEach(() => {
-    (BascikConfig as any).minifyScripts = false;
+    (BascikConfig as any).minify = { css: false, js: false, html: false };
   });
 
   it("writes minified JS using a custom minify function", async () => {
-    (BascikConfig as any).minifyScripts = async (code: string) => code.replace(/\s+/g, "");
+    (BascikConfig as any).minify = { css: false, js: async (code: string) => code.replace(/\s+/g, ""), html: false };
     vi.mocked(readFile)
       .mockResolvedValueOnce("const x = 1 ;" as any)
       .mockRejectedValueOnce(new Error("ENOENT"));
@@ -421,7 +421,7 @@ describe("copyReplicatePath – JS minification", () => {
   });
 
   it("skips write when minified JS already matches dest", async () => {
-    (BascikConfig as any).minifyScripts = async (code: string) => code.trim();
+    (BascikConfig as any).minify = { css: false, js: async (code: string) => code.trim(), html: false };
     const content = "const x = 1;";
     vi.mocked(readFile)
       .mockResolvedValueOnce(content as any)
@@ -432,8 +432,8 @@ describe("copyReplicatePath – JS minification", () => {
     expect(writeFile).not.toHaveBeenCalled();
   });
 
-  it("calls minifyJs when minifyScripts is true", async () => {
-    (BascikConfig as any).minifyScripts = true;
+  it("calls minifyJs when minify.js is true", async () => {
+    (BascikConfig as any).minify = { css: false, js: true, html: false };
     vi.mocked(readFile)
       .mockResolvedValueOnce("const x = 1;" as any)
       .mockRejectedValueOnce(new Error("ENOENT"));
