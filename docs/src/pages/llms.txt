@@ -35,9 +35,12 @@ For the complete, centralized developer reference and AI assistant instructions,
 
 - [FAQ](https://bascik.dev/faq): Answers to common questions about Bascik.
 - [Scoping Compatibility](https://bascik.dev/compatibility): Legend
-- [Agent Skill](https://bascik.dev/agent-skill): Download the Bascik skill file and attach it to GitHub Copilot, Cursor, Claude, or any AI assistant that supports instruction files, so it understands Bascik's component model, ...
-- [VS Code Extension](https://bascik.dev/resources/vscode-extension): The Bascik VS Code extension is a lightweight editor companion for the scoping system.
-- [Deploying](https://bascik.dev/resources/deploying): Bascik's build output is a standard folder of static HTML, CSS, and JavaScript files.
+- [Deploying](https://bascik.dev/deploying): Bascik's build output is a standard folder of static HTML, CSS, and JavaScript files.
+
+## Tooling
+
+- [VS Code Extension](https://bascik.dev/tools/vscode-extension): The Bascik VS Code extension is a lightweight editor companion for the scoping system.
+- [Agent Skill](https://bascik.dev/tools/agent-skill): Download the Bascik skill file and attach it to GitHub Copilot, Cursor, Claude, or any AI assistant that supports instruction files, so it understands Bascik's component model, ...
 
 ## Recipes
 

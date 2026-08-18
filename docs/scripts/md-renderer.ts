@@ -63,7 +63,13 @@ interface RenderRange {
  * @returns {Promise<string>} HTML-escaped code ready for a <code-block> slot.
  */
 export async function extractDemoBlock(filePath: string, markerId: string): Promise<string> {
-  const md = await readFile(filePath, 'utf8');
+  let md: string;
+  try {
+    md = await readFile(filePath, 'utf8');
+  } catch (err) {
+    console.warn(`[md-renderer] Warning: Could not read file "${filePath}": ${(err as Error).message}`);
+    return `<!-- [md-renderer] File not found: ${filePath} -->`;
+  }
   const markerRe = new RegExp(`<!--\\s*demo:${markerId}\\s*-->`, 'i');
   const markerMatch = markerRe.exec(md);
   if (!markerMatch) return `<!-- demo:${markerId} not found in ${filePath} -->`;
@@ -84,7 +90,13 @@ export async function renderMd(
   filePath: string,
   { skipFirstHeading = false, stripDemoBlocks = false }: RenderMdOptions = {},
 ): Promise<string> {
-  let md = await readFile(filePath, 'utf8');
+  let md: string;
+  try {
+    md = await readFile(filePath, 'utf8');
+  } catch (err) {
+    console.warn(`[md-renderer] Warning: Could not read file "${filePath}": ${(err as Error).message}`);
+    return `<div class="callout"><p><strong>File not found:</strong> <code>${filePath}</code></p></div>`;
+  }
   return _transformMd(md, { skipFirstHeading, stripDemoBlocks });
 }
 
@@ -102,7 +114,13 @@ export async function renderMdRange(
   { from, to }: RenderRange = {},
   options: RenderMdOptions = {},
 ): Promise<string> {
-  let md = await readFile(filePath, 'utf8');
+  let md: string;
+  try {
+    md = await readFile(filePath, 'utf8');
+  } catch (err) {
+    console.warn(`[md-renderer] Warning: Could not read file "${filePath}": ${(err as Error).message}`);
+    return `<div class="callout"><p><strong>File not found:</strong> <code>${filePath}</code></p></div>`;
+  }
 
   if (from) {
     const idx = _headingIndex(md, from);

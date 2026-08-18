@@ -36,8 +36,8 @@
     console.log(await articleSchema());
   </script>
   <meta name="description"
-    content="The Bascik VS Code extension provides editor warnings for CSS and JavaScript patterns that are unsupported by the scoping system." />
-  <title>VS Code Extension - Bascik Docs</title>
+    content="Download the Bascik agent skill file and attach it to GitHub Copilot, Cursor, Claude, or any AI agent that supports custom instructions." />
+  <title>Agent Skill - Bascik Docs</title>
 </head>
 
 <body>
@@ -46,24 +46,26 @@
 
   <div class="container">
     <div class="docs-layout">
-
       <docs-sidebar />
 
       <main class="docs-content">
-        <p class="section-label">Reference</p>
+        <p class="section-label">Tooling & Ecosystem</p>
+
+        <!-- Content rendered from docs/content/tools/agent-skill.md at build time.
+             To update page content, edit the MD file — not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
           );
-          console.log(await renderMd('./content/resources/vscode-extension.md'));
+          console.log(await renderMd('./content/tools/agent-skill.md'));
         </script>
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
           const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.ts')).href);
-          console.log(renderPagination('/resources/vscode-extension'));
+          console.log(renderPagination('/tools/agent-skill'));
         </script>
 
       </main>

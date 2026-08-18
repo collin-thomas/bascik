@@ -589,7 +589,13 @@ export const transpilePage = async (
 
   // Execute <script data-bascik-build> blocks first so that the generated HTML
   // can contain component tags, which will be resolved below.
-  const rawHtml = (await readFile(pagePath)).toString();
+  let rawHtml: string;
+  try {
+    rawHtml = (await readFile(pagePath)).toString();
+  } catch (err) {
+    console.warn(`[bascik] warning: Could not read page file "${pagePath}": ${(err as Error).message}`);
+    return null;
+  }
   const htmlWithBuildOutput = await executeBuildScripts(rawHtml, pagePath);
 
   // Do NOT minify before component resolution. Minification runs after transpilation

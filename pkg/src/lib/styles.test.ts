@@ -183,6 +183,13 @@ describe("addElementClassesInHtml", () => {
   it("test", () => {
     expect(addElementClassesInHtml(elHtml, "my-comp", ["p"])).toBe(elHtmlRes);
   });
+
+  it("does not match <aside> as an <a> element when scoping 'a'", () => {
+    const html = `<aside class="docs-sidebar"><ul class="sidebar-nav"><li><a href="/why-bascik">Why Bascik</a></li></ul></aside>`;
+    const result = addElementClassesInHtml(html, "docs-sidebar", ["li", "a"]);
+    expect(result).not.toContain("docs-sidebar bascik__docs-sidebar__el__a");
+    expect(result).toContain('<a class="bascik__docs-sidebar__el__a" href="/why-bascik">Why Bascik</a>');
+  });
 });
 
 describe("getCssClasses", () => {

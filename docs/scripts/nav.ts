@@ -49,9 +49,13 @@ export const NAV: NavSection[] = [
     section: 'Reference', pages: [
       { href: '/faq', label: 'FAQ' },
       { href: '/compatibility', label: 'Scoping Compatibility' },
-      { href: '/agent-skill', label: 'Agent Skill' },
-      { href: '/resources/vscode-extension', label: 'VS Code Extension' },
-      { href: '/resources/deploying', label: 'Deploying' },
+      { href: '/deploying', label: 'Deploying' },
+    ]
+  },
+  {
+    section: 'Tooling', pages: [
+      { href: '/tools/vscode-extension', label: 'VS Code Extension' },
+      { href: '/tools/agent-skill', label: 'Agent Skill' },
     ]
   },
   {

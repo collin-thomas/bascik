@@ -925,13 +925,23 @@ export const build = defineConfig({
 
 ---
 
-## 10. Folder Structure, 404, and 500 pages
+## 10. Folder Structure, Static Assets, 404, and 500 pages
 
 ```
 src/
-  pages/       ← one .html file per route (plus CSS, images, etc.)
-  components/  ← component .html (+ optional .css) files
+  components/           ← component .html (+ optional .css) templates
+  pages/                ← HTML routes, static assets, and subfolders
+    index.html          → dist/index.html
+    css/styles.css      → dist/css/styles.css (auto-minified)
+    js/main.js          → dist/js/main.js (auto-minified)
+    images/logo.svg     → dist/images/logo.svg
+    404.html            → dist/404.html
 ```
+
+### Static Assets and Subdirectories
+* **Any Asset or Folder in `src/pages/`:** You can create any subfolders (`css/`, `js/`, `images/`, `fonts/`, `downloads/`) inside `src/pages/`. All non-`.html` files (CSS, JS, images, fonts, PDFs, JSON, etc.) are automatically copied to `dist/` replicating their exact directory structure.
+* **Auto-Minification:** CSS and JS files placed in `src/pages/` are automatically minified at build time when `minifyStyles` / `minifyScripts` are enabled in `bascik.config.ts`.
+* **No Passthrough Configuration:** No asset pipelines, passthrough copy configuration, or public folder settings are needed.
 
 ### Custom 404 & 500 Pages
 * **404 Page (`src/pages/404.html`):** If you create a `404.html` file in your pages directory, the dev server and `bascik --serve` automatically serve it as a fallback for any non-existent routes with a `404` status code. When you build for production (`bascik --build`), this is compiled to `dist/404.html` which is recognized by standard static hosts (GitHub Pages, Vercel, Netlify).

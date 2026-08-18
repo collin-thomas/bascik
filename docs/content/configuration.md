@@ -64,14 +64,16 @@ export const build = defineConfig({
 
 ### `directory`
 
-Paths to your pages and components directories. Relative to the project root.
+Paths to your pages and components directories, relative to the project root.
 
 ```js
 directory: {
-  pages: 'src/pages',      // default
-  components: 'src/components', // default
+  pages: 'src/pages',           // default — HTML routes, static assets, and subfolders
+  components: 'src/components', // default — component .html and .css templates
 }
 ```
+
+> **Asset Mirroring:** Any subfolders and non-`.html` files inside `pages` (such as `css/`, `js/`, `images/`, `fonts/`) are automatically copied to `dist/` preserving their folder structure. CSS and JS files in `pages` are minified during build when `minifyStyles` / `minifyScripts` are enabled.
 
 ### `scopeScriptBlocks`
 

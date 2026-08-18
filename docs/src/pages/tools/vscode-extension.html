@@ -36,8 +36,8 @@
     console.log(await articleSchema());
   </script>
   <meta name="description"
-    content="Deploy Bascik sites to any static host or run the production server for dynamic content. Generic guidance for GitHub Pages, Netlify, Cloudflare Pages, and more." />
-  <title>Deploying - Bascik Docs</title>
+    content="The Bascik VS Code extension provides editor warnings for CSS and JavaScript patterns that are unsupported by the scoping system." />
+  <title>VS Code Extension - Bascik Docs</title>
 </head>
 
 <body>
@@ -50,22 +50,20 @@
       <docs-sidebar />
 
       <main class="docs-content">
-        <p class="section-label">Reference</p>
-        <!-- Content rendered from docs/content/resources/deploying.md at build time.
-             To update page content, edit the MD file — not this file. -->
+        <p class="section-label">Tooling & Ecosystem</p>
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
           );
-          console.log(await renderMd('./content/resources/deploying.md'));
+          console.log(await renderMd('./content/tools/vscode-extension.md'));
         </script>
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
           const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.ts')).href);
-          console.log(renderPagination('/resources/deploying'));
+          console.log(renderPagination('/tools/vscode-extension'));
         </script>
 
       </main>

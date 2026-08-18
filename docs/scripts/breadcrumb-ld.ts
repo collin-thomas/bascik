@@ -39,7 +39,13 @@ export async function breadcrumbLd(): Promise<string> {
   if (parts.length < 2) return ''; // top-level pages don't need breadcrumbs
 
   const [section] = parts;
-  const html = await readFile(pageFile, 'utf8');
+  let html: string;
+  try {
+    html = await readFile(pageFile, 'utf8');
+  } catch (err) {
+    console.warn(`[breadcrumb-ld] Warning: Could not read page file "${pageFile}": ${(err as Error).message}`);
+    return '';
+  }
   const titleM = html.match(/<title[^>]*>([^<]+)<\/title>/);
   // Strip " - Bascik Docs" / " - Bascik Developer Guide" / " - Bascik" suffixes
   const pageLabel = titleM

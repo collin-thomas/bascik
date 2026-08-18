@@ -21,7 +21,13 @@ function stripMd(text: string): string {
 }
 
 export async function faqSchema(mdPath: string): Promise<string> {
-  const md = await readFile(join(process.cwd(), mdPath), 'utf8');
+  let md: string;
+  try {
+    md = await readFile(join(process.cwd(), mdPath), 'utf8');
+  } catch (err) {
+    console.warn(`[faq-schema] Warning: Could not read file "${mdPath}": ${(err as Error).message}`);
+    return '';
+  }
 
   // Split on ## headings; first element is the preamble before any ##
   const sections = md.split(/^## /m).slice(1);
