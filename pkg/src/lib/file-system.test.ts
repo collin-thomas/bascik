@@ -279,6 +279,19 @@ describe("copyReplicatePath – CSS minification", () => {
     expect(writeFile).toHaveBeenCalledOnce();
     expect(copyFile).not.toHaveBeenCalled();
   });
+
+  it("writes minified CSS using a custom minify function", async () => {
+    (BascikConfig as any).minify = { css: async (code: string) => `/* custom */ ${code.trim()}`, js: false, html: false };
+    vi.mocked(readFile)
+      .mockResolvedValueOnce("  body { color: red; }  " as any)
+      .mockRejectedValueOnce(new Error("ENOENT"));
+
+    await copyReplicatePath("pages/css/styles.css", "dist");
+
+    expect(writeFile).toHaveBeenCalledOnce();
+    const written = vi.mocked(writeFile).mock.calls[0][1] as string;
+    expect(written).toBe("/* custom */ body { color: red; }");
+  });
 });
 
 describe("getRelativePath — Windows separators", () => {

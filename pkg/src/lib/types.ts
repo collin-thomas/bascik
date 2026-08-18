@@ -43,9 +43,16 @@ export interface MinifyOptions {
   /**
    * Collapse whitespace and newlines in component `<style>` blocks, inline styles,
    * and static `.css` files.
+   * Accepts `boolean` or a custom CSS minifier/transformer function.
    * Defaults to `false` in dev mode and `true` during `bascik --build` and `bascik --serve`.
+   *
+   * ```ts
+   * minify: {
+   *   css: async (css) => (await transform(css, { minify: true })).code,
+   * }
+   * ```
    */
-  css: boolean;
+  css: boolean | ((code: string) => string | Promise<string>);
   /**
    * Minify inline `<script>` content and `.js` static files in the output.
    * Accepts `boolean` or a custom minifier function.

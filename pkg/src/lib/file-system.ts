@@ -91,7 +91,8 @@ export async function copyReplicatePath(
 
     if (isMinifyCss && src.endsWith(".css")) {
       // Read, minify, and write CSS rather than doing a raw copy
-      const minified = minifyCss((await readFile(src)).toString());
+      const minifyFn = isMinifyCss === true ? minifyCss : isMinifyCss;
+      const minified = await minifyFn((await readFile(src)).toString());
       const destHash = createHash("md5").update(await readFile(destPath).catch(() => "")).digest("hex");
       const minifiedHash = createHash("md5").update(minified).digest("hex");
       if (minifiedHash === destHash) return;

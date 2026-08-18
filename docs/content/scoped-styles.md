@@ -321,6 +321,54 @@ Given two instances of `<my-card>` on the same page:
 
 Using the `id`-based pattern with `getElementById()` is recommended because it gives you per-instance JS isolation while keeping `deduplicateCss: true` for minimal CSS payload.
 
+## Vendor Prefixing & BYOMinifier Post-Processing (PostCSS, LightningCSS)
+
+Bascik's built-in CSS scoping pipeline is ultra-fast, zero-dependency, and lightweight. It handles selector scoping, custom property isolation, and whitespace minification out of the box.
+
+Thanks to Bascik's **BYOMinifier (Bring Your Own Minifier)** feature, if your project requires browser vendor prefixing (such as `-webkit-` prefixes for Safari cross-browser compatibility) or advanced CSS transformations, you can plug custom CSS processors like **PostCSS with Autoprefixer** or **LightningCSS** directly into `minify.css` in `bascik.config.ts`.
+
+### PostCSS with Autoprefixer
+
+```ts
+// bascik.config.ts
+import { defineConfig } from '@bascik/bascik/config';
+import autoprefixer from 'autoprefixer';
+import postcss from 'postcss';
+
+export const build = defineConfig({
+  minify: {
+    css: async (css) => {
+      const result = await postcss([autoprefixer]).process(css, { from: undefined });
+      return result.css;
+    },
+  },
+});
+```
+
+### LightningCSS
+
+```ts
+// bascik.config.ts
+import { defineConfig } from '@bascik/bascik/config';
+import { transform } from 'lightningcss';
+
+export const build = defineConfig({
+  minify: {
+    css: (css) => {
+      const { code } = transform({
+        filename: 'style.css',
+        code: Buffer.from(css),
+        minify: true,
+        targets: { safari: (15 << 16) },
+      });
+      return code.toString();
+    },
+  },
+});
+```
+
+When configured, Bascik runs your custom `minify.css` transformer on all scoped component `<style>` blocks, inlined global stylesheets, and static `.css` files during `bascik --build` and `bascik --serve`.
+
 ## How Scoping Works
 
 This guide focuses on the CSS behavior you write and observe. The compiler implementation is documented separately.

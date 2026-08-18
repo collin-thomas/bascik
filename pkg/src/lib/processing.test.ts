@@ -717,6 +717,17 @@ describe("pageProcessing – inlineStyles", () => {
     expect(pageContent).not.toContain('body {  color:  red;  }');
   });
 
+  it("minifies inlined CSS using a custom minify.css function", async () => {
+    (BascikConfig as Record<string, unknown>).inlineStyles = ['src/pages/css/styles.css'];
+    (BascikConfig.minify as any).css = async (css: string) => `/* custom */ ${css.trim()}`;
+    (readFile as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce(PAGE_HTML)
+      .mockResolvedValueOnce('body { color: red; }');
+    await pageProcessing(PAGE_PATH, {});
+    const { pageContent } = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(pageContent).toContain('/* custom */ body { color: red; }');
+  });
+
   it("inlines every page stylesheet when inlineStyles is true", async () => {
     (BascikConfig as Record<string, unknown>).inlineStyles = true;
     const { deepReadDirFlat } = await import("./file-system.js");
@@ -1679,6 +1690,29 @@ describe("transpilePage – inline component <style> extraction & deduplication"
 
     // Head contains scoped CSS rules from both <style> tags
     expect(html).toContain('.bascik__comp-multi-styles__box');
+  });
+
+  it("applies custom async minify.css transformer (e.g. vendor prefixing) to component styles and page <style> blocks", async () => {
+    (BascikConfig.minify as any).css = async (css: string) => {
+      return css.replace(/user-select:\s*none;?/g, "-webkit-user-select: none; user-select: none;");
+    };
+    const pageHtml = '<!DOCTYPE html><html><head><style>.page { user-select: none; }</style></head><body><comp-prefix></comp-prefix></body></html>';
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(pageHtml);
+
+    const componentList = {
+      "comp-prefix": {
+        fileName: "components/comp-prefix.html",
+        fileContent: '<style>.box { user-select: none; }</style><div class="box">Text</div>',
+      },
+    };
+
+    const result = await transpilePage(PAGE_PATH, componentList);
+    expect(result).not.toBeNull();
+    const html = result!.distHtml;
+
+    expect(html).toContain("-webkit-user-select: none");
+    expect(html).toContain("user-select: none");
+    (BascikConfig.minify as any).css = false;
   });
 
   it("correctly handles a component with leading <script>, multiple root elements, and attribute inheritance", async () => {
