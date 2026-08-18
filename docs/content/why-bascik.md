@@ -8,7 +8,7 @@ Create one HTML file, then use its filename as a tag anywhere, with no registrat
 
 <!-- demo:source-usage -->
 ```html
-<hello-card></hello-card>
+<hello-card />
 ```
 
 <!-- demo:source-html -->

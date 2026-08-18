@@ -363,15 +363,15 @@ describe("executeBuildScripts", () => {
   });
 
   it("respects onScriptError: halt", async () => {
-    BascikConfig.onScriptError = "halt";
+    (BascikConfig as any).onScriptError = "halt";
     rejectWith("failed script execution");
     const html = "<script data-bascik-build>bad()</script>";
     await expect(executeBuildScripts(html)).rejects.toThrow(/build script error/);
-    BascikConfig.onScriptError = undefined;
+    (BascikConfig as any).onScriptError = undefined;
   });
 
   it("respects onScriptError: warn", async () => {
-    BascikConfig.onScriptError = "warn";
+    (BascikConfig as any).onScriptError = "warn";
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
     rejectWith("failed script execution");
     const html = "<script data-bascik-build>bad()</script>";
@@ -379,11 +379,11 @@ describe("executeBuildScripts", () => {
     expect(result).toBe("");
     expect(warnSpy).toHaveBeenCalled();
     warnSpy.mockRestore();
-    BascikConfig.onScriptError = undefined;
+    (BascikConfig as any).onScriptError = undefined;
   });
 
   it("respects onScriptError: error", async () => {
-    BascikConfig.onScriptError = "error";
+    (BascikConfig as any).onScriptError = "error";
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
     rejectWith("failed script execution");
     const html = "<script data-bascik-build>bad()</script>";
@@ -391,7 +391,7 @@ describe("executeBuildScripts", () => {
     expect(result).toBe("");
     expect(errorSpy).toHaveBeenCalled();
     errorSpy.mockRestore();
-    BascikConfig.onScriptError = undefined;
+    (BascikConfig as any).onScriptError = undefined;
   });
 });
 

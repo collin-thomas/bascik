@@ -229,10 +229,10 @@ describe("page templates", () => {
   it("indexPage contains hero, features, and counter demo", () => {
     const html = indexPage("My App");
     expect(html).toContain("hero");
-    expect(html).toContain("<my-counter>");
+    expect(html).toContain("<my-counter />");
     expect(html).toContain("<site-header");
     expect(html).toContain("<site-footer");
-    expect(html).toContain("<site-meta>");
+    expect(html).toContain("<site-meta />");
   });
 
   it("aboutPage contains two feature cards", () => {
@@ -264,7 +264,7 @@ describe("page templates", () => {
 
   it("all pages use site-meta head component", () => {
     for (const fn of [indexPage, aboutPage, contactPage, notFoundPage]) {
-      expect(fn("x")).toContain("<site-meta>");
+      expect(fn("x")).toContain("<site-meta />");
     }
   });
 });

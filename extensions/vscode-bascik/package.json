@@ -1,6 +1,7 @@
 {
   "name": "bascik-vscode",
   "displayName": "Bascik",
+  "publisher": "bascik",
   "description": "VS Code support for Bascik component tags and scoping compatibility warnings.",
   "version": "0.1.0",
   "engines": {
@@ -18,11 +19,17 @@
     "precompile": "node ../../docs/scripts/generate-compatibility-rules.ts",
     "compile": "tsc -p ./tsconfig.json",
     "watch": "tsc -watch -p ./tsconfig.json",
-    "vscode:prepublish": "npm run compile"
+    "vscode:prepublish": "npm run compile",
+    "pretest": "npm run compile",
+    "test": "npm run compile && vscode-test --config .vscode-test.cjs"
   },
   "devDependencies": {
+    "@types/mocha": "^10.0.10",
     "@types/node": "^24.0.0",
     "@types/vscode": "^1.90.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^3.1.0",
+    "mocha": "^10.8.2",
     "typescript": "^5.6.3"
   }
 }

@@ -1337,7 +1337,7 @@ The `extensions/vscode-bascik/` package provides editor tooling:
 
 * **Command-click navigation:** click a component tag like `<site-nav>` to jump to `src/components/site-nav/site-nav.html`.
 * **Inline warnings:** flags CSS patterns Bascik cannot safely scope (standalone attribute selectors, element names inside `:is()`/`:where()`/`:has()`) and JS patterns that won't be rewritten (`.id =` setter, template-literal class names, `style.setProperty('--var', …)`).
-* **Rules generated from the compatibility matrix:** `docs/scripts/generate-compatibility-rules.mjs` reads `docs/content/compatibility.md` and writes the warning rules, so editor diagnostics stay in sync with the documented capability table automatically.
+* **Rules generated from the compatibility matrix:** `docs/scripts/generate-compatibility-rules.ts` reads `docs/content/compatibility.md` and writes the warning rules, so editor diagnostics stay in sync with the documented capability table automatically.
 
 To install locally: open `extensions/vscode-bascik/` in VS Code and press F5.
 

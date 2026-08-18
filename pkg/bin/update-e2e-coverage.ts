@@ -34,7 +34,7 @@ mkdirSync(repDir, { recursive: true });
 
 const env = { ...process.env, NODE_V8_COVERAGE: covDir };
 
-const run = (args) => {
+const run = (args: string) => {
   try {
     execSync(`node "${cli}" ${args}`, { cwd: e2eDir, env, stdio: 'pipe' });
   } catch { /* non-zero exits still capture coverage */ }
@@ -83,7 +83,7 @@ run(`--build --log "${join(pkgDir, 'coverage/e2e-build.log')}"`);
 console.log('[6/7] dev server boot → HTTP requests → watch events');
 
 // HTTP/2 request — bascik's dev server only accepts HTTP/2, not HTTP/1.1
-const h2req = (method, path, port = 9443, extraHeaders = {}) => new Promise((resolve) => {
+const h2req = (method: string, path: string, port = 9443, extraHeaders: Record<string, string> = {}): Promise<number> => new Promise((resolve) => {
   const client = http2.connect(`https://localhost:${port}`, { rejectUnauthorized: false });
   client.on('error', () => { client.destroy(); resolve(0); });
   const req = client.request({ ':method': method, ':path': path, ...extraHeaders });
@@ -95,7 +95,7 @@ const h2req = (method, path, port = 9443, extraHeaders = {}) => new Promise((res
 });
 
 // SSE: connect with referer so mem.trackOpenPage fires, then disconnect after brief delay
-const h2sse = (port = 9443) => new Promise((resolve) => {
+const h2sse = (port = 9443): Promise<void> => new Promise((resolve) => {
   const client = http2.connect(`https://localhost:${port}`, { rejectUnauthorized: false });
   client.on('error', () => { client.destroy(); resolve(); });
   const req = client.request({
@@ -107,7 +107,7 @@ const h2sse = (port = 9443) => new Promise((resolve) => {
   req.end();
 });
 
-await new Promise((resolve) => {
+await new Promise<void>((resolve) => {
   const devProc = spawn('node', [cli], { cwd: e2eDir, env, stdio: ['ignore', 'pipe', 'pipe'] });
   let done = false;
   let ready = false;
@@ -144,7 +144,7 @@ await new Promise((resolve) => {
     kill();
   };
 
-  devProc.stdout.on('data', (chunk) => {
+  devProc.stdout.on('data', (chunk: Buffer) => {
     const s = chunk.toString();
     process.stdout.write(s);
     if (!ready && (s.includes('Server running') || s.includes('https://localhost'))) {
@@ -152,11 +152,11 @@ await new Promise((resolve) => {
       runRequests().catch(() => kill());
     }
   });
-  devProc.stderr.on('data', (chunk) => {
+  devProc.stderr.on('data', (chunk: Buffer) => {
     const s = chunk.toString();
     if (!s.includes('SIGTERM') && !s.includes('gracefully')) process.stderr.write(s);
   });
-  devProc.on('close', (code) => {
+  devProc.on('close', (code: number | null) => {
     clearTimeout(timeout);
     if (!ready) console.warn(`  [warn] dev server exited (code ${code}) before ready.`);
     resolve();
@@ -166,7 +166,7 @@ await new Promise((resolve) => {
 // ── Step 7: --serve (isServe=true branches in config.ts, http2 serve paths) ──
 
 console.log('[7/7] --serve + HTTP/2 requests');
-await new Promise((resolve) => {
+await new Promise<void>((resolve) => {
   const serveProc = spawn('node', [cli, '--serve'], {
     cwd: e2eDir, env, stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -176,11 +176,11 @@ await new Promise((resolve) => {
   const serveRequests = async () => {
     await new Promise(r => setTimeout(r, 300));
     // Get the ETag from the first response, then reuse it for a 304 conditional GET
-    const etag = await new Promise((res) => {
+    const etag = await new Promise<string>((res) => {
       const c = http2.connect('https://localhost:9443', { rejectUnauthorized: false });
       c.on('error', () => { c.destroy(); res(''); });
       const r = c.request({ ':method': 'GET', ':path': '/scope-test' });
-      r.on('response', (h) => { r.resume(); c.close(); res(h['etag'] ?? ''); });
+      r.on('response', (h) => { r.resume(); c.close(); res((h['etag'] as string) ?? ''); });
       r.on('error', () => res(''));
       r.end();
     });
@@ -194,7 +194,7 @@ await new Promise((resolve) => {
     serveProc.kill('SIGTERM');
   };
 
-  serveProc.stdout.on('data', (chunk) => {
+  serveProc.stdout.on('data', (chunk: Buffer) => {
     const s = chunk.toString();
     process.stdout.write(s);
     if (!serveReady && (s.includes('Server running') || s.includes('https://localhost'))) {
@@ -202,7 +202,7 @@ await new Promise((resolve) => {
       serveRequests().catch(() => serveProc.kill('SIGTERM'));
     }
   });
-  serveProc.stderr.on('data', (chunk) => {
+  serveProc.stderr.on('data', (chunk: Buffer) => {
     const s = chunk.toString();
     if (!s.includes('SIGTERM') && !s.includes('gracefully')) process.stderr.write(s);
   });

@@ -471,14 +471,14 @@ const pageShell = (
 <html lang="en">
 <head>
   <title>${title}</title>
-  <site-meta></site-meta>
+  <site-meta />
 </head>
 <body>
-  <site-header data-bascik-prop-brand="${brand}"></site-header>
+  <site-header data-bascik-prop-brand="${brand}" />
   <main>
 ${body}
   </main>
-  <site-footer data-bascik-prop-brand="${brand}"></site-footer>
+  <site-footer data-bascik-prop-brand="${brand}" />
 </body>
 </html>
 `;
@@ -530,8 +530,8 @@ export const indexPage = (brand: string): string =>
         <h2>Counter component</h2>
         <p>Each instance holds its own state. Place the same component twice — they stay independent.</p>
         <div style="display:flex;gap:48px;flex-wrap:wrap;margin-top:24px;">
-          <my-counter></my-counter>
-          <my-counter></my-counter>
+          <my-counter />
+          <my-counter />
         </div>
       </div>
     </section>`);

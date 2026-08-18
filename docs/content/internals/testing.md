@@ -52,7 +52,7 @@ The e2e fixture is a small but complete Bascik project at `pkg/e2e/`:
 pkg/e2e/
   bascik.config.ts       ← fixture config (obfuscateAttributeNames: false)
   playwright.config.ts   ← Playwright config; builds + serves fixture before tests
-  server.mjs             ← minimal static HTTP server for dist/
+  server.ts              ← minimal static HTTP server for dist/
   src/
     pages/               ← one HTML page per feature under test
     components/          ← components used by those pages
@@ -62,7 +62,7 @@ pkg/e2e/
 Playwright's `webServer` hook runs two commands before any test:
 
 1. `node dist/index.js --config bascik.config.ts --build`: transpiles the fixture site into `e2e/dist/`
-2. `node server.mjs 4200`: serves `dist/` on `http://localhost:4200`
+2. `node server.ts 4200`: serves `dist/` on `http://localhost:4200`
 
 Tests then navigate to pages on that server and assert against the live browser DOM.
 

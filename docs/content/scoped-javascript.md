@@ -65,7 +65,7 @@ The toggle below registers `is-open` on a hidden element, then safely applies th
 
 <!-- demo:runtime-class-usage -->
 ```html
-<state-toggle></state-toggle>
+<state-toggle />
 ```
 
 <!-- demo:runtime-class-html -->

@@ -1,15 +1,25 @@
 # VS Code Extension
 
-The Bascik VS Code extension is a lightweight editor companion for the scoping system. It helps you catch the patterns that are easy to write but unsafe to scope.
+The Bascik VS Code extension is a lightweight editor companion for the scoping system. It helps you catch the patterns that are easy to write but unsafe to scope, as well as markup structures that might lead to layout or execution surprises.
 
 The extension is generated from the compatibility rules in [Scoping Compatibility](/compatibility), so the warning set stays aligned with the documented support matrix instead of drifting over time.
 
 ## What it does
 
-- Command-click a custom component tag to jump to the matching component file.
-- Warns on CSS selectors that Bascik cannot safely scope.
-- Warns on JavaScript patterns that cannot be rewritten reliably at build time.
-- Points authors toward the supported patterns documented in the compatibility guide.
+### 1. Code Navigation
+- **Go to Definition:** Command-click (or Ctrl-click) any custom component tag (e.g. `<my-component>`) to instantly jump to its definition HTML file in your project.
+
+### 2. Markup and Script Structural Warnings
+- **Unclosed Component Tags (Warning):** If a custom component tag is not self-closing and lacks a corresponding closing tag (for example, `<my-card>` without `</my-card>`), the extension flags it. This helps you prevent unintentional self-closing layout collapse.
+- **Conflicting Script Attributes (Error):** Putting both `data-bascik-build` and `data-bascik-server` attributes on the same `<script>` tag is invalid because a script can only execute during the build or at request time, not both. The extension marks this as a high-visibility red error.
+- **Multiple `<style>` Blocks (Warning):** Warns if a component contains multiple inline `<style>` tags. While Bascik combines them at build time, separating style blocks in a single component file is discouraged for clean maintainability.
+- **Style Coexistence Conflicts (Warning):** Flags if a component has both a companion `.css` file and an inline `<style>` tag, encouraging consistent stylesheet structure within your project.
+
+### 3. CSS Scoping Compatibility Warnings
+- **Global Selector Warnings:** Flags CSS selectors that Bascik's scoping engine cannot isolate. For example, using `[id]` selectors is flagged because they cannot be scoped without DOM wrapping and would apply globally.
+
+### 4. JavaScript Scoping Compatibility Warnings
+- **Risky Selector Rewriting Patterns:** Warns on patterns that cannot be reliably rewritten at build time, such as runtime assignments to `el.id` or `el.name`. It directs you to stable alternatives, like querying the scoped element once and operating on its reference directly.
 
 The extension does **not** warn on class names that only appear in JavaScript and never in a `class="…"` HTML attribute. Those classes are automatically discovered and scoped by the build pipeline. A `classList.toggle('active')` call is fully supported even if `active` never appears in the component template.
 

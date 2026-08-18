@@ -98,6 +98,32 @@ class ComponentDefinitionProvider {
         return new vscode.Location(vscode.Uri.file(file), new vscode.Position(0, 0));
     }
 }
+function findMatchingClose(html, tagName, contentStart) {
+    const tn = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const openRe = new RegExp(`<${tn}[\\s>]`, "gi");
+    const closeRe = new RegExp(`<\\/${tn}>`, "gi");
+    let depth = 1;
+    let pos = contentStart;
+    while (pos < html.length) {
+        openRe.lastIndex = pos;
+        closeRe.lastIndex = pos;
+        const openMatch = openRe.exec(html);
+        const closeMatch = closeRe.exec(html);
+        if (!closeMatch)
+            return -1;
+        if (!openMatch || closeMatch.index < openMatch.index) {
+            depth--;
+            if (depth === 0)
+                return closeMatch.index;
+            pos = closeMatch.index + closeMatch[0].length;
+        }
+        else {
+            depth++;
+            pos = openMatch.index + openMatch[0].length;
+        }
+    }
+    return -1;
+}
 function createDiagnosticsForDocument(document) {
     const { languageId } = document;
     if (languageId !== 'css' && languageId !== 'javascript' && languageId !== 'typescript' && languageId !== 'html') {
@@ -171,14 +197,74 @@ function createDiagnosticsForDocument(document) {
         const hasCompanionCss = document.uri.scheme === 'file'
             && document.uri.fsPath.toLowerCase().endsWith('.html')
             && fs.existsSync(document.uri.fsPath.replace(/\.html$/i, '.css'));
-        const maskedText = text.replace(/(<(code|pre|script|textarea)(?:[^>"']|"[^"]*"|'[^']*')*>)([\s\S]*?)(<\/\2\s*>)/gi, (_m, open, _tag, content, close) => open + ' '.repeat(content.length) + close);
+        const maskedText = text
+            .replace(/(<(code|pre|script|textarea)(?:[^>"']|"[^"]*"|'[^']*')*>)([\s\S]*?)(<\/\2\s*>)/gi, (_m, open, _tag, content, close) => open + ' '.repeat(content.length) + close)
+            .replace(/<!--([\s\S]*?)-->/g, (_m, content) => '<!--' + ' '.repeat(content.length) + '-->');
+        const root = getWorkspaceRoot();
+        const componentMap = root ? findComponentMap(root) : new Map();
+        const componentNames = Array.from(componentMap.keys());
+        if (componentNames.length > 0) {
+            componentNames.sort((a, b) => b.length - a.length);
+            const escapedNames = componentNames.map(name => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+            const componentTagRe = new RegExp(`<(${escapedNames.join('|')})\\b`, 'gi');
+            let compMatch;
+            while ((compMatch = componentTagRe.exec(maskedText)) !== null) {
+                const tagStartIndex = compMatch.index;
+                const tagName = compMatch[1].toLowerCase();
+                let inDoubleQuote = false;
+                let inSingleQuote = false;
+                let openTagEndIndex = -1;
+                for (let i = tagStartIndex; i < maskedText.length; i++) {
+                    const char = maskedText[i];
+                    if (char === '"' && !inSingleQuote) {
+                        inDoubleQuote = !inDoubleQuote;
+                    }
+                    else if (char === "'" && !inDoubleQuote) {
+                        inSingleQuote = !inSingleQuote;
+                    }
+                    else if (char === '>' && !inDoubleQuote && !inSingleQuote) {
+                        openTagEndIndex = i + 1;
+                        break;
+                    }
+                }
+                if (openTagEndIndex !== -1) {
+                    const openTagText = maskedText.slice(tagStartIndex, openTagEndIndex);
+                    const isSelfClosing = /\/\s*>$/.test(openTagText);
+                    if (!isSelfClosing) {
+                        const closeIndex = findMatchingClose(maskedText, tagName, openTagEndIndex);
+                        if (closeIndex === -1) {
+                            const start = document.positionAt(tagStartIndex);
+                            const end = document.positionAt(openTagEndIndex);
+                            const diag = new vscode.Diagnostic(new vscode.Range(start, end), `Component tag <${tagName}> is unclosed. It will be treated as self-closing (<${tagName}/>), but an explicit closing tag is recommended to avoid layout or scoping issues.`, vscode.DiagnosticSeverity.Warning);
+                            diag.source = 'bascik';
+                            diagnostics.push(diag);
+                        }
+                    }
+                }
+            }
+        }
+        const styleMatches = [];
         while ((styleMatch = styleBlockRe.exec(maskedText)) !== null) {
-            const openTag = styleMatch[1];
-            const styleBody = styleMatch[2] ?? '';
-            const styleBodyOffset = (styleMatch.index ?? 0) + openTag.length;
+            styleMatches.push(styleMatch);
+        }
+        if (styleMatches.length > 1) {
+            for (let i = 1; i < styleMatches.length; i++) {
+                const match = styleMatches[i];
+                const openTag = match[1];
+                const start = document.positionAt(match.index ?? 0);
+                const end = document.positionAt((match.index ?? 0) + openTag.length);
+                const diag = new vscode.Diagnostic(new vscode.Range(start, end), 'Component has multiple <style> tags. They will be combined at build time, but using multiple <style> tags in a single component file is not recommended for readability and maintainability.', vscode.DiagnosticSeverity.Warning);
+                diag.source = 'bascik';
+                diagnostics.push(diag);
+            }
+        }
+        for (const match of styleMatches) {
+            const openTag = match[1];
+            const styleBody = match[2] ?? '';
+            const styleBodyOffset = (match.index ?? 0) + openTag.length;
             if (hasCompanionCss) {
-                const start = document.positionAt(styleMatch.index ?? 0);
-                const end = document.positionAt((styleMatch.index ?? 0) + openTag.length);
+                const start = document.positionAt(match.index ?? 0);
+                const end = document.positionAt((match.index ?? 0) + openTag.length);
                 const diag = new vscode.Diagnostic(new vscode.Range(start, end), 'Component has both a companion .css file and an inline <style> tag. They will be combined at build time, but mixing both is not recommended for readability and maintainability.', vscode.DiagnosticSeverity.Warning);
                 diag.source = 'bascik';
                 diagnostics.push(diag);

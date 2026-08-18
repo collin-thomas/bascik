@@ -46,8 +46,8 @@
     "test": "vitest",
     "test:ci": "vitest run --coverage.enabled --coverage.reporter='text-summary'",
     "test:coverage": "vitest run --coverage.enabled",
-    "update-coverage": "vitest run --coverage.enabled && node bin/update-coverage.mjs",
-    "update-e2e-coverage": "node bin/update-e2e-coverage.mjs",
+    "update-coverage": "vitest run --coverage.enabled && node bin/update-coverage.ts",
+    "update-e2e-coverage": "node bin/update-e2e-coverage.ts",
     "bench": "vitest bench",
     "typecheck": "tsc --noEmit",
     "e2e": "playwright test --config e2e/playwright.config.ts"

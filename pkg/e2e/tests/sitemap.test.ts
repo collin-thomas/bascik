@@ -5,7 +5,7 @@
  * triggers Bascik to write dist/sitemap.xml and dist/robots.txt at the end of
  * `--build`. These tests verify the generated files are correct.
  *
- * The static server (server.mjs) serves dist/ files so both files are
+ * The static server (server.ts) serves dist/ files so both files are
  * accessible via plain HTTP GET requests.
  */
 import { test, expect } from '@playwright/test';
