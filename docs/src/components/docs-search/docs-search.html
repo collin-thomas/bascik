@@ -37,7 +37,7 @@
   const fns = logic
     .replace(/^\/\*\*[\s\S]*?\r?\n\r?\n/m, '')   // strip file-level JSDoc
     .replace(/^export interface[\s\S]*?\r?\n\}/m, '') // strip SearchEntry interface
-    .replace(/:\s*(?:string(?:\[\])?|number|SearchEntry(?:\[\])?|Record<[^>]+>|string\s*\|\s*null\s*\|\s*undefined)/g, '') // strip TS types
+    .replace(/:\s*(?:string\s*\|\s*null\s*\|\s*undefined|string(?:\[\])?|number|SearchEntry(?:\[\])?|Record<[^>]+>)/g, '') // strip TS types
     .replace(/^export function /gm, 'function ')
     .replace(/^export const /gm, 'var ');
   console.log('<script>\n(function () {\n' + fns.trim() + '\n\n' + dom.trim() + '\n})();\n</scr' + 'ipt>');
