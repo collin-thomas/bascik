@@ -1272,27 +1272,27 @@ test.describe('my-feature-test page', () => {
 
 There are 44 e2e test files covering CSS scoping, JS scoping, slots, props, attribute inheritance, animations, observers, SVG, and head components.
 
-### Testing JavaScript in a Bascik Project
+### Testing Site Logic in a Bascik Project
 
 Browser component scripts are IIFE-based and not directly importable. The recommended pattern for testing complex client-side logic:
 
-1. **Extract pure functions** (no DOM, no `fetch`) into a sibling `.mjs` module that exports them — e.g. `search-logic.mjs` alongside `docs-search.html`.
-2. **Combine at build time**: use a `<script data-bascik-build>` to read both the logic module and a DOM-wiring `.js` file, strip `export` keywords from the module, and output a single `<script>` containing one IIFE with all functions inside it. This keeps esbuild minification working correctly (no cross-script boundary renames).
-3. **Test the module with Vitest**: import the `.mjs` file directly in a `*.test.mjs` file. No browser or DOM required for pure function tests.
+1. **Extract pure functions** (no DOM, no `fetch`) into a sibling TypeScript `.ts` module that exports them, e.g. `search-logic.ts` alongside `docs-search.html`.
+2. **Combine at build time**: use a `<script data-bascik-build>` to read both the TypeScript logic module and a DOM-wiring `.js` file, strip type annotations and `export` keywords from the module, and output a single `<script>` containing one IIFE with all functions inside it. This keeps esbuild minification working correctly with no cross-script boundary renames.
+3. **Test the module with Vitest**: import the `.ts` file directly in a `*.test.ts` file. No browser or DOM required for pure function tests.
 
-**What to test vs. skip:** DOM wiring (adding event listeners, toggling visibility) is low value to test because it depends on the compiled output. Pure data functions (parsing, scoring, formatting) are high value. Extract those into a `.mjs` module and test them with Vitest. Configure Vitest in `vite.config.js`:
+**What to test vs. skip:** DOM wiring (adding event listeners, toggling visibility) is low value to test because it depends on the compiled output. Pure data functions (parsing, scoring, formatting) are high value. Extract those into a `.ts` module and test them with Vitest. Configure Vitest in `vite.config.ts`:
 
-```js
-// vite.config.js
+```ts
+// vite.config.ts
 import { defineConfig } from 'vite';
 export default defineConfig({
   test: {
-    include: ['src/**/*.test.mjs'],
+    include: ['src/**/*.test.ts'],
   },
 });
 ```
 
-**Server scripts** (`data-bascik-server`): test the business logic as pure functions in a `.mjs` module; test the HTTP layer with integration tests that POST to the dev server, not by importing the script.
+**Server scripts** (`data-bascik-server`): test the business logic as pure functions in a `.ts` module. Node 24 runs `.ts` files natively with no separate build or compilation step required. Test the HTTP layer with integration tests that POST to the dev server, not by importing the script.
 
 ---
 

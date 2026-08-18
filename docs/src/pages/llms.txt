@@ -31,21 +31,21 @@ For the complete, centralized developer reference and AI assistant instructions,
 - [Sitemap & robots.txt](https://bascik.dev/sitemap): Bascik generates a sitemap.xml and robots.txt automatically at build time.
 - [JavaScript Libraries](https://bascik.dev/libraries): Bascik does not add any JavaScript to your pages.
 
+## Reference
+
+- [FAQ](https://bascik.dev/faq): Answers to common questions about Bascik.
+- [Scoping Compatibility](https://bascik.dev/compatibility): Legend
+- [Agent Skill](https://bascik.dev/agent-skill): Download the Bascik skill file and attach it to GitHub Copilot, Cursor, Claude, or any AI assistant that supports instruction files, so it understands Bascik's component model, ...
+- [VS Code Extension](https://bascik.dev/resources/vscode-extension): The Bascik VS Code extension is a lightweight editor companion for the scoping system.
+- [Deploying](https://bascik.dev/resources/deploying): Bascik's build output is a standard folder of static HTML, CSS, and JavaScript files.
+
 ## Recipes
 
 - [Markdown](https://bascik.dev/recipes/markdown): Bascik does not ship a Markdown pipeline, but build-time scripts are Node.js, so any Markdown library works.
+- [Page-Aware Scripts](https://bascik.dev/recipes/page-aware-scripts): Some pages need content that is specific to the current page, such as a canonical URL in the head, an Open Graph image, a structured-data block, or even a page-specific sidebar.
 - [Server Scripts](https://bascik.dev/recipes/server-scripts): data-bascik-server scripts are plain Node.js ESM modules.
 - [Templating](https://bascik.dev/recipes/templating): Bascik does not ship a template language or a custom server-side object model.
-- [Testing](https://bascik.dev/recipes/testing): Bascik projects can include two kinds of JavaScript: server scripts that run in Node.js on every request, and browser scripts inside components.
-- [Page-Aware Scripts](https://bascik.dev/recipes/page-aware-scripts): Some pages need content that is specific to the current page, such as a canonical URL in the head, an Open Graph image, a structured-data block, or even a page-specific sidebar.
-
-## Reference
-
-- [Scoping Compatibility](https://bascik.dev/compatibility): Legend
-- [FAQ](https://bascik.dev/faq): Answers to common questions about Bascik.
-- [Agent Skill](https://bascik.dev/agent-skill): Download the Bascik skill file and attach it to GitHub Copilot, Cursor, Claude, or any AI assistant that supports instruction files, so it understands Bascik's component model, ...
-- [Deploying](https://bascik.dev/resources/deploying): Bascik's build output is a standard folder of static HTML, CSS, and JavaScript files.
-- [VS Code Extension](https://bascik.dev/resources/vscode-extension): The Bascik VS Code extension is a lightweight editor companion for the scoping system.
+- [Testing Site Logic](https://bascik.dev/recipes/testing): Bascik projects can include two kinds of scripts: server scripts that run in Node.js on every request, and browser scripts inside components.
 
 ## Internals
 
@@ -54,7 +54,7 @@ For the complete, centralized developer reference and AI assistant instructions,
 - [Transpilation Pipeline](https://bascik.dev/internals/transpilation-pipeline): Bascik transforms source HTML into deployable HTML by replacing every custom component tag with its resolved, scoped content.
 - [Scoping System](https://bascik.dev/internals/scoping-system): Scoping prevents one component's styles and identifiers from leaking into another.
 - [Dev Server](https://bascik.dev/internals/dev-server): Bascik's development server serves transpiled pages from an in-memory store, static assets from disk, and broadcasts live-reload events via Server-Sent Events.
-- [Testing](https://bascik.dev/internals/testing): Bascik has two separate test suites: unit tests (Vitest) that verify individual library modules, and end-to-end tests (Playwright) that build and browser-test the full transpila...
+- [Testing Internals](https://bascik.dev/internals/testing): Bascik has two separate test suites: unit tests (Vitest) that verify individual library modules, and end-to-end tests (Playwright) that build and browser-test the full transpila...
 - [Create App](https://bascik.dev/internals/create-app): The create/ folder is a small standalone package that scaffolds a fresh Bascik project.
 - [CI / CD](https://bascik.dev/internals/ci-cd): Bascik uses two GitHub Actions workflows: one for continuous integration on every push and pull request, and one for publishing releases to npm when a version tag is pushed.
 

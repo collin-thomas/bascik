@@ -46,21 +46,21 @@ export const NAV: NavSection[] = [
     ]
   },
   {
-    section: 'Recipes', pages: [
-      { href: '/recipes/markdown', label: 'Markdown' },
-      { href: '/recipes/server-scripts', label: 'Server Scripts' },
-      { href: '/recipes/templating', label: 'Templating' },
-      { href: '/recipes/testing', label: 'Testing' },
-      { href: '/recipes/page-aware-scripts', label: 'Page-Aware Scripts' },
+    section: 'Reference', pages: [
+      { href: '/faq', label: 'FAQ' },
+      { href: '/compatibility', label: 'Scoping Compatibility' },
+      { href: '/agent-skill', label: 'Agent Skill' },
+      { href: '/resources/vscode-extension', label: 'VS Code Extension' },
+      { href: '/resources/deploying', label: 'Deploying' },
     ]
   },
   {
-    section: 'Reference', pages: [
-      { href: '/compatibility', label: 'Scoping Compatibility' },
-      { href: '/faq', label: 'FAQ' },
-      { href: '/agent-skill', label: 'Agent Skill' },
-      { href: '/resources/deploying', label: 'Deploying' },
-      { href: '/resources/vscode-extension', label: 'VS Code Extension' },
+    section: 'Recipes', pages: [
+      { href: '/recipes/markdown', label: 'Markdown' },
+      { href: '/recipes/page-aware-scripts', label: 'Page-Aware Scripts' },
+      { href: '/recipes/server-scripts', label: 'Server Scripts' },
+      { href: '/recipes/templating', label: 'Templating' },
+      { href: '/recipes/testing', label: 'Testing Site Logic' },
     ]
   },
   {
@@ -70,7 +70,7 @@ export const NAV: NavSection[] = [
       { href: '/internals/transpilation-pipeline', label: 'Transpilation Pipeline' },
       { href: '/internals/scoping-system', label: 'Scoping System' },
       { href: '/internals/dev-server', label: 'Dev Server' },
-      { href: '/internals/testing', label: 'Testing' },
+      { href: '/internals/testing', label: 'Testing Internals' },
       { href: '/internals/create-app', label: 'Create App' },
       { href: '/internals/ci-cd', label: 'CI / CD' },
     ]

@@ -329,6 +329,18 @@ rm -rf node_modules/.cache/bascik/script-cache
 
 Set to `false` when debugging a script that reads external state not covered by the cache key (e.g. a live API call or a file referenced by a dynamic path).
 
+### `onScriptError`
+
+Action to take when a `<script data-bascik-build>` or `<script data-bascik-server>` block fails to execute.
+
+- `"error"` (default): Log a detailed compilation error with line and column numbers to `console.error` and continue transpilation, replacing the script tag's output with an empty string.
+- `"warn"`: Log a detailed warning to `console.warn` and continue transpilation, replacing the script tag's output with an empty string.
+- `"halt"`: Throw an error and halt compilation immediately, aborting the build or request.
+
+```js
+onScriptError: "error" // default
+```
+
 ## `build`
 
 Exporting a `build` object lets you set options that apply during `bascik --build` and `bascik --serve` (production server), overriding the default export. A common pattern is to enable obfuscation and minification only in production:

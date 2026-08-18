@@ -1,4 +1,4 @@
-# Testing
+# Testing Internals
 
 Bascik has two separate test suites: **unit tests** (Vitest) that verify individual library modules, and **end-to-end tests** (Playwright) that build and browser-test the full transpilation pipeline against a fixture site.
 

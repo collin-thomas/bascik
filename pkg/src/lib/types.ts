@@ -185,6 +185,17 @@ export interface BascikConfigOptions {
    * export const bascikConfig = { buildScriptCache: false };
    */
   buildScriptCache?: boolean;
+  /**
+   * Action to take when a `data-bascik-build` or `data-bascik-server` script
+   * fails during execution.
+   *
+   * - `"warn"`  — Log a warning via `console.warn` and proceed, replacing the tag with an empty string.
+   * - `"error"` — Log an error via `console.error` and proceed, replacing the tag with an empty string.
+   * - `"halt"`  — Throw an error and halt/abort compilation.
+   *
+   * Defaults to `"error"`.
+   */
+  onScriptError?: "warn" | "error" | "halt";
   isBuild?: boolean;
   isProdServer?: boolean;
   /**

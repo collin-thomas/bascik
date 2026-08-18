@@ -13,8 +13,15 @@ vi.mock("node:fs/promises", () => ({
   mkdir: vi.fn(async () => { }),
 }));
 
+vi.mock("./config.js", () => ({
+  BascikConfig: {
+    onScriptError: "error",
+  },
+}));
+
 import { execFile } from "node:child_process";
 import { writeFile, unlink } from "node:fs/promises";
+import { BascikConfig } from "./config.js";
 
 const mockExecFile = execFile as unknown as ReturnType<typeof vi.fn>;
 
@@ -334,5 +341,37 @@ describe("executeServerScripts", () => {
     const written = (writeFile as ReturnType<typeof vi.fn>).mock.calls[0][1] as string;
     expect(written).toBe("const x=1;");
     expect(written.indexOf("escapeHtml")).toBe(-1);
+  });
+
+  it("respects onScriptError: halt", async () => {
+    BascikConfig.onScriptError = "halt";
+    rejectWith("failed script execution");
+    const html = "<script data-bascik-server>bad()</script>";
+    await expect(executeServerScripts(html, baseRequest)).rejects.toThrow(/server script error/);
+    BascikConfig.onScriptError = undefined;
+  });
+
+  it("respects onScriptError: warn", async () => {
+    BascikConfig.onScriptError = "warn";
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+    rejectWith("failed script execution");
+    const html = "<script data-bascik-server>bad()</script>";
+    const result = await executeServerScripts(html, baseRequest);
+    expect(result).toBe("");
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
+    BascikConfig.onScriptError = undefined;
+  });
+
+  it("respects onScriptError: error", async () => {
+    BascikConfig.onScriptError = "error";
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    rejectWith("failed script execution");
+    const html = "<script data-bascik-server>bad()</script>";
+    const result = await executeServerScripts(html, baseRequest);
+    expect(result).toBe("");
+    expect(errorSpy).toHaveBeenCalled();
+    errorSpy.mockRestore();
+    BascikConfig.onScriptError = undefined;
   });
 });

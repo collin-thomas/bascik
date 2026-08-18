@@ -62,6 +62,7 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild" | "isProdServer"
   inlineStyles: false,
   useWorkers: false,
   buildScriptCache: true,
+  onScriptError: "error",
   devServer: {
     logging: {
       level: "info",

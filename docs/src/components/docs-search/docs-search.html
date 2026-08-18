@@ -27,15 +27,17 @@
   </div>
 </div>
 <script data-bascik-build>
-  // Combine search-logic.mjs (pure functions) and docs-search-dom.js (DOM wiring)
+  // Combine search-logic.ts (pure functions) and docs-search-dom.js (DOM wiring)
   // into one IIFE so minification can rename consistently across the whole block.
   import { readFile } from 'node:fs/promises';
   import { join } from 'node:path';
   const base = join(process.cwd(), 'src/components/docs-search');
-  const logic = await readFile(join(base, 'search-logic.mjs'), 'utf8');
+  const logic = await readFile(join(base, 'search-logic.ts'), 'utf8');
   const dom = await readFile(join(base, 'docs-search-dom.js'), 'utf8');
   const fns = logic
-    .replace(/^\/\*\*[\s\S]*?\*\/\n\n/m, '')   // strip file-level JSDoc
+    .replace(/^\/\*\*[\s\S]*?\r?\n\r?\n/m, '')   // strip file-level JSDoc
+    .replace(/^export interface[\s\S]*?\r?\n\}/m, '') // strip SearchEntry interface
+    .replace(/:\s*(?:string(?:\[\])?|number|SearchEntry(?:\[\])?|Record<[^>]+>|string\s*\|\s*null\s*\|\s*undefined)/g, '') // strip TS types
     .replace(/^export function /gm, 'function ')
     .replace(/^export const /gm, 'var ');
   console.log('<script>\n(function () {\n' + fns.trim() + '\n\n' + dom.trim() + '\n})();\n</scr' + 'ipt>');
