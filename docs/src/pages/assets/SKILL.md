@@ -95,6 +95,7 @@ Because IDs are scoped per instance, the same component can appear multiple time
 * The custom component tags in a Bascik project are the components the developer creates; Bascik does not provide a framework-owned component catalog.
 * Build instructions such as `data-bascik-slot`, `data-bascik-prop-*`, and `data-bascik-build` use HTML's standards-valid `data-*` extension mechanism.
 * Bascik consumes those instructions at build time. They are not runtime directives that require a client library to interpret them.
+* **Tag structure ordering rule:** When writing component files containing both styles and scripts alongside HTML, always place `<style>` tags above the HTML markup as a style guide, and always place `<script>` tags below the HTML markup.
 
 ### Repository Layout and the Create App
 

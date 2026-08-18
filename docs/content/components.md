@@ -437,6 +437,10 @@ When utilizing your components inside pages or other components, you can use sta
 
 If your component does not use a `<slot>` to accept inner children, you can choose to use it as a void/self-closing component. Both forms are fully supported and compile to the exact same output, with no difference in behavior or performance. You can choose whichever style matches your personal preference or project guidelines.
 
+## Component Structure & Tag Ordering
+
+When writing component files containing both styles and scripts alongside HTML, always place `<style>` tags above the HTML markup as a style guide, and always place `<script>` tags below the HTML markup.
+
 ## Multiple Style Blocks
 
 You can include multiple `<style>` blocks in a single component file. For example, you can organize styles into separate blocks for general layout, media queries, or themes.
