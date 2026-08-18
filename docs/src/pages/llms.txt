@@ -16,7 +16,7 @@ For the complete, centralized developer reference and AI assistant instructions,
 
 - [Getting Started](https://bascik.dev/getting-started): Bascik requires Node.js v22.18+.
 - [CLI / Command Line](https://bascik.dev/cli): Bascik features a simple, fast, and highly informative CLI for both development and production building.
-- [Configuration](https://bascik.dev/configuration): Create a bascik.config.ts file in your project root to override any default settings.
+- [Configuration](https://bascik.dev/configuration): Bascik is completely zero configuration by default.
 
 ## Features
 

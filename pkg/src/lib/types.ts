@@ -34,6 +34,32 @@ export interface TranspilePageResult {
   distHtml: string;
   usedComponentsNames: string[];
 }
+export interface MinifyOptions {
+  /**
+   * Minify HTML output: strip comments and collapse excess whitespace.
+   * Defaults to `false` in dev mode and `true` during `bascik --build` and `bascik --serve`.
+   */
+  html: boolean;
+  /**
+   * Collapse whitespace and newlines in component `<style>` blocks, inline styles,
+   * and static `.css` files.
+   * Defaults to `false` in dev mode and `true` during `bascik --build` and `bascik --serve`.
+   */
+  css: boolean;
+  /**
+   * Minify inline `<script>` content and `.js` static files in the output.
+   * Accepts `boolean` or a custom minifier function.
+   * Defaults to `false` in dev mode and `true` during `bascik --build` and `bascik --serve`.
+   *
+   * ```ts
+   * minify: {
+   *   js: async (js) => (await transform(js, { minify: true })).code,
+   * }
+   * ```
+   */
+  js: boolean | ((code: string) => string | Promise<string>);
+}
+
 export interface BascikConfigOptions {
   scopeScriptBlocks: boolean;
   inheritAttributes: boolean;
@@ -63,25 +89,10 @@ export interface BascikConfigOptions {
    * watch: ['scripts/', 'data/']
    */
   watch: string[];
-  minifyStyles: boolean;
   /**
-   * Minify inline `<script>` content and `.js` static files in the output.
-   *
-   * - `false`  — no minification (default in dev)
-   * - `true`   — built-in minifier: strips comments and collapses whitespace
-   * - `(fn)`   — call the provided function for each script body; return the
-   *              minified string.  Async functions are supported, which lets
-   *              you plug in esbuild, terser, or any other tool:
-   *
-   * ```ts
-   * // bascik.config.ts
-   * import { transform } from 'esbuild';
-   * export const build = {
-   *   minifyScripts: async (js) => (await transform(js, { minify: true })).code,
-   * };
-   * ```
+   * Options for HTML, CSS, and JS minification.
    */
-  minifyScripts: boolean | ((code: string) => string | Promise<string>);
+  minify: MinifyOptions;
   obfuscateAttributeNames: boolean;
   cacheHttp: boolean;
   /**
@@ -138,7 +149,7 @@ export interface BascikConfigOptions {
   * - `string[]` — inline only the listed stylesheet paths (relative to the
   *   project root).
   *
-   * When `minifyStyles` is true the content is minified before injection.
+  * When `minify.css` is true the content is minified before injection.
   * Global styles are injected before component styles so component rules take
   * precedence.
    *

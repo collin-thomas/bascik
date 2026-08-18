@@ -27,8 +27,8 @@ You can organize your assets into **any custom folder structure** inside `src/pa
 Bascik automatically handles static assets in `src/pages/`:
 
 - **HTML templates (`.html`)**: Transpiled into HTML pages with components resolved and scoped.
-- **CSS files (`.css`)**: Replicated to `dist/` and minified at build time if `minifyStyles` is enabled.
-- **JavaScript files (`.js`)**: Replicated to `dist/` and minified at build time if `minifyScripts` is enabled.
+- **CSS files (`.css`)**: Replicated to `dist/` and minified at build time if `minify.css` is enabled.
+- **JavaScript files (`.js`)**: Replicated to `dist/` and minified at build time if `minify.js` is enabled.
 - **Binary / Media assets (`.png`, `.jpg`, `.svg`, `.webp`, `.woff2`, `.pdf`, etc.)**: Copied as-is to `dist/` with directory structure intact.
 
 No passthrough copy list or asset bundler configuration is required.

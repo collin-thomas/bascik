@@ -146,11 +146,12 @@ const resolveInlineStyles = async (): Promise<string[]> => {
 export const resolveInlineStylesHtml = async (): Promise<string> => {
   const inlineStyles = await resolveInlineStyles();
   if (!inlineStyles.length) return "";
+  const isMinifyCss = BascikConfig.minify?.css ?? false;
   const sheets = await Promise.all(
     inlineStyles.map(async (filePath) => {
       try {
         const css = (await readFile(filePath)).toString();
-        return BascikConfig.minifyStyles ? minifyCss(css) : css;
+        return isMinifyCss ? minifyCss(css) : css;
       } catch (error) {
         console.warn(`[bascik] inlineStyles: could not read "${filePath}":`, (error as Error).message);
         return "";
@@ -166,11 +167,11 @@ export const resolveInlineStylesHtml = async (): Promise<string> => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Resolve the `minifyScripts` config value to a concrete async minifier
+ * Resolve the `minify.js` config value to a concrete async minifier
  * function, or `null` when minification is disabled.
  */
 const resolveScriptMinifier = (): ((code: string) => Promise<string>) | null => {
-  const cfg = BascikConfig.minifyScripts;
+  const cfg = BascikConfig.minify?.js ?? false;
   if (!cfg) return null;
   const fn = cfg === true ? minifyJs : cfg;
   return async (code: string) => fn(code);
@@ -662,13 +663,16 @@ export const transpilePage = async (
     globalStylesHtml = await resolveInlineStylesHtml();
   }
 
+  const isMinifyCss = BascikConfig.minify?.css ?? false;
+  const isMinifyHtml = BascikConfig.minify?.html ?? false;
+
   let transpiledHead = `${transpiledHeadContent}${globalStylesHtml}
     <style>
-    ${BascikConfig.minifyStyles ? minifyCss(componentCss) : componentCss}
+    ${isMinifyCss ? minifyCss(componentCss) : componentCss}
     </style>`;
   // Compress the entire head (removes newlines, collapses whitespace in inline <style> tags too)
 
-  if (BascikConfig.minifyStyles) {
+  if (isMinifyCss) {
     // Also minify any inline <style> blocks that came from the page source
     transpiledHead = transpiledHead.replace(
       /<style>([\s\S]*?)<\/style>/gi,
@@ -683,7 +687,9 @@ export const transpilePage = async (
 
   // Minify the body AFTER component resolution so that <pre> blocks from resolved
   // components (e.g. <code-block> → <pre><code>…</code></pre>) are preserved intact.
-  transpiledHtmlBody = minifyHtml(transpiledHtmlBody);
+  if (isMinifyHtml) {
+    transpiledHtmlBody = minifyHtml(transpiledHtmlBody);
+  }
 
   // Minify inline <script> content when configured.
   const jsMinifier = resolveScriptMinifier();

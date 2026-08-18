@@ -160,7 +160,7 @@ vi.mock("../config.ts", () => ({
     scopeAttribute: { class: true, id: true, name: true },
     obfuscateAttributeNames: false,
     isBuild: false,
-    minifyStyles: false,
+    minify: { css: false },
   },
 }));
 

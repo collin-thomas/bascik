@@ -57,8 +57,8 @@ src/
 You can create **any folder structure** and place **any asset type** inside `src/pages/`. Bascik treats `src/pages/` as the single unified source tree for both page routes and static files:
 
 - **HTML files (`.html`)**: Transpiled by Bascik (resolving component tags, scoping CSS and JS, executing build scripts) and emitted to `dist/` at the matching path.
-- **CSS files (`.css`)**: Copied to `dist/` preserving their folder structure. Automatically minified during `bascik --build` when `minifyStyles` is enabled (the default).
-- **JavaScript files (`.js`)**: Copied to `dist/` preserving their folder structure. Automatically minified during `bascik --build` when `minifyScripts` is enabled (the default).
+- **CSS files (`.css`)**: Copied to `dist/` preserving their folder structure. Automatically minified during `bascik --build` when `minify.css` is enabled (the default).
+- **JavaScript files (`.js`)**: Copied to `dist/` preserving their folder structure. Automatically minified during `bascik --build` when `minify.js` is enabled (the default).
 - **Static assets (images, fonts, PDFs, JSON, etc.)**: Any non-`.html` file (such as `.png`, `.jpg`, `.svg`, `.webp`, `.woff2`, `.pdf`) is copied as-is to `dist/` maintaining its exact subfolder structure.
 
 No asset pipelines, passthrough copy configuration, or public folder settings are required.

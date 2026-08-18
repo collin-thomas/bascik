@@ -474,7 +474,7 @@ Using the `id`-based pattern with `getElementById()` is recommended because it g
 
 ### TypeScript in Component Scripts
 
-Bascik ships plain JavaScript to the browser, so TypeScript in component `<script>` blocks must be stripped before output is served. Wire Node 22.18+'s built-in `stripTypeScriptTypes` into the `minifyScripts` hook:
+Bascik ships plain JavaScript to the browser, so TypeScript in component `<script>` blocks must be stripped before output is served. Wire Node 22.18+'s built-in `stripTypeScriptTypes` into the `minify.js` hook:
 
 ```ts
 // bascik.config.ts
@@ -482,11 +482,13 @@ import { stripTypeScriptTypes } from 'node:module';
 import { defineConfig } from '@bascik/bascik/config';
 
 export const build = defineConfig({
-  minifyScripts: (js) => stripTypeScriptTypes(js),
+  minify: {
+    js: (js) => stripTypeScriptTypes(js),
+  },
 });
 ```
 
-Component scripts can then use TypeScript annotations freely. Bascik's scoping pipeline runs first (IIFE wrapping, selector rewriting), then `minifyScripts` strips the types. **Erasable syntax only:** `stripTypeScriptTypes` removes type annotations, interfaces, `as` casts, and `!` non-null assertions. Non-erasable syntax (`enum`, parameter properties, namespaces with runtime code) requires a separate compile step.
+Component scripts can then use TypeScript annotations freely. Bascik's scoping pipeline runs first (IIFE wrapping, selector rewriting), then `minify.js` strips the types. **Erasable syntax only:** `stripTypeScriptTypes` removes type annotations, interfaces, `as` casts, and `!` non-null assertions. Non-erasable syntax (`enum`, parameter properties, namespaces with runtime code) requires a separate compile step.
 
 ---
 
@@ -872,9 +874,12 @@ export default defineConfig({
   },
   deduplicateCss: true,
   skipTranspilingElementContents: ['code'], // don't scope inside these elements
-  minifyStyles: true,
+  minify: {
+    html: false,
+    css: false,
+    js: false,
+  },
   inlineStyles: false, // false | true | ['src/pages/css/styles.css']
-  minifyScripts: true, // true (default) | false | async (js: string) => string
   obfuscateAttributeNames: true, // hash class/id names to short hex strings
   cacheHttp: false, // dev default; automatically true in --serve mode
   siteUrl: 'https://example.com',
@@ -910,16 +915,22 @@ export default defineConfig({
 // Applied only during `bascik --build` and `bascik --serve`.
 export const build = defineConfig({
   obfuscateAttributeNames: true,
-  minifyStyles: true,
+  minify: {
+    html: true,
+    css: true,
+    js: true,
+  },
 });
 ```
 
-**`minifyScripts`:** `true` (default) strips comments and collapses whitespace — it does not mangle identifiers. Pass a custom async function to plug in esbuild, terser, or `stripTypeScriptTypes`:
+**`minify.js`:** `true` (default) strips comments and collapses whitespace — it does not mangle identifiers. Pass a custom async function to plug in esbuild, terser, or `stripTypeScriptTypes`:
 
 ```ts
 import { transform } from 'esbuild';
 export const build = defineConfig({
-  minifyScripts: async (js) => (await transform(js, { minify: true, loader: 'js' })).code,
+  minify: {
+    js: async (js) => (await transform(js, { minify: true, loader: 'js' })).code,
+  },
 });
 ```
 
@@ -940,7 +951,7 @@ src/
 
 ### Static Assets and Subdirectories
 * **Any Asset or Folder in `src/pages/`:** You can create any subfolders (`css/`, `js/`, `images/`, `fonts/`, `downloads/`) inside `src/pages/`. All non-`.html` files (CSS, JS, images, fonts, PDFs, JSON, etc.) are automatically copied to `dist/` replicating their exact directory structure.
-* **Auto-Minification:** CSS and JS files placed in `src/pages/` are automatically minified at build time when `minifyStyles` / `minifyScripts` are enabled in `bascik.config.ts`.
+* **Auto-Minification:** CSS and JS files placed in `src/pages/` are automatically minified at build time when `minify.css` / `minify.js` are enabled in `bascik.config.ts`.
 * **No Passthrough Configuration:** No asset pipelines, passthrough copy configuration, or public folder settings are needed.
 
 ### Custom 404 & 500 Pages
@@ -1362,7 +1373,7 @@ Bascik gives you an enormous head start on Lighthouse scores. Because it outputs
 * **Zero runtime:** The most impactful thing Bascik does is what it does not add: no framework bundle, no hydration script, and no client-side router. The only JavaScript on any page is what you wrote.
 * **CSS deduplication:** When a component appears multiple times on a page, Bascik emits a single `<style>` block regardless of instance count.
 * **HTML minification:** HTML comments are stripped and excess whitespace is collapsed in every built page. Content inside `<pre>` blocks is left intact.
-* **Script minification:** `minifyScripts` is `true` by default, stripping comments and whitespace.
+* **Script minification:** `minify.js` is `true` by default, stripping comments and whitespace.
 * **Inline styles:** Set `inlineStyles` in `bascik.config.ts` to inject a stylesheet directly into `<head>`, eliminating the render-blocking HTTP request.
 
 ### Performance Patterns for Developers

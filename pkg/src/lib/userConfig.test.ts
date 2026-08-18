@@ -29,11 +29,11 @@ describe("loadUserConfig", () => {
     const { loadUserConfig } = await import("./userConfig.js");
     const p = await writeConfig(
       `export default { scopeScriptBlocks: false };
-       export const build = { minifyStyles: false };`,
+       export const build = { minify: { css: false } };`,
     );
     const { config, build } = await loadUserConfig(p);
     expect(config).toEqual({ scopeScriptBlocks: false });
-    expect(build).toEqual({ minifyStyles: false });
+    expect(build).toEqual({ minify: { css: false } });
   });
 
   it("defaults missing exports to empty objects", async () => {

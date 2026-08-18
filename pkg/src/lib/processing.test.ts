@@ -12,7 +12,11 @@ vi.mock("./config.js", () => ({
     scopeAttribute: { class: false, id: false, name: false },
     obfuscateAttributeNames: false,
     isBuild: false,
-    minifyStyles: false,
+    minify: {
+      html: false,
+      css: false,
+      js: false,
+    },
     deduplicateCss: true,
     inlineStyles: false,
     directory: {
@@ -613,7 +617,7 @@ describe("pageProcessing – $-pattern safety in body/head reassembly", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (BascikConfig as Record<string, unknown>).inlineStyles = false;
-    (BascikConfig as Record<string, unknown>).minifyStyles = false;
+    (BascikConfig.minify as any).css = false;
   });
 
   it("preserves $1 in page body verbatim (not expanded as capture-group back-ref)", async () => {
@@ -646,7 +650,7 @@ describe("pageProcessing – inlineStyles", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (BascikConfig as Record<string, unknown>).inlineStyles = false;
-    (BascikConfig as Record<string, unknown>).minifyStyles = false;
+    (BascikConfig.minify as any).css = false;
   });
 
   it("does not inject a global <style> when inlineStyles is false", async () => {
@@ -701,9 +705,9 @@ describe("pageProcessing – inlineStyles", () => {
     warnSpy.mockRestore();
   });
 
-  it("minifies inlined CSS when minifyStyles is true", async () => {
+  it("minifies inlined CSS when minify.css is true", async () => {
     (BascikConfig as Record<string, unknown>).inlineStyles = ['src/pages/css/styles.css'];
-    (BascikConfig as Record<string, unknown>).minifyStyles = true;
+    (BascikConfig.minify as any).css = true;
     (readFile as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce(PAGE_HTML)
       .mockResolvedValueOnce('body {  color:  red;  }');
@@ -833,7 +837,7 @@ describe("pageProcessing – live-reload script injection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (BascikConfig as Record<string, unknown>).inlineStyles = false;
-    (BascikConfig as Record<string, unknown>).minifyStyles = false;
+    (BascikConfig.minify as any).css = false;
     (BascikConfig as Record<string, unknown>).isBuild = false;
     (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(PAGE_HTML);
   });
@@ -1365,7 +1369,7 @@ describe("processAllPages – build mode sitemap", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// V: transpilePage – minifyScripts branch coverage
+// V: transpilePage – minify.js branch coverage
 // Tests the minifyScriptTagsInHtml skip conditions:
 //   – non-JS type scripts (application/ld+json, etc.) are not minified
 //   – server scripts (data-bascik-server) are not minified
@@ -1373,12 +1377,12 @@ describe("processAllPages – build mode sitemap", () => {
 //   – text/javascript scripts are minified
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("transpilePage – minifyScripts branch coverage", () => {
+describe("transpilePage – minify.js branch coverage", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     (BascikConfig as Record<string, unknown>).inlineStyles = false;
     (BascikConfig as Record<string, unknown>).isBuild = true;
-    (BascikConfig as Record<string, unknown>).minifyScripts = true;
+    (BascikConfig.minify as any).js = true;
     const { writeFile, mkdir } = await import("node:fs/promises");
     (mkdir as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
     (writeFile as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
@@ -1386,7 +1390,7 @@ describe("transpilePage – minifyScripts branch coverage", () => {
 
   afterEach(() => {
     (BascikConfig as Record<string, unknown>).isBuild = false;
-    (BascikConfig as Record<string, unknown>).minifyScripts = false;
+    (BascikConfig.minify as any).js = false;
   });
 
   it("minifies inline text/javascript script content", async () => {
@@ -1454,7 +1458,7 @@ describe("transpilePage – auto-fetches componentList", () => {
     vi.clearAllMocks();
     (BascikConfig as Record<string, unknown>).inlineStyles = false;
     (BascikConfig as Record<string, unknown>).isBuild = false;
-    (BascikConfig as Record<string, unknown>).minifyScripts = false;
+    (BascikConfig.minify as any).js = false;
     const componentsModule = await import("./components.js");
     vi.spyOn(componentsModule, "listComponents").mockResolvedValue({});
   });

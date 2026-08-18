@@ -86,7 +86,10 @@ export async function copyReplicatePath(
 
   // Only copy if file hashes differ
   try {
-    if (BascikConfig.minifyStyles && src.endsWith(".css")) {
+    const isMinifyCss = BascikConfig.minify?.css ?? false;
+    const minifyJsCfg = BascikConfig.minify?.js ?? false;
+
+    if (isMinifyCss && src.endsWith(".css")) {
       // Read, minify, and write CSS rather than doing a raw copy
       const minified = minifyCss((await readFile(src)).toString());
       const destHash = createHash("md5").update(await readFile(destPath).catch(() => "")).digest("hex");
@@ -96,10 +99,9 @@ export async function copyReplicatePath(
       if (canLogDevEvent(BascikConfig.devServer?.logging?.copies, "info")) {
         console.log("copied (minified):", displayRelativePath(src));
       }
-    } else if (BascikConfig.minifyScripts && src.endsWith(".js")) {
+    } else if (minifyJsCfg && src.endsWith(".js")) {
       // Read, minify, and write JS rather than doing a raw copy
-      const cfg = BascikConfig.minifyScripts;
-      const minifyFn = cfg === true ? minifyJs : cfg;
+      const minifyFn = minifyJsCfg === true ? minifyJs : minifyJsCfg;
       const minified = await minifyFn((await readFile(src)).toString());
       const destHash = createHash("md5").update(await readFile(destPath).catch(() => "")).digest("hex");
       const minifiedHash = createHash("md5").update(minified).digest("hex");

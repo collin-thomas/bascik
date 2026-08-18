@@ -42,8 +42,11 @@ const BASCIK_CONFIG = `// Bascik works without this file — defaults are src/pa
 
 // Applied only during \`bascik --build\` and \`bascik --serve\`.
 export const build = {
-  minifyStyles: true,
-  minifyScripts: true,
+  minify: {
+    html: true,
+    css: true,
+    js: true,
+  },
   obfuscateAttributeNames: true,
 };
 `;
