@@ -281,7 +281,7 @@ export const SITE_HEADER_CSS = `.header {
 
 /** Sticky top nav with logo (brand prop) and mobile hamburger. */
 export const SITE_HEADER_HTML = `<style>
-\${SITE_HEADER_CSS}</style>
+${SITE_HEADER_CSS}</style>
 <header class="header">
   <div class="container">
     <nav class="nav">
@@ -342,7 +342,7 @@ export const SITE_FOOTER_CSS = `.footer {
 
 /** Footer with brand prop and build-time year. */
 export const SITE_FOOTER_HTML = `<style>
-\${SITE_FOOTER_CSS}</style>
+${SITE_FOOTER_CSS}</style>
 <footer class="footer">
   <div class="container">
     <div class="footer-inner">
@@ -402,7 +402,7 @@ export const FEAT_CARD_CSS = `.fcard {
  * Slots: header (label/icon area), default (title + body), footer (actions).
  */
 export const FEAT_CARD_HTML = `<style>
-\${FEAT_CARD_CSS}</style>
+${FEAT_CARD_CSS}</style>
 <article class="fcard">
   <div class="fcard-header" data-bascik-slot="header"></div>
   <div class="fcard-body" data-bascik-slot></div>
@@ -441,7 +441,7 @@ export const MY_COUNTER_CSS = `.counter {
 
 /** Interactive counter — two instances on a page stay fully independent. */
 export const MY_COUNTER_HTML = `<style>
-\${MY_COUNTER_CSS}</style>
+${MY_COUNTER_CSS}</style>
 <div class="counter">
   <button id="btn-dec" class="btn btn-ghost">−</button>
   <span id="count-val" class="count-val">0</span>

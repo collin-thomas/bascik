@@ -884,6 +884,7 @@ export default defineConfig({
   },
   useWorkers: false,       // true: transpile pages across CPU-core worker threads
   buildScriptCache: true,  // false: disable disk cache for <script data-bascik-build>
+  onScriptError: 'error',  // 'warn' | 'error' | 'halt' — script error handling
   devServer: {
     logging: {
       level: 'info',    // silent | error | warn | info | debug

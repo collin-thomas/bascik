@@ -142,15 +142,24 @@ suite('Extension Integration Suite', () => {
       assert.strictEqual(match.severity, vscode.DiagnosticSeverity.Warning);
     });
 
-    test('reports multiple style tags warning', async () => {
+    test('does not report unclosed component warning when nested component is self-closing', async () => {
+      const doc = await vscode.workspace.openTextDocument({
+        language: 'html',
+        content: '<my-card>\n<my-card />\n</my-card>',
+      });
+      const diagnostics = vscode.languages.getDiagnostics(doc.uri);
+      const match = diagnostics.find((d) => d.message.includes('Component tag <my-card> is unclosed'));
+      assert.ok(!match, 'Should NOT report unclosed warning when nested child component is self-closing');
+    });
+
+    test('does not report warning for multiple style tags', async () => {
       const doc = await vscode.workspace.openTextDocument({
         language: 'html',
         content: '<style>.a { color: red; }</style>\n<style>.b { color: blue; }</style>',
       });
       const diagnostics = vscode.languages.getDiagnostics(doc.uri);
       const match = diagnostics.find((d) => d.message.includes('Component has multiple <style> tags'));
-      assert.ok(match, 'Expected warning for multiple style tags');
-      assert.strictEqual(match.severity, vscode.DiagnosticSeverity.Warning);
+      assert.ok(!match, 'Should not report warning for multiple style tags');
     });
 
     test('reports companion CSS file conflict when opening html file', async () => {

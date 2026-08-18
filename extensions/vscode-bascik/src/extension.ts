@@ -98,6 +98,27 @@ function findMatchingClose(
       if (depth === 0) return closeMatch.index;
       pos = closeMatch.index + closeMatch[0].length;
     } else {
+      let inDoubleQuote = false;
+      let inSingleQuote = false;
+      let tagEnd = -1;
+      for (let i = openMatch.index; i < html.length; i++) {
+        const char = html[i];
+        if (char === '"' && !inSingleQuote) {
+          inDoubleQuote = !inDoubleQuote;
+        } else if (char === "'" && !inDoubleQuote) {
+          inSingleQuote = !inSingleQuote;
+        } else if (char === '>' && !inDoubleQuote && !inSingleQuote) {
+          tagEnd = i + 1;
+          break;
+        }
+      }
+      if (tagEnd !== -1) {
+        const fullOpenTag = html.slice(openMatch.index, tagEnd);
+        if (/\/\s*>$/.test(fullOpenTag)) {
+          pos = tagEnd;
+          continue;
+        }
+      }
       depth++;
       pos = openMatch.index + openMatch[0].length;
     }
@@ -254,22 +275,6 @@ function createDiagnosticsForDocument(document: vscode.TextDocument): vscode.Dia
     const styleMatches: RegExpExecArray[] = [];
     while ((styleMatch = styleBlockRe.exec(maskedText)) !== null) {
       styleMatches.push(styleMatch);
-    }
-
-    if (styleMatches.length > 1) {
-      for (let i = 1; i < styleMatches.length; i++) {
-        const match = styleMatches[i];
-        const openTag = match[1];
-        const start = document.positionAt(match.index ?? 0);
-        const end = document.positionAt((match.index ?? 0) + openTag.length);
-        const diag = new vscode.Diagnostic(
-          new vscode.Range(start, end),
-          'Component has multiple <style> tags. They will be combined at build time, but using multiple <style> tags in a single component file is not recommended for readability and maintainability.',
-          vscode.DiagnosticSeverity.Warning,
-        );
-        diag.source = 'bascik';
-        diagnostics.push(diag);
-      }
     }
 
     for (const match of styleMatches) {
