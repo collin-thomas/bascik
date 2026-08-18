@@ -289,6 +289,22 @@ describe("minifyHtml", () => {
     expect(result).toBe(expected);
   });
 
+  it("preserves whitespace between inline tags", () => {
+    const htmlString =
+      "<p><strong>More on the next page.</strong> <a href=\"/scoped-styles\">Scoped Styles</a></p>";
+    expect(minifyHtml(htmlString)).toBe(
+      "<p><strong>More on the next page.</strong> <a href=\"/scoped-styles\">Scoped Styles</a></p>",
+    );
+  });
+
+  it("preserves newlines as single space between inline tags", () => {
+    const htmlString =
+      "<p><strong>More on the next page.</strong>\n<a href=\"/scoped-styles\">Scoped Styles</a></p>";
+    expect(minifyHtml(htmlString)).toBe(
+      "<p><strong>More on the next page.</strong> <a href=\"/scoped-styles\">Scoped Styles</a></p>",
+    );
+  });
+
   it("handles an empty input string", () => {
     expect(minifyHtml("")).toEqual("");
   });

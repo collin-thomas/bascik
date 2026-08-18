@@ -398,6 +398,52 @@ export const extractScriptTags = (htmlString: string): string => {
     .trim();
 };
 
+const INLINE_TAGS = new Set([
+  "a",
+  "abbr",
+  "acronym",
+  "b",
+  "bdi",
+  "bdo",
+  "big",
+  "br",
+  "button",
+  "cite",
+  "code",
+  "data",
+  "del",
+  "dfn",
+  "em",
+  "i",
+  "img",
+  "input",
+  "kbd",
+  "label",
+  "mark",
+  "meter",
+  "output",
+  "progress",
+  "q",
+  "rp",
+  "rt",
+  "ruby",
+  "s",
+  "samp",
+  "script",
+  "select",
+  "small",
+  "span",
+  "strong",
+  "sub",
+  "sup",
+  "textarea",
+  "time",
+  "tt",
+  "u",
+  "var",
+  "wbr",
+]);
+
 export const minifyHtml = (htmlString: string): string => {
   let html = htmlString.replace(/<!--[\s\S]*?-->/g, "");
   const scriptTags = extractScriptTags(html);
@@ -416,7 +462,21 @@ export const minifyHtml = (htmlString: string): string => {
       return `\x00P${preserved.length - 1}\x00`;
     },
   );
-  html = html.replace(/\n/g, "").replace(/>\s+</g, "><").replace(/\s\s+/g, " ");
+  html = html.replace(/\n/g, " ").replace(/\s\s+/g, " ");
+  html = html.replace(/>\s+</g, (match, offset, fullString) => {
+    const prevSub = fullString.slice(0, offset + 1);
+    const prevMatch = prevSub.match(/<\/?([a-zA-Z0-9-]+)[^>]*>$/);
+    const prevTag = prevMatch ? prevMatch[1].toLowerCase() : "";
+
+    const nextSub = fullString.slice(offset + match.length - 1);
+    const nextMatch = nextSub.match(/^<\/?([a-zA-Z0-9-]+)/);
+    const nextTag = nextMatch ? nextMatch[1].toLowerCase() : "";
+
+    if (INLINE_TAGS.has(prevTag) && INLINE_TAGS.has(nextTag)) {
+      return "> <";
+    }
+    return "><";
+  });
   if (preserved.length) {
     // Collapse any whitespace that landed between a tag boundary and a placeholder
     // after newline removal (e.g. "<div> \x00P0\x00 <" → "<div>\x00P0\x00<").
