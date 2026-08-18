@@ -473,9 +473,9 @@ Given two instances of `<my-card>` on the same page:
 
 Using the `id`-based pattern with `getElementById()` is recommended because it gives you per-instance JS isolation while keeping `deduplicateCss: true` for minimal CSS payload.
 
-### TypeScript in Component Scripts
+### TypeScript in Component Scripts & BYOMinifier
 
-Bascik ships vanilla JavaScript to the browser, so TypeScript in component `<script>` blocks must be stripped before output is served. Wire Node 22.18+'s built-in `stripTypeScriptTypes` into the `minify.js` hook:
+Bascik ships vanilla JavaScript to the browser, so TypeScript in component `<script>` blocks must be stripped before output is served. Thanks to Bascik's **BYOMinifier (Bring Your Own Minifier)** feature, wire Node 22.18+'s built-in `stripTypeScriptTypes` into the `minify.js` hook:
 
 ```ts
 // bascik.config.ts
@@ -952,7 +952,7 @@ src/
 
 ### Static Assets and Subdirectories
 * **Any Asset or Folder in `src/pages/`:** You can create any subfolders (`css/`, `js/`, `images/`, `fonts/`, `downloads/`) inside `src/pages/`. All non-`.html` files (CSS, JS, images, fonts, PDFs, JSON, etc.) are automatically copied to `dist/` replicating their exact directory structure.
-* **Auto-Minification:** CSS and JS files placed in `src/pages/` are automatically minified at build time when `minify.css` / `minify.js` are enabled in `bascik.config.ts`.
+* **Auto-Minification:** CSS and JS files placed in `src/pages/` are automatically minified at build time when `minify.css` / `minify.js` are enabled in `bascik.config.ts`. Custom BYOMinifier minifier/transformer functions (e.g. PostCSS/Autoprefixer, LightningCSS, esbuild, terser) can also be assigned to `minify.css` and `minify.js`.
 * **No Passthrough Configuration:** No asset pipelines, passthrough copy configuration, or public folder settings are needed.
 
 ### Custom 404 & 500 Pages

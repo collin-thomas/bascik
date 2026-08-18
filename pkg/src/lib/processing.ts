@@ -143,15 +143,26 @@ const resolveInlineStyles = async (): Promise<string[]> => {
   return [];
 };
 
+/**
+ * Resolve the `minify.css` config value to a concrete async minifier
+ * function, or `null` when minification is disabled.
+ */
+const resolveCssMinifier = (): ((code: string) => Promise<string>) | null => {
+  const cfg = BascikConfig.minify?.css ?? false;
+  if (!cfg) return null;
+  const fn = cfg === true ? minifyCss : cfg;
+  return async (code: string) => fn(code);
+};
+
 export const resolveInlineStylesHtml = async (): Promise<string> => {
   const inlineStyles = await resolveInlineStyles();
   if (!inlineStyles.length) return "";
-  const isMinifyCss = BascikConfig.minify?.css ?? false;
+  const cssMinifier = resolveCssMinifier();
   const sheets = await Promise.all(
     inlineStyles.map(async (filePath) => {
       try {
         const css = (await readFile(filePath)).toString();
-        return isMinifyCss ? minifyCss(css) : css;
+        return cssMinifier ? await cssMinifier(css) : css;
       } catch (error) {
         console.warn(`[bascik] inlineStyles: could not read "${filePath}":`, (error as Error).message);
         return "";
@@ -652,21 +663,37 @@ export const transpilePage = async (
     globalStylesHtml = await resolveInlineStylesHtml();
   }
 
-  const isMinifyCss = BascikConfig.minify?.css ?? false;
+  const cssMinifier = resolveCssMinifier();
   const isMinifyHtml = BascikConfig.minify?.html ?? false;
+
+  const formattedComponentCss = cssMinifier ? await cssMinifier(componentCss) : componentCss;
 
   let transpiledHead = `${transpiledHeadContent}${globalStylesHtml}
     <style>
-    ${isMinifyCss ? minifyCss(componentCss) : componentCss}
+    ${formattedComponentCss}
     </style>`;
   // Compress the entire head (removes newlines, collapses whitespace in inline <style> tags too)
 
-  if (isMinifyCss) {
+  if (cssMinifier) {
     // Also minify any inline <style> blocks that came from the page source
-    transpiledHead = transpiledHead.replace(
-      /<style>([\s\S]*?)<\/style>/gi,
-      (_: string, css: string) => `<style>${minifyCss(css)}</style>`,
-    );
+    const styleBlockRegex = /<style\b[^>]*>([\s\S]*?)<\/style>/gi;
+    const matches: Array<{ full: string; css: string; index: number }> = [];
+    let match: RegExpExecArray | null;
+    while ((match = styleBlockRegex.exec(transpiledHead)) !== null) {
+      matches.push({ full: match[0], css: match[1], index: match.index });
+    }
+    if (matches.length > 0) {
+      let newHead = "";
+      let lastIndex = 0;
+      for (const m of matches) {
+        newHead += transpiledHead.slice(lastIndex, m.index);
+        const minifiedCss = await cssMinifier(m.css);
+        newHead += `<style>${minifiedCss}</style>`;
+        lastIndex = m.index + m.full.length;
+      }
+      newHead += transpiledHead.slice(lastIndex);
+      transpiledHead = newHead;
+    }
     transpiledHead = transpiledHead.replace(/\n/g, " ").replace(/\s\s+/g, " ");
   }
 

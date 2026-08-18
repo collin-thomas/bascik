@@ -555,11 +555,11 @@ Keep inlined critical CSS to the minimum needed for above-the-fold visibility, t
 >
 > Once your stylesheet grows past roughly 15–20 KB (gzipped: ~4–5 KB), it is worth considering a linked external stylesheet instead. The tradeoff: the first page load pays one extra HTTP request, but every subsequent page in the session gets the file from the browser cache for free. If most of your traffic arrives from search and reads a single page, inline wins. If visitors typically navigate several pages per session, the cached external file pays off by page two. HTTP/2 reduces the penalty of the extra request significantly, but it does not eliminate it.
 
-## Minify JavaScript Output
+## Minify JavaScript Output & BYOMinifier
 
 Bascik's `minify.js` option strips comments and collapses whitespace from every inline `<script>` block and any `.js` files copied into `dist/`. It is `true` by default, so production builds are already smaller without any configuration.
 
-For maximum compression, identifier mangling, dead-code elimination, and tree-shaking, point `minify.js` at esbuild's `transform` API. esbuild has zero npm dependencies (it ships as a single native binary) and is typically 10–100× faster than alternatives:
+For maximum compression, identifier mangling, dead-code elimination, and tree-shaking, Bascik's **BYOMinifier (Bring Your Own Minifier)** lets you point `minify.js` at esbuild's `transform` API. esbuild has zero npm dependencies (it ships as a single native binary) and is typically 10–100× faster than alternatives:
 
 ```sh
 npm install --save-dev esbuild

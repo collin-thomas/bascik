@@ -148,29 +148,26 @@ skipTranspilingElementContents: ['code'] // default
 
 Set to an empty array to disable the protection entirely, or extend the list for other elements whose contents should be preserved as-is.
 
-### `minify`
+### `minify` (BYOMinifier)
 
 Configure minification toggles for HTML, CSS, and JS outputs. All three default to `false` in dev mode and `true` during `bascik --build` and `bascik --serve`.
 
-```ts
-minify: {
-  html: true, // strip HTML comments and collapse whitespace
-  css: true,  // collapse whitespace in component <style> blocks and .css files
-  js: true,   // strip comments/whitespace in inline <script> tags and .js files
-}
-```
-
-The `js` property also accepts a custom async-capable minifier function to plug in esbuild or terser:
+Bascik supports **BYOMinifier (Bring Your Own Minifier)**: both `css` and `js` accept custom async-capable minifier or transformer functions. Plug in PostCSS with Autoprefixer, LightningCSS, esbuild, terser, or Node's built-in TypeScript type stripper:
 
 ```ts
 // bascik.config.ts
 import { defineConfig } from '@bascik/bascik/config';
+import autoprefixer from 'autoprefixer';
+import postcss from 'postcss';
 import { transform } from 'esbuild';
 
 export const build = defineConfig({
   minify: {
     html: true,
-    css: true,
+    css: async (css) => {
+      const result = await postcss([autoprefixer]).process(css, { from: undefined });
+      return result.css;
+    },
     js: async (code) => {
       const result = await transform(code, { minify: true, loader: 'js' });
       return result.code;
