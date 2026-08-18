@@ -651,7 +651,7 @@ Components work inside `<head>` to organize metadata:
 * Use `console.log()` or `process.stdout.write()` to output HTML.
 * Build scripts run before component resolution, so their output can contain component tags.
 * All build scripts on a page execute concurrently via `Promise.all` (capped by a memory semaphore), and output is assembled in document order once all scripts complete.
-* On error, the script tag is replaced with an empty string and a warning is logged.
+* On error, behavior is controlled by `onScriptError` in `bascik.config.ts`: `'error'` (default: log error to stderr and replace tag with `""`), `'warn'` (log warning to stderr and replace tag with `""`), or `'halt'` (throw error and immediately stop the build, recommended for CI/CD).
 * **Hard error:** combining `data-bascik-build` and `data-bascik-server` on the same tag throws and aborts the build. A script runs at build time or at request time, not both.
 
 ### Build Script Environment Variables
@@ -989,7 +989,7 @@ Then run `bascik init` to scaffold the starter files and folder structure, or ad
 
 ```sh
 bascik                        # dev: transpile, start plaintext HTTP server at http://localhost:8080, watch
-bascik --build                # production: transpile to dist/ only
+bascik --build                # production: transpile to dist/ only (preview locally with `npx http-server dist`)
 bascik --build --log [path]   # write build output to a log file (default: .bascik/build.log)
 bascik --serve                # production server: serve a pre-built dist/ with HTTP
 bascik --check                # static analysis: validate pages and components without building
