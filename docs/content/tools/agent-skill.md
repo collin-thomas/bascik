@@ -6,32 +6,32 @@ The Bascik skill file (`SKILL.md`) teaches any AI assistant, GitHub Copilot, Cur
 
 Add it once, and your AI assistant can accurately answer questions about Bascik, generate correct components, and help debug scoping issues without needing to look anything up.
 
-## Download
-
-Download [SKILL.md](https://bascik.dev/assets/SKILL.md) directly.
-
 ## Download and Install
 
-Run the following from the root of your repo in your terminal.
+Run the following from the root of your repo in your terminal. This will create the `skills/bascik` directory and download and install the Bascik `SKILL.md` file.
 
-### Adding it to VSCode
+### Add the Skill to VSCode
 
 ```sh
 mkdir -p .github/skills/bascik && curl -L -o .github/skills/bascik/SKILL.md https://bascik.dev/assets/SKILL.md
 
 ```
 
-### Adding it to Cursor
+### Add the Skill to Cursor
 
 ```sh
 mkdir -p .cursor/skills/bascik && curl -L -o .cursor/skills/bascik/SKILL.md https://bascik.dev/assets/SKILL.md
 ```
 
-### Adding it to Claude
+### Add the Skill to Claude
 
 ```sh
 mkdir -p .claude/skills/bascik && curl -L -o .claude/skills/bascik/SKILL.md https://bascik.dev/assets/SKILL.md
 ```
+
+### Download Only
+
+Download the Bascik [SKILL.md](https://bascik.dev/assets/SKILL.md) directly.
 
 ## What's inside
 
