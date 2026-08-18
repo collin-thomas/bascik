@@ -52,9 +52,6 @@
   --hl-comment:     #7e8190;
   --hl-scoped:      var(--accent);
   --hl-num:         #f9e2af;
-  /* ── Homepage pillar card ── */
-  --pillar-bg:       #2e3428;
-  --pillar-border:   rgba(211,255,141,0.14);
   /* ── Live indicator dot ── */
   --live-dot-bg:     var(--accent);
   --live-dot-shadow: 0 0 8px rgba(211,255,141,0.45);
@@ -106,8 +103,6 @@ html[data-theme="light"] {
   --hl-comment:     #6b7280;
   --hl-scoped:      var(--accent-fg);
   --hl-num:         #9a3412;
-  --pillar-bg:      var(--surface);
-  --pillar-border:  var(--border);
   --live-dot-bg:    var(--text);
   --live-dot-shadow: 0 0 0 2px var(--accent);
   --hero-glow:   rgba(100,160,30,0.22);
@@ -365,7 +360,7 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
 /* ── Tables ── */
 .docs-content table {
   width: 100%; border-collapse: collapse;
-  font-size: 0.88rem; margin: 16px 0 32px;
+  font-size: 0.88rem; margin: 0;
 }
 .docs-content th {
   text-align: left; padding: 8px 12px;

@@ -68,7 +68,8 @@
               <h1>Testing Internals</h1>
               <p style="color:var(--text-muted);font-size:.92rem;margin-bottom:1rem">Bascik has two separate test suites: <strong>unit tests</strong> (Vitest) that verify individual library modules, and <strong>end-to-end tests</strong> (Playwright) that build and browser-test the full transpilation pipeline against a fixture site.</p>
               <h2>Unit Test Coverage</h2>
-              <p style="color:var(--text-muted);font-size:.92rem;margin-bottom:1rem">Line, function, and branch coverage from the Vitest unit test suite. CLI entry points (<code>index.ts</code>, <code>transpile.ts</code>, <code>page-worker.ts</code>) are excluded — they run only in E2E tests below.</p>
+              <p style="color:var(--text-muted);font-size:.92rem;margin-bottom:1rem">Line, function, and branch coverage from the Vitest unit test suite. CLI entry points (<code>index.ts</code>, <code>transpile.ts</code>, <code>page-worker.ts</code>) are excluded. They run only in E2E tests below.</p>
+              <doc-table>
               <table style="width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:.9rem">
                 <thead>
                   <tr style="text-align:left;border-bottom:1px solid var(--border)">
@@ -100,6 +101,8 @@
                   </tr>
                 </tbody>
               </table>
+              </doc-table>
+              </doc-table>
               <p style="font-size:.8rem;color:var(--text-muted);margin-top:-.5rem">Regenerate with <code>yarn docs:update-coverage</code></p>
             `);
           } catch {
@@ -123,6 +126,7 @@
             console.log(`
               <h2 style="margin-top:2.5rem">E2E Coverage (Playwright + V8)</h2>
               <p style="color:var(--text-muted);font-size:.92rem;margin-bottom:1rem">Coverage captured while the CLI builds the 55-page E2E fixture site. Exercises the full transpilation pipeline end-to-end including the CLI entry point, startup, and worker threads that unit tests cannot reach.</p>
+              <doc-table>
               <table style="width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:.9rem">
                 <thead>
                   <tr style="text-align:left;border-bottom:1px solid var(--border)">

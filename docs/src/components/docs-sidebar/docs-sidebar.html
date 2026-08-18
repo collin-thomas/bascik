@@ -18,23 +18,59 @@
      (function () {
           var path = window.location.pathname;
           var sidebar = document.querySelector('.docs-sidebar');
-          if (sidebar) {
-               var links = Array.from(sidebar.querySelectorAll('a'));
-               var idx = links.findIndex(function (a) { return a.getAttribute('href') === path; });
-               if (idx !== -1) {
-                    links[idx].setAttribute('aria-current', 'page');
-                    requestAnimationFrame(function () {
-                         var linkTop = links[idx].getBoundingClientRect().top - sidebar.getBoundingClientRect().top + sidebar.scrollTop;
-                         sidebar.scrollTop = linkTop - sidebar.clientHeight / 2 + links[idx].offsetHeight / 2;
-                    });
-                    var next = links[idx + 1];
-                    if (next) {
-                         var link = document.createElement('link');
-                         link.rel = 'prefetch';
-                         link.href = next.getAttribute('href');
-                         document.head.appendChild(link);
-                    }
+          if (!sidebar) return;
+
+          var links = Array.from(sidebar.querySelectorAll('a'));
+          var preloaded = new Set();
+
+          function preload(href) {
+               if (!href || preloaded.has(href) || href.startsWith('#') || href.startsWith('http')) return;
+               preloaded.add(href);
+               var link = document.createElement('link');
+               link.rel = 'prefetch';
+               link.href = href;
+               document.head.appendChild(link);
+          }
+
+          var idx = links.findIndex(function (a) { return a.getAttribute('href') === path; });
+          if (idx !== -1) {
+               links[idx].setAttribute('aria-current', 'page');
+               requestAnimationFrame(function () {
+                    var linkTop = links[idx].getBoundingClientRect().top - sidebar.getBoundingClientRect().top + sidebar.scrollTop;
+                    sidebar.scrollTop = linkTop - sidebar.clientHeight / 2 + links[idx].offsetHeight / 2;
+               });
+               var next = links[idx + 1];
+               if (next && next.getAttribute('href')) {
+                    preload(next.getAttribute('href'));
                }
           }
+
+          links.forEach(function (a) {
+               var href = a.getAttribute('href');
+               if (!href) return;
+
+               var timer;
+               a.addEventListener('pointerenter', function () {
+                    if (preloaded.has(href)) return;
+                    timer = setTimeout(function () {
+                         preload(href);
+                    }, 65);
+               });
+
+               a.addEventListener('pointerleave', function () {
+                    if (timer) {
+                         clearTimeout(timer);
+                         timer = null;
+                    }
+               });
+
+               a.addEventListener('focus', function () {
+                    preload(href);
+               });
+
+               a.addEventListener('touchstart', function () {
+                    preload(href);
+               }, { passive: true });
+          });
      })();
 </script>
