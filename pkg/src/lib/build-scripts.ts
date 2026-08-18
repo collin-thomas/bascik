@@ -42,7 +42,7 @@ import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFile, writeFile, unlink, mkdir } from "node:fs/promises";
 import { freemem, totalmem } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { getRelativePath } from "./file-system.js";
 import { BascikConfig } from "./config.js";
 
@@ -137,17 +137,23 @@ const BUILD_SCRIPT_TIMEOUT = 60_000;
 // skip the Node.js child-process spawn entirely for unchanged scripts.
 
 // Bump to invalidate all existing disk cache entries (e.g. when key composition changes).
-export const SCRIPT_CACHE_VERSION = 2;
+export const SCRIPT_CACHE_VERSION = 3;
 
 // Extract relative paths the script depends on from quoted string literals:
 //   './content/foo.md', 'scripts/md-renderer.mjs', './data/items.json'
-export const extractScriptDeps = (script: string): string[] => {
+export const extractScriptDeps = (script: string, baseDir: string = process.cwd()): string[] => {
   const seen = new Set<string>();
   for (const m of script.matchAll(
     /['`"]((?:\.{1,2}\/|[a-zA-Z0-9_$-]+\/)[^'`"\n:]+\.(?:md|mjs|js|jsx|ts|tsx|json|yaml|yml|css|html|txt|csv|svg))['`"]/g,
   )) {
-    if (!m[1].includes("://")) {
-      seen.add(m[1]);
+    const specifier = m[1];
+    if (specifier.includes("://")) continue;
+    if (baseDir === process.cwd()) {
+      seen.add(specifier);
+    } else {
+      const absPath = resolve(baseDir, specifier);
+      const relPath = relative(process.cwd(), absPath).replace(/\\/g, "/");
+      seen.add(relPath);
     }
   }
   return [...seen];
@@ -165,13 +171,35 @@ const computeScriptCacheKey = async (
   hash.update(isBuild ? "1" : "0");
   hash.update(filePath);   // BASCIK_PAGE_FILE — varies per page
   hash.update(siteUrl);    // BASCIK_SITE_URL  — can affect script output
-  const deps = extractScriptDeps(script);
-  if (deps.length > 0) {
-    const contents = await Promise.all(
-      deps.map(p => readFile(join(process.cwd(), p), "utf8").catch(() => "")),
-    );
-    contents.forEach(c => hash.update(c));
+
+  const visited = new Set<string>();
+  const queue = extractScriptDeps(script);
+
+  while (queue.length > 0) {
+    const rawDep = queue.shift()!;
+    const absPath = resolve(process.cwd(), rawDep);
+    const relKey = relative(process.cwd(), absPath).replace(/\\/g, "/");
+
+    if (visited.has(relKey)) continue;
+    visited.add(relKey);
+
+    try {
+      const content = await readFile(absPath, "utf8");
+      hash.update(relKey);
+      hash.update(content);
+
+      // Scan file content for nested dependencies relative to the file's directory
+      const fileDir = dirname(absPath);
+      const nested = extractScriptDeps(content, fileDir);
+      for (const n of nested) {
+        if (!visited.has(n)) queue.push(n);
+      }
+    } catch {
+      hash.update(relKey);
+      hash.update("MISSING");
+    }
   }
+
   return hash.digest("hex");
 };
 

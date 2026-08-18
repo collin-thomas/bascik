@@ -1,6 +1,6 @@
 # Switch from React
 
-React and Bascik both build UIs from reusable components. The core difference is that Bascik does all component work at build time and outputs plain HTML, there is no virtual DOM, no framework runtime, and no JSX. Switching is mostly mechanical: rename files, swap JSX syntax for HTML, and replace framework abstractions with their build-time or vanilla-JS equivalents.
+React and Bascik both build UIs from reusable components. The core difference is that Bascik does all component work at build time and outputs vanilla HTML, there is no virtual DOM, no framework runtime, and no JSX. Switching is mostly mechanical: rename files, swap JSX syntax for HTML, and replace framework abstractions with their build-time or vanilla-JS equivalents.
 
 ## File and Folder Setup
 
@@ -22,7 +22,7 @@ src/components/              src/components/
 
 ## Component Syntax
 
-A Bascik component is a plain HTML file. There are no imports, no function declarations, and no JSX. The file name (minus the extension) is the tag name.
+A Bascik component is a vanilla HTML file. There are no imports, no function declarations, and no JSX. The file name (minus the extension) is the tag name.
 
 ```jsx
 // SiteNav.jsx (React - before)
@@ -141,7 +141,7 @@ export function AlertBox({ title, message }) {
 
 ## useState / useEffect → Vanilla JS
 
-`useState`, `useEffect`, and event handlers become plain JavaScript in a `<script>` tag inside the component. Bascik automatically scopes `id` values and class names referenced in the script, so multiple instances of the component on the same page work independently.
+`useState`, `useEffect`, and event handlers become vanilla JavaScript in a `<script>` tag inside the component. Bascik automatically scopes `id` values and class names referenced in the script, so multiple instances of the component on the same page work independently.
 
 ```jsx
 // Counter.jsx (React - before)

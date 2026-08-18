@@ -751,19 +751,7 @@ describe("selectivelyProcessPagesForWatchPath", () => {
     expect(invalidateComponentListCache).toHaveBeenCalledOnce();
   });
 
-  it("rebuilds all pages when no page source references the changed filename", async () => {
-    const pages = ["src/pages/index.html", "src/pages/about.html"];
-    (listPages as ReturnType<typeof vi.fn>).mockResolvedValue(pages);
-    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(
-      "<html><body><p>no mention of the watched file</p></body></html>",
-    );
-    await selectivelyProcessPagesForWatchPath("scripts/nav.mjs");
-    const { eventEmitter } = await import("./events.js");
-    // Both pages transpiled → one "transpiled" emit each
-    expect(eventEmitter.emit).toHaveBeenCalledTimes(pages.length);
-  });
-
-  it("rebuilds only pages that reference the changed filename", async () => {
+  it("rebuilds all pages when a watched file changes", async () => {
     const pages = ["src/pages/index.html", "src/pages/about.html"];
     (listPages as ReturnType<typeof vi.fn>).mockResolvedValue(pages);
     (readFile as ReturnType<typeof vi.fn>).mockImplementation((path: string) => {
@@ -772,7 +760,7 @@ describe("selectivelyProcessPagesForWatchPath", () => {
     });
     await selectivelyProcessPagesForWatchPath("scripts/nav.mjs");
     const { eventEmitter } = await import("./events.js");
-    expect(eventEmitter.emit).toHaveBeenCalledTimes(1);
+    expect(eventEmitter.emit).toHaveBeenCalledTimes(pages.length);
   });
 });
 

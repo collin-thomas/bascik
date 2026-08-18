@@ -441,26 +441,15 @@ export const partitionByOpenPages = (pageList: string[]): [string[], string[]] =
   return [open, rest];
 };
 
-export const selectivelyProcessPagesForWatchPath = async (changedPath: string): Promise<void> => {
+export const selectivelyProcessPagesForWatchPath = async (_changedPath?: string): Promise<void> => {
   invalidateComponentListCache();
-  const filename = basename(changedPath);
   const [pages, componentList, globalStylesHtml] = await Promise.all([
     listPages(),
     listComponents(),
     resolveInlineStylesHtml(),
   ]);
   const pageList = pages ?? [];
-
-  // Only re-transpile pages whose source references the changed filename.
-  const matching = (await Promise.all(
-    pageList.map(async (pagePath) => {
-      const src = await readFile(pagePath, "utf8");
-      return src.includes(filename) ? pagePath : null;
-    }),
-  )).filter((p): p is string => p !== null);
-
-  const candidates = matching.length > 0 ? matching : pageList;
-  const [openPages, restPages] = partitionByOpenPages(candidates);
+  const [openPages, restPages] = partitionByOpenPages(pageList);
   // Transpile open pages first so the browser reload fires before the rest complete.
   if (openPages.length > 0) {
     await Promise.all(openPages.map((path) => pageProcessing(path, componentList, globalStylesHtml)));

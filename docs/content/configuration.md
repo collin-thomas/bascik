@@ -87,7 +87,7 @@ export const build = defineConfig({
 
 Paths to your pages and components directories, relative to the project root.
 
-```js
+```ts
 directory: {
   pages: 'src/pages',           // default — HTML routes, static assets, and subfolders
   components: 'src/components', // default — component .html and .css templates
@@ -100,7 +100,7 @@ directory: {
 
 Wrap component `<script>` tags in an IIFE and rewrite scoped attribute references. Set to `false` if you want raw unmodified script output.
 
-```js
+```ts
 scopeScriptBlocks: true // default
 ```
 
@@ -108,7 +108,7 @@ scopeScriptBlocks: true // default
 
 Control whether non-`data-bascik-*` attributes on a component usage tag are merged onto the component root element. Defaults to `true`.
 
-```js
+```ts
 inheritAttributes: true // default
 ```
 
@@ -116,7 +116,7 @@ inheritAttributes: true // default
 
 Control which HTML attribute types are scoped independently. Useful if you're using Tailwind (`class: false`) or don't need name scoping.
 
-```js
+```ts
 scopeAttribute: {
   class: true, // default
   id: true,    // default
@@ -130,7 +130,7 @@ When `true` (default), all instances of the same component share the same scoped
 
 When `false`, every instance gets its own unique per-instance class names (the same scheme used for `id` scoping). This means a `querySelector('.myClass')` inside a component script will naturally target only elements inside that specific instance, but each instance emits its own `<style>` block.
 
-```js
+```ts
 deduplicateCss: true // default
 ```
 
@@ -142,7 +142,7 @@ An array of HTML element names whose inner content is left untouched by the scop
 
 Defaults to `["code"]`: the typical element used to display literal code examples. Add `"pre"` only if your templates contain raw text inside `<pre>` blocks that aren't wrapped in `<code>` and whose content has attribute patterns you don't want scoped. Note: when `"pre"` is in the list, attributes on elements *inside* `<pre>` (such as `class="cblock-body"` on a `<code>` child) are also excluded from scoping.
 
-```js
+```ts
 skipTranspilingElementContents: ['code'] // default
 ```
 
@@ -152,7 +152,7 @@ Set to an empty array to disable the protection entirely, or extend the list for
 
 Configure minification toggles for HTML, CSS, and JS outputs. All three default to `false` in dev mode and `true` during `bascik --build` and `bascik --serve`.
 
-```js
+```ts
 minify: {
   html: true, // strip HTML comments and collapse whitespace
   css: true,  // collapse whitespace in component <style> blocks and .css files
@@ -187,7 +187,7 @@ To strip TypeScript from component scripts, pass Node's built-in `stripTypeScrip
 
 Hash the generated class and id names to short hex strings instead of the verbose `bascik__component__id__name` format. Recommended for production.
 
-```js
+```ts
 obfuscateAttributeNames: true // production default
 // bascik__my-nav__ab12cd34__navigation
 // becomes: bab12cd34
@@ -216,7 +216,7 @@ The default path is `.bascik/build.log`. If you omit `--log`, Bascik does not cr
 
 Control the noise level of the development server's status output. The `level` field applies to all dev-server status events; individual toggles let you silence only the logs you do not want.
 
-```js
+```ts
 devServer: {
   logging: {
     level: 'info',      // silent | error | warn | info | debug
@@ -234,7 +234,7 @@ Use `level: 'warn'` or `level: 'silent'` to suppress the high-volume status line
 
 Configure the HTTP server started by `bascik --serve` and `bascik` (dev mode). `port`, `hostname`, `enableTls`, `keyFile`, and `certFile` are read in both modes. `bascik --build` does not start a server and ignores this block.
 
-```js
+```ts
 serve: {
   port: 8080,              // default (8080 for HTTP, 8443 for HTTPS)
   hostname: 'localhost',   // default; set '0.0.0.0' to bind all interfaces
@@ -254,7 +254,7 @@ See [Production Server](/server) for the full guide.
 
 The canonical base URL of your deployed site (e.g. `'https://example.com'`). Required for sitemap generation. Trailing slashes are trimmed automatically.
 
-```js
+```ts
 siteUrl: 'https://example.com'
 ```
 
@@ -262,7 +262,7 @@ siteUrl: 'https://example.com'
 
 Control which files are written to `dist/` during `bascik --build`. Both default to `true`. Requires `siteUrl` to be set.
 
-```js
+```ts
 generate: {
   sitemap: true, // write dist/sitemap.xml
   robots: true,  // write dist/robots.txt
@@ -275,7 +275,7 @@ See [Sitemap & robots.txt](/sitemap) for a full walkthrough.
 
 An array of directories or files that, when changed in dev mode, trigger a full re-transpile of all pages. Useful for utility scripts, data files, or image directories that pages depend on at build time.
 
-```js
+```ts
 watch: ['scripts/', 'data/'],
 ```
 
@@ -288,7 +288,7 @@ Scripts to run as part of the build/dev lifecycle. Entries execute sequentially 
 - **With `watch`**: runs on dev startup (non-blocking) and re-runs whenever a watched file changes, followed by a live-reload. Also runs before pages during `--build`.
 - **Without `watch`**: build-only, skipped in dev.
 
-```js
+```ts
 exec: [
   { script: 'scripts/generate-search-index.ts', watch: ['content/'] },
   { script: 'scripts/generate-llms-txt.ts' }, // build only
@@ -303,7 +303,7 @@ Controls which global stylesheets Bascik reads and injects as `<style>` tags int
 - `true`: inline every `.css` file under `directory.pages`
 - `string[]`: inline only the listed stylesheet paths
 
-```js
+```ts
 inlineStyles: false // default
 inlineStyles: true
 inlineStyles: ['src/pages/css/styles.css']
@@ -330,7 +330,7 @@ export const build = defineConfig({
 
 Transpile pages across a pool of CPU-core worker threads instead of sequentially on the main thread.
 
-```js
+```ts
 useWorkers: false // default
 useWorkers: true
 ```
@@ -343,7 +343,7 @@ Spinning up the worker pool has a fixed cost, each worker loads the transpiler's
 
 Cache `<script data-bascik-build>` output on disk so unchanged scripts skip the Node.js child-process spawn on subsequent builds or server restarts.
 
-```js
+```ts
 buildScriptCache: true  // default
 buildScriptCache: false // disable for debugging
 ```
@@ -366,7 +366,7 @@ Action to take when a `<script data-bascik-build>` or `<script data-bascik-serve
 - `"warn"`: Log a detailed warning to `console.warn` and continue transpilation, replacing the script tag's output with an empty string.
 - `"halt"`: Throw an error and halt compilation immediately, aborting the build or request.
 
-```js
+```ts
 onScriptError: "error" // default
 ```
 
@@ -374,7 +374,7 @@ onScriptError: "error" // default
 
 Exporting a `build` object lets you set options that apply during `bascik --build` and `bascik --serve` (production server), overriding the default export. A common pattern is to enable obfuscation and minification only in production:
 
-```js
+```ts
 export const build = {
   obfuscateAttributeNames: true,
   minify: {

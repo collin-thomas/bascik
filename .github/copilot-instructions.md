@@ -277,3 +277,7 @@ npx --prefix extensions/vscode-bascik tsc -p extensions/vscode-bascik/tsconfig.j
 (`docs/` does not have its own typescript package, so use `pkg`'s tsc for it.)
 
 Fix all errors before finishing. Do not suppress errors with `// @ts-ignore` or `as any` when a proper type fix is straightforward.
+
+## Docs Writing Guide
+
+Favor the term vanilla HTML/JavaScript/CSS over plain HTML/JavaScript/CSS.

@@ -47,13 +47,13 @@
         "@type": "HowToStep",
         "position": "2",
         "name": "Start the development server",
-        "text": "Run npm run dev from your project directory. Bascik serves your site over HTTP/2 at https://localhost:8443 by default."
+        "text": "Run npm run dev from your project directory. Bascik serves your site over HTTP at http://localhost:8080 by default."
       },
       {
         "@type": "HowToStep",
         "position": "3",
         "name": "Build for production",
-        "text": "Run npm run build to output a dist/ directory of plain HTML files ready for any static host."
+        "text": "Run npm run build to output a dist/ directory of vanilla HTML files ready for any static host."
       }
     ]
   }
@@ -72,7 +72,7 @@
 
       <!-- Content -->
       <main class="docs-content">
-        <p class="section-label">Start Here</p>
+        <p class="section-label">Overview</p>
 
         <!-- Content rendered from docs/content/getting-started.md at build time.
              To update page content, edit the MD file - not this file. -->
@@ -128,7 +128,7 @@
           <div class="step-body">
             <h3>Start the dev server</h3>
             <code-block data-bascik-prop-lang="sh">npm run dev</code-block>
-            <p>The server runs on <code>https://localhost:8443</code> and live-reloads on every change.</p>
+            <p>The server runs on <code>http://localhost:8080</code> and live-reloads on every change.</p>
           </div>
         </div>
 
@@ -141,23 +141,14 @@
           </div>
         </div>
 
-        <div class="callout">
-          <p><strong>Next:</strong> Add scoped CSS to your component by creating
-            <code>src/components/site-nav.css</code> alongside your HTML file. See <a href="/scoped-styles">Scoped
-              Styles →</a>
-          </p>
+        <div class="card"
+          style="margin-top: 48px; padding: 28px; border-color: var(--accent-border); background: var(--accent-dim);">
+          <p class="section-label" style="margin-bottom: 8px;">Next Step</p>
+          <h3 style="margin: 0 0 8px; font-size: 1.3rem;">Learn How Components Work</h3>
+          <p style="margin: 0 0 16px; color: var(--text);">Discover how Bascik resolves custom tags, passes props,
+            scopes CSS and JS, and handles slots with zero runtime footprint.</p>
+          <a href="/components" class="btn btn-primary">Explore Components →</a>
         </div>
-
-        <!-- Content rendered from docs/content/getting-started-workflow.md at build time.
-             To update page content, edit the MD file - not this file. -->
-        <script data-bascik-build>
-          import { join } from 'node:path';
-          import { pathToFileURL } from 'node:url';
-          const { renderMd } = await import(
-            pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
-          );
-          console.log(await renderMd('./content/getting-started-workflow.md'));
-        </script>
 
         <script data-bascik-build>
           import { join } from 'node:path';

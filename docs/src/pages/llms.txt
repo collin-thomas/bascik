@@ -1,22 +1,17 @@
 # Bascik
 
-> Bascik is a build tool for HTML components. It scopes and assembles reusable HTML component files into plain HTML pages at build time. It adds zero JavaScript to the output. You write HTML, CSS, and JavaScript; Bascik scopes and assembles them.
+> Bascik is a build tool for HTML components. It scopes and assembles reusable HTML component files into vanilla HTML pages at build time. It adds zero JavaScript to the output. You write HTML, CSS, and JavaScript; Bascik scopes and assembles them.
 
 Bascik resolves custom HTML tags to component source HTML, scopes CSS and JavaScript, rewrites DOM selectors, and outputs plain static HTML pages with zero framework runtime.
 
 For the complete, centralized developer reference and AI assistant instructions, see [SKILL.md](https://bascik.dev/assets/SKILL.md).
 
-## Philosophy
+## Overview
 
 - [Why Bascik](https://bascik.dev/why-bascik): The guiding principle behind Bascik is simple: use what already exists.
-- [Lighthouse 100s](https://bascik.dev/performance): Bascik gives you an enormous head start on Lighthouse scores.
 - [Bascik vs Frameworks](https://bascik.dev/vs-frameworks): Bascik is not a framework.
-
-## Start Here
-
+- [Lighthouse 100s](https://bascik.dev/performance): Bascik gives you an enormous head start on Lighthouse scores.
 - [Getting Started](https://bascik.dev/getting-started): Bascik requires Node.js v22.18+.
-- [CLI / Command Line](https://bascik.dev/cli): Bascik features a simple, fast, and highly informative CLI for both development and production building.
-- [Configuration](https://bascik.dev/configuration): Bascik is completely zero configuration by default.
 
 ## Features
 
@@ -34,6 +29,8 @@ For the complete, centralized developer reference and AI assistant instructions,
 ## Reference
 
 - [FAQ](https://bascik.dev/faq): Answers to common questions about Bascik.
+- [CLI / Command Line](https://bascik.dev/cli): Bascik features a simple, fast, and highly informative CLI for both development and production building.
+- [Configuration](https://bascik.dev/configuration): Bascik is completely zero configuration by default.
 - [Scoping Compatibility](https://bascik.dev/compatibility): Legend
 - [Deploying](https://bascik.dev/deploying): Bascik's build output is a standard folder of static HTML, CSS, and JavaScript files.
 

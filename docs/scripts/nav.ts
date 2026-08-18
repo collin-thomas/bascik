@@ -18,17 +18,11 @@ export interface NavSection {
 
 export const NAV: NavSection[] = [
   {
-    section: 'Philosophy', pages: [
+    section: 'Overview', pages: [
       { href: '/why-bascik', label: 'Why Bascik' },
-      { href: '/performance', label: 'Lighthouse 100s' },
       { href: '/vs-frameworks', label: 'Bascik vs Frameworks' },
-    ]
-  },
-  {
-    section: 'Start Here', pages: [
+      { href: '/performance', label: 'Lighthouse 100s' },
       { href: '/getting-started', label: 'Getting Started' },
-      { href: '/cli', label: 'CLI / Command Line' },
-      { href: '/configuration', label: 'Configuration' },
     ]
   },
   {
@@ -48,6 +42,8 @@ export const NAV: NavSection[] = [
   {
     section: 'Reference', pages: [
       { href: '/faq', label: 'FAQ' },
+      { href: '/cli', label: 'CLI / Command Line' },
+      { href: '/configuration', label: 'Configuration' },
       { href: '/compatibility', label: 'Scoping Compatibility' },
       { href: '/deploying', label: 'Deploying' },
     ]

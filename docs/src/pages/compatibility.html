@@ -39,13 +39,6 @@
     content="A complete audit of which CSS and JavaScript patterns Bascik's build-time scoping engine supports, with notes on known edge cases." />
   <title>Bascik Scoping Compatibility - Bascik Docs</title>
   <style>
-    .compat-table-wrapper {
-      width: 100%;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      margin: 16px 0 32px;
-    }
-
     .compat-table {
       width: 100%;
       border-collapse: collapse;
@@ -142,9 +135,6 @@
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
           );
           let html = await renderMd('./content/compatibility.md');
-          html = html
-            .replace(/<table>/g, '<div class="compat-table-wrapper"><table class="compat-table">')
-            .replace(/<\/table>/g, '</table></div>');
           html = html
             .replace(/td>\s*✓\s*<\/td/g, 'td class="badge-ok">✓</td')
             .replace(/td>\s*△\s*<\/td/g, 'td class="badge-partial">△</td')

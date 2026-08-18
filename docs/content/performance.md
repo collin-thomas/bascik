@@ -1,6 +1,6 @@
 # Lighthouse 100s
 
-Bascik gives you an enormous head start on Lighthouse scores. Because it outputs plain HTML with zero framework runtime, you begin every page with near-perfect scores, and reaching 100 across all four Lighthouse categories is a matter of applying a small, well-known set of HTML patterns.
+Bascik gives you an enormous head start on Lighthouse scores. Because it outputs vanilla HTML with zero framework runtime, you begin every page with near-perfect scores, and reaching 100 across all four Lighthouse categories is a matter of applying a small, well-known set of HTML patterns.
 
 | Performance | Accessibility | Best Practices | SEO |
 | :---: | :---: | :---: | :---: |
@@ -178,7 +178,7 @@ Because Bascik adds no runtime scripts of its own, every `<script>` tag in your 
 
 ## SEO: The Essential Head Tags
 
-Lighthouse's SEO audit checks for a short list of meta tags and structural signals. All of them are plain HTML attributes, nothing to install or configure.
+Lighthouse's SEO audit checks for a short list of meta tags and structural signals. All of them are vanilla HTML attributes, nothing to install or configure.
 
 Bascik also helps with one of the easy-to-miss SEO assets: once `siteUrl` is set, `bascik --build` generates `dist/sitemap.xml` for you by default. That gives crawlers a complete list of your pages without adding another plugin or build step.
 
@@ -233,7 +233,7 @@ Add a `<script type="application/ld+json">` block to your `<head>` with the sche
         "name": "What is Bascik?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Bascik is a build tool that compiles reusable HTML components into plain HTML pages with no JavaScript runtime."
+          "text": "Bascik is a build tool that compiles reusable HTML components into vanilla HTML pages with no JavaScript runtime."
         }
       },
       {
@@ -241,7 +241,7 @@ Add a `<script type="application/ld+json">` block to your `<head>` with the sche
         "name": "Does Bascik add JavaScript to my pages?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "No. Bascik outputs plain HTML. The only JavaScript on any page is what you write yourself."
+          "text": "No. Bascik outputs vanilla HTML. The only JavaScript on any page is what you write yourself."
         }
       }
     ]
@@ -382,7 +382,7 @@ body {
 
 Two of the fastest content-heavy sites on the internet share a core philosophy: ship finished HTML and let the browser do what it was designed to do.
 
-**McMaster-Carr** (mcmaster.com) is an industrial supply catalog with over 600,000 products. Its homepage loads in under a second on a mobile connection and scores 100 across all four Lighthouse categories. The homepage is almost entirely plain HTML links and text, no JavaScript framework, no hydration step, no layout shift. The browser receives a complete document and paints it immediately.
+**McMaster-Carr** (mcmaster.com) is an industrial supply catalog with over 600,000 products. Its homepage loads in under a second on a mobile connection and scores 100 across all four Lighthouse categories. The homepage is almost entirely vanilla HTML links and text, no JavaScript framework, no hydration step, no layout shift. The browser receives a complete document and paints it immediately.
 
 **Bring a Trailer** (bringatrailer.com) is an auction platform that serves hundreds of high-resolution car photos per page. It achieves near-perfect Lighthouse scores by resizing images at the CDN level, every thumbnail is served at exactly the pixel dimensions it occupies in the layout, and by fixing explicit aspect ratios on image containers so the layout never shifts as photos load in.
 

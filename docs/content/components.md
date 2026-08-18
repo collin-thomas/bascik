@@ -149,7 +149,7 @@ Add a `<script>` block for interactive behavior. Use `id` on any element you nee
 <!-- demo:source-html-toggle -->
 ```html
 <div class="toggle-wrap">
-  <p>Bascik assembles components at build time and ships plain HTML files with no framework runtime.</p>
+  <p>Bascik assembles components at build time and ships vanilla HTML files with no framework runtime.</p>
   <div id="detail" hidden>
     <p>No JavaScript is added to the page. Every script in the output was written by you.</p>
   </div>
@@ -172,7 +172,7 @@ btn.addEventListener('click', () => {
 <!-- demo:output-html-toggle -->
 ```html
 <div class="bascik__comp-toggle__toggle-wrap">
-  <p class="bascik__comp-toggle__el__p">Bascik assembles components at build time and ships plain HTML files with no framework runtime.</p>
+  <p class="bascik__comp-toggle__el__p">Bascik assembles components at build time and ships vanilla HTML files with no framework runtime.</p>
   <div id="bascik__comp-toggle__a1b__detail" hidden>
     <p class="bascik__comp-toggle__el__p">No JavaScript is added to the page. Every script in the output was written by you.</p>
   </div>
@@ -321,7 +321,7 @@ Choosing between inline `<style>` blocks and companion `.css` files is a matter 
 ```html
 <feature-card
   data-bascik-prop-title="Build-time Components"
-  data-bascik-prop-desc="Bascik resolves tags and ships plain HTML.">
+  data-bascik-prop-desc="Bascik resolves tags and ships vanilla HTML.">
 </feature-card>
 ```
 
@@ -355,7 +355,7 @@ Choosing between inline `<style>` blocks and companion `.css` files is a matter 
 ```html
 <div class="bascik__feature-card__fcard">
   <h3>Build-time Components</h3>
-  <p>Bascik resolves tags and ships plain HTML.</p>
+  <p>Bascik resolves tags and ships vanilla HTML.</p>
 </div>
 ```
 
@@ -436,6 +436,10 @@ When utilizing your components inside pages or other components, you can use sta
 ```
 
 If your component does not use a `<slot>` to accept inner children, you can choose to use it as a void/self-closing component. Both forms are fully supported and compile to the exact same output, with no difference in behavior or performance. You can choose whichever style matches your personal preference or project guidelines.
+
+## Component Structure & Tag Ordering
+
+When writing component files containing both styles and scripts alongside HTML, always place `<style>` tags above the HTML markup as a style guide, and always place `<script>` tags below the HTML markup.
 
 ## Multiple Style Blocks
 

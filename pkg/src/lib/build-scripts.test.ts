@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { resolve } from "node:path";
 import { executeBuildScripts, extractScriptDeps, SCRIPT_CACHE_VERSION } from "./build-scripts.js";
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
@@ -443,6 +444,13 @@ describe("extractScriptDeps", () => {
     expect(deps).toContain("../shared/config.yaml");
     expect(deps).toContain("src/utils/helpers.ts");
   });
+
+  it("resolves relative dependencies when baseDir is a subfolder", () => {
+    const fileContent = "import { NAV } from './nav.ts';";
+    const baseDir = resolve(process.cwd(), "docs/scripts");
+    const deps = extractScriptDeps(fileContent, baseDir);
+    expect(deps).toContain("docs/scripts/nav.ts");
+  });
 });
 
 // ─── script output cache ─────────────────────────────────────────────────────
@@ -554,6 +562,46 @@ describe("build-script output cache", () => {
     // And the cache write path for both must use a .json file (different keys, so two distinct writes).
     const jsonWrites = mockWriteFile.mock.calls.filter(([p]) => String(p).endsWith(".json"));
     expect(jsonWrites.length).toBe(1);
+  });
+
+  it("invalidates cache when a transitively imported dependency file changes", async () => {
+    // Mock readFile behavior for script cache misses and transitive dependency reads:
+    // When reading script-cache json -> return ENOENT (cache miss)
+    // When reading docs/scripts/render-nav.ts -> returns import statement referencing ./nav.ts
+    // When reading docs/scripts/nav.ts -> returns version 1 or version 2
+    let navVersion = "v1";
+    mockReadFile.mockImplementation((path: string) => {
+      const p = String(path);
+      if (p.includes(".cache")) return Promise.reject(new Error("ENOENT"));
+      if (p.includes("render-nav.ts")) return Promise.resolve("import { NAV } from './nav.ts';");
+      if (p.includes("nav.ts")) return Promise.resolve(`export const NAV = '${navVersion}';`);
+      return Promise.reject(new Error("ENOENT"));
+    });
+
+    resolveWith("<p>rendered-v1</p>");
+    const script = "<script data-bascik-build>import 'docs/scripts/render-nav.ts'</script>";
+
+    await executeBuildScripts(script, "src/pages/test.html");
+
+    const jsonWrite1 = mockWriteFile.mock.calls.find(([p]) => String(p).endsWith(".json"));
+    expect(jsonWrite1).toBeDefined();
+    const cacheKey1 = jsonWrite1![0];
+
+    // Change transitive dependency nav.ts
+    navVersion = "v2";
+    mockExecFile.mockClear();
+    mockWriteFile.mockClear();
+    resolveWith("<p>rendered-v2</p>");
+
+    await executeBuildScripts(script, "src/pages/test.html");
+
+    const jsonWrite2 = mockWriteFile.mock.calls.find(([p]) => String(p).endsWith(".json"));
+    expect(jsonWrite2).toBeDefined();
+    const cacheKey2 = jsonWrite2![0];
+
+    // Cache keys MUST be different when transitive dependency changed
+    expect(cacheKey1).not.toEqual(cacheKey2);
+    expect(mockExecFile).toHaveBeenCalledTimes(1);
   });
 
   it("skips cache reads and writes entirely when buildScriptCache is false", async () => {

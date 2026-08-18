@@ -16,7 +16,7 @@ Bascik does use a small set of build instructions such as `data-bascik-slot`, `d
 
 [HTMX](https://htmx.org) (~14 KB) and [Alpine.js](https://alpinejs.dev) (~16 KB) both take an attribute-based approach to adding behavior to HTML. HTMX focuses on server-driven partial updates: you add attributes like `hx-get`, `hx-post`, `hx-target`, and `hx-swap`, and HTMX intercepts events, fires requests to your server, and swaps portions of the page with the response. Alpine focuses on client-side interactivity: `x-data` defines state, and directives like `x-bind`, `x-show`, and `@click` wire that state to the DOM.
 
-Both are compatible with Bascik. Bascik resolves components at build time and produces plain HTML; HTMX and Alpine run in the browser on whatever Bascik produced. There is no conflict, and no coordination required between them.
+Both are compatible with Bascik. Bascik resolves components at build time and produces vanilla HTML; HTMX and Alpine run in the browser on whatever Bascik produced. There is no conflict, and no coordination required between them.
 
 ```html
 <!-- HTMX and Alpine attributes work inside Bascik components without modification -->
@@ -50,9 +50,9 @@ Bascik's output for an equivalent component is a static HTML file with no JavaSc
 
 - A compiled JavaScript bundle per component (size varies; runtime helpers are shared across the app)
 - A reactivity model (`$state`, `$derived`, `$effect`) that requires JavaScript to function
-- Template syntax (`{#if}`, `{#each}`, `{@html}`) that resolves to JavaScript, not plain HTML
+- Template syntax (`{#if}`, `{#each}`, `{@html}`) that resolves to JavaScript, not vanilla HTML
 
-For content sites and documentation portals, the closest Svelte analog is SvelteKit in static-output mode (`adapter-static`). Even then, SvelteKit ships JavaScript for client-side navigation and hydration. Bascik's output for equivalent pages is plain HTML with none of that overhead.
+For content sites and documentation portals, the closest Svelte analog is SvelteKit in static-output mode (`adapter-static`). Even then, SvelteKit ships JavaScript for client-side navigation and hydration. Bascik's output for equivalent pages is vanilla HTML with none of that overhead.
 
 ## Next.js
 
@@ -60,7 +60,7 @@ Next.js is a React meta-framework that adds routing, server-side rendering, stat
 
 Many teams reach for Next.js on content sites, landing pages, and documentation portals because it is familiar and well-supported. The tradeoff is that every page ships 80+ KB or more of React runtime regardless of whether the page uses any client-side reactivity. Its conventions also gradually pull projects toward client-side patterns even for pages that were always static, and auditing what actually reaches the browser gets harder over time.
 
-For a lot of what people build, that is simply more framework than the project needs. Bascik is built for exactly this kind of work. You write plain HTML, CSS, and JavaScript. Components are reused at build time. The output is a dist folder of static files you can open and verify file by file. There is no runtime to load, nothing to hydrate, letting you write the standard HTML, CSS, and JavaScript you already know. Google's Core Web Vitals (LCP, INP, CLS) are directly affected by JavaScript that blocks rendering; Bascik's output has none of that overhead.
+For a lot of what people build, that is simply more framework than the project needs. Bascik is built for exactly this kind of work. You write vanilla HTML, CSS, and JavaScript. Components are reused at build time. The output is a dist folder of static files you can open and verify file by file. There is no runtime to load, nothing to hydrate, letting you write the standard HTML, CSS, and JavaScript you already know. Google's Core Web Vitals (LCP, INP, CLS) are directly affected by JavaScript that blocks rendering; Bascik's output has none of that overhead.
 
 **What Bascik offers for these projects:**
 
@@ -89,6 +89,6 @@ Bascik overlaps with them at the output level, all of these tools can ship plain
 
 The browser can parse Bascik's source without needing to understand a new runtime language: custom tags are valid custom-element-shaped HTML names, and build instructions use the web platform's `data-*` convention. Bascik resolves both before deployment. By contrast, runtime directives such as `hx-get`, `x-data`, and `v-scope` only gain behavior after their library's JavaScript loads.
 
-Most of what people build, content sites, marketing pages, docs portals, company blogs, landing pages, does not require a framework runtime in the browser. Knowing what each tool is optimized for is the best basis for choosing. Bascik fills the gap they leave open: component reuse and predictable build output, without a runtime or a new programming model to adopt. You write plain HTML, CSS, and JavaScript, get the organizational benefits you would expect from a framework, and ship a dist folder you can fully audit. For the parts of a project that do need client-side behavior, Bascik composes cleanly with HTMX or Alpine.
+Most of what people build, content sites, marketing pages, docs portals, company blogs, landing pages, does not require a framework runtime in the browser. Knowing what each tool is optimized for is the best basis for choosing. Bascik fills the gap they leave open: component reuse and predictable build output, without a runtime or a new programming model to adopt. You write vanilla HTML, CSS, and JavaScript, get the organizational benefits you would expect from a framework, and ship a dist folder you can fully audit. For the parts of a project that do need client-side behavior, Bascik composes cleanly with HTMX or Alpine.
 
 > **Combining tools.** A common pattern is Bascik for layout components (nav, footer, hero sections) and HTMX or Alpine for specific interactive elements. Each tool does what it is best at, and neither one intrudes on the other's domain.

@@ -10,9 +10,9 @@
 [![E2E functions](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fcollin-thomas%2Fbascik%2Fmain%2Fpkg%2Fe2e-test-coverage.json&query=%24.total.functions.pct&label=e2e%20functions&suffix=%25&color=orange)](https://github.com/collin-thomas/bascik/blob/main/pkg/e2e-test-coverage.json)
 [![E2E branches](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fcollin-thomas%2Fbascik%2Fmain%2Fpkg%2Fe2e-test-coverage.json&query=%24.total.branches.pct&label=e2e%20branches&suffix=%25&color=orange)](https://github.com/collin-thomas/bascik/blob/main/pkg/e2e-test-coverage.json)
 
-Bascik is a build tool for HTML components. It is **not** a JavaScript framework — you write plain HTML, CSS, and JavaScript.
+Bascik is a build tool for HTML components. It is **not** a JavaScript framework — you write vanilla HTML, CSS, and JavaScript.
 
-Bascik acts as a build-time find-and-replace: it resolves custom HTML tags to their component source, scopes CSS and JavaScript per component instance, and writes a `dist/` directory of plain HTML files. **Zero JavaScript is added to your pages.** Every script in the output was written by you.
+Bascik acts as a build-time find-and-replace: it resolves custom HTML tags to their component source, scopes CSS and JavaScript per component instance, and writes a `dist/` directory of vanilla HTML files. **Zero JavaScript is added to your pages.** Every script in the output was written by you.
 
 ---
 
@@ -218,7 +218,7 @@ yarn pkg:test:coverage  # full coverage report → coverage/
 
 ### Type checking (JSDoc + checkJs)
 
-The source is plain JavaScript with JSDoc type annotations. TypeScript's compiler checks them without a build step:
+The source is vanilla JavaScript with JSDoc type annotations. TypeScript's compiler checks them without a build step:
 
 ```sh
 yarn pkg:typecheck

@@ -1,6 +1,6 @@
 # Switch from Hugo
 
-Hugo is a static site generator; Bascik is a build tool for HTML components. Both produce plain HTML with no client-side framework runtime. The main conceptual shift is that Hugo uses Go template syntax in `.html` layout files, while Bascik uses plain HTML component files composed by tag name. Partials become component files, base template blocks become slot-based layout components, and Go template logic becomes Node.js build scripts.
+Hugo is a static site generator; Bascik is a build tool for HTML components. Both produce vanilla HTML with no client-side framework runtime. The main conceptual shift is that Hugo uses Go template syntax in `.html` layout files, while Bascik uses vanilla HTML component files composed by tag name. Partials become component files, base template blocks become slot-based layout components, and Go template logic becomes Node.js build scripts.
 
 ## Layouts and Partials → HTML Component Files
 
@@ -200,7 +200,7 @@ Hugo shortcodes (`{{< callout >}}text{{< /callout >}}`) are reusable template fr
 
 ## SCSS / Sass → Plain CSS
 
-Hugo ships a built-in asset pipeline with SCSS/Sass support via `resources.ToCSS`. Bascik does not include a CSS preprocessor, write plain CSS in the paired `.css` file alongside each component. Bascik's scoping engine handles selector scoping automatically, so there is rarely a need for nesting or variables beyond what native CSS custom properties and `:is()` provide.
+Hugo ships a built-in asset pipeline with SCSS/Sass support via `resources.ToCSS`. Bascik does not include a CSS preprocessor, write vanilla CSS in the paired `.css` file alongside each component. Bascik's scoping engine handles selector scoping automatically, so there is rarely a need for nesting or variables beyond what native CSS custom properties and `:is()` provide.
 
 ```text
 Before (Hugo)                After (Bascik)
@@ -208,7 +208,7 @@ assets/
   scss/                      src/components/
     _vars.scss                 site-nav/
     nav.scss                     site-nav.html
-    footer.scss                  site-nav.css   ← plain CSS, auto-scoped
+    footer.scss                  site-nav.css   ← vanilla CSS, auto-scoped
                                site-footer/
                                  site-footer.html
                                  site-footer.css

@@ -32,6 +32,12 @@ The page phase prepares the source HTML document and orchestrates the component 
 9. **Write output.** In build mode, the finished HTML is written to `dist/`. In dev mode, no disk write occurs, the result is stored in the in-memory page store so the HTTP/2 server can serve it instantly.
 10. **Emit transpiled event.** `eventEmitter.emit("transpiled")` triggers live-reload for any connected browser.
 
+### Incremental Disk Writes and `dist/` Persistence
+
+Build mode (`bascik --build`) writes transpiled files incrementally into `dist/`. It does not clear or delete the `dist/` directory before populating it.
+
+If source files are deleted from `src/pages/` between separate build runs, their previously compiled output in `dist/` remains until `dist/` is cleaned manually. In dev mode (`bascik`), the active file watcher listens for deletion events (`unlink` and `unlinkDir`) and removes corresponding files from `dist/` dynamically during the dev session.
+
 ## Build Script Output Cache
 
 Every `<script data-bascik-build>` block spawns a fresh Node.js child process, which carries a ~50–150 ms V8 startup cost even for a trivial script. On a site with many pages and many build-script blocks this cost dominates total build time. The cache eliminates that cost for scripts whose inputs have not changed.
@@ -116,7 +122,7 @@ Each step is skipped if disabled in `bascik.config.ts`.
 
 ## Termination
 
-The recursion terminates when `getFirstComponent` no longer finds any custom tag in the HTML string, i.e., when all recognised component names have been replaced with plain HTML.
+The recursion terminates when `getFirstComponent` no longer finds any custom tag in the HTML string, i.e., when all recognised component names have been replaced with vanilla HTML.
 
 <div class="callout">
 <p><strong>Performance note:</strong> Each call to <code>recursivelyTranspile</code> uses the same in-memory <code>ComponentList</code> built once at the start of the pipeline. In the multi-page startup path, this list is pre-computed once and passed to every worker via <code>workerData</code>, components are never re-read from disk per page or per worker.</p>

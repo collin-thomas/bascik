@@ -185,6 +185,9 @@ function _transformMd(
   html = html.replace(/<blockquote>\n?/g, '<div class="callout">');
   html = html.replace(/\n?<\/blockquote>/g, '</div>');
 
+  // Wrap all tables in <doc-table> component
+  html = html.replace(/(<table[\s\S]*?<\/table>)/g, '<doc-table>$1</doc-table>');
+
   // Open external links in a new tab
   html = html.replace(
     /<a href="(https?:\/\/[^"]+)"/g,

@@ -160,7 +160,7 @@ petite-vue's `v-for` and `v-model` work as expected. Filter a list in real time 
 
 ### Shared State Across Components
 
-For state that needs to be shared between separate components, define it in a plain JavaScript module and import it in a `data-bascik-build` script or a regular `<script type="module">`:
+For state that needs to be shared between separate components, define it in a vanilla JavaScript module and import it in a `data-bascik-build` script or a regular `<script type="module">`:
 
 ```js
 // src/pages/store.js - imported by components that share state
@@ -241,7 +241,7 @@ With class scoping turned off, Tailwind utility classes work normally inside any
 ```html
 <feature-card
   data-bascik-prop-title="Zero Runtime"
-  data-bascik-prop-body="Bascik outputs plain HTML with no client-side overhead.">
+  data-bascik-prop-body="Bascik outputs vanilla HTML with no client-side overhead.">
 </feature-card>
 ```
 

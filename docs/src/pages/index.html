@@ -405,8 +405,8 @@
 
     .pillar {
       padding: 28px 24px;
-      background: var(--pillar-bg);
-      border: 1px solid var(--pillar-border);
+      background: var(--callout-bg);
+      border: 1px solid var(--callout-border);
       border-radius: var(--r);
     }
 
@@ -581,7 +581,7 @@
         <ul class="hero-stats">
           <li><strong>0 kB</strong> framework JS added</li>
           <li><a href="/performance"><strong>Lighthouse 100s</strong> out of the box</a></li>
-          <li><strong>Use what you know</strong>: plain HTML, CSS, JS</li>
+          <li><strong>Use what you know</strong>: vanilla HTML, CSS, JS</li>
         </ul>
       </div>
     </section>
@@ -748,34 +748,32 @@
       });
     </script>
 
-    <!-- ── Philosophy pillars ── -->
+    <!-- ── DX pillars ── -->
     <section class="home-section">
       <div class="container">
-        <p class="section-label">Philosophy</p>
-        <h2 class="section-heading">Use what already exists.</h2>
-        <p class="section-sub">The principle behind every decision Bascik makes: use what you know, and use what the
-          browser knows.</p>
+        <p class="section-label">Developer Experience</p>
+        <h2 class="section-heading">Built for developer joy.</h2>
+        <p class="section-sub">Component modularity and automatic scoping without the framework friction, complex
+          setups, or runtime overhead.</p>
 
         <div class="pillars-grid">
           <div class="pillar">
-            <p class="pillar-label">No JS added</p>
-            <h3>Zero runtime footprint</h3>
-            <p>Bascik has zero runtime dependencies and adds no framework code to your output. Every script in
-              <code>dist/</code> was written by you. What you
-              ship is 100% plain HTML, CSS, and JS.
-            </p>
+            <p class="pillar-label">Zero Configuration</p>
+            <h3>Works instantly</h3>
+            <p>No bundler setups, complex configs, or transpiler chains. Run <code>bascik</code> and start building
+              instantly with standard Node.js.</p>
           </div>
           <div class="pillar">
-            <p class="pillar-label">Build-time scoping</p>
-            <h3>No CSS collisions. Ever.</h3>
-            <p>Class names and DOM selectors are rewritten at build time. No CSS-in-JS, no BEM discipline, no global
-              namespace to manage.</p>
+            <p class="pillar-label">Zero Learning Curve</p>
+            <h3>Standard HTML &amp; CSS</h3>
+            <p>No JSX, custom template syntax, or framework hooks. Write pure HTML and CSS with standard DOM
+              APIs—everything you know just works.</p>
           </div>
           <div class="pillar">
-            <p class="pillar-label">Standard HTML</p>
-            <h3>Use what you know</h3>
-            <p>No JSX, no template syntax, no special compiler directives. Write the HTML you already know. Bascik does
-              the assembly.</p>
+            <p class="pillar-label">Zero Runtime Overhead</p>
+            <h3>Automatic isolation</h3>
+            <p>Component styles and DOM queries are scoped automatically at build time. Enjoy total component isolation
+              with zero added JavaScript.</p>
           </div>
         </div>
       </div>
@@ -790,6 +788,12 @@
           reference.</p>
 
         <div class="grid-3">
+          <a href="/components" class="card" style="text-decoration:none">
+            <p class="section-label">Core</p>
+            <h3 style="margin-bottom:6px">Components</h3>
+            <p style="margin:0;font-size:0.875rem">Build UI with reusable HTML components. No imports or registration
+              needed—just write the custom tag.</p>
+          </a>
           <a href="/scoped-styles" class="card" style="text-decoration:none">
             <p class="section-label">CSS</p>
             <h3 style="margin-bottom:6px">Scoped Styles</h3>
@@ -806,17 +810,10 @@
           </a>
           <a href="/slots" class="card" style="text-decoration:none">
             <p class="section-label">Slots</p>
-            <h3 style="margin-bottom:6px">Default &amp; Named Slots</h3>
+            <h3 style="margin-bottom:6px">Slots</h3>
             <p style="margin:0;font-size:0.875rem">Pass inner HTML into components. Named slots target specific zones
               with
               fallback content supported.</p>
-          </a>
-          <a href="/props" class="card" style="text-decoration:none">
-            <p class="section-label">Props</p>
-            <h3 style="margin-bottom:6px">Component Props</h3>
-            <p style="margin:0;font-size:0.875rem">Inject text values via <code>data-bascik-prop-*</code> attributes,
-              with no
-              runtime and no special syntax.</p>
           </a>
           <a href="/build-scripts" class="card" style="text-decoration:none">
             <p class="section-label">Build</p>
@@ -832,12 +829,11 @@
             <p style="margin:0;font-size:0.875rem">Override defaults in <code>bascik.config.ts</code>. Toggle scoping,
               obfuscation, and minification per project.</p>
           </a>
-          <a href="/compatibility" class="card" style="text-decoration:none">
-            <p class="section-label">Reference</p>
-            <h3 style="margin-bottom:6px">Scoping Compatibility</h3>
-            <p style="margin:0;font-size:0.875rem">A complete audit of which CSS selectors and JS DOM patterns are
-              scoped,
-              partial, or unsupported.</p>
+          <a href="/performance" class="card" style="text-decoration:none">
+            <p class="section-label">Speed</p>
+            <h3 style="margin-bottom:6px">Lighthouse 100s</h3>
+            <p style="margin:0;font-size:0.875rem">Zero runtime dependencies and zero added JS payload for instant load
+              times and perfect scores.</p>
           </a>
           <a href="/switch" class="card" style="text-decoration:none">
             <p class="section-label">Switching</p>
