@@ -8,30 +8,30 @@ Add it once, and your AI assistant can accurately answer questions about Bascik,
 
 ## Download
 
-Download [SKILL.md](https://bascik.dev/assets/SKILL.md) directly, or copy the URL:
+Download [SKILL.md](https://bascik.dev/assets/SKILL.md) directly.
 
-```text
-https://bascik.dev/assets/SKILL.md
+## Download and Install
+
+Run the following from the root of your repo in your terminal.
+
+### Adding it to VSCode
+
+```sh
+mkdir -p .github/skills/bascik && curl -L -o .github/skills/bascik/SKILL.md https://bascik.dev/assets/SKILL.md
+
 ```
 
-## Adding it to GitHub Copilot (VS Code)
+### Adding it to Cursor
 
-Save the file somewhere in your project (e.g. `.github/bascik-skill.md`) then reference it in your `.github/copilot-instructions.md`:
-
-```markdown
-<!-- .github/copilot-instructions.md -->
-See @.github/bascik-skill.md for the complete Bascik reference.
+```sh
+mkdir -p .cursor/skills/bascik && curl -L -o .cursor/skills/bascik/SKILL.md https://bascik.dev/assets/SKILL.md
 ```
 
-Or attach it directly in a Copilot Chat conversation using the **Attach Context** button and selecting the file.
+### Adding it to Claude
 
-## Adding it to Cursor
-
-Place the file at `.cursor/rules/bascik.md` in your project root. Cursor picks it up automatically as a project rule.
-
-## Adding it to Claude (claude.md)
-
-Paste the contents into your `claude.md` file, or reference the file path in your project instructions.
+```sh
+mkdir -p .claude/skills/bascik && curl -L -o .claude/skills/bascik/SKILL.md https://bascik.dev/assets/SKILL.md
+```
 
 ## What's inside
 
