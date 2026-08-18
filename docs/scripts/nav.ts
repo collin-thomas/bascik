@@ -19,10 +19,10 @@ export interface NavSection {
 export const NAV: NavSection[] = [
   {
     section: 'Overview', pages: [
-      { href: '/getting-started', label: 'Getting Started' },
       { href: '/why-bascik', label: 'Why Bascik' },
-      { href: '/performance', label: 'Lighthouse 100s' },
       { href: '/vs-frameworks', label: 'Bascik vs Frameworks' },
+      { href: '/performance', label: 'Lighthouse 100s' },
+      { href: '/getting-started', label: 'Getting Started' },
     ]
   },
   {
