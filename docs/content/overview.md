@@ -1,6 +1,6 @@
 # Bascik
 
-> Bascik is a build tool for HTML components. Write your components in plain HTML, CSS, and JavaScript. Bascik scopes and assembles them at build time, outputting plain HTML pages with zero JavaScript added. Supports static site generation (SSG) out of the box.
+> Bascik is a build tool for HTML components. Write your components in vanilla HTML, CSS, and JavaScript. Bascik scopes and assembles them at build time, outputting vanilla HTML pages with zero JavaScript added. Supports static site generation (SSG) out of the box.
 
 > **Docs Site Source.** This documentation site itself is a complete, real-world Bascik site! It features complex build-time generation, such as dynamically building the navigation, rendering markdown files, extracting code blocks, generating breadcrumbs, structured schema, sitemaps, and even live-embedding coverage stats. Check out the [Bascik Docs Source Code on GitHub](https://github.com/collin-thomas/bascik/tree/main/docs) to see exactly how these advanced features are structured and built.
 

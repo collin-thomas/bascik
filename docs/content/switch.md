@@ -15,7 +15,7 @@ Replace framework-specific slots and properties with Bascik equivalents:
 - Map standard string or number props to `data-bascik-prop-*` attributes. For rich HTML content, use named slots instead.
 
 ### 3. Handle Scoped Styles
-Migrate CSS Modules, styled-components, or Tailwind to plain CSS. You can write CSS directly in inline `<style>` blocks or use paired `.css` files (e.g., `component-name.css`). Bascik will scope and deduplicate them automatically.
+Migrate CSS Modules, styled-components, or Tailwind to vanilla CSS. You can write CSS directly in inline `<style>` blocks or use paired `.css` files (e.g., `component-name.css`). Bascik will scope and deduplicate them automatically.
 
 ### 4. Setup Pages and Routes
 Move client-side routes and layout wrappers into static `.html` files under `src/pages/`.

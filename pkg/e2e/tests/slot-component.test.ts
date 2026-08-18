@@ -5,7 +5,7 @@
  * Three instances of <slot-card> are rendered:
  *   - Usage 1: default slot contains a <status-badge> component + plain text;
  *              named header and footer slots are filled with plain text.
- *   - Usage 2: all three slots filled with plain HTML only (no nested component).
+ *   - Usage 2: all three slots filled with vanilla HTML only (no nested component).
  *   - Usage 3: no slot content at all — all three slots use fallback content.
  *
  * Tests verify:

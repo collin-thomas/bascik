@@ -149,7 +149,7 @@ Add a `<script>` block for interactive behavior. Use `id` on any element you nee
 <!-- demo:source-html-toggle -->
 ```html
 <div class="toggle-wrap">
-  <p>Bascik assembles components at build time and ships plain HTML files with no framework runtime.</p>
+  <p>Bascik assembles components at build time and ships vanilla HTML files with no framework runtime.</p>
   <div id="detail" hidden>
     <p>No JavaScript is added to the page. Every script in the output was written by you.</p>
   </div>
@@ -172,7 +172,7 @@ btn.addEventListener('click', () => {
 <!-- demo:output-html-toggle -->
 ```html
 <div class="bascik__comp-toggle__toggle-wrap">
-  <p class="bascik__comp-toggle__el__p">Bascik assembles components at build time and ships plain HTML files with no framework runtime.</p>
+  <p class="bascik__comp-toggle__el__p">Bascik assembles components at build time and ships vanilla HTML files with no framework runtime.</p>
   <div id="bascik__comp-toggle__a1b__detail" hidden>
     <p class="bascik__comp-toggle__el__p">No JavaScript is added to the page. Every script in the output was written by you.</p>
   </div>
@@ -321,7 +321,7 @@ Choosing between inline `<style>` blocks and companion `.css` files is a matter 
 ```html
 <feature-card
   data-bascik-prop-title="Build-time Components"
-  data-bascik-prop-desc="Bascik resolves tags and ships plain HTML.">
+  data-bascik-prop-desc="Bascik resolves tags and ships vanilla HTML.">
 </feature-card>
 ```
 
@@ -355,7 +355,7 @@ Choosing between inline `<style>` blocks and companion `.css` files is a matter 
 ```html
 <div class="bascik__feature-card__fcard">
   <h3>Build-time Components</h3>
-  <p>Bascik resolves tags and ships plain HTML.</p>
+  <p>Bascik resolves tags and ships vanilla HTML.</p>
 </div>
 ```
 

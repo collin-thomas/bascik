@@ -1,6 +1,6 @@
 # Switch from Svelte
 
-Svelte and Bascik share a surface-level resemblance: both use single-file components that combine markup, logic, and scoped styles in one place. The difference is in the output. Svelte compiles components to JavaScript that runs in the browser to manage reactive state and DOM updates. Bascik compiles components to plain HTML at build time and outputs nothing else. Switching is mostly mechanical: remove Svelte's script and template syntax, extract styles to a paired CSS file, and replace reactive primitives with vanilla JS.
+Svelte and Bascik share a surface-level resemblance: both use single-file components that combine markup, logic, and scoped styles in one place. The difference is in the output. Svelte compiles components to JavaScript that runs in the browser to manage reactive state and DOM updates. Bascik compiles components to vanilla HTML at build time and outputs nothing else. Switching is mostly mechanical: remove Svelte's script and template syntax, extract styles to a paired CSS file, and replace reactive primitives with vanilla JS.
 
 ## File and Folder Setup
 
@@ -25,7 +25,7 @@ src/                         src/components/
 
 ## Component Syntax
 
-A Bascik component is a plain HTML file. There are no `<script>`, `<template>`, or `<style>` blocks in the component file itself; the HTML is the component markup. Scoped styles go in a paired `.css` file.
+A Bascik component is a vanilla HTML file. There are no `<script>`, `<template>`, or `<style>` blocks in the component file itself; the HTML is the component markup. Scoped styles go in a paired `.css` file.
 
 ```html
 <!-- SiteNav.svelte (Svelte - before) -->
@@ -160,7 +160,7 @@ Svelte 5's `$props()` and Svelte 4's `export let` both become Bascik's `data-bas
 
 ## $state / Reactive Variables → Vanilla JS
 
-Svelte's `$state()` (Svelte 5) and reactive variables (Svelte 4) become plain JavaScript in a `<script>` tag inside the component. Bascik automatically scopes `id` values and class names referenced in the script, so multiple instances on the same page work independently.
+Svelte's `$state()` (Svelte 5) and reactive variables (Svelte 4) become vanilla JavaScript in a `<script>` tag inside the component. Bascik automatically scopes `id` values and class names referenced in the script, so multiple instances on the same page work independently.
 
 ```html
 <!-- Counter.svelte (Svelte 5 - before) -->

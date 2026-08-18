@@ -4,7 +4,7 @@ Bascik does not ship a Markdown pipeline, but build-time scripts are Node.js, so
 
 ## See it in action
 
-The same Markdown source appears as plain HTML in the preview and compiled output.
+The same Markdown source appears as vanilla HTML in the preview and compiled output.
 
 ## marked
 
@@ -32,7 +32,7 @@ The output replaces the script tag in the compiled HTML with no client-side Java
 ```md
 ## A practical heading
 
-Markdown stays comfortable for authors, while the published page stays **plain HTML**.
+Markdown stays comfortable for authors, while the published page stays **vanilla HTML**.
 
 > Add an editorial treatment with ordinary CSS.
 ```
@@ -40,7 +40,7 @@ Markdown stays comfortable for authors, while the published page stays **plain H
 <!-- demo:output-html -->
 ```html
 <h2>A practical heading</h2>
-<p>Markdown stays comfortable for authors, while the published page stays <strong>plain HTML</strong>.</p>
+<p>Markdown stays comfortable for authors, while the published page stays <strong>vanilla HTML</strong>.</p>
 <blockquote>
 <p>Add an editorial treatment with ordinary CSS.</p>
 </blockquote>
@@ -108,7 +108,7 @@ Then style the HTML elements the parser emits:
 }
 ```
 
-This is the simplest choice when several pages share one editorial design. The generated elements are plain HTML, so responsive styles, custom properties, print styles, and media queries all work normally.
+This is the simplest choice when several pages share one editorial design. The generated elements are vanilla HTML, so responsive styles, custom properties, print styles, and media queries all work normally.
 
 ### Option 2: A Scoped Bascik Component
 
@@ -175,7 +175,7 @@ Given this Markdown:
 ```md
 ## A practical heading
 
-Markdown stays comfortable for authors, while the published page stays **plain HTML**.
+Markdown stays comfortable for authors, while the published page stays **vanilla HTML**.
 
 > Content can have a distinct editorial treatment without adding a client runtime.
 ```
@@ -185,7 +185,7 @@ The parser produces normal elements inside the resolved component:
 ```html
 <article class="bascik__markdown-content__markdown-content">
   <h2>A practical heading</h2>
-  <p>Markdown stays comfortable for authors, while the published page stays <strong>plain HTML</strong>.</p>
+  <p>Markdown stays comfortable for authors, while the published page stays <strong>vanilla HTML</strong>.</p>
   <blockquote>
     <p>Content can have a distinct editorial treatment without adding a client runtime.</p>
   </blockquote>
@@ -360,4 +360,4 @@ If your content comes from a headless CMS that returns Markdown via an API, fetc
 </script>
 ```
 
-The Markdown is converted to HTML and baked into the static output. No CMS API calls happen in the browser, users see plain HTML.
+The Markdown is converted to HTML and baked into the static output. No CMS API calls happen in the browser, users see vanilla HTML.

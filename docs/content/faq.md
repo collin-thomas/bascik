@@ -14,7 +14,7 @@ Yes. In fact some of my earliest exposure to programming was to TI-Basic on my f
 
 ## What is Bascik?
 
-Bascik is a build tool for HTML components. You write reusable components in plain HTML, CSS, and JavaScript. At build time, Bascik resolves your custom tags to their component source, scopes CSS and JavaScript so they never collide across instances, and outputs a directory of plain HTML files. Zero JavaScript is added to your pages, every script in the output was written by you.
+Bascik is a build tool for HTML components. You write reusable components in vanilla HTML, CSS, and JavaScript. At build time, Bascik resolves your custom tags to their component source, scopes CSS and JavaScript so they never collide across instances, and outputs a directory of vanilla HTML files. Zero JavaScript is added to your pages, every script in the output was written by you.
 
 By default the output is fully static and can be hosted anywhere. If you need per-request dynamic content, the [production server](/server) lets you run server-side scripts that inject into specific sections of a page at request time, while everything else stays static.
 
@@ -57,11 +57,11 @@ If you have two files that differ only in case (for example `my-card.html` and `
 
 ## Can I use Bascik with JavaScript libraries like Alpine.js or HTMX?
 
-Yes. Bascik's output is plain HTML. Any library that works with HTML works with Bascik. Drop a `<script>` tag in and it loads like it always has. See the [JavaScript Libraries](/libraries) page for examples.
+Yes. Bascik's output is vanilla HTML. Any library that works with HTML works with Bascik. Drop a `<script>` tag in and it loads like it always has. See the [JavaScript Libraries](/libraries) page for examples.
 
 ## Does Bascik add any JavaScript to my pages?
 
-No. Bascik is a build-time tool. The output is plain HTML, CSS, and exactly the JavaScript you wrote. No runtime script is injected into your pages.
+No. Bascik is a build-time tool. The output is vanilla HTML, CSS, and exactly the JavaScript you wrote. No runtime script is injected into your pages.
 
 ## Do I need to restart the dev server when I add a new component?
 

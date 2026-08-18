@@ -1,6 +1,6 @@
 # Switch from Vue
 
-Vue and Bascik are both component-based. The key difference is that Bascik does all component work at build time and outputs plain HTML with no runtime framework. Switching is mostly mechanical: rename files, remove Vue-specific syntax, and replace reactive primitives with vanilla JS or build-time equivalents.
+Vue and Bascik are both component-based. The key difference is that Bascik does all component work at build time and outputs vanilla HTML with no runtime framework. Switching is mostly mechanical: rename files, remove Vue-specific syntax, and replace reactive primitives with vanilla JS or build-time equivalents.
 
 ## File and Folder Setup
 
@@ -22,7 +22,7 @@ src/components/              src/components/
 
 ## Component Syntax
 
-A Bascik component is a plain HTML file. There are no `<template>`, `<script setup>`, or `<style>` blocks. The file name (minus the extension) is the tag name.
+A Bascik component is a vanilla HTML file. There are no `<template>`, `<script setup>`, or `<style>` blocks. The file name (minus the extension) is the tag name.
 
 ```html
 <!-- SiteNav.vue (Vue - before) -->
@@ -151,7 +151,7 @@ defineProps({ title: String, description: String });
 
 ## ref / reactive → Vanilla JS
 
-Vue's `ref`, `reactive`, and event handlers become plain JavaScript in a `<script>` tag inside the component. Bascik automatically scopes `id` values and class names referenced in the script, so multiple instances on the same page work independently.
+Vue's `ref`, `reactive`, and event handlers become vanilla JavaScript in a `<script>` tag inside the component. Bascik automatically scopes `id` values and class names referenced in the script, so multiple instances on the same page work independently.
 
 ```html
 <!-- Counter.vue (Vue - before) -->

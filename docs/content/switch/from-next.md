@@ -234,4 +234,4 @@ Delete the `.module.css` file and create a plain `.css` file alongside the compo
 
 ## TypeScript → Not Needed
 
-Bascik component files are plain HTML. Type annotations are not applicable. If you have TypeScript utility scripts or content-generation scripts you want to keep, continue using TypeScript there, just not in Bascik component or page HTML files.
+Bascik component files are vanilla HTML. Type annotations are not applicable. If you have TypeScript utility scripts or content-generation scripts you want to keep, continue using TypeScript there, just not in Bascik component or page HTML files.

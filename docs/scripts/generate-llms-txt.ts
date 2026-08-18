@@ -85,7 +85,7 @@ const lines: string[] = [];
 
 lines.push('# Bascik');
 lines.push('');
-lines.push('> Bascik is a build tool for HTML components. It scopes and assembles reusable HTML component files into plain HTML pages at build time. It adds zero JavaScript to the output. You write HTML, CSS, and JavaScript; Bascik scopes and assembles them.');
+lines.push('> Bascik is a build tool for HTML components. It scopes and assembles reusable HTML component files into vanilla HTML pages at build time. It adds zero JavaScript to the output. You write HTML, CSS, and JavaScript; Bascik scopes and assembles them.');
 lines.push('');
 lines.push('Bascik resolves custom HTML tags to component source HTML, scopes CSS and JavaScript, rewrites DOM selectors, and outputs plain static HTML pages with zero framework runtime.');
 lines.push('');

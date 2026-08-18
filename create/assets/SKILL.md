@@ -11,7 +11,7 @@ This file contains the **complete, centralized documentation and development ski
 
 ## 1. What Bascik Is & Does
 
-> Bascik is a build tool for HTML components. It scopes and assembles reusable HTML component files into plain HTML pages at build time. It adds zero JavaScript to the output. You write HTML, CSS, and JavaScript; Bascik scopes and assembles them.
+> Bascik is a build tool for HTML components. It scopes and assembles reusable HTML component files into vanilla HTML pages at build time. It adds zero JavaScript to the output. You write HTML, CSS, and JavaScript; Bascik scopes and assembles them.
 
 * **Resolves custom HTML tags** (e.g. `<my-nav></my-nav>`) to their component source HTML at build time.
 * **Scopes CSS class names, element selectors, `@keyframes`, and CSS custom properties** per component so they never collide.
@@ -85,8 +85,8 @@ Because IDs are scoped per instance, the same component can appear multiple time
 
 
 ### How Bascik Positions Against Other Tools
-* **Next.js** is a full React meta-framework aimed at applications with complex client-side state, authentication, and API routes. Many teams reach for it on content sites and landing pages, but every page ships 80–100+ KB of React runtime regardless of whether any reactivity is used. Its conventions also gradually pull projects toward client-side patterns. For a lot of what people build, that is simply more framework than the project needs. Bascik is built for exactly that kind of work: plain HTML, CSS, and JS authoring with component reuse, a dist folder you can open and verify file by file, and no runtime overhead affecting Core Web Vitals.
-* **Closest surface resemblance to Svelte:** Both use single-file components with scoped styles. The difference is that Svelte compiles to a JavaScript runtime for reactive DOM management; Bascik compiles to plain HTML with no runtime added.
+* **Next.js** is a full React meta-framework aimed at applications with complex client-side state, authentication, and API routes. Many teams reach for it on content sites and landing pages, but every page ships 80–100+ KB of React runtime regardless of whether any reactivity is used. Its conventions also gradually pull projects toward client-side patterns. For a lot of what people build, that is simply more framework than the project needs. Bascik is built for exactly that kind of work: vanilla HTML, CSS, and JS authoring with component reuse, a dist folder you can open and verify file by file, and no runtime overhead affecting Core Web Vitals.
+* **Closest surface resemblance to Svelte:** Both use single-file components with scoped styles. The difference is that Svelte compiles to a JavaScript runtime for reactive DOM management; Bascik compiles to vanilla HTML with no runtime added.
 * **Complements HTMX and Alpine.js:** Bascik resolves components at build time; HTMX/Alpine add behavior at runtime. They compose cleanly, with each tool doing what it is best at.
 * **Different scope than Hugo / Eleventy / Jekyll:** those tools focus on content pipelines (Markdown collections, taxonomies, front matter). Bascik focuses on HTML page composition and component reuse without a template language.
 * Most of what people build, content sites, marketing pages, docs portals, blogs, landing pages, does not require a framework runtime in the browser. Bascik fills the gap: component reuse and predictable build output, without a runtime or new programming model to adopt.
@@ -475,7 +475,7 @@ Using the `id`-based pattern with `getElementById()` is recommended because it g
 
 ### TypeScript in Component Scripts
 
-Bascik ships plain JavaScript to the browser, so TypeScript in component `<script>` blocks must be stripped before output is served. Wire Node 22.18+'s built-in `stripTypeScriptTypes` into the `minify.js` hook:
+Bascik ships vanilla JavaScript to the browser, so TypeScript in component `<script>` blocks must be stripped before output is served. Wire Node 22.18+'s built-in `stripTypeScriptTypes` into the `minify.js` hook:
 
 ```ts
 // bascik.config.ts
@@ -587,7 +587,7 @@ Inject text values into a component at usage time.
   data-bascik-prop-message="Your changes were saved."
 ></alert-box>
 ```
-Props in Bascik follow the same basic idea as React props, but the mechanism is plain HTML through `data-bascik-prop-*` attributes.
+Props in Bascik follow the same basic idea as React props, but the mechanism is vanilla HTML through `data-bascik-prop-*` attributes.
 The `data-bascik-prop-*` marker is removed from compiled output, while the target element's other attributes are preserved.
 *Props accept text values only. For rich HTML content, use slots.*
 
@@ -707,7 +707,7 @@ Given this Markdown source:
 ```md
 ## A practical heading
 
-Markdown stays comfortable for authors, while the published page stays **plain HTML**.
+Markdown stays comfortable for authors, while the published page stays **vanilla HTML**.
 
 > Add an editorial treatment with ordinary CSS.
 ```
@@ -716,7 +716,7 @@ Markdown stays comfortable for authors, while the published page stays **plain H
 
 ```html
 <h2>A practical heading</h2>
-<p>Markdown stays comfortable for authors, while the published page stays <strong>plain HTML</strong>.</p>
+<p>Markdown stays comfortable for authors, while the published page stays <strong>vanilla HTML</strong>.</p>
 <blockquote>
 <p>Add an editorial treatment with ordinary CSS.</p>
 </blockquote>
@@ -1368,7 +1368,7 @@ To install locally: open `extensions/vscode-bascik/` in VS Code and press F5.
 
 ## 16. Lighthouse 100s & Performance
 
-Bascik gives you an enormous head start on Lighthouse scores. Because it outputs plain HTML with zero framework runtime, you begin every page with near-perfect scores. Reaching 100 across all four Lighthouse categories is a matter of applying a small, well-known set of HTML patterns.
+Bascik gives you an enormous head start on Lighthouse scores. Because it outputs vanilla HTML with zero framework runtime, you begin every page with near-perfect scores. Reaching 100 across all four Lighthouse categories is a matter of applying a small, well-known set of HTML patterns.
 
 ### What Bascik Does
 * **Zero runtime:** The most impactful thing Bascik does is what it does not add: no framework bundle, no hydration script, and no client-side router. The only JavaScript on any page is what you wrote.

@@ -4,7 +4,7 @@ Props let you pass text values into a component template at usage time using `da
 
 ## Define and pass props
 
-Props in Bascik borrow the same basic idea as props in React: pass values into a reusable component from the usage site. In Bascik, the mechanism is plain HTML via `data-bascik-prop-*` attributes.
+Props in Bascik borrow the same basic idea as props in React: pass values into a reusable component from the usage site. In Bascik, the mechanism is vanilla HTML via `data-bascik-prop-*` attributes.
 
 Add a `data-bascik-prop-{name}` attribute (no value) to any element in the component template. The element's inner content will be replaced with the prop value at build time.
 
