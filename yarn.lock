@@ -902,6 +902,7 @@ __metadata:
   resolution: "bascik-docs@workspace:docs"
   dependencies:
     "@bascik/bascik": "workspace:*"
+    "@playwright/test": "npm:^1.62.0"
     "@types/node": "npm:^24.0.0"
     marked: "npm:^18.0.7"
     vitest: "npm:^4.1.10"
