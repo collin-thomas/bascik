@@ -51,7 +51,14 @@ The `renderMd` helper (`docs/scripts/md-renderer.ts`) applies these transformati
     <div class="docs-layout">
       <docs-sidebar></docs-sidebar>
       <main class="docs-content">
-        <p class="section-label">Category</p>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderSectionLabel } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/render-nav.ts')).href
+          );
+          console.log(renderSectionLabel('/topic'));
+        </script>
         <!-- h1, page-intro p, and all content come from MD -->
         <script data-bascik-build>…</script>
 

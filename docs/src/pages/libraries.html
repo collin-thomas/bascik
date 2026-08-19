@@ -51,7 +51,14 @@
       <docs-sidebar />
 
       <main class="docs-content">
-        <p class="section-label">Feature</p>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderSectionLabel } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/render-nav.ts')).href
+          );
+          console.log(renderSectionLabel('/libraries'));
+        </script>
 
         <!-- Intro and concise demo context first. -->
         <script data-bascik-build>

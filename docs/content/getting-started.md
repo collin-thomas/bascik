@@ -14,7 +14,7 @@ That scaffolds the project, installs dependencies, and starts the dev server in 
 
 Pass a different name to use it as both the directory name and the site title. If you omit `-y`, the CLI steps through the setup prompts interactively.
 
-`npm create bascik@latest` scaffolds a complete starter site: pages, components, global CSS, `bascik.config.ts`, and a `.gitignore`.
+`npm create bascik@latest` scaffolds a complete starter site: pages, components with unit tests, global CSS, `bascik.config.ts`, `vite.config.js`, and a `.gitignore` with Vitest and code coverage pre-configured.
 
 ### Manual Setup
 

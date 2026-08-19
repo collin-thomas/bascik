@@ -50,7 +50,14 @@
       <docs-sidebar />
 
       <main class="docs-content">
-        <p class="section-label">Overview</p>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderSectionLabel } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/render-nav.ts')).href
+          );
+          console.log(renderSectionLabel('/why-bascik'));
+        </script>
         <!-- Intro and demo context rendered from docs/content/why-bascik.md. -->
         <script data-bascik-build>
           import { join } from 'node:path';

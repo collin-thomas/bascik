@@ -72,7 +72,14 @@
 
       <!-- Content -->
       <main class="docs-content">
-        <p class="section-label">Overview</p>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderSectionLabel } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/render-nav.ts')).href
+          );
+          console.log(renderSectionLabel('/getting-started'));
+        </script>
 
         <!-- Content rendered from docs/content/getting-started.md at build time.
              To update page content, edit the MD file - not this file. -->

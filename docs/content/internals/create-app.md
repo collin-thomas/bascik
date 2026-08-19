@@ -25,6 +25,7 @@ Running `npx create-bascik <name>` writes this structure:
 <name>/
   package.json
   bascik.config.ts
+  vite.config.js
   .gitignore
   .github/skills/bascik/SKILL.md
   .claude/skills/bascik/SKILL.md
@@ -39,21 +40,22 @@ Running `npx create-bascik <name>` writes this structure:
     components/
       site-meta/
         site-meta.html
+        site-meta.test.ts
       site-header/
         site-header.html
-        site-header.css
+        site-header.test.ts
       site-footer/
         site-footer.html
-        site-footer.css
+        site-footer.test.ts
       feat-card/
         feat-card.html
-        feat-card.css
+        feat-card.test.ts
       my-counter/
         my-counter.html
-        my-counter.css
+        my-counter.test.ts
 ```
 
-The `feat-card` component demonstrates named slots. The `my-counter` component demonstrates scoped JS with two independent instances on the home page.
+The `feat-card` component demonstrates named slots. The `my-counter` component demonstrates scoped JS with two independent instances on the home page. Every component includes co-located unit tests, and `vite.config.js` configures Vitest with V8 code coverage.
 
 After scaffolding, the CLI offers to run `npm install` and `npm run dev`. Both prompts can be skipped with `-y`.
 

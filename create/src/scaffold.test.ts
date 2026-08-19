@@ -3,16 +3,22 @@ import {
   BASCIK_CONFIG,
   FEAT_CARD_CSS,
   FEAT_CARD_HTML,
+  FEAT_CARD_TEST,
   GITIGNORE,
   MY_COUNTER_CSS,
   MY_COUNTER_HTML,
+  MY_COUNTER_TEST,
   PACKAGE_JSON,
   SITE_FOOTER_CSS,
   SITE_FOOTER_HTML,
+  SITE_FOOTER_TEST,
   SITE_HEADER_CSS,
   SITE_HEADER_HTML,
+  SITE_HEADER_TEST,
   SITE_META_HTML,
+  SITE_META_TEST,
   STYLES_CSS,
+  VITE_CONFIG,
   aboutPage,
   contactPage,
   indexPage,
@@ -70,11 +76,20 @@ describe("PACKAGE_JSON", () => {
     expect(() => JSON.parse(PACKAGE_JSON("my-app"))).not.toThrow();
   });
 
-  it('sets type:module, dev and build scripts', () => {
+  it('sets type:module, dev, build, and test scripts', () => {
     const pkg = JSON.parse(PACKAGE_JSON("my-app"));
     expect(pkg.type).toBe("module");
     expect(pkg.scripts.dev).toBe("bascik");
     expect(pkg.scripts.build).toBe("bascik --build");
+    expect(pkg.scripts.test).toBe("vitest run");
+    expect(pkg.scripts["test:watch"]).toBe("vitest");
+    expect(pkg.scripts["test:coverage"]).toBe("vitest run --coverage");
+  });
+
+  it("includes vitest and coverage-v8 in devDependencies", () => {
+    const pkg = JSON.parse(PACKAGE_JSON("my-app"));
+    expect(pkg.devDependencies.vitest).toBeDefined();
+    expect(pkg.devDependencies["@vitest/coverage-v8"]).toBeDefined();
   });
 
   it("includes @bascik/bascik as a dependency", () => {
@@ -88,6 +103,13 @@ describe("PACKAGE_JSON", () => {
   });
 });
 
+describe("VITE_CONFIG", () => {
+  it("includes test matchers and coverage config", () => {
+    expect(VITE_CONFIG).toContain("src/**/*.test.ts");
+    expect(VITE_CONFIG).toContain("provider: 'v8'");
+  });
+});
+
 describe("BASCIK_CONFIG", () => {
   it("contains a link to the docs", () => {
     expect(BASCIK_CONFIG).toContain("bascik.dev/configuration");
@@ -95,10 +117,35 @@ describe("BASCIK_CONFIG", () => {
 });
 
 describe("GITIGNORE", () => {
-  it("ignores node_modules, dist, and pem files", () => {
+  it("ignores node_modules, dist, coverage, and pem files", () => {
     expect(GITIGNORE).toContain("node_modules/");
     expect(GITIGNORE).toContain("dist/");
+    expect(GITIGNORE).toContain("coverage/");
     expect(GITIGNORE).toContain(".pem");
+  });
+});
+
+describe("component test templates", () => {
+  it("SITE_META_TEST asserts head tags", () => {
+    expect(SITE_META_TEST).toContain("charset");
+    expect(SITE_META_TEST).toContain("styles.css");
+  });
+
+  it("SITE_HEADER_TEST asserts brand and links", () => {
+    expect(SITE_HEADER_TEST).toContain("data-bascik-prop-brand");
+    expect(SITE_HEADER_TEST).toContain("nav-toggle");
+  });
+
+  it("SITE_FOOTER_TEST asserts brand and year script", () => {
+    expect(SITE_FOOTER_TEST).toContain("getFullYear");
+  });
+
+  it("FEAT_CARD_TEST asserts slot zones", () => {
+    expect(FEAT_CARD_TEST).toContain('data-bascik-slot="header"');
+  });
+
+  it("MY_COUNTER_TEST asserts counter controls", () => {
+    expect(MY_COUNTER_TEST).toContain("btn-dec");
   });
 });
 
@@ -307,9 +354,9 @@ describe("scaffold", () => {
     expect(dirs.some((d) => d.includes("site-meta"))).toBe(true);
   });
 
-  it("writes all 16 expected files", async () => {
+  it("writes all 22 expected files", async () => {
     await scaffold("my-app", "/tmp");
-    expect(mockWriteFile.mock.calls.length).toBe(16);
+    expect(mockWriteFile.mock.calls.length).toBe(22);
   });
 
   it("writes SKILL.md into .github/skills/bascik and .claude/skills/bascik", async () => {
@@ -323,6 +370,7 @@ describe("scaffold", () => {
     await scaffold("my-app", "/tmp");
     expect(writtenTo("package.json")).toBeDefined();
     expect(writtenTo("bascik.config.ts")).toBeDefined();
+    expect(writtenTo("vite.config.js")).toBeDefined();
     expect(writtenTo(".gitignore")).toBeDefined();
   });
 
@@ -335,7 +383,7 @@ describe("scaffold", () => {
     expect(paths.some((p) => p.endsWith("404.html"))).toBe(true);
   });
 
-  it("writes all component files", async () => {
+  it("writes all component files and tests", async () => {
     await scaffold("my-app", "/tmp");
     const paths = allWrittenPaths();
     expect(paths.some((p) => p.includes("site-meta"))).toBe(true);
@@ -344,6 +392,7 @@ describe("scaffold", () => {
     expect(paths.some((p) => p.includes("feat-card"))).toBe(true);
     expect(paths.some((p) => p.includes("my-counter"))).toBe(true);
     expect(paths.some((p) => p.endsWith(".css"))).toBe(true);
+    expect(paths.some((p) => p.endsWith(".test.ts"))).toBe(true);
   });
 
   it("writes styles.css", async () => {

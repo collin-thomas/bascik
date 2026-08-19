@@ -49,7 +49,14 @@
       <docs-sidebar />
 
       <main class="docs-content">
-        <p class="section-label">Recipe</p>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderSectionLabel } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/render-nav.ts')).href
+          );
+          console.log(renderSectionLabel('/recipes/markdown'));
+        </script>
 
         <!-- Intro rendered from docs/content/markdown.md. -->
         <script data-bascik-build>

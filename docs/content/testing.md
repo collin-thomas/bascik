@@ -176,29 +176,37 @@ Bascik executes the build script during compilation and replaces the tag with th
 
 ## Test Runner Setup
 
-Vitest is the recommended test runner for Bascik applications.
+Projects created via `npm create bascik` come pre-configured with Vitest, V8 code coverage, `vite.config.js`, and unit tests for every scaffolded component out of the box.
 
-### Installation and configuration
+For existing projects, install Vitest and V8 coverage:
 
 ```sh
-npm install -D vitest
+npm install -D vitest @vitest/coverage-v8
 ```
 
-Create `vite.config.ts` in the project root:
+Create `vite.config.js` in the project root:
 
-```ts
+```js
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  test: { include: ['src/**/*.test.ts'] },
+  test: {
+    include: ['src/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+    },
+  },
 });
 ```
 
-Add the test command to `package.json`:
+Add the test commands to `package.json`:
 
 ```json
 "scripts": {
-  "test": "vitest run"
+  "test": "vitest run",
+  "test:watch": "vitest",
+  "test:coverage": "vitest run --coverage"
 }
 ```
 
@@ -206,7 +214,18 @@ Execute tests using:
 
 ```sh
 npm test
+npm run test:coverage
 ```
+
+### Code Coverage Reporting
+
+With `@vitest/coverage-v8` installed and configured in `vite.config.js`, running `npm run test:coverage` analyzes all TypeScript source files across components, server logic, and utilities.
+
+- **Terminal output**: displays an inline summary of statement, branch, function, and line coverage percentages.
+- **HTML reports**: generated in `coverage/index.html` for interactive per-file drill-downs in any web browser.
+- **JSON artifacts**: saved in `coverage/coverage-final.json` for integration into CI/CD quality gates.
+
+The `coverage/` output directory is automatically ignored by `.gitignore` in scaffolded Bascik projects.
 
 ## Testing Boundaries and Guidance
 
@@ -214,9 +233,11 @@ npm test
 - **Pure Logic Functions**: Validate scoring, filtering, formatting, sorting, tokenization, and data transformations with fast unit tests in Vitest.
 - **End-to-End Workflows**: Validate multi-page user journeys, interactive clicks, visual state updates, and server routes in Playwright.
 
-## Reference Implementation: Docs Search
+## Reference Implementations
 
-The Bascik documentation search component (`docs-search.html`) implements this testing architecture. The core search engine logic (`search-logic.ts`) exports five functions:
+All components across the Bascik documentation site (`docs/src/components/`) and scaffolded projects include co-located unit tests (`.test.ts`) that verify component structure, props, slots, ARIA roles, and embedded scripts.
+
+The Bascik documentation search component (`docs-search.html`) provides a complete reference for testing pure component logic. Its search engine module (`search-logic.ts`) exports five functions:
 
 | Function | Description |
 |---|---|
@@ -227,6 +248,8 @@ The Bascik documentation search component (`docs-search.html`) implements this t
 | `buildResults(index, q, toks, limit)` | Filters, scores, and sorts search results |
 
 `docs-search.html` inlines the logic at build time, while `search-logic.test.ts` provides comprehensive unit test coverage for scoring tiers, deduplication, and edge cases.
+
+To run the documentation component test suite:
 
 ```sh
 yarn workspace bascik-docs test

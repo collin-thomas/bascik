@@ -46,7 +46,7 @@ export const NAV: NavSection[] = [
       { href: '/configuration', label: 'Configuration' },
       { href: '/compatibility', label: 'Scoping Compatibility' },
       { href: '/deploying', label: 'Deploying' },
-      { href: '/recipes/testing', label: 'Testing' },
+      { href: '/testing', label: 'Testing' },
     ]
   },
   {

@@ -22,9 +22,17 @@ export const PACKAGE_JSON = (name: string): string =>
       scripts: {
         dev: "bascik",
         build: "bascik --build",
+        test: "vitest run",
+        "test:watch": "vitest",
+        "test:coverage": "vitest run --coverage",
       },
       dependencies: {
         "@bascik/bascik": "file:../pkg",
+      },
+      devDependencies: {
+        "@types/node": "^24.0.0",
+        "@vitest/coverage-v8": "^4.1.10",
+        vitest: "^4.1.10",
       },
     },
     null,
@@ -35,8 +43,22 @@ export const BASCIK_CONFIG = `// Bascik works out of the box — no config requi
 // Full reference: https://bascik.dev/configuration
 `;
 
+export const VITE_CONFIG = `import { defineConfig } from 'vite';
+
+export default defineConfig({
+  test: {
+    include: ['src/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+    },
+  },
+});
+`;
+
 export const GITIGNORE = `node_modules/
 dist/
+coverage/
 *.pem
 `;
 
@@ -461,6 +483,92 @@ ${MY_COUNTER_CSS}</style>
 </script>
 `;
 
+// ─── Component Tests ──────────────────────────────────────────────────────────
+
+export const SITE_META_TEST = `import { describe, it, expect } from 'vitest';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+describe('site-meta component', () => {
+  const path = join(process.cwd(), 'src/components/site-meta/site-meta.html');
+
+  it('contains charset, viewport, favicon, and stylesheet link tags', async () => {
+    const html = await readFile(path, 'utf8');
+    expect(html).toContain('charset="UTF-8"');
+    expect(html).toContain('name="viewport"');
+    expect(html).toContain('favicon.svg');
+    expect(html).toContain('styles.css');
+  });
+});
+`;
+
+export const SITE_HEADER_TEST = `import { describe, it, expect } from 'vitest';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+describe('site-header component', () => {
+  const path = join(process.cwd(), 'src/components/site-header/site-header.html');
+
+  it('renders brand prop placeholder and navigation links', async () => {
+    const html = await readFile(path, 'utf8');
+    expect(html).toContain('data-bascik-prop-brand');
+    expect(html).toContain('href="/"');
+    expect(html).toContain('href="/about"');
+    expect(html).toContain('href="/contact"');
+    expect(html).toContain('id="nav-toggle"');
+  });
+});
+`;
+
+export const SITE_FOOTER_TEST = `import { describe, it, expect } from 'vitest';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+describe('site-footer component', () => {
+  const path = join(process.cwd(), 'src/components/site-footer/site-footer.html');
+
+  it('renders brand prop placeholder and build-time year script', async () => {
+    const html = await readFile(path, 'utf8');
+    expect(html).toContain('data-bascik-prop-brand');
+    expect(html).toContain('data-bascik-build');
+    expect(html).toContain('getFullYear');
+  });
+});
+`;
+
+export const FEAT_CARD_TEST = `import { describe, it, expect } from 'vitest';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+describe('feat-card component', () => {
+  const path = join(process.cwd(), 'src/components/feat-card/feat-card.html');
+
+  it('defines header, default, and footer slots', async () => {
+    const html = await readFile(path, 'utf8');
+    expect(html).toContain('data-bascik-slot="header"');
+    expect(html).toContain('data-bascik-slot');
+    expect(html).toContain('data-bascik-slot="footer"');
+  });
+});
+`;
+
+export const MY_COUNTER_TEST = `import { describe, it, expect } from 'vitest';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+describe('my-counter component', () => {
+  const path = join(process.cwd(), 'src/components/my-counter/my-counter.html');
+
+  it('renders increment and decrement controls with scoped script', async () => {
+    const html = await readFile(path, 'utf8');
+    expect(html).toContain('id="btn-dec"');
+    expect(html).toContain('id="btn-inc"');
+    expect(html).toContain('id="count-val"');
+    expect(html).toContain('addEventListener');
+  });
+});
+`;
+
 // ─── Pages ───────────────────────────────────────────────────────────────────
 
 const pageShell = (
@@ -640,6 +748,7 @@ export async function scaffold(
     // Root
     writeFile(join(root, "package.json"), PACKAGE_JSON(projectName), "utf8"),
     writeFile(join(root, "bascik.config.ts"), BASCIK_CONFIG, "utf8"),
+    writeFile(join(root, "vite.config.js"), VITE_CONFIG, "utf8"),
     writeFile(join(root, ".gitignore"), GITIGNORE, "utf8"),
     writeFile(join(root, ".github", "skills", "bascik", "SKILL.md"), skillMd, "utf8"),
     writeFile(join(root, ".claude", "skills", "bascik", "SKILL.md"), skillMd, "utf8"),
@@ -658,9 +767,14 @@ export async function scaffold(
 
     // Components
     writeFile(join(root, "src", "components", "site-meta", "site-meta.html"), SITE_META_HTML, "utf8"),
+    writeFile(join(root, "src", "components", "site-meta", "site-meta.test.ts"), SITE_META_TEST, "utf8"),
     writeFile(join(root, "src", "components", "site-header", "site-header.html"), SITE_HEADER_HTML, "utf8"),
+    writeFile(join(root, "src", "components", "site-header", "site-header.test.ts"), SITE_HEADER_TEST, "utf8"),
     writeFile(join(root, "src", "components", "site-footer", "site-footer.html"), SITE_FOOTER_HTML, "utf8"),
+    writeFile(join(root, "src", "components", "site-footer", "site-footer.test.ts"), SITE_FOOTER_TEST, "utf8"),
     writeFile(join(root, "src", "components", "feat-card", "feat-card.html"), FEAT_CARD_HTML, "utf8"),
+    writeFile(join(root, "src", "components", "feat-card", "feat-card.test.ts"), FEAT_CARD_TEST, "utf8"),
     writeFile(join(root, "src", "components", "my-counter", "my-counter.html"), MY_COUNTER_HTML, "utf8"),
+    writeFile(join(root, "src", "components", "my-counter", "my-counter.test.ts"), MY_COUNTER_TEST, "utf8"),
   ]);
 }
