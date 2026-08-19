@@ -42,18 +42,19 @@
           <button class="demo-language-tab" data-language="css" type="button">CSS</button>
           <button class="demo-language-tab" data-language="js" type="button">JS</button>
         </tab-bar>
-        <button class="demo-info-btn" type="button" aria-expanded="false" aria-label="Output formatting information"
-          title="Show output format details">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="8" cy="8" r="7"></circle>
-            <line x1="8" y1="8" x2="8" y2="12"></line>
-            <line x1="8" y1="4" x2="8.01" y2="4"></line>
-          </svg>
-        </button>
-      </div>
-      <div class="demo-info-notice" hidden>
-        Output is shown unminified (HTML, CSS, JS, and identifier names) for readability.
+        <details class="demo-info-details">
+          <summary class="demo-info-btn" aria-label="Output formatting information" title="Show output format details">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="8" cy="8" r="7"></circle>
+              <line x1="8" y1="8" x2="8" y2="12"></line>
+              <line x1="8" y1="4" x2="8.01" y2="4"></line>
+            </svg>
+          </summary>
+          <div class="demo-info-notice">
+            Output is shown unminified (HTML, CSS, JS, and identifier names) for readability.
+          </div>
+        </details>
       </div>
       <div class="demo-language-pane active" data-language-pane="html">
         <div data-bascik-slot="output-html"></div>
@@ -232,6 +233,11 @@
     align-items: center;
     padding-right: 12px;
     background: var(--bg-muted);
+    flex-wrap: wrap;
+  }
+
+  .demo-info-details {
+    display: contents;
   }
 
   .demo-info-btn {
@@ -250,12 +256,21 @@
     flex-shrink: 0;
   }
 
+  summary.demo-info-btn {
+    list-style: none;
+  }
+
+  summary.demo-info-btn::-webkit-details-marker {
+    display: none;
+  }
+
   .demo-info-btn:hover {
     color: var(--text);
     background: var(--elevated);
   }
 
   .demo-info-notice {
+    flex-basis: 100%;
     padding: 10px 16px;
     font-size: 0.75rem;
     color: var(--text-muted);
@@ -324,14 +339,4 @@
       });
     });
   });
-
-  const infoBtn = demoBox.querySelector('.demo-info-btn');
-  const infoNotice = demoBox.querySelector('.demo-info-notice');
-  if (infoBtn && infoNotice) {
-    infoBtn.addEventListener('click', () => {
-      const isHidden = infoNotice.hidden;
-      infoNotice.hidden = !isHidden;
-      infoBtn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
-    });
-  }
 </script>
