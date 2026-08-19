@@ -9,6 +9,7 @@ import {
 } from "./processing.js";
 import {
   copyReplicatePath,
+  copyStaticAssets,
   deleteDistDir,
   deleteDistFile,
 } from "./file-system.js";
@@ -17,10 +18,15 @@ import { MIME_MAP } from "./mime.js";
 import { eventEmitter, registerShutdownHandler } from "./events.js";
 
 export const watchFiles = async () => {
+  if (BascikConfig.isBuild) {
+    await Promise.all([copyStaticAssets(), processAllPages()]);
+    return;
+  }
+
   const onWatchError = (err: unknown) => console.error("[bascik] watch error:", err);
   const watchers: ReturnType<typeof chokidar.watch>[] = [];
   const w = <T extends ReturnType<typeof chokidar.watch>>(watcher: T) => { watchers.push(watcher); return watcher; };
-  if (!BascikConfig.isBuild) registerShutdownHandler(() => Promise.all(watchers.map(watcher => watcher.close())).then(() => { }));
+  registerShutdownHandler(() => Promise.all(watchers.map(watcher => watcher.close())).then(() => { }));
 
   // Copy non-page files
   w(chokidar
