@@ -19,6 +19,7 @@
     "pkg:e2e": "yarn workspace @bascik/bascik e2e",
     "pkg:bench": "yarn workspace @bascik/bascik bench",
     "docs:build": "yarn workspace bascik-docs build",
+    "docs:preview": "npx http-server docs/dist",
     "docs:update-coverage": "yarn workspace @bascik/bascik update-coverage",
     "docs:update-e2e-coverage": "yarn workspace @bascik/bascik update-e2e-coverage",
     "docs:dev": "yarn workspace bascik-docs dev",
