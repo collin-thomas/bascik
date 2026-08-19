@@ -140,9 +140,18 @@
   opacity: 1;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .dfooter-upper {
     grid-template-columns: 1fr;
     gap: 32px;
+  }
+
+  .dfooter-bottom {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .dfooter-links {
+    justify-content: center;
   }
 }

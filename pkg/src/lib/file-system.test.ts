@@ -12,6 +12,7 @@ import {
   deleteDistDir,
   createDir,
   copyReplicatePath,
+  copyStaticAssets,
 } from "./file-system.js";
 import { BascikConfig } from "./config.js";
 import { readdir, rm, mkdir, copyFile, readFile, writeFile } from "node:fs/promises";
@@ -218,6 +219,19 @@ describe("copyReplicatePath", () => {
     await copyReplicatePath("/workspace/project/pages/css/styles.css", "dist");
 
     expect(console.log).toHaveBeenCalledWith("copied:", "pages/css/styles.css");
+  });
+});
+
+describe("copyStaticAssets", () => {
+  it("copies non-HTML static assets and ignores HTML files", async () => {
+    vi.mocked(readFile)
+      .mockResolvedValueOnce("body { color: red; }" as any)
+      .mockRejectedValueOnce(new Error("ENOENT"));
+
+    await copyStaticAssets();
+
+    expect(console.log).toHaveBeenCalledWith("copied:", "pages/dir/one.css");
+    expect(console.log).not.toHaveBeenCalledWith("copied:", "pages/dir/one.html");
   });
 });
 

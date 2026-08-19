@@ -1,27 +1,48 @@
-<div class="demo-box" id="demo-root">
+<div class="demo-box">
   <div class="demo-nav">
     <div class="demo-tabs">
-      <button class="demo-tab active" data-tab="preview">Preview</button>
-      <button class="demo-tab" data-tab="code">Source</button>
-      <button class="demo-tab" data-tab="output">Output</button>
+      <label class="demo-tab">
+        <input type="radio" class="demo-tab-radio" name="pane" value="preview" checked hidden>
+        <span>Preview</span>
+      </label>
+      <label class="demo-tab">
+        <input type="radio" class="demo-tab-radio" name="pane" value="code" hidden>
+        <span>Source</span>
+      </label>
+      <label class="demo-tab">
+        <input type="radio" class="demo-tab-radio" name="pane" value="output" hidden>
+        <span>Output</span>
+      </label>
     </div>
     <div class="demo-meta" data-bascik-prop-file></div>
   </div>
 
   <div class="demo-panes">
-    <div class="demo-pane active" data-pane="preview">
+    <div class="demo-pane" data-pane="preview">
       <div class="demo-preview-content" data-demo-theme="dark">
         <div data-bascik-slot="example"></div>
       </div>
     </div>
     <div class="demo-pane" data-pane="code" data-demo-pane>
       <tab-bar class="demo-language-tabs" role="tablist" aria-label="Source language">
-        <button class="demo-language-tab active" data-language="usage" type="button">Usage</button>
-        <button class="demo-language-tab" data-language="html" type="button">HTML</button>
-        <button class="demo-language-tab" data-language="css" type="button">CSS</button>
-        <button class="demo-language-tab" data-language="js" type="button">JS</button>
+        <label class="demo-language-tab" data-language="usage">
+          <input type="radio" class="demo-lang-radio" name="source-lang" value="usage" checked hidden>
+          <span>Usage</span>
+        </label>
+        <label class="demo-language-tab" data-language="html">
+          <input type="radio" class="demo-lang-radio" name="source-lang" value="html" hidden>
+          <span>HTML</span>
+        </label>
+        <label class="demo-language-tab" data-language="css">
+          <input type="radio" class="demo-lang-radio" name="source-lang" value="css" hidden>
+          <span>CSS</span>
+        </label>
+        <label class="demo-language-tab" data-language="js">
+          <input type="radio" class="demo-lang-radio" name="source-lang" value="js" hidden>
+          <span>JS</span>
+        </label>
       </tab-bar>
-      <div class="demo-language-pane active" data-language-pane="usage">
+      <div class="demo-language-pane" data-language-pane="usage">
         <div data-bascik-slot="source-usage"></div>
       </div>
       <div class="demo-language-pane" data-language-pane="html">
@@ -36,12 +57,35 @@
       <div data-bascik-slot="code"></div>
     </div>
     <div class="demo-pane" data-pane="output" data-demo-pane>
-      <tab-bar class="demo-language-tabs" role="tablist" aria-label="Output language">
-        <button class="demo-language-tab active" data-language="html" type="button">HTML</button>
-        <button class="demo-language-tab" data-language="css" type="button">CSS</button>
-        <button class="demo-language-tab" data-language="js" type="button">JS</button>
-      </tab-bar>
-      <div class="demo-language-pane active" data-language-pane="html">
+      <div class="demo-output-header">
+        <tab-bar class="demo-language-tabs" role="tablist" aria-label="Output language">
+          <label class="demo-language-tab" data-language="html">
+            <input type="radio" class="demo-lang-radio" name="output-lang" value="html" checked hidden>
+            <span>HTML</span>
+          </label>
+          <label class="demo-language-tab" data-language="css">
+            <input type="radio" class="demo-lang-radio" name="output-lang" value="css" hidden>
+            <span>CSS</span>
+          </label>
+          <label class="demo-language-tab" data-language="js">
+            <input type="radio" class="demo-lang-radio" name="output-lang" value="js" hidden>
+            <span>JS</span>
+          </label>
+        </tab-bar>
+        <label class="demo-info-btn" aria-label="Output formatting information" title="Show output format details">
+          <input type="checkbox" class="demo-info-toggle" hidden>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="8" cy="8" r="7"></circle>
+            <line x1="8" y1="8" x2="8" y2="12"></line>
+            <line x1="8" y1="4" x2="8.01" y2="4"></line>
+          </svg>
+        </label>
+      </div>
+      <div class="demo-info-notice">
+        Output is shown unminified (HTML, CSS, JS, and identifier names) for readability.
+      </div>
+      <div class="demo-language-pane" data-language-pane="html">
         <div data-bascik-slot="output-html"></div>
       </div>
       <div class="demo-language-pane" data-language-pane="css">
@@ -72,6 +116,7 @@
     border-bottom: 1px solid var(--border);
     padding: 0 16px;
     overflow-x: auto;
+    -ms-overflow-style: none;
     scrollbar-width: none;
   }
 
@@ -85,9 +130,12 @@
   }
 
   .demo-tab {
+    display: inline-flex;
+    align-items: center;
     padding: 12px 16px;
     font-size: 0.85rem;
     font-weight: 500;
+    line-height: 1;
     color: var(--text-muted);
     background: none;
     border: none;
@@ -96,6 +144,8 @@
     position: relative;
     isolation: isolate;
     transition: color 0.2s;
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   .demo-tab::before {
@@ -112,17 +162,17 @@
       color: var(--text);
     }
 
-    .demo-tab:hover:not(.active)::before {
+    .demo-tab:hover:not(:has(.demo-tab-radio:checked))::before {
       background: var(--elevated);
     }
   }
 
-  .demo-tab.active {
+  .demo-tab:has(.demo-tab-radio:checked) {
     color: #18191b;
     font-weight: 600;
   }
 
-  .demo-tab.active::before {
+  .demo-tab:has(.demo-tab-radio:checked)::before {
     background: var(--accent);
   }
 
@@ -143,21 +193,34 @@
     display: none;
   }
 
-  .demo-pane.active {
+  .demo-box:has(.demo-tab-radio[value="preview"]:checked) .demo-pane[data-pane="preview"] {
+    display: block;
+  }
+
+  .demo-box:has(.demo-tab-radio[value="code"]:checked) .demo-pane[data-pane="code"] {
+    display: block;
+  }
+
+  .demo-box:has(.demo-tab-radio[value="output"]:checked) .demo-pane[data-pane="output"] {
     display: block;
   }
 
   .demo-language-tab {
+    display: inline-flex;
+    align-items: center;
     min-width: 48px;
     padding: 8px 12px;
     color: var(--text-muted);
     font-family: var(--mono);
     font-size: 0.75rem;
+    line-height: 1;
     background: transparent;
     border: none;
     position: relative;
     isolation: isolate;
     cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   .demo-language-tab::before {
@@ -173,15 +236,15 @@
     color: var(--text);
   }
 
-  .demo-language-tab:hover:not(.active)::before {
+  .demo-language-tab:hover:not(:has(.demo-lang-radio:checked))::before {
     background: var(--elevated);
   }
 
-  .demo-language-tab.active {
+  .demo-language-tab:has(.demo-lang-radio:checked) {
     color: #18191b;
   }
 
-  .demo-language-tab.active::before {
+  .demo-language-tab:has(.demo-lang-radio:checked)::before {
     background: var(--accent);
   }
 
@@ -189,8 +252,67 @@
     display: none;
   }
 
-  .demo-language-pane.active {
+  .demo-pane:has(.demo-lang-radio[value="usage"]:checked) .demo-language-pane[data-language-pane="usage"] {
     display: block;
+  }
+
+  .demo-pane:has(.demo-lang-radio[value="html"]:checked) .demo-language-pane[data-language-pane="html"] {
+    display: block;
+  }
+
+  .demo-pane:has(.demo-lang-radio[value="css"]:checked) .demo-language-pane[data-language-pane="css"] {
+    display: block;
+  }
+
+  .demo-pane:has(.demo-lang-radio[value="js"]:checked) .demo-language-pane[data-language-pane="js"] {
+    display: block;
+  }
+
+  /* Hide empty language tabs */
+  .demo-pane:has(.demo-language-pane[data-language-pane="usage"]:empty) .demo-language-tab[data-language="usage"] {
+    display: none;
+  }
+
+  .demo-pane:has(.demo-language-pane[data-language-pane="html"]:empty) .demo-language-tab[data-language="html"] {
+    display: none;
+  }
+
+  .demo-pane:has(.demo-language-pane[data-language-pane="css"]:empty) .demo-language-tab[data-language="css"] {
+    display: none;
+  }
+
+  .demo-pane:has(.demo-language-pane[data-language-pane="js"]:empty) .demo-language-tab[data-language="js"] {
+    display: none;
+  }
+
+  /* Hide tablist if all language panes are empty */
+  .demo-pane:not(:has(.demo-language-pane:not(:empty))) .demo-language-tabs {
+    display: none;
+  }
+
+  /* Fallback activation when default checked tab is empty */
+  .demo-pane:has(.demo-language-pane[data-language-pane="usage"]:empty):has(.demo-lang-radio[value="usage"]:checked) .demo-language-pane[data-language-pane="html"]:not(:empty) {
+    display: block;
+  }
+
+  .demo-pane:has(.demo-language-pane[data-language-pane="usage"]:empty):has(.demo-lang-radio[value="usage"]:checked) .demo-language-tab[data-language="html"] {
+    color: #18191b;
+  }
+
+  .demo-pane:has(.demo-language-pane[data-language-pane="usage"]:empty):has(.demo-lang-radio[value="usage"]:checked) .demo-language-tab[data-language="html"]::before {
+    background: var(--accent);
+  }
+
+  .demo-pane:has(.demo-language-pane[data-language-pane="usage"]:empty):has(.demo-language-pane[data-language-pane="html"]:empty):has(.demo-lang-radio[value="usage"]:checked) .demo-language-pane[data-language-pane="css"]:not(:empty) {
+    display: block;
+  }
+
+  .demo-pane:has(.demo-language-pane[data-language-pane="usage"]:empty):has(.demo-language-pane[data-language-pane="html"]:empty):has(.demo-lang-radio[value="usage"]:checked) .demo-language-tab[data-language="css"] {
+    color: #18191b;
+  }
+
+  .demo-pane:has(.demo-language-pane[data-language-pane="usage"]:empty):has(.demo-language-pane[data-language-pane="html"]:empty):has(.demo-lang-radio[value="usage"]:checked) .demo-language-tab[data-language="css"]::before {
+    background: var(--accent);
   }
 
   .demo-preview-content {
@@ -211,65 +333,54 @@
   .demo-pane code-block {
     margin: 0;
   }
+
+  .demo-output-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-right: 12px;
+    background: var(--bg-muted);
+  }
+
+  .demo-info-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--r-sm, 4px);
+    cursor: pointer;
+    transition: color 0.15s, background-color 0.15s;
+    flex-shrink: 0;
+    margin-left: auto;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .demo-info-btn:hover {
+    color: var(--text);
+    background: var(--elevated);
+  }
+
+  .demo-info-btn:has(.demo-info-toggle:checked) {
+    color: var(--text);
+    background: var(--elevated);
+  }
+
+  .demo-pane:not(:has(.demo-info-toggle:checked)) .demo-info-notice {
+    display: none;
+  }
+
+  .demo-info-notice {
+    padding: 10px 16px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    background: var(--bg-muted);
+    border-bottom: 1px solid var(--border);
+    line-height: 1.4;
+  }
 </style>
-
-<script>
-  const demoBox = document.getElementById('demo-root');
-  const tabs = demoBox.querySelectorAll('.demo-tab');
-  const panes = demoBox.querySelectorAll('.demo-pane');
-
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const target = tab.dataset.tab;
-
-      tabs.forEach(t => t.classList.remove('active'));
-      panes.forEach(p => p.classList.remove('active'));
-
-      tab.classList.add('active');
-      demoBox.querySelector(`[data-pane="${target}"]`).classList.add('active');
-    });
-  });
-
-  demoBox.querySelectorAll('[data-pane="code"], [data-pane="output"]').forEach(pane => {
-    const languageTabs = pane.querySelectorAll('.demo-language-tab');
-    const languagePanes = pane.querySelectorAll('.demo-language-pane');
-
-    // Hide the language tab bar when none of the language panes have content.
-    // Pages that use only the legacy 'code'/'output' slots leave these panes
-    // empty, so there is nothing to switch between.
-    const hasLanguageContent = Array.from(languagePanes).some(p => p.children.length > 0);
-    if (!hasLanguageContent) {
-      const tabBar = pane.querySelector('[role="tablist"]');
-      if (tabBar) tabBar.style.display = 'none';
-    } else {
-      // Hide individual language tabs/panes that have no content.
-      languageTabs.forEach(tab => {
-        const langPane = pane.querySelector(`[data-language-pane="${tab.dataset.language}"]`);
-        if (langPane && langPane.children.length === 0) {
-          tab.hidden = true;
-          tab.classList.remove('active');
-          langPane.classList.remove('active');
-        }
-      });
-      // If the default active tab was hidden, activate the first visible one.
-      const activeTab = Array.from(languageTabs).find(t => t.classList.contains('active') && !t.hidden);
-      if (!activeTab) {
-        const firstVisible = Array.from(languageTabs).find(t => !t.hidden);
-        if (firstVisible) {
-          firstVisible.classList.add('active');
-          pane.querySelector(`[data-language-pane="${firstVisible.dataset.language}"]`).classList.add('active');
-        }
-      }
-    }
-
-    languageTabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        languageTabs.forEach(item => item.classList.remove('active'));
-        languagePanes.forEach(item => item.classList.remove('active'));
-
-        tab.classList.add('active');
-        pane.querySelector(`[data-language-pane="${tab.dataset.language}"]`).classList.add('active');
-      });
-    });
-  });
-</script>

@@ -59,7 +59,7 @@ The `class` attribute can still coexist on the same element for styling, just ad
 
 ## Dynamic Runtime Classes
 
-If a class is only toggled at runtime (`classList.toggle("is-open")`) but doesn't appear on any element in the template HTML, Bascik's compiler won't register it. The CSS side obfuscates the name but the JS side doesn't, causing a silent mismatch at runtime.
+If a class is only toggled at runtime (`classList.toggle("is-open")`) but doesn't appear on any element in the template HTML, Bascik's compiler won't register it. The CSS side minifies the name but the JS side doesn't, causing a silent mismatch at runtime.
 
 The toggle below registers `is-open` on a hidden element, then safely applies that scoped class at runtime.
 

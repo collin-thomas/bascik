@@ -173,6 +173,31 @@ describe("getTag", () => {
     };
     expect(getTag(htmlString, tagName, componentList)).toEqual(expectedOutput);
   });
+
+  it("ignores tags inside HTML comments when extracting body or component tags", () => {
+    const html = `<!DOCTYPE html>
+<html>
+<head></head>
+<body>
+  <div>
+    <!-- Example: <body> tag in comment -->
+    <p>Content</p>
+  </div>
+</body>
+</html>`;
+    const result = getTag(html, "body");
+    expect(result.innerContent).toBeDefined();
+    expect(result.innerContent).toContain("<p>Content</p>");
+  });
+
+  it("ignores component tags inside HTML comments", () => {
+    const cList: ComponentList = {
+      "my-comp": { fileName: "my-comp.html", fileContent: "<div>comp</div>" },
+    };
+    const html = `<div><!-- <my-comp></my-comp> --></div>`;
+    const result = getFirstComponent(html, cList);
+    expect(result.name).toBeUndefined();
+  });
 });
 
 describe("getFirstComponent", () => {

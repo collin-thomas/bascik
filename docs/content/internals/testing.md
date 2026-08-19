@@ -50,7 +50,7 @@ The e2e fixture is a small but complete Bascik project at `pkg/e2e/`:
 
 ```text
 pkg/e2e/
-  bascik.config.ts       ← fixture config (obfuscateAttributeNames: false)
+  bascik.config.ts       ← fixture config (minify.identifiers: false)
   playwright.config.ts   ← Playwright config; builds + serves fixture before tests
   server.ts              ← minimal static HTTP server for dist/
   src/
@@ -68,7 +68,7 @@ Tests then navigate to pages on that server and assert against the live browser 
 
 ## Fixture Design
 
-`obfuscateAttributeNames` is left at its default (`false`) in the fixture config so Playwright selectors can use readable scoped names like `bascik__my-comp__btn`. The only non-default values set are the site URL and the production server port:
+`minify.identifiers` is kept at `false` in the fixture config so Playwright selectors can use readable scoped names like `bascik__my-comp__btn`. The only non-default values set are the site URL and the production server port:
 
 ```ts
 // pkg/e2e/bascik.config.ts
@@ -158,9 +158,8 @@ vi.mock("../config.ts", () => ({
   BascikConfig: {
     scopeScriptBlocks: true,
     scopeAttribute: { class: true, id: true, name: true },
-    obfuscateAttributeNames: false,
     isBuild: false,
-    minify: { css: false },
+    minify: { css: false, identifiers: false },
   },
 }));
 

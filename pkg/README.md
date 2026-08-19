@@ -113,24 +113,24 @@ export const bascikConfig = {
     html: false,
     css: true,
     js: false,
+    identifiers: true, // hash class/id names to short hex strings
   },
   inlineStyles: false, // false | true | ['src/pages/css/styles.css']
-  obfuscateAttributeNames: true, // hash class/id names to short hex strings
   cacheHttp: false, // HTTP cache headers on dev server responses
 };
 
 // Options applied only during `bascik --build`, merged over bascikConfig
 export const buildOverrideConfig = {
-  obfuscateAttributeNames: true,
   minify: {
     html: true,
     css: true,
     js: true,
+    identifiers: true,
   },
 };
 ```
 
-`obfuscateAttributeNames` is the most impactful production setting: it turns `bascik__site-nav__a1b2c3__navigation` into a short hash like `ba1b2c3d`.
+`minify.identifiers` is an impactful production setting: it turns `bascik__site-nav__a1b2c3__navigation` into a short hash like `ba1b2c3d`.
 
 ---
 
@@ -344,7 +344,7 @@ For class attribute, also scopes the companion .css file:
   [id] { }              →  (stripped — cannot be scoped without DOM wrapping)
 ```
 
-When `obfuscateAttributeNames: true` (the production default), all generated names are hashed to short hex strings: `bascik__comp__a1b2c3__nav` → `bab12cd3`.
+When `minify.identifiers: true` (the production default), all generated names are hashed to short hex strings: `bascik__comp__a1b2c3__nav` → `bab12cd3`.
 
 ---
 

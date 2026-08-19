@@ -65,6 +65,11 @@ export interface MinifyOptions {
    * ```
    */
   js: boolean | ((code: string) => string | Promise<string>);
+  /**
+   * Hash/shorten scoped attribute names (classes, ids, names) to short hex strings (e.g. `ba1b2c3d`) for compression.
+   * Defaults to `false` in dev mode and `true` during `bascik --build` and `bascik --serve`.
+   */
+  identifiers: boolean;
 }
 
 export interface BascikConfigOptions {
@@ -100,7 +105,6 @@ export interface BascikConfigOptions {
    * Options for HTML, CSS, and JS minification.
    */
   minify: MinifyOptions;
-  obfuscateAttributeNames: boolean;
   cacheHttp: boolean;
   /**
    * Tag names whose inner content is left untouched by the scoping pipeline.

@@ -15,9 +15,13 @@ Scaffolds a complete starter project in a new directory. Prompts for a project n
 my-project/
   package.json
   bascik.config.ts
+  vite.config.js
   .gitignore
   .github/skills/bascik/SKILL.md
   .claude/skills/bascik/SKILL.md
+  e2e/
+    playwright.config.ts
+    app.spec.ts
   src/
     pages/
       assets/
@@ -30,11 +34,23 @@ my-project/
       404.html
     components/
       site-meta/
+        site-meta.html
+        site-meta.test.ts
       site-header/
+        site-header.html
+        site-header.test.ts
       site-footer/
+        site-footer.html
+        site-footer.test.ts
       feat-card/
+        feat-card.html
+        feat-card.test.ts
       my-counter/
+        my-counter.html
+        my-counter.test.ts
 ```
+
+Every scaffolded project includes co-located unit tests for its components, Playwright E2E browser tests in `e2e/`, Vitest configuration in `vite.config.js`, and pre-configured test scripts (`npm test`, `npm run test:watch`, `npm run test:coverage`, and `npm run e2e`).
 
 After scaffolding, the tool prompts you interactively:
 

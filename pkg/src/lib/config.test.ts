@@ -35,11 +35,8 @@ describe("defaultConfig", () => {
       html: false,
       css: false,
       js: false,
+      identifiers: false,
     });
-  });
-
-  it("has obfuscateAttributeNames: false (dev default — production default comes from buildDefaultConfig)", () => {
-    expect(defaultConfig.obfuscateAttributeNames).toBe(false);
   });
 
   it("has cacheHttp: false", () => {
@@ -104,7 +101,6 @@ describe("BascikConfig", () => {
     expect(BascikConfig).toHaveProperty("scopeAttribute");
     expect(BascikConfig).toHaveProperty("directory");
     expect(BascikConfig).toHaveProperty("minify");
-    expect(BascikConfig).toHaveProperty("obfuscateAttributeNames");
     expect(BascikConfig).toHaveProperty("cacheHttp");
     expect(BascikConfig).toHaveProperty("deduplicateCss");
     expect(BascikConfig).toHaveProperty("devServer");
@@ -156,34 +152,34 @@ describe("dev vs build vs prod server defaults", () => {
     vi.resetModules();
   });
 
-  it("keeps minify and obfuscate off in dev mode", () => {
+  it("keeps minify options off in dev mode", () => {
     const { BascikConfig: cfg } = initBascikConfig({}, {}, { isBuild: false, isProdServer: false });
     expect(cfg.minify).toEqual({
       html: false,
       css: false,
       js: false,
+      identifiers: false,
     });
-    expect(cfg.obfuscateAttributeNames).toBe(false);
   });
 
-  it("turns minify and obfuscate on by default for --build", () => {
+  it("turns minify options on by default for --build", () => {
     const { BascikConfig: cfg } = initBascikConfig({}, {}, { isBuild: true });
     expect(cfg.minify).toEqual({
       html: true,
       css: true,
       js: true,
+      identifiers: true,
     });
-    expect(cfg.obfuscateAttributeNames).toBe(true);
   });
 
-  it("turns minify and obfuscate on by default for --serve (prod server)", () => {
+  it("turns minify options on by default for --serve (prod server)", () => {
     const { BascikConfig: cfg } = initBascikConfig({}, {}, { isProdServer: true });
     expect(cfg.minify).toEqual({
       html: true,
       css: true,
       js: true,
+      identifiers: true,
     });
-    expect(cfg.obfuscateAttributeNames).toBe(true);
   });
 
   it("applies build defaults through the singleton when BASCIK_BUILD=1", async () => {
@@ -192,7 +188,7 @@ describe("dev vs build vs prod server defaults", () => {
     const mod = await import("./config.js");
     expect(mod.BascikConfig.isBuild).toBe(true);
     expect(mod.BascikConfig.minify.html).toBe(true);
-    expect(mod.BascikConfig.obfuscateAttributeNames).toBe(true);
+    expect(mod.BascikConfig.minify.identifiers).toBe(true);
   });
 
   it("exposes buildDefaultConfig with the production defaults", async () => {
@@ -201,8 +197,8 @@ describe("dev vs build vs prod server defaults", () => {
       html: true,
       css: true,
       js: true,
+      identifiers: true,
     });
-    expect(buildDefaultConfig.obfuscateAttributeNames).toBe(true);
   });
 });
 
@@ -217,17 +213,45 @@ describe("minify user config overrides", () => {
     expect(cfg.minify.css).toBe(true);
     expect(cfg.minify.js).toBe(true);
   });
+
+  it("supports boolean minify: false to disable all minification during build", () => {
+    const { BascikConfig: cfg } = initBascikConfig(
+      { minify: false },
+      {},
+      { isBuild: true },
+    );
+    expect(cfg.minify).toEqual({
+      html: false,
+      css: false,
+      js: false,
+      identifiers: false,
+    });
+  });
+
+  it("supports boolean minify: true to enable all minification in dev mode", () => {
+    const { BascikConfig: cfg } = initBascikConfig(
+      { minify: true },
+      {},
+      { isBuild: false },
+    );
+    expect(cfg.minify).toEqual({
+      html: true,
+      css: true,
+      js: true,
+      identifiers: true,
+    });
+  });
 });
 
 describe("user config overrides", () => {
   it("lets userConfig win over build defaults", () => {
     const { BascikConfig: cfg } = initBascikConfig(
-      { minify: { css: false }, obfuscateAttributeNames: false },
+      { minify: { css: false, identifiers: false } },
       {},
       { isBuild: true },
     );
     expect(cfg.minify.css).toBe(false);
-    expect(cfg.obfuscateAttributeNames).toBe(false);
+    expect(cfg.minify.identifiers).toBe(false);
     // Untouched build default still applies.
     expect(cfg.minify.js).toBe(true);
   });

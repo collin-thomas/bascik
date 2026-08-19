@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { obfuscateAttributeName, getAttributeNameHash, getUniqueId } from './names.js'
+import { minifyAttributeName, obfuscateAttributeName, getAttributeNameHash, getUniqueId } from './names.js'
 import { BascikConfig } from "./config.js";
 
 
 vi.mock("./config.js", () => {
   return {
-    BascikConfig: { obfuscateAttributeNames: false },
+    BascikConfig: { minify: { identifiers: false } },
   };
 });
 
@@ -27,15 +27,17 @@ describe("getAttributeNameHash", () => {
   });
 });
 
-describe("obfuscateAttributeName", () => {
-  it("returns the name unchanged when obfuscateAttributeNames is false", () => {
+describe("minifyAttributeName", () => {
+  it("returns the name unchanged when minify.identifiers is false", () => {
+    expect(minifyAttributeName("my-class")).toBe("my-class");
     expect(obfuscateAttributeName("my-class")).toBe("my-class");
   });
 
-  it("returns the hash when obfuscateAttributeNames is true", () => {
-    (BascikConfig as Record<string, unknown>).obfuscateAttributeNames = true;
+  it("returns the hash when minify.identifiers is true", () => {
+    (BascikConfig as { minify: { identifiers: boolean } }).minify.identifiers = true;
+    expect(minifyAttributeName("my-class")).toBe("b012345678901");
     expect(obfuscateAttributeName("my-class")).toBe("b012345678901");
-    (BascikConfig as Record<string, unknown>).obfuscateAttributeNames = false;
+    (BascikConfig as { minify: { identifiers: boolean } }).minify.identifiers = false;
   });
 });
 

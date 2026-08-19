@@ -15,7 +15,7 @@ Here are just a few ways Bascik puts architectural choices back in your hands:
 - **Granular Attribute Scoping (`scopeAttribute`):** Control exactly which attributes (classes, IDs, or name attributes) are scoped. If you are using Tailwind CSS, you can disable class scoping entirely while keeping ID scoping active.
 - **Parallel Builds (`useWorkers`):** Optimize build speeds on larger sites by opting into a multi-core CPU worker pool, or stick to main-thread processing for smaller projects.
 - **Error Behavior (`onScriptError`):** Choose whether to halt the entire build on template script errors, or output inline compiler warnings and keep going.
-- **Environment Overrides (`build`):** Easily define production-only overrides (such as obfuscating attribute names or inlining stylesheets) while keeping development logs detailed and verbose.
+- **Environment Overrides (`build`):** Easily define production-only overrides (such as minifying identifier names or inlining stylesheets) while keeping development logs detailed and verbose.
 
 ## Full Example
 
@@ -44,10 +44,9 @@ export default defineConfig({
     html: true,
     css: true,
     js: true,
+    identifiers: true,
   },
   inlineStyles: ['src/pages/css/styles.css'],
-
-  obfuscateAttributeNames: true,
 
   cacheHttp: false,  // true by default in --serve mode
 
@@ -72,11 +71,11 @@ export default defineConfig({
 });
 
 export const build = defineConfig({
-  obfuscateAttributeNames: true,
   minify: {
     html: true,
     css: true,
     js: true,
+    identifiers: true,
   },
 });
 ```
@@ -180,12 +179,14 @@ Only applies to inline scripts (those without a `src` attribute) and to `.js` fi
 
 To strip TypeScript from component scripts, pass Node's built-in `stripTypeScriptTypes` to `minify.js`. See [TypeScript in Component Scripts](/scoped-javascript#typescript-in-component-scripts).
 
-### `obfuscateAttributeNames`
+### `minify.identifiers`
 
-Hash the generated class and id names to short hex strings instead of the verbose `bascik__component__id__name` format. Recommended for production.
+Hash generated class, ID, and name attributes (name compression or mangling) to short hex strings instead of the verbose `bascik__component__id__name` format. Enabled by default in builds.
 
 ```ts
-obfuscateAttributeNames: true // production default
+minify: {
+  identifiers: true // production default
+}
 // bascik__my-nav__ab12cd34__navigation
 // becomes: bab12cd34
 ```
@@ -285,6 +286,8 @@ Scripts to run as part of the build/dev lifecycle. Entries execute sequentially 
 - **With `watch`**: runs on dev startup (non-blocking) and re-runs whenever a watched file changes, followed by a live-reload. Also runs before pages during `--build`.
 - **Without `watch`**: build-only, skipped in dev.
 
+> **Output location recommendation.** Lifecycle scripts executed by `exec` should write generated artifacts directly to your output directory (such as `dist/` or `dist/assets/`) rather than into source directories (`src/`). Writing generated files into `src/` can pollute your source tree with build artifacts and cause unnecessary `git` diffs or pre-push sync steps.
+
 ```ts
 exec: [
   { script: 'scripts/generate-search-index.ts', watch: ['content/'] },
@@ -369,15 +372,15 @@ onScriptError: "error" // default
 
 ## `build`
 
-Exporting a `build` object lets you set options that apply during `bascik --build` and `bascik --serve` (production server), overriding the default export. A common pattern is to enable obfuscation and minification only in production:
+Exporting a `build` object lets you set options that apply during `bascik --build` and `bascik --serve` (production server), overriding the default export. A common pattern is to enable minification options only in production:
 
 ```ts
 export const build = {
-  obfuscateAttributeNames: true,
   minify: {
     html: true,
     css: true,
     js: true,
+    identifiers: true,
   },
 };
 ```

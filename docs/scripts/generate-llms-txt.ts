@@ -2,9 +2,9 @@
 /**
  * generate-llms-txt.ts
  *
- * Generates docs/src/pages/llms.txt following the llms.txt (v2) specification.
+ * Generates docs/dist/llms.txt following the llms.txt (v2) specification.
  * It reads the docs structure from nav.ts, extracts brief page descriptions
- * from content Markdown files, and outputs a structured index file.
+ * from content Markdown files, and outputs a structured index file directly to dist/.
  *
  * Usage (from docs/):
  *   node scripts/generate-llms-txt.ts
@@ -13,14 +13,14 @@
  *   yarn workspace bascik-docs generate:llms
  */
 
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { NAV } from './nav.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const docsDir = resolve(__dirname, '..');
-const outputFile = join(docsDir, 'src', 'pages', 'llms.txt');
+const outputFile = join(docsDir, 'dist', 'llms.txt');
 const siteUrl = 'https://bascik.dev';
 
 function stripMd(text: string): string {
@@ -111,4 +111,5 @@ lines.push('- [Complete Skill File](https://bascik.dev/assets/SKILL.md): Complet
 lines.push('');
 
 const output = lines.join('\n');
+await mkdir(dirname(outputFile), { recursive: true });
 await writeFile(outputFile, output, 'utf8');

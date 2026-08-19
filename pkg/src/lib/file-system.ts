@@ -172,6 +172,16 @@ export const deepReadDirFlat = async (
   }
 };
 
+export const copyStaticAssets = async (): Promise<void> => {
+  const allFiles = await deepReadDirFlat(BascikConfig.directory.pages);
+  const staticAssetFiles = allFiles.filter(
+    (filePath) => /\.[a-zA-Z0-9]+$/.test(filePath) && !filePath.endsWith(".html"),
+  );
+  await Promise.all(
+    staticAssetFiles.map((filePath) => copyReplicatePath(filePath, "dist")),
+  );
+};
+
 export const getDirectoryPath = (pagePath: string): string => {
   const normalized = pagePath.replace(/\\/g, "/");
   return normalized.split("/").slice(1, -1).join("/");

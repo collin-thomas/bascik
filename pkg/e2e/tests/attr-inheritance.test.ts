@@ -11,7 +11,7 @@
  *   - Usage 6: id passthrough when the template root does not already define an id
  *   - Usage 7: multiple attrs combined
  *
- * The fixture is built with `obfuscateAttributeNames: false` so scoped names
+ * The fixture is built with `minify.identifiers: false` so scoped names
  * are readable: e.g. `bascik__attr-inherit__card`.
  */
 import { test, expect } from '@playwright/test';

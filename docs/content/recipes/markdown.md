@@ -192,7 +192,7 @@ The parser produces normal elements inside the resolved component:
 </article>
 ```
 
-The generated class name may be shortened in production when attribute obfuscation is enabled. You continue writing `.markdown-content` in the source; Bascik keeps the HTML and CSS names synchronized.
+The generated class name may be shortened in production when identifier minification is enabled. You continue writing `.markdown-content` in the source; Bascik keeps the HTML and CSS names synchronized.
 
 ## Front Matter with gray-matter
 

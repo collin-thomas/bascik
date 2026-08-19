@@ -7,7 +7,7 @@
  *   - scoped element-type selectors (p {}) apply only inside the component
  *   - toggling a class on instance A does not affect instance B
  *
- * The fixture is built with `obfuscateAttributeNames: false` so scoped names
+ * The fixture is built with `minify.identifiers: false` so scoped names
  * are readable: e.g. `bascik__css-scope-test__active`.
  */
 import { test, expect, type Locator } from '@playwright/test';

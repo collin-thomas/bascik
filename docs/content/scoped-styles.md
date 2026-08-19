@@ -40,7 +40,7 @@ id     →  bascik__<componentName>__<instanceId>__<originalName>
 name   →  bascik__<componentName>__<instanceId>__<originalName>
 ```
 
-In production builds (`obfuscateAttributeNames: true`, the default), these verbose names are hashed to short hex strings such as `ba1b2c3d`. The HTML, CSS, and JavaScript are all rewritten with the same hashed names so they stay in sync. This is entirely a build-time transformation with no runtime overhead.
+In production builds (`minify.identifiers: true`, the default), these verbose names are hashed to short hex strings such as `ba1b2c3d` for name compression. The HTML, CSS, and JavaScript are all rewritten with the same hashed names so they stay in sync. This is entirely a build-time transformation with no runtime overhead.
 
 ## Selector and animation lab
 

@@ -20,7 +20,7 @@ The simplest component is just markup. No CSS, no JavaScript required.
 </article>
 ```
 
-> **Styles omitted for clarity.** This demo component includes a companion `.css` file that styles the card. The CSS is not shown in the source view so the demo stays focused on the HTML structure.
+> **Styles omitted for clarity.** This demo component includes a companion `.css` file that styles the card. The CSS is not shown in the source view so the demo stays focused on the HTML structure. Note that output code examples across the documentation show unminified output (HTML, CSS, JS, and identifier names) for readability.
 
 <!-- demo:output-html-hello -->
 ```html
@@ -167,7 +167,7 @@ btn.addEventListener('click', () => {
 });
 ```
 
-> **Styles omitted for clarity.** This demo component includes a companion `.css` file that styles the card. The CSS is not shown in the source view so the demo stays focused on the JavaScript.
+> **Styles omitted for clarity.** This demo component includes a companion `.css` file that styles the card. The CSS is not shown in the source view so the demo stays focused on the JavaScript. Note that output code examples across the documentation show unminified output (HTML, CSS, JS, and identifier names) for readability.
 
 <!-- demo:output-html-toggle -->
 ```html

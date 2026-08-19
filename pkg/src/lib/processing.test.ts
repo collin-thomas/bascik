@@ -10,12 +10,12 @@ vi.mock("./config.js", () => ({
     scopeScriptBlocks: false,
     inheritAttributes: true,
     scopeAttribute: { class: false, id: false, name: false },
-    obfuscateAttributeNames: false,
     isBuild: false,
     minify: {
       html: false,
       css: false,
       js: false,
+      identifiers: false,
     },
     deduplicateCss: true,
     inlineStyles: false,
@@ -75,6 +75,7 @@ vi.mock("./events.js", () => ({
 
 vi.mock("./names.js", () => ({
   getUniqueId: vi.fn(() => "test1234"),
+  minifyAttributeName: vi.fn((name) => name),
   obfuscateAttributeName: vi.fn((name) => name),
   getAttributeNameHash: vi.fn((name) => name),
 }));
@@ -1265,6 +1266,15 @@ describe("selectivelyProcessPages", () => {
     expect(mem.pagesThisComponentIsUsedOn).toHaveBeenCalledWith("my-nav");
   });
 
+  it("extracts the correct component name for nested component file paths", async () => {
+    (mem.pagesThisComponentIsUsedOn as ReturnType<typeof vi.fn>).mockReturnValue([]);
+    await selectivelyProcessPages("src/components/ui/button/button.html");
+    expect(mem.pagesThisComponentIsUsedOn).toHaveBeenCalledWith("button");
+
+    await selectivelyProcessPages("src/components/ui/button/button.css");
+    expect(mem.pagesThisComponentIsUsedOn).toHaveBeenCalledWith("button");
+  });
+
   it("calls pageProcessing for each page returned by pagesThisComponentIsUsedOn", async () => {
     (mem.pagesThisComponentIsUsedOn as ReturnType<typeof vi.fn>).mockReturnValue(["src/pages/index.html"]);
     (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(PAGE_HTML);
@@ -1292,18 +1302,37 @@ describe("selectivelyProcessPagesForWatchPath – open pages first", () => {
     (mem as any).openPages = [];
   });
 
-  it("processes the open page before the rest when a page is actively open", async () => {
+  it("stores all pages in memory before emitting transpiled events for any page", async () => {
     (mem as any).openPages = ["/about"];
     const pages = ["src/pages/index.html", "src/pages/about.html"];
     (listPages as ReturnType<typeof vi.fn>).mockResolvedValue(pages);
-    // Every page read succeeds with valid HTML
     (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(PAGE_HTML);
+
+    const callOrder: string[] = [];
+    (mem.storePage as ReturnType<typeof vi.fn>).mockImplementation(async ({ relativePagePath }) => {
+      callOrder.push(`store:${relativePagePath}`);
+    });
+
+    const { eventEmitter } = await import("./events.js");
+    (eventEmitter.emit as ReturnType<typeof vi.fn>).mockImplementation((event, payload) => {
+      if (event === "transpiled") {
+        callOrder.push(`emit:${payload.relativePagePath}`);
+      }
+    });
 
     await selectivelyProcessPagesForWatchPath("nav.mjs");
 
-    const { eventEmitter } = await import("./events.js");
-    // Both pages are transpiled
-    expect(eventEmitter.emit).toHaveBeenCalledTimes(pages.length);
+    // All store calls must happen before the first emit call
+    const firstEmitIndex = callOrder.findIndex((entry) => entry.startsWith("emit:"));
+    const storeIndices = callOrder
+      .map((entry, idx) => (entry.startsWith("store:") ? idx : -1))
+      .filter((idx) => idx !== -1);
+
+    expect(firstEmitIndex).toBeGreaterThan(-1);
+    expect(storeIndices.length).toBe(pages.length);
+    for (const storeIdx of storeIndices) {
+      expect(storeIdx).toBeLessThan(firstEmitIndex);
+    }
   });
 });
 

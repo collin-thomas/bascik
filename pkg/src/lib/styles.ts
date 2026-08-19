@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { obfuscateAttributeName } from "./names.js";
+import { minifyAttributeName } from "./names.js";
 import type { BascikComponent } from "./types.js";
 
 // CSS unit keywords that are not valid HTML element names.  A CSS syntax
@@ -55,7 +55,7 @@ export const convertCssElementSelectorsToClasses = (
       seen.add(elementName);
       elementsConvertedClasses.push(elementName);
     }
-    return `.${obfuscateAttributeName(`bascik__${componentName}__el__${elementName}`)}`;
+    return `.${minifyAttributeName(`bascik__${componentName}__el__${elementName}`)}`;
   };
 
   // Pass 1: standalone element selectors after a selector boundary.
@@ -129,7 +129,7 @@ export const addElementClassesInHtml = (
 ): string => {
   // Loop through each element that has styling
   elementsConvertedClasses.forEach((element) => {
-    const bascikClassName = obfuscateAttributeName(
+    const bascikClassName = minifyAttributeName(
       `bascik__${componentName}__el__${element}`,
     );
     const injectClass = (elementHtml: string): string => {
@@ -198,7 +198,7 @@ export const prefixKeyframes = (css: string, componentName: string): string => {
     // pipeline runs more than once on the same CSS.
     if (name.startsWith("bascik__")) continue;
     const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const scoped = obfuscateAttributeName(
+    const scoped = minifyAttributeName(
       `bascik__${componentName}__keyframe__${name}`,
     );
     // Rewrite every standalone occurrence of the name — both the @keyframes
@@ -264,7 +264,7 @@ export const convertCssIdSelectorsToClasses = (
     /#([a-zA-Z][a-zA-Z0-9-_]*)(?=[^{};]*\{)/g,
     (_: string, idName: string) => {
       if (!seen.has(idName)) {
-        const className = obfuscateAttributeName(
+        const className = minifyAttributeName(
           `bascik__${componentName}__id__${idName}`,
         );
         seen.set(idName, className);
@@ -394,7 +394,7 @@ export const scopeCssCustomProperties = (
     if (!propMap.has(originalName)) {
       propMap.set(
         originalName,
-        obfuscateAttributeName(`bascik__${componentName}__${originalName}`),
+        minifyAttributeName(`bascik__${componentName}__${originalName}`),
       );
     }
   }
@@ -405,7 +405,7 @@ export const scopeCssCustomProperties = (
     if (!propMap.has(originalName)) {
       propMap.set(
         originalName,
-        obfuscateAttributeName(`bascik__${componentName}__${originalName}`),
+        minifyAttributeName(`bascik__${componentName}__${originalName}`),
       );
     }
   }
@@ -456,7 +456,7 @@ export const scopeLayerNames = (css: string, componentName: string): string => {
   if (layerNames.size === 0) return css;
   let result = css;
   layerNames.forEach((name) => {
-    const scoped = obfuscateAttributeName(
+    const scoped = minifyAttributeName(
       `bascik__${componentName}__layer__${name}`,
     );
     result = result.replace(
@@ -495,7 +495,7 @@ export const scopeContainerNames = (
   if (containerNames.size === 0) return css;
   let result = css;
   containerNames.forEach((name) => {
-    const scoped = obfuscateAttributeName(
+    const scoped = minifyAttributeName(
       `bascik__${componentName}__container__${name}`,
     );
     result = result.replace(
@@ -536,7 +536,7 @@ export const scopeViewTransitionNames = (
 
   let result = css;
   names.forEach((name) => {
-    const scoped = obfuscateAttributeName(
+    const scoped = minifyAttributeName(
       `bascik__${componentName}__vtn__${name}`,
     );
     result = result.replace(
@@ -593,7 +593,7 @@ export const scopeCounterStyleNames = (
   let result = css;
   names.forEach((name) => {
     const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const scoped = obfuscateAttributeName(
+    const scoped = minifyAttributeName(
       `bascik__${componentName}__counter__${name}`,
     );
     // Scope the @counter-style declaration
@@ -660,7 +660,7 @@ export const scopeAnchorNames = (
   let result = css;
   names.forEach((name) => {
     const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const scoped = obfuscateAttributeName(
+    const scoped = minifyAttributeName(
       `bascik__${componentName}__anchor__${name}`,
     );
     // Scope anchor-name: --name declarations
@@ -777,7 +777,7 @@ export const scopeInlineStyleTags = (
       const { css: shieldedCss, restore } = shieldCssStrings(css);
       css = restore(
         shieldedCss.replace(/(?<=\.)[a-z_][a-z0-9-_]*/gim, (className) =>
-          obfuscateAttributeName(`bascik__${componentName}__${className}`),
+          minifyAttributeName(`bascik__${componentName}__${className}`),
         ),
       );
       const { css: elCss, elementsConvertedClasses } =

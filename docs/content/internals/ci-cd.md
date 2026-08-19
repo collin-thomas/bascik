@@ -28,7 +28,7 @@ yarn pkg:test:ci
 yarn pkg:build && yarn pkg:e2e
 ```
 
-The `e2e` job installs only the Chromium browser via `playwright install --with-deps chromium` before running. Both jobs have `permissions: contents: read` to enforce least privilege.
+The `e2e` job installs only the Chromium browser via `playwright install chromium` before running. Both jobs have `permissions: contents: read` to enforce least privilege.
 
 ## Release Workflow
 

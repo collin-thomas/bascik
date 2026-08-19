@@ -49,7 +49,14 @@
       <docs-sidebar />
 
       <main class="docs-content">
-        <p class="section-label">Feature</p>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderSectionLabel } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/render-nav.ts')).href
+          );
+          console.log(renderSectionLabel('/scoped-javascript'));
+        </script>
         <!-- Intro rendered from docs/content/scoped-javascript.md. -->
         <script data-bascik-build>
           import { join } from 'node:path';
@@ -60,9 +67,23 @@
           console.log(await renderMdRange('./content/scoped-javascript.md', { to: 'Writing Component Scripts' }));
         </script>
 
-        <component-demo style="margin-top:24px" data-bascik-prop-file="src/components/demo-counter/">
+        <style>
+          .demo-spacer {
+            margin-top: 24px;
+          }
+
+          .demo-counters-flex {
+            display: flex;
+            gap: 32px;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 8px 0;
+          }
+        </style>
+
+        <component-demo class="demo-spacer" data-bascik-prop-file="src/components/demo-counter/">
           <div data-bascik-slot="example">
-            <div style="display:flex;gap:32px;flex-wrap:wrap;justify-content:center;padding:8px 0">
+            <div class="demo-counters-flex">
               <demo-counter data-bascik-prop-label="Counter A"></demo-counter>
               <demo-counter data-bascik-prop-label="Counter B"></demo-counter>
             </div>

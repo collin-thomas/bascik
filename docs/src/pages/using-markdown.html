@@ -49,16 +49,23 @@
       <docs-sidebar />
 
       <main class="docs-content">
-        <p class="section-label">Recipe</p>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderSectionLabel } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/render-nav.ts')).href
+          );
+          console.log(renderSectionLabel('/using-markdown'));
+        </script>
 
-        <!-- Intro rendered from docs/content/markdown.md. -->
+        <!-- Intro rendered from docs/content/recipes/markdown.md. -->
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
           const { renderMdRange } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
           );
-          console.log(await renderMdRange('./content/markdown.md', { to: 'marked' }));
+          console.log(await renderMdRange('./content/recipes/markdown.md', { to: 'marked' }));
         </script>
 
         <component-demo>
@@ -78,7 +85,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
-                console.log(await extractDemoBlock('./content/markdown.md', 'source-md'));
+                console.log(await extractDemoBlock('./content/recipes/markdown.md', 'source-md'));
               </script>
             </code-block>
           </div>
@@ -88,7 +95,7 @@
                 import { join } from 'node:path';
                 import { pathToFileURL } from 'node:url';
                 const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
-                console.log(await extractDemoBlock('./content/markdown.md', 'output-html'));
+                console.log(await extractDemoBlock('./content/recipes/markdown.md', 'output-html'));
               </script>
             </code-block>
           </div>
@@ -100,7 +107,7 @@
           const { renderMdRange } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
           );
-          console.log(await renderMdRange('./content/markdown.md', { from: 'marked' }, { stripDemoBlocks: true }));
+          console.log(await renderMdRange('./content/recipes/markdown.md', { from: 'marked' }, { stripDemoBlocks: true }));
         </script>
 
         <script data-bascik-build>

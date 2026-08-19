@@ -49,8 +49,15 @@
       <docs-sidebar />
 
       <main class="docs-content">
-        <p class="section-label">Recipe</p>
-        <!-- Content rendered from docs/content/page-aware-scripts.md at build time.
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderSectionLabel } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/render-nav.ts')).href
+          );
+          console.log(renderSectionLabel('/recipes/page-aware-scripts'));
+        </script>
+        <!-- Content rendered from docs/content/recipes/page-aware-scripts.md at build time.
              To update page content, edit the MD file, not this file. -->
         <script data-bascik-build>
           import { join } from 'node:path';
@@ -58,7 +65,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
           );
-          console.log(await renderMd('./content/page-aware-scripts.md'));
+          console.log(await renderMd('./content/recipes/page-aware-scripts.md'));
         </script>
 
         <div class="callout">

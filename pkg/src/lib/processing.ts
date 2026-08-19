@@ -49,7 +49,7 @@
  * All scoped names follow the pattern:
  *   bascik__<componentName>__<instanceId>__<originalName>
  *
- * When `obfuscateAttributeNames` is enabled (default in builds), names are
+ * When `minify.identifiers` is enabled (default in builds), names are
  * hashed to short hex strings (e.g. `bab12cd3`) for smaller output.
  */
 
@@ -452,6 +452,52 @@ export const partitionByOpenPages = (pageList: string[]): [string[], string[]] =
   return [open, rest];
 };
 
+export const processPageBatch = async (
+  pagePaths: string[],
+  componentList?: ComponentList,
+  globalStylesHtml?: string,
+): Promise<string[]> => {
+  if (pagePaths.length === 0) return [];
+  if (!componentList) componentList = await listComponents();
+  if (globalStylesHtml === undefined) globalStylesHtml = await resolveInlineStylesHtml();
+
+  const sortedPaths = (() => {
+    if (BascikConfig.isBuild || pagePaths.length <= 1) return pagePaths;
+    const [open, rest] = partitionByOpenPages(pagePaths);
+    return [...open, ...rest];
+  })();
+
+  const results = await Promise.all(
+    sortedPaths.map((path) => transpilePage(path, componentList, globalStylesHtml)),
+  );
+
+  // Store ALL transpiled pages in memory FIRST before emitting any reload events.
+  // This guarantees that when a browser tab reloads, any page it navigates to
+  // is already stored in memory and won't serve a stale version.
+  await Promise.all(
+    results.map(async (result) => {
+      if (!result) return;
+      if (!BascikConfig.isBuild) {
+        await mem.storePage({
+          relativePagePath: result.relativePagePath,
+          absolutePagePath: result.absolutePagePath,
+          pageContent: result.distHtml,
+          usedComponentsNames: result.usedComponentsNames,
+        });
+      }
+    })
+  );
+
+  // Now that ALL pages in memory are fresh and ready, notify browser connections
+  for (const result of results) {
+    if (result) {
+      eventEmitter.emit("transpiled", { relativePagePath: result.relativePagePath });
+    }
+  }
+
+  return results.map((r) => r?.relativePagePath ?? null).filter((p): p is string => p !== null);
+};
+
 export const selectivelyProcessPagesForWatchPath = async (_changedPath?: string): Promise<void> => {
   invalidateComponentListCache();
   const [pages, componentList, globalStylesHtml] = await Promise.all([
@@ -460,28 +506,19 @@ export const selectivelyProcessPagesForWatchPath = async (_changedPath?: string)
     resolveInlineStylesHtml(),
   ]);
   const pageList = pages ?? [];
-  const [openPages, restPages] = partitionByOpenPages(pageList);
-  // Transpile open pages first so the browser reload fires before the rest complete.
-  if (openPages.length > 0) {
-    await Promise.all(openPages.map((path) => pageProcessing(path, componentList, globalStylesHtml)));
-  }
-  await Promise.all(restPages.map((path) => pageProcessing(path, componentList, globalStylesHtml)));
+  await processPageBatch(pageList, componentList, globalStylesHtml);
 };
 
 export const selectivelyProcessPages = async (path: string): Promise<void> => {
   invalidateComponentListCache();
-  const relativePath = getRelativePath(path, "components");
-  const match = relativePath.match(/^components[\/](?<componentName>(\w|-)+)/);
-  const componentName = match?.groups?.componentName;
+  const rawFileName = path.replace(/^.*[\\/]/, "");
+  if (!rawFileName || rawFileName.startsWith(".")) return;
+  const componentName = rawFileName.split(".")[0].toLowerCase();
   if (!componentName) return;
   const pagesToTranspile = mem.pagesThisComponentIsUsedOn(componentName);
   const componentList = await listComponents();
-  await Promise.all(
-    pagesToTranspile.map((absolutePagePath: string) => {
-      // We need the absolute page path for pageProcessing
-      return pageProcessing(absolutePagePath, componentList);
-    }),
-  );
+  const globalStylesHtml = await resolveInlineStylesHtml();
+  await processPageBatch(pagesToTranspile, componentList, globalStylesHtml);
 };
 
 export const processAllPages = async (options?: { useWorkers?: boolean }) => {
@@ -493,13 +530,7 @@ export const processAllPages = async (options?: { useWorkers?: boolean }) => {
     listComponents(),
     resolveInlineStylesHtml(),
   ]);
-  // In dev mode, open pages go first so they emit "transpiled" sooner.
-  const pageList = (() => {
-    const all = pages ?? [];
-    if (BascikConfig.isBuild) return all;
-    const [open, rest] = partitionByOpenPages(all);
-    return [...open, ...rest];
-  })();
+  const pageList = pages ?? [];
 
   let results: (TranspilePageResult | null)[];
 
@@ -520,9 +551,13 @@ export const processAllPages = async (options?: { useWorkers?: boolean }) => {
       await pool.terminate();
     }
   } else {
-    // Concurrent — child process concurrency is capped at the semaphore in runModule.
+    const sortedPaths = (() => {
+      if (BascikConfig.isBuild || pageList.length <= 1) return pageList;
+      const [open, rest] = partitionByOpenPages(pageList);
+      return [...open, ...rest];
+    })();
     results = await Promise.all(
-      pageList.map((path) => transpilePage(path, componentList, globalStylesHtml)),
+      sortedPaths.map((path) => transpilePage(path, componentList, globalStylesHtml)),
     );
   }
 
@@ -538,9 +573,14 @@ export const processAllPages = async (options?: { useWorkers?: boolean }) => {
           usedComponentsNames: result.usedComponentsNames,
         });
       }
-      eventEmitter.emit("transpiled", { relativePagePath: result.relativePagePath });
     })
   );
+
+  for (const result of results) {
+    if (result) {
+      eventEmitter.emit("transpiled", { relativePagePath: result.relativePagePath });
+    }
+  }
 
   const count = results.filter(Boolean).length;
   const elapsed = Math.round(performance.now() - start);

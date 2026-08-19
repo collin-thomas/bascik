@@ -6,7 +6,7 @@
  *   - Usage 2: only title and count provided; description and badge use fallbacks
  *   - Usage 3: no props at all; all four slots use fallback content
  *
- * The fixture is built with `obfuscateAttributeNames: false` so scoped names
+ * The fixture is built with `minify.identifiers: false` so scoped names
  * are readable: e.g. `bascik__prop-test__title`.
  */
 import { test, expect, type Locator } from '@playwright/test';

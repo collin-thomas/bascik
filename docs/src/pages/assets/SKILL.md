@@ -866,6 +866,7 @@ export default defineConfig({
     // { script: 'scripts/generate-search-index.ts', watch: ['content/'] }, // runs sequentially in array order before page transpilation during --build; in dev, runs on startup and watched file changes
     // { script: 'scripts/generate-llms-txt.ts' },                          // build-only: skipped in dev
   ],
+  // Recommended: lifecycle scripts registered in `exec` should write generated artifacts directly to your output directory (such as `dist/` or `dist/assets/`) rather than `src/` to prevent polluting your source tree with build artifacts.
   scopeScriptBlocks: true,
   inheritAttributes: true,
   scopeAttribute: {
@@ -879,9 +880,9 @@ export default defineConfig({
     html: false,
     css: false,
     js: false,
+    identifiers: true, // hash class/id names to short hex strings
   },
   inlineStyles: false, // false | true | ['src/pages/css/styles.css']
-  obfuscateAttributeNames: true, // hash class/id names to short hex strings
   cacheHttp: false, // dev default; automatically true in --serve mode
   siteUrl: 'https://example.com',
   generate: {
@@ -915,11 +916,11 @@ export default defineConfig({
 
 // Applied only during `bascik --build` and `bascik --serve`.
 export const build = defineConfig({
-  obfuscateAttributeNames: true,
   minify: {
     html: true,
     css: true,
     js: true,
+    identifiers: true,
   },
 });
 ```
@@ -1160,7 +1161,7 @@ src/pages/blog/post.html   →  dist/blog/post.html
 
 What to check in compiled output:
 * **Component resolution:** every custom tag (e.g. `<site-nav>`) should be replaced with expanded HTML. A hyphenated tag still present in `dist/` means no component file matched.
-* **Scoped class names:** attributes like `class="bascik__site-nav__nav"` (or a short hash with `obfuscateAttributeNames`) confirm CSS scoping ran correctly.
+* **Scoped class names:** attributes like `class="bascik__site-nav__nav"` (or a short hash with `minify.identifiers`) confirm CSS scoping ran correctly.
 * **Injected `<style>` block:** the `<head>` should contain one combined `<style>` with CSS from all components used on that page.
 * **Build script output:** `<script data-bascik-build>` is replaced with stdout; if missing, check the terminal for a `[bascik] build script error` line.
 * **Server script output:** `<script data-bascik-server>` is replaced at request time; if output is missing on a live request, check the terminal for a `[bascik] server script error` line. Remember these scripts run in Node.js, not the browser, they require `bascik --serve` or the dev server to execute.
@@ -1272,7 +1273,7 @@ The e2e suite lives in `pkg/e2e/`. Playwright's `webServer` hook:
 1. Builds the fixture site (`pkg/e2e/src/`) using the current `pkg/dist/`
 2. Serves `e2e/dist/` on `http://localhost:4200`
 
-The fixture config sets `obfuscateAttributeNames: false` so Playwright selectors can use readable scoped names like `bascik__my-comp__btn` instead of opaque hashes.
+The fixture config sets `minify.identifiers: false` so Playwright selectors can use readable scoped names like `bascik__my-comp__btn` instead of opaque hashes.
 
 **Adding a new e2e test:**
 1. Add a component in `pkg/e2e/src/components/my-feature/`
@@ -1325,7 +1326,7 @@ Two GitHub Actions workflows handle all automation.
 
 **CI** (`.github/workflows/ci.yml`) — runs on every push to `main` and every PR, two parallel jobs on Node 24:
 - `test`: runs `yarn pkg:test:ci` (unit tests with coverage)
-- `e2e`: builds the package (`yarn pkg:build`), installs Chromium via `playwright install --with-deps chromium`, then runs `yarn pkg:e2e` (Playwright tests)
+- `e2e`: builds the package (`yarn pkg:build`), installs Chromium via `playwright install chromium`, then runs `yarn pkg:e2e` (Playwright tests)
 - Both jobs have `permissions: contents: read`
 
 **Release** (`.github/workflows/release.yml`) — triggers on version tags:
@@ -1447,6 +1448,7 @@ When generating code, pages, or components for a Bascik project, the following c
 8. **Script Modules:** `<script type="module">` scripts are not wrapped in an IIFE, but their selectors are still rewritten.
 9. **Non-JS Script Types:** Script tags with any `type` other than `text/javascript` (e.g. `type="application/json"`) are left completely untouched — no IIFE wrapping, no selector rewriting.
 10. **Literal Tag Text Is Safe:** Component tag text inside `<script>`, `<style>`, or `<textarea>` content (e.g. `<my-card>` in a JSON-LD string or code example) is treated as text and never resolved into a component.
+11. **HTML and CSS First:** Always try to use HTML and CSS before resorting to JavaScript. If a feature or layout can be implemented cleanly and without causing issues using only HTML and CSS, do it in HTML and CSS.
 
 ---
 

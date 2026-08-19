@@ -6,7 +6,7 @@
  *   - Usage 2: only the default slot filled; named slots fall back to component defaults
  *   - Usage 3: no slot content at all; all three slots use fallback content
  *
- * The fixture is built with `obfuscateAttributeNames: false` so scoped names
+ * The fixture is built with `minify.identifiers: false` so scoped names
  * are readable: e.g. `bascik__slot-host__host-wrapper`.
  */
 import { test, expect, type Locator } from '@playwright/test';

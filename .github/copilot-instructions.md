@@ -51,7 +51,14 @@ The `renderMd` helper (`docs/scripts/md-renderer.ts`) applies these transformati
     <div class="docs-layout">
       <docs-sidebar></docs-sidebar>
       <main class="docs-content">
-        <p class="section-label">Category</p>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderSectionLabel } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/render-nav.ts')).href
+          );
+          console.log(renderSectionLabel('/topic'));
+        </script>
         <!-- h1, page-intro p, and all content come from MD -->
         <script data-bascik-build>…</script>
 
@@ -81,7 +88,7 @@ The `renderMd` helper (`docs/scripts/md-renderer.ts`) applies these transformati
 
 **Do not run `#pre-push.prompt.md` or pre-push scripts automatically.** The user handles running pre-push steps.
 
-Note: `llms.txt` and search index are generated automatically when running `yarn docs:build` (or during dev server via `exec` in `docs/bascik.config.ts`).
+Note: `llms.txt` and search index are generated automatically when running `yarn docs:build` (or during dev server via `exec` in `docs/bascik.config.ts`). **Lifecycle/generation scripts executed by `exec` must write their generated output files directly to the output directory (`dist/`), never to the source directories (`src/`), to avoid polluting the source tree with build-time artifacts.**
 
 If manually updating or propagating `SKILL.md` when specifically requested:
 

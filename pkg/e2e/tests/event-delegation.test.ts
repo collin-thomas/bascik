@@ -12,7 +12,7 @@
  * (looked up by scoped per-instance ID), clicks in instance A never trigger
  * instance B's handlers — true isolation without any runtime class-name trickery.
  *
- * The fixture is built with `obfuscateAttributeNames: false` so scoped names
+ * The fixture is built with `minify.identifiers: false` so scoped names
  * are readable (e.g. `bascik__event-delegate__btn`).
  */
 import { test, expect, type Locator } from '@playwright/test';

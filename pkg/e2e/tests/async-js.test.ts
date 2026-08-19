@@ -13,7 +13,7 @@
  *     Class-scoped but document-wide — resolves the FIRST matching element in the DOM.
  *     Clicking promise-btn on instance B therefore updates instance A's result element.
  *
- * The fixture is built with `obfuscateAttributeNames: false` so scoped names
+ * The fixture is built with `minify.identifiers: false` so scoped names
  * are readable (e.g. `bascik__async-query__wrapper`).
  */
 import { test, expect, type Locator } from '@playwright/test';

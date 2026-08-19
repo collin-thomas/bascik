@@ -13,6 +13,7 @@ const {
   mockSelectivelyProcessPages,
   mockSelectivelyProcessPagesForWatchPath,
   mockCopyReplicatePath,
+  mockCopyStaticAssets,
   mockDeleteDistDir,
   mockDeleteDistFile,
   mockEventEmit,
@@ -24,6 +25,7 @@ const {
   const mockSelectivelyProcessPages = vi.fn().mockResolvedValue(undefined);
   const mockSelectivelyProcessPagesForWatchPath = vi.fn().mockResolvedValue(undefined);
   const mockCopyReplicatePath = vi.fn().mockResolvedValue(undefined);
+  const mockCopyStaticAssets = vi.fn().mockResolvedValue(undefined);
   const mockDeleteDistDir = vi.fn().mockResolvedValue(undefined);
   const mockDeleteDistFile = vi.fn().mockResolvedValue(undefined);
   const mockEventEmit = vi.fn();
@@ -54,6 +56,7 @@ const {
       undefined,
     );
     mockCopyReplicatePath.mockReset().mockResolvedValue(undefined);
+    mockCopyStaticAssets.mockReset().mockResolvedValue(undefined);
     mockDeleteDistDir.mockReset().mockResolvedValue(undefined);
     mockDeleteDistFile.mockReset().mockResolvedValue(undefined);
     mockEventEmit.mockReset();
@@ -71,6 +74,7 @@ const {
     mockSelectivelyProcessPages,
     mockSelectivelyProcessPagesForWatchPath,
     mockCopyReplicatePath,
+    mockCopyStaticAssets,
     mockDeleteDistDir,
     mockDeleteDistFile,
     mockEventEmit,
@@ -93,6 +97,7 @@ vi.mock("./processing.js", () => ({
 
 vi.mock("./file-system.js", () => ({
   copyReplicatePath: mockCopyReplicatePath,
+  copyStaticAssets: mockCopyStaticAssets,
   deleteDistDir: mockDeleteDistDir,
   deleteDistFile: mockDeleteDistFile,
 }));
@@ -132,6 +137,7 @@ import {
 } from "./processing.js";
 import {
   copyReplicatePath,
+  copyStaticAssets,
   deleteDistDir,
   deleteDistFile,
 } from "./file-system.js";
@@ -250,11 +256,12 @@ describe("watchFiles – html page watcher (watcher 1)", () => {
     expect(processAllPages).toHaveBeenCalledTimes(1);
   });
 
-  it("calls pageProcessing on 'add' after ready", () => {
+  it("calls processAllPages on 'add' after ready", () => {
     // ready already fired during watchFiles() in beforeEach; initialScanDone is true
     const addHandler = getHandler(1, "add");
+    mockProcessAllPages.mockClear();
     addHandler?.("/path/to/new-page.html");
-    expect(pageProcessing).toHaveBeenCalledWith("/path/to/new-page.html");
+    expect(processAllPages).toHaveBeenCalled();
   });
 
   it("calls pageProcessing on 'change'", () => {
@@ -457,18 +464,12 @@ describe("watchFiles – isBuild = true", () => {
     (BascikConfig as any).isBuild = false;
   });
 
-  it("does NOT emit asset-changed on change when isBuild is true", async () => {
+  it("copies static assets and transpiles all pages without creating file watchers", async () => {
     await watchFiles();
-    const handler = getHandler(0, "change");
-    await handler?.("/path/to/style.css");
-    expect(eventEmitter.emit).not.toHaveBeenCalled();
-  });
 
-  it("does not create the extra watch watcher even when watch paths are set", async () => {
-    (BascikConfig as any).watch = ["/extra/path"];
-    await watchFiles();
-    expect(mockWatch).toHaveBeenCalledTimes(3);
-    (BascikConfig as any).watch = [];
+    expect(copyStaticAssets).toHaveBeenCalledTimes(1);
+    expect(processAllPages).toHaveBeenCalledTimes(1);
+    expect(mockWatch).not.toHaveBeenCalled();
   });
 });
 

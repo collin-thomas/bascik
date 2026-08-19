@@ -5,7 +5,7 @@
  * clicks a button in Instance A also verifies that Instance B is unaffected,
  * which catches cross-instance scoping failures.
  *
- * The fixture is built with `obfuscateAttributeNames: false` so scoped class
+ * The fixture is built with `minify.identifiers: false` so scoped class
  * names are readable: e.g. `bascik__scope-test__active` rather than a hash.
  * Tests match on `/bascik__scope-test__/` patterns so they don't break if the
  * scope-separator format ever changes.

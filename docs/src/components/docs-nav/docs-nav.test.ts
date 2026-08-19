@@ -1,0 +1,24 @@
+import { describe, it, expect } from 'vitest';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+describe('docs-nav component', () => {
+  const componentPath = join(process.cwd(), 'src/components/docs-nav/docs-nav.html');
+  const cssPath = join(process.cwd(), 'src/components/docs-nav/docs-nav.css');
+
+  it('renders site navigation, search component, and mobile nav build script', async () => {
+    const html = await readFile(componentPath, 'utf8');
+
+    expect(html).toContain('<nav class="dnav">');
+    expect(html).toContain('<docs-logo />');
+    expect(html).toContain('<docs-search />');
+    expect(html).toContain('scripts/nav.ts');
+  });
+
+  it('constrains banner and dnav-inner to max-width 1100px', async () => {
+    const css = await readFile(cssPath, 'utf8');
+
+    expect(css).toContain('.dnav-banner {\n  max-width: 1100px;\n  margin: 0 auto;');
+    expect(css).toContain('.dnav-inner {\n  max-width: 1100px;\n  margin: 0 auto;');
+  });
+});

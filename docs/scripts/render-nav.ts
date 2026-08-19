@@ -19,6 +19,19 @@
 import { NAV } from './nav.ts';
 
 /**
+ * Renders the section label <p class="section-label">...</p> for a given page.
+ * Returns an empty string when currentPath is not found in NAV.
+ *
+ * @param {string} currentPath - e.g. '/slots'
+ */
+export function renderSectionLabel(currentPath: string): string {
+  const path = currentPath === '/using-markdown' ? '/recipes/markdown' : currentPath;
+  const section = NAV.find(s => s.pages.some(p => p.href === path));
+  if (!section) return '';
+  return `<p class="section-label">${section.section}</p>`;
+}
+
+/**
  * Renders the prev/next pagination <nav> for a given page. Returns an
  * empty string when currentPath is not found in NAV or is the only page.
  *

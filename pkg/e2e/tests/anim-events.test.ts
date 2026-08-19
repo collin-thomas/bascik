@@ -11,7 +11,7 @@
  * name. The component JS listens for animationstart/animationend on the anim-box
  * element and updates a status div accordingly.
  *
- * The fixture is built with `obfuscateAttributeNames: false` so scoped names
+ * The fixture is built with `minify.identifiers: false` so scoped names
  * are readable (e.g. `bascik__anim-events__wrapper`).
  */
 import { test, expect, type Locator } from '@playwright/test';

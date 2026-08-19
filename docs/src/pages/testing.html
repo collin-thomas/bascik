@@ -36,8 +36,8 @@
     console.log(await articleSchema());
   </script>
   <meta name="description"
-    content="How to test JavaScript and TypeScript in a Bascik project: extract pure logic to a module, test with Vitest. Covers both server scripts and browser component scripts." />
-  <title>Testing Site Logic - Bascik Docs</title>
+    content="Official reference for testing Bascik applications: component markup and CSS verification, Playwright end-to-end testing, server script testing, and browser component script testing." />
+  <title>Testing - Bascik Docs</title>
 </head>
 
 <body>
@@ -50,7 +50,14 @@
       <docs-sidebar />
 
       <main class="docs-content">
-        <p class="section-label">Recipes</p>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderSectionLabel } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/render-nav.ts')).href
+          );
+          console.log(renderSectionLabel('/testing'));
+        </script>
         <script data-bascik-build>
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
@@ -63,8 +70,8 @@
           import { join } from 'node:path';
           import { pathToFileURL } from 'node:url';
           const { renderPagination } = await import(pathToFileURL(join(process.cwd(), 'scripts/render-nav.ts')).href);
-          console.log(renderPagination('/recipes/testing'));
-        </script>
+          console.log(renderPagination('/testing'));
+        </script>>
       </main>
     </div>
   </div>

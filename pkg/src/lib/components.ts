@@ -206,23 +206,28 @@ export const listComponents = async (): Promise<ComponentList> => {
 const ATTR_VALUE = `(?:[^>"']|"[^"]*"|'[^']*')*`;
 
 /**
- * Return a same-length copy of `htmlString` where the inner content of
- * `<script>`, `<style>`, and `<textarea>` elements is blanked out with
+ * Return a same-length copy of `htmlString` where HTML comments and the inner content of
+ * `<script>`, `<style>`, and `<textarea>` elements are blanked out with
  * spaces. Component-tag searches run against the masked string so literal
- * tag text inside raw-text elements (e.g. `<my-card>` mentioned in a
- * JSON-LD string or a code example) is never resolved as a component.
+ * tag text inside comments or raw-text elements (e.g. `<my-card>` or `<body>`
+ * mentioned in a comment, JSON-LD string, or code example) is never resolved
+ * as a component or structural tag.
  * Because lengths are preserved, indices found in the masked string are
  * valid in the original.
  */
 const maskRawTextContent = (htmlString: string): string =>
-  htmlString.replace(
-    new RegExp(
-      `(<(script|style|textarea)(?:${ATTR_VALUE})>)([\\s\\S]*?)(<\\/\\2\\s*>)`,
-      "gi",
-    ),
-    (_m, open: string, _tag: string, content: string, close: string) =>
-      `${open}${" ".repeat(content.length)}${close}`,
-  );
+  htmlString
+    .replace(/<!--[\s\S]*?-->/g, (m) =>
+      m.length >= 7 ? `<!--${" ".repeat(m.length - 7)}-->` : m,
+    )
+    .replace(
+      new RegExp(
+        `(<(script|style|textarea)(?:${ATTR_VALUE})>)([\\s\\S]*?)(<\\/\\2\\s*>)`,
+        "gi",
+      ),
+      (_m, open: string, _tag: string, content: string, close: string) =>
+        `${open}${" ".repeat(content.length)}${close}`,
+    );
 
 /**
  * Find the first `<tagName ...>` opening tag in `htmlString` and return its

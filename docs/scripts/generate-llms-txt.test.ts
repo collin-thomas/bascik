@@ -6,7 +6,7 @@ describe('generate-llms-txt', () => {
   it('generates llms.txt following the llms.txt spec', async () => {
     await import('./generate-llms-txt.js');
 
-    const llmsFile = path.resolve(import.meta.dirname, '../src/pages/llms.txt');
+    const llmsFile = path.resolve(import.meta.dirname, '../dist/llms.txt');
     const content = await fs.readFile(llmsFile, 'utf8');
 
     expect(content).toContain('# Bascik');

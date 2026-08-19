@@ -2,11 +2,12 @@ import type { BascikConfigOptions } from "./types.js";
 
 // Partial on nested objects that config.ts deep-merges individually.
 type UserConfig = Partial<
-  Omit<BascikConfigOptions, "isBuild" | "directory" | "scopeAttribute" | "generate">
+  Omit<BascikConfigOptions, "isBuild" | "directory" | "scopeAttribute" | "generate" | "minify">
 > & {
   directory?: Partial<BascikConfigOptions["directory"]>;
   scopeAttribute?: Partial<BascikConfigOptions["scopeAttribute"]>;
   generate?: Partial<BascikConfigOptions["generate"]>;
+  minify?: boolean | Partial<BascikConfigOptions["minify"]>;
 };
 
 /** Public type for bascik.config.ts — use with `defineConfig`. */

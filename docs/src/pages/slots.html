@@ -49,7 +49,14 @@
       <docs-sidebar />
 
       <main class="docs-content">
-        <p class="section-label">Feature</p>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderSectionLabel } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/render-nav.ts')).href
+          );
+          console.log(renderSectionLabel('/slots'));
+        </script>
 
         <!-- Intro and demo context rendered from docs/content/slots.md. -->
         <script data-bascik-build>
@@ -122,9 +129,18 @@
           console.log(await renderMdRange('./content/slots.md', { from: 'Default slots and fallback content', to: 'Named Slots' }, { stripDemoBlocks: true }));
         </script>
 
+        <style>
+          .slot-demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            width: 100%;
+          }
+        </style>
+
         <component-demo data-bascik-prop-file="src/components/simple-slot-card/">
           <div data-bascik-slot="example">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;width:100%">
+            <div class="slot-demo-grid">
               <simple-slot-card>
                 <p>Custom content replaces the fallback.</p>
               </simple-slot-card>

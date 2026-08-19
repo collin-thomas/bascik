@@ -51,7 +51,14 @@
       <docs-sidebar />
 
       <main class="docs-content">
-        <p class="section-label">Feature</p>
+        <script data-bascik-build>
+          import { join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { renderSectionLabel } = await import(
+            pathToFileURL(join(process.cwd(), 'scripts/render-nav.ts')).href
+          );
+          console.log(renderSectionLabel('/libraries'));
+        </script>
 
         <!-- Intro and concise demo context first. -->
         <script data-bascik-build>
@@ -61,16 +68,88 @@
           console.log(await renderMdRange('./content/libraries.md', { to: 'How to Include a Library' }));
         </script>
 
+        <style>
+          .demo-flex-center {
+            display: flex;
+            gap: 48px;
+            flex-wrap: wrap;
+            align-items: center;
+          }
+
+          .demo-instance-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            font-family: var(--font-mono);
+          }
+
+          .demo-petite-vue {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 280px;
+          }
+
+          .demo-petite-input {
+            padding: 8px 12px;
+            background: var(--bg-muted);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-family: inherit;
+          }
+
+          .demo-petite-list {
+            margin: 0;
+            padding-left: 16px;
+            color: var(--text);
+          }
+
+          .demo-alpine-btn {
+            padding: 8px 16px;
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-family: inherit;
+          }
+
+          .demo-alpine-p {
+            margin: 0;
+            color: var(--text);
+          }
+
+          .demo-tailwind-flex {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+          }
+
+          .demo-tailwind-card {
+            width: 220px;
+          }
+
+          .demo-tailwind-title {
+            color: var(--accent);
+          }
+
+          .demo-tailwind-desc {
+            color: var(--text);
+          }
+        </style>
+
         <component-demo data-bascik-prop-file="src/components/my-counter/">
           <div data-bascik-slot="example">
-            <div style="display:flex;gap:48px;flex-wrap:wrap;align-items:center">
+            <div class="demo-flex-center">
               <div>
-                <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:12px;font-family:var(--font-mono)">
+                <p class="demo-instance-label">
                   Instance 1</p>
                 <my-counter></my-counter>
               </div>
               <div>
-                <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:12px;font-family:var(--font-mono)">
+                <p class="demo-instance-label">
                   Instance 2</p>
                 <my-counter></my-counter>
               </div>
@@ -160,10 +239,9 @@
             <div v-scope="{
               query: '',
               items: ['Astro', 'Eleventy', 'Next.js', 'Nuxt', 'SvelteKit']
-            }" style="display:flex;flex-direction:column;gap:12px;max-width:280px">
-              <input type="search" v-model="query" placeholder="Filter frameworks…"
-                style="padding:8px 12px;background:var(--bg-muted);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:inherit" />
-              <ul style="margin:0;padding-left:16px;color:var(--text)">
+            }" class="demo-petite-vue">
+              <input type="search" v-model="query" placeholder="Filter frameworks…" class="demo-petite-input" />
+              <ul class="demo-petite-list">
                 <template v-for="item in items.filter(i => i.toLowerCase().includes(query.toLowerCase()))">
                   <li>{{ item }}</li>
                 </template>
@@ -210,12 +288,11 @@
 
         <component-demo>
           <div data-bascik-slot="example">
-            <div x-data="{ open: false }" style="display:flex;flex-direction:column;gap:12px;max-width:280px">
-              <button @click="open = !open"
-                style="padding:8px 16px;background:var(--accent);color:var(--bg);border:none;border-radius:6px;cursor:pointer;font-weight:600;font-family:inherit">
+            <div x-data="{ open: false }" class="demo-petite-vue">
+              <button @click="open = !open" class="demo-alpine-btn">
                 Toggle details
               </button>
-              <p x-show="open" style="margin:0;color:var(--text)">Here is the hidden content.</p>
+              <p x-show="open" class="demo-alpine-p">Here is the hidden content.</p>
             </div>
           </div>
           <div data-bascik-slot="source-usage">
@@ -250,15 +327,15 @@
 
         <component-demo>
           <div data-bascik-slot="example">
-            <div style="display:flex;gap:1rem;flex-wrap:wrap">
-              <div class="rounded-xl border border-gray-200 p-6 shadow-sm" style="width:220px">
-                <h3 class="mb-2 text-lg font-semibold" style="color:var(--accent)">Zero Runtime</h3>
-                <p class="text-sm" style="color:var(--text)">Bascik outputs vanilla HTML with no client-side overhead.
+            <div class="demo-tailwind-flex">
+              <div class="rounded-xl border border-gray-200 p-6 shadow-sm demo-tailwind-card">
+                <h3 class="mb-2 text-lg font-semibold demo-tailwind-title">Zero Runtime</h3>
+                <p class="text-sm demo-tailwind-desc">Bascik outputs vanilla HTML with no client-side overhead.
                 </p>
               </div>
-              <div class="rounded-xl border border-gray-200 p-6 shadow-sm" style="width:220px">
-                <h3 class="mb-2 text-lg font-semibold" style="color:var(--accent)">Scoped CSS</h3>
-                <p class="text-sm" style="color:var(--text)">Component styles never leak - isolation is guaranteed at
+              <div class="rounded-xl border border-gray-200 p-6 shadow-sm demo-tailwind-card">
+                <h3 class="mb-2 text-lg font-semibold demo-tailwind-title">Scoped CSS</h3>
+                <p class="text-sm demo-tailwind-desc">Component styles never leak - isolation is guaranteed at
                   build time.</p>
               </div>
             </div>

@@ -76,7 +76,7 @@ export const minifyHtml = (htmlString: string): string => {
   // breaking the visual display of code examples in the browser.
   const preserved: string[] = [];
   html = html.replace(
-    /<(pre|textarea)([ \t][^>]*)?>[\s\S]*?<\/\1>/gi,
+    /<(pre|textarea)\b[^>]*>[\s\S]*?<\/\1>/gi,
     (match) => {
       preserved.push(match);
       return `\x00P${preserved.length - 1}\x00`;
