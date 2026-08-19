@@ -85,7 +85,7 @@ Each fixture page renders two or more instances of the component under test so i
 
 ## Test Files
 
-Each test file is paired with a fixture page. See the full list on [GitHub](https://github.com/collin-thomas/bascik/tree/main/pkg/e2e/tests).
+Each test file is paired with a fixture page. See the full list on [GitHub](https://github.com/bascikdev/bascik/tree/main/pkg/e2e/tests).
 
 ## Writing a New E2E Test
 
@@ -145,7 +145,7 @@ Coverage is collected via V8 and written to `pkg/coverage/`. The CI script uses 
 
 ## Test Files
 
-Each library module has a paired test file. See the full list on [GitHub](https://github.com/collin-thomas/bascik/tree/main/pkg/src/lib).
+Each library module has a paired test file. See the full list on [GitHub](https://github.com/bascikdev/bascik/tree/main/pkg/src/lib).
 
 ## Writing Tests
 

@@ -9,6 +9,40 @@
   z-index: 100;
 }
 
+.dnav-banner {
+  background: var(--accent-dim);
+  border-bottom: 1px solid var(--accent-border);
+  text-align: center;
+}
+
+.dnav-banner-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 6px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.dnav-banner-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--accent);
+  color: #18191b;
+  flex-shrink: 0;
+}
+
 /* dnav-inner doubles as the container — max-width + centering baked in */
 .dnav-inner {
   max-width: 1100px;
@@ -209,7 +243,7 @@
     top: 100%;
     left: 0;
     right: 0;
-    height: calc(100dvh - 57px);
+    height: calc(100dvh - 88px);
     overflow-y: auto;
     padding: 20px 0 40px;
     border-top: 1px solid var(--border);
