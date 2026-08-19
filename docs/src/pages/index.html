@@ -516,7 +516,25 @@
     }
 
     .install-prompt {
+      -webkit-user-select: none;
       user-select: none;
+    }
+
+    .docs-grid-sub {
+      margin-bottom: 32px;
+    }
+
+    .docs-card-link {
+      text-decoration: none;
+    }
+
+    .docs-card-title {
+      margin-bottom: 6px;
+    }
+
+    .docs-card-desc {
+      margin: 0;
+      font-size: 0.875rem;
     }
 
     @media (max-width: 820px) {
@@ -784,61 +802,61 @@
       <div class="container">
         <p class="section-label">Docs</p>
         <h2 class="section-heading">Explore the docs.</h2>
-        <p class="section-sub" style="margin-bottom:32px">Each feature has a dedicated page with examples and a complete
+        <p class="section-sub docs-grid-sub">Each feature has a dedicated page with examples and a complete
           reference.</p>
 
         <div class="grid-3">
-          <a href="/components" class="card" style="text-decoration:none">
+          <a href="/components" class="card docs-card-link">
             <p class="section-label">Core</p>
-            <h3 style="margin-bottom:6px">Components</h3>
-            <p style="margin:0;font-size:0.875rem">Build UI with reusable HTML components. No imports or registration
+            <h3 class="docs-card-title">Components</h3>
+            <p class="docs-card-desc">Build UI with reusable HTML components. No imports or registration
               needed—just write the custom tag.</p>
           </a>
-          <a href="/scoped-styles" class="card" style="text-decoration:none">
+          <a href="/scoped-styles" class="card docs-card-link">
             <p class="section-label">CSS</p>
-            <h3 style="margin-bottom:6px">Scoped Styles</h3>
-            <p style="margin:0;font-size:0.875rem">Class names, element selectors, <code>@media</code>, and
+            <h3 class="docs-card-title">Scoped Styles</h3>
+            <p class="docs-card-desc">Class names, element selectors, <code>@media</code>, and
               <code>@keyframes</code> are all automatically scoped per component.
             </p>
           </a>
-          <a href="/scoped-javascript" class="card" style="text-decoration:none">
+          <a href="/scoped-javascript" class="card docs-card-link">
             <p class="section-label">JS</p>
-            <h3 style="margin-bottom:6px">Scoped JavaScript</h3>
-            <p style="margin:0;font-size:0.875rem">DOM queries in component scripts are rewritten to match scoped IDs
+            <h3 class="docs-card-title">Scoped JavaScript</h3>
+            <p class="docs-card-desc">DOM queries in component scripts are rewritten to match scoped IDs
               and
               class names at build time.</p>
           </a>
-          <a href="/slots" class="card" style="text-decoration:none">
+          <a href="/slots" class="card docs-card-link">
             <p class="section-label">Slots</p>
-            <h3 style="margin-bottom:6px">Slots</h3>
-            <p style="margin:0;font-size:0.875rem">Pass inner HTML into components. Named slots target specific zones
+            <h3 class="docs-card-title">Slots</h3>
+            <p class="docs-card-desc">Pass inner HTML into components. Named slots target specific zones
               with
               fallback content supported.</p>
           </a>
-          <a href="/build-scripts" class="card" style="text-decoration:none">
+          <a href="/build-scripts" class="card docs-card-link">
             <p class="section-label">Build</p>
-            <h3 style="margin-bottom:6px">Build Scripts</h3>
-            <p style="margin:0;font-size:0.875rem">Run arbitrary Node.js at build time with
+            <h3 class="docs-card-title">Build Scripts</h3>
+            <p class="docs-card-desc">Run arbitrary Node.js at build time with
               <code>data-bascik-build</code>
               script blocks. Fetch data, render Markdown, generate anything.
             </p>
           </a>
-          <a href="/configuration" class="card" style="text-decoration:none">
+          <a href="/configuration" class="card docs-card-link">
             <p class="section-label">Config</p>
-            <h3 style="margin-bottom:6px">Configuration</h3>
-            <p style="margin:0;font-size:0.875rem">Override defaults in <code>bascik.config.ts</code>. Toggle scoping,
+            <h3 class="docs-card-title">Configuration</h3>
+            <p class="docs-card-desc">Override defaults in <code>bascik.config.ts</code>. Toggle scoping,
               identifier minification, and code minification per project.</p>
           </a>
-          <a href="/performance" class="card" style="text-decoration:none">
+          <a href="/performance" class="card docs-card-link">
             <p class="section-label">Speed</p>
-            <h3 style="margin-bottom:6px">Lighthouse 100s</h3>
-            <p style="margin:0;font-size:0.875rem">Zero runtime dependencies and zero added JS payload for instant load
+            <h3 class="docs-card-title">Lighthouse 100s</h3>
+            <p class="docs-card-desc">Zero runtime dependencies and zero added JS payload for instant load
               times and perfect scores.</p>
           </a>
-          <a href="/switch" class="card" style="text-decoration:none">
+          <a href="/switch" class="card docs-card-link">
             <p class="section-label">Switching</p>
-            <h3 style="margin-bottom:6px">Switch to Bascik</h3>
-            <p style="margin:0;font-size:0.875rem">Moving from React, Next.js, Eleventy, or Astro. Concept mapping and
+            <h3 class="docs-card-title">Switch to Bascik</h3>
+            <p class="docs-card-desc">Moving from React, Next.js, Eleventy, or Astro. Concept mapping and
               worked examples.</p>
           </a>
         </div>

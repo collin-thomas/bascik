@@ -26,6 +26,13 @@
       margin: 0 auto 36px;
       color: var(--fg-muted, #8b949e);
     }
+
+    .not-found-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
   </style>
 </head>
 
@@ -39,7 +46,7 @@
       <h1 class="not-found-title"><span class="text-accent">Page Not Found</span></h1>
       <p class="not-found-desc">The page you are looking for might have been removed, had its name changed, or is
         temporarily unavailable.</p>
-      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+      <div class="not-found-actions">
         <a href="/" class="btn btn-primary">Go Home</a>
         <a href="/getting-started" class="btn btn-ghost">Getting Started</a>
       </div>

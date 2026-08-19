@@ -67,9 +67,23 @@
           console.log(await renderMdRange('./content/scoped-javascript.md', { to: 'Writing Component Scripts' }));
         </script>
 
-        <component-demo style="margin-top:24px" data-bascik-prop-file="src/components/demo-counter/">
+        <style>
+          .demo-spacer {
+            margin-top: 24px;
+          }
+
+          .demo-counters-flex {
+            display: flex;
+            gap: 32px;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 8px 0;
+          }
+        </style>
+
+        <component-demo class="demo-spacer" data-bascik-prop-file="src/components/demo-counter/">
           <div data-bascik-slot="example">
-            <div style="display:flex;gap:32px;flex-wrap:wrap;justify-content:center;padding:8px 0">
+            <div class="demo-counters-flex">
               <demo-counter data-bascik-prop-label="Counter A"></demo-counter>
               <demo-counter data-bascik-prop-label="Counter B"></demo-counter>
             </div>

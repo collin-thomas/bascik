@@ -2,6 +2,7 @@
 
 .dnav {
   background: var(--nav-bg);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
   position: sticky;

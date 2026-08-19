@@ -129,9 +129,18 @@
           console.log(await renderMdRange('./content/slots.md', { from: 'Default slots and fallback content', to: 'Named Slots' }, { stripDemoBlocks: true }));
         </script>
 
+        <style>
+          .slot-demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            width: 100%;
+          }
+        </style>
+
         <component-demo data-bascik-prop-file="src/components/simple-slot-card/">
           <div data-bascik-slot="example">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;width:100%">
+            <div class="slot-demo-grid">
               <simple-slot-card>
                 <p>Custom content replaces the fallback.</p>
               </simple-slot-card>

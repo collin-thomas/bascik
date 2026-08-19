@@ -148,11 +148,33 @@
           </div>
         </div>
 
-        <div class="card"
-          style="margin-top: 48px; padding: 28px; border-color: var(--accent-border); background: var(--accent-dim);">
-          <p class="section-label" style="margin-bottom: 8px;">Next Step</p>
-          <h3 style="margin: 0 0 8px; font-size: 1.3rem;">Learn How Components Work</h3>
-          <p style="margin: 0 0 16px; color: var(--text);">Discover how Bascik resolves custom tags, passes props,
+        <style>
+          .next-step-card {
+            margin-top: 48px;
+            padding: 28px;
+            border-color: var(--accent-border);
+            background: var(--accent-dim);
+          }
+
+          .next-step-label {
+            margin-bottom: 8px;
+          }
+
+          .next-step-title {
+            margin: 0 0 8px;
+            font-size: 1.3rem;
+          }
+
+          .next-step-desc {
+            margin: 0 0 16px;
+            color: var(--text);
+          }
+        </style>
+
+        <div class="card next-step-card">
+          <p class="section-label next-step-label">Next Step</p>
+          <h3 class="next-step-title">Learn How Components Work</h3>
+          <p class="next-step-desc">Discover how Bascik resolves custom tags, passes props,
             scopes CSS and JS, and handles slots with zero runtime footprint.</p>
           <a href="/components" class="btn btn-primary">Explore Components →</a>
         </div>
