@@ -46,6 +46,7 @@ export const NAV: NavSection[] = [
       { href: '/configuration', label: 'Configuration' },
       { href: '/compatibility', label: 'Scoping Compatibility' },
       { href: '/deploying', label: 'Deploying' },
+      { href: '/recipes/testing', label: 'Testing' },
     ]
   },
   {
@@ -60,7 +61,6 @@ export const NAV: NavSection[] = [
       { href: '/recipes/page-aware-scripts', label: 'Page-Aware Scripts' },
       { href: '/recipes/server-scripts', label: 'Server Scripts' },
       { href: '/recipes/templating', label: 'Templating' },
-      { href: '/recipes/testing', label: 'Testing Site Logic' },
     ]
   },
   {

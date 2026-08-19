@@ -1,32 +1,130 @@
-# Testing Site Logic
+# Testing
 
-Bascik projects can include two kinds of scripts: server scripts that run in Node.js on every request, and browser scripts inside components. Both follow the same testing principle: extract the logic you care about into a plain TypeScript `.ts` module and test it with Vitest. The module is the single source of truth; whatever runs in production is derived from it.
+Bascik supports automated testing across every layer of an application, including component markup, CSS scoping, server scripts, and browser component logic.
 
-Since Bascik runs on Node 24+, your server scripts and build scripts can import and execute `.ts` files natively with no separate compiler step and no configuration.
+Node 22.18.0+ natively executes TypeScript files without a separate compilation step. Test runners and build scripts import `.ts` modules directly.
 
-## Testing server scripts
+## Testing Architecture
 
-Server scripts (`<script data-bascik-server>`) already run in Node.js, so extracting logic is straightforward. Pull any non-trivial functions into a sibling TypeScript module:
+Testing a Bascik application is structured into two main tiers:
+
+1. **Markup, Style, and E2E Testing**: Validates rendered HTML markup, CSS rules, interactive state mechanisms (such as CSS `:has()` or details toggles), and full browser workflows.
+2. **TypeScript Logic Testing**: Validates pure, exported functions from server scripts (`<script data-bascik-server>`) and browser component logic modules.
+
+## Component Markup and CSS Testing
+
+Component templates (`.html`) can be tested directly using Vitest by inspecting the template source or the transpiled build output. This verifies structural contracts, ARIA attributes, CSS selectors, and the absence of unwanted runtime client scripts.
+
+### Directory structure
+
+```text
+src/components/component-demo/
+  component-demo.html         ← component HTML and CSS
+  component-demo.test.ts      ← component markup unit tests
+```
+
+### Example test implementation
+
+```ts
+import { describe, it, expect } from 'vitest';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+describe('component-demo component', () => {
+  const path = join(process.cwd(), 'src/components/component-demo/component-demo.html');
+
+  it('uses radio inputs and CSS :has() for tab state with no client script', async () => {
+    const html = await readFile(path, 'utf8');
+
+    // Verify radio input contract
+    expect(html).toContain('type="radio"');
+    expect(html).toContain('value="preview"');
+
+    // Verify CSS :has() state rules exist
+    expect(html).toContain(':has(');
+
+    // Verify no runtime client script tag
+    const clientScriptRegex = /<script(?![^>]*data-bascik-build)[^>]*>[\s\S]*?<\/script>/gi;
+    expect(clientScriptRegex.test(html)).toBe(false);
+  });
+});
+```
+
+## End-to-End Browser Testing
+
+End-to-end (E2E) testing validates full page rendering, user interactions, form submissions, and routing in real browser engines using Playwright.
+
+### Installation
+
+```sh
+npm install -D @playwright/test
+```
+
+### Configuration (`playwright.config.ts`)
+
+Configure Playwright to build and serve the site automatically before running tests:
+
+```ts
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './e2e',
+  use: { baseURL: 'http://localhost:4200' },
+  webServer: {
+    command: 'npx bascik --build && npx bascik --serve 4200',
+    port: 4200,
+    reuseExistingServer: !process.env.CI,
+  },
+});
+```
+
+### Spec implementation (`e2e/docs-components.spec.ts`)
+
+```ts
+import { test, expect } from '@playwright/test';
+
+test('component-demo switches tabs without JavaScript', async ({ page }) => {
+  await page.goto('/components');
+
+  const previewPane = page.locator('.demo-pane[data-pane="preview"]').first();
+  const sourcePane = page.locator('.demo-pane[data-pane="code"]').first();
+
+  await expect(previewPane).toBeVisible();
+  await expect(sourcePane).toBeHidden();
+
+  // Click Source tab label
+  await page.locator('.demo-tab:has-text("Source")').first().click();
+
+  await expect(previewPane).toBeHidden();
+  await expect(sourcePane).toBeVisible();
+});
+```
+
+## Server Script Testing
+
+Server scripts (`<script data-bascik-server>`) execute in Node.js on every request. Non-trivial request logic should be extracted into standalone TypeScript modules for isolated unit testing.
+
+### Component file layout
 
 ```text
 src/components/my-widget/
-  my-widget.html          ← component HTML
+  my-widget.html          ← component HTML template
   widget-logic.ts         ← pure functions (TypeScript), exported
-  widget-logic.test.ts    ← tests (TypeScript)
+  widget-logic.test.ts    ← unit tests (TypeScript)
 ```
 
-The server script imports directly:
+### Server script usage
 
 ```html
 <script data-bascik-server>
   import { myPureFunction } from './widget-logic.js';
-  // use myPureFunction in the request handler
+  // Execute myPureFunction within the request handler
 </script>
 ```
 
-> **ESM Import Convention.** In standard ES modules, when importing local TypeScript modules under Node 24+, you can import them using their runtime `.js` extension, or Vitest and build scripts can import them directly via `.ts`.
+> **ESM Import Convention.** Standard ES module resolution under Node 24+ allows importing local TypeScript files using either runtime `.js` specifiers or `.ts` specifiers during testing.
 
-The test file imports the same module:
+### Unit test implementation
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -39,23 +137,23 @@ describe('myPureFunction', () => {
 });
 ```
 
-## Testing browser scripts
+## Browser Component Script Testing
 
-Browser component scripts are IIFE-based and not importable as modules. The solution is the same: extract pure functions to a `.ts` module, but delivering them to the browser requires a build step.
+Browser component scripts run in an IIFE scope and cannot be directly imported as standard ES modules. Testing browser script logic requires separating pure functions from DOM event wiring.
 
-The component directory holds three files:
+### Directory structure
 
 ```text
 src/components/my-widget/
-  my-widget.html         ← HTML + build script
+  my-widget.html         ← HTML template and build script
   widget-logic.ts        ← pure functions (TypeScript), exported
-  widget-logic-dom.js    ← DOM wiring (no IIFE wrapper)
-  widget-logic.test.ts   ← tests (TypeScript)
+  widget-logic-dom.js    ← DOM event listeners and wiring
+  widget-logic.test.ts   ← unit tests (TypeScript)
 ```
 
-The build script in `my-widget.html` reads both files and combines them into a single IIFE. Keeping everything in one `<script>` block is important: if you use two separate blocks, a minifier will rename variables independently in each one, breaking cross-block calls.
+### Build script integration
 
-Since browsers do not run TypeScript directly, our build script can strip simple types on the fly when assembling the bundle:
+A build script (`<script data-bascik-build>`) in the component template combines the logic and DOM modules into a single IIFE block at build time:
 
 ```html
 <script data-bascik-build>
@@ -65,33 +163,38 @@ Since browsers do not run TypeScript directly, our build script can strip simple
   const logic = await readFile(join(base, 'widget-logic.ts'), 'utf8');
   const dom   = await readFile(join(base, 'widget-logic-dom.js'), 'utf8');
   const fns = logic
-    .replace(/:\s*(?:string|number|boolean|any)/g, '') // strip simple TypeScript type annotations
+    .replace(/:\s*(?:string|number|boolean|any)/g, '')
     .replace(/^export function /gm, 'function ')
     .replace(/^export const /gm, 'var ');
   console.log('<script>\n(function () {\n' + fns.trim() + '\n\n' + dom.trim() + '\n})();\n</scr' + 'ipt>');
 </script>
 ```
 
-Bascik executes this at build time and replaces the tag with the output: one `<script>` block containing a single IIFE with all functions inside it. The minifier can then rename variables freely because every reference is in the same scope.
+Bascik executes the build script during compilation and replaces the tag with the resulting `<script>` IIFE output.
 
-> **One source of truth.** `widget-logic.ts` is the canonical source for all pure functions. The browser bundle is generated from it on every build, so the two cannot drift apart.
+> **Single Source of Truth.** The `widget-logic.ts` file remains the single source of truth for both unit tests and production browser output.
 
-## Setting up Vitest
+## Test Runner Setup
 
-Install Vitest and add a `vite.config.ts` in your project root:
+Vitest is the recommended test runner for Bascik applications.
+
+### Installation and configuration
 
 ```sh
 npm install -D vitest
 ```
 
+Create `vite.config.ts` in the project root:
+
 ```ts
 import { defineConfig } from 'vite';
+
 export default defineConfig({
   test: { include: ['src/**/*.test.ts'] },
 });
 ```
 
-Then add a test script to `package.json`:
+Add the test command to `package.json`:
 
 ```json
 "scripts": {
@@ -99,46 +202,31 @@ Then add a test script to `package.json`:
 }
 ```
 
-A test file imports directly from the logic module, with no build step and no browser:
-
-```ts
-import { describe, it, expect } from 'vitest';
-import { myPureFunction } from './widget-logic.ts';
-
-describe('myPureFunction', () => {
-  it('returns the expected value', () => {
-    expect(myPureFunction('input')).toBe('expected output');
-  });
-});
-```
-
-Run with:
+Execute tests using:
 
 ```sh
 npm test
 ```
 
-## What to test
+## Testing Boundaries and Guidance
 
-**Test pure logic functions**: scoring, filtering, formatting, sorting, tokenisation, data transformation. Anything that takes inputs and returns outputs with no side effects.
+- **Component HTML and CSS**: Validate input contracts, ARIA accessibility attributes, CSS `:has()` rules, and verify that zero runtime JavaScript is shipped when CSS can handle state transitions.
+- **Pure Logic Functions**: Validate scoring, filtering, formatting, sorting, tokenization, and data transformations with fast unit tests in Vitest.
+- **End-to-End Workflows**: Validate multi-page user journeys, interactive clicks, visual state updates, and server routes in Playwright.
 
-**Skip DOM interaction and HTTP handlers**: event listeners, `querySelector` calls, and render functions are low-value unit tests. For browser scripts, they are better covered by E2E tests (Playwright) or manual smoke-testing. For server scripts, focus on the data logic, not the `res.send` wiring.
+## Reference Implementation: Docs Search
 
-The split is clean: everything in `widget-logic.ts` gets unit tests; the wiring in `widget.html` does not.
+The Bascik documentation search component (`docs-search.html`) implements this testing architecture. The core search engine logic (`search-logic.ts`) exports five functions:
 
-## Real example: search
-
-The docs site uses this pattern for its search component. `search-logic.ts` exports five functions:
-
-| Function | What it does |
+| Function | Description |
 |---|---|
-| `tokens(q)` | Splits a query string into words ≥2 chars |
-| `score(entry, q, toks)` | Returns a tier-based relevance score (navLabel > heading > text) |
-| `snippet(text, q, toks)` | Extracts ~120 chars centred on the first match |
-| `basePath(path)` | Strips the hash fragment from a URL path |
-| `buildResults(index, q, toks, limit)` | Returns the ordered result array |
+| `tokens(q)` | Splits a query string into normalized tokens (≥2 characters) |
+| `score(entry, q, toks)` | Calculates a tier-based relevance score (navLabel > heading > text) |
+| `snippet(text, q, toks)` | Extracts a ~120 character excerpt centered on the match |
+| `basePath(path)` | Strips hash fragments from URL paths |
+| `buildResults(index, q, toks, limit)` | Filters, scores, and sorts search results |
 
-The `docs-search.html` component inlines them via the build-time pattern above. `search-logic.test.ts` covers tier ordering guarantees, dominant-page grouping, deduplication, and edge cases like empty queries.
+`docs-search.html` inlines the logic at build time, while `search-logic.test.ts` provides comprehensive unit test coverage for scoring tiers, deduplication, and edge cases.
 
 ```sh
 yarn workspace bascik-docs test
