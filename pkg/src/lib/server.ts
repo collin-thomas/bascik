@@ -436,6 +436,10 @@ export const startServerInstance = async (
   // Find the first available port, incrementing if the preferred one is in use.
   await new Promise<void>((resolve, reject) => {
     const tryPort = (p: number) => {
+      if (p > 65535) {
+        reject(new RangeError(`No available ports found between ${startPort} and 65535.`));
+        return;
+      }
       const errorHandler = (err: NodeJS.ErrnoException) => {
         if (err.code === "EADDRINUSE") {
           console.warn(`Port ${p} is in use, trying ${p + 1}…`);

@@ -44,6 +44,14 @@ describe("loadUserConfig", () => {
     expect(build).toEqual({});
   });
 
+  it("handles primitive or null exports cleanly", async () => {
+    const { loadUserConfig } = await import("./userConfig.js");
+    const p = await writeConfig(`export default null; export const build = "invalid";`);
+    const { config, build } = await loadUserConfig(p);
+    expect(config).toEqual({});
+    expect(build).toEqual({});
+  });
+
   it("returns empty config (with a warning) when the file does not exist", async () => {
     const { loadUserConfig } = await import("./userConfig.js");
     vi.spyOn(console, "warn").mockImplementation(() => { });

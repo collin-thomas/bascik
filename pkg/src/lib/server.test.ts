@@ -1952,4 +1952,24 @@ describe("startServerInstance signal handler cleanup", () => {
     expect(mockServerWithCloseAll.closeAllConnections).toHaveBeenCalled();
     mockExit.mockRestore();
   });
+
+  it("rejects with RangeError if port search exceeds 65535", async () => {
+    let portAttempt = 65535;
+    const mockOverflowServer: any = {
+      once: vi.fn((event: string, cb: any) => {
+        if (event === "error") {
+          cb({ code: "EADDRINUSE" });
+        }
+        return mockOverflowServer;
+      }),
+      listen: vi.fn((port: number, _host: string, _cb?: () => void) => {
+        portAttempt = port;
+        return mockOverflowServer;
+      }),
+      on: vi.fn().mockReturnThis(),
+      removeListener: vi.fn().mockReturnThis(),
+    };
+
+    await expect(startServerInstance(mockOverflowServer, "http")).rejects.toThrow(RangeError);
+  });
 });

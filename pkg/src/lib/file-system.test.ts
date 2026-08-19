@@ -459,6 +459,20 @@ describe("copyReplicatePath – JS minification", () => {
     expect(writeFile).not.toHaveBeenCalled();
   });
 
+  it("falls back to unminified copy when JS minification throws an error", async () => {
+    (BascikConfig as any).minify = { css: false, js: async () => { throw new Error("JS syntax error"); }, html: false };
+    vi.mocked(readFile).mockResolvedValueOnce("invalid js {{{" as any);
+    vi.spyOn(console, "warn").mockImplementation(() => { });
+
+    await copyReplicatePath("pages/js/app.js", "dist");
+
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining("JS minification failed for pages/js/app.js"),
+      expect.any(Error),
+    );
+    expect(copyFile).toHaveBeenCalledOnce();
+  });
+
   it("calls minifyJs when minify.js is true", async () => {
     (BascikConfig as any).minify = { css: false, js: true, html: false };
     vi.mocked(readFile)

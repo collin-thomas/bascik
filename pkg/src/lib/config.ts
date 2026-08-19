@@ -170,15 +170,17 @@ export const initBascikConfig = (
   buildOverride: ConfigInput = {},
   flags: { isBuild?: boolean; isProdServer?: boolean } = {},
 ) => {
+  const safeUserConfig = (typeof userConfig === "object" && userConfig !== null) ? userConfig : {};
+  const safeBuildOverride = (typeof buildOverride === "object" && buildOverride !== null) ? buildOverride : {};
   const isBuild = flags.isBuild ?? false;
   const isProdServer = flags.isProdServer ?? false;
   const userDirectory: Partial<BascikConfigOptions["directory"]> =
-    userConfig.directory ?? {};
+    safeUserConfig.directory ?? {};
   const buildDirectory: Partial<BascikConfigOptions["directory"]> =
-    buildOverride.directory ?? {};
+    safeBuildOverride.directory ?? {};
 
-  const userMinify = normalizeMinify(userConfig.minify);
-  const buildMinify = normalizeMinify(buildOverride.minify);
+  const userMinify = normalizeMinify(safeUserConfig.minify);
+  const buildMinify = normalizeMinify(safeBuildOverride.minify);
 
   const baseMinify = {
     ...defaultConfig.minify,
@@ -197,8 +199,8 @@ export const initBascikConfig = (
     ...defaultConfig,
     ...(isProdServer ? prodServerDefaultConfig : {}),
     ...(isBuild ? buildDefaultConfig : {}),
-    ...userConfig,
-    ...((isBuild || isProdServer) ? buildOverride : {}),
+    ...safeUserConfig,
+    ...((isBuild || isProdServer) ? safeBuildOverride : {}),
     directory: {
       ...defaultConfig.directory,
       ...userDirectory,
@@ -206,31 +208,31 @@ export const initBascikConfig = (
     },
     scopeAttribute: {
       ...defaultConfig.scopeAttribute,
-      ...(userConfig.scopeAttribute ?? {}),
-      ...((isBuild || isProdServer) ? (buildOverride.scopeAttribute ?? {}) : {}),
+      ...(safeUserConfig.scopeAttribute ?? {}),
+      ...((isBuild || isProdServer) ? (safeBuildOverride.scopeAttribute ?? {}) : {}),
     },
     generate: {
       ...defaultConfig.generate,
-      ...(userConfig.generate ?? {}),
-      ...((isBuild || isProdServer) ? (buildOverride.generate ?? {}) : {}),
+      ...(safeUserConfig.generate ?? {}),
+      ...((isBuild || isProdServer) ? (safeBuildOverride.generate ?? {}) : {}),
     },
     minify,
     devServer: {
       ...defaultConfig.devServer,
-      ...(userConfig.devServer ?? {}),
+      ...(safeUserConfig.devServer ?? {}),
       logging: {
         ...defaultConfig.devServer?.logging,
-        ...(userConfig.devServer?.logging ?? {}),
+        ...(safeUserConfig.devServer?.logging ?? {}),
       },
     },
     serve: {
       ...defaultConfig.serve,
-      ...(userConfig.serve ?? {}),
-      ...((isBuild || isProdServer) ? (buildOverride.serve ?? {}) : {}),
+      ...(safeUserConfig.serve ?? {}),
+      ...((isBuild || isProdServer) ? (safeBuildOverride.serve ?? {}) : {}),
       logging: {
         ...defaultConfig.serve?.logging,
-        ...((userConfig.serve ?? {}).logging ?? {}),
-        ...((((isBuild || isProdServer) ? (buildOverride.serve ?? {}) : {}).logging) ?? {}),
+        ...((safeUserConfig.serve ?? {}).logging ?? {}),
+        ...((((isBuild || isProdServer) ? (safeBuildOverride.serve ?? {}) : {}).logging) ?? {}),
       },
     },
     isBuild,

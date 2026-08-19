@@ -424,7 +424,7 @@ export const recursivelyTranspile = (
       }
       console.error(`${errorMsg}\n  Error: ${error instanceof Error ? error.stack || error.message : String(error)}`);
       if (component.content) {
-        transpiledHtmlBody = transpiledHtmlBody.replace(component.content, "");
+        transpiledHtmlBody = replaceTag(transpiledHtmlBody, component.name, "");
         substitutions++;
       } else {
         // No content to strip — replacing would be a no-op and the while(true)
