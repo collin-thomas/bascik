@@ -250,11 +250,12 @@ describe("watchFiles – html page watcher (watcher 1)", () => {
     expect(processAllPages).toHaveBeenCalledTimes(1);
   });
 
-  it("calls pageProcessing on 'add' after ready", () => {
+  it("calls processAllPages on 'add' after ready", () => {
     // ready already fired during watchFiles() in beforeEach; initialScanDone is true
     const addHandler = getHandler(1, "add");
+    mockProcessAllPages.mockClear();
     addHandler?.("/path/to/new-page.html");
-    expect(pageProcessing).toHaveBeenCalledWith("/path/to/new-page.html");
+    expect(processAllPages).toHaveBeenCalled();
   });
 
   it("calls pageProcessing on 'change'", () => {

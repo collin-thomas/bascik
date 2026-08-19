@@ -64,7 +64,7 @@ jobs:
         run: yarn pkg:build
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: Run E2E tests
         run: yarn pkg:e2e

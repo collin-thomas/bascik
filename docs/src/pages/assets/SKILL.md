@@ -1326,7 +1326,7 @@ Two GitHub Actions workflows handle all automation.
 
 **CI** (`.github/workflows/ci.yml`) — runs on every push to `main` and every PR, two parallel jobs on Node 24:
 - `test`: runs `yarn pkg:test:ci` (unit tests with coverage)
-- `e2e`: builds the package (`yarn pkg:build`), installs Chromium via `playwright install --with-deps chromium`, then runs `yarn pkg:e2e` (Playwright tests)
+- `e2e`: builds the package (`yarn pkg:build`), installs Chromium via `playwright install chromium`, then runs `yarn pkg:e2e` (Playwright tests)
 - Both jobs have `permissions: contents: read`
 
 **Release** (`.github/workflows/release.yml`) — triggers on version tags:
@@ -1448,6 +1448,7 @@ When generating code, pages, or components for a Bascik project, the following c
 8. **Script Modules:** `<script type="module">` scripts are not wrapped in an IIFE, but their selectors are still rewritten.
 9. **Non-JS Script Types:** Script tags with any `type` other than `text/javascript` (e.g. `type="application/json"`) are left completely untouched — no IIFE wrapping, no selector rewriting.
 10. **Literal Tag Text Is Safe:** Component tag text inside `<script>`, `<style>`, or `<textarea>` content (e.g. `<my-card>` in a JSON-LD string or code example) is treated as text and never resolved into a component.
+11. **HTML and CSS First:** Always try to use HTML and CSS before resorting to JavaScript. If a feature or layout can be implemented cleanly and without causing issues using only HTML and CSS, do it in HTML and CSS.
 
 ---
 

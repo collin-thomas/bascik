@@ -57,10 +57,12 @@ export const watchFiles = async () => {
         persistent: !BascikConfig.isBuild,
       })
       .on("add", (path) => {
-        if (initialScanDone) pageProcessing(path).catch(onWatchError);
+        if (initialScanDone) processAllPages().catch(onWatchError);
       })
       .on("change", (path) => pageProcessing(path).catch(onWatchError))
-      .on("unlink", (path: string, _stats?: Stats) => removePage(path).catch(onWatchError))
+      .on("unlink", (path: string, _stats?: Stats) => {
+        removePage(path).then(() => processAllPages()).catch(onWatchError);
+      })
       .on("unlinkDir", (path: string, _stats?: Stats) => deleteDistDir(path).catch(onWatchError))
       .on("ready", () => {
         initialScanDone = true;

@@ -1293,18 +1293,37 @@ describe("selectivelyProcessPagesForWatchPath – open pages first", () => {
     (mem as any).openPages = [];
   });
 
-  it("processes the open page before the rest when a page is actively open", async () => {
+  it("stores all pages in memory before emitting transpiled events for any page", async () => {
     (mem as any).openPages = ["/about"];
     const pages = ["src/pages/index.html", "src/pages/about.html"];
     (listPages as ReturnType<typeof vi.fn>).mockResolvedValue(pages);
-    // Every page read succeeds with valid HTML
     (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(PAGE_HTML);
+
+    const callOrder: string[] = [];
+    (mem.storePage as ReturnType<typeof vi.fn>).mockImplementation(async ({ relativePagePath }) => {
+      callOrder.push(`store:${relativePagePath}`);
+    });
+
+    const { eventEmitter } = await import("./events.js");
+    (eventEmitter.emit as ReturnType<typeof vi.fn>).mockImplementation((event, payload) => {
+      if (event === "transpiled") {
+        callOrder.push(`emit:${payload.relativePagePath}`);
+      }
+    });
 
     await selectivelyProcessPagesForWatchPath("nav.mjs");
 
-    const { eventEmitter } = await import("./events.js");
-    // Both pages are transpiled
-    expect(eventEmitter.emit).toHaveBeenCalledTimes(pages.length);
+    // All store calls must happen before the first emit call
+    const firstEmitIndex = callOrder.findIndex((entry) => entry.startsWith("emit:"));
+    const storeIndices = callOrder
+      .map((entry, idx) => (entry.startsWith("store:") ? idx : -1))
+      .filter((idx) => idx !== -1);
+
+    expect(firstEmitIndex).toBeGreaterThan(-1);
+    expect(storeIndices.length).toBe(pages.length);
+    for (const storeIdx of storeIndices) {
+      expect(storeIdx).toBeLessThan(firstEmitIndex);
+    }
   });
 });
 
