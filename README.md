@@ -52,12 +52,11 @@ Before committing changes that edited source code, tests, or any `docs/content/*
 /pre-push
 ```
 
-This updates test coverage JSON files, builds docs (generating `llms.txt` and search index), updates `docs/src/pages/assets/SKILL.md` to reflect any new or changed content, and copies it to `create/assets/SKILL.md` — all in one step.
+This updates test coverage JSON files, updates `docs/src/pages/assets/SKILL.md` to reflect any new or changed content, and copies it to `create/assets/SKILL.md` — all in one step.
 
 The prompt calls:
 
 - `yarn docs:update-coverage`
 - `yarn docs:update-e2e-coverage`
-- `yarn docs:build`
 - The LLM updates the `SKILL.md` file based on changes in `docs/content/`.
 - `yarn create:prepack`

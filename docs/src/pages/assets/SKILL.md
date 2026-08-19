@@ -866,6 +866,7 @@ export default defineConfig({
     // { script: 'scripts/generate-search-index.ts', watch: ['content/'] }, // runs sequentially in array order before page transpilation during --build; in dev, runs on startup and watched file changes
     // { script: 'scripts/generate-llms-txt.ts' },                          // build-only: skipped in dev
   ],
+  // Recommended: lifecycle scripts registered in `exec` should write generated artifacts directly to your output directory (such as `dist/` or `dist/assets/`) rather than `src/` to prevent polluting your source tree with build artifacts.
   scopeScriptBlocks: true,
   inheritAttributes: true,
   scopeAttribute: {

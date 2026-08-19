@@ -285,6 +285,8 @@ Scripts to run as part of the build/dev lifecycle. Entries execute sequentially 
 - **With `watch`**: runs on dev startup (non-blocking) and re-runs whenever a watched file changes, followed by a live-reload. Also runs before pages during `--build`.
 - **Without `watch`**: build-only, skipped in dev.
 
+> **Output location recommendation.** Lifecycle scripts executed by `exec` should write generated artifacts directly to your output directory (such as `dist/` or `dist/assets/`) rather than into source directories (`src/`). Writing generated files into `src/` can pollute your source tree with build artifacts and cause unnecessary `git` diffs or pre-push sync steps.
+
 ```ts
 exec: [
   { script: 'scripts/generate-search-index.ts', watch: ['content/'] },

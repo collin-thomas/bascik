@@ -866,6 +866,7 @@ export default defineConfig({
     // { script: 'scripts/generate-search-index.ts', watch: ['content/'] }, // runs sequentially in array order before page transpilation during --build; in dev, runs on startup and watched file changes
     // { script: 'scripts/generate-llms-txt.ts' },                          // build-only: skipped in dev
   ],
+  // Recommended: lifecycle scripts registered in `exec` should write generated artifacts directly to your output directory (such as `dist/` or `dist/assets/`) rather than `src/` to prevent polluting your source tree with build artifacts.
   scopeScriptBlocks: true,
   inheritAttributes: true,
   scopeAttribute: {
@@ -952,7 +953,7 @@ src/
 
 ### Static Assets and Subdirectories
 * **Any Asset or Folder in `src/pages/`:** You can create any subfolders (`css/`, `js/`, `images/`, `fonts/`, `downloads/`) inside `src/pages/`. All non-`.html` files (CSS, JS, images, fonts, PDFs, JSON, etc.) are automatically copied to `dist/` replicating their exact directory structure.
-* **Auto-Minification:** CSS and JS files placed in `src/pages/` are automatically minified at build time when `minify.css` / `minify.js` are enabled in `bascik.config.ts`. Custom minifier/transformer functions (e.g. PostCSS/Autoprefixer, LightningCSS, esbuild, terser) can also be assigned to `minify.css` and `minify.js`.
+* **Auto-Minification:** CSS and JS files placed in `src/pages/` are automatically minified at build time when `minify.css` / `minify.js` are enabled in `bascik.config.ts`. Custom BYOMinifier minifier/transformer functions (e.g. PostCSS/Autoprefixer, LightningCSS, esbuild, terser) can also be assigned to `minify.css` and `minify.js`.
 * **No Passthrough Configuration:** No asset pipelines, passthrough copy configuration, or public folder settings are needed.
 
 ### Custom 404 & 500 Pages
