@@ -12,6 +12,7 @@
   --accent-dim:   rgba(211,255,141,0.12);
   --text:         #f0f1f2;
   --text-muted:   #8d929e;
+  --pillar-text:  #9aa0ae;
   --mono:         'SF Mono','Fira Code',Menlo,monospace;
   --r:            10px;
   --r-sm:         6px;
@@ -88,6 +89,7 @@ html[data-theme="light"] {
   --accent-dim:   rgba(211,255,141,0.28);
   --text:         #18191b;
   --text-muted:   #525d6a;
+  --pillar-text:  var(--text-muted);
   --nav-bg:       rgba(242,243,240,0.92);
   --pre-bg:       var(--elevated);
   --accent-border: rgba(211,255,141,0.45);
@@ -169,6 +171,7 @@ body {
   --pagination-border-hover: rgba(211,255,141,0.35);
   --text: #f0f1f2;
   --text-muted: #8d929e;
+  --pillar-text:  #9aa0ae;
   --pre-bg: #0d0e0f;
   --bg-muted: #1e2022;
   color: var(--text);
