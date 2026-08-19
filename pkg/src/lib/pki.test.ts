@@ -3,9 +3,10 @@ import os from "node:os";
 
 // vi.hoisted() runs before vi.mock() factories so the same vi.fn() references
 // are used in both the factory (which is hoisted) and the test file.
-const { _mockAccess, _mockExec, _mockRm } = vi.hoisted(() => ({
+const { _mockAccess, _mockExec, _mockExecFile, _mockRm } = vi.hoisted(() => ({
   _mockAccess: vi.fn(),
   _mockExec: vi.fn(),
+  _mockExecFile: vi.fn(),
   _mockRm: vi.fn().mockResolvedValue(undefined),
 }));
 
@@ -18,6 +19,7 @@ vi.mock("node:fs/promises", () => ({
 
 vi.mock("node:child_process", () => ({
   exec: _mockExec,
+  execFile: _mockExecFile,
 }));
 
 vi.mock("node:os", () => ({
@@ -26,10 +28,11 @@ vi.mock("node:os", () => ({
 
 // ─── Imports (after mocks) ────────────────────────────────────────────────────
 
-import { createSelfSignedCert } from "./pki.js";
+import { createSelfSignedCert, ensureCertificates } from "./pki.js";
 
 const mockAccess = _mockAccess;
 const mockExec = _mockExec;
+const mockExecFile = _mockExecFile;
 const mockRm = _mockRm;
 const mockPlatform = (os as any).platform as ReturnType<typeof vi.fn>;
 
@@ -54,10 +57,15 @@ const makeExecFail = (msg = "openssl not found") => {
 beforeEach(() => {
   mockAccess.mockReset();
   mockExec.mockReset();
+  mockExecFile.mockReset();
   mockRm.mockReset();
   mockRm.mockResolvedValue(undefined);
   mockPlatform.mockReturnValue("linux");
   mockAccess.mockResolvedValue(undefined); // default: certs exist → early return
+  mockExecFile.mockImplementation((...args: any[]) => {
+    const cb = args[args.length - 1];
+    if (typeof cb === "function") cb(new Error("mkcert not found"));
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -171,3 +179,43 @@ describe("createSelfSignedCert – exec failure", () => {
     await expect(createSelfSignedCert()).rejects.toThrow("exec string error");
   });
 });
+
+describe("ensureCertificates", () => {
+  beforeEach(() => {
+    mockAccess.mockReset();
+    mockExec.mockReset();
+    mockExecFile.mockReset();
+    mockExecFile.mockImplementation((...args: any[]) => {
+      const cb = args[args.length - 1];
+      if (typeof cb === "function") cb(new Error("mkcert not found"));
+    });
+  });
+
+  it("throws if custom certificate files are specified but missing", async () => {
+    mockAccess.mockRejectedValue(new Error("ENOENT"));
+    await expect(
+      ensureCertificates({ keyFile: "custom-key.pem", certFile: "custom-cert.pem" })
+    ).rejects.toThrow("Custom TLS certificate files are configured but could not be found.");
+  });
+
+  it("uses custom certificate paths if they exist", async () => {
+    mockAccess.mockResolvedValue(undefined);
+    const paths = await ensureCertificates({ keyFile: "custom-key.pem", certFile: "custom-cert.pem" });
+    expect(paths.keyPath).toContain("custom-key.pem");
+    expect(paths.certPath).toContain("custom-cert.pem");
+  });
+
+  it("uses mkcert if available when default certs are missing", async () => {
+    mockAccess.mockRejectedValue(new Error("ENOENT"));
+    mockExecFile.mockImplementation((...args: any[]) => {
+      const cb = args[args.length - 1];
+      if (typeof cb === "function") cb(null, { stdout: "mkcert output", stderr: "" });
+    });
+
+    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => { });
+    const paths = await ensureCertificates();
+    expect(paths.keyPath).toContain("bascik-privkey.pem");
+    expect(consoleSpy).toHaveBeenCalledWith("SSL: generated trusted certs via mkcert");
+  });
+});
+

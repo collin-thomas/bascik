@@ -1,4 +1,7 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { rm } from "node:fs/promises";
 import { resolveCliAction, CLI_USAGE } from "./lib/cli.js";
 
 describe("resolveCliAction", () => {
@@ -106,3 +109,76 @@ describe("CLI_USAGE", () => {
     }
   });
 });
+
+describe("index.ts CLI runner functions", () => {
+  it("readVersion returns valid version from package.json or unknown on failure", async () => {
+    const { readVersion } = await import("./index.js");
+    const ver = await readVersion();
+    expect(typeof ver).toBe("string");
+    expect(ver.length).toBeGreaterThan(0);
+
+    const fallbackVer = await readVersion("/non/existent/path/for/test");
+    expect(fallbackVer).toBe("unknown");
+  });
+
+  it("resolveBuildLogPath resolves default or custom log paths", async () => {
+    const { resolveBuildLogPath } = await import("./index.js");
+    expect(resolveBuildLogPath(["--build"])).toBeUndefined();
+    expect(resolveBuildLogPath(["--build", "--log"])).toBe(".bascik/build.log");
+    expect(resolveBuildLogPath(["--build", "--log", "custom.log"])).toBe("custom.log");
+  });
+
+  it("runCli handles help and version flags", async () => {
+    const { runCli } = await import("./index.js");
+    const helpRes = await runCli(["--help"], { exitOnFinish: false });
+    expect(helpRes).toEqual({ action: "help", exitCode: 0 });
+
+    const verRes = await runCli(["--version"], { exitOnFinish: false });
+    expect(verRes).toEqual({ action: "version", exitCode: 0 });
+  });
+
+  it("runCli handles unknown flags with error", async () => {
+    const { runCli } = await import("./index.js");
+    const errRes = await runCli(["--unknown-flag"], { exitOnFinish: false });
+    expect(errRes).toEqual({ action: "error", exitCode: 1 });
+  });
+
+  it("setupBuildLogging creates log directory and tees console logs", async () => {
+    const { setupBuildLogging } = await import("./index.js");
+    const tmpLogPath = join(tmpdir(), "bascik-test-logs", "build.log");
+    const path = await setupBuildLogging(tmpLogPath);
+    expect(path).toContain("build.log");
+
+    console.log("Log test message");
+    console.warn("Warn test message");
+    console.error("Error test message");
+
+    await rm(dirname(tmpLogPath), { recursive: true, force: true }).catch(() => { });
+  });
+
+  it("runCli executes subcommands init, check, prodServer, and dev/build", async () => {
+    const { runCli } = await import("./index.js");
+
+    const initSpy = vi.spyOn(await import("./lib/init.js"), "initProject").mockResolvedValueOnce(undefined);
+    const checkSpy = vi.spyOn(await import("./lib/check.js"), "checkProject").mockResolvedValueOnce(true);
+    const serveSpy = vi.spyOn(await import("./lib/serve.js"), "serveProduction").mockResolvedValueOnce(undefined);
+    const transpileSpy = vi.spyOn(await import("./transpile.js"), "runTranspile").mockResolvedValue(undefined);
+
+    const initRes = await runCli(["init"], { exitOnFinish: false });
+    expect(initRes.action).toBe("init");
+    expect(initSpy).toHaveBeenCalled();
+
+    const checkRes = await runCli(["--check"], { exitOnFinish: false });
+    expect(checkRes.action).toBe("check");
+    expect(checkSpy).toHaveBeenCalled();
+
+    const serveRes = await runCli(["--serve"], { exitOnFinish: false });
+    expect(serveRes.action).toBe("prodServer");
+    expect(serveSpy).toHaveBeenCalled();
+
+    const buildRes = await runCli(["--build"], { exitOnFinish: false });
+    expect(buildRes.action).toBe("build");
+    expect(transpileSpy).toHaveBeenCalled();
+  });
+});
+

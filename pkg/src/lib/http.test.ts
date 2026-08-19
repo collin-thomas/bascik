@@ -103,7 +103,39 @@ describe("startHttpServer", () => {
     expect(mockResMsg.end).toHaveBeenCalledWith();
   });
 
-  it("passes an onShutdown callback to startServerInstance that destroys open sockets", async () => {
+  it("handles missing method and remoteAddress, strips :status header, and handles close/on", () => {
+    const mockReqMsg: any = {
+      method: undefined,
+      url: "/",
+      headers: {},
+      socket: {},
+    };
+    const mockResMsg: any = {
+      headersSent: false,
+      destroyed: false,
+      writeHead: vi.fn(),
+      write: vi.fn(),
+      end: vi.fn(),
+      destroy: vi.fn(),
+      on: vi.fn(),
+    };
+
+    const { req, res } = adaptHttp1(mockReqMsg, mockResMsg);
+    expect(req.method).toBe("GET");
+    expect(req.remoteIp).toBe("unknown");
+
+    res.respond(200, { ":status": 200, "content-type": "text/plain" });
+    expect(mockResMsg.writeHead).toHaveBeenCalledWith(200, { "content-type": "text/plain" });
+
+    res.close();
+    expect(mockResMsg.destroy).toHaveBeenCalled();
+
+    const cb = () => { };
+    res.on("close", cb);
+    expect(mockResMsg.on).toHaveBeenCalledWith("close", cb);
+  });
+
+  it("passes an onShutdown callback to startServerInstance that destroys open sockets even if socket.destroy throws", async () => {
     let connectionCb: ((socket: any) => void) | undefined;
     let shutdownCb: (() => void) | undefined;
 
@@ -126,13 +158,13 @@ describe("startHttpServer", () => {
     expect(shutdownCb).toBeDefined();
 
     const mockSocket = {
-      destroy: vi.fn(),
+      destroy: vi.fn().mockImplementation(() => { throw new Error("Socket error"); }),
       once: vi.fn(),
     };
 
     connectionCb!(mockSocket);
-    shutdownCb!();
-
+    expect(() => shutdownCb!()).not.toThrow();
     expect(mockSocket.destroy).toHaveBeenCalled();
   });
 });
+

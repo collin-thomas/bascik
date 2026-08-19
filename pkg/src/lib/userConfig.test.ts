@@ -80,4 +80,10 @@ describe("loadUserConfig", () => {
     const { config } = await loadUserConfig(p);
     expect(config).toEqual({ scopeScriptBlocks: false });
   });
+
+  it("handles non-Error exceptions when loading config file fails", async () => {
+    const { loadUserConfig } = await import("./userConfig.js");
+    const p = await writeConfig(`throw "custom string error";`);
+    await expect(loadUserConfig(p)).rejects.toThrow("custom string error");
+  });
 });
