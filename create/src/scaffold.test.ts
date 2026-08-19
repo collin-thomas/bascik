@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   BASCIK_CONFIG,
+  E2E_APP_SPEC,
   FEAT_CARD_CSS,
   FEAT_CARD_HTML,
   FEAT_CARD_TEST,
@@ -9,6 +10,7 @@ import {
   MY_COUNTER_HTML,
   MY_COUNTER_TEST,
   PACKAGE_JSON,
+  PLAYWRIGHT_CONFIG,
   SITE_FOOTER_CSS,
   SITE_FOOTER_HTML,
   SITE_FOOTER_TEST,
@@ -76,7 +78,7 @@ describe("PACKAGE_JSON", () => {
     expect(() => JSON.parse(PACKAGE_JSON("my-app"))).not.toThrow();
   });
 
-  it('sets type:module, dev, build, and test scripts', () => {
+  it('sets type:module, dev, build, test, and e2e scripts', () => {
     const pkg = JSON.parse(PACKAGE_JSON("my-app"));
     expect(pkg.type).toBe("module");
     expect(pkg.scripts.dev).toBe("bascik");
@@ -84,12 +86,14 @@ describe("PACKAGE_JSON", () => {
     expect(pkg.scripts.test).toBe("vitest run");
     expect(pkg.scripts["test:watch"]).toBe("vitest");
     expect(pkg.scripts["test:coverage"]).toBe("vitest run --coverage");
+    expect(pkg.scripts.e2e).toBe("playwright test --config e2e/playwright.config.ts");
   });
 
-  it("includes vitest and coverage-v8 in devDependencies", () => {
+  it("includes vitest, coverage-v8, and playwright in devDependencies", () => {
     const pkg = JSON.parse(PACKAGE_JSON("my-app"));
     expect(pkg.devDependencies.vitest).toBeDefined();
     expect(pkg.devDependencies["@vitest/coverage-v8"]).toBeDefined();
+    expect(pkg.devDependencies["@playwright/test"]).toBeDefined();
   });
 
   it("includes @bascik/bascik as a dependency", () => {
@@ -107,6 +111,21 @@ describe("VITE_CONFIG", () => {
   it("includes test matchers and coverage config", () => {
     expect(VITE_CONFIG).toContain("src/**/*.test.ts");
     expect(VITE_CONFIG).toContain("provider: 'v8'");
+  });
+});
+
+describe("PLAYWRIGHT_CONFIG", () => {
+  it("configures port 8080 webServer and base URL", () => {
+    expect(PLAYWRIGHT_CONFIG).toContain("http://localhost:8080");
+    expect(PLAYWRIGHT_CONFIG).toContain("npx bascik --build && npx bascik --serve 8080");
+  });
+});
+
+describe("E2E_APP_SPEC", () => {
+  it("includes tests for navigation, counter, and mobile menu toggle", () => {
+    expect(E2E_APP_SPEC).toContain("navigates pages and checks titles");
+    expect(E2E_APP_SPEC).toContain("counter component increments and decrements count");
+    expect(E2E_APP_SPEC).toContain("mobile navigation toggle expands and collapses menu");
   });
 });
 
@@ -341,11 +360,12 @@ describe("page templates", () => {
 describe("scaffold", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("creates all component and page directories", async () => {
+  it("creates all component, page, and e2e directories", async () => {
     await scaffold("my-app", "/tmp");
     const dirs = mockMkdir.mock.calls.map((c) => String(c[0]));
     expect(dirs.some((d) => d.includes(".github/skills/bascik"))).toBe(true);
     expect(dirs.some((d) => d.includes(".claude/skills/bascik"))).toBe(true);
+    expect(dirs.some((d) => d.endsWith("e2e"))).toBe(true);
     expect(dirs.some((d) => d.includes("src/pages/assets"))).toBe(true);
     expect(dirs.some((d) => d.includes("src/pages/css"))).toBe(true);
     expect(dirs.some((d) => d.includes("site-header"))).toBe(true);
@@ -354,9 +374,16 @@ describe("scaffold", () => {
     expect(dirs.some((d) => d.includes("site-meta"))).toBe(true);
   });
 
-  it("writes all 22 expected files", async () => {
+  it("writes all 24 expected files", async () => {
     await scaffold("my-app", "/tmp");
-    expect(mockWriteFile.mock.calls.length).toBe(22);
+    expect(mockWriteFile.mock.calls.length).toBe(24);
+  });
+
+  it("writes E2E config and spec files", async () => {
+    await scaffold("my-app", "/tmp");
+    const paths = allWrittenPaths();
+    expect(paths.some((p) => p.endsWith("e2e/playwright.config.ts"))).toBe(true);
+    expect(paths.some((p) => p.endsWith("e2e/app.spec.ts"))).toBe(true);
   });
 
   it("writes SKILL.md into .github/skills/bascik and .claude/skills/bascik", async () => {

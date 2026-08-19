@@ -1,58 +1,114 @@
 # Testing
 
-Bascik supports automated testing across every layer of an application, including component markup, CSS scoping, server scripts, and browser component logic.
+Bascik supports automated testing across every layer of an application, including component markup contracts, compiled build outputs, server scripts, and browser component logic.
 
 Node 22.18.0+ natively executes TypeScript files without a separate compilation step. Test runners and build scripts import `.ts` modules directly.
 
 ## Testing Architecture
 
-Testing a Bascik application is structured into two main tiers:
+Testing a Bascik application is structured into three main tiers:
 
-1. **Markup, Style, and E2E Testing**: Validates rendered HTML markup, CSS rules, interactive state mechanisms (such as CSS `:has()` or details toggles), and full browser workflows.
+1. **Component Contract and Build Output Testing**: Validates rendered HTML markup, CSS rules, prop substitution, slot replacement, and accessibility attributes in compiled pages or component templates.
 2. **TypeScript Logic Testing**: Validates pure, exported functions from server scripts (`<script data-bascik-server>`) and browser component logic modules.
+3. **End-to-End Browser Testing**: Validates full browser workflows, user interactions, form submissions, and routing in real browser engines using Playwright.
 
-## Component Markup and CSS Testing
+## High-Value Component Testing vs Contrived Tests
 
-Component templates (`.html`) can be tested directly using Vitest by inspecting the template source or the transpiled build output. This verifies structural contracts, ARIA attributes, CSS selectors, and the absence of unwanted runtime client scripts.
+When writing component tests, focus on verifying actual component behavior, accessibility contracts, and compiled outputs rather than writing low-value assertions.
 
-### Directory structure
+### What to Avoid: Trivial Source Matching
 
-```text
-src/components/component-demo/
-  component-demo.html         ← component HTML and CSS
-  component-demo.test.ts      ← component markup unit tests
-```
+Reading a raw component `.html` template file with `readFile` simply to assert that a string like `class="my-card"` exists in the source text is a low-value test. It only verifies that static text exists in a file on disk. It does not verify that Bascik compiles the component, that props or slots resolve properly, or that embedded scripts behave correctly.
 
-### Example test implementation
+### What to Test Instead
+
+High-value component tests verify specific failure modes and structural contracts:
+
+- **Compiled Output Validation**: Inspect the compiled `dist/` pages after building to verify that custom component tags expanded completely, props substituted correctly, slots received their content, and no raw `data-bascik-prop-*` or `data-bascik-slot` attributes remain in the final HTML.
+- **Accessibility and Markup Contracts**: Assert that interactive controls have explicit `type="button"` attributes, mandatory `aria-expanded` or `aria-label` attributes, and proper semantic HTML tags.
+- **Instance Safety and Scope Isolation**: Ensure component scripts use instance-safe DOM lookup patterns (such as `getElementById` or scoped queries) and do not leak variables into the global scope.
+- **Script Efficiency**: Verify that pure CSS components (such as radio-based tabs or `:has()` toggles) do not ship unnecessary runtime client `<script>` tags.
+
+## Testing Compiled Build Output
+
+Testing compiled pages in `dist/` validates the entire Bascik compilation pipeline for your site, including component expansion, prop substitution, slot filling, and minification.
+
+### Example build output test
 
 ```ts
 import { describe, it, expect } from 'vitest';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-describe('component-demo component', () => {
+describe('Compiled index page', () => {
+  const distPath = join(process.cwd(), 'dist/index.html');
+
+  it('expands component tags and substitutes props cleanly', async () => {
+    const html = await readFile(distPath, 'utf8');
+
+    // Verify component tags expanded completely
+    expect(html).not.toContain('<site-header');
+    expect(html).not.toContain('<feat-card');
+
+    // Verify prop substitution succeeded without leaving raw prop markers
+    expect(html).not.toContain('data-bascik-prop-brand');
+
+    // Verify slot content was injected into component output
+    expect(html).toContain('Zero runtime');
+
+    // Verify no unhandled slot attributes remain
+    expect(html).not.toContain('data-bascik-slot');
+  });
+});
+```
+
+## Component Template Contract Testing
+
+When testing individual `.html` component templates before transpilation, test the component's structural contracts, accessibility standards, and script discipline.
+
+### Directory structure
+
+```text
+src/components/component-demo/
+  component-demo.html         ← component HTML and CSS
+  component-demo.test.ts      ← component contract unit tests
+```
+
+### Example component contract test
+
+```ts
+import { describe, it, expect } from 'vitest';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+describe('component-demo component contract', () => {
   const path = join(process.cwd(), 'src/components/component-demo/component-demo.html');
 
-  it('uses radio inputs and CSS :has() for tab state with no client script', async () => {
+  it('uses CSS :has() for tab state and ships zero client-side JavaScript', async () => {
     const html = await readFile(path, 'utf8');
 
-    // Verify radio input contract
+    // Verify accessibility and structural contracts
     expect(html).toContain('type="radio"');
     expect(html).toContain('value="preview"');
-
-    // Verify CSS :has() state rules exist
     expect(html).toContain(':has(');
 
-    // Verify no runtime client script tag
+    // Verify no runtime client script tag is included
     const clientScriptRegex = /<script(?![^>]*data-bascik-build)[^>]*>[\s\S]*?<\/script>/gi;
     expect(clientScriptRegex.test(html)).toBe(false);
   });
 });
 ```
 
-## End-to-End Browser Testing
+## End-to-End Browser Testing (Playwright)
 
-End-to-end (E2E) testing validates full page rendering, user interactions, form submissions, and routing in real browser engines using Playwright.
+End-to-end (E2E) testing with Playwright is the primary way to verify that Bascik components functionally work in real browser engines (Chromium, Firefox, WebKit).
+
+Because Bascik compiles vanilla HTML, CSS, and JavaScript with zero framework runtime overhead, E2E tests validate real-world behavior that unit tests cannot catch:
+
+- **Browser DOM Event Handling**: Clicking buttons, opening modals, toggling details panels, and keypress shortcuts (such as `Cmd+K` or `Escape`).
+- **CSS Engine Evaluation**: Real layout rendering, `:has()` pseudo-class state selection, CSS variable scoping, and responsive media queries.
+- **Client State Mechanics**: Independent component instances holding isolated state (such as multiple counters or tabs on one page).
+- **Navigation and Server Routes**: Real page transitions, hash anchor navigation, and 404 fallback routing.
 
 ### Installation
 
@@ -60,19 +116,22 @@ End-to-end (E2E) testing validates full page rendering, user interactions, form 
 npm install -D @playwright/test
 ```
 
-### Configuration (`playwright.config.ts`)
+### Configuration (`e2e/playwright.config.ts`)
 
-Configure Playwright to build and serve the site automatically before running tests:
+Configure Playwright to build and serve the compiled Bascik site automatically on a test port before running specs:
 
 ```ts
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
-  use: { baseURL: 'http://localhost:4200' },
+  use: {
+    baseURL: 'http://localhost:4200',
+    headless: true,
+  },
   webServer: {
     command: 'npx bascik --build && npx bascik --serve 4200',
-    port: 4200,
+    url: 'http://localhost:4200',
     reuseExistingServer: !process.env.CI,
   },
 });
@@ -83,20 +142,38 @@ export default defineConfig({
 ```ts
 import { test, expect } from '@playwright/test';
 
-test('component-demo switches tabs without JavaScript', async ({ page }) => {
-  await page.goto('/components');
+test.describe('Docs Component Functional E2E Tests', () => {
+  test('comp-toggle expands and collapses detail panel', async ({ page }) => {
+    await page.goto('/scoped-javascript');
 
-  const previewPane = page.locator('.demo-pane[data-pane="preview"]').first();
-  const sourcePane = page.locator('.demo-pane[data-pane="code"]').first();
+    const toggleBtn = page.locator('.toggle-wrap button#btn').first();
+    const detailPanel = page.locator('.toggle-wrap #detail').first();
 
-  await expect(previewPane).toBeVisible();
-  await expect(sourcePane).toBeHidden();
+    await expect(detailPanel).toBeHidden();
+    await expect(toggleBtn).toHaveText('Read more');
 
-  // Click Source tab label
-  await page.locator('.demo-tab:has-text("Source")').first().click();
+    // Click toggle button to expand
+    await toggleBtn.click();
+    await expect(detailPanel).toBeVisible();
+    await expect(toggleBtn).toHaveText('Show less');
+  });
 
-  await expect(previewPane).toBeHidden();
-  await expect(sourcePane).toBeVisible();
+  test('docs-search opens modal, filters results on input, and closes on Escape', async ({ page }) => {
+    await page.goto('/');
+
+    const searchBtn = page.locator('.dnav-search-btn');
+    const modal = page.locator('.search-overlay');
+    const input = page.locator('#docs-search-input');
+
+    await searchBtn.click();
+    await expect(modal).toBeVisible();
+
+    await input.fill('scoped styles');
+    await expect(page.locator('.search-results li').first()).toContainText('Scoped Styles');
+
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
+  });
 });
 ```
 
@@ -176,12 +253,12 @@ Bascik executes the build script during compilation and replaces the tag with th
 
 ## Test Runner Setup
 
-Projects created via `npm create bascik` come pre-configured with Vitest, V8 code coverage, `vite.config.js`, and unit tests for every scaffolded component out of the box.
+Projects created via `npm create bascik` come pre-configured with Vitest, Playwright, V8 code coverage, `vite.config.js`, unit tests for every scaffolded component, and E2E browser tests in `e2e/app.spec.ts` out of the box.
 
-For existing projects, install Vitest and V8 coverage:
+For existing projects, install Vitest, V8 coverage, and Playwright:
 
 ```sh
-npm install -D vitest @vitest/coverage-v8
+npm install -D vitest @vitest/coverage-v8 @playwright/test
 ```
 
 Create `vite.config.js` in the project root:
@@ -206,7 +283,8 @@ Add the test commands to `package.json`:
 "scripts": {
   "test": "vitest run",
   "test:watch": "vitest",
-  "test:coverage": "vitest run --coverage"
+  "test:coverage": "vitest run --coverage",
+  "e2e": "playwright test --config e2e/playwright.config.ts"
 }
 ```
 
@@ -215,6 +293,7 @@ Execute tests using:
 ```sh
 npm test
 npm run test:coverage
+npm run e2e
 ```
 
 ### Code Coverage Reporting
@@ -229,28 +308,32 @@ The `coverage/` output directory is automatically ignored by `.gitignore` in sca
 
 ## Testing Boundaries and Guidance
 
-- **Component HTML and CSS**: Validate input contracts, ARIA accessibility attributes, CSS `:has()` rules, and verify that zero runtime JavaScript is shipped when CSS can handle state transitions.
-- **Pure Logic Functions**: Validate scoring, filtering, formatting, sorting, tokenization, and data transformations with fast unit tests in Vitest.
-- **End-to-End Workflows**: Validate multi-page user journeys, interactive clicks, visual state updates, and server routes in Playwright.
+Choosing between unit tests and E2E browser tests depends on what you need to verify:
+
+| Testing Tier | Tool | Focus & Purpose | Execution Speed |
+|---|---|---|---|
+| **E2E Browser Tests** | Playwright | **Primary test for functionality.** Validates DOM events, user clicks, visual state transitions, CSS `:has()` rules, and multi-page workflows in real browser engines. | Seconds (runs against built server) |
+| **Component Contract Unit Tests** | Vitest | **Fast structural guardrails.** Validates HTML markup contracts, ARIA accessibility attributes, slot/prop placeholders, and ensures zero runtime JavaScript is shipped when CSS handles state transitions. | Sub-second (~100ms) |
+| **Pure Logic Unit Tests** | Vitest | **Fast business logic checks.** Validates scoring, tokenization, search indexing, data transformations, and server script helper functions. | Sub-second (~10ms) |
+
+### When to Use Each
+
+- **Use Playwright E2E tests** when you need to verify that clicking a button opens a modal, toggling a panel changes text, incrementing a counter updates the screen, or navigating links loads the correct page.
+- **Use Vitest unit tests** for instant local feedback when refactoring HTML templates, preventing accidental removal of accessibility attributes (`aria-expanded`, `aria-label`), ensuring pure CSS components stay script-free, or testing pure JavaScript/TypeScript calculation functions.
 
 ## Reference Implementations
 
-All components across the Bascik documentation site (`docs/src/components/`) and scaffolded projects include co-located unit tests (`.test.ts`) that verify component structure, props, slots, ARIA roles, and embedded scripts.
+The Bascik documentation site (`docs/`) includes both E2E browser tests and unit tests to ensure all components functionally work and stay tested:
 
-The Bascik documentation search component (`docs-search.html`) provides a complete reference for testing pure component logic. Its search engine module (`search-logic.ts`) exports five functions:
+- **E2E Browser Tests (`docs/e2e/docs-components.spec.ts`)**: Runs Playwright against a live built Bascik server (`npx bascik --build && npx bascik --serve 4200`) to test real browser behavior for `docs-search`, `component-demo`, `comp-toggle`, `demo-counter`, and `comp-alert`.
+- **Pure Logic Unit Tests (`docs/src/components/docs-search/search-logic.test.ts`)**: Tests the search engine logic (`search-logic.ts`) in Vitest across tokenization, scoring tiers, snippet extraction, and result formatting.
 
-| Function | Description |
-|---|---|
-| `tokens(q)` | Splits a query string into normalized tokens (≥2 characters) |
-| `score(entry, q, toks)` | Calculates a tier-based relevance score (navLabel > heading > text) |
-| `snippet(text, q, toks)` | Extracts a ~120 character excerpt centered on the match |
-| `basePath(path)` | Strips hash fragments from URL paths |
-| `buildResults(index, q, toks, limit)` | Filters, scores, and sorts search results |
-
-`docs-search.html` inlines the logic at build time, while `search-logic.test.ts` provides comprehensive unit test coverage for scoring tiers, deduplication, and edge cases.
-
-To run the documentation component test suite:
+To execute the test suites:
 
 ```sh
+# Run unit tests (Vitest)
 yarn workspace bascik-docs test
+
+# Run E2E browser tests (Playwright)
+yarn workspace bascik-docs e2e
 ```

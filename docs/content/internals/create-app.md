@@ -29,6 +29,9 @@ Running `npx create-bascik <name>` writes this structure:
   .gitignore
   .github/skills/bascik/SKILL.md
   .claude/skills/bascik/SKILL.md
+  e2e/
+    playwright.config.ts
+    app.spec.ts
   src/
     pages/
       index.html
@@ -55,7 +58,7 @@ Running `npx create-bascik <name>` writes this structure:
         my-counter.test.ts
 ```
 
-The `feat-card` component demonstrates named slots. The `my-counter` component demonstrates scoped JS with two independent instances on the home page. Every component includes co-located unit tests, and `vite.config.js` configures Vitest with V8 code coverage.
+The `feat-card` component demonstrates named slots. The `my-counter` component demonstrates scoped JS with two independent instances on the home page. Every component includes co-located unit tests, `vite.config.js` configures Vitest with V8 code coverage, and `e2e/` includes Playwright browser specs testing page navigation, counter interaction, and mobile menu toggling.
 
 After scaffolding, the CLI offers to run `npm install` and `npm run dev`. Both prompts can be skipped with `-y`.
 

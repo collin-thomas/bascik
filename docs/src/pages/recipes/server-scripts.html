@@ -64,7 +64,7 @@
           const { renderMd } = await import(
             pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href
           );
-          console.log(await renderMd('./content/server-scripts.md'));
+          console.log(await renderMd('./content/recipes/server-scripts.md'));
         </script>
         <script data-bascik-build>
           import { join } from 'node:path';

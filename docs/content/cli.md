@@ -19,6 +19,9 @@ my-project/
   .gitignore
   .github/skills/bascik/SKILL.md
   .claude/skills/bascik/SKILL.md
+  e2e/
+    playwright.config.ts
+    app.spec.ts
   src/
     pages/
       assets/
@@ -47,7 +50,7 @@ my-project/
         my-counter.test.ts
 ```
 
-Every scaffolded project includes co-located unit tests for its components, Vitest configuration in `vite.config.js`, and test scripts (`npm test`, `npm run test:watch`, and `npm run test:coverage`).
+Every scaffolded project includes co-located unit tests for its components, Playwright E2E browser tests in `e2e/`, Vitest configuration in `vite.config.js`, and pre-configured test scripts (`npm test`, `npm run test:watch`, `npm run test:coverage`, and `npm run e2e`).
 
 After scaffolding, the tool prompts you interactively:
 

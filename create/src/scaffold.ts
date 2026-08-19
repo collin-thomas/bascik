@@ -25,11 +25,13 @@ export const PACKAGE_JSON = (name: string): string =>
         test: "vitest run",
         "test:watch": "vitest",
         "test:coverage": "vitest run --coverage",
+        e2e: "playwright test --config e2e/playwright.config.ts",
       },
       dependencies: {
         "@bascik/bascik": "file:../pkg",
       },
       devDependencies: {
+        "@playwright/test": "^1.62.0",
         "@types/node": "^24.0.0",
         "@vitest/coverage-v8": "^4.1.10",
         vitest: "^4.1.10",
@@ -53,6 +55,70 @@ export default defineConfig({
       reporter: ['text', 'json', 'html'],
     },
   },
+});
+`;
+
+export const PLAYWRIGHT_CONFIG = `import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './',
+  use: {
+    baseURL: 'http://localhost:8080',
+    headless: true,
+  },
+  webServer: {
+    command: 'npx bascik --build && npx bascik --serve 8080',
+    url: 'http://localhost:8080',
+    reuseExistingServer: !process.env.CI,
+  },
+});
+`;
+
+export const E2E_APP_SPEC = `import { test, expect } from '@playwright/test';
+
+test.describe('Starter App E2E Tests', () => {
+  test('navigates pages and checks titles', async ({ page }) => {
+    await page.goto('/');
+    await expect(page).toHaveTitle(/Home/);
+
+    await page.getByRole('link', { name: 'About' }).first().click();
+    await expect(page).toHaveURL('/about');
+    await expect(page).toHaveTitle(/About/);
+  });
+
+  test('counter component increments and decrements count', async ({ page }) => {
+    await page.goto('/');
+
+    const counter = page.locator('.counter').first();
+    const decBtn = counter.locator('#btn-dec');
+    const incBtn = counter.locator('#btn-inc');
+    const val = counter.locator('#count-val');
+
+    await expect(val).toHaveText('0');
+
+    await incBtn.click();
+    await expect(val).toHaveText('1');
+
+    await decBtn.click();
+    await expect(val).toHaveText('0');
+  });
+
+  test('mobile navigation toggle expands and collapses menu', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto('/');
+
+    const toggle = page.locator('#nav-toggle');
+    const menu = page.locator('#nav-menu');
+
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(menu).toHaveClass(/is-open/);
+
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  });
 });
 `;
 
@@ -733,6 +799,7 @@ export async function scaffold(
   await Promise.all([
     mkdir(join(root, ".github", "skills", "bascik"), { recursive: true }),
     mkdir(join(root, ".claude", "skills", "bascik"), { recursive: true }),
+    mkdir(join(root, "e2e"), { recursive: true }),
     mkdir(join(root, "src", "pages", "assets"), { recursive: true }),
     mkdir(join(root, "src", "pages", "css"), { recursive: true }),
     mkdir(join(root, "src", "components", "site-meta"), { recursive: true }),
@@ -752,6 +819,10 @@ export async function scaffold(
     writeFile(join(root, ".gitignore"), GITIGNORE, "utf8"),
     writeFile(join(root, ".github", "skills", "bascik", "SKILL.md"), skillMd, "utf8"),
     writeFile(join(root, ".claude", "skills", "bascik", "SKILL.md"), skillMd, "utf8"),
+
+    // E2E
+    writeFile(join(root, "e2e", "playwright.config.ts"), PLAYWRIGHT_CONFIG, "utf8"),
+    writeFile(join(root, "e2e", "app.spec.ts"), E2E_APP_SPEC, "utf8"),
 
     // Assets
     writeFile(join(root, "src", "pages", "assets", "favicon.svg"), FAVICON_SVG, "utf8"),
