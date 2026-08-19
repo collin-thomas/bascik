@@ -4,8 +4,8 @@
   border-right: 1px solid var(--border);
   padding: 32px 20px;
   position: sticky;
-  top: 57px;
-  height: calc(100vh - 57px);
+  top: 88px;
+  height: calc(100vh - 88px);
   overflow-y: auto;
 }
 

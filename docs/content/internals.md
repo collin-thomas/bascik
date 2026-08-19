@@ -23,7 +23,7 @@ The `pkg/` directory is a self-contained TypeScript project with its own `packag
 You need Node.js v22.18 or later and Yarn 4. Clone the repo and install dependencies from the root, Yarn workspaces wires everything up in one step:
 
 ```sh
-git clone https://github.com/collin-thomas/bascik.git
+git clone https://github.com/bascikdev/bascik.git
 cd bascik
 corepack enable
 yarn install
