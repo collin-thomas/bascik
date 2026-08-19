@@ -45,6 +45,15 @@ describe("minifyHtml", () => {
     expect(result).toBe('<div><pre class="code-block">  indented\ncode\n</pre></div>');
   });
 
+  it("preserves content of <pre> and <textarea> elements with multiline or newline attributes", () => {
+    const htmlString =
+      '<div><pre\n  class="code-block"\n  id="block1">\n    line1\n    line2\n</pre></div>';
+    const result = minifyHtml(htmlString);
+    expect(result).toBe(
+      '<div><pre\n  class="code-block"\n  id="block1">\n    line1\n    line2\n</pre></div>',
+    );
+  });
+
   it("removes comments, whitespace and newlines and puts script tags at the end of the HTML", () => {
     const htmlString = `
       <!DOCTYPE html>

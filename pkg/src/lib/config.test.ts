@@ -213,6 +213,34 @@ describe("minify user config overrides", () => {
     expect(cfg.minify.css).toBe(true);
     expect(cfg.minify.js).toBe(true);
   });
+
+  it("supports boolean minify: false to disable all minification during build", () => {
+    const { BascikConfig: cfg } = initBascikConfig(
+      { minify: false },
+      {},
+      { isBuild: true },
+    );
+    expect(cfg.minify).toEqual({
+      html: false,
+      css: false,
+      js: false,
+      identifiers: false,
+    });
+  });
+
+  it("supports boolean minify: true to enable all minification in dev mode", () => {
+    const { BascikConfig: cfg } = initBascikConfig(
+      { minify: true },
+      {},
+      { isBuild: false },
+    );
+    expect(cfg.minify).toEqual({
+      html: true,
+      css: true,
+      js: true,
+      identifiers: true,
+    });
+  });
 });
 
 describe("user config overrides", () => {

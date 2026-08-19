@@ -143,7 +143,16 @@ type ConfigInput = Partial<
   directory?: Partial<BascikConfigOptions["directory"]>;
   scopeAttribute?: Partial<BascikConfigOptions["scopeAttribute"]>;
   generate?: Partial<BascikConfigOptions["generate"]>;
-  minify?: Partial<BascikConfigOptions["minify"]>;
+  minify?: boolean | Partial<BascikConfigOptions["minify"]>;
+};
+
+const normalizeMinify = (
+  val: boolean | Partial<BascikConfigOptions["minify"]> | undefined,
+): Partial<BascikConfigOptions["minify"]> => {
+  if (typeof val === "boolean") {
+    return { html: val, css: val, js: val, identifiers: val };
+  }
+  return val ?? {};
 };
 
 /**
@@ -168,8 +177,8 @@ export const initBascikConfig = (
   const buildDirectory: Partial<BascikConfigOptions["directory"]> =
     buildOverride.directory ?? {};
 
-  const userMinify = userConfig.minify ?? {};
-  const buildMinify = buildOverride.minify ?? {};
+  const userMinify = normalizeMinify(userConfig.minify);
+  const buildMinify = normalizeMinify(buildOverride.minify);
 
   const baseMinify = {
     ...defaultConfig.minify,

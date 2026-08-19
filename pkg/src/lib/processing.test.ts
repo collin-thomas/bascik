@@ -1266,6 +1266,15 @@ describe("selectivelyProcessPages", () => {
     expect(mem.pagesThisComponentIsUsedOn).toHaveBeenCalledWith("my-nav");
   });
 
+  it("extracts the correct component name for nested component file paths", async () => {
+    (mem.pagesThisComponentIsUsedOn as ReturnType<typeof vi.fn>).mockReturnValue([]);
+    await selectivelyProcessPages("src/components/ui/button/button.html");
+    expect(mem.pagesThisComponentIsUsedOn).toHaveBeenCalledWith("button");
+
+    await selectivelyProcessPages("src/components/ui/button/button.css");
+    expect(mem.pagesThisComponentIsUsedOn).toHaveBeenCalledWith("button");
+  });
+
   it("calls pageProcessing for each page returned by pagesThisComponentIsUsedOn", async () => {
     (mem.pagesThisComponentIsUsedOn as ReturnType<typeof vi.fn>).mockReturnValue(["src/pages/index.html"]);
     (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(PAGE_HTML);

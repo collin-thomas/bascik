@@ -7,7 +7,7 @@ type UserConfig = Partial<
   directory?: Partial<BascikConfigOptions["directory"]>;
   scopeAttribute?: Partial<BascikConfigOptions["scopeAttribute"]>;
   generate?: Partial<BascikConfigOptions["generate"]>;
-  minify?: Partial<BascikConfigOptions["minify"]>;
+  minify?: boolean | Partial<BascikConfigOptions["minify"]>;
 };
 
 /** Public type for bascik.config.ts — use with `defineConfig`. */

@@ -511,9 +511,9 @@ export const selectivelyProcessPagesForWatchPath = async (_changedPath?: string)
 
 export const selectivelyProcessPages = async (path: string): Promise<void> => {
   invalidateComponentListCache();
-  const relativePath = getRelativePath(path, "components");
-  const match = relativePath.match(/^components[\/](?<componentName>(\w|-)+)/);
-  const componentName = match?.groups?.componentName;
+  const rawFileName = path.replace(/^.*[\\/]/, "");
+  if (!rawFileName || rawFileName.startsWith(".")) return;
+  const componentName = rawFileName.split(".")[0].toLowerCase();
   if (!componentName) return;
   const pagesToTranspile = mem.pagesThisComponentIsUsedOn(componentName);
   const componentList = await listComponents();
