@@ -19,12 +19,12 @@ vi.mock("./config.js", () => ({
     scopeScriptBlocks: true,
     inheritAttributes: true,
     scopeAttribute: { class: true, id: true, name: true },
-    obfuscateAttributeNames: false,
     isBuild: true,
     minify: {
       html: false,
       css: false,
       js: false,
+      identifiers: false,
     },
     deduplicateCss: true,
     inlineStyles: false,

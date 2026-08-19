@@ -109,7 +109,7 @@ const idCss = `
 
 vi.mock("./config.js", () => {
   return {
-    BascikConfig: { obfuscateAttributeNames: false },
+    BascikConfig: { minify: { identifiers: false } },
   };
 });
 

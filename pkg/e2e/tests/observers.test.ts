@@ -18,7 +18,7 @@
  * - Observer API calls (new MutationObserver, .observe(), etc.) are browser globals
  *   and are not modified by bascik.
  *
- * The fixture is built with `obfuscateAttributeNames: false` so scoped class and id
+ * The fixture is built with `minify.identifiers: false` so scoped class and id
  * names are readable (e.g. `bascik__observer-test__wrapper`).
  */
 import { test, expect, type Locator } from '@playwright/test';

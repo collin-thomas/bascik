@@ -23,6 +23,6 @@
 
     "skipLibCheck": true
   },
-  "include": ["src/**/*.ts", "bench/**/*.ts"],
+  "include": ["src/**/*.ts", "bench/**/*.ts", "e2e/bascik.config.ts"],
   "exclude": ["node_modules", "coverage"]
 }

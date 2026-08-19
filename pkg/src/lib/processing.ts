@@ -49,7 +49,7 @@
  * All scoped names follow the pattern:
  *   bascik__<componentName>__<instanceId>__<originalName>
  *
- * When `obfuscateAttributeNames` is enabled (default in builds), names are
+ * When `minify.identifiers` is enabled (default in builds), names are
  * hashed to short hex strings (e.g. `bab12cd3`) for smaller output.
  */
 

@@ -1,14 +1,14 @@
 {
   "total": {
     "lines": {
-      "total": 2260,
-      "covered": 2106,
+      "total": 2261,
+      "covered": 2107,
       "skipped": 0,
       "pct": 93.18
     },
     "statements": {
-      "total": 2448,
-      "covered": 2264,
+      "total": 2449,
+      "covered": 2265,
       "skipped": 0,
       "pct": 92.48
     },

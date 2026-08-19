@@ -73,7 +73,7 @@
  * that variables declared inside one component cannot leak into another.
  */
 
-import { getUniqueId, obfuscateAttributeName } from "./names.js";
+import { getUniqueId, minifyAttributeName } from "./names.js";
 import {
   addElementClassesInHtml,
   addIdClassesInHtml,
@@ -198,7 +198,7 @@ export const prefixElementAttribute = (
         .split(" ")
         .map((attributeName: string) => {
           const name = `bascik__${scopeKey}__${attributeName}`;
-          const obfuscatedAttributeName = obfuscateAttributeName(name);
+          const obfuscatedAttributeName = minifyAttributeName(name);
           attributesToReplace.push({ attributeName, obfuscatedAttributeName });
           return obfuscatedAttributeName;
         })
@@ -217,7 +217,7 @@ export const prefixElementAttribute = (
       if (!knownClasses.has(className)) {
         attributesToReplace.push({
           attributeName: className,
-          obfuscatedAttributeName: obfuscateAttributeName(`bascik__${scopeKey}__${className}`),
+          obfuscatedAttributeName: minifyAttributeName(`bascik__${scopeKey}__${className}`),
         });
         knownClasses.add(className);
       }
@@ -478,7 +478,7 @@ export const prefixElementAttribute = (
       );
       component.cssFileContent = restoreCssStrings(
         shieldedCss.replace(/(?<=\.)[a-z_][a-z0-9-_]*/gim, (className) => {
-          return obfuscateAttributeName(`bascik__${scopeKey}__${className}`);
+          return minifyAttributeName(`bascik__${scopeKey}__${className}`);
         }),
       );
 

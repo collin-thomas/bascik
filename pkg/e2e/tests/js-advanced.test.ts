@@ -11,7 +11,7 @@
  *   - element.className setter (scoped to component-level class)
  *   - element.setAttribute('class', ...) (scoped to component-level class)
  *
- * The fixture is built with `obfuscateAttributeNames: false` so scoped class
+ * The fixture is built with `minify.identifiers: false` so scoped class
  * names are readable (e.g. `bascik__js-advanced__active`).
  *
  * NOTE: ID-based selectors use the full per-instance scoped ID (with hash),

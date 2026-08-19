@@ -8,7 +8,7 @@
  *   - classList mutation: `classList.add("active")` → `classList.add("bascik__css-transition__active")`
  *   - transition property is preserved as-is (no scoping needed)
  *
- * The fixture is built with `obfuscateAttributeNames: false` so scoped names
+ * The fixture is built with `minify.identifiers: false` so scoped names
  * are readable (e.g. `bascik__css-transition__wrapper`).
  */
 import { test, expect, type Locator } from '@playwright/test';

@@ -6,7 +6,7 @@
  * by name, getElementsByClassName) resolves only within the component instance
  * that initiated it — never crossing into the sibling instance.
  *
- * The fixture is built with `obfuscateAttributeNames: false` so scoped class
+ * The fixture is built with `minify.identifiers: false` so scoped class
  * and id names are readable (e.g. `bascik__dom-query-test__active`).
  */
 import { test, expect, type Locator } from '@playwright/test';

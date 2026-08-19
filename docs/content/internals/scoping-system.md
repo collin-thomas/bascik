@@ -230,9 +230,9 @@ document.querySelector(".btn").addEventListener("click", function() { count++; }
 })();
 ```
 
-## Obfuscation
+## Identifier Minification
 
-When `obfuscateAttributeNames: true` is set (the default for builds), every scoped name is hashed using SHAKE-256 (outputLength 6 bytes = 12 hex chars) and prefixed with `b` to ensure it starts with a letter:
+When `minify.identifiers: true` is set (the default for builds), every scoped name is hashed using SHAKE-256 (outputLength 6 bytes = 12 hex chars) and prefixed with `b` to ensure it starts with a letter:
 
 ```ts
 // names.ts
@@ -243,7 +243,7 @@ export const getAttributeNameHash = (attributeName: string): string => {
 };
 ```
 
-The hash is deterministic, the same full scoped name always produces the same short hash, so CSS and HTML always stay in sync. The obfuscated output looks like:
+The hash is deterministic, the same full scoped name always produces the same short hash, so CSS and HTML always stay in sync. The minified output looks like:
 
 ```html
 <button class="ba1c2d3e4f5b">Menu</button>

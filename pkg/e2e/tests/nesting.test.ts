@@ -17,7 +17,7 @@
  *   - Child CSS is scoped to inner-badge (bascik__inner-badge__*)
  *   - Each card is independent (no prop bleed-through between instances)
  *
- * The fixture is built with `obfuscateAttributeNames: false` so scoped names
+ * The fixture is built with `minify.identifiers: false` so scoped names
  * are readable: e.g. `bascik__nesting-test__card`.
  */
 import { test, expect, type Locator } from '@playwright/test';

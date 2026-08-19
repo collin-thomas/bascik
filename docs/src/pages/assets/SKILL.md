@@ -880,9 +880,9 @@ export default defineConfig({
     html: false,
     css: false,
     js: false,
+    identifiers: true, // hash class/id names to short hex strings
   },
   inlineStyles: false, // false | true | ['src/pages/css/styles.css']
-  obfuscateAttributeNames: true, // hash class/id names to short hex strings
   cacheHttp: false, // dev default; automatically true in --serve mode
   siteUrl: 'https://example.com',
   generate: {
@@ -916,11 +916,11 @@ export default defineConfig({
 
 // Applied only during `bascik --build` and `bascik --serve`.
 export const build = defineConfig({
-  obfuscateAttributeNames: true,
   minify: {
     html: true,
     css: true,
     js: true,
+    identifiers: true,
   },
 });
 ```
@@ -1161,7 +1161,7 @@ src/pages/blog/post.html   →  dist/blog/post.html
 
 What to check in compiled output:
 * **Component resolution:** every custom tag (e.g. `<site-nav>`) should be replaced with expanded HTML. A hyphenated tag still present in `dist/` means no component file matched.
-* **Scoped class names:** attributes like `class="bascik__site-nav__nav"` (or a short hash with `obfuscateAttributeNames`) confirm CSS scoping ran correctly.
+* **Scoped class names:** attributes like `class="bascik__site-nav__nav"` (or a short hash with `minify.identifiers`) confirm CSS scoping ran correctly.
 * **Injected `<style>` block:** the `<head>` should contain one combined `<style>` with CSS from all components used on that page.
 * **Build script output:** `<script data-bascik-build>` is replaced with stdout; if missing, check the terminal for a `[bascik] build script error` line.
 * **Server script output:** `<script data-bascik-server>` is replaced at request time; if output is missing on a live request, check the terminal for a `[bascik] server script error` line. Remember these scripts run in Node.js, not the browser, they require `bascik --serve` or the dev server to execute.
@@ -1273,7 +1273,7 @@ The e2e suite lives in `pkg/e2e/`. Playwright's `webServer` hook:
 1. Builds the fixture site (`pkg/e2e/src/`) using the current `pkg/dist/`
 2. Serves `e2e/dist/` on `http://localhost:4200`
 
-The fixture config sets `obfuscateAttributeNames: false` so Playwright selectors can use readable scoped names like `bascik__my-comp__btn` instead of opaque hashes.
+The fixture config sets `minify.identifiers: false` so Playwright selectors can use readable scoped names like `bascik__my-comp__btn` instead of opaque hashes.
 
 **Adding a new e2e test:**
 1. Add a component in `pkg/e2e/src/components/my-feature/`

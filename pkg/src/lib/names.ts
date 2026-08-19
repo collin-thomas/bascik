@@ -8,11 +8,13 @@ export const getAttributeNameHash = (attributeName: string): string => {
     .digest("hex")}`;
 };
 
-export const obfuscateAttributeName = (attributeName: string): string => {
-  return BascikConfig.obfuscateAttributeNames
+export const minifyAttributeName = (attributeName: string): string => {
+  return BascikConfig.minify.identifiers
     ? getAttributeNameHash(attributeName)
     : attributeName;
 };
+
+export const obfuscateAttributeName = minifyAttributeName;
 
 export const getUniqueId = (length: number): string => {
   if (length % 2 !== 0) {

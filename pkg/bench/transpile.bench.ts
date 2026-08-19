@@ -16,18 +16,19 @@ vi.mock("../src/lib/config.ts", () => ({
   BascikConfig: {
     scopeScriptBlocks: true,
     scopeAttribute: { class: true, id: true, name: true },
-    obfuscateAttributeNames: false,
     isBuild: true,
     minify: {
       html: false,
       css: true,
       js: false,
+      identifiers: false,
     },
   },
 }));
 
 vi.mock("../src/lib/names.ts", () => ({
   getUniqueId: () => "bench1234",
+  minifyAttributeName: (n: string) => n,
   obfuscateAttributeName: (n: string) => n,
   getAttributeNameHash: (n: string) => n,
 }));

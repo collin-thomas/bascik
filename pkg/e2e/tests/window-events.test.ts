@@ -19,7 +19,7 @@
  *    ID (e.g. "bascik__window-events__d6f6274a__wrapper") — distinct per
  *    instance since getElementById("wrapper") is rewritten at build time.
  *
- * The fixture is built with `obfuscateAttributeNames: false` so scoped names
+ * The fixture is built with `minify.identifiers: false` so scoped names
  * are readable.
  */
 import { test, expect, type Locator } from '@playwright/test';

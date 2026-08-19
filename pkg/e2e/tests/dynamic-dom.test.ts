@@ -15,7 +15,7 @@
  *
  * - `list.innerHTML = ""` is NOT rewritten — innerHTML clears work as-is.
  *
- * The fixture is built with `obfuscateAttributeNames: false` so scoped class
+ * The fixture is built with `minify.identifiers: false` so scoped class
  * and id names are readable (e.g. `bascik__dynamic-dom__item`).
  */
 import { test, expect, type Locator } from '@playwright/test';

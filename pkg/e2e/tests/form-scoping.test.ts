@@ -8,7 +8,7 @@
  *   - Clicking a button in one instance does not mutate the other instance's result
  *   - The in-component `getElementById` calls are also rewritten to scoped names
  *
- * The fixture is built with `obfuscateAttributeNames: false` so readable scoped
+ * The fixture is built with `minify.identifiers: false` so readable scoped
  * names like `bascik__form-test__9c332cac__username` appear in the DOM.
  */
 import { test, expect, type Locator } from '@playwright/test';

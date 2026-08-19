@@ -13,7 +13,7 @@
  *   - setting leakVar in instance A does not bleed into instance B
  *   - `window.leakVar` remains undefined even after local mutation in instance A
  *
- * The fixture is built with `obfuscateAttributeNames: false` so scoped class
+ * The fixture is built with `minify.identifiers: false` so scoped class
  * names are readable (e.g. `bascik__script-isolation__wrapper`).
  */
 import { test, expect, type Locator } from '@playwright/test';

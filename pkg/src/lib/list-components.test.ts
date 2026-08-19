@@ -15,9 +15,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("./config.js", () => ({
   BascikConfig: {
     directory: { components: "src/components" },
-    obfuscateAttributeNames: false,
     deduplicateCss: true,
-    minify: { html: false, css: false, js: false },
+    minify: { html: false, css: false, js: false, identifiers: false },
     skipTranspilingElementContents: [],
   },
 }));

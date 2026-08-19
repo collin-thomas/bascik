@@ -25,12 +25,12 @@ const prodServerDefaultConfig: Partial<Omit<BascikConfigOptions, "isBuild" | "is
     html: true,
     css: true,
     js: true,
+    identifiers: true,
   },
-  obfuscateAttributeNames: true,
 };
 
 // Applied on top of defaultConfig (and prodServerDefaultConfig) when --build is
-// active, before user config. Minification and attribute-name obfuscation are
+// active, before user config. Minification and identifier-name compression are
 // production-only defaults: they slow down rebuilds and make debugging harder,
 // so they stay off in dev but on for `bascik --build`. Users can still
 // override any of them in bascik.config (or via the build export).
@@ -41,8 +41,8 @@ export const buildDefaultConfig: Partial<
     html: true,
     css: true,
     js: true,
+    identifiers: true,
   },
-  obfuscateAttributeNames: true,
 };
 
 export const defaultConfig: Omit<BascikConfigOptions, "isBuild" | "isProdServer"> = {
@@ -64,8 +64,8 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild" | "isProdServer"
     html: false,
     css: false,
     js: false,
+    identifiers: false,
   },
-  obfuscateAttributeNames: false,
   cacheHttp: false,
   generate: {
     sitemap: true,

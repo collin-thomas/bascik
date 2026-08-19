@@ -46,8 +46,8 @@ export const build = {
     html: true,
     css: true,
     js: true,
+    identifiers: true,
   },
-  obfuscateAttributeNames: true,
 };
 `;
 

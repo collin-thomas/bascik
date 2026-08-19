@@ -4,7 +4,7 @@ import { prefixElementAttribute, namespaceScriptTags, minifyJs } from "./javascr
 
 vi.mock("./config.js", () => ({
   BascikConfig: {
-    obfuscateAttributeNames: false,
+    minify: { identifiers: false },
     scopeAttribute: { class: true, id: true, name: true },
     deduplicateCss: true,
   },
