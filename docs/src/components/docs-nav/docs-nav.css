@@ -10,15 +10,21 @@
 }
 
 .dnav-banner {
+  max-width: 1100px;
+  margin: 0 auto;
   background: var(--accent-dim);
   border-bottom: 1px solid var(--accent-border);
+  border-left: 1px solid var(--accent-border);
+  border-right: 1px solid var(--accent-border);
+  border-bottom-left-radius: var(--r-sm);
+  border-bottom-right-radius: var(--r-sm);
   text-align: center;
 }
 
 .dnav-banner-inner {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 6px 20px;
+  padding: 6px 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -223,7 +229,11 @@
   display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
+  .dnav-banner-inner {
+    padding: 6px 20px;
+  }
+
   .dnav-inner {
     padding: 12px 20px;
   }

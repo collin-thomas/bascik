@@ -15,7 +15,7 @@ describe('docs-footer component', () => {
     expect(html).toContain('scripts/nav.ts');
   });
 
-  it('uses max-width 640px for mobile centering breakpoint in footer CSS', async () => {
+  it('uses standard breakpoint media query max-width 640px for mobile in footer CSS', async () => {
     const css = await readFile(cssPath, 'utf8');
 
     expect(css).toContain('@media (max-width: 640px)');

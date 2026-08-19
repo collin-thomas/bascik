@@ -48,6 +48,24 @@
   /* ── Homepage manual highlight spans ── */
   --hl-tag:         #89b4fa;
   --hl-kw:          #cba6f7;
+  /* ── Breakpoints / Screen width standard tokens (2026 guidelines) ── */
+  --bp-sm:          640px;
+  --bp-md:          768px;
+  --bp-lg:          1024px;
+  --bp-xl:          1280px;
+  --bp-2xl:         1536px;
+
+  --screen-sm:      640px;
+  --screen-md:      768px;
+  --screen-lg:      1024px;
+  --screen-xl:      1280px;
+  --screen-2xl:     1536px;
+
+  --breakpoint-sm:  640px;
+  --breakpoint-md:  768px;
+  --breakpoint-lg:  1024px;
+  --breakpoint-xl:  1280px;
+  --breakpoint-2xl: 1536px;
   --hl-str:         #a6e3a1;
   --hl-comment:     #7e8190;
   --hl-scoped:      var(--accent);
