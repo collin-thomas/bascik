@@ -82,7 +82,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Run create-bascik unit tests
-        run: yarn workspace create-bascik test:ci
+        run: yarn create:test:ci
 
   unit-docs:
     name: Docs Unit Tests
