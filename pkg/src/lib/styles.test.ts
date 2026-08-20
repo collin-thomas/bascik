@@ -1531,3 +1531,46 @@ describe("extractInlineStyles", () => {
     expect(css).toContain("@media (min-width: 768px) {\n.primary { color: blue; }\n}");
   });
 });
+
+describe("Resilience to regex replacement patterns (TDD)", () => {
+  it("prevents $1 injection in scopeCssCustomProperties", () => {
+    const css = "@property --brand { syntax: '<color>'; inherits: false; } .el { color: var(--brand); }";
+    const result = scopeCssCustomProperties(css, "my$1comp");
+    expect(result).toContain("my$1comp");
+    expect(result).not.toContain("my@property");
+    expect(result).not.toContain("my.el");
+  });
+
+  it("prevents $& injection in scopeAnchorNames", () => {
+    const css = ".anchor { anchor-name: --foo; }";
+    const result = scopeAnchorNames(css, "my$&comp");
+    expect(result).toContain("my$&comp");
+    expect(result).not.toContain("my.anchorcomp");
+    expect(result).not.toContain("myfoo");
+  });
+
+  it("prevents $1 injection in scopeCounterStyleNames", () => {
+    const css = "@counter-style thumbs { } .el { list-style: thumbs; }";
+    const result = scopeCounterStyleNames(css, "my$1comp");
+    expect(result).toContain("my$1comp");
+    expect(result).not.toContain("my@counter-style");
+    expect(result).not.toContain("mthumbs");
+  });
+
+  it("prevents $1 injection in scopeContainerNames", () => {
+    const css = ".el { container-name: sidebar; } @container sidebar (min-width: 200px) { }";
+    const result = scopeContainerNames(css, "my$1comp");
+    expect(result).toContain("my$1comp");
+    expect(result).not.toContain("mysidebar");
+    expect(result).not.toContain("my.el");
+  });
+
+  it("prevents $1 injection in scopeViewTransitionNames", () => {
+    const css = ".el { view-transition-name: slide; } ::view-transition-old(slide) { }";
+    const result = scopeViewTransitionNames(css, "my$1comp");
+    expect(result).toContain("my$1comp");
+    expect(result).not.toContain("myslide");
+    expect(result).not.toContain("my.el");
+  });
+});
+
