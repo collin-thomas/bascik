@@ -4,9 +4,9 @@ test.describe('Docs Component E2E Tests', () => {
   test('component-demo switches between preview, code, and output tabs', async ({ page }) => {
     await page.goto('/components');
 
-    // Locate component-demo tab labels/radios
-    const previewLabel = page.locator('label', { hasText: 'Preview' }).first();
-    const codeLabel = page.locator('label', { hasText: 'Source' }).first();
+    // Locate component-demo tab labels/radios using robust test IDs
+    const previewLabel = page.getByTestId('demo-tab-preview').first();
+    const codeLabel = page.getByTestId('demo-tab-code').first();
 
     await expect(previewLabel).toBeVisible();
     await expect(codeLabel).toBeVisible();
@@ -14,7 +14,7 @@ test.describe('Docs Component E2E Tests', () => {
     // Click Source tab and verify pane switching
     await codeLabel.click();
 
-    const codePane = page.locator('[data-pane="code"]').first();
+    const codePane = page.getByTestId('demo-pane-code').first();
     await expect(codePane).toBeVisible();
   });
 
