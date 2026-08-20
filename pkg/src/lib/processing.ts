@@ -615,24 +615,35 @@ export const processAllPages = async (options?: { useWorkers?: boolean }) => {
   return relativePaths;
 };
 
-export const pageProcessing = async (
+const pageProcessingQueues = new Map<string, Promise<unknown>>();
+
+export const pageProcessing = (
   pagePath: string,
   componentList?: ComponentList,
   globalStylesHtml?: string,
-) => {
-  const result = await transpilePage(pagePath, componentList, globalStylesHtml);
-  if (!result) return;
-  const { relativePagePath, absolutePagePath, distHtml, usedComponentsNames } = result;
-  if (!BascikConfig.isBuild) {
-    await mem.storePage({
-      relativePagePath,
-      absolutePagePath,
-      pageContent: distHtml,
-      usedComponentsNames,
-    });
-  }
-  eventEmitter.emit("transpiled", { relativePagePath });
-  return relativePagePath;
+): Promise<string | undefined> => {
+  const current = pageProcessingQueues.get(pagePath) ?? Promise.resolve();
+  const next = current.then(async () => {
+    const result = await transpilePage(pagePath, componentList, globalStylesHtml);
+    if (!result) return;
+    const { relativePagePath, absolutePagePath, distHtml, usedComponentsNames } = result;
+    if (!BascikConfig.isBuild) {
+      await mem.storePage({
+        relativePagePath,
+        absolutePagePath,
+        pageContent: distHtml,
+        usedComponentsNames,
+      });
+    }
+    eventEmitter.emit("transpiled", { relativePagePath });
+    return relativePagePath;
+  }).finally(() => {
+    if (pageProcessingQueues.get(pagePath) === next) {
+      pageProcessingQueues.delete(pagePath);
+    }
+  });
+  pageProcessingQueues.set(pagePath, next);
+  return next as Promise<string | undefined>;
 };
 
 export const transpilePage = async (
