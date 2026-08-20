@@ -30,7 +30,7 @@ Build scripts run as isolated Node.js ESM modules during transpilation. When a b
 
 ### Terminal Error Formatting & Stack Remapping
 
-When a build script fails, Bascik prints the page file path along with the exact line and column number of the `<script data-bascik-build>` tag. Bascik automatically intercepts child-process stack traces and remaps temporary execution files back to your source file and line offset:
+When a build script fails, Bascik prints the page file path along with the exact line and column number of the `<script data-bascik-build>` tag. Bascik automatically intercepts child-process stack traces, filters out noisy Node.js internal files, stack frames, and `Command failed:` headers, and remaps temporary execution files back to your source file and line offset:
 
 ```text
 [bascik] build script error in "src/pages/deploying.html" at (line 14, column 3):
@@ -38,7 +38,7 @@ Error: Cannot find module 'marked'
     at src/pages/deploying.html:18:12
 ```
 
-In VS Code or terminal emulators, you can `Cmd + Click` (or `Ctrl + Click`) the file reference directly in the error log to jump to the exact line in your source HTML file where the script failed.
+By filtering out the noise of internal V8 loader frames and child process execution headers, you only see the stack trace that relates directly to your templates and helper scripts. In VS Code or terminal emulators, you can `Cmd + Click` (or `Ctrl + Click`) the file reference directly in the error log to jump to the exact line in your source HTML file where the script failed.
 
 ### Configuring Error Behavior
 
