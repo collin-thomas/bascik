@@ -15,7 +15,7 @@
  *   npx playwright test --config e2e/playwright.dev.config.ts
  */
 import { test, expect } from '@playwright/test';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -23,7 +23,7 @@ const e2eDir = fileURLToPath(new URL('..', import.meta.url));
 const pagePath = join(e2eDir, 'src/pages/scope-test.html');
 const secondPagePath = join(e2eDir, 'src/pages/isolation-test.html');
 const componentPath = join(e2eDir, 'src/components/scope-test/scope-test.html');
-const staticCssPath = join(e2eDir, 'dist/dev-static-test.css');
+const staticCssPath = join(e2eDir, 'src/pages/dev-static-test.css');
 
 test.describe('Dev Server Live-Reload & Watch Engine', () => {
   let originalPageContent: string;
@@ -41,6 +41,7 @@ test.describe('Dev Server Live-Reload & Watch Engine', () => {
     await writeFile(pagePath, originalPageContent, 'utf8');
     await writeFile(secondPagePath, originalSecondPageContent, 'utf8');
     await writeFile(componentPath, originalComponentContent, 'utf8');
+    await rm(staticCssPath, { force: true });
   });
 
   // ── 1. Dev-mode Script Injection & SSE ─────────────────────────────────────
@@ -161,9 +162,9 @@ test.describe('Dev Server Live-Reload & Watch Engine', () => {
 
     // Write 3 rapid changes in quick succession
     await writeFile(pagePath, originalPageContent.replace('<h1>JS Scope Rewriting — Live Test</h1>', '<h1>Rapid 1</h1>'), 'utf8');
-    await new Promise((r) => setTimeout(r, 50));
+    await new Promise((r) => setTimeout(r, 200));
     await writeFile(pagePath, originalPageContent.replace('<h1>JS Scope Rewriting — Live Test</h1>', '<h1>Rapid 2</h1>'), 'utf8');
-    await new Promise((r) => setTimeout(r, 50));
+    await new Promise((r) => setTimeout(r, 200));
     await writeFile(pagePath, originalPageContent.replace('<h1>JS Scope Rewriting — Live Test</h1>', `<h1>${finalMarker}</h1>`), 'utf8');
 
     // Server should recover and render the final state on the open browser page
