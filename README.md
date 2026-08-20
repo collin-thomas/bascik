@@ -64,10 +64,13 @@ Before committing changes that edited source code, tests, or any `docs/content/*
 /pre-push
 ```
 
-This updates test coverage JSON files, updates `docs/src/pages/assets/SKILL.md` to reflect any new or changed content, and copies it to `create/assets/SKILL.md` — all in one step.
+This runs a pre-review of committed and uncommitted changes using TDD for any code smells, checks spelling and web standards, verifies all unit tests, updates coverage JSON files, updates `docs/src/pages/assets/SKILL.md` based on documentation changes, and propagates assets.
 
 The prompt calls:
 
+- Pre-review of branch changes and TDD for smells or edge cases
+- `yarn check:spelling` and `yarn check:standards`
+- `yarn test:all`
 - `yarn update-coverage:all`
-- The LLM updates the `SKILL.md` file based on changes in `docs/content/`.
+- Updates `SKILL.md` based on changes in `docs/content/`
 - `yarn create:prepack`

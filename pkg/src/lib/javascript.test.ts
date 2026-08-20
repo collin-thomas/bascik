@@ -1236,7 +1236,34 @@ describe("prefixElementAttribute – auto-generated instance id", () => {
 });
 
 describe("namespaceScriptTags – line-offset padding and sourceURL", () => {
-  it("adds sourceURL and correct newline padding when fileName is present", () => {
+  it("preserves exact line numbers of inner JS code relative to original HTML file", () => {
+    const fileContent =
+      "<html>\n" +                  // line 1
+      "<body>\n" +                  // line 2
+      "  <h1>Hello</h1>\n" +        // line 3
+      "  <script>\n" +              // line 4
+      "    const greeting = 'hi';\n" + // line 5
+      "    console.log(greeting);\n" + // line 6
+      "  </script>\n" +             // line 7
+      "</body>\n" +                 // line 8
+      "</html>";                    // line 9
+
+    const c = {
+      name: "hello-comp",
+      fileName: "src/components/hello-comp.html",
+      fileContent,
+    };
+
+    const result = namespaceScriptTags(c);
+    const lines = result.fileContent.split(/\r?\n/);
+
+    // Line 5 (index 4) should be const greeting = 'hi';
+    expect(lines[4]).toContain("const greeting = 'hi';");
+    // Line 6 (index 5) should be console.log(greeting);
+    expect(lines[5]).toContain("console.log(greeting);");
+  });
+
+  it("adds sourceURL when fileName is present", () => {
     const c = {
       name: "my-comp",
       fileName: "/Users/collin/github/bascik/src/components/my-comp.html",
@@ -1250,34 +1277,7 @@ describe("namespaceScriptTags – line-offset padding and sourceURL", () => {
 
     const result = namespaceScriptTags(c);
     expect(result.fileContent).toContain("src/components/my-comp.html");
-
-    // With lineOffset = 2 (where script is), openTagLines = 0, startLine = 2
-    // padCount = 2 - 1 = 1. padNewlines = "" (0 extra newlines)
-    // The output script block content should be:
-    // (function() {\nconst a = 1;\nconsole.log(a);\n})();\n//# sourceURL=src/components/my-comp.html
-    expect(result.fileContent).toContain("(function() {\n\nconst a = 1;");
-  });
-
-  it("adds multi-line padding when script is further down in the file", () => {
-    const c = {
-      name: "my-comp",
-      fileName: "src/components/my-comp.html",
-      fileContent:
-        "\n\n\n\n" + // 4 newlines, script is on line 5
-        "<script>\n" +
-        "console.log(2);\n" +
-        "</script>"
-    };
-
-    const result = namespaceScriptTags(c);
-    expect(result.fileContent).toContain("src/components/my-comp.html");
-
-    // lineOffset = 5. startLine = 5.
-    // padCount = 5 - 1 = 4. padNewlines = 3 newlines ("\n\n\n")
-    // Total newlines before code starts should be 4:
-    // padNewlines (3) + \n before code (1) = 4.
-    // Let's verify that there are exactly 3 newlines before (function() {
-    expect(result.fileContent).toContain("\n\n\n(function() {");
+    expect(result.fileContent).toContain("(function() {");
   });
 
   it("does not add sourceURL or wrap non-JS/data script tags", () => {

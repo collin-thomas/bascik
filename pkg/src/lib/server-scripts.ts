@@ -50,6 +50,9 @@ import { join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
 import os from "node:os";
 import { BascikConfig } from "./config.js";
+import { cleanStackTrace } from "./stack-trace.js";
+
+export { cleanStackTrace };
 
 /** Request context passed to every `data-bascik-server` script. */
 export interface ServerRequest {
@@ -125,33 +128,6 @@ const runModule = (
       },
     );
   });
-
-export const cleanStackTrace = (
-  rawTrace: string,
-  tmpPath: string,
-  realPath: string,
-  lineOffset: number,
-): string => {
-  if (!rawTrace) return rawTrace;
-
-  // Escaping backslashes for Windows paths
-  const escapedTmpPath = tmpPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-  // Also support file:// URI schemes in stack traces
-  let fileUri = tmpPath;
-  try {
-    fileUri = pathToFileURL(tmpPath).href;
-  } catch { }
-  const escapedFileUri = fileUri.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-  const regex = new RegExp(`(?:${escapedFileUri}|${escapedTmpPath}):(\\d+)`, "g");
-
-  return rawTrace.replace(regex, (match, lineStr) => {
-    const lineNum = parseInt(lineStr, 10);
-    const mappedLine = lineOffset + lineNum - 1;
-    return `${realPath}:${mappedLine}`;
-  });
-};
 
 /**
  * Find every `<script data-bascik-server>` block in `html`, execute each as a

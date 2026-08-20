@@ -600,29 +600,15 @@ export const namespaceScriptTags = (
         return match;
       }
 
-      let sourceUrlComment = "";
-      let padNewlines = "";
+      const leading = code.startsWith("\n") ? "" : "\n";
+      const trailing = code.endsWith("\n") ? "" : "\n";
+
       if (component.fileName) {
         const relPath = relative(process.cwd(), component.fileName).replace(/\\/g, "/");
-        sourceUrlComment = `\n//# sourceURL=${relPath}`;
-
-        const lineOffset = component.fileContent.slice(0, offset).split(/\r?\n/).length;
-        const openTagLines = open.split(/\r?\n/).length - 1;
-        const startLine = lineOffset + openTagLines;
-
-        const padCount = startLine - 1;
-        padNewlines = padCount > 0 ? "\n".repeat(padCount - 1) : "";
-      }
-
-      if (component.fileName) {
-        return `${open}${padNewlines}(function() {\n${code}\n})();${sourceUrlComment}${close}`;
+        const sourceUrlComment = `\n//# sourceURL=${relPath}`;
+        return `${open}(function() {${leading}${code}${trailing}})();${sourceUrlComment}${close}`;
       } else {
-        // Fallback for tests without fileName
-        return `${open}
-        (function() {
-          ${code}
-        })();
-        ${close}`;
+        return `${open}(function() {${leading}${code}${trailing}})();${close}`;
       }
     },
   );

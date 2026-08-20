@@ -46,6 +46,9 @@ import { dirname, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { getRelativePath } from "./file-system.js";
 import { BascikConfig } from "./config.js";
+import { cleanStackTrace } from "./stack-trace.js";
+
+export { cleanStackTrace };
 
 // Limits concurrent child-process spawns based on available memory.
 // Initialized lazily on first use so freemem() reflects the live state at startup.
@@ -269,33 +272,6 @@ const writeScriptCache = async (
     JSON.stringify({ v: SCRIPT_CACHE_VERSION, output }),
     "utf8",
   ).catch(() => { });
-};
-
-export const cleanStackTrace = (
-  rawTrace: string,
-  tmpPath: string,
-  realPath: string,
-  lineOffset: number,
-): string => {
-  if (!rawTrace) return rawTrace;
-
-  // Escaping backslashes for Windows paths
-  const escapedTmpPath = tmpPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-  // Also support file:// URI schemes in stack traces
-  let fileUri = tmpPath;
-  try {
-    fileUri = pathToFileURL(tmpPath).href;
-  } catch { }
-  const escapedFileUri = fileUri.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-  const regex = new RegExp(`(?:${escapedFileUri}|${escapedTmpPath}):(\\d+)`, "g");
-
-  return rawTrace.replace(regex, (match, lineStr) => {
-    const lineNum = parseInt(lineStr, 10);
-    const mappedLine = lineOffset + lineNum - 1;
-    return `${realPath}:${mappedLine}`;
-  });
 };
 
 /**
