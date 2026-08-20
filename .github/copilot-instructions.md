@@ -201,17 +201,25 @@ Update `docs/content/internals/dev-server.md` to reflect the change. This page i
 
 **General principle:** the three files that must stay in sync are `llms.txt`, `SKILL.md`, and the relevant `docs/content/internals/*.md`. The copilot-instructions file is the enforcement mechanism — add notes here when a new sync relationship is created.
 
-### Testing Principles & Bug Prevention Rules
+### Testing Philosophy & Bug Prevention
 
-Write tests that directly catch and prevent real-world edge-case bugs:
+High unit test coverage numbers can create false confidence if tests only exercise happy-path functions in isolation with ideal inputs. Bascik's testing philosophy focuses on real-world system boundaries, environment parity, and edge-case resilience:
 
-- **Path Normalization & Route Matching:** Test path utilities (`getHttpPath`, `getRelativePath`, `toDistPath`) against every input path variation: absolute paths (`/abs/path/src/pages/x.html`), relative paths (`src/pages/x.html`, `pages/x.html`), bare filenames (`x.html`), subfolder routes (`src/pages/sub/x.html`), and trailing-slash variants. Verify that SSE live-reload referer matching works seamlessly across subfolder routes and watched external files.
-- **No Fragile Relative DOM Traversal in E2E Tests:** Never use index-based or relative DOM traversal like `locator('../..').locator('span').nth(1)` in Playwright tests. Minification in production builds (`bascik --build`) collapses whitespace and alters DOM node indexing compared to unminified local HTML. Always target elements via explicit semantic attributes, scoped IDs (`button[id$="__btn"]`), or data attributes (`data-bascik-prop-*`, `data-testid`).
-- **Scoped Class and ID Selectors in Assertions:** Bascik rewrites class names and IDs with `bascik__<comp>__...` prefixes. E2E test assertions targeting component DOM must query using scoped names (or `minify.identifiers: false` readable scoped names), never raw un-scoped template names.
-- **Regex Replacement Safety ($1, $2, $&):** String replacements in core pipeline steps (`replaceTag`, `executeBuildScripts`, slot insertion) must use function replacements `() => replacement` rather than raw replacement strings. Tests for string substitution methods must include test cases containing regex special tokens (`$1`, `$2`, `$&`, `$'`, ``$` ``), such as SQL `$1` parameter markers, to prevent infinite loops and process crashes.
-- **Worker Thread vs Main Thread Environment Parity:** Worker threads (`worker-pool.ts`, `page-worker.ts`) do not inherit `process.argv`. When adding or testing config options or flags (like `isBuild`, `useWorkers`, `minify`), unit tests must explicitly test worker execution and verify that disk side-effects (such as `dist/` file creation) occur as expected, not just in-memory return values.
-- **Isolation of Unit Tests (No Source Tree Mutation):** Unit tests must never mutate package source directories or leave un-gitignored files on disk (`bascik.config.js`, `pages/index.html`). Run file system tests in isolated temp directories or mock `fs` calls cleanly so `git status` stays clean after test runs.
-- **Network Reset & Error Handling in HTTP/2 and SSE:** E2E and server unit tests must verify graceful connection close handling (`ECONNRESET`, `EPIPE`, `ERR_HTTP2_STREAM_CANCEL`) without unhandled stream exceptions or process crashes.
+1. **Test Boundaries, Not Just Isolated Functions (Coverage ≠ Resilience):**
+   - High line coverage does not prove system resilience. Bugs hide at boundary intersections: Main Thread ↔ Worker Thread, Dev Server SSE ↔ Browser EventSource, and Build Scripts ↔ Disk Cache.
+   - Always pair unit tests with E2E integration tests running against active dev (`bascik`), production HTTP/2 (`bascik --serve`), and static build output (`bascik --build`).
+
+2. **Test the Full Real-World Input Spectrum:**
+   - Functions rarely receive clean ideal inputs in production. Test path utilities, route lookups, and watchers against the full spectrum of environment inputs: absolute filesystem paths (`/abs/.../src/pages/x.html`), relative paths (`src/pages/x.html`, `pages/x.html`), bare filenames (`x.html`), subfolder routes, Windows backslashes, and trailing slash URL variants.
+   - Test string replacements with special regex tokens (`$1`, `$2`, `$&`, ``$` ``) such as SQL parameter placeholders or JSON strings containing HTML tags. Core pipeline replacements must use function replacements `() => value` to prevent infinite loops and process OOMs.
+
+3. **Enforce Environment Parity in Tests:**
+   - Worker threads (`worker-pool.ts`, `page-worker.ts`) do not inherit `process.argv` from the main thread. Always test worker execution explicitly and verify that disk side-effects (`dist/` outputs) occur as expected, not just in-memory return values.
+   - HTML minification in production (`bascik --build`) collapses whitespace and shifts DOM element indices. E2E assertions must target elements via explicit semantic attributes, scoped IDs (`button[id$="__btn"]`), or data attributes (`data-bascik-prop-*`), never fragile relative DOM traversal (`.nth(N)` or `.locator('../..')`).
+
+4. **Resilience & Fault Tolerance by Design:**
+   - Test recovery from invalid user input, syntax errors, rapid file edits, and unexpected client disconnects (`ECONNRESET`, `EPIPE`, `ERR_HTTP2_STREAM_CANCEL`). The watcher and server must stay alive and recover automatically.
+   - Unit tests must be strictly isolated: never mutate package source directories or leave un-gitignored files on disk (`bascik.config.js`, `pages/index.html`). Run filesystem tests in isolated temp directories or mock system calls cleanly.
 
 ## License Source of Truth
 
