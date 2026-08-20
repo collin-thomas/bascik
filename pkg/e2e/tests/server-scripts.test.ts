@@ -113,8 +113,8 @@ test.describe('data-bascik-server — request-time script execution', () => {
 
   test('executes data-bascik-server scripts inside custom components at request time', async ({ page }) => {
     await page.goto('/server-scripts-advanced-test');
-    await expect(page.locator('.server-comp-static')).toHaveText('Component Static');
-    await expect(page.locator('#comp-server-output')).toHaveText('Comp Server: GET');
+    await expect(page.locator('[class*="server-comp-static"]')).toHaveText('Component Static');
+    await expect(page.locator('[id$="__comp-server-output"]')).toHaveText('Comp Server: GET');
   });
 
   test('strips ANSI escape codes from script output before injecting into HTML', async ({ page }) => {

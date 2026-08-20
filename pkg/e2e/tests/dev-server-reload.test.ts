@@ -89,18 +89,18 @@ test.describe('Dev Server Live-Reload & Watch Engine', () => {
   test('open browser page updates live when a component template changes', async ({ page }) => {
     await page.goto('/scope-test');
 
-    const button = page.locator('button#add-btn').first();
+    const button = page.locator('button[id$="__add-btn"]').first();
     await expect(button).toBeVisible();
 
     const markerText = `Click Me ${Date.now()}`;
     const updatedComponent = originalComponentContent.replace(
-      'Add Class',
+      'classList.add("active", "highlighted")',
       markerText,
     );
     await writeFile(componentPath, updatedComponent, 'utf8');
 
     // Live reload should re-transpile the page with the updated component template
-    await expect(page.locator('button#add-btn').first()).toHaveText(markerText, { timeout: 15000 });
+    await expect(page.locator('button[id$="__add-btn"]').first()).toHaveText(markerText, { timeout: 15000 });
   });
 
   // ── 4. Multi-Tab Live Reload ───────────────────────────────────────────────
@@ -127,7 +127,7 @@ test.describe('Dev Server Live-Reload & Watch Engine', () => {
     // Modify second page
     const marker2 = `Tab 2 Marker ${Date.now()}`;
     await writeFile(secondPagePath, originalSecondPageContent.replace(
-      '<h1>Component JS Isolation — Live Test</h1>',
+      '<h1>Cross-Component Isolation Test</h1>',
       `<h1>${marker2}</h1>`,
     ), 'utf8');
 
@@ -199,8 +199,13 @@ test.describe('Dev Server HTTP Protocol & Security Headers', () => {
   });
 
   test('rejects path traversal attempts with 400 Bad Request', async ({ request }) => {
-    const res = await request.get('/../../../etc/passwd');
-    expect(res.status()).toBe(400);
+    const res1 = await request.get('/../../../etc/passwd');
+    // HTTP/1.1 clients (like Playwright in dev mode) may normalize the path to /etc/passwd
+    // on the client side before sending, which results in 404 Not Found, while HTTP/2 keeps it as 400.
+    expect([400, 404]).toContain(res1.status());
+
+    const res2 = await request.get('/..%2f..%2f..%2fetc/passwd');
+    expect(res2.status()).toBe(400);
   });
 });
 
@@ -242,8 +247,8 @@ test.describe('Dev Server Request-Time Scripts (data-bascik-server)', () => {
     await page.goto('/server-scripts-advanced-test');
 
     await expect(page.locator('#esm-import-output')).toHaveText('ESM Import: server-scripts-advanced-test | Method: GET');
-    await expect(page.locator('.server-comp-static')).toHaveText('Component Static');
-    await expect(page.locator('#comp-server-output')).toHaveText('Comp Server: GET');
+    await expect(page.locator('[class*="server-comp-static"]')).toHaveText('Component Static');
+    await expect(page.locator('[id$="__comp-server-output"]')).toHaveText('Comp Server: GET');
     await expect(page.locator('#ansi-output')).toHaveText('Clean HTML');
   });
 });
