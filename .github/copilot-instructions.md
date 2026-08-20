@@ -196,8 +196,8 @@ Then inspect the relevant `docs/dist/` output to confirm the pkg change has the 
 - E2E tests support four server modes: static production (`playwright.config.ts`), HTTP/1.1 production server (`playwright.server.config.ts`), HTTP/2 production server (`playwright.server-http2.config.ts` via `yarn pkg:e2e:prod`), and live dev server (`playwright.dev.config.ts` via `yarn pkg:e2e:dev`).
 - The coverage numbers shown on the testing page are read from `pkg/test-coverage.json` (unit tests) and `pkg/e2e-test-coverage.json` (E2E build-step coverage) at docs build time. Do not run `#pre-push.prompt.md` or pre-push scripts automatically after adding tests. The user handles running pre-push steps.
 
-**When changing `pkg/src/lib/dev-server.md` (or adding to the live-reload / SSE / watch system):**
-Update `docs/content/internals/dev-server.md` to reflect the change. This page is the source of truth for how the dev server and watch system work.
+**When changing server components in `pkg/src/lib/` (or adding to the live-reload / SSE / watch / request script systems):**
+Update `docs/content/internals/server.md` to reflect the change. This page is the source of truth for how the server architecture works across dev and production modes.
 
 **General principle:** the three files that must stay in sync are `llms.txt`, `SKILL.md`, and the relevant `docs/content/internals/*.md`. The copilot-instructions file is the enforcement mechanism — add notes here when a new sync relationship is created.
 

@@ -33,7 +33,7 @@ transpiled: pages/index.html (modified component: <user-badge>)
 
 Drop a new component file at `src/components/user-badge/user-badge.html` and use `<user-badge></user-badge>` in your pages immediately without writing import statements or registering tags.
 
-> **Deep Dive:** Read [CLI Dev Server](/cli#starting-the-dev-server) for server options, or explore [Dev Server Internals](/internals/dev-server) for live reload mechanics.
+> **Deep Dive:** Read [CLI Dev Server](/cli#starting-the-dev-server) for server options, or explore [Server Architecture Internals](/internals/server) for live reload mechanics.
 
 ## VS Code Editor Ergonomics
 

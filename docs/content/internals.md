@@ -58,5 +58,7 @@ After any `pkg/src/` change, rebuild the package and the docs server will pick i
 - [Create App](/internals/create-app), how the standalone scaffolding CLI is structured and why the generated app uses npm.
 - [Transpilation Pipeline](/internals/transpilation-pipeline), the two-phase page and component pipeline that turns source HTML into deployable output.
 - [Scoping System](/internals/scoping-system), how IDs, class names, CSS, and JavaScript references are namespaced per component instance.
-- [Dev Server](/internals/dev-server), the HTTP/2 server, TLS certificate generation, memory store, live reload, and watch system.
+- [Server Architecture](/internals/server), the HTTP/1.1 and HTTP/2 servers, dev vs prod modes, request script execution, memory store, and live reload.
+- [Diagnostics Engine](/internals/diagnostics), static project validation (`bascik --check`), tag scanning, and stack trace remapping.
+- [Minification & Asset Optimization](/internals/minification), zero-dependency HTML, CSS, and JS minification, Base62 identifier hashing, and BYO minifiers.
 - [Testing Internals](/internals/testing), running tests, coverage, writing new tests, and the benchmarking suite.
