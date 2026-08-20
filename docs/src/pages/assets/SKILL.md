@@ -654,7 +654,7 @@ Components work inside `<head>` to organize metadata:
 * Use `console.log()` or `process.stdout.write()` to output HTML.
 * Build scripts run before component resolution, so their output can contain component tags.
 * All build scripts on a page execute concurrently via `Promise.all` (capped by a memory semaphore), and output is assembled in document order once all scripts complete.
-* On error, behavior is controlled by `onScriptError` in `bascik.config.ts`: `'error'` (default: log error to stderr and replace tag with `""`), `'warn'` (log warning to stderr and replace tag with `""`), or `'halt'` (throw error and immediately stop the build, recommended for CI/CD).
+* On error, behavior is controlled by `onScriptError` in `bascik.config.ts`: `'warn'` (default in dev: log warning to stderr and replace tag with `""`), `'error'` (default in `--build` and `--serve`: log error to stderr and throw exception to stop build), or `'halt'` (alias for `'error'`).
 * **Hard error:** combining `data-bascik-build` and `data-bascik-server` on the same tag throws and aborts the build. A script runs at build time or at request time, not both.
 
 ### Build Script Environment Variables
@@ -891,7 +891,8 @@ export default defineConfig({
   },
   useWorkers: false,       // true: transpile pages across CPU-core worker threads
   buildScriptCache: true,  // false: disable disk cache for <script data-bascik-build>
-  onScriptError: 'error',  // 'warn' | 'error' | 'halt' — script error handling
+  onScriptError: 'warn',   // 'warn' (default in dev) | 'error' (default in build/prod-server) | 'halt'
+  onMinifyError: 'warn',   // 'warn' (default in dev) | 'error' (default in build/prod-server) | 'halt'
   devServer: {
     logging: {
       level: 'info',    // silent | error | warn | info | debug
@@ -1269,13 +1270,16 @@ Each `pkg/src/lib/*.ts` module has a paired `*.test.ts`. Because modules depend 
 yarn pkg:build                  # build package first
 yarn pkg:e2e                    # run static production suite
 yarn pkg:e2e:dev                # run dev server live-reload and watch suite
-yarn pkg:e2e:prod               # run HTTP/2 server script production suite
+yarn pkg:e2e:prod               # run both HTTP/1.1 and HTTP/2 production server suites
+yarn pkg:e2e:prod:http1         # run cleartext HTTP/1.1 prod server suite
+yarn pkg:e2e:prod:http2         # run TLS HTTP/2 prod server suite
 ```
 
-The E2E suite lives in `pkg/e2e/` and supports three execution modes:
+The E2E suite lives in `pkg/e2e/` and supports four execution modes:
 1. **Static production suite (`playwright.config.ts`)**: builds the fixture site with `bascik --build` and serves static files via `server.ts` on port 4200.
-2. **Server script production suite (`playwright.server.config.ts`)**: boots `bascik --serve` over HTTP/2 on port 9443 to test `data-bascik-server` request-time script execution.
-3. **Dev server watch suite (`playwright.dev.config.ts`)**: boots `bascik --dev` on port 9443 to run the full test suite and live-reload watcher tests directly against the live dev server with SSE tracking and open-page priority re-transpilation.
+2. **HTTP/1.1 production server suite (`playwright.server.config.ts`)**: boots cleartext `bascik --serve` over HTTP/1.1 on port 9443 to test `data-bascik-server` request-time script execution and cleartext server behavior.
+3. **HTTP/2 production server suite (`playwright.server-http2.config.ts`)**: boots TLS-enabled `bascik --serve` over HTTP/2 on port 9444 to test `data-bascik-server` request-time script execution and encrypted server behavior.
+4. **Dev server watch suite (`playwright.dev.config.ts`)**: boots `bascik --dev` on port 8080 to run the full test suite and live-reload watcher tests directly against the live dev server with SSE tracking and open-page priority re-transpilation.
 
 The fixture config sets `minify.identifiers: false` so Playwright selectors can use readable scoped names like `bascik__my-comp__btn` instead of opaque hashes.
 
