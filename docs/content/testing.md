@@ -325,7 +325,7 @@ Choosing between unit tests and E2E browser tests depends on what you need to ve
 
 The Bascik documentation site (`docs/`) includes both E2E browser tests and unit tests to ensure all components functionally work and stay tested:
 
-- **E2E Browser Tests (`docs/e2e/docs-components.spec.ts`)**: Runs Playwright against a live built Bascik server (`npx bascik --build && npx bascik --serve 4200`) to test real browser behavior for `docs-search`, `component-demo`, `comp-toggle`, `demo-counter`, and `comp-alert`.
+- **E2E Browser Tests (`docs/e2e/docs-components.spec.ts`)**: Runs Playwright against a live built Bascik server (`npx bascik --build && npx bascik --serve`) to test real browser behavior for `docs-search`, `component-demo`, `comp-toggle`, `demo-counter`, and `comp-alert`.
 - **Pure Logic Unit Tests (`docs/src/components/docs-search/search-logic.test.ts`)**: Tests the search engine logic (`search-logic.ts`) in Vitest across tokenization, scoring tiers, snippet extraction, and result formatting.
 
 To execute the test suites:
