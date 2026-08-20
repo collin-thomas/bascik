@@ -19,6 +19,23 @@
 - It does not add any JavaScript to pages. Every script in the output was written by you.
 - It does not require Web Components, Shadow DOM, or any browser-specific API.
 
+## Sub-Second Build Speeds
+
+Bascik transpiles and scopes entire static sites in milliseconds. This documentation website, featuring 50 complete pages with build scripts, dynamic navigation, search indexing, and component scoping, builds in under 1.8 seconds.
+
+<!-- demo:home-build-output -->
+```text
+$ bascik
+transpiled: pages/404.html
+transpiled: pages/index.html
+transpiled: pages/search.html
+transpiled: pages/license.html
+transpiled: pages/getting-started.html
+...
+✓ 50 pages transpiled in 1779ms
+Server running at http://localhost:8080
+```
+
 ## Example: One Component, Start to Finish
 
 Create a file. The file name is the tag name. HTML, CSS, and JavaScript live together in that one file, and everything gets scoped automatically at build time.

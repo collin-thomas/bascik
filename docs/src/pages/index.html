@@ -496,6 +496,87 @@
       flex: 1;
     }
 
+    /* ── Speed section ── */
+    .speed-grid {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .speed-terminal {
+      background: var(--pre-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      --cblock-header-display: none;
+      --cblock-border: none;
+      --cblock-radius: 0;
+    }
+
+    .speed-terminal-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .terminal-dots {
+      display: flex;
+      gap: 6px;
+      margin-right: 8px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .dot-red {
+      background: #ff5f56;
+    }
+
+    .dot-yellow {
+      background: #ffbd2e;
+    }
+
+    .dot-green {
+      background: #27c93f;
+    }
+
+    .speed-metrics {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .metric-card {
+      padding: 20px 22px;
+      background: var(--callout-bg);
+      border: 1px solid var(--callout-border);
+      border-radius: var(--r);
+    }
+
+    .metric-number {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--accent-fg);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+
+    .metric-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
     /* ── Install CTA ── */
     .cta-section {
       padding: 72px 0 88px;
@@ -539,6 +620,10 @@
 
     @media (max-width: 820px) {
       .how-split {
+        grid-template-columns: 1fr;
+      }
+
+      .speed-grid {
         grid-template-columns: 1fr;
       }
 
@@ -598,6 +683,7 @@
           class="install-command hero-quickstart"><code>npm create bascik@latest</code><button class="install-copy-btn" aria-label="Copy" title="Copy"><svg class="copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg class="copy-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg></button></pre>
         <ul class="hero-stats">
           <li><strong>0 kB</strong> framework JS added</li>
+          <li><strong>50 pages</strong> transpiled in ~1.8s</li>
           <li><a href="/performance"><strong>Lighthouse 100s</strong> out of the box</a></li>
           <li><strong>Use what you know</strong>: vanilla HTML, CSS, JS</li>
         </ul>
@@ -626,7 +712,7 @@
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
                   const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
-                  console.log(await extractDemoBlock('./content/overview.md', 'home-card-component'));
+                  console.log(await extractDemoBlock('./content/index.md', 'home-card-component'));
                 </script>
               </code-block>
             </div>
@@ -636,7 +722,7 @@
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
                   const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
-                  console.log(await extractDemoBlock('./content/overview.md', 'home-card-usage'));
+                  console.log(await extractDemoBlock('./content/index.md', 'home-card-usage'));
                 </script>
               </code-block>
             </div>
@@ -646,7 +732,7 @@
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
                   const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
-                  console.log(await extractDemoBlock('./content/overview.md', 'home-card-output'));
+                  console.log(await extractDemoBlock('./content/index.md', 'home-card-output'));
                 </script>
               </code-block>
             </div>
@@ -661,6 +747,53 @@
             <div class="how-result-card" id="how-demo-card">
               <h3>My Card</h3>
               <p>Any HTML goes inside as slot content.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Speed & Build Performance ── -->
+    <section class="home-section">
+      <div class="container">
+        <p class="section-label">Build Performance</p>
+        <h2 class="section-heading">Sub-second build speeds. Industry-leading performance.</h2>
+        <p class="section-sub">Bascik transpiles and scopes entire static websites in milliseconds. This documentation
+          site, built with Bascik, compiles 50 complete pages in under 1.8 seconds.</p>
+
+        <div class="speed-grid">
+          <div class="speed-terminal">
+            <div class="speed-terminal-bar">
+              <div class="terminal-dots">
+                <span class="dot dot-red"></span>
+                <span class="dot dot-yellow"></span>
+                <span class="dot dot-green"></span>
+              </div>
+              <span>yarn docs:dev</span>
+            </div>
+            <code-block data-bascik-prop-lang="text">
+              <script data-bascik-build>
+                import { join } from 'node:path';
+                import { pathToFileURL } from 'node:url';
+                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
+                console.log(await extractDemoBlock('./content/index.md', 'home-build-output'));
+              </script>
+            </code-block>
+          </div>
+
+          <div class="speed-metrics">
+            <div class="metric-card">
+              <div class="metric-number">1779ms</div>
+              <div class="metric-label">50 full pages transpiled with build scripts, search indexing, and component
+                scoping</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-number">~35ms</div>
+              <div class="metric-label">Average build time per page</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-number">0 kB</div>
+              <div class="metric-label">Framework runtime overhead</div>
             </div>
           </div>
         </div>
@@ -689,7 +822,7 @@
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
                   const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
-                  console.log(await extractDemoBlock('./content/overview.md', 'home-counter-html'));
+                  console.log(await extractDemoBlock('./content/index.md', 'home-counter-html'));
                 </script>
               </code-block>
             </div>
@@ -699,7 +832,7 @@
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
                   const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
-                  console.log(await extractDemoBlock('./content/overview.md', 'home-counter-css'));
+                  console.log(await extractDemoBlock('./content/index.md', 'home-counter-css'));
                 </script>
               </code-block>
             </div>
@@ -709,7 +842,7 @@
                   import { join } from 'node:path';
                   import { pathToFileURL } from 'node:url';
                   const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
-                  console.log(await extractDemoBlock('./content/overview.md', 'home-counter-js'));
+                  console.log(await extractDemoBlock('./content/index.md', 'home-counter-js'));
                 </script>
               </code-block>
             </div>
