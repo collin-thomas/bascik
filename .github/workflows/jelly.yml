@@ -1,0 +1,30 @@
+name: Jelly Static Analysis
+on:
+  push:
+    branches: [main, master, pre-release-*]
+  pull_request:
+    branches: [main, master, pre-release-*]
+
+jobs:
+  jelly:
+    name: Jelly Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Enable Corepack & Install dependencies
+        run: |
+          corepack enable
+          yarn install --immutable
+
+      - name: Install Jelly Static Analyzer Globally
+        run: npm install -g @cs-au-dk/jelly
+
+      - name: Run Jelly Analysis on package index
+        run: jelly --ignore-dependencies pkg/src/index.ts
