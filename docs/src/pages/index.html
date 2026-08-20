@@ -767,6 +767,16 @@
         <div class="demo-layout">
           <!-- Code panel using component-demo with disabled preview tab -->
           <component-demo data-bascik-prop-no-preview="true" data-bascik-prop-file="src/components/demo-counter.html">
+            <div data-bascik-slot="source-usage">
+              <code-block data-bascik-prop-lang="html">
+                <script data-bascik-build>
+                  import { join } from 'node:path';
+                  import { pathToFileURL } from 'node:url';
+                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
+                  console.log(await extractDemoBlock('./content/index.md', 'home-counter-usage'));
+                </script>
+              </code-block>
+            </div>
             <div data-bascik-slot="source-html">
               <code-block data-bascik-prop-lang="html">
                 <script data-bascik-build>

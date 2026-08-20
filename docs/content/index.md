@@ -92,9 +92,15 @@ At build time Bascik inlines the component and scopes every class name and DOM s
 
 The same component used twice on one page. Each instance gets its own namespace, so plain `getElementById` and `querySelector` calls stay fully isolated without runtime JS, Shadow DOM, or a virtual DOM.
 
+<!-- demo:home-counter-usage -->
+```html
+<!-- src/pages/index.html -->
+<demo-counter data-bascik-prop-label="Instance A"></demo-counter>
+<demo-counter data-bascik-prop-label="Instance B"></demo-counter>
+```
 <!-- demo:home-counter-html -->
 ```html
-<!-- src/components/demo-counter.html - component template -->
+<!-- src/components/demo-counter.html -->
 <div class="ctr">
   <span class="ctr-label" data-bascik-prop-label></span>
   <span class="ctr-count" id="count">0</span>
@@ -103,16 +109,10 @@ The same component used twice on one page. Each instance gets its own namespace,
     <button class="ctr-inc">+</button>
   </div>
 </div>
-
-<!-- src/pages/index.html - usage -->
-<demo-counter data-bascik-prop-label="Instance A"></demo-counter>
-<demo-counter data-bascik-prop-label="Instance B"></demo-counter>
 ```
 
 <!-- demo:home-counter-css -->
 ```css
-/* Auto-scoped - class names become:
-   .bascik__demo-counter__ctr { ... } */
 .ctr {
   display: flex;
   flex-direction: column;
@@ -131,7 +131,6 @@ The same component used twice on one page. Each instance gets its own namespace,
   cursor: pointer;
 }
 ```
-
 <!-- demo:home-counter-js -->
 ```js
 // Plain JavaScript. No framework APIs, no special
