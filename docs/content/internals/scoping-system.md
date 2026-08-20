@@ -232,14 +232,14 @@ document.querySelector(".btn").addEventListener("click", function() { count++; }
 
 ## Identifier Minification
 
-When `minify.identifiers: true` is set (the default for builds), every scoped name is hashed using SHAKE-256 (outputLength 6 bytes = 12 hex chars) and prefixed with `b` to ensure it starts with a letter:
+When `minify.identifiers: true` is set (the default for builds), every scoped name is hashed using SHA-256 (converting the 64-bit prefix to an 11-character Base62 string) and prefixed with `b` to ensure it starts with a letter:
 
 ```ts
 // names.ts
 export const getAttributeNameHash = (attributeName: string): string => {
-  return `b${createHash("shake256", { outputLength: 6 })
-    .update(attributeName)
-    .digest("hex")}`;
+  const digest = createHash("sha256").update(attributeName).digest();
+  const num = typeof digest === "string" ? Buffer.from(digest).readBigUInt64BE(0) : digest.readBigUInt64BE(0);
+  return `b${toBase62(num, 11)}`;
 };
 ```
 
