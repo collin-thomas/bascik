@@ -904,6 +904,7 @@ __metadata:
     "@bascik/bascik": "workspace:*"
     "@playwright/test": "npm:^1.62.0"
     "@types/node": "npm:^24.0.0"
+    "@vitest/coverage-v8": "npm:^4.1.10"
     marked: "npm:^18.0.7"
     vitest: "npm:^4.1.10"
   languageName: unknown
@@ -1209,6 +1210,7 @@ __metadata:
   resolution: "create-bascik@workspace:create"
   dependencies:
     "@types/node": "npm:^24.0.0"
+    "@vitest/coverage-v8": "npm:^4.1.10"
     typescript: "npm:^7.0.2"
     vite: "npm:^8.1.5"
     vitest: "npm:^4.1.10"

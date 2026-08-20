@@ -10,6 +10,17 @@ Bascik is a build tool for HTML components. It scopes and assembles reusable HTM
 
 ---
 
+### Test Coverage
+
+| Package / Suite | Lines | Functions | Branches |
+| :--- | :--- | :--- | :--- |
+| **`@bascik/bascik` Unit** | [![Unit lines](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fbascikdev%2Fbascik%2Fmain%2Fpkg%2Ftest-coverage.json&query=%24.total.lines.pct&label=unit%20lines&suffix=%25&color=brightgreen)](https://github.com/bascikdev/bascik/blob/main/pkg/test-coverage.json) | [![Unit functions](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fbascikdev%2Fbascik%2Fmain%2Fpkg%2Ftest-coverage.json&query=%24.total.functions.pct&label=unit%20functions&suffix=%25&color=brightgreen)](https://github.com/bascikdev/bascik/blob/main/pkg/test-coverage.json) | [![Unit branches](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fbascikdev%2Fbascik%2Fmain%2Fpkg%2Ftest-coverage.json&query=%24.total.branches.pct&label=unit%20branches&suffix=%25&color=blue)](https://github.com/bascikdev/bascik/blob/main/pkg/test-coverage.json) |
+| **`@bascik/bascik` E2E** | [![E2E lines](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fbascikdev%2Fbascik%2Fmain%2Fpkg%2Fe2e-test-coverage.json&query=%24.total.lines.pct&label=e2e%20lines&suffix=%25&color=orange)](https://github.com/bascikdev/bascik/blob/main/pkg/e2e-test-coverage.json) | [![E2E functions](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fbascikdev%2Fbascik%2Fmain%2Fpkg%2Fe2e-test-coverage.json&query=%24.total.functions.pct&label=e2e%20functions&suffix=%25&color=orange)](https://github.com/bascikdev/bascik/blob/main/pkg/e2e-test-coverage.json) | [![E2E branches](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fbascikdev%2Fbascik%2Fmain%2Fpkg%2Fe2e-test-coverage.json&query=%24.total.branches.pct&label=e2e%20branches&suffix=%25&color=orange)](https://github.com/bascikdev/bascik/blob/main/pkg/e2e-test-coverage.json) |
+| **`create-bascik` Unit** | [![Unit lines](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fbascikdev%2Fbascik%2Fmain%2Fcreate%2Ftest-coverage.json&query=%24.total.lines.pct&label=unit%20lines&suffix=%25&color=brightgreen)](https://github.com/bascikdev/bascik/blob/main/create/test-coverage.json) | [![Unit functions](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fbascikdev%2Fbascik%2Fmain%2Fcreate%2Ftest-coverage.json&query=%24.total.functions.pct&label=unit%20functions&suffix=%25&color=brightgreen)](https://github.com/bascikdev/bascik/blob/main/create/test-coverage.json) | - |
+| **`bascik-docs` Scripts** | [![Scripts lines](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fbascikdev%2Fbascik%2Fmain%2Fdocs%2Ftest-coverage.json&query=%24.total.lines.pct&label=scripts%20lines&suffix=%25&color=brightgreen)](https://github.com/bascikdev/bascik/blob/main/docs/test-coverage.json) | [![Scripts functions](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fbascikdev%2Fbascik%2Fmain%2Fdocs%2Ftest-coverage.json&query=%24.total.functions.pct&label=scripts%20functions&suffix=%25&color=brightgreen)](https://github.com/bascikdev/bascik/blob/main/docs/test-coverage.json) | [![Scripts branches](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fbascikdev%2Fbascik%2Fmain%2Fdocs%2Ftest-coverage.json&query=%24.total.branches.pct&label=scripts%20branches&suffix=%25&color=blue)](https://github.com/bascikdev/bascik/blob/main/docs/test-coverage.json) |
+
+---
+
 ## Repo Structure
 
 | Directory   | Purpose                                                                            |
@@ -56,7 +67,6 @@ This updates test coverage JSON files, updates `docs/src/pages/assets/SKILL.md` 
 
 The prompt calls:
 
-- `yarn docs:update-coverage`
-- `yarn docs:update-e2e-coverage`
+- `yarn all:update-coverage`
 - The LLM updates the `SKILL.md` file based on changes in `docs/content/`.
 - `yarn create:prepack`
