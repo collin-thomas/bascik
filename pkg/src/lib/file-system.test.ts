@@ -313,6 +313,58 @@ describe("copyReplicatePath – CSS minification", () => {
   });
 });
 
+describe("copyReplicatePath – JS minification & fallback", () => {
+  beforeEach(() => {
+    vi.mocked(readFile).mockReset();
+    vi.mocked(writeFile).mockReset();
+    (BascikConfig as any).minify = { css: false, js: true, html: false };
+  });
+
+  afterEach(() => {
+    (BascikConfig as any).minify = { css: false, js: false, html: false };
+  });
+
+  it("writes minified JS when minify.js is enabled", async () => {
+    (BascikConfig as any).minify = {
+      css: false,
+      js: (code: string) => code.replace(/\/\/.*$/gm, "").trim(),
+      html: false,
+    };
+    const rawJs = "const x = 1; // comment\nconsole.log(x);";
+    vi.mocked(readFile)
+      .mockResolvedValueOnce(rawJs as any)
+      .mockRejectedValueOnce(new Error("ENOENT"));
+
+    await copyReplicatePath("pages/js/app.js", "dist");
+
+    expect(writeFile).toHaveBeenCalledOnce();
+    const written = vi.mocked(writeFile).mock.calls[0][1] as string;
+    expect(written).not.toContain("// comment");
+  });
+
+  it("falls back to unminified copy when JS minification throws an error", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+    (BascikConfig as any).minify = {
+      css: false,
+      js: () => { throw new Error("JS Syntax Error"); },
+      html: false,
+    };
+
+    vi.mocked(readFile)
+      .mockResolvedValueOnce("const bad = ;" as any)
+      .mockRejectedValueOnce(new Error("ENOENT"));
+
+    await copyReplicatePath("pages/js/bad.js", "dist");
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("JS minification failed"),
+      expect.any(String),
+      expect.any(Error)
+    );
+    warnSpy.mockRestore();
+  });
+});
+
 describe("getRelativePath — Windows separators", () => {
   it("matches when the configured directory uses backslashes", async () => {
     const original = BascikConfig.directory.pages;
