@@ -290,7 +290,7 @@ For per-request server-side rendering, see [Server scripts](/server).
 <script data-bascik-build>
   import { readFile } from 'node:fs/promises';
   import { marked } from 'marked';
-  const md = await readFile('./content/overview.md', 'utf8');
+  const md = await readFile('./content/index.md', 'utf8');
   const firstPara = md.split('\n\n')[1];
   console.log(`
     <feature-card
