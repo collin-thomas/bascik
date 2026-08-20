@@ -568,17 +568,17 @@ describe("prefixElementAttribute – CSS #id selector scoping", () => {
     expect(result.fileContent).toContain("bascik__my-comp__id__btn");
   });
 
-  it("does NOT mangle hex colour values: color: #abc;", () => {
+  it("does NOT mangle hex color values: color: #abc;", () => {
     const c = makeComponent(
       '<div class="card"></div>',
       ".card { color: #abc; }",
     );
     const result = prefixElementAttribute(c, "class", "test1234");
-    // The hex colour should pass through untouched
+    // The hex color should pass through untouched
     expect(result.cssFileContent).toContain("color: #abc");
   });
 
-  it("does NOT mangle hex colour in gradient: linear-gradient(#abc, #def)", () => {
+  it("does NOT mangle hex color in gradient: linear-gradient(#abc, #def)", () => {
     const c = makeComponent(
       '<div class="card"></div>',
       ".card { background: linear-gradient(#abc, #def); }",
@@ -1232,5 +1232,67 @@ describe("prefixElementAttribute – auto-generated instance id", () => {
     // The scoped name should contain "bascik__my-comp__" followed by a generated id
     expect(result.fileContent).toMatch(/bascik__my-comp__[0-9a-f]{8}__box/);
     expect(result.fileContent).not.toContain('id="box"');
+  });
+});
+
+describe("namespaceScriptTags – line-offset padding and sourceURL", () => {
+  it("adds sourceURL and correct newline padding when fileName is present", () => {
+    const c = {
+      name: "my-comp",
+      fileName: "/Users/collin/github/bascik/src/components/my-comp.html",
+      fileContent:
+        "<div class=\"box\"></div>\n" + // line 1
+        "<script>\n" +                 // line 2
+        "const a = 1;\n" +             // line 3
+        "console.log(a);\n" +          // line 4
+        "</script>"
+    };
+
+    const result = namespaceScriptTags(c);
+    expect(result.fileContent).toContain("src/components/my-comp.html");
+
+    // With lineOffset = 2 (where script is), openTagLines = 0, startLine = 2
+    // padCount = 2 - 1 = 1. padNewlines = "" (0 extra newlines)
+    // The output script block content should be:
+    // (function() {\nconst a = 1;\nconsole.log(a);\n})();\n//# sourceURL=src/components/my-comp.html
+    expect(result.fileContent).toContain("(function() {\n\nconst a = 1;");
+  });
+
+  it("adds multi-line padding when script is further down in the file", () => {
+    const c = {
+      name: "my-comp",
+      fileName: "src/components/my-comp.html",
+      fileContent:
+        "\n\n\n\n" + // 4 newlines, script is on line 5
+        "<script>\n" +
+        "console.log(2);\n" +
+        "</script>"
+    };
+
+    const result = namespaceScriptTags(c);
+    expect(result.fileContent).toContain("src/components/my-comp.html");
+
+    // lineOffset = 5. startLine = 5.
+    // padCount = 5 - 1 = 4. padNewlines = 3 newlines ("\n\n\n")
+    // Total newlines before code starts should be 4:
+    // padNewlines (3) + \n before code (1) = 4.
+    // Let's verify that there are exactly 3 newlines before (function() {
+    expect(result.fileContent).toContain("\n\n\n(function() {");
+  });
+
+  it("does not add sourceURL or wrap non-JS/data script tags", () => {
+    const c = {
+      name: "my-comp",
+      fileName: "src/components/my-comp.html",
+      fileContent:
+        '<script type="application/ld+json">{"@type":"Thing"}</script>\n' +
+        '<script type="importmap">{"imports":{}}</script>'
+    };
+
+    const result = namespaceScriptTags(c);
+    expect(result.fileContent).toBe(
+      '<script type="application/ld+json">{"@type":"Thing"}</script>\n' +
+      '<script type="importmap">{"imports":{}}</script>'
+    );
   });
 });

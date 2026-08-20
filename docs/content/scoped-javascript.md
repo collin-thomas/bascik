@@ -204,6 +204,8 @@ Bascik's scoping pipeline runs first (IIFE wrapping, selector rewriting), then `
 
 Every component `<script>` is wrapped in an IIFE to prevent variable leaks, and every selector string that references a scoped attribute is rewritten to match:
 
+Bascik also preserves line-offset padding and appends `//# sourceURL=src/components/name.html` directives to client script blocks. In browser DevTools, runtime errors and console statements point directly to the original component file and line number.
+
 The counter demo's Output tabs show the complete compiled HTML, CSS, and JavaScript together. The runtime-class demo adds a focused view of `classList.toggle()` rewriting.
 
 The scoping format:

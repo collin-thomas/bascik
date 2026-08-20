@@ -309,3 +309,11 @@ Fix all errors before finishing. Do not suppress errors with `// @ts-ignore` or 
 ## Docs Writing Guide
 
 Favor the term vanilla HTML/JavaScript/CSS over plain HTML/JavaScript/CSS.
+
+## Spelling and Quality Check Extensions
+
+- This repository uses standard **American English** spelling rather than British English spelling (e.g., use `color`, `behavior`, `initialize`, `recognize`, `defense`, `gray`, `centered`, etc.).
+- Maintain clean source code and documentation by running `codespell` to check for spelling errors.
+- Web standards are checked using `webhint`.
+- Recommended extensions are configured in `.vscode/extensions.json`. Install both `Codespell.ai` (`codespellai.codespellai-vscode`) and `webhint` (`webhint.vscode-webhint`) in VS Code for automated spelling and web quality checks.
+- Code spelling and quality checks are integrated into the pre-push workspace checklist `.github/prompts/pre-push.prompt.md`. Running `codespell` and `webhint` via CLI is part of the required pre-push routine.

@@ -40,7 +40,7 @@ If you create a file like `nav.html` or `div.html`, Bascik will print a warning 
 
 ```text
 warning: Component "nav" has the same name as a native HTML element.
-This may cause unexpected behaviour, consider a hyphenated name like "my-nav".
+This may cause unexpected behavior, consider a hyphenated name like "my-nav".
 ```
 
 The component will conflict with every occurrence of that element in your pages. All your `<nav>` tags would be replaced by the component content, most likely breaking your site entirely.

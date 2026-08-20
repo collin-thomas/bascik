@@ -18,7 +18,7 @@
   --r:            10px;
   --r-sm:         6px;
   --r-lg:         16px;
-  --anchor-scroll-offset: 115px;
+  --anchor-scroll-offset: 40px;
   --nav-bg:       rgba(24,25,27,0.9);
   --pre-bg:       #0d0e0f;
   --accent-border: rgba(211,255,141,0.22);
@@ -217,7 +217,7 @@ body {
 /* ── Layout ── */
 .container  { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
 .docs-layout { display: grid; grid-template-columns: 220px 1fr; gap: 0; min-height: 80vh; }
-.docs-content { padding: 48px 40px 80px; max-width: 780px; min-width: 0; overflow-x: hidden; }
+.docs-content { padding: 38px 40px 80px; max-width: 780px; min-width: 0; overflow-x: hidden; }
 
 /* ── Typography ── */
 h1,h2,h3,h4 { margin-top: 0; line-height: 1.2; font-weight: 700; }

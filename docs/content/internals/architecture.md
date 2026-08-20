@@ -43,7 +43,7 @@ All logic lives in `pkg/src/lib/`. Each file has a single, well-defined responsi
 | Module | Responsibility |
 |--------|----------------|
 | `boot-page.ts` | In-memory dev-server boot page shown during initial transpile. Connects to live reload and refreshes once the build finishes. |
-| `build-scripts.ts` | Executes `<script data-bascik-build>` blocks as Node.js ESM modules at transpile time and replaces the tag with the script's stdout output. |
+| `build-scripts.ts` | Executes `<script data-bascik-build>` blocks as Node.js ESM modules at transpile time, cleaning child-process stack traces and appending sourceURL comments for debugging. |
 | `check.ts` | Static analysis for `bascik --check`. Scans all pages and components for unresolved custom tags (errors) and unused component files (warnings). Exits with code 1 when errors are found so it can gate CI pipelines. |
 | `cli.ts` | Command-line argument parser for the `bascik` binary, resolving CLI flags into actions that `index.ts` can execute. |
 | `components.ts` | Loads component HTML and CSS files from disk, detects component tags in HTML strings, extracts props/slots/attributes, and injects resolved content back. Tag detection masks `<script>`/`<style>`/`<textarea>` content so literal tag text is never resolved. |
@@ -57,7 +57,7 @@ All logic lives in `pkg/src/lib/`. Each file has a single, well-defined responsi
 | `http.ts` | Plaintext HTTP/1.1 server (`node:http`) used by default in development and cleartext environments. |
 | `http2.ts` | TLS-enabled HTTP/2 server (`node:http2`) used when `enableTls: true` is configured. |
 | `init.ts` | Bootstraps a new Bascik project via `bascik init`. Creates `src/pages/index.html`, `src/components/`, and `bascik.config.js`, and patches `package.json` with `"type": "module"` and dev/build scripts. |
-| `javascript.ts` | The scoping transforms: `prefixElementAttribute` (rewrites HTML attributes, JS DOM selectors, and CSS) and `namespaceScriptTags` (wraps scripts in IIFEs). |
+| `javascript.ts` | The scoping transforms: `prefixElementAttribute` (rewrites HTML attributes, JS DOM selectors, and CSS) and `namespaceScriptTags` (wraps scripts in IIFEs with `sourceURL` annotations and line padding). |
 | `js-minifier.ts` | Lightweight, built-in JavaScript minifier that strips comments and collapses safe whitespace without breaking statement boundaries (ASI). |
 | `live-reload.ts` | Injected client-side script that establishes an EventSource connection to the dev server to reload pages when they are updated. |
 | `mem.ts` | In-memory page store. Stores brotli-compressed page buffers keyed by HTTP path, and maintains a reverse index mapping each component name to the set of pages that use it. |
@@ -68,7 +68,7 @@ All logic lives in `pkg/src/lib/`. Each file has a single, well-defined responsi
 | `pki.ts` | Generates a self-signed TLS certificate (`bascik-cert.pem` / `bascik-privkey.pem`) via OpenSSL or PowerShell on Windows. |
 | `processing.ts` | The core transpilation pipeline. Contains `pageProcessing` (page phase) and `recursivelyTranspile` (component phase), plus pipeline utility types. |
 | `serve.ts` | Production server entrypoint (`bascik --serve`). Pre-loads pre-rendered `dist/` HTML into `mem.ts` and boots `server.ts`. |
-| `server-scripts.ts` | Loads and executes `<script data-bascik-server>` blocks at request time, injecting stdout into the page in place of the tag. |
+| `server-scripts.ts` | Loads and executes `<script data-bascik-server>` blocks at request time, cleaning child-process stack traces and appending sourceURL comments before injecting stdout into the page. |
 | `server.ts` | Server orchestrator. Dispatches requests to `http.ts` or `http2.ts` based on `BascikConfig.serve.enableTls`, runs shared request handlers, and manages server instances. |
 | `sitemap.ts` | Generates `dist/sitemap.xml` and `dist/robots.txt` at the end of a build when `siteUrl` is configured and `generate.sitemap` / `generate.robots` are enabled (both default to `true`). |
 | `styles.ts` | All CSS transformations: element selector conversion, class prefixing, `@keyframes` / `@layer` / container scoping, custom property prefixing, CSS deduplication. |
@@ -117,7 +117,7 @@ index.ts
 
 ### Frozen config singleton
 
-`BascikConfig` is initialised once at startup via `config.ts` and frozen with `Object.freeze()`. Every module imports this singleton directly. There is no dependency injection, configuration is a module-level constant that is immutable at runtime.
+`BascikConfig` is initialized once at startup via `config.ts` and frozen with `Object.freeze()`. Every module imports this singleton directly. There is no dependency injection, configuration is a module-level constant that is immutable at runtime.
 
 ### No runtime framework
 
@@ -137,7 +137,7 @@ For package distribution, the source code in `pkg/src/` is compiled by `tsc` usi
 
 ### CPU-aware worker pool (opt-in)
 
-When `useWorkers: true` is set in `bascik.config.ts` (default `false`), `processAllPages()` creates `Math.min(os.cpus().length, pageCount)` worker threads via `worker-pool.ts` instead of transpiling sequentially on the main thread. Each worker is initialised once with the pre-computed `componentList` and `globalStylesHtml`, then reused for every page assigned to it. The main thread dispatches page paths through the pool's task queue and collects results to apply side effects (memory storage, event emission) after all workers complete.
+When `useWorkers: true` is set in `bascik.config.ts` (default `false`), `processAllPages()` creates `Math.min(os.cpus().length, pageCount)` worker threads via `worker-pool.ts` instead of transpiling sequentially on the main thread. Each worker is initialized once with the pre-computed `componentList` and `globalStylesHtml`, then reused for every page assigned to it. The main thread dispatches page paths through the pool's task queue and collects results to apply side effects (memory storage, event emission) after all workers complete.
 
 Spinning up the pool has a fixed cost, each worker loads the transpiler's module graph independently before it can process its first page. This pays for itself on larger sites with CPU-heavy per-page work, but for small sites (or sites whose slow parts are I/O-bound, like `<script data-bascik-build>` blocks) sequential transpilation on the main thread is often faster overall. See the [`useWorkers`](/configuration#useworkers) config option.
 
@@ -147,7 +147,7 @@ In dev mode, `pageProcessing()` writes the transpiled HTML to the in-memory stor
 
 ### Process-isolated script execution
 
-Both `<script data-bascik-build>` (run at build time) and `<script data-bascik-server>` (run at request time) are executed in complete isolation. Instead of using `eval` or Node's `vm` module, which can leak state or restrict standard Node.js APIs, Bascik writes script content to a temporary `.mjs` file on disk and runs it as a standalone Node.js subprocess. This process-level isolation ensures that user scripts cannot pollute the memory of the compiler or server, natively supports ES modules, top-level `await`, dynamic imports, and captures stdout cleanly before removing the temporary files.
+Both `<script data-bascik-build>` (run at build time) and `<script data-bascik-server>` (run at request time) are executed in complete isolation. Instead of using `eval` or Node's `vm` module, which can leak state or restrict standard Node.js APIs, Bascik writes script content to a temporary `.mjs` file on disk and runs it as a standalone Node.js subprocess. This process-level isolation ensures that user scripts cannot pollute the memory of the compiler or server, natively supports ES modules, top-level `await`, dynamic imports, and captures stdout cleanly before removing the temporary files. To maintain accurate debugging diagnostics across process boundaries, Bascik appends `//# sourceURL` directives and cleans child-process stack traces, mapping temporary `.mjs` paths and line offsets back to the original source file.
 
 ### Incremental rebuilds via reverse component index
 

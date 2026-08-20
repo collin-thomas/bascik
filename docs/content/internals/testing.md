@@ -211,7 +211,7 @@ describe("prefixElementAttribute", () => {
 ```
 
 <div class="callout">
-<p><strong>Important:</strong> Always import the module under test <em>after</em> calling <code>vi.mock</code>. Vitest hoists mock calls to the top of the file, but the import order still matters for ensuring the mock is in place when the module initialises its dependencies.</p>
+<p><strong>Important:</strong> Always import the module under test <em>after</em> calling <code>vi.mock</code>. Vitest hoists mock calls to the top of the file, but the import order still matters for ensuring the mock is in place when the module initializes its dependencies.</p>
 </div>
 
 ## Benchmarks

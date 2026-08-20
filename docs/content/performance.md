@@ -355,7 +355,7 @@ The Lighthouse accessibility audit checks for semantic HTML, sufficient color co
   <svg aria-hidden="true">…</svg>
 </button>
 
-<!-- Form inputs must be labelled -->
+<!-- Form inputs must be labeled -->
 <label for="email">Email address</label>
 <input type="email" id="email" name="email" autocomplete="email" />
 
@@ -441,7 +441,7 @@ To capture and analyze a performance profile of your page:
 1. Open your page in Google Chrome. For accurate measurements, use an Incognito window to prevent browser extensions from polluting the results.
 2. Open DevTools by pressing `Cmd + Option + I` on macOS or `Ctrl + Shift + I` on Windows and Linux, then select the **Performance** tab.
 3. To profile a page load, click the **Start profiling and reload page** button (the circular arrow icon). DevTools will reload the page, record activity until the page is fully loaded and idle, and then stop recording automatically.
-4. To profile a dynamic interaction, click the **Record** button (the solid grey circle), perform the action on your page (such as opening a modal or sorting a list), and then click **Stop**.
+4. To profile a dynamic interaction, click the **Record** button (the solid gray circle), perform the action on your page (such as opening a modal or sorting a list), and then click **Stop**.
 
 ### Analyzing the Flame Chart and Tracks
 
@@ -798,7 +798,7 @@ Only if all three answers are no should you reach for JavaScript. When you do, s
 
 Lighthouse 13.3 introduced a new **Agentic Browsing** category that audits how well a site supports AI agents and automated browsers. It is still under development, but it already checks three things that Bascik sites pass by default.
 
-**Accessibility tree is well-formed.** AI agents navigate pages through the accessibility tree, the same structure that screen readers use. Bascik outputs real, semantic HTML (`<nav>`, `<main>`, `<header>`, `<footer>`, labelled `<button>` elements, `<img alt="">`) so the accessibility tree is correct without any extra effort.
+**Accessibility tree is well-formed.** AI agents navigate pages through the accessibility tree, the same structure that screen readers use. Bascik outputs real, semantic HTML (`<nav>`, `<main>`, `<header>`, `<footer>`, labeled `<button>` elements, `<img alt="">`) so the accessibility tree is correct without any extra effort.
 
 **Cumulative Layout Shift is 0.** When content moves after load, agents that have already built a representation of the page are working from stale coordinates. Because Bascik ships finished HTML with explicit `width` and `height` on every image and no client-side rendering pass, there is nothing left to shift.
 

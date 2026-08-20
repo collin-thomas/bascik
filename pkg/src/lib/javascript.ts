@@ -73,6 +73,7 @@
  * that variables declared inside one component cannot leak into another.
  */
 
+import { relative } from "node:path";
 import { getUniqueId, minifyAttributeName } from "./names.js";
 import {
   addElementClassesInHtml,
@@ -493,7 +494,7 @@ export const prefixElementAttribute = (
       );
 
       // Convert CSS hash-ID selectors (#id) to component-scoped class selectors.
-      // Uses a context-aware lookahead to avoid matching hex colour values.
+      // Uses a context-aware lookahead to avoid matching hex color values.
       const { css: idSelectorCss, idsConverted } =
         convertCssIdSelectorsToClasses(component.cssFileContent, scopeKey);
       component.cssFileContent = idSelectorCss;
@@ -572,21 +573,57 @@ export const namespaceScriptTags = (
   // Only wrap <script> tags with no type or type="text/javascript"
   component.fileContent = component.fileContent.replace(
     /(<script\b[^>]*>)([\s\S]*?)(<\/script[^>]*>)/gi,
-    (match, open, code, close) => {
+    (match, open, code, close, offset) => {
       // Server scripts run in Node.js at request time — never wrap in browser IIFE
       if (/\bdata-bascik-server\b/i.test(open)) return match;
+
       // Check for type attribute
       const typeMatch = open.match(/type\s*=\s*["']?([^"'>\s]+)["']?/i);
-      if (typeMatch && typeMatch[1].toLowerCase() !== "text/javascript") {
-        // If type is present and not text/javascript, leave unchanged
+      const isJsType = !typeMatch || [
+        "text/javascript",
+        "module",
+        "application/javascript",
+        "text/ecmascript",
+        "application/ecmascript",
+      ].includes(typeMatch[1].toLowerCase());
+
+      const shouldWrap = !typeMatch || typeMatch[1].toLowerCase() === "text/javascript";
+
+      if (!shouldWrap) {
+        // If type is present and not text/javascript, leave unchanged.
+        // If it is a JS type (like module), still add sourceURL if possible.
+        if (isJsType && component.fileName) {
+          const relPath = relative(process.cwd(), component.fileName).replace(/\\/g, "/");
+          const sourceUrlComment = `\n//# sourceURL=${relPath}`;
+          return `${open}${code}${sourceUrlComment}${close}`;
+        }
         return match;
       }
-      // Otherwise, wrap in IIFE
-      return `${open}
+
+      let sourceUrlComment = "";
+      let padNewlines = "";
+      if (component.fileName) {
+        const relPath = relative(process.cwd(), component.fileName).replace(/\\/g, "/");
+        sourceUrlComment = `\n//# sourceURL=${relPath}`;
+
+        const lineOffset = component.fileContent.slice(0, offset).split(/\r?\n/).length;
+        const openTagLines = open.split(/\r?\n/).length - 1;
+        const startLine = lineOffset + openTagLines;
+
+        const padCount = startLine - 1;
+        padNewlines = padCount > 0 ? "\n".repeat(padCount - 1) : "";
+      }
+
+      if (component.fileName) {
+        return `${open}${padNewlines}(function() {\n${code}\n})();${sourceUrlComment}${close}`;
+      } else {
+        // Fallback for tests without fileName
+        return `${open}
         (function() {
           ${code}
         })();
         ${close}`;
+      }
     },
   );
   return component;

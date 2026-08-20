@@ -32,7 +32,7 @@ const INDEX_HTML = `<!DOCTYPE html>
 `;
 
 const BASCIK_CONFIG = `// Bascik works without this file — defaults are src/pages and src/components.
-// Uncomment to customise directories or other options.
+// Uncomment to customize directories or other options.
 // Full reference: https://bascik.dev/configuration
 //
 // import { defineConfig } from '@bascik/bascik/config';

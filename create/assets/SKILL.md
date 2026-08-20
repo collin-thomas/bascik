@@ -1150,7 +1150,7 @@ Editors validate all `<script>` blocks in an HTML file as sharing one scope, cau
 { "html.validate.scripts": false }
 ```
 
-Commit this file so all contributors get the correct behaviour automatically. Alternatively, add `// @ts-nocheck` as the first line inside any individual script block that triggers the warning.
+Commit this file so all contributors get the correct behavior automatically. Alternatively, add `// @ts-nocheck` as the first line inside any individual script block that triggers the warning.
 
 #### 5. Inspecting `dist/` Output
 

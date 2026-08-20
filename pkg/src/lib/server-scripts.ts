@@ -46,7 +46,8 @@
 
 import { execFile } from "node:child_process";
 import { writeFile, unlink, mkdir } from "node:fs/promises";
-import { join } from "node:path";
+import { join, relative } from "node:path";
+import { pathToFileURL } from "node:url";
 import os from "node:os";
 import { BascikConfig } from "./config.js";
 
@@ -125,6 +126,33 @@ const runModule = (
     );
   });
 
+export const cleanStackTrace = (
+  rawTrace: string,
+  tmpPath: string,
+  realPath: string,
+  lineOffset: number,
+): string => {
+  if (!rawTrace) return rawTrace;
+
+  // Escaping backslashes for Windows paths
+  const escapedTmpPath = tmpPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  // Also support file:// URI schemes in stack traces
+  let fileUri = tmpPath;
+  try {
+    fileUri = pathToFileURL(tmpPath).href;
+  } catch { }
+  const escapedFileUri = fileUri.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  const regex = new RegExp(`(?:${escapedFileUri}|${escapedTmpPath}):(\\d+)`, "g");
+
+  return rawTrace.replace(regex, (match, lineStr) => {
+    const lineNum = parseInt(lineStr, 10);
+    const mappedLine = lineOffset + lineNum - 1;
+    return `${realPath}:${mappedLine}`;
+  });
+};
+
 /**
  * Find every `<script data-bascik-server>` block in `html`, execute each as a
  * Node.js ESM module with the supplied request context, and replace the tag
@@ -138,6 +166,7 @@ export const executeServerScripts = async (
   html: string,
   request: ServerRequest,
   timeoutMs: number = DEFAULT_SCRIPT_TIMEOUT_MS,
+  filePath?: string,
 ): Promise<string> => {
   const matches = [...html.matchAll(createServerScriptRegex())];
   if (matches.length === 0) return html;
@@ -153,15 +182,33 @@ export const executeServerScripts = async (
     scriptContent: string;
     index: number;
     length: number;
+    startLine: number;
     output?: string;
   }
 
-  const scriptJobs: ScriptJob[] = matches.map((match) => ({
-    fullTag: match[0],
-    scriptContent: match[1],
-    index: match.index!,
-    length: match[0].length,
-  }));
+  const scriptJobs: ScriptJob[] = matches.map((match) => {
+    const fullTag = match[0];
+    const scriptContent = match[1];
+    const index = match.index!;
+    const length = fullTag.length;
+
+    const prefix = html.slice(0, index);
+    const lines = prefix.split(/\r?\n/);
+    const lineOffset = lines.length;
+
+    // Server-script open tag
+    const openTag = fullTag.slice(0, fullTag.length - scriptContent.length - "</script>".length);
+    const openTagLines = openTag.split(/\r?\n/).length - 1;
+    const startLine = lineOffset + openTagLines;
+
+    return {
+      fullTag,
+      scriptContent,
+      index,
+      length,
+      startLine,
+    };
+  });
 
   for (let i = 0; i < scriptJobs.length; i += MAX_CONCURRENT_SCRIPTS) {
     const batch = scriptJobs.slice(i, i + MAX_CONCURRENT_SCRIPTS);
@@ -171,14 +218,25 @@ export const executeServerScripts = async (
           tempDir,
           `server-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
         );
+
+        let sourceUrlComment = "";
+        if (filePath) {
+          const relPath = relative(process.cwd(), filePath).replace(/\\/g, "/");
+          sourceUrlComment = `\n//# sourceURL=${relPath}`;
+        } else {
+          sourceUrlComment = `\n//# sourceURL=${request.path}`;
+        }
+
         try {
-          await writeFile(tmpPath, job.scriptContent.trim(), "utf8");
+          await writeFile(tmpPath, job.scriptContent.trim() + sourceUrlComment, "utf8");
           const { stdout, stderr } = await runModule(tmpPath, request, timeoutMs);
           if (stderr) process.stderr.write(stderr);
           job.output = stripAnsiEscapeCodes(stdout);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
-          const errorMsg = `[bascik] server script error at "${request.path}":\n${msg}`;
+          const relPath = filePath ? relative(process.cwd(), filePath).replace(/\\/g, "/") : request.path;
+          const cleanedMsg = cleanStackTrace(msg, tmpPath, relPath, job.startLine);
+          const errorMsg = `[bascik] server script error at "${request.path}":\n${cleanedMsg}`;
           const behavior = BascikConfig.onScriptError ?? "error";
           if (behavior === "halt" || behavior === "error") {
             console.error(errorMsg);

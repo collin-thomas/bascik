@@ -31,7 +31,7 @@ import { getHttpPath } from "./paths.js";
 /**
  * Escape the five XML metacharacters for safe interpolation into `<loc>` etc.
  * Applied to the user-configured `siteUrl`; URL paths derived from page
- * filenames are already safe but are escaped too for defence in depth.
+ * filenames are already safe but are escaped too for defense in depth.
  */
 export const escapeXml = (value: string): string =>
   value

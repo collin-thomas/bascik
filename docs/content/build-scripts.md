@@ -30,7 +30,7 @@ Build scripts run as isolated Node.js ESM modules during transpilation. When a b
 
 ### Terminal Error Formatting
 
-When a script fails, Bascik prints the page file path along with the exact line and column number of the `<script data-bascik-build>` tag, followed by the error message or stack trace:
+When a script fails, Bascik prints the page file path along with the exact line and column number of the `<script data-bascik-build>` tag, followed by the error message or stack trace. Stack traces produced by child process execution are cleaned automatically, remapping temporary execution files back to the original source HTML file and line offset:
 
 ```text
 [bascik] build script error in "pages/deploying.html" at (line 14, column 3):

@@ -43,6 +43,7 @@ import { createHash } from "node:crypto";
 import { readFile, writeFile, unlink, mkdir } from "node:fs/promises";
 import { freemem, totalmem } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { getRelativePath } from "./file-system.js";
 import { BascikConfig } from "./config.js";
 
@@ -66,7 +67,7 @@ const MEM_PER_CHILD = 100 * 1024 * 1024; // ~100 MB per Node child process
 let _sem: Semaphore | undefined;
 const childSemaphore = () => _sem ??= new Semaphore(
   // freemem() is near-zero on macOS (compressed/inactive memory isn't "free"),
-  // so floor at 25% of total RAM to avoid artificially serialising on dev machines.
+  // so floor at 25% of total RAM to avoid artificially serializing on dev machines.
   Math.max(1, Math.floor(Math.max(freemem() * 0.6, totalmem() * 0.25) / MEM_PER_CHILD))
 );
 
@@ -270,6 +271,33 @@ const writeScriptCache = async (
   ).catch(() => { });
 };
 
+export const cleanStackTrace = (
+  rawTrace: string,
+  tmpPath: string,
+  realPath: string,
+  lineOffset: number,
+): string => {
+  if (!rawTrace) return rawTrace;
+
+  // Escaping backslashes for Windows paths
+  const escapedTmpPath = tmpPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  // Also support file:// URI schemes in stack traces
+  let fileUri = tmpPath;
+  try {
+    fileUri = pathToFileURL(tmpPath).href;
+  } catch { }
+  const escapedFileUri = fileUri.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  const regex = new RegExp(`(?:${escapedFileUri}|${escapedTmpPath}):(\\d+)`, "g");
+
+  return rawTrace.replace(regex, (match, lineStr) => {
+    const lineNum = parseInt(lineStr, 10);
+    const mappedLine = lineOffset + lineNum - 1;
+    return `${realPath}:${mappedLine}`;
+  });
+};
+
 /**
  * Find every `<script data-bascik-build>` block in `html`, execute each as a
  * Node.js ESM module, and replace the tag with the script's stdout output.
@@ -328,8 +356,22 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
       tempDir,
       `build-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
     );
+
+    const prefix = html.slice(0, index);
+    const lines = prefix.split(/\r?\n/);
+    const lineOffset = lines.length;
+
+    const openTagLines = openTag.split(/\r?\n/).length - 1;
+    const startLine = lineOffset + openTagLines;
+
+    let sourceUrlComment = "";
+    if (filePath) {
+      const relPath = relative(process.cwd(), filePath).replace(/\\/g, "/");
+      sourceUrlComment = `\n//# sourceURL=${relPath}`;
+    }
+
     try {
-      await writeFile(tmpPath, trimmedScript, "utf8");
+      await writeFile(tmpPath, trimmedScript + sourceUrlComment, "utf8");
       const { stdout, stderr } = await runModule(tmpPath, {
         BASCIK_PAGE_FILE: filePath ?? "",
         BASCIK_SITE_URL: BascikConfig.siteUrl ?? "",
@@ -342,6 +384,8 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       let errorMsg = `[bascik] build script error`;
+      const relPath = filePath ? relative(process.cwd(), filePath).replace(/\\/g, "/") : "unknown";
+      const cleanedMsg = cleanStackTrace(msg, tmpPath, relPath, startLine);
       if (filePath) {
         const prefix = html.slice(0, index);
         const lines = prefix.split(/\r?\n/);
@@ -349,10 +393,10 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
       }
       const behavior = BascikConfig.onScriptError ?? "error";
       if (behavior === "halt" || behavior === "error") {
-        console.error(`${errorMsg}:\n${msg}`);
-        throw new Error(`${errorMsg}:\n${msg}`);
+        console.error(`${errorMsg}:\n${cleanedMsg}`);
+        throw new Error(`${errorMsg}:\n${cleanedMsg}`);
       } else {
-        console.warn(`${errorMsg}:\n${msg}`);
+        console.warn(`${errorMsg}:\n${cleanedMsg}`);
       }
       return { fullTag, index, output: "" };
     } finally {

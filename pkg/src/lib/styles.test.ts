@@ -53,13 +53,13 @@ const css = `
 `;
 const elHtml = `
 <h4>h4</h4>
-<p>misspeled</p>
-<p class="not-used">mispelled</p>
+<p>misspelled</p>
+<p class="not-used">misspelled</p>
 `;
 const elHtmlRes = `
 <h4>h4</h4>
-<p class="bascik__my-comp__el__p">misspeled</p>
-<p class="not-used bascik__my-comp__el__p">mispelled</p>
+<p class="bascik__my-comp__el__p">misspelled</p>
+<p class="not-used bascik__my-comp__el__p">misspelled</p>
 `;
 const elCss = `
 p {
@@ -1022,7 +1022,7 @@ describe("convertCssIdSelectorsToClasses – selector vs value context", () => {
 
   // ── Value position — must NOT be converted ──────────────────────────────
 
-  it("does NOT convert hex colour terminated by semicolon: color: #abc;", () => {
+  it("does NOT convert hex color terminated by semicolon: color: #abc;", () => {
     const { idsConverted } = convertCssIdSelectorsToClasses(
       ".el { color: #abc; }",
       "my-comp",
@@ -1030,7 +1030,7 @@ describe("convertCssIdSelectorsToClasses – selector vs value context", () => {
     expect(idsConverted).toHaveLength(0);
   });
 
-  it("does NOT convert hex colour in linear-gradient function: #abc,", () => {
+  it("does NOT convert hex color in linear-gradient function: #abc,", () => {
     const { idsConverted } = convertCssIdSelectorsToClasses(
       ".el { background: linear-gradient(#abc, #def); }",
       "my-comp",
@@ -1038,13 +1038,13 @@ describe("convertCssIdSelectorsToClasses – selector vs value context", () => {
     expect(idsConverted).toHaveLength(0);
   });
 
-  it("does NOT convert hex colour followed by closing brace: color: #abc\\n}", () => {
+  it("does NOT convert hex color followed by closing brace: color: #abc\\n}", () => {
     const css = ".el {\n  color: #abc\n}";
     const { idsConverted } = convertCssIdSelectorsToClasses(css, "my-comp");
     expect(idsConverted).toHaveLength(0);
   });
 
-  it("does NOT convert hex colour followed by whitespace value: background: #abc url(…)", () => {
+  it("does NOT convert hex color followed by whitespace value: background: #abc url(…)", () => {
     const { idsConverted } = convertCssIdSelectorsToClasses(
       ".el { background: #abc url('./img.png'); }",
       "my-comp",
@@ -1119,7 +1119,7 @@ describe("scopeInlineStyleTags – #id in inline styles", () => {
     expect(idsConverted[0].idName).toBe("btn");
   });
 
-  it("does NOT convert hex colour inside inline <style>", () => {
+  it("does NOT convert hex color inside inline <style>", () => {
     const html = "<style>.el { color: #abc; }</style>";
     const { idsConverted } = scopeInlineStyleTags(html, "my-comp");
     expect(idsConverted).toHaveLength(0);

@@ -948,6 +948,7 @@ describe("onError and server resiliency edge cases", () => {
         searchParams: { user: "alice", tab: "overview" },
       },
       expect.any(Number),
+      "/abs/pages/about.html",
     );
 
     expect(stream.respond).toHaveBeenCalledWith(
@@ -1128,7 +1129,7 @@ describe("startHttp2Server – rate limiting details", () => {
 
 describe("startHttp2Server – port auto-increment", () => {
   afterEach(() => {
-    // Restore default listen behaviour so subsequent tests are unaffected.
+    // Restore default behavior so subsequent tests are unaffected.
     mockServer.listen.mockImplementation(
       (_port: number, _hostname: string, cb?: () => void) => { cb?.(); },
     );
