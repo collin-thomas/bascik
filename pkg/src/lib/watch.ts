@@ -51,6 +51,7 @@ export const watchFiles = async () => {
         );
         return !!(stats?.isFile() && !hasFileExt);
       },
+      ignoreInitial: true,
       persistent: !BascikConfig.isBuild,
     })
     .on("add", async (path) => {
@@ -101,7 +102,7 @@ export const watchFiles = async () => {
       .on("unlinkDir", (path: string, _stats?: Stats) => deleteDistDir(path).catch(onWatchError))
       .on("ready", () => {
         initialScanDone = true;
-        processAllPages().then(() => resolve()).catch(reject);
+        Promise.all([copyStaticAssets(), processAllPages()]).then(() => resolve()).catch(reject);
       }));
   });
 
