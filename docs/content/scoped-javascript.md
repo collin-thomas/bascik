@@ -57,6 +57,27 @@ The `class` attribute can still coexist on the same element for styling, just ad
 
 > **Rule of thumb.** Use `getElementById` (or `getElementsByName`) for elements you need to control per-instance. Reserve `querySelector`/`querySelectorAll` for cases where you intentionally want to sweep across all instances.
 
+## Debugging Component Scripts
+
+When you open browser DevTools (`F12` or `Cmd + Option + I` / `Ctrl + Shift + I`), Bascik makes debugging component scripts seamless:
+
+### Virtual Source Files in DevTools
+
+Bascik appends a `//# sourceURL=src/components/name.html` directive and preserves line-offset padding in every component `<script>` block. In browser DevTools under the **Sources** (or **Debugger**) panel, your component scripts appear as virtual files matching your project folder structure (for example, `src/components/card.html`).
+
+### Setting Breakpoints and Inspecting State
+
+Because component scripts appear as virtual source files in DevTools:
+
+1. Open the **Sources** panel in DevTools and press `Cmd + P` (or `Ctrl + P`).
+2. Search for your component file (for example, `card.html`).
+3. Click any line number to set a breakpoint, or place a `debugger;` statement directly inside your component `<script>`.
+4. Interact with the component in your browser to pause execution, inspect variables, and step through code.
+
+### Accurate Console Stack Traces
+
+When `console.log()` runs or an uncaught exception occurs inside a component script, the DevTools Console panel attributes the message directly to `src/components/card.html:18` instead of pointing to a line in the generated page HTML. The reported line number matches the line in your original source HTML file.
+
 ## Dynamic Runtime Classes
 
 If a class is only toggled at runtime (`classList.toggle("is-open")`) but doesn't appear on any element in the template HTML, Bascik's compiler won't register it. The CSS side minifies the name but the JS side doesn't, causing a silent mismatch at runtime.
