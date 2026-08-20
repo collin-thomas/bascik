@@ -24,16 +24,22 @@ const pagePath = join(e2eDir, 'src/pages/scope-test.html');
 const secondPagePath = join(e2eDir, 'src/pages/isolation-test.html');
 const componentPath = join(e2eDir, 'src/components/scope-test/scope-test.html');
 const staticCssPath = join(e2eDir, 'src/pages/dev-static-test.css');
+const contentDocPath = join(e2eDir, 'src/content/watch-doc.md');
+const subfolderPagePath = join(e2eDir, 'src/pages/subfolder/route-test.html');
 
 test.describe('Dev Server Live-Reload & Watch Engine', () => {
   let originalPageContent: string;
   let originalSecondPageContent: string;
   let originalComponentContent: string;
+  let originalContentDoc: string;
+  let originalSubfolderPage: string;
 
   test.beforeAll(async () => {
     originalPageContent = await readFile(pagePath, 'utf8');
     originalSecondPageContent = await readFile(secondPagePath, 'utf8');
     originalComponentContent = await readFile(componentPath, 'utf8');
+    originalContentDoc = await readFile(contentDocPath, 'utf8');
+    originalSubfolderPage = await readFile(subfolderPagePath, 'utf8');
   });
 
   test.afterEach(async () => {
@@ -41,6 +47,8 @@ test.describe('Dev Server Live-Reload & Watch Engine', () => {
     await writeFile(pagePath, originalPageContent, 'utf8');
     await writeFile(secondPagePath, originalSecondPageContent, 'utf8');
     await writeFile(componentPath, originalComponentContent, 'utf8');
+    await writeFile(contentDocPath, originalContentDoc, 'utf8');
+    await writeFile(subfolderPagePath, originalSubfolderPage, 'utf8');
     await rm(staticCssPath, { force: true });
   });
 
@@ -169,6 +177,28 @@ test.describe('Dev Server Live-Reload & Watch Engine', () => {
 
     // Server should recover and render the final state on the open browser page
     await expect(page.locator('h1')).toHaveText(finalMarker, { timeout: 15000 });
+  });
+
+  // ── 7. Watched Dependencies & Subfolder Routes ─────────────────────────────
+
+  test('open page updates live when a watched external content file changes', async ({ page }) => {
+    await page.goto('/watch-content-test');
+    await expect(page.locator('h1')).toHaveText('Watch Doc Initial Content');
+
+    const updatedText = `Updated Content ${Date.now()}`;
+    await writeFile(contentDocPath, updatedText, 'utf8');
+
+    await expect(page.locator('h1')).toHaveText(updatedText, { timeout: 15000 });
+  });
+
+  test('subfolder routes receive live reload when nested page source changes', async ({ page }) => {
+    await page.goto('/subfolder/route-test');
+    await expect(page.locator('h1')).toHaveText('Subfolder Route Initial');
+
+    const updatedText = `Subfolder Route Updated ${Date.now()}`;
+    await writeFile(subfolderPagePath, `<!DOCTYPE html><html><body><h1>${updatedText}</h1></body></html>`, 'utf8');
+
+    await expect(page.locator('h1')).toHaveText(updatedText, { timeout: 15000 });
   });
 });
 

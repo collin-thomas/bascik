@@ -8,6 +8,7 @@ import { transform } from 'esbuild';
 
 export default defineConfig({
   siteUrl: 'http://localhost:4200',
+  watch: ['src/content/'],
   useWorkers: true,
   minify: {
     identifiers: false,
