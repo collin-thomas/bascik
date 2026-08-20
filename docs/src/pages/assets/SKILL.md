@@ -1282,7 +1282,9 @@ The E2E suite lives in `pkg/e2e/` and supports four execution modes:
 3. **HTTP/2 production server suite (`playwright.server-http2.config.ts`)**: boots TLS-enabled `bascik --serve` over HTTP/2 on port 9444 to test `data-bascik-server` request-time script execution and encrypted server behavior.
 4. **Dev server watch suite (`playwright.dev.config.ts`)**: boots `bascik --dev` on port 8080 to run the full test suite and live-reload watcher tests directly against the live dev server with SSE tracking and open-page priority re-transpilation.
 
-The fixture config sets `minify.identifiers: false` so Playwright selectors can use readable scoped names like `bascik__my-comp__btn` instead of opaque hashes.
+The fixture config sets `minify.identifiers: false` so Playwright selectors can use readable scoped names like `bascik__my-comp__btn` instead of opaque hashes. However, in production builds (where `minify.identifiers: true` is enabled), Bascik compiles and minifies element IDs and class names. Consequently, relying on raw CSS selectors like `page.locator('.my-class')` or `page.locator('#my-id')` will fail because those identifiers are hashed and compressed.
+
+To make end-to-end tests resilient across both development and production environments, use standard `data-testid` attributes (e.g., `data-testid="search-input"`) on interactive elements and retrieve them using Playwright's native `page.getByTestId(...)` locator. Other native locators like `page.getByRole(...)` or `page.getByPlaceholder(...)` are also recommended over raw selectors or fragile DOM traversal.
 
 **Adding a new e2e test:**
 1. Add a component in `pkg/e2e/src/components/my-feature/`
@@ -1296,8 +1298,8 @@ test.describe('my-feature-test page', () => {
   test.beforeEach(async ({ page }) => { await page.goto('/my-feature-test'); });
 
   test('instances are isolated', async ({ page }) => {
-    const a = page.locator('.bascik__my-feature__wrapper').nth(0);
-    const b = page.locator('.bascik__my-feature__wrapper').nth(1);
+    const a = page.getByTestId('feature-wrapper').nth(0);
+    const b = page.getByTestId('feature-wrapper').nth(1);
     // assert A and B are independent
   });
 });
