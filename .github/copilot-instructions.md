@@ -200,7 +200,19 @@ Then inspect the relevant `docs/dist/` output to confirm the pkg change has the 
 Update `docs/content/internals/dev-server.md` to reflect the change. This page is the source of truth for how the dev server and watch system work.
 
 **General principle:** the three files that must stay in sync are `llms.txt`, `SKILL.md`, and the relevant `docs/content/internals/*.md`. The copilot-instructions file is the enforcement mechanism — add notes here when a new sync relationship is created.
-files that must stay in sync are `SKILL.md`
+
+### Testing Principles & Bug Prevention Rules
+
+Write tests that directly catch and prevent real-world edge-case bugs:
+
+- **Path Normalization & Route Matching:** Test path utilities (`getHttpPath`, `getRelativePath`, `toDistPath`) against every input path variation: absolute paths (`/abs/path/src/pages/x.html`), relative paths (`src/pages/x.html`, `pages/x.html`), bare filenames (`x.html`), subfolder routes (`src/pages/sub/x.html`), and trailing-slash variants. Verify that SSE live-reload referer matching works seamlessly across subfolder routes and watched external files.
+- **No Fragile Relative DOM Traversal in E2E Tests:** Never use index-based or relative DOM traversal like `locator('../..').locator('span').nth(1)` in Playwright tests. Minification in production builds (`bascik --build`) collapses whitespace and alters DOM node indexing compared to unminified local HTML. Always target elements via explicit semantic attributes, scoped IDs (`button[id$="__btn"]`), or data attributes (`data-bascik-prop-*`, `data-testid`).
+- **Scoped Class and ID Selectors in Assertions:** Bascik rewrites class names and IDs with `bascik__<comp>__...` prefixes. E2E test assertions targeting component DOM must query using scoped names (or `minify.identifiers: false` readable scoped names), never raw un-scoped template names.
+- **Regex Replacement Safety ($1, $2, $&):** String replacements in core pipeline steps (`replaceTag`, `executeBuildScripts`, slot insertion) must use function replacements `() => replacement` rather than raw replacement strings. Tests for string substitution methods must include test cases containing regex special tokens (`$1`, `$2`, `$&`, `$'`, ``$` ``), such as SQL `$1` parameter markers, to prevent infinite loops and process crashes.
+- **Worker Thread vs Main Thread Environment Parity:** Worker threads (`worker-pool.ts`, `page-worker.ts`) do not inherit `process.argv`. When adding or testing config options or flags (like `isBuild`, `useWorkers`, `minify`), unit tests must explicitly test worker execution and verify that disk side-effects (such as `dist/` file creation) occur as expected, not just in-memory return values.
+- **Isolation of Unit Tests (No Source Tree Mutation):** Unit tests must never mutate package source directories or leave un-gitignored files on disk (`bascik.config.js`, `pages/index.html`). Run file system tests in isolated temp directories or mock `fs` calls cleanly so `git status` stays clean after test runs.
+- **Network Reset & Error Handling in HTTP/2 and SSE:** E2E and server unit tests must verify graceful connection close handling (`ECONNRESET`, `EPIPE`, `ERR_HTTP2_STREAM_CANCEL`) without unhandled stream exceptions or process crashes.
+
 ## License Source of Truth
 
 The license lives in **three places** that must stay in sync:
