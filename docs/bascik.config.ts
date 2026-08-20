@@ -8,4 +8,7 @@ export default defineConfig({
   ],
   siteUrl: 'https://bascik.dev',
   inlineStyles: ['src/pages/css/styles.css'],
+  serve: {
+    port: 4200,
+  },
 });
