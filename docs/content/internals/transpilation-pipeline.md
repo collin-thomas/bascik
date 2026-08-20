@@ -105,7 +105,7 @@ A fresh `instanceId` (a random 8-byte hex string) is generated for this occurren
 1. `prefixElementAttribute(c, "id", instanceId)`: scopes `id` attributes and all corresponding JS DOM selector references.
 2. `prefixElementAttribute(c, "name", instanceId)`: scopes `name` attributes and `getElementsByName` calls.
 3. `prefixElementAttribute(c, "class", instanceId)`: scopes class names in HTML attributes, CSS, and JS selector calls.
-4. `namespaceScriptTags(c)`: wraps every inline `<script>` in an IIFE, preserves line-offset padding, and appends a `//# sourceURL` comment for browser DevTools source attribution.
+4. `namespaceScriptTags(c)`: wraps every inline `<script>` in an IIFE, preserves line positioning, and appends a `//# sourceURL` comment for browser DevTools source attribution.
 
 Each step is skipped if disabled in `bascik.config.ts`.
 

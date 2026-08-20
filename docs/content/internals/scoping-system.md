@@ -216,7 +216,7 @@ el.setAttribute("name", "bascik__site-nav__a1b2c3d4__email-field");
 
 ## Script Namespacing
 
-`namespaceScriptTags` wraps every inline script in an IIFE so that `var` declarations cannot leak between components. It also appends a `//# sourceURL` comment pointing to the relative component path and preserves newline padding matching the script tag's original offset in the component file, ensuring browser DevTools attribute errors and logs directly to the original component file and line number:
+`namespaceScriptTags` wraps every inline script in an IIFE so that `var` declarations cannot leak between components. It also appends a `//# sourceURL` comment pointing to the relative component path and preserves line positioning relative to the component file, ensuring browser DevTools attribute errors and logs directly to the original component file and line number:
 
 ```js
 // Before (in src/components/card.html at line 12)
