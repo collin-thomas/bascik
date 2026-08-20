@@ -1,12 +1,12 @@
 /**
- * Playwright config for running E2E tests against the Bascik HTTP/1.1 Production Server (`bascik --serve`).
+ * Playwright config for running E2E tests against the Bascik HTTP/2 (TLS) Production Server (`bascik --serve`).
  *
  * Runs the full E2E test suite (scoping, slots, CSS, JS, components, DOM, etc.)
- * plus `data-bascik-server` script execution and prod server HTTP/1.1 tests
- * directly against cleartext `bascik --serve`.
+ * plus `data-bascik-server` script execution and prod server HTTP/2 tests
+ * directly against TLS-enabled `bascik --serve`.
  *
  * Run with:
- *   npx playwright test --config e2e/playwright.server.config.ts
+ *   npx playwright test --config e2e/playwright.server-http2.config.ts
  */
 import { defineConfig } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
@@ -22,17 +22,17 @@ export default defineConfig({
   fullyParallel: false,
   retries: process.env.CI ? 1 : 0,
   use: {
-    baseURL: 'http://localhost:9443',
+    baseURL: 'https://localhost:9444',
     ignoreHTTPSErrors: true,
     headless: true,
   },
   webServer: {
     command: [
       `node ${pkgDir}/dist/index.js --build`,
-      `BASCIK_ENABLE_TLS=false BASCIK_SERVE_PORT=9443 node ${pkgDir}/dist/index.js --serve`,
+      `BASCIK_ENABLE_TLS=true BASCIK_SERVE_PORT=9444 node ${pkgDir}/dist/index.js --serve`,
     ].join(' && '),
     cwd: e2eDir,
-    url: 'http://localhost:9443/server-scripts-test',
+    url: 'https://localhost:9444/server-scripts-test',
     reuseExistingServer: false,
     ignoreHTTPSErrors: true,
     stdout: 'pipe',

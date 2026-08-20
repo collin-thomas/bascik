@@ -31,8 +31,12 @@ yarn pkg:e2e
 # Dev server suite (runs full E2E test suite + live-reload tests against bascik --dev)
 yarn pkg:e2e:dev
 
-# HTTP/2 production server suite (runs full E2E test suite + server script tests against bascik --serve)
+# Production server suite (runs both HTTP/1.1 cleartext and HTTP/2 TLS server script tests against bascik --serve)
 yarn pkg:e2e:prod
+
+# Or run HTTP/1.1 and HTTP/2 prod server suites individually:
+yarn pkg:e2e:prod:http1
+yarn pkg:e2e:prod:http2
 ```
 
 This builds the fixture site (using the current `dist/`) and then runs Playwright against it. The first run requires the package to be built first:
@@ -50,8 +54,11 @@ npx playwright test --config e2e/playwright.config.ts e2e/tests/css-scoping.test
 # Run dev server live-reload tests against bascik --dev
 npx playwright test --config e2e/playwright.dev.config.ts e2e/tests/dev-server-reload.test.ts
 
-# Run prod server tests against bascik --serve
+# Run HTTP/1.1 prod server tests against bascik --serve
 npx playwright test --config e2e/playwright.server.config.ts e2e/tests/prod-server.test.ts
+
+# Run HTTP/2 prod server tests against bascik --serve
+npx playwright test --config e2e/playwright.server-http2.config.ts e2e/tests/prod-server.test.ts
 
 # Open the Playwright UI for interactive debugging
 npx playwright test --config e2e/playwright.config.ts --ui
@@ -63,22 +70,24 @@ The e2e fixture is a small but complete Bascik project at `pkg/e2e/`:
 
 ```text
 pkg/e2e/
-  bascik.config.ts           ← fixture config (minify.identifiers: false)
-  playwright.config.ts       ← static build test runner
-  playwright.server.config.ts ← HTTP/2 prod server runner for data-bascik-server scripts
-  playwright.dev.config.ts   ← dev server runner for live-reload and open-page priority
-  server.ts                  ← minimal static HTTP server for dist/
+  bascik.config.ts                ← fixture config (minify.identifiers: false)
+  playwright.config.ts            ← static build test runner
+  playwright.server.config.ts      ← HTTP/1.1 cleartext prod server runner
+  playwright.server-http2.config.ts← HTTP/2 TLS prod server runner
+  playwright.dev.config.ts        ← dev server runner for live-reload and open-page priority
+  server.ts                       ← minimal static HTTP server for dist/
   src/
-    pages/                   ← one HTML page per feature under test
-    components/              ← components used by those pages
-  tests/                     ← Playwright test files
+    pages/                        ← one HTML page per feature under test
+    components/                   ← components used by those pages
+  tests/                          ← Playwright test files
 ```
 
-The E2E suite supports three execution modes:
+The E2E suite supports four execution modes:
 
 1. **Static production suite (`playwright.config.ts`)**: builds the fixture site with `bascik --build` and serves static files via `server.ts` on port 4200.
-2. **Server script production suite (`playwright.server.config.ts`)**: boots `bascik --serve` over HTTP/2 on port 9443 to test `data-bascik-server` request-time script execution.
-3. **Dev server watch suite (`playwright.dev.config.ts`)**: boots `bascik --dev` on port 9443 to run the full test suite and live-reload watcher tests directly against the live dev server with SSE tracking and open-page priority re-transpilation.
+2. **HTTP/1.1 production server suite (`playwright.server.config.ts`)**: boots cleartext `bascik --serve` over HTTP/1.1 on port 9443 to test `data-bascik-server` request-time script execution and cleartext server behavior.
+3. **HTTP/2 production server suite (`playwright.server-http2.config.ts`)**: boots TLS-enabled `bascik --serve` over HTTP/2 on port 9444 to test `data-bascik-server` request-time script execution and encrypted server behavior.
+4. **Dev server watch suite (`playwright.dev.config.ts`)**: boots `bascik --dev` on port 8080 to run the full test suite and live-reload watcher tests directly against the live dev server with SSE tracking and open-page priority re-transpilation.
 
 Tests navigate to pages on the active server and assert against the live browser DOM.
 

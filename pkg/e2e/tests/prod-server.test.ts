@@ -1,9 +1,12 @@
 /**
- * E2E tests for the Bascik HTTP/2 Production Server (`bascik --serve`).
+ * E2E tests for the Bascik Production Server (`bascik --serve`).
+ *
+ * Runs against both HTTP/1.1 cleartext (`playwright.server.config.ts`) and
+ * HTTP/2 TLS (`playwright.server-http2.config.ts`) production server instances.
  *
  * Exercises:
  *   1. Clean HTML output — NO dev live-reload SSE script injected
- *   2. HTTP/2 protocol, TLS, and production security headers
+ *   2. Protocol headers (HTTP/1.1 & HTTP/2) and production security headers
  *   3. ETags and Conditional GETs (`304 Not Modified` on `If-None-Match`)
  *   4. Pre-compressed Brotli content serving (`Accept-Encoding: br`)
  *   5. Static asset streaming with ETags and proper MIME types
@@ -12,6 +15,7 @@
  *
  * Run with:
  *   npx playwright test --config e2e/playwright.server.config.ts
+ *   npx playwright test --config e2e/playwright.server-http2.config.ts
  */
 import { test, expect } from '@playwright/test';
 

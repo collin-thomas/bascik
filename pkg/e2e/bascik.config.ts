@@ -25,6 +25,7 @@ export default defineConfig({
     { script: 'scripts/generate-manifest.ts' },
   ],
   serve: {
-    port: 9443,
+    port: Number(process.env.BASCIK_SERVE_PORT) || 9443,
+    enableTls: process.env.BASCIK_ENABLE_TLS === 'true',
   },
 });

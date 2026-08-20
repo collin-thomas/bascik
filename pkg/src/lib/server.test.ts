@@ -896,15 +896,19 @@ describe("onError and server resiliency edge cases", () => {
     expect(closeSpy).toHaveBeenCalledWith(2);
   });
 
-  it("startServer starts HTTP server when enableTls is false", async () => {
+  it("startServer boots HTTP/1.1 server when enableTls is false and HTTP/2 server when enableTls is true", async () => {
     const { startServer } = await import("./server.js");
     const { BascikConfig } = await import("./config.js");
+
+    // HTTP/1.1 mode
     (BascikConfig as any).serve.enableTls = false;
+    const http1Origin = await startServer();
+    expect(http1Origin).toBeDefined();
 
-    const res = await startServer();
-    expect(res).toBeDefined();
-
+    // HTTP/2 TLS mode
     (BascikConfig as any).serve.enableTls = true;
+    const http2Origin = await startServer();
+    expect(http2Origin).toBeDefined();
   });
 
   it("executes server scripts and sets private, no-store cache-control header", async () => {

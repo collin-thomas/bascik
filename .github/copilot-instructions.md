@@ -193,7 +193,7 @@ Then inspect the relevant `docs/dist/` output to confirm the pkg change has the 
 **When adding, removing, or significantly changing tests in `pkg/src/` or `pkg/e2e/`:**
 
 - The testing docs (`docs/content/internals/testing.md`) describe the test approach, not an enumerated list of files. The "Test Files" section links to GitHub which is always current. You only need to update the prose if the testing *patterns* change (e.g. a new mock strategy, a new test runner, new helpers, or new E2E server modes like `playwright.dev.config.ts`).
-- E2E tests support three server modes: static production (`playwright.config.ts`), HTTP/2 production server (`playwright.server.config.ts` via `yarn pkg:e2e:prod`), and live dev server (`playwright.dev.config.ts` via `yarn pkg:e2e:dev`).
+- E2E tests support four server modes: static production (`playwright.config.ts`), HTTP/1.1 production server (`playwright.server.config.ts`), HTTP/2 production server (`playwright.server-http2.config.ts` via `yarn pkg:e2e:prod`), and live dev server (`playwright.dev.config.ts` via `yarn pkg:e2e:dev`).
 - The coverage numbers shown on the testing page are read from `pkg/test-coverage.json` (unit tests) and `pkg/e2e-test-coverage.json` (E2E build-step coverage) at docs build time. Do not run `#pre-push.prompt.md` or pre-push scripts automatically after adding tests. The user handles running pre-push steps.
 
 **When changing `pkg/src/lib/dev-server.md` (or adding to the live-reload / SSE / watch system):**
