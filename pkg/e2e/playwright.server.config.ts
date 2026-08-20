@@ -22,7 +22,7 @@ export default defineConfig({
   fullyParallel: false,
   retries: process.env.CI ? 1 : 0,
   use: {
-    baseURL: 'https://localhost:9443',
+    baseURL: 'http://localhost:9443',
     ignoreHTTPSErrors: true,
     headless: true,
   },
@@ -32,7 +32,7 @@ export default defineConfig({
       `node ${pkgDir}/dist/index.js --serve`,
     ].join(' && '),
     cwd: e2eDir,
-    url: 'https://localhost:9443/server-scripts-test',
+    url: 'http://localhost:9443/server-scripts-test',
     reuseExistingServer: false,
     ignoreHTTPSErrors: true,
     stdout: 'pipe',
