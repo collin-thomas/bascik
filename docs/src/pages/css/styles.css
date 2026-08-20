@@ -1,6 +1,7 @@
 /* ── Bascik Docs Design System ── */
 
 *, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
 
 :root {
   --bg:           #18191b;

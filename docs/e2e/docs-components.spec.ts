@@ -19,7 +19,7 @@ test.describe('Docs Component E2E Tests', () => {
   });
 
   test('comp-toggle expands and collapses detail panel', async ({ page }) => {
-    await page.goto('/scoped-javascript');
+    await page.goto('/components');
 
     const toggleBtn = page.getByRole('button', { name: /Read more|Show less/ }).first();
     const detailPanel = page.locator('p:has-text("No JavaScript is added to the page")').locator('..');
@@ -39,11 +39,11 @@ test.describe('Docs Component E2E Tests', () => {
   });
 
   test('demo-counter increments and decrements count', async ({ page }) => {
-    await page.goto('/getting-started');
+    await page.goto('/scoped-javascript');
 
     const incBtn = page.locator('button:has-text("+")').first();
     const decBtn = page.locator('button:has-text("−")').first();
-    const countVal = incBtn.locator('../..').locator('span').last();
+    const countVal = incBtn.locator('../..').locator('span').nth(1);
 
     await expect(countVal).toHaveText('0');
 
