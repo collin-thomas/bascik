@@ -181,14 +181,14 @@ To strip TypeScript from component scripts, pass Node's built-in `stripTypeScrip
 
 ### `minify.identifiers`
 
-Hash generated class, ID, and name attributes (name compression or mangling) to short hex strings instead of the verbose `bascik__component__id__name` format. Enabled by default in builds.
+Hash generated class, ID, and name attributes (name compression or mangling) to short alphanumeric strings instead of the verbose `bascik__component__id__name` format. Enabled by default in builds.
 
 ```ts
 minify: {
   identifiers: true // production default
 }
 // bascik__my-nav__ab12cd34__navigation
-// becomes: bab12cd34
+// becomes: b2Y4G9eD1K8b
 ```
 
 ### `cacheHttp`
