@@ -69,6 +69,12 @@ describe("validateProjectName", () => {
   it("rejects an empty string", () => {
     expect(validateProjectName("")).not.toBeNull();
   });
+
+  it("rejects invalid directory names with special characters", () => {
+    const res = validateProjectName("my app*invalid");
+    expect(res).not.toBeNull();
+    expect(res).toContain("is not a valid directory name");
+  });
 });
 
 // ─── Template exports ─────────────────────────────────────────────────────────

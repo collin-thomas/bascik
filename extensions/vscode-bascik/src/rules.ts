@@ -19,7 +19,7 @@ type CompatibilityRuleDefinition = {
 
 const compatibilityRules: CompatibilityPattern[] = (compatibilityRulesData as CompatibilityRuleDefinition[]).map((rule) => ({
   ...rule,
-  regex: new RegExp(rule.pattern, rule.flags ?? ''),
+  regex: new RegExp(rule.pattern, rule.flags),
 }));
 
 export function matchCompatibilityRules(text: string, kind: 'css' | 'js'): CompatibilityPattern[] {
