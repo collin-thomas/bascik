@@ -190,7 +190,7 @@ To debug `bascik.config.ts` or custom build scripts, press `F5` in VS Code. Node
 }
 ```
 
-> **Deep Dive:** Read [CLI Transpilation and Build Errors](/cli#transpilation-and-build-errors) to learn how Bascik reports syntax issues, or explore [Architecture](/internals/architecture) to see how transpilation works under the hood.
+> **Deep Dive:** Read [Debugging with VS Code and Node.js](/testing#debugging-with-vs-code-and-nodejs) for step-debugging launch configurations, [CLI Transpilation and Build Errors](/cli#transpilation-and-build-errors) to learn how Bascik reports syntax issues, or explore [Architecture](/internals/architecture) to see how transpilation works under the hood.
 
 ## Testing Your Workflow
 

@@ -29,6 +29,8 @@ npm run test:coverage
 npm run e2e
 ```
 
+> **Debugging with VS Code.** Scaffolded projects also include pre-configured `.vscode/launch.json` debug profiles to step through unit tests, server scripts, and browser component logic. See [Debugging with VS Code and Node.js](#debugging-with-vs-code-and-nodejs).
+
 If you are adding testing manually to an existing or custom project structure, refer to the [Manual Test Runner Setup](#manual-test-runner-setup) section at the bottom of this page.
 
 ## Testing Compiled Build Output
@@ -274,23 +276,6 @@ Choosing between unit tests and E2E browser tests depends on what you need to ve
 - **Use Playwright E2E tests** when you need to verify that clicking a button opens a modal, toggling a panel changes text, incrementing a counter updates the screen, or navigating links loads the correct page.
 - **Use Vitest unit tests** for instant local feedback when refactoring HTML templates, preventing accidental removal of accessibility attributes (`aria-expanded`, `aria-label`), ensuring pure CSS components stay script-free, or testing pure JavaScript/TypeScript calculation functions.
 
-## High-Value Component Testing vs Contrived Tests
-
-When writing component tests, focus on verifying actual component behavior, accessibility contracts, and compiled outputs rather than writing low-value assertions.
-
-### What to Avoid: Trivial Source Matching
-
-Reading a raw component `.html` template file with `readFile` simply to assert that a string like `class="my-card"` exists in the source text is a low-value test. It only verifies that static text exists in a file on disk. It does not verify that Bascik compiles the component, that props or slots resolve properly, or that embedded scripts behave correctly.
-
-### What to Test Instead
-
-High-value component tests verify specific failure modes and structural contracts:
-
-- **Compiled Output Validation**: Inspect the compiled `dist/` pages after building to verify that custom component tags expanded completely, props substituted correctly, slots received their content, and no raw `data-bascik-prop-*` or `data-bascik-slot` attributes remain in the final HTML.
-- **Accessibility and Markup Contracts**: Assert that interactive controls have explicit `type="button"` attributes, mandatory `aria-expanded` or `aria-label` attributes, and proper semantic HTML tags.
-- **Instance Safety and Scope Isolation**: Ensure component scripts use instance-safe DOM lookup patterns (such as `getElementById` or scoped queries) and do not leak variables into the global scope.
-- **Script Efficiency**: Verify that pure CSS components (such as radio-based tabs or `:has()` toggles) do not ship unnecessary runtime client `<script>` tags.
-
 ## Debugging with VS Code and Node.js
 
 Bascik works smoothly with debuggers because it operates directly on vanilla HTML, CSS, and JavaScript without complex runtime abstractions or heavy bundle transformations.
@@ -367,6 +352,23 @@ To debug interactive client component scripts in Google Chrome or Microsoft Edge
 2. Select **Launch Chrome** from the Run and Debug panel and press `F5`.
 3. VS Code launches a new Chrome window attached to the debugger.
 4. Set breakpoints directly in your component `.html` files in VS Code, or open Chrome DevTools (`F12`), press `Cmd + P` (or `Ctrl + P`), and open virtual source files like `src/components/my-counter.html`.
+
+## High-Value Component Testing vs Contrived Tests
+
+When writing component tests, focus on verifying actual component behavior, accessibility contracts, and compiled outputs rather than writing low-value assertions.
+
+### What to Avoid: Trivial Source Matching
+
+Reading a raw component `.html` template file with `readFile` simply to assert that a string like `class="my-card"` exists in the source text is a low-value test. It only verifies that static text exists in a file on disk. It does not verify that Bascik compiles the component, that props or slots resolve properly, or that embedded scripts behave correctly.
+
+### What to Test Instead
+
+High-value component tests verify specific failure modes and structural contracts:
+
+- **Compiled Output Validation**: Inspect the compiled `dist/` pages after building to verify that custom component tags expanded completely, props substituted correctly, slots received their content, and no raw `data-bascik-prop-*` or `data-bascik-slot` attributes remain in the final HTML.
+- **Accessibility and Markup Contracts**: Assert that interactive controls have explicit `type="button"` attributes, mandatory `aria-expanded` or `aria-label` attributes, and proper semantic HTML tags.
+- **Instance Safety and Scope Isolation**: Ensure component scripts use instance-safe DOM lookup patterns (such as `getElementById` or scoped queries) and do not leak variables into the global scope.
+- **Script Efficiency**: Verify that pure CSS components (such as radio-based tabs or `:has()` toggles) do not ship unnecessary runtime client `<script>` tags.
 
 ## Reference Implementations
 

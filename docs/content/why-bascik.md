@@ -123,6 +123,4 @@ Every decision in Bascik follows from one rule: use what already exists. Do not 
 
 Bascik is a find-and-replace at build time. Custom component tags are resolved to their source HTML. CSS class names are scoped so they cannot collide. Script variables are isolated so they cannot leak. The output is a directory of vanilla HTML files that any server can host, any browser can render, and any tool can inspect without knowing Bascik exists.
 
-If the web platform ever ships a native, zero-runtime, build-time component model that does exactly this, Bascik becomes unnecessary. Until then, it stays out of the way and lets you write the web the way it was designed to be written.
-
 > **Next:** Read the [Getting Started guide](/getting-started) to install Bascik and write your first component in under five minutes. Or jump to [Scoping Compatibility](/compatibility) to see exactly what CSS and JavaScript patterns are supported.
