@@ -61,7 +61,7 @@ Building a website has never been simpler at the language level. HTML structures
 
 The problem is organization, not language. Once a project grows past a handful of pages, copy-pasting the same navigation markup into every file becomes painful. Styles that were meant to be local start bleeding across the page. Script variables in one section collide with variables in another.
 
-Frameworks like React and Vue solve this problem well, for interactive applications that genuinely need component state, client-side routing, and reactive data binding. Most websites are not that. A marketing site, a documentation portal, a portfolio, a blog, these are mostly static documents with a handful of interactive moments sprinkled in. Reaching for a full framework for these projects means paying the runtime cost, the build complexity, and the mental overhead of an entire abstraction layer when the underlying platform already has everything needed.
+Frameworks like React and Vue solve this problem well, for interactive applications that genuinely need component state, client-side routing, and reactive data binding. Most websites are not that. A marketing site, a documentation portal, a portfolio, a blog, even a portal, these are mostly static documents with a handful of interactive moments sprinkled in. Reaching for a full framework for these projects means paying the runtime cost, the build complexity, and the mental overhead of an entire abstraction layer when the underlying platform already has everything needed.
 
 > Frameworks were built for people writing large interactive applications. Bascik was built for everyone else, and for the tools that write code on their behalf.
 

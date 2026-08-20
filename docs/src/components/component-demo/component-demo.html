@@ -1,4 +1,5 @@
 <div class="demo-box">
+  <span class="demo-no-preview-marker" data-bascik-prop-no-preview data-bascik-prop-hide-preview hidden></span>
   <div class="demo-nav">
     <div class="demo-tabs">
       <label class="demo-tab" data-testid="demo-tab-preview">
@@ -193,12 +194,35 @@
     display: none;
   }
 
+  /* When no-preview prop is set, hide preview tab/pane and adjust margins */
+  .demo-box:has(.demo-no-preview-marker:not(:empty)) {
+    margin: 0;
+  }
+
+  .demo-box:has(.demo-no-preview-marker:not(:empty)) .demo-tab[data-testid="demo-tab-preview"] {
+    display: none;
+  }
+
+  .demo-box:has(.demo-no-preview-marker:not(:empty)) .demo-pane[data-pane="preview"] {
+    display: none !important;
+  }
+
   .demo-box:has(.demo-tab-radio[value="preview"]:checked) .demo-pane[data-pane="preview"] {
     display: block;
   }
 
-  .demo-box:has(.demo-tab-radio[value="code"]:checked) .demo-pane[data-pane="code"] {
+  .demo-box:has(.demo-tab-radio[value="code"]:checked) .demo-pane[data-pane="code"],
+  .demo-box:has(.demo-no-preview-marker:not(:empty)):has(.demo-tab-radio[value="preview"]:checked) .demo-pane[data-pane="code"] {
     display: block;
+  }
+
+  .demo-box:has(.demo-no-preview-marker:not(:empty)):has(.demo-tab-radio[value="preview"]:checked) .demo-tab[data-testid="demo-tab-code"] {
+    color: #18191b;
+    font-weight: 600;
+  }
+
+  .demo-box:has(.demo-no-preview-marker:not(:empty)):has(.demo-tab-radio[value="preview"]:checked) .demo-tab[data-testid="demo-tab-code"]::before {
+    background: var(--accent);
   }
 
   .demo-box:has(.demo-tab-radio[value="output"]:checked) .demo-pane[data-pane="output"] {
