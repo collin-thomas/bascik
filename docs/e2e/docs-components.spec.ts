@@ -22,7 +22,7 @@ test.describe('Docs Component E2E Tests', () => {
     await page.goto('/components');
 
     const toggleBtn = page.getByRole('button', { name: /Read more|Show less/ }).first();
-    const detailPanel = page.locator('[id$="detail"]').first();
+    const detailPanel = page.getByTestId('toggle-detail').first();
 
     await expect(detailPanel).toBeHidden();
     await expect(toggleBtn).toHaveText('Read more');
@@ -63,7 +63,7 @@ test.describe('Docs Component E2E Tests', () => {
     await page.goto('/');
 
     const searchBtn = page.getByRole('button', { name: 'Search docs' }).first();
-    const modal = page.locator('.search-overlay').first();
+    const modal = page.getByTestId('search-overlay').first();
     const input = page.getByPlaceholder('Search docs…');
     const resultsList = page.getByRole('listbox', { name: 'Search results' });
 
@@ -91,7 +91,7 @@ test.describe('Docs Component E2E Tests', () => {
     await page.goto('/components');
 
     const closeBtn = page.getByRole('button', { name: 'Dismiss' }).first();
-    const alert = page.locator('[id$="alert"]').first();
+    const alert = page.getByTestId('comp-alert').first();
 
     if (await closeBtn.isVisible()) {
       await closeBtn.click();
