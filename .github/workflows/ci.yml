@@ -192,8 +192,8 @@ jobs:
       - name: Run framework E2E tests (dev server)
         run: yarn pkg:e2e:dev
 
-  e2e-pkg-prod:
-    name: Framework E2E (Prod Server)
+  e2e-pkg-prod-http1:
+    name: Framework E2E (Prod Server HTTP/1.1)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -219,8 +219,38 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium
 
-      - name: Run framework E2E tests (production server)
-        run: yarn pkg:e2e:prod
+      - name: Run framework E2E tests (production server HTTP/1.1)
+        run: yarn pkg:e2e:prod:http1
+
+  e2e-pkg-prod-http2:
+    name: Framework E2E (Prod Server HTTP/2)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: [jelly, unit-pkg, unit-create, unit-docs, unit-extension]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build package
+        run: yarn pkg:build
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium
+
+      - name: Run framework E2E tests (production server HTTP/2)
+        run: yarn pkg:e2e:prod:http2
 
   e2e-docs:
     name: Docs E2E
@@ -286,7 +316,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    needs: [e2e-pkg-static, e2e-pkg-dev, e2e-pkg-prod, e2e-docs, e2e-create]
+    needs: [e2e-pkg-static, e2e-pkg-dev, e2e-pkg-prod-http1, e2e-pkg-prod-http2, e2e-docs, e2e-create]
     steps:
       - uses: actions/checkout@v5
 

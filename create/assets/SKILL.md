@@ -1284,7 +1284,9 @@ The E2E suite lives in `pkg/e2e/` and supports four execution modes:
 
 The fixture config sets `minify.identifiers: false` so Playwright selectors can use readable scoped names like `bascik__my-comp__btn` instead of opaque hashes. However, in production builds (where `minify.identifiers: true` is enabled), Bascik compiles and minifies element IDs and class names. Consequently, relying on raw CSS selectors like `page.locator('.my-class')` or `page.locator('#my-id')` will fail because those identifiers are hashed and compressed.
 
-To make end-to-end tests resilient across both development and production environments, use standard `data-testid` attributes (e.g., `data-testid="search-input"`) on interactive elements and retrieve them using Playwright's native `page.getByTestId(...)` locator. Other native locators like `page.getByRole(...)` or `page.getByPlaceholder(...)` are also recommended over raw selectors or fragile DOM traversal.
+To handle this, keep a clear distinction between compiler testing and application testing:
+* **Compiler-Level E2E Tests (`pkg/e2e/`):** These verify that Bascik's scoping and transpilation systems work. They deliberately target exact compiled class names (e.g., `.bascik__my-comp__wrapper`) and rewritten IDs (e.g., `[id$="__btn"]`). Do not use generic `data-testid` attributes for these, as doing so would bypass verifying the actual compilation engine.
+* **Application-Level E2E Tests (`docs/e2e/`):** These verify user-facing behavior of application widgets. To make them resilient to identifier minification and hashing, use standard `data-testid` attributes (e.g., `data-testid="search-input"`) with Playwright's native `page.getByTestId(...)` locator, or native accessibility-based locators like `page.getByRole(...)` and `page.getByPlaceholder(...)`.
 
 **Adding a new e2e test:**
 1. Add a component in `pkg/e2e/src/components/my-feature/`
@@ -1298,8 +1300,8 @@ test.describe('my-feature-test page', () => {
   test.beforeEach(async ({ page }) => { await page.goto('/my-feature-test'); });
 
   test('instances are isolated', async ({ page }) => {
-    const a = page.getByTestId('feature-wrapper').nth(0);
-    const b = page.getByTestId('feature-wrapper').nth(1);
+    const a = page.locator('.bascik__my-feature__wrapper').nth(0);
+    const b = page.locator('.bascik__my-feature__wrapper').nth(1);
     // assert A and B are independent
   });
 });
