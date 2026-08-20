@@ -33,54 +33,23 @@ mkdir -p .claude/skills/bascik && curl -L -o .claude/skills/bascik/SKILL.md http
 
 Download the Bascik [SKILL.md](https://bascik.dev/assets/SKILL.md) directly.
 
-## Keeping Updated via Git Submodules
+## Keeping the Skill Updated
 
-If you want to ensure your workspace's skill file is always up to date with the latest Bascik specifications, you can use a Git submodule. Because Git does not support tracking an individual file as a submodule, you must add the Bascik repository itself and then symlink the skill file.
+An easy way to keep the skill file current is to simply instruct your AI assistant or agent to update itself from time to time.
 
-### 1. Add the Submodule
+Since the skill file is hosted at a stable static URL (`https://bascik.dev/assets/SKILL.md`), you can add a brief instruction to your agent's system prompt or workspace instructions (such as a `.prompt.md`, `.instructions.md`, or your assistant's rules) telling it to keep the file updated.
 
-Add the Bascik repository as a Git submodule inside your project (for example, under `vendor/bascik`):
+### Recommended Prompt for Your Agent
 
-```sh
-git submodule add https://github.com/bascikdev/bascik.git vendor/bascik
-```
+Add an instruction like the following to your agent configuration files:
 
-### 2. Symlink the Skill File
+> When working in this repository, check if the Bascik skill file (`SKILL.md`) is present and up to date. If you need to update it, run the following download command to fetch the latest version of the guidelines:
+> 
+> ```sh
+> curl -L -o .github/skills/bascik/SKILL.md https://bascik.dev/assets/SKILL.md
+> ```
 
-Create a symbolic link (symlink) pointing from the appropriate agent skills directory in your project to the `SKILL.md` file inside the submodule. 
-
-For **VS Code**:
-
-```sh
-mkdir -p .github/skills/bascik
-ln -s ../../../vendor/bascik/docs/src/pages/assets/SKILL.md .github/skills/bascik/SKILL.md
-```
-
-For **Cursor**:
-
-```sh
-mkdir -p .cursor/skills/bascik
-ln -s ../../../vendor/bascik/docs/src/pages/assets/SKILL.md .cursor/skills/bascik/SKILL.md
-```
-
-For **Claude**:
-
-```sh
-mkdir -p .claude/skills/bascik
-ln -s ../../../vendor/bascik/docs/src/pages/assets/SKILL.md .claude/skills/bascik/SKILL.md
-```
-
-Using relative symbolic links ensures that they work seamlessly for any developer on your team who clones your repository.
-
-### 3. Keep the Skill Updated
-
-To fetch the latest updates from the upstream Bascik repository and keep your local skill file synchronized, run:
-
-```sh
-git submodule update --remote --merge
-```
-
-This updates the submodule to the latest commit on its tracking branch, automatically syncing your local `SKILL.md` to the current version.
+This ensures your AI assistant always operates with the most up-to-date syntax, conventions, and compatibility guidelines with zero manual effort required from you.
 
 ## What's inside
 
