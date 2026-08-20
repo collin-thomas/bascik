@@ -626,13 +626,14 @@ export const pageProcessing = (
   const next = current.then(async () => {
     const result = await transpilePage(pagePath, componentList, globalStylesHtml);
     if (!result) return;
-    const { relativePagePath, absolutePagePath, distHtml, usedComponentsNames } = result;
+    const { relativePagePath, absolutePagePath, distHtml, usedComponentsNames, fileDependencies } = result;
     if (!BascikConfig.isBuild) {
       await mem.storePage({
         relativePagePath,
         absolutePagePath,
         pageContent: distHtml,
         usedComponentsNames,
+        fileDependencies,
       });
     }
     eventEmitter.emit("transpiled", { relativePagePath });

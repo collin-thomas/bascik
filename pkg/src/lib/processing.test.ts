@@ -1,6 +1,7 @@
 import fc from "fast-check";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { recursivelyTranspile, pageProcessing, processPageBatch, selectivelyProcessPagesForWatchPath, partitionByOpenPages, getDisplayPath, findActiveSourceFile, getFilePosition, transpilePage, processAllPages, selectivelyProcessPages, removePage } from "./processing.js";
+import { collectAllScriptDeps } from "./build-scripts.js";
 import { BascikConfig } from "./config.js";
 
 // Disable all scoping so tests produce predictable, readable HTML
@@ -960,6 +961,24 @@ describe("pageProcessing – live-reload script injection", () => {
     expect(checkIdx).toBeGreaterThan(-1);
     expect(assignIdx).toBeGreaterThan(-1);
     expect(checkIdx).toBeLessThan(assignIdx);
+  });
+
+  it("passes fileDependencies from transpilePage to mem.storePage", async () => {
+    (collectAllScriptDeps as ReturnType<typeof vi.fn>).mockResolvedValueOnce(["scripts/md-renderer.ts", "content/cli.md"]);
+    const html = `
+      <!DOCTYPE html><html><head></head><body>
+      <script data-bascik-build>
+        import { renderMd } from './scripts/md-renderer.ts';
+        console.log(await renderMd('./content/cli.md'));
+      </script>
+      </body></html>
+    `;
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(html);
+    await pageProcessing(PAGE_PATH, {});
+    const storeArgs = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(storeArgs.fileDependencies).toBeDefined();
+    expect(storeArgs.fileDependencies).toContain("scripts/md-renderer.ts");
+    expect(storeArgs.fileDependencies).toContain("content/cli.md");
   });
 });
 
