@@ -1266,12 +1266,16 @@ Each `pkg/src/lib/*.ts` module has a paired `*.test.ts`. Because modules depend 
 ### End-to-End Tests (Playwright)
 
 ```sh
-yarn pkg:build && yarn pkg:e2e   # build package first, then run all e2e tests
+yarn pkg:build                  # build package first
+yarn pkg:e2e                    # run static production suite
+yarn pkg:e2e:dev                # run dev server live-reload and watch suite
+yarn pkg:e2e:prod               # run HTTP/2 server script production suite
 ```
 
-The e2e suite lives in `pkg/e2e/`. Playwright's `webServer` hook:
-1. Builds the fixture site (`pkg/e2e/src/`) using the current `pkg/dist/`
-2. Serves `e2e/dist/` on `http://localhost:4200`
+The E2E suite lives in `pkg/e2e/` and supports three execution modes:
+1. **Static production suite (`playwright.config.ts`)**: builds the fixture site with `bascik --build` and serves static files via `server.ts` on port 4200.
+2. **Server script production suite (`playwright.server.config.ts`)**: boots `bascik --serve` over HTTP/2 on port 9443 to test `data-bascik-server` request-time script execution.
+3. **Dev server watch suite (`playwright.dev.config.ts`)**: boots `bascik --dev` on port 9443 to run the full test suite and live-reload watcher tests directly against the live dev server with SSE tracking and open-page priority re-transpilation.
 
 The fixture config sets `minify.identifiers: false` so Playwright selectors can use readable scoped names like `bascik__my-comp__btn` instead of opaque hashes.
 
