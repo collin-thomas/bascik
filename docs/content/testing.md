@@ -126,12 +126,12 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './e2e',
   use: {
-    baseURL: 'http://localhost:4200',
+    baseURL: 'http://localhost:8080',
     headless: true,
   },
   webServer: {
-    command: 'npx bascik --build && npx bascik --serve 4200',
-    url: 'http://localhost:4200',
+    command: 'npx bascik --build && npx bascik --serve',
+    url: 'http://localhost:8080',
     reuseExistingServer: !process.env.CI,
   },
 });

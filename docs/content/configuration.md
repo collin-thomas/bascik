@@ -17,7 +17,9 @@ Here are just a few ways Bascik puts architectural choices back in your hands:
 - **Error Behavior (`onScriptError`):** Choose whether to halt the entire build on template script errors, or output inline compiler warnings and keep going.
 - **Environment Overrides (`build`):** Easily define production-only overrides (such as minifying identifier names or inlining stylesheets) while keeping development logs detailed and verbose.
 
-## Full Example
+## Default Configuration Example
+
+Because Bascik is zero-config, you do not need a `bascik.config.ts` file to use these settings. The example below displays all available configuration options populated with their built-in default values for illustrative purposes.
 
 ```ts
 // bascik.config.ts
@@ -28,7 +30,10 @@ export default defineConfig({
     pages: 'src/pages',
     components: 'src/components',
   },
-  watch: ['scripts/', 'data/'],
+  watch: [],
+  exec: [
+    // { script: 'scripts/generate-search-index.ts', watch: ['content/'] },
+  ],
 
   scopeScriptBlocks: true,
   inheritAttributes: true,
@@ -41,16 +46,16 @@ export default defineConfig({
 
   deduplicateCss: true,
   minify: {
-    html: true,
-    css: true,
-    js: true,
-    identifiers: true,
+    html: false,        // false in dev; true in --build and --serve
+    css: false,         // false in dev; true in --build and --serve
+    js: false,          // false in dev; true in --build and --serve
+    identifiers: false, // false in dev; true in --build and --serve
   },
-  inlineStyles: ['src/pages/css/styles.css'],
+  inlineStyles: false,  // false | true | ['src/pages/css/styles.css']
 
-  cacheHttp: false,  // true by default in --serve mode
+  cacheHttp: false,     // false in dev; true in --serve
 
-  siteUrl: 'https://example.com',
+  siteUrl: undefined,   // e.g. 'https://example.com' (required for sitemap generation)
   generate: {
     sitemap: true,
     robots: true,
@@ -58,6 +63,8 @@ export default defineConfig({
 
   useWorkers: false,
   buildScriptCache: true,
+  onScriptError: 'warn', // 'warn' in dev; 'error' in --build and --serve
+  onMinifyError: 'warn', // 'warn' in dev; 'error' in --build and --serve
 
   devServer: {
     logging: {
@@ -66,6 +73,19 @@ export default defineConfig({
       copies: true,
       deletes: true,
       transpiles: true,
+    },
+  },
+
+  serve: {
+    port: 8080,           // default (8080 HTTP, 8443 HTTPS)
+    hostname: 'localhost', // use '0.0.0.0' to bind all interfaces
+    enableTls: false,     // default; set true for HTTP/2 HTTPS
+    scriptTimeout: 30000, // max execution time (ms) per server script
+    keyFile: undefined,   // path to TLS private key when enableTls is true
+    certFile: undefined,  // path to TLS certificate when enableTls is true
+    logging: {
+      level: 'info',      // silent | error | warn | info | debug
+      requests: true,     // log each request as 'GET / ... 200 17ms'
     },
   },
 });
@@ -230,13 +250,14 @@ Use `level: 'warn'` or `level: 'silent'` to suppress the high-volume status line
 
 ### `serve`
 
-Configure the HTTP server started by `bascik --serve` and `bascik` (dev mode). `port`, `hostname`, `enableTls`, `keyFile`, and `certFile` are read in both modes. `bascik --build` does not start a server and ignores this block.
+Configure the HTTP server started by `bascik --serve` and `bascik` (dev mode). `port`, `hostname`, `enableTls`, `scriptTimeout`, `keyFile`, and `certFile` are read in both modes. `bascik --build` does not start a server and ignores this block.
 
 ```ts
 serve: {
   port: 8080,              // default (8080 for HTTP, 8443 for HTTPS)
   hostname: 'localhost',   // default; set '0.0.0.0' to bind all interfaces
   enableTls: false,        // default; set true for encrypted HTTP/2 (HTTPS)
+  scriptTimeout: 30000,    // max execution time (ms) per server script (default: 30000)
   keyFile: 'bascik-privkey.pem',  // path to TLS private key when enableTls: true
   certFile: 'bascik-cert.pem',    // path to TLS certificate when enableTls: true
   logging: {

@@ -880,7 +880,7 @@ export default defineConfig({
     html: false,
     css: false,
     js: false,
-    identifiers: true, // hash class/id names to short alphanumeric strings
+    identifiers: false, // false in dev; true in --build and --serve
   },
   inlineStyles: false, // false | true | ['src/pages/css/styles.css']
   cacheHttp: false, // dev default; automatically true in --serve mode
@@ -906,6 +906,7 @@ export default defineConfig({
     enableTls: false,     // default; set true for HTTP/2 HTTPS
     port: 8080,           // default (8080 HTTP, 8443 HTTPS)
     hostname: 'localhost', // use '0.0.0.0' to bind all interfaces (containers/proxies)
+    scriptTimeout: 30000, // max execution time (ms) per server script (default: 30000)
     keyFile: '/etc/ssl/site.key',  // optional: provide your own TLS cert
     certFile: '/etc/ssl/site.crt', // optional: provide your own TLS cert
     logging: {

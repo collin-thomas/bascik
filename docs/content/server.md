@@ -6,7 +6,7 @@ The mechanism is `data-bascik-server`: a script tag that runs on the server on e
 
 ```sh
 bascik --build   # compile to dist/ (static assets)
-bascik --serve   # start the HTTP/2 server; runs data-bascik-server scripts per request
+bascik --serve   # start the production HTTP server; runs data-bascik-server scripts per request
 ```
 
 If your site has no `data-bascik-server` scripts, you do not need `bascik --serve`: any static host will do.
@@ -115,7 +115,7 @@ Use a small helper in your own script, or keep it inline if you only need it onc
 
   const name = escapeHtml(headers['x-display-name'] ?? 'Guest');
   const tab = escapeHtml(searchParams.tab ?? 'overview');
-  console.log(`<p>Hello ${name} &mdash; tab: ${tab}</p>`);
+  console.log(`<p>Hello ${name} - tab: ${tab}</p>`);
 </script>
 ```
 
