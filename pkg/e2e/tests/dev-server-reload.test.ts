@@ -18,6 +18,7 @@ import { test, expect } from '@playwright/test';
 import { readFile, writeFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawn } from 'node:child_process';
 
 const e2eDir = fileURLToPath(new URL('..', import.meta.url));
 const pagePath = join(e2eDir, 'src/pages/scope-test.html');
@@ -281,6 +282,64 @@ test.describe('Dev Server Request-Time Scripts (data-bascik-server)', () => {
     await expect(page.locator('[class*="server-comp-static"]')).toHaveText('Component Static');
     await expect(page.locator('[id$="__comp-server-output"]')).toHaveText('Comp Server: GET');
     await expect(page.locator('#ansi-output')).toHaveText('Clean HTML');
+  });
+});
+
+test.describe('Dev Server Startup Output', () => {
+  test('startup logs do not contain duplicate transpiled page entries or duplicate completion summaries', async () => {
+    const entryPath = join(pkgDir, 'bin/bascik.js');
+    const child = spawn(process.execPath, [entryPath], {
+      cwd: e2eDir,
+      env: { ...process.env, PORT: '9989' },
+    });
+
+    let output = '';
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        child.kill();
+        reject(new Error(`Dev server startup timed out. Output captured:\n${output}`));
+      }, 15000);
+
+      child.stdout?.on('data', (data) => {
+        output += data.toString('utf8');
+        if (output.includes('Server running at')) {
+          clearTimeout(timeout);
+          child.kill();
+          resolve();
+        }
+      });
+
+      child.stderr?.on('data', (data) => {
+        output += data.toString('utf8');
+      });
+
+      child.on('error', (err) => {
+        clearTimeout(timeout);
+        reject(err);
+      });
+
+      child.on('exit', (code) => {
+        clearTimeout(timeout);
+        if (!output.includes('Server running at')) {
+          reject(new Error(`Dev server exited prematurely with code ${code}. Output:\n${output}`));
+        } else {
+          resolve();
+        }
+      });
+    });
+
+    const lines = output.split('\n').map((l) => l.trim()).filter(Boolean);
+
+    // 1. Check transpiled page lines: each page path should be transpiled exactly once
+    const transpiledLines = lines.filter((l) => l.startsWith('transpiled:'));
+    expect(transpiledLines.length).toBeGreaterThan(0);
+
+    const uniqueTranspiled = new Set(transpiledLines);
+    expect(transpiledLines.length).toBe(uniqueTranspiled.size);
+
+    // 2. Check summary line: exactly one "✓ N pages transpiled in Xms" before server ready
+    const summaryLines = lines.filter((l) => /^✓ \d+ pages? transpiled in \d+ms$/.test(l));
+    expect(summaryLines.length).toBe(1);
   });
 });
 
