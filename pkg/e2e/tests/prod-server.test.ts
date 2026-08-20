@@ -107,7 +107,9 @@ test.describe('Production Server (`bascik --serve`) Engine', () => {
 
   test('rejects path traversal attempts with 400 Bad Request', async ({ request }) => {
     const res1 = await request.get('/../../../etc/passwd');
-    expect(res1.status()).toBe(400);
+    // HTTP clients (like Playwright) may normalize the path to /etc/passwd
+    // on the client side before sending, which results in 404 Not Found, while unnormalized path keeps it as 400.
+    expect([400, 404]).toContain(res1.status());
 
     const res2 = await request.get('/..%2f..%2f..%2fetc/passwd');
     expect(res2.status()).toBe(400);
