@@ -221,6 +221,7 @@ const maskRawTextContent = (htmlString: string): string =>
       m.length >= 7 ? `<!--${" ".repeat(m.length - 7)}-->` : m,
     )
     .replace(
+      // nosemgrep javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
       new RegExp(
         `(<(script|style|textarea)(?:${ATTR_VALUE})>)([\\s\\S]*?)(<\\/\\2\\s*>)`,
         "gi",
@@ -240,7 +241,9 @@ const findOpenTag = (
   htmlString: string,
   tagName: string,
 ): { openTag: string; start: number; end: number } | null => {
+  if (!/^[a-zA-Z][\w:-]*$/.test(tagName)) return null;
   const tn = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // nosemgrep javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
   const openTagRegexp = new RegExp(`<${tn}(?:${ATTR_VALUE})>`, "i");
   const openTagMatch = openTagRegexp.exec(maskRawTextContent(htmlString));
   if (!openTagMatch) return null;
@@ -256,6 +259,7 @@ export const replaceTag = (
   tagName: string,
   transpiledTag: string,
 ): string => {
+  if (!/^[a-zA-Z][\w:-]*$/.test(tagName)) return htmlString;
   const tn = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   // Try paired tags first: <tagName ...>...</tagName>
   // Use findMatchingClose (a depth counter) instead of a lazy regex so nested
@@ -265,6 +269,7 @@ export const replaceTag = (
   if (openTag && !/\/\s*>$/.test(openTag.openTag)) {
     const closeIndex = findMatchingClose(htmlString, tagName, openTag.end);
     if (closeIndex !== -1) {
+      // nosemgrep javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
       const closeTagRegexp = new RegExp(`^<\\/${tn}\\s*>`, "i");
       const closeTagMatch = closeTagRegexp.exec(htmlString.slice(closeIndex));
       if (closeTagMatch) {
@@ -285,6 +290,7 @@ export const replaceTag = (
   // Use a replacement function for the same `$`-safety reason.
   // Search the masked string so a literal tag inside <script>/<style>/<textarea>
   // content is never replaced; splice by index into the original string.
+  // nosemgrep javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
   const selfClosingRegexp = new RegExp(`<${tn}(?:${ATTR_VALUE})\\s*\\/?>`, "i");
   const selfClosingMatch = selfClosingRegexp.exec(maskRawTextContent(htmlString));
   if (!selfClosingMatch) return htmlString;
@@ -299,7 +305,9 @@ export const getTagContents = (
   htmlString: string,
   tagName: string,
 ): { content?: string; innerContent?: string } => {
+  if (!/^[a-zA-Z][\w:-]*$/.test(tagName)) return {};
   const tn = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // nosemgrep javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
   const regexp = new RegExp(
     `(?<content><${tn}[^>]*>(?<innerContent>([\\s\\S]*?))<\\/${tn}>)`,
     "i",
@@ -320,9 +328,11 @@ export const getFirstComponent = (
   // because reverse, the longer tag will be first in the regexp, and therefore match first.
   // It's like how an ingress controller works.
   const componentNames = Object.keys(componentList)
+    .filter((name) => /^[a-zA-Z][\w:-]*$/.test(name))
     .map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
     .sort((a, b) => b.length - a.length);
   if (componentNames.length === 0) return {};
+  // nosemgrep javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
   const matchComponentName = new RegExp(
     `<\\b(${componentNames.join("|")})\\b[\\s\\S]*?>`,
     "i",
@@ -346,6 +356,7 @@ export const getTag = (
   tagName: string,
   componentList?: ComponentList,
 ): Partial<BascikComponent> => {
+  if (!/^[a-zA-Z][\w:-]*$/.test(tagName)) return {};
   const tn = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   // Try paired tags: <tagName ...>content</tagName>
   // Use findMatchingClose (a depth counter) instead of a lazy regex so nested
@@ -355,6 +366,7 @@ export const getTag = (
   if (openTag && !/\/\s*>$/.test(openTag.openTag)) {
     const closeIndex = findMatchingClose(htmlString, tagName, openTag.end);
     if (closeIndex !== -1) {
+      // nosemgrep javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
       const closeTagRegexp = new RegExp(`^<\\/${tn}\\s*>`, "i");
       const closeTagMatch = closeTagRegexp.exec(htmlString.slice(closeIndex));
       if (closeTagMatch) {
@@ -373,6 +385,7 @@ export const getTag = (
 
   // Try self-closing: <tagName ... /> or <tagName/>
   // Search the masked string so literal tag text inside raw-text elements is skipped.
+  // nosemgrep javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
   const selfClosingPattern = new RegExp(
     `<${tn}([\\s\\S]*?)\\/?>`,
     "i",
@@ -439,11 +452,13 @@ export const injectProps = (
   if (!fileContent) return "";
   let result = fileContent;
   Object.entries(props).forEach(([propName, propValue]) => {
+    if (!/^[a-zA-Z0-9_-]+$/.test(propName)) return;
     const attrName = `data-bascik-prop-${propName}`;
     // Match: <tagName [attrsBefore] data-bascik-prop-name[=value] [attrsAfter]>...</tagName>
     // The attr scans are quote-aware so a `>` inside a quoted attribute value
     // (e.g. title="a > b") does not end the opening tag early.
     result = result.replace(
+      // nosemgrep javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
       new RegExp(
         `<(\\w+(?:-\\w+)*?)(${ATTR_VALUE}?)\\s+${attrName}(?:=("[^"]*"|'[^']*'))?(${ATTR_VALUE})>([\\s\\S]*?)<\\/\\1>`,
         "gi",
@@ -480,8 +495,11 @@ const findMatchingClose = (
   tagName: string,
   contentStart: number,
 ): number => {
+  if (!/^[a-zA-Z][\w:-]*$/.test(tagName)) return -1;
   const tn = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // nosemgrep javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
   const openRe = new RegExp(`<${tn}[\\s>]`, "gi");
+  // nosemgrep javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
   const closeRe = new RegExp(`<\\/${tn}>`, "gi");
   // Scan the masked string so literal tag text inside <script>/<style>/<textarea>
   // content never skews the depth counter. Indices are valid in the original.
@@ -524,6 +542,7 @@ const parseNamedSlots = (
   // Quote-aware attribute scan (ATTR_VALUE) so the marker may appear after
   // other attributes, and `data-bascik-slot` inside a quoted attribute value
   // never false-positives.
+  // nosemgrep javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
   const openTagRe = new RegExp(
     `<(\\w+(?:-\\w+)*)(?=[\\s>])(?:${ATTR_VALUE}?)\\s+data-bascik-slot="([^"]+)"(?:${ATTR_VALUE})>`,
     "gi",
@@ -627,6 +646,7 @@ export const replaceDefaultSlots = (
   fileContent: string,
   defaultSlotContent: string,
 ): string => {
+  // nosemgrep javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
   const openTagRe = new RegExp(
     `<(\\w+(?:-\\w+)*)(?=[\\s>])(?:${ATTR_VALUE}?)\\s+data-bascik-slot(?!\\s*=)(?:${ATTR_VALUE})>`,
     "gi",
@@ -674,6 +694,7 @@ export const extractInheritableAttributes = (
   // Grab just the opening tag text (up to the first > or />).
   // The attribute scan is quote-aware so a `>` inside a quoted attribute value
   // (e.g. title="a > b") does not end the opening tag early.
+  // nosemgrep javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
   const openTagMatch = componentContent.match(
     new RegExp(`^<[\\w-]+(${ATTR_VALUE})(?:\\s*\\/?>)`),
   );
