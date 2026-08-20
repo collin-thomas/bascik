@@ -28,5 +28,5 @@ jobs:
       - name: Install Jelly Static Analyzer Globally
         run: npm install -g @cs-au-dk/jelly
 
-      - name: Run Jelly Analysis on package index
-        run: jelly --ignore-dependencies pkg/src/index.ts
+      - name: Run Jelly Analysis on package
+        run: jelly --obj-spread pkg/src/index.ts
