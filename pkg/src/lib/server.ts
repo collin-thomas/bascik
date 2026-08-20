@@ -170,6 +170,19 @@ export const createRequestHandler = () => {
         return;
       }
 
+      // ── Path traversal guard for all requests ────────────────────────────
+      if (
+        pathname.includes("/../") ||
+        pathname.startsWith("../") ||
+        pathname.endsWith("/..") ||
+        pathname === ".."
+      ) {
+        responseStatus = 400;
+        res.respond(400, { ...SECURITY_HEADERS });
+        res.end("Bad Request");
+        return;
+      }
+
       // ── Static asset (has extension, not .html) ──────────────────────────
       const ext = extname(pathname).toLowerCase();
       if (ext && !ext.match(/^\.htm.*$/)) {

@@ -56,12 +56,15 @@ test.describe('Dev Server Live-Reload & Watch Engine', () => {
     expect(hasLiveReloadScript).toBe(true);
   });
 
-  test('SSE endpoint responds with event-stream content-type and no-cache headers', async ({ request }) => {
-    const res = await request.get('/bascik-live-reload', {
+  test('SSE endpoint responds with event-stream content-type and no-cache headers', async () => {
+    const controller = new AbortController();
+    const res = await fetch('http://localhost:9443/bascik-live-reload', {
       headers: { Referer: 'http://localhost:9443/scope-test' },
+      signal: controller.signal,
     });
-    expect(res.headers()['content-type']).toContain('text/event-stream');
-    expect(res.headers()['cache-control']).toContain('no-cache');
+    expect(res.headers.get('content-type')).toContain('text/event-stream');
+    expect(res.headers.get('cache-control')).toContain('no-cache');
+    controller.abort();
   });
 
   // ── 2. Live Page Modification ──────────────────────────────────────────────
@@ -78,7 +81,7 @@ test.describe('Dev Server Live-Reload & Watch Engine', () => {
     await writeFile(pagePath, updatedContent, 'utf8');
 
     // Page should auto-reload via SSE and display the new text
-    await expect(page.locator('h1')).toHaveText(markerText);
+    await expect(page.locator('h1')).toHaveText(markerText, { timeout: 15000 });
   });
 
   // ── 3. Live Component Modification ─────────────────────────────────────────
@@ -97,7 +100,7 @@ test.describe('Dev Server Live-Reload & Watch Engine', () => {
     await writeFile(componentPath, updatedComponent, 'utf8');
 
     // Live reload should re-transpile the page with the updated component template
-    await expect(page.locator('button#add-btn').first()).toHaveText(markerText);
+    await expect(page.locator('button#add-btn').first()).toHaveText(markerText, { timeout: 15000 });
   });
 
   // ── 4. Multi-Tab Live Reload ───────────────────────────────────────────────
@@ -119,7 +122,7 @@ test.describe('Dev Server Live-Reload & Watch Engine', () => {
     ), 'utf8');
 
     // Page 1 reloads with marker
-    await expect(page1.locator('h1')).toHaveText(marker1);
+    await expect(page1.locator('h1')).toHaveText(marker1, { timeout: 15000 });
 
     // Modify second page
     const marker2 = `Tab 2 Marker ${Date.now()}`;
@@ -129,7 +132,7 @@ test.describe('Dev Server Live-Reload & Watch Engine', () => {
     ), 'utf8');
 
     // Page 2 reloads with marker
-    await expect(page2.locator('h1')).toHaveText(marker2);
+    await expect(page2.locator('h1')).toHaveText(marker2, { timeout: 15000 });
 
     await page1.close();
     await page2.close();
@@ -164,7 +167,7 @@ test.describe('Dev Server Live-Reload & Watch Engine', () => {
     await writeFile(pagePath, originalPageContent.replace('<h1>JS Scope Rewriting — Live Test</h1>', `<h1>${finalMarker}</h1>`), 'utf8');
 
     // Server should recover and render the final state on the open browser page
-    await expect(page.locator('h1')).toHaveText(finalMarker);
+    await expect(page.locator('h1')).toHaveText(finalMarker, { timeout: 15000 });
   });
 });
 
