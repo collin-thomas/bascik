@@ -46,8 +46,8 @@ export const NAV: NavSection[] = [
       { href: '/cli', label: 'CLI / Command Line' },
       { href: '/configuration', label: 'Configuration' },
       { href: '/compatibility', label: 'Scoping Compatibility' },
-      { href: '/deploying', label: 'Deploying' },
       { href: '/testing', label: 'Testing' },
+      { href: '/deploying', label: 'Deploying' },
     ]
   },
   {
