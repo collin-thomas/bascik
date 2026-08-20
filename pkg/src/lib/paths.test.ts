@@ -49,4 +49,11 @@ describe("getHttpPath", () => {
     expect(getHttpPath("cli.html")).toBe("/cli");
     expect(getHttpPath("/cli.html")).toBe("/cli");
   });
+
+  it("handles mixed backslashes, leading slashes, and 'pages' segment in directory names", () => {
+    expect(getHttpPath("C:\\my-project\\src\\pages\\docs\\pages-guide.html")).toBe("/docs/pages-guide");
+    expect(getHttpPath("///src/pages/deeply//nested///index.html")).toBe("/deeply/nested/");
+    expect(getHttpPath("pages/sub-pages/index.html")).toBe("/sub-pages/");
+  });
 });
+

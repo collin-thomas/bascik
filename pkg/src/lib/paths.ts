@@ -1,5 +1,5 @@
 export const getHttpPath = (pagePath: string): string => {
-  let normalized = pagePath.replace(/\\/g, "/");
+  let normalized = pagePath.replace(/\\/g, "/").replace(/\/+/g, "/");
 
   // Strip leading path segments up to pages/ or src/pages/ if present
   if (normalized.includes("/pages/")) {
