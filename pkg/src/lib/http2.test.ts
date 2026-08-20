@@ -71,6 +71,7 @@ describe("startHttp2Server", () => {
     // Find the 'request' listener registered on the server
     const requestCall = mockServer.on.mock.calls.find(c => c[0] === "request");
     expect(requestCall).toBeDefined();
+    if (!requestCall) throw new Error("request listener not registered");
     const requestListener = requestCall[1];
 
     // Case 1: HTTP/2 request (should be ignored by request listener because it is already handled by 'stream')

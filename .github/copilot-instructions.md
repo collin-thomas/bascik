@@ -215,7 +215,7 @@ High unit test coverage numbers can create false confidence if tests only exerci
 
 3. **Enforce Environment Parity in Tests:**
    - Worker threads (`worker-pool.ts`, `page-worker.ts`) do not inherit `process.argv` from the main thread. Always test worker execution explicitly and verify that disk side-effects (`dist/` outputs) occur as expected, not just in-memory return values.
-   - HTML minification in production (`bascik --build`) collapses whitespace and shifts DOM element indices. E2E assertions must target elements via explicit semantic attributes, scoped IDs (`button[id$="__btn"]`), or data attributes (`data-bascik-prop-*`), never fragile relative DOM traversal (`.nth(N)` or `.locator('../..')`).
+   - Identifier minification in production (`bascik --build` with `minify.identifiers: true`) hashes and compresses scoped element IDs and class names. Consequently, E2E assertions must never target raw classes or IDs (such as `.search-overlay` or `[id$="detail"]`). Instead, always use explicit `data-testid` attributes and locate them using Playwright's native `page.getByTestId(...)` API. Never use fragile relative DOM traversal (`.nth(N)` or `.locator('../..')`).
 
 4. **Resilience & Fault Tolerance by Design:**
    - Test recovery from invalid user input, syntax errors, rapid file edits, and unexpected client disconnects (`ECONNRESET`, `EPIPE`, `ERR_HTTP2_STREAM_CANCEL`). The watcher and server must stay alive and recover automatically.
