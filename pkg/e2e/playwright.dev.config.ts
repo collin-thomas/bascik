@@ -1,5 +1,5 @@
 /**
- * Playwright config for running E2E tests against the Bascik Dev Server (`bascik --dev`).
+ * Playwright config for running E2E tests against the Bascik Dev Server.
  *
  * Runs the full E2E test suite (scoping, slots, CSS, JS, components, DOM, etc.)
  * plus dev-server live-reload and watch tests directly against the live dev server.
@@ -25,7 +25,7 @@ export default defineConfig({
     headless: true,
   },
   webServer: {
-    command: `node ${pkgDir}/dist/index.js --dev`,
+    command: `node ${pkgDir}/dist/index.js`,
     cwd: e2eDir,
     url: 'http://localhost:9443/scope-test',
     reuseExistingServer: false,
