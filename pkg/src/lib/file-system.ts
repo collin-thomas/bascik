@@ -10,12 +10,15 @@ import { minifyJs } from "./javascript.js";
 /** Resolve an absolute path to a `parentDir/...` relative path, normalising separators. */
 export const getRelativePath = (path: string, parentDir: string): string => {
   const normalizedPath = path.replace(/\\/g, "/");
-  // Normalise the configured directory too — on Windows `resolve()` produces
-  // backslash separators which would never match the chokidar-style path.
   const parentPath = (parentDir === "pages"
     ? BascikConfig.directory.pages
     : BascikConfig.directory.components
   ).replace(/\\/g, "/");
+
+  if (normalizedPath.startsWith(`${parentDir}/`)) {
+    const relative = normalizedPath.slice(parentDir.length + 1).replace(/^\.?\//, "").replace(/^\//, "");
+    return relative ? `${parentDir}/${relative}`.replace(/\/+/g, "/") : parentDir;
+  }
 
   const suffix = normalizedPath.includes(`${parentPath}/`)
     ? normalizedPath.split(`${parentPath}/`)[1]
@@ -90,35 +93,49 @@ export async function copyReplicatePath(
     const minifyJsCfg = BascikConfig.minify?.js ?? false;
 
     if (isMinifyCss && src.endsWith(".css")) {
+      const minifyFn = isMinifyCss === true ? minifyCss : isMinifyCss;
+      let minified: string;
       try {
-        const minifyFn = isMinifyCss === true ? minifyCss : isMinifyCss;
-        const minified = await minifyFn((await readFile(src)).toString());
-        const destHash = createHash("sha256").update(await readFile(destPath).catch(() => "")).digest("hex");
-        const minifiedHash = createHash("sha256").update(minified).digest("hex");
-        if (minifiedHash === destHash) return;
-        await writeFile(destPath, minified);
-        if (canLogDevEvent(BascikConfig.devServer?.logging?.copies, "info")) {
-          console.log("copied (minified):", displayRelativePath(src));
-        }
-        return;
+        minified = await minifyFn((await readFile(src)).toString());
       } catch (minErr) {
-        console.warn("[bascik] CSS minification failed for %s, falling back to unminified copy:", src, minErr);
+        const behavior = BascikConfig.onMinifyError ?? "error";
+        if (behavior === "halt" || behavior === "error") {
+          console.error(`[bascik] CSS minification failed for ${src}:`, minErr);
+          throw minErr;
+        }
+        console.warn(`[bascik] CSS minification failed for ${src}, falling back to unminified copy:`, minErr);
+        minified = (await readFile(src)).toString();
       }
+      const destHash = createHash("sha256").update(await readFile(destPath).catch(() => "")).digest("hex");
+      const minifiedHash = createHash("sha256").update(minified).digest("hex");
+      if (minifiedHash === destHash) return;
+      await writeFile(destPath, minified);
+      if (canLogDevEvent(BascikConfig.devServer?.logging?.copies, "info")) {
+        console.log("copied (minified):", displayRelativePath(src));
+      }
+      return;
     } else if (minifyJsCfg && src.endsWith(".js")) {
+      const minifyFn = minifyJsCfg === true ? minifyJs : minifyJsCfg;
+      let minified: string;
       try {
-        const minifyFn = minifyJsCfg === true ? minifyJs : minifyJsCfg;
-        const minified = await minifyFn((await readFile(src)).toString());
-        const destHash = createHash("sha256").update(await readFile(destPath).catch(() => "")).digest("hex");
-        const minifiedHash = createHash("sha256").update(minified).digest("hex");
-        if (minifiedHash === destHash) return;
-        await writeFile(destPath, minified);
-        if (canLogDevEvent(BascikConfig.devServer?.logging?.copies, "info")) {
-          console.log("copied (minified):", displayRelativePath(src));
-        }
-        return;
+        minified = await minifyFn((await readFile(src)).toString());
       } catch (minErr) {
-        console.warn("[bascik] JS minification failed for %s, falling back to unminified copy:", src, minErr);
+        const behavior = BascikConfig.onMinifyError ?? "error";
+        if (behavior === "halt" || behavior === "error") {
+          console.error(`[bascik] JS minification failed for ${src}:`, minErr);
+          throw minErr;
+        }
+        console.warn(`[bascik] JS minification failed for ${src}, falling back to unminified copy:`, minErr);
+        minified = (await readFile(src)).toString();
       }
+      const destHash = createHash("sha256").update(await readFile(destPath).catch(() => "")).digest("hex");
+      const minifiedHash = createHash("sha256").update(minified).digest("hex");
+      if (minifiedHash === destHash) return;
+      await writeFile(destPath, minified);
+      if (canLogDevEvent(BascikConfig.devServer?.logging?.copies, "info")) {
+        console.log("copied (minified):", displayRelativePath(src));
+      }
+      return;
     }
 
     const [srcHash, destHash] = await Promise.all([
@@ -133,6 +150,7 @@ export async function copyReplicatePath(
     }
   } catch (err) {
     console.error("Failed to copy file:", src, err);
+    throw err;
   }
 }
 

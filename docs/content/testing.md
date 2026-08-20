@@ -126,16 +126,22 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './e2e',
   use: {
-    baseURL: 'http://localhost:4200',
+    baseURL: 'http://localhost:8080',
     headless: true,
   },
   webServer: {
-    command: 'npx bascik --build && npx bascik --serve 4200',
-    url: 'http://localhost:4200',
+    command: 'npx bascik --build && npx bascik --serve',
+    url: 'http://localhost:8080',
     reuseExistingServer: !process.env.CI,
   },
 });
 ```
+
+### Robust Locators and Identifier Minification
+
+In production builds (`bascik --build`), Bascik compiles and minifies element IDs and class names (enabled by `minify.identifiers: true`) to optimize bundle sizes. Consequently, relying on raw CSS selectors like `page.locator('.my-class')` or `page.locator('#my-id')` will fail in production because those identifiers are hashed and compressed.
+
+To make your end-to-end tests resilient across both development and production environments, use standard `data-testid` attributes (e.g. `data-testid="search-input"`) on interactive elements and retrieve them using Playwright's native `page.getByTestId(...)` locator.
 
 ### Spec implementation (`e2e/docs-components.spec.ts`)
 
@@ -146,8 +152,8 @@ test.describe('Docs Component Functional E2E Tests', () => {
   test('comp-toggle expands and collapses detail panel', async ({ page }) => {
     await page.goto('/scoped-javascript');
 
-    const toggleBtn = page.locator('.toggle-wrap button#btn').first();
-    const detailPanel = page.locator('.toggle-wrap #detail').first();
+    const toggleBtn = page.getByRole('button', { name: /Read more|Show less/ }).first();
+    const detailPanel = page.getByTestId('toggle-detail').first();
 
     await expect(detailPanel).toBeHidden();
     await expect(toggleBtn).toHaveText('Read more');
@@ -161,9 +167,9 @@ test.describe('Docs Component Functional E2E Tests', () => {
   test('docs-search opens modal, filters results on input, and closes on Escape', async ({ page }) => {
     await page.goto('/');
 
-    const searchBtn = page.locator('.dnav-search-btn');
-    const modal = page.locator('.search-overlay');
-    const input = page.locator('#docs-search-input');
+    const searchBtn = page.getByRole('button', { name: 'Search docs' }).first();
+    const modal = page.getByTestId('search-overlay').first();
+    const input = page.getByPlaceholder('Search docs…');
 
     await searchBtn.click();
     await expect(modal).toBeVisible();
@@ -325,7 +331,7 @@ Choosing between unit tests and E2E browser tests depends on what you need to ve
 
 The Bascik documentation site (`docs/`) includes both E2E browser tests and unit tests to ensure all components functionally work and stay tested:
 
-- **E2E Browser Tests (`docs/e2e/docs-components.spec.ts`)**: Runs Playwright against a live built Bascik server (`npx bascik --build && npx bascik --serve 4200`) to test real browser behavior for `docs-search`, `component-demo`, `comp-toggle`, `demo-counter`, and `comp-alert`.
+- **E2E Browser Tests (`docs/e2e/docs-components.spec.ts`)**: Runs Playwright against a live built Bascik server (`npx bascik --build && npx bascik --serve`) to test real browser behavior for `docs-search`, `component-demo`, `comp-toggle`, `demo-counter`, and `comp-alert`.
 - **Pure Logic Unit Tests (`docs/src/components/docs-search/search-logic.test.ts`)**: Tests the search engine logic (`search-logic.ts`) in Vitest across tokenization, scoring tiers, snippet extraction, and result formatting.
 
 To execute the test suites:

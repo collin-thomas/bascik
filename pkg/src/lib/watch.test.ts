@@ -517,3 +517,50 @@ describe("watchFiles – extra watch paths (watcher 3)", () => {
     expect(processAllPages).toHaveBeenCalled();
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Watcher error resiliency (onWatchError handling)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("watchFiles – error resiliency", () => {
+  beforeEach(async () => {
+    await watchFiles();
+  });
+
+  it("catches and logs errors when asset watcher handlers reject", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    mockCopyReplicatePath.mockRejectedValueOnce(new Error("Disk error"));
+
+    const addHandler = getHandler(0, "add");
+    await expect(addHandler?.("/path/to/broken.css")).resolves.not.toThrow();
+    expect(errorSpy).toHaveBeenCalledWith("[bascik] watch error:", expect.any(Error));
+
+    errorSpy.mockRestore();
+  });
+
+  it("catches and logs errors when pageProcessing rejects during page change", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    mockPageProcessing.mockRejectedValueOnce(new Error("Transpile error"));
+
+    const changeHandler = getHandler(1, "change");
+    expect(() => changeHandler?.("/path/to/bad.html")).not.toThrow();
+
+    await new Promise((r) => setTimeout(r, 10));
+    expect(errorSpy).toHaveBeenCalledWith("[bascik] watch error:", expect.any(Error));
+
+    errorSpy.mockRestore();
+  });
+
+  it("catches and logs errors when selectivelyProcessPages rejects during component change", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    mockSelectivelyProcessPages.mockRejectedValueOnce(new Error("Component error"));
+
+    const changeHandler = getHandler(2, "change");
+    await expect(changeHandler?.("/path/to/bad-comp.html")).resolves.not.toThrow();
+
+    expect(errorSpy).toHaveBeenCalledWith("[bascik] watch error:", expect.any(Error));
+
+    errorSpy.mockRestore();
+  });
+});
+

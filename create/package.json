@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "@vitest/coverage-v8": "^4.1.10",
     "typescript": "^7.0.2",
     "vite": "^8.1.5",
     "vitest": "^4.1.10"
@@ -31,6 +32,7 @@
     "prepack": "cp ../LICENSE LICENSE && mkdir -p assets && cp ../docs/src/pages/assets/SKILL.md assets/SKILL.md",
     "test": "vitest",
     "test:ci": "vitest run",
+    "update-coverage": "vitest run --coverage.enabled && node bin/update-coverage.ts",
     "typecheck": "tsc --noEmit"
   }
 }

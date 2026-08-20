@@ -35,7 +35,7 @@
   margin-left: 4px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .search-btn-text,
   .search-btn-kbd { display: none; }
   .dnav-search-btn { padding: 7px; background: none; border-color: transparent; }

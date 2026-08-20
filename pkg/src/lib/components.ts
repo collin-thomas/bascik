@@ -145,37 +145,52 @@ export const listComponents = async (): Promise<ComponentList> => {
     componentHtmlFileNames.map(async (fileName) => {
       // Name the file name without the extension.
       // Name is used in all the mappings components
+      const componentName = fileName.replace(/^.*[\\/]/, "").split(".")[0].toLowerCase();
+      if (NATIVE_HTML_ELEMENTS.has(componentName)) {
+        console.warn(
+          `warning: Component "${componentName}" has the same name as a native HTML element. ` +
+          `This may cause unexpected behavior — consider a hyphenated name like "my-${componentName}".`,
+        );
+      }
+      let fileContentBuffer: Buffer;
+      let cssFileContent: string | undefined;
       try {
-        const componentName = fileName.replace(/^.*[\\/]/, "").split(".")[0].toLowerCase();
-        if (NATIVE_HTML_ELEMENTS.has(componentName)) {
-          console.warn(
-            `warning: Component "${componentName}" has the same name as a native HTML element. ` +
-            `This may cause unexpected behaviour — consider a hyphenated name like "my-${componentName}".`,
-          );
-        }
-        const [fileContent, cssFileContent] = await Promise.all([
+        [fileContentBuffer, cssFileContent] = await Promise.all([
           readFile(fileName),
           getComponentCss(fileName, componentCssFileNames),
         ]);
-        // Run build scripts before minification so that generated content
-        // stays in its original position (minifyHtml moves <script> tags).
-        const rawContent = fileContent.toString();
-        const resolvedContent = await executeBuildScripts(rawContent, fileName);
-        const { html: cleanedContent, css: inlineCss } = extractInlineStyles(resolvedContent);
-        const combinedCss = [cssFileContent, inlineCss].filter(Boolean).join("\n");
-        const component: BascikComponent = {
-          name: componentName,
-          fileName,
-          fileContent: minifyHtml(cleanedContent),
-        };
-        if (combinedCss) {
-          component.cssFileContent = combinedCss;
-        }
-        return component;
       } catch (e) {
         console.warn("warning: Failed to process %s", fileName, e);
         return {};
       }
+
+      // Run build scripts before minification so that generated content
+      // stays in its original position (minifyHtml moves <script> tags).
+      const rawContent = fileContentBuffer.toString();
+      const resolvedContent = await executeBuildScripts(rawContent, fileName);
+      const { html: cleanedContent, css: inlineCss } = extractInlineStyles(resolvedContent);
+      const combinedCss = [cssFileContent, inlineCss].filter(Boolean).join("\n");
+      let minifiedContent: string;
+      try {
+        minifiedContent = minifyHtml(cleanedContent);
+      } catch (minErr) {
+        const behavior = BascikConfig.onMinifyError ?? "error";
+        if (behavior === "halt" || behavior === "error") {
+          console.error(`[bascik] HTML minification failed for component "${fileName}":`, minErr);
+          throw minErr;
+        }
+        console.warn(`[bascik] HTML minification failed for component "${fileName}", proceeding unminified:`, minErr);
+        minifiedContent = cleanedContent;
+      }
+      const component: BascikComponent = {
+        name: componentName,
+        fileName,
+        fileContent: minifiedContent,
+      };
+      if (combinedCss) {
+        component.cssFileContent = combinedCss;
+      }
+      return component;
     }),
   );
   componentListCache = (components as BascikComponent[]).reduce(

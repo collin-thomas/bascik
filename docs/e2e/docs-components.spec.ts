@@ -4,9 +4,9 @@ test.describe('Docs Component E2E Tests', () => {
   test('component-demo switches between preview, code, and output tabs', async ({ page }) => {
     await page.goto('/components');
 
-    // Locate component-demo tab labels/radios
-    const previewLabel = page.locator('.demo-tab:has-text("Preview")').first();
-    const codeLabel = page.locator('.demo-tab:has-text("Source")').first();
+    // Locate component-demo tab labels/radios using robust test IDs
+    const previewLabel = page.getByTestId('demo-tab-preview').first();
+    const codeLabel = page.getByTestId('demo-tab-code').first();
 
     await expect(previewLabel).toBeVisible();
     await expect(codeLabel).toBeVisible();
@@ -14,15 +14,15 @@ test.describe('Docs Component E2E Tests', () => {
     // Click Source tab and verify pane switching
     await codeLabel.click();
 
-    const codePane = page.locator('.demo-pane[data-pane="code"]').first();
+    const codePane = page.getByTestId('demo-pane-code').first();
     await expect(codePane).toBeVisible();
   });
 
   test('comp-toggle expands and collapses detail panel', async ({ page }) => {
-    await page.goto('/scoped-javascript');
+    await page.goto('/components');
 
-    const toggleBtn = page.locator('.toggle-wrap button#btn').first();
-    const detailPanel = page.locator('.toggle-wrap #detail').first();
+    const toggleBtn = page.getByRole('button', { name: /Read more|Show less/ }).first();
+    const detailPanel = page.getByTestId('toggle-detail').first();
 
     await expect(detailPanel).toBeHidden();
     await expect(toggleBtn).toHaveText('Read more');
@@ -39,11 +39,11 @@ test.describe('Docs Component E2E Tests', () => {
   });
 
   test('demo-counter increments and decrements count', async ({ page }) => {
-    await page.goto('/getting-started');
+    await page.goto('/scoped-javascript');
 
-    const countVal = page.locator('.ctr-count').first();
-    const incBtn = page.locator('.ctr-inc').first();
-    const decBtn = page.locator('.ctr-dec').first();
+    const incBtn = page.getByTestId('counter-inc').first();
+    const decBtn = page.getByTestId('counter-dec').first();
+    const countVal = page.getByTestId('counter-count').first();
 
     await expect(countVal).toHaveText('0');
 
@@ -62,10 +62,10 @@ test.describe('Docs Component E2E Tests', () => {
   test('docs-search modal opens, filters results on typing, and closes on Escape', async ({ page }) => {
     await page.goto('/');
 
-    const searchBtn = page.locator('.dnav-search-btn');
-    const modal = page.locator('.search-overlay');
-    const input = page.locator('#docs-search-input');
-    const resultsList = page.locator('.search-results');
+    const searchBtn = page.getByRole('button', { name: 'Search docs' }).first();
+    const modal = page.getByTestId('search-overlay').first();
+    const input = page.getByPlaceholder('Search docs…');
+    const resultsList = page.getByRole('listbox', { name: 'Search results' });
 
     await expect(modal).toBeHidden();
 
@@ -90,10 +90,10 @@ test.describe('Docs Component E2E Tests', () => {
   test('comp-alert dismisses when clicking close button', async ({ page }) => {
     await page.goto('/components');
 
-    const alert = page.locator('#alert').first();
-    const closeBtn = page.locator('#alert #close').first();
+    const closeBtn = page.getByRole('button', { name: 'Dismiss' }).first();
+    const alert = page.getByTestId('comp-alert').first();
 
-    if (await alert.isVisible()) {
+    if (await closeBtn.isVisible()) {
       await closeBtn.click();
       await expect(alert).toBeHidden();
     }

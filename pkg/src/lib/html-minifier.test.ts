@@ -95,7 +95,13 @@ describe("minifyHtml", () => {
     );
   });
 
+  it("preserves special regex tokens ($1, $&, $', $`, $$) inside <pre> and <textarea> blocks verbatim", () => {
+    const htmlString = "<div><pre><code>const query = '$1' && '$&' || '$`';</code></pre></div>";
+    expect(minifyHtml(htmlString)).toBe("<div><pre><code>const query = '$1' && '$&' || '$`';</code></pre></div>");
+  });
+
   it("handles an empty input string", () => {
     expect(minifyHtml("")).toEqual("");
   });
 });
+

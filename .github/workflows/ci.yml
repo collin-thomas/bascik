@@ -7,54 +7,147 @@ on:
     branches: [main]
 
 jobs:
-  test:
-    name: Test (Node ${{ matrix.node }})
+  # ── Stage 1: Jelly & Unit Tests (Parallel) ───────────────────────────────────
+
+  jelly:
+    name: Jelly Static Analysis
     runs-on: ubuntu-latest
     permissions:
       contents: read
-
-    strategy:
-      matrix:
-        node: [24]
-
     steps:
       - uses: actions/checkout@v5
 
       - name: Enable Corepack
         run: corepack enable
 
-      - name: Use Node.js ${{ matrix.node }}
+      - name: Use Node.js 24
         uses: actions/setup-node@v5
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 24
           cache: 'yarn'
 
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Run tests with coverage
-        run: yarn pkg:test:ci
+      - name: Install Jelly Static Analyzer Globally
+        run: npm install -g @cs-au-dk/jelly
 
-  e2e:
-    name: E2E Tests (Node ${{ matrix.node }})
+      - name: Run Jelly Analysis on package
+        run: |
+          OUTPUT=$(jelly --obj-spread pkg/src/index.ts)
+          echo "$OUTPUT"
+          echo "$OUTPUT" | grep -q "Analysis errors: 0" || { echo "$OUTPUT"; exit 1; }
+
+  unit-pkg:
+    name: Framework Unit Tests
     runs-on: ubuntu-latest
     permissions:
       contents: read
-
-    strategy:
-      matrix:
-        node: [24]
-
     steps:
       - uses: actions/checkout@v5
 
       - name: Enable Corepack
         run: corepack enable
 
-      - name: Use Node.js ${{ matrix.node }}
+      - name: Use Node.js 24
         uses: actions/setup-node@v5
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 24
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run framework unit tests with coverage
+        run: yarn pkg:test:ci
+
+  unit-create:
+    name: Create-Bascik Unit Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run create-bascik unit tests
+        run: yarn create:test:ci
+
+  unit-docs:
+    name: Docs Unit Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run docs unit tests
+        run: yarn docs:test
+
+  unit-extension:
+    name: Extension Unit Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run extension tests
+        run: xvfb-run -a yarn ext:test
+
+  # ── Stage 2: E2E Tests (Parallel, Depends on Jelly & Unit Tests) ────────────
+
+  e2e-pkg-static:
+    name: Framework E2E (Static)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: [jelly, unit-pkg, unit-create, unit-docs, unit-extension]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
           cache: 'yarn'
 
       - name: Install dependencies
@@ -66,5 +159,168 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium
 
-      - name: Run E2E tests
+      - name: Run framework E2E tests (static)
         run: yarn pkg:e2e
+
+  e2e-pkg-dev:
+    name: Framework E2E (Dev Server)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: [jelly, unit-pkg, unit-create, unit-docs, unit-extension]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build package
+        run: yarn pkg:build
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium
+
+      - name: Run framework E2E tests (dev server)
+        run: yarn pkg:e2e:dev
+
+  e2e-pkg-prod-http1:
+    name: Framework E2E (Prod Server HTTP/1.1)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: [jelly, unit-pkg, unit-create, unit-docs, unit-extension]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build package
+        run: yarn pkg:build
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium
+
+      - name: Run framework E2E tests (production server HTTP/1.1)
+        run: yarn pkg:e2e:prod:http1
+
+  e2e-pkg-prod-http2:
+    name: Framework E2E (Prod Server HTTP/2)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: [jelly, unit-pkg, unit-create, unit-docs, unit-extension]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build package
+        run: yarn pkg:build
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium
+
+      - name: Run framework E2E tests (production server HTTP/2)
+        run: yarn pkg:e2e:prod:http2
+
+  e2e-docs:
+    name: Docs E2E
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: [jelly, unit-pkg, unit-create, unit-docs, unit-extension]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build package
+        run: yarn pkg:build
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium
+
+      - name: Run docs E2E tests
+        run: yarn docs:e2e
+
+  e2e-create:
+    name: Create-Bascik Scaffold E2E
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: [jelly, unit-pkg, unit-create, unit-docs, unit-extension]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build package
+        run: yarn pkg:build
+
+      - name: Run create-bascik scaffold generation test
+        run: yarn create:test-site
+
+  # ── Stage 3: Semgrep Static Analysis (Depends on E2E Tests) ──────────────────
+
+  semgrep:
+    name: Semgrep Static Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: [e2e-pkg-static, e2e-pkg-dev, e2e-pkg-prod-http1, e2e-pkg-prod-http2, e2e-docs, e2e-create]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Run Semgrep
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: p/default

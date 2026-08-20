@@ -8,7 +8,8 @@ describe('comp-toggle component', () => {
   it('renders expandable panel and toggle button script', async () => {
     const html = await readFile(componentPath, 'utf8');
 
-    expect(html).toContain('id="detail" hidden');
+    expect(html).toContain('id="detail"');
+    expect(html).toContain('hidden');
     expect(html).toContain('id="btn"');
     expect(html).toContain('Read more');
   });

@@ -1,6 +1,7 @@
 import fc from "fast-check";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { recursivelyTranspile, pageProcessing, selectivelyProcessPagesForWatchPath, partitionByOpenPages, getDisplayPath, findActiveSourceFile, getFilePosition, transpilePage, processAllPages, selectivelyProcessPages, removePage } from "./processing.js";
+import { recursivelyTranspile, pageProcessing, processPageBatch, selectivelyProcessPagesForWatchPath, partitionByOpenPages, getDisplayPath, findActiveSourceFile, getFilePosition, transpilePage, processAllPages, selectivelyProcessPages, removePage } from "./processing.js";
+import { collectAllScriptDeps } from "./build-scripts.js";
 import { BascikConfig } from "./config.js";
 
 // Disable all scoping so tests produce predictable, readable HTML
@@ -53,6 +54,7 @@ vi.mock("node:fs/promises", () => ({
 
 vi.mock("./build-scripts.js", () => ({
   executeBuildScripts: vi.fn((html: string) => Promise.resolve(html)),
+  collectAllScriptDeps: vi.fn(async () => []),
 }));
 
 vi.mock("./sitemap.js", () => ({
@@ -63,6 +65,7 @@ vi.mock("./mem.js", () => ({
   mem: {
     storePage: vi.fn(),
     pagesThisComponentIsUsedOn: vi.fn(() => []),
+    pagesDependentOnFile: vi.fn(() => []),
     openPages: [] as string[],
     trackOpenPage: vi.fn(),
     untrackOpenPage: vi.fn(),
@@ -756,6 +759,7 @@ describe("selectivelyProcessPagesForWatchPath", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (BascikConfig as Record<string, unknown>).inlineStyles = false;
+    (mem.pagesDependentOnFile as ReturnType<typeof vi.fn>).mockReturnValue([]);
   });
 
   it("invalidates the component list cache before fetching components", async () => {
@@ -775,10 +779,24 @@ describe("selectivelyProcessPagesForWatchPath", () => {
     const { eventEmitter } = await import("./events.js");
     expect(eventEmitter.emit).toHaveBeenCalledTimes(pages.length);
   });
+
+  it("rebuilds only the dependent pages when mem identifies specific page dependencies", async () => {
+    const pages = ["src/pages/cli.html", "src/pages/testing.html"];
+    (listPages as ReturnType<typeof vi.fn>).mockResolvedValue(pages);
+    (mem.pagesDependentOnFile as ReturnType<typeof vi.fn>).mockReturnValueOnce(["src/pages/cli.html"]);
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue("<html><body>cli content</body></html>");
+
+    await selectivelyProcessPagesForWatchPath("content/cli.md");
+
+    const { eventEmitter } = await import("./events.js");
+    expect(mem.pagesDependentOnFile).toHaveBeenCalledWith("content/cli.md");
+    expect(eventEmitter.emit).toHaveBeenCalledTimes(1);
+    expect(eventEmitter.emit).toHaveBeenCalledWith("transpiled", { relativePagePath: "pages/cli.html" });
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// G: partitionByOpenPages
+// G: partitionByOpenPages & processPageBatch open-page priority
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("partitionByOpenPages", () => {
@@ -827,6 +845,66 @@ describe("partitionByOpenPages", () => {
     const [open, rest] = partitionByOpenPages([]);
     expect(open).toEqual([]);
     expect(rest).toEqual([]);
+  });
+});
+
+describe("processPageBatch – open page priority & instant reloading", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (mem as any).openPages = [];
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue("<html><body>test</body></html>");
+  });
+
+  it("transpiles and emits open pages FIRST before rest of pages", async () => {
+    (mem as any).openPages = ["/about"];
+    const emitOrder: string[] = [];
+    const { eventEmitter } = await import("./events.js");
+    (eventEmitter.emit as ReturnType<typeof vi.fn>).mockImplementation((event: string, payload: { relativePagePath: string }) => {
+      if (event === "transpiled") {
+        emitOrder.push(payload.relativePagePath);
+      }
+    });
+
+    const pages = ["src/pages/index.html", "src/pages/about.html", "src/pages/faq.html"];
+    await processPageBatch(pages, {});
+
+    // about.html (the open page) MUST be transpiled and emitted FIRST
+    expect(emitOrder[0]).toBe("pages/about.html");
+    expect(emitOrder).toHaveLength(3);
+    expect(emitOrder).toContain("pages/index.html");
+    expect(emitOrder).toContain("pages/faq.html");
+  });
+
+  it("stores open page in memory and emits transpiled BEFORE rest pages start transpiling", async () => {
+    (mem as any).openPages = ["/internals/scoping-system"];
+    const callSequence: string[] = [];
+
+    (mem.storePage as ReturnType<typeof vi.fn>).mockImplementation(async ({ relativePagePath }) => {
+      callSequence.push(`store:${relativePagePath}`);
+    });
+
+    const { eventEmitter } = await import("./events.js");
+    (eventEmitter.emit as ReturnType<typeof vi.fn>).mockImplementation((event: string, payload: { relativePagePath: string }) => {
+      if (event === "transpiled") {
+        callSequence.push(`emit:${payload.relativePagePath}`);
+      }
+    });
+
+    const pages = [
+      "src/pages/index.html",
+      "src/pages/internals/scoping-system.html",
+      "src/pages/getting-started.html",
+    ];
+
+    await processPageBatch(pages, {});
+
+    // scoping-system.html (the open page) must be stored and emitted BEFORE index.html or getting-started.html
+    expect(callSequence[0]).toBe("store:pages/internals/scoping-system.html");
+    expect(callSequence[1]).toBe("emit:pages/internals/scoping-system.html");
+    expect(callSequence).toContain("store:pages/index.html");
+    expect(callSequence).toContain("emit:pages/index.html");
+    expect(callSequence).toContain("store:pages/getting-started.html");
+    expect(callSequence).toContain("emit:pages/getting-started.html");
   });
 });
 
@@ -883,6 +961,24 @@ describe("pageProcessing – live-reload script injection", () => {
     expect(checkIdx).toBeGreaterThan(-1);
     expect(assignIdx).toBeGreaterThan(-1);
     expect(checkIdx).toBeLessThan(assignIdx);
+  });
+
+  it("passes fileDependencies from transpilePage to mem.storePage", async () => {
+    (collectAllScriptDeps as ReturnType<typeof vi.fn>).mockResolvedValueOnce(["scripts/md-renderer.ts", "content/cli.md"]);
+    const html = `
+      <!DOCTYPE html><html><head></head><body>
+      <script data-bascik-build>
+        import { renderMd } from './scripts/md-renderer.ts';
+        console.log(await renderMd('./content/cli.md'));
+      </script>
+      </body></html>
+    `;
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue(html);
+    await pageProcessing(PAGE_PATH, {});
+    const storeArgs = (mem.storePage as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(storeArgs.fileDependencies).toBeDefined();
+    expect(storeArgs.fileDependencies).toContain("scripts/md-renderer.ts");
+    expect(storeArgs.fileDependencies).toContain("content/cli.md");
   });
 });
 
@@ -1303,7 +1399,7 @@ describe("selectivelyProcessPagesForWatchPath – open pages first", () => {
     (mem as any).openPages = [];
   });
 
-  it("stores all pages in memory before emitting transpiled events for any page", async () => {
+  it("transpiles, stores, and emits open pages before rest of pages", async () => {
     (mem as any).openPages = ["/about"];
     const pages = ["src/pages/index.html", "src/pages/about.html"];
     (listPages as ReturnType<typeof vi.fn>).mockResolvedValue(pages);
@@ -1323,17 +1419,17 @@ describe("selectivelyProcessPagesForWatchPath – open pages first", () => {
 
     await selectivelyProcessPagesForWatchPath("nav.mjs");
 
-    // All store calls must happen before the first emit call
-    const firstEmitIndex = callOrder.findIndex((entry) => entry.startsWith("emit:"));
-    const storeIndices = callOrder
-      .map((entry, idx) => (entry.startsWith("store:") ? idx : -1))
-      .filter((idx) => idx !== -1);
+    // Open page (/about → pages/about.html) store and emit must happen before non-open page (/index → pages/index.html)
+    const storeAboutIdx = callOrder.indexOf("store:pages/about.html");
+    const emitAboutIdx = callOrder.indexOf("emit:pages/about.html");
+    const storeIndexIdx = callOrder.indexOf("store:pages/index.html");
+    const emitIndexIdx = callOrder.indexOf("emit:pages/index.html");
 
-    expect(firstEmitIndex).toBeGreaterThan(-1);
-    expect(storeIndices.length).toBe(pages.length);
-    for (const storeIdx of storeIndices) {
-      expect(storeIdx).toBeLessThan(firstEmitIndex);
-    }
+    expect(storeAboutIdx).toBeGreaterThan(-1);
+    expect(emitAboutIdx).toBeGreaterThan(-1);
+    expect(storeAboutIdx).toBeLessThan(storeIndexIdx);
+    expect(emitAboutIdx).toBeLessThan(storeIndexIdx);
+    expect(emitAboutIdx).toBeLessThan(emitIndexIdx);
   });
 });
 

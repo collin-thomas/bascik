@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Server Scripts Real-World Test</title>
+</head>
+
+<body>
+  <h1>Real-World Server Scripts</h1>
+
+  <!-- 1. Cookie Header Parsing -->
+  <script data-bascik-server>
+    const req = JSON.parse(process.env.BASCIK_REQUEST);
+    const rawCookies = req.headers['cookie'] ?? '';
+    const cookies = Object.fromEntries(
+      rawCookies.split(';').map(c => c.trim().split('=').map(decodeURIComponent)).filter(pair => pair.length === 2)
+    );
+    const session = cookies.session_id ?? 'guest';
+    const theme = cookies.theme ?? 'light';
+    process.stdout.write(`<p id="user-session">Session: ${session}</p><p id="user-theme">Theme: ${theme}</p>`);
+  </script>
+
+  <!-- 2. Laggy / Delayed Async DB Call Simulation -->
+  <script data-bascik-server>
+    // Simulate a 120ms database query or external microservice call
+    await new Promise(r => setTimeout(r, 120));
+    const dbData = { id: 42, status: 'active', role: 'admin' };
+    process.stdout.write(`<p id="db-status">DB Status: ${dbData.status} (${dbData.role})</p>`);
+  </script>
+
+  <!-- 3. Failing External API Call with Try-Catch Fallback -->
+  <script data-bascik-server>
+    try {
+      // Attempt to fetch an unreachable endpoint (simulating API failure)
+      await fetch('http://127.0.0.1:59999/down-api', { signal: AbortSignal.timeout(100) });
+      process.stdout.write('<p id="api-status">API Online</p>');
+    } catch (err) {
+      // Graceful fallback UI when external service is offline
+      process.stdout.write('<p id="api-status">API Offline Fallback</p>');
+    }
+  </script>
+
+  <!-- 4. Complex Query Params & Special Character Handling -->
+  <script data-bascik-server>
+    const req = JSON.parse(process.env.BASCIK_REQUEST);
+    const filter = req.searchParams.filter ?? 'none';
+    const tag = req.searchParams.tag ?? 'all';
+    process.stdout.write(`<p id="query-filter">Filter: ${filter}</p><p id="query-tag">Tag: ${tag}</p>`);
+  </script>
+</body>
+
+</html>

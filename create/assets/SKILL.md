@@ -654,7 +654,7 @@ Components work inside `<head>` to organize metadata:
 * Use `console.log()` or `process.stdout.write()` to output HTML.
 * Build scripts run before component resolution, so their output can contain component tags.
 * All build scripts on a page execute concurrently via `Promise.all` (capped by a memory semaphore), and output is assembled in document order once all scripts complete.
-* On error, behavior is controlled by `onScriptError` in `bascik.config.ts`: `'error'` (default: log error to stderr and replace tag with `""`), `'warn'` (log warning to stderr and replace tag with `""`), or `'halt'` (throw error and immediately stop the build, recommended for CI/CD).
+* On error, behavior is controlled by `onScriptError` in `bascik.config.ts`: `'warn'` (default in dev: log warning to stderr and replace tag with `""`), `'error'` (default in `--build` and `--serve`: log error to stderr and throw exception to stop build), or `'halt'` (alias for `'error'`).
 * **Hard error:** combining `data-bascik-build` and `data-bascik-server` on the same tag throws and aborts the build. A script runs at build time or at request time, not both.
 
 ### Build Script Environment Variables
@@ -880,7 +880,7 @@ export default defineConfig({
     html: false,
     css: false,
     js: false,
-    identifiers: true, // hash class/id names to short alphanumeric strings
+    identifiers: false, // false in dev; true in --build and --serve
   },
   inlineStyles: false, // false | true | ['src/pages/css/styles.css']
   cacheHttp: false, // dev default; automatically true in --serve mode
@@ -891,7 +891,8 @@ export default defineConfig({
   },
   useWorkers: false,       // true: transpile pages across CPU-core worker threads
   buildScriptCache: true,  // false: disable disk cache for <script data-bascik-build>
-  onScriptError: 'error',  // 'warn' | 'error' | 'halt' — script error handling
+  onScriptError: 'warn',   // 'warn' (default in dev) | 'error' (default in build/prod-server) | 'halt'
+  onMinifyError: 'warn',   // 'warn' (default in dev) | 'error' (default in build/prod-server) | 'halt'
   devServer: {
     logging: {
       level: 'info',    // silent | error | warn | info | debug
@@ -905,6 +906,7 @@ export default defineConfig({
     enableTls: false,     // default; set true for HTTP/2 HTTPS
     port: 8080,           // default (8080 HTTP, 8443 HTTPS)
     hostname: 'localhost', // use '0.0.0.0' to bind all interfaces (containers/proxies)
+    scriptTimeout: 30000, // max execution time (ms) per server script (default: 30000)
     keyFile: '/etc/ssl/site.key',  // optional: provide your own TLS cert
     certFile: '/etc/ssl/site.crt', // optional: provide your own TLS cert
     logging: {
@@ -1266,14 +1268,25 @@ Each `pkg/src/lib/*.ts` module has a paired `*.test.ts`. Because modules depend 
 ### End-to-End Tests (Playwright)
 
 ```sh
-yarn pkg:build && yarn pkg:e2e   # build package first, then run all e2e tests
+yarn pkg:build                  # build package first
+yarn pkg:e2e                    # run static production suite
+yarn pkg:e2e:dev                # run dev server live-reload and watch suite
+yarn pkg:e2e:prod               # run both HTTP/1.1 and HTTP/2 production server suites
+yarn pkg:e2e:prod:http1         # run cleartext HTTP/1.1 prod server suite
+yarn pkg:e2e:prod:http2         # run TLS HTTP/2 prod server suite
 ```
 
-The e2e suite lives in `pkg/e2e/`. Playwright's `webServer` hook:
-1. Builds the fixture site (`pkg/e2e/src/`) using the current `pkg/dist/`
-2. Serves `e2e/dist/` on `http://localhost:4200`
+The E2E suite lives in `pkg/e2e/` and supports four execution modes:
+1. **Static production suite (`playwright.config.ts`)**: builds the fixture site with `bascik --build` and serves static files via `server.ts` on port 4200.
+2. **HTTP/1.1 production server suite (`playwright.server.config.ts`)**: boots cleartext `bascik --serve` over HTTP/1.1 on port 9443 to test `data-bascik-server` request-time script execution and cleartext server behavior.
+3. **HTTP/2 production server suite (`playwright.server-http2.config.ts`)**: boots TLS-enabled `bascik --serve` over HTTP/2 on port 9444 to test `data-bascik-server` request-time script execution and encrypted server behavior.
+4. **Dev server watch suite (`playwright.dev.config.ts`)**: boots `bascik --dev` on port 8080 to run the full test suite and live-reload watcher tests directly against the live dev server with SSE tracking and open-page priority re-transpilation.
 
-The fixture config sets `minify.identifiers: false` so Playwright selectors can use readable scoped names like `bascik__my-comp__btn` instead of opaque hashes.
+The fixture config sets `minify.identifiers: false` so Playwright selectors can use readable scoped names like `bascik__my-comp__btn` instead of opaque hashes. However, in production builds (where `minify.identifiers: true` is enabled), Bascik compiles and minifies element IDs and class names. Consequently, relying on raw CSS selectors like `page.locator('.my-class')` or `page.locator('#my-id')` will fail because those identifiers are hashed and compressed.
+
+To handle this, keep a clear distinction between compiler testing and application testing:
+* **Compiler-Level E2E Tests (`pkg/e2e/`):** These verify that Bascik's scoping and transpilation systems work. They deliberately target exact compiled class names (e.g., `.bascik__my-comp__wrapper`) and rewritten IDs (e.g., `[id$="__btn"]`). Do not use generic `data-testid` attributes for these, as doing so would bypass verifying the actual compilation engine.
+* **Application-Level E2E Tests (`docs/e2e/`):** These verify user-facing behavior of application widgets. To make them resilient to identifier minification and hashing, use standard `data-testid` attributes (e.g., `data-testid="search-input"`) with Playwright's native `page.getByTestId(...)` locator, or native accessibility-based locators like `page.getByRole(...)` and `page.getByPlaceholder(...)`.
 
 **Adding a new e2e test:**
 1. Add a component in `pkg/e2e/src/components/my-feature/`

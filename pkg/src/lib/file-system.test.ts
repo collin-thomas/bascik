@@ -171,6 +171,11 @@ describe("toDistPath", () => {
     expect(toDistPath("pages/css/styles.css")).toBe("dist/css/styles.css");
   });
 
+  it("handles paths already starting with pages/ or components/ even when config directory differs", () => {
+    expect(getRelativePath("pages/cli.html", "pages")).toBe("pages/cli.html");
+    expect(getRelativePath("components/card/card.html", "components")).toBe("components/card/card.html");
+  });
+
   it("resolves absolute pages paths to dist paths", () => {
     expect(toDistPath("/workspace/project/pages/about.html")).toBe("dist/about.html");
     expect(toDistPath("/workspace/project/pages/css/styles.css")).toBe("dist/css/styles.css");
@@ -305,6 +310,57 @@ describe("copyReplicatePath – CSS minification", () => {
     expect(writeFile).toHaveBeenCalledOnce();
     const written = vi.mocked(writeFile).mock.calls[0][1] as string;
     expect(written).toBe("/* custom */ body { color: red; }");
+  });
+});
+
+describe("copyReplicatePath – JS minification & fallback", () => {
+  beforeEach(() => {
+    vi.mocked(readFile).mockReset();
+    vi.mocked(writeFile).mockReset();
+    (BascikConfig as any).minify = { css: false, js: true, html: false };
+  });
+
+  afterEach(() => {
+    (BascikConfig as any).minify = { css: false, js: false, html: false };
+  });
+
+  it("writes minified JS when minify.js is enabled", async () => {
+    (BascikConfig as any).minify = {
+      css: false,
+      js: (code: string) => code.replace(/\/\/.*$/gm, "").trim(),
+      html: false,
+    };
+    const rawJs = "const x = 1; // comment\nconsole.log(x);";
+    vi.mocked(readFile)
+      .mockResolvedValueOnce(rawJs as any)
+      .mockRejectedValueOnce(new Error("ENOENT"));
+
+    await copyReplicatePath("pages/js/app.js", "dist");
+
+    expect(writeFile).toHaveBeenCalledOnce();
+    const written = vi.mocked(writeFile).mock.calls[0][1] as string;
+    expect(written).not.toContain("// comment");
+  });
+
+  it("logs a failure message to console and throws an exception when JS minification throws an error", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    (BascikConfig as any).minify = {
+      css: false,
+      js: () => { throw new Error("JS Syntax Error"); },
+      html: false,
+    };
+
+    vi.mocked(readFile)
+      .mockResolvedValueOnce("const bad = ;" as any)
+      .mockRejectedValueOnce(new Error("ENOENT"));
+
+    await expect(copyReplicatePath("pages/js/bad.js", "dist")).rejects.toThrow("JS Syntax Error");
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining("JS minification failed"),
+      expect.any(Error)
+    );
+    errorSpy.mockRestore();
   });
 });
 
@@ -460,19 +516,34 @@ describe("copyReplicatePath – JS minification", () => {
     expect(writeFile).not.toHaveBeenCalled();
   });
 
-  it("falls back to unminified copy when JS minification throws an error", async () => {
+  it("logs a failure message to console and throws an exception when JS minification throws an error (default onMinifyError: 'error')", async () => {
     (BascikConfig as any).minify = { css: false, js: async () => { throw new Error("JS syntax error"); }, html: false };
     vi.mocked(readFile).mockResolvedValueOnce("invalid js {{{" as any);
-    vi.spyOn(console, "warn").mockImplementation(() => { });
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+
+    await expect(copyReplicatePath("pages/js/app.js", "dist")).rejects.toThrow("JS syntax error");
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining("JS minification failed"),
+      expect.any(Error),
+    );
+    errorSpy.mockRestore();
+  });
+
+  it("logs a warning and falls back to unminified copy when onMinifyError is set to 'warn'", async () => {
+    (BascikConfig as any).onMinifyError = "warn";
+    (BascikConfig as any).minify = { css: false, js: async () => { throw new Error("JS syntax error"); }, html: false };
+    vi.mocked(readFile).mockResolvedValue("const bad = ;" as any);
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
 
     await copyReplicatePath("pages/js/app.js", "dist");
 
-    expect(console.warn).toHaveBeenCalledWith(
-      "[bascik] JS minification failed for %s, falling back to unminified copy:",
-      "pages/js/app.js",
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("JS minification failed"),
       expect.any(Error),
     );
-    expect(copyFile).toHaveBeenCalledOnce();
+    warnSpy.mockRestore();
+    (BascikConfig as any).onMinifyError = "error";
   });
 
   it("calls minifyJs when minify.js is true", async () => {
@@ -490,17 +561,18 @@ describe("copyReplicatePath – JS minification", () => {
 });
 
 describe("copyReplicatePath – generic error path", () => {
-  it("logs error when copyFile rejects", async () => {
+  it("logs error and throws when copyFile rejects", async () => {
     const err = new Error("Disk full");
     vi.mocked(copyFile).mockRejectedValueOnce(err);
-    vi.spyOn(console, "error").mockImplementation(() => { });
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
 
-    await copyReplicatePath("pages/image.png", "dist");
+    await expect(copyReplicatePath("pages/image.png", "dist")).rejects.toThrow("Disk full");
 
-    expect(console.error).toHaveBeenCalledWith(
+    expect(errorSpy).toHaveBeenCalledWith(
       "Failed to copy file:",
       expect.any(String),
       err,
     );
+    errorSpy.mockRestore();
   });
 });

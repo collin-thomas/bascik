@@ -10,6 +10,7 @@ import {
   type BascikRequest,
   type BascikResponse
 } from "./server.js";
+import { adaptHttp1 } from "./http.js";
 
 export { _rateLimiter } from "./server.js";
 
@@ -69,6 +70,7 @@ export const startHttp2Server = async (): Promise<string> => {
   const server = http2.createSecureServer({
     key,
     cert,
+    allowHTTP1: true,
     settings: { maxConcurrentStreams: 250 },
   });
 
@@ -91,6 +93,16 @@ export const startHttp2Server = async (): Promise<string> => {
       await handleRequest(req, res);
     },
   );
+
+  // When allowHTTP1: true is configured, Node's HTTP/2 server can fall back to
+  // HTTP/1.1 over TLS for clients that do not support HTTP/2 or ALPN.
+  // We handle these requests using standard HTTP/1.1 adapters, but ignore
+  // HTTP/2 requests here since they are already processed via the "stream" event.
+  server.on("request", async (reqMsg, resMsg) => {
+    if (reqMsg.httpVersion === "2.0") return;
+    const { req, res } = adaptHttp1(reqMsg as any, resMsg as any);
+    await handleRequest(req, res);
+  });
 
   return startServerInstance(
     server,

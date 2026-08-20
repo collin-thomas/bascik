@@ -8,7 +8,9 @@ import { transform } from 'esbuild';
 
 export default defineConfig({
   siteUrl: 'http://localhost:4200',
+  watch: ['src/content/'],
   useWorkers: true,
+  onScriptError: 'warn',
   minify: {
     identifiers: false,
     css: async (css) => {
@@ -24,6 +26,7 @@ export default defineConfig({
     { script: 'scripts/generate-manifest.ts' },
   ],
   serve: {
-    port: 9443,
+    port: Number(process.env.BASCIK_SERVE_PORT) || 9443,
+    enableTls: process.env.BASCIK_ENABLE_TLS === 'true',
   },
 });

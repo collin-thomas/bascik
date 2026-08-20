@@ -39,7 +39,14 @@ export const watchFiles = async () => {
       },
       persistent: !BascikConfig.isBuild,
     })
-    .on("add", (path) => copyReplicatePath(path, "dist").catch(onWatchError))
+    .on("add", async (path) => {
+      try {
+        await copyReplicatePath(path, "dist");
+        if (!BascikConfig.isBuild) {
+          eventEmitter.emit("asset-changed");
+        }
+      } catch (err) { onWatchError(err); }
+    })
     .on("change", async (path) => {
       try {
         await copyReplicatePath(path, "dist");

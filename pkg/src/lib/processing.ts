@@ -87,7 +87,7 @@ import {
 import { namespaceScriptTags, prefixElementAttribute } from "./javascript.js";
 import { minifyJs } from "./js-minifier.js";
 import { deduplicateCss, minifyCss } from "./styles.js";
-import { executeBuildScripts } from "./build-scripts.js";
+import { executeBuildScripts, collectAllScriptDeps } from "./build-scripts.js";
 import { getUniqueId } from "./names.js";
 import { BascikConfig, shouldLog } from "./config.js";
 import { mem } from "./mem.js";
@@ -151,7 +151,19 @@ const resolveCssMinifier = (): ((code: string) => Promise<string>) | null => {
   const cfg = BascikConfig.minify?.css ?? false;
   if (!cfg) return null;
   const fn = cfg === true ? minifyCss : cfg;
-  return async (code: string) => fn(code);
+  return async (code: string) => {
+    try {
+      return await fn(code);
+    } catch (err) {
+      const behavior = BascikConfig.onMinifyError ?? "error";
+      if (behavior === "halt" || behavior === "error") {
+        console.error("[bascik] CSS minification failed:", err);
+        throw err;
+      }
+      console.warn("[bascik] CSS minification failed, falling back to unminified CSS:", err);
+      return code;
+    }
+  };
 };
 
 export const resolveInlineStylesHtml = async (): Promise<string> => {
@@ -160,13 +172,14 @@ export const resolveInlineStylesHtml = async (): Promise<string> => {
   const cssMinifier = resolveCssMinifier();
   const sheets = await Promise.all(
     inlineStyles.map(async (filePath) => {
+      let css: string;
       try {
-        const css = (await readFile(filePath)).toString();
-        return cssMinifier ? await cssMinifier(css) : css;
+        css = (await readFile(filePath)).toString();
       } catch (error) {
         console.warn("[bascik] inlineStyles: could not read %s:", filePath, (error as Error).message);
         return "";
       }
+      return cssMinifier ? await cssMinifier(css) : css;
     }),
   );
   const combined = sheets.filter(Boolean).join(" ");
@@ -185,7 +198,19 @@ const resolveScriptMinifier = (): ((code: string) => Promise<string>) | null => 
   const cfg = BascikConfig.minify?.js ?? false;
   if (!cfg) return null;
   const fn = cfg === true ? minifyJs : cfg;
-  return async (code: string) => fn(code);
+  return async (code: string) => {
+    try {
+      return await fn(code);
+    } catch (err) {
+      const behavior = BascikConfig.onMinifyError ?? "error";
+      if (behavior === "halt" || behavior === "error") {
+        console.error("[bascik] JS minification failed:", err);
+        throw err;
+      }
+      console.warn("[bascik] JS minification failed, falling back to unminified JS:", err);
+      return code;
+    }
+  };
 };
 
 /**
@@ -443,11 +468,13 @@ export const recursivelyTranspile = (
 export const partitionByOpenPages = (pageList: string[]): [string[], string[]] => {
   const openSet = new Set(mem.openPages);
   if (openSet.size === 0) return [[], pageList];
+  const strip = (p: string) => p.replace(/\/$/, "") || "/";
+  const openNormalizedSet = new Set([...openSet].map(strip));
   const open: string[] = [];
   const rest: string[] = [];
   for (const path of pageList) {
     const httpPath = getHttpPath(getRelativePath(path, "pages"));
-    (openSet.has(httpPath) ? open : rest).push(path);
+    (openNormalizedSet.has(strip(httpPath)) ? open : rest).push(path);
   }
   return [open, rest];
 };
@@ -461,44 +488,59 @@ export const processPageBatch = async (
   if (!componentList) componentList = await listComponents();
   if (globalStylesHtml === undefined) globalStylesHtml = await resolveInlineStylesHtml();
 
-  const sortedPaths = (() => {
-    if (BascikConfig.isBuild || pagePaths.length <= 1) return pagePaths;
-    const [open, rest] = partitionByOpenPages(pagePaths);
-    return [...open, ...rest];
-  })();
+  const [openPages, restPages] = partitionByOpenPages(pagePaths);
 
-  const results = await Promise.all(
-    sortedPaths.map((path) => transpilePage(path, componentList, globalStylesHtml)),
-  );
+  const results: (TranspilePageResult | null)[] = [];
 
-  // Store ALL transpiled pages in memory FIRST before emitting any reload events.
-  // This guarantees that when a browser tab reloads, any page it navigates to
-  // is already stored in memory and won't serve a stale version.
-  await Promise.all(
-    results.map(async (result) => {
-      if (!result) return;
-      if (!BascikConfig.isBuild) {
-        await mem.storePage({
-          relativePagePath: result.relativePagePath,
-          absolutePagePath: result.absolutePagePath,
-          pageContent: result.distHtml,
-          usedComponentsNames: result.usedComponentsNames,
-        });
+  // Transpile open pages first, store in memory, and emit transpiled reload event IMMEDIATELY.
+  // This ensures open browser tabs update near instantly without waiting for the rest of the site to finish.
+  if (openPages.length > 0) {
+    const openResults = await Promise.all(
+      openPages.map((path) => transpilePage(path, componentList, globalStylesHtml)),
+    );
+    for (const result of openResults) {
+      if (result) {
+        if (!BascikConfig.isBuild) {
+          await mem.storePage({
+            relativePagePath: result.relativePagePath,
+            absolutePagePath: result.absolutePagePath,
+            pageContent: result.distHtml,
+            usedComponentsNames: result.usedComponentsNames,
+            fileDependencies: result.fileDependencies,
+          });
+        }
+        eventEmitter.emit("transpiled", { relativePagePath: result.relativePagePath });
+        results.push(result);
       }
-    })
-  );
+    }
+  }
 
-  // Now that ALL pages in memory are fresh and ready, notify browser connections
-  for (const result of results) {
-    if (result) {
-      eventEmitter.emit("transpiled", { relativePagePath: result.relativePagePath });
+  // Transpile remaining (closed) pages afterwards
+  if (restPages.length > 0) {
+    const restResults = await Promise.all(
+      restPages.map((path) => transpilePage(path, componentList, globalStylesHtml)),
+    );
+    for (const result of restResults) {
+      if (result) {
+        if (!BascikConfig.isBuild) {
+          await mem.storePage({
+            relativePagePath: result.relativePagePath,
+            absolutePagePath: result.absolutePagePath,
+            pageContent: result.distHtml,
+            usedComponentsNames: result.usedComponentsNames,
+            fileDependencies: result.fileDependencies,
+          });
+        }
+        eventEmitter.emit("transpiled", { relativePagePath: result.relativePagePath });
+        results.push(result);
+      }
     }
   }
 
   return results.map((r) => r?.relativePagePath ?? null).filter((p): p is string => p !== null);
 };
 
-export const selectivelyProcessPagesForWatchPath = async (_changedPath?: string): Promise<void> => {
+export const selectivelyProcessPagesForWatchPath = async (changedPath?: string): Promise<void> => {
   invalidateComponentListCache();
   const [pages, componentList, globalStylesHtml] = await Promise.all([
     listPages(),
@@ -506,7 +548,16 @@ export const selectivelyProcessPagesForWatchPath = async (_changedPath?: string)
     resolveInlineStylesHtml(),
   ]);
   const pageList = pages ?? [];
-  await processPageBatch(pageList, componentList, globalStylesHtml);
+
+  let pagesToProcess = pageList;
+  if (changedPath) {
+    const dependentPages = mem.pagesDependentOnFile(changedPath);
+    if (dependentPages.length > 0) {
+      pagesToProcess = dependentPages;
+    }
+  }
+
+  await processPageBatch(pagesToProcess, componentList, globalStylesHtml);
 };
 
 export const selectivelyProcessPages = async (path: string): Promise<void> => {
@@ -532,7 +583,7 @@ export const processAllPages = async (options?: { useWorkers?: boolean }) => {
   ]);
   const pageList = pages ?? [];
 
-  let results: (TranspilePageResult | null)[];
+  let relativePaths: string[] = [];
 
   if (useWorkers && pageList.length > 0) {
     const workerExt = import.meta.url.endsWith(".ts") ? ".ts" : ".js";
@@ -543,6 +594,7 @@ export const processAllPages = async (options?: { useWorkers?: boolean }) => {
       poolSize,
       { componentList, globalStylesHtml },
     );
+    let results: (TranspilePageResult | null)[];
     try {
       results = await Promise.all(pageList.map((path) => pool.run(path)));
     } finally {
@@ -550,39 +602,33 @@ export const processAllPages = async (options?: { useWorkers?: boolean }) => {
       // alive and the CLI hangs on exit instead of reporting the failure.
       await pool.terminate();
     }
-  } else {
-    const sortedPaths = (() => {
-      if (BascikConfig.isBuild || pageList.length <= 1) return pageList;
-      const [open, rest] = partitionByOpenPages(pageList);
-      return [...open, ...rest];
-    })();
-    results = await Promise.all(
-      sortedPaths.map((path) => transpilePage(path, componentList, globalStylesHtml)),
+
+    // Side effects that must happen on the main thread
+    await Promise.all(
+      results.map(async (result) => {
+        if (!result) return;
+        if (!BascikConfig.isBuild) {
+          await mem.storePage({
+            relativePagePath: result.relativePagePath,
+            absolutePagePath: result.absolutePagePath,
+            pageContent: result.distHtml,
+            usedComponentsNames: result.usedComponentsNames,
+          });
+        }
+      })
     );
-  }
 
-  // Side effects that must happen on the main thread
-  await Promise.all(
-    results.map(async (result) => {
-      if (!result) return;
-      if (!BascikConfig.isBuild) {
-        await mem.storePage({
-          relativePagePath: result.relativePagePath,
-          absolutePagePath: result.absolutePagePath,
-          pageContent: result.distHtml,
-          usedComponentsNames: result.usedComponentsNames,
-        });
+    for (const result of results) {
+      if (result) {
+        eventEmitter.emit("transpiled", { relativePagePath: result.relativePagePath });
       }
-    })
-  );
-
-  for (const result of results) {
-    if (result) {
-      eventEmitter.emit("transpiled", { relativePagePath: result.relativePagePath });
     }
+    relativePaths = results.map((r) => r?.relativePagePath ?? null).filter((p): p is string => p !== null);
+  } else {
+    relativePaths = await processPageBatch(pageList, componentList, globalStylesHtml);
   }
 
-  const count = results.filter(Boolean).length;
+  const count = relativePaths.length;
   const elapsed = Math.round(performance.now() - start);
 
   if (BascikConfig.isBuild) {
@@ -593,27 +639,39 @@ export const processAllPages = async (options?: { useWorkers?: boolean }) => {
     `\n✓ ${count} page${count !== 1 ? "s" : ""} transpiled in ${elapsed}ms`,
   );
 
-  return results.map((r) => r?.relativePagePath ?? null);
+  return relativePaths;
 };
 
-export const pageProcessing = async (
+const pageProcessingQueues = new Map<string, Promise<unknown>>();
+
+export const pageProcessing = (
   pagePath: string,
   componentList?: ComponentList,
   globalStylesHtml?: string,
-) => {
-  const result = await transpilePage(pagePath, componentList, globalStylesHtml);
-  if (!result) return;
-  const { relativePagePath, absolutePagePath, distHtml, usedComponentsNames } = result;
-  if (!BascikConfig.isBuild) {
-    await mem.storePage({
-      relativePagePath,
-      absolutePagePath,
-      pageContent: distHtml,
-      usedComponentsNames,
-    });
-  }
-  eventEmitter.emit("transpiled", { relativePagePath });
-  return relativePagePath;
+): Promise<string | undefined> => {
+  const current = pageProcessingQueues.get(pagePath) ?? Promise.resolve();
+  const next = current.then(async () => {
+    const result = await transpilePage(pagePath, componentList, globalStylesHtml);
+    if (!result) return;
+    const { relativePagePath, absolutePagePath, distHtml, usedComponentsNames, fileDependencies } = result;
+    if (!BascikConfig.isBuild) {
+      await mem.storePage({
+        relativePagePath,
+        absolutePagePath,
+        pageContent: distHtml,
+        usedComponentsNames,
+        fileDependencies,
+      });
+    }
+    eventEmitter.emit("transpiled", { relativePagePath });
+    return relativePagePath;
+  }).finally(() => {
+    if (pageProcessingQueues.get(pagePath) === next) {
+      pageProcessingQueues.delete(pagePath);
+    }
+  });
+  pageProcessingQueues.set(pagePath, next);
+  return next as Promise<string | undefined>;
 };
 
 export const transpilePage = async (
@@ -744,7 +802,16 @@ export const transpilePage = async (
   // Minify the body AFTER component resolution so that <pre> blocks from resolved
   // components (e.g. <code-block> → <pre><code>…</code></pre>) are preserved intact.
   if (isMinifyHtml) {
-    transpiledHtmlBody = minifyHtml(transpiledHtmlBody);
+    try {
+      transpiledHtmlBody = minifyHtml(transpiledHtmlBody);
+    } catch (err) {
+      const behavior = BascikConfig.onMinifyError ?? "error";
+      if (behavior === "halt" || behavior === "error") {
+        console.error(`[bascik] HTML minification failed for "${relativePagePath}":`, err);
+        throw err;
+      }
+      console.warn(`[bascik] HTML minification failed for "${relativePagePath}", proceeding unminified:`, err);
+    }
   }
 
   // Minify inline <script> content when configured.
@@ -772,6 +839,18 @@ export const transpilePage = async (
     );
 
   const allUsedComponents = [...usedComponents, ...headUsedComponents];
+
+  const fileDependencies = await collectAllScriptDeps(rawHtml);
+  for (const comp of allUsedComponents) {
+    if (comp.fileContent) {
+      const compDeps = await collectAllScriptDeps(comp.fileContent);
+      for (const dep of compDeps) {
+        if (!fileDependencies.includes(dep)) {
+          fileDependencies.push(dep);
+        }
+      }
+    }
+  }
 
   // Only write to disk during build. Dev server serves from memory.
   if (BascikConfig.isBuild) {
@@ -803,6 +882,7 @@ export const transpilePage = async (
     absolutePagePath: pagePath,
     distHtml,
     usedComponentsNames: allUsedComponents.map(({ name }) => name),
+    fileDependencies,
   };
 };
 

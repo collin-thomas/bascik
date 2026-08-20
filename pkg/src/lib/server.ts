@@ -170,6 +170,19 @@ export const createRequestHandler = () => {
         return;
       }
 
+      // ── Path traversal guard for all requests ────────────────────────────
+      if (
+        pathname.includes("/../") ||
+        pathname.startsWith("../") ||
+        pathname.endsWith("/..") ||
+        pathname === ".."
+      ) {
+        responseStatus = 400;
+        res.respond(400, { ...SECURITY_HEADERS });
+        res.end("Bad Request");
+        return;
+      }
+
       // ── Static asset (has extension, not .html) ──────────────────────────
       const ext = extname(pathname).toLowerCase();
       if (ext && !ext.match(/^\.htm.*$/)) {
@@ -272,7 +285,10 @@ export const createRequestHandler = () => {
         // Parse the referer once at connection time for path-matching and open-page tracking.
         let openPagePath: string | null = null;
         try {
-          if (req.headers.referer) openPagePath = new URL(req.headers.referer as string).pathname;
+          if (req.headers.referer) {
+            const rawPath = new URL(req.headers.referer as string).pathname;
+            openPagePath = getHttpPath(rawPath);
+          }
         } catch { }
         if (openPagePath) mem.trackOpenPage(openPagePath);
 

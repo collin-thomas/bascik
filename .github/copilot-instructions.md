@@ -190,16 +190,37 @@ Then inspect the relevant `docs/dist/` output to confirm the pkg change has the 
 
 ## Tests and Coverage
 
-**When adding, removing, or significantly changing tests in `pkg/src/`:**
+**When adding, removing, or significantly changing tests in `pkg/src/` or `pkg/e2e/`:**
 
-- The testing docs (`docs/content/internals/testing.md`) describe the test approach, not an enumerated list of files. The "Test Files" section links to GitHub which is always current. You only need to update the prose if the testing *patterns* change (e.g. a new mock strategy, a new test runner, new helpers).
+- The testing docs (`docs/content/internals/testing.md`) describe the test approach, not an enumerated list of files. The "Test Files" section links to GitHub which is always current. You only need to update the prose if the testing *patterns* change (e.g. a new mock strategy, a new test runner, new helpers, or new E2E server modes like `playwright.dev.config.ts`).
+- E2E tests support four server modes: static production (`playwright.config.ts`), HTTP/1.1 production server (`playwright.server.config.ts`), HTTP/2 production server (`playwright.server-http2.config.ts` via `yarn pkg:e2e:prod`), and live dev server (`playwright.dev.config.ts` via `yarn pkg:e2e:dev`).
 - The coverage numbers shown on the testing page are read from `pkg/test-coverage.json` (unit tests) and `pkg/e2e-test-coverage.json` (E2E build-step coverage) at docs build time. Do not run `#pre-push.prompt.md` or pre-push scripts automatically after adding tests. The user handles running pre-push steps.
 
 **When changing `pkg/src/lib/dev-server.md` (or adding to the live-reload / SSE / watch system):**
 Update `docs/content/internals/dev-server.md` to reflect the change. This page is the source of truth for how the dev server and watch system work.
 
 **General principle:** the three files that must stay in sync are `llms.txt`, `SKILL.md`, and the relevant `docs/content/internals/*.md`. The copilot-instructions file is the enforcement mechanism — add notes here when a new sync relationship is created.
-files that must stay in sync are `SKILL.md`
+
+### Testing Philosophy & Bug Prevention
+
+High unit test coverage numbers can create false confidence if tests only exercise happy-path functions in isolation with ideal inputs. Bascik's testing philosophy focuses on real-world system boundaries, environment parity, and edge-case resilience:
+
+1. **Test Boundaries, Not Just Isolated Functions (Coverage ≠ Resilience):**
+   - High line coverage does not prove system resilience. Bugs hide at boundary intersections: Main Thread ↔ Worker Thread, Dev Server SSE ↔ Browser EventSource, and Build Scripts ↔ Disk Cache.
+   - Always pair unit tests with E2E integration tests running against active dev (`bascik`), production HTTP/2 (`bascik --serve`), and static build output (`bascik --build`).
+
+2. **Test the Full Real-World Input Spectrum:**
+   - Functions rarely receive clean ideal inputs in production. Test path utilities, route lookups, and watchers against the full spectrum of environment inputs: absolute filesystem paths (`/abs/.../src/pages/x.html`), relative paths (`src/pages/x.html`, `pages/x.html`), bare filenames (`x.html`), subfolder routes, Windows backslashes, and trailing slash URL variants.
+   - Test string replacements with special regex tokens (`$1`, `$2`, `$&`, ``$` ``) such as SQL parameter placeholders or JSON strings containing HTML tags. Core pipeline replacements must use function replacements `() => value` to prevent infinite loops and process OOMs.
+
+3. **Enforce Environment Parity in Tests:**
+   - Worker threads (`worker-pool.ts`, `page-worker.ts`) do not inherit `process.argv` from the main thread. Always test worker execution explicitly and verify that disk side-effects (`dist/` outputs) occur as expected, not just in-memory return values.
+   - Identifier minification in production (`bascik --build` with `minify.identifiers: true`) hashes and compresses scoped element IDs and class names. Consequently, E2E assertions must never target raw classes or IDs (such as `.search-overlay` or `[id$="detail"]`). Instead, always use explicit `data-testid` attributes and locate them using Playwright's native `page.getByTestId(...)` API. Never use fragile relative DOM traversal (`.nth(N)` or `.locator('../..')`).
+
+4. **Resilience & Fault Tolerance by Design:**
+   - Test recovery from invalid user input, syntax errors, rapid file edits, and unexpected client disconnects (`ECONNRESET`, `EPIPE`, `ERR_HTTP2_STREAM_CANCEL`). The watcher and server must stay alive and recover automatically.
+   - Unit tests must be strictly isolated: never mutate package source directories or leave un-gitignored files on disk (`bascik.config.js`, `pages/index.html`). Run filesystem tests in isolated temp directories or mock system calls cleanly.
+
 ## License Source of Truth
 
 The license lives in **three places** that must stay in sync:

@@ -187,6 +187,68 @@ describe("storePage update", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// fileDependencies / pagesDependentOnFile
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("fileDependencies and pagesDependentOnFile", () => {
+  it("returns empty array for an unknown file path", () => {
+    expect(mem.pagesDependentOnFile("content/unknown.md")).toEqual([]);
+  });
+
+  it("returns the list of pages that depend on a specific file", async () => {
+    await mem.storePage({
+      relativePagePath: "pages/cli.html",
+      absolutePagePath: "pages/cli.html",
+      pageContent: "<html></html>",
+      fileDependencies: ["content/cli.md", "scripts/md-renderer.ts"],
+    });
+
+    await mem.storePage({
+      relativePagePath: "pages/testing.html",
+      absolutePagePath: "pages/testing.html",
+      pageContent: "<html></html>",
+      fileDependencies: ["content/testing.md", "scripts/md-renderer.ts"],
+    });
+
+    expect(mem.pagesDependentOnFile("content/cli.md")).toEqual(["pages/cli.html"]);
+    expect(mem.pagesDependentOnFile("content/testing.md")).toEqual(["pages/testing.html"]);
+    expect(mem.pagesDependentOnFile("scripts/md-renderer.ts")).toContain("pages/cli.html");
+    expect(mem.pagesDependentOnFile("scripts/md-renderer.ts")).toContain("pages/testing.html");
+  });
+
+  it("normalizes path strings so absolute, relative, and ./ paths match", async () => {
+    await mem.storePage({
+      relativePagePath: "pages/cli.html",
+      absolutePagePath: "pages/cli.html",
+      pageContent: "<html></html>",
+      fileDependencies: ["./content/cli.md"],
+    });
+
+    expect(mem.pagesDependentOnFile("content/cli.md")).toEqual(["pages/cli.html"]);
+    expect(mem.pagesDependentOnFile(`${process.cwd()}/content/cli.md`)).toEqual(["pages/cli.html"]);
+  });
+
+  it("updates file dependencies when a page is updated", async () => {
+    await mem.storePage({
+      relativePagePath: "pages/dynamic.html",
+      absolutePagePath: "pages/dynamic.html",
+      pageContent: "<html></html>",
+      fileDependencies: ["content/old.md"],
+    });
+    expect(mem.pagesDependentOnFile("content/old.md")).toEqual(["pages/dynamic.html"]);
+
+    await mem.storePage({
+      relativePagePath: "pages/dynamic.html",
+      absolutePagePath: "pages/dynamic.html",
+      pageContent: "<html></html>",
+      fileDependencies: ["content/new.md"],
+    });
+    expect(mem.pagesDependentOnFile("content/old.md")).toEqual([]);
+    expect(mem.pagesDependentOnFile("content/new.md")).toEqual(["pages/dynamic.html"]);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Open-page tracking
 // ─────────────────────────────────────────────────────────────────────────────
 

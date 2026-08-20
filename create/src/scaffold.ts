@@ -89,10 +89,9 @@ test.describe('Starter App E2E Tests', () => {
   test('counter component increments and decrements count', async ({ page }) => {
     await page.goto('/');
 
-    const counter = page.locator('.counter').first();
-    const decBtn = counter.locator('#btn-dec');
-    const incBtn = counter.locator('#btn-inc');
-    const val = counter.locator('#count-val');
+    const val = page.getByTestId('counter-val').first();
+    const decBtn = page.getByTestId('counter-dec').first();
+    const incBtn = page.getByTestId('counter-inc').first();
 
     await expect(val).toHaveText('0');
 
@@ -107,8 +106,8 @@ test.describe('Starter App E2E Tests', () => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/');
 
-    const toggle = page.locator('#nav-toggle');
-    const menu = page.locator('#nav-menu');
+    const toggle = page.getByTestId('nav-toggle').first();
+    const menu = page.getByTestId('nav-menu').first();
 
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
 
@@ -374,10 +373,10 @@ ${SITE_HEADER_CSS}</style>
   <div class="container">
     <nav class="nav">
       <a href="/" class="logo" data-bascik-prop-brand>My Site</a>
-      <button id="nav-toggle" class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+      <button id="nav-toggle" class="nav-toggle" aria-label="Toggle menu" aria-expanded="false" data-testid="nav-toggle">
         <span></span><span></span><span></span>
       </button>
-      <ul id="nav-menu" class="nav-menu">
+      <ul id="nav-menu" class="nav-menu" data-testid="nav-menu">
         <li><a href="/">Home</a></li>
         <li><a href="/about">About</a></li>
         <li><a href="/contact">Contact</a></li>
@@ -531,9 +530,9 @@ export const MY_COUNTER_CSS = `.counter {
 export const MY_COUNTER_HTML = `<style>
 ${MY_COUNTER_CSS}</style>
 <div class="counter">
-  <button id="btn-dec" class="btn btn-ghost">−</button>
-  <span id="count-val" class="count-val">0</span>
-  <button id="btn-inc" class="btn btn-primary">+</button>
+  <button id="btn-dec" class="btn btn-ghost" data-testid="counter-dec">−</button>
+  <span id="count-val" class="count-val" data-testid="counter-val">0</span>
+  <button id="btn-inc" class="btn btn-primary" data-testid="counter-inc">+</button>
 </div>
 <script>
   (function () {

@@ -152,7 +152,7 @@ describe("dev vs build vs prod server defaults", () => {
     vi.resetModules();
   });
 
-  it("keeps minify options off in dev mode", () => {
+  it("keeps minify options off and defaults error actions to 'warn' in dev mode", () => {
     const { BascikConfig: cfg } = initBascikConfig({}, {}, { isBuild: false, isProdServer: false });
     expect(cfg.minify).toEqual({
       html: false,
@@ -160,9 +160,11 @@ describe("dev vs build vs prod server defaults", () => {
       js: false,
       identifiers: false,
     });
+    expect(cfg.onScriptError).toBe("warn");
+    expect(cfg.onMinifyError).toBe("warn");
   });
 
-  it("turns minify options on by default for --build", () => {
+  it("turns minify options on and defaults error actions to 'error' for --build", () => {
     const { BascikConfig: cfg } = initBascikConfig({}, {}, { isBuild: true });
     expect(cfg.minify).toEqual({
       html: true,
@@ -170,9 +172,11 @@ describe("dev vs build vs prod server defaults", () => {
       js: true,
       identifiers: true,
     });
+    expect(cfg.onScriptError).toBe("error");
+    expect(cfg.onMinifyError).toBe("error");
   });
 
-  it("turns minify options on by default for --serve (prod server)", () => {
+  it("turns minify options on and defaults error actions to 'error' for --serve (prod server)", () => {
     const { BascikConfig: cfg } = initBascikConfig({}, {}, { isProdServer: true });
     expect(cfg.minify).toEqual({
       html: true,
@@ -180,6 +184,8 @@ describe("dev vs build vs prod server defaults", () => {
       js: true,
       identifiers: true,
     });
+    expect(cfg.onScriptError).toBe("error");
+    expect(cfg.onMinifyError).toBe("error");
   });
 
   it("applies build defaults through the singleton when BASCIK_BUILD=1", async () => {
@@ -240,6 +246,26 @@ describe("minify user config overrides", () => {
       js: true,
       identifiers: true,
     });
+  });
+
+  it("allows user config to override onScriptError and onMinifyError in dev mode", () => {
+    const { BascikConfig: cfg } = initBascikConfig(
+      { onScriptError: "error", onMinifyError: "error" },
+      {},
+      { isBuild: false },
+    );
+    expect(cfg.onScriptError).toBe("error");
+    expect(cfg.onMinifyError).toBe("error");
+  });
+
+  it("allows user config to override onScriptError and onMinifyError in build mode", () => {
+    const { BascikConfig: cfg } = initBascikConfig(
+      { onScriptError: "warn", onMinifyError: "warn" },
+      {},
+      { isBuild: true },
+    );
+    expect(cfg.onScriptError).toBe("warn");
+    expect(cfg.onMinifyError).toBe("warn");
   });
 });
 
