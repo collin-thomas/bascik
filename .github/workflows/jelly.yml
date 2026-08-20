@@ -1,9 +1,9 @@
 name: Jelly Static Analysis
 on:
   push:
-    branches: [main, master, pre-release-*]
+    branches: [main]
   pull_request:
-    branches: [main, master, pre-release-*]
+    branches: [main]
 
 jobs:
   jelly:
@@ -13,15 +13,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: 24
+          cache: 'yarn'
 
-      - name: Enable Corepack & Install dependencies
-        run: |
-          corepack enable
-          yarn install --immutable
+      - name: Install dependencies
+        run: yarn install --immutable
 
       - name: Install Jelly Static Analyzer Globally
         run: npm install -g @cs-au-dk/jelly
