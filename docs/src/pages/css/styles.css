@@ -18,7 +18,9 @@
   --r:            10px;
   --r-sm:         6px;
   --r-lg:         16px;
-  --anchor-scroll-offset: 115px;
+  --scroll-margin-h2: 84px;
+  --scroll-margin-h3: 122px;
+  --anchor-scroll-offset: 154px;
   --nav-bg:       rgba(24,25,27,0.9);
   --pre-bg:       #0d0e0f;
   --accent-border: rgba(211,255,141,0.22);
@@ -132,7 +134,6 @@ html[data-theme="light"] {
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: var(--anchor-scroll-offset);
 }
 
 body {
@@ -217,7 +218,7 @@ body {
 /* ── Layout ── */
 .container  { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
 .docs-layout { display: grid; grid-template-columns: 220px 1fr; gap: 0; min-height: 80vh; }
-.docs-content { padding: 48px 40px 80px; max-width: 780px; min-width: 0; overflow-x: hidden; }
+.docs-content { padding: 38px 40px 80px; max-width: 780px; min-width: 0; overflow-x: hidden; }
 
 /* ── Typography ── */
 h1,h2,h3,h4 { margin-top: 0; line-height: 1.2; font-weight: 700; }
@@ -227,15 +228,15 @@ h2 {
   margin: 48px 0 12px;
   border-top: 1px solid var(--border);
   padding-top: 40px;
-  scroll-margin-top: var(--anchor-scroll-offset);
+  scroll-margin-top: var(--scroll-margin-h2);
 }
 h2 .anchor-link, h3 .anchor-link { color: inherit; text-decoration: none; }
 h2 .anchor-link::after, h3 .anchor-link::after { content: ' #'; opacity: 0; color: var(--text-muted); font-weight: 400; transition: opacity .15s; }
 h2:hover .anchor-link::after, h3:hover .anchor-link::after { opacity: 1; }
 h2:focus-within .anchor-link::after, h3:focus-within .anchor-link::after { opacity: 1; }
 h2 .anchor-link.copied::after, h3 .anchor-link.copied::after { content: ' ✓'; opacity: 1; color: var(--accent); }
-h2:first-of-type { border-top: none; padding-top: 0; margin-top: 32px; }
-h3 { font-size: 1.05rem; margin: 28px 0 8px; scroll-margin-top: var(--anchor-scroll-offset); }
+h2:first-of-type { border-top: none; padding-top: 0; margin-top: 32px; scroll-margin-top: var(--scroll-margin-h3); }
+h3 { font-size: 1.05rem; margin: 28px 0 8px; scroll-margin-top: var(--scroll-margin-h3); }
 p  { margin-top: 0; color: var(--text-muted); }
 
 .docs-content strong,
@@ -400,6 +401,11 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
+  :root {
+    --scroll-margin-h2: 106px;
+    --scroll-margin-h3: 136px;
+    --anchor-scroll-offset: 136px;
+  }
   .docs-layout { display: block; }
   .docs-content { padding: 32px 0; }
 }

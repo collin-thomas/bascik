@@ -236,7 +236,7 @@ export const removeIdSelectors = (css: string): string => {
  *   /#([a-zA-Z][a-zA-Z0-9-_]*)(?=[^{};]*\{)/g
  *
  * In selector position the next `{` appears before any `;` or `}`.
- * In value position (colour declarations, gradient functions, etc.) a `;` or
+ * In value position (color declarations, gradient functions, etc.) a `;` or
  * `}` always appears before the next `{`.
  *
  * This correctly handles all common cases:

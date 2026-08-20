@@ -56,7 +56,7 @@ export function score(e: SearchEntry, q: string, toks: string[]): number {
   return 0;
 }
 
-/** Returns ~120 chars centred on the first query/token match in text. */
+/** Returns ~120 chars centered on the first query/token match in text. */
 export function snippet(text: string | null | undefined, q: string, toks: string[]): string {
   if (!text) return '';
   var lo = text.toLowerCase();

@@ -1,0 +1,78 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Docs Dev Server (bascik-docs)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/docs",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": [
+        "docs:dev"
+      ],
+      "console": "integratedTerminal",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "Debug Docs Production Server",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/docs",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": [
+        "docs:serve"
+      ],
+      "console": "integratedTerminal",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "Debug Docs Build",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/docs",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": [
+        "docs:build"
+      ],
+      "console": "integratedTerminal",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "Debug Package Unit Tests (Vitest)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": [
+        "test",
+        "run"
+      ],
+      "console": "integratedTerminal",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "Launch Chrome (Docs Dev Server)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:8080",
+      "webRoot": "${workspaceFolder}/docs"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack Docs (Dev Server + Launch Chrome)",
+      "configurations": [
+        "Debug Docs Dev Server (bascik-docs)",
+        "Launch Chrome (Docs Dev Server)"
+      ]
+    }
+  ]
+}

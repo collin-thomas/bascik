@@ -568,17 +568,17 @@ describe("prefixElementAttribute – CSS #id selector scoping", () => {
     expect(result.fileContent).toContain("bascik__my-comp__id__btn");
   });
 
-  it("does NOT mangle hex colour values: color: #abc;", () => {
+  it("does NOT mangle hex color values: color: #abc;", () => {
     const c = makeComponent(
       '<div class="card"></div>',
       ".card { color: #abc; }",
     );
     const result = prefixElementAttribute(c, "class", "test1234");
-    // The hex colour should pass through untouched
+    // The hex color should pass through untouched
     expect(result.cssFileContent).toContain("color: #abc");
   });
 
-  it("does NOT mangle hex colour in gradient: linear-gradient(#abc, #def)", () => {
+  it("does NOT mangle hex color in gradient: linear-gradient(#abc, #def)", () => {
     const c = makeComponent(
       '<div class="card"></div>',
       ".card { background: linear-gradient(#abc, #def); }",
@@ -1232,5 +1232,67 @@ describe("prefixElementAttribute – auto-generated instance id", () => {
     // The scoped name should contain "bascik__my-comp__" followed by a generated id
     expect(result.fileContent).toMatch(/bascik__my-comp__[0-9a-f]{8}__box/);
     expect(result.fileContent).not.toContain('id="box"');
+  });
+});
+
+describe("namespaceScriptTags – line-offset padding and sourceURL", () => {
+  it("preserves exact line numbers of inner JS code relative to original HTML file", () => {
+    const fileContent =
+      "<html>\n" +                  // line 1
+      "<body>\n" +                  // line 2
+      "  <h1>Hello</h1>\n" +        // line 3
+      "  <script>\n" +              // line 4
+      "    const greeting = 'hi';\n" + // line 5
+      "    console.log(greeting);\n" + // line 6
+      "  </script>\n" +             // line 7
+      "</body>\n" +                 // line 8
+      "</html>";                    // line 9
+
+    const c = {
+      name: "hello-comp",
+      fileName: "src/components/hello-comp.html",
+      fileContent,
+    };
+
+    const result = namespaceScriptTags(c);
+    const lines = result.fileContent.split(/\r?\n/);
+
+    // Line 5 (index 4) should be const greeting = 'hi';
+    expect(lines[4]).toContain("const greeting = 'hi';");
+    // Line 6 (index 5) should be console.log(greeting);
+    expect(lines[5]).toContain("console.log(greeting);");
+  });
+
+  it("adds sourceURL when fileName is present", () => {
+    const c = {
+      name: "my-comp",
+      fileName: "/Users/collin/github/bascik/src/components/my-comp.html",
+      fileContent:
+        "<div class=\"box\"></div>\n" + // line 1
+        "<script>\n" +                 // line 2
+        "const a = 1;\n" +             // line 3
+        "console.log(a);\n" +          // line 4
+        "</script>"
+    };
+
+    const result = namespaceScriptTags(c);
+    expect(result.fileContent).toContain("src/components/my-comp.html");
+    expect(result.fileContent).toContain("(function() {");
+  });
+
+  it("does not add sourceURL or wrap non-JS/data script tags", () => {
+    const c = {
+      name: "my-comp",
+      fileName: "src/components/my-comp.html",
+      fileContent:
+        '<script type="application/ld+json">{"@type":"Thing"}</script>\n' +
+        '<script type="importmap">{"imports":{}}</script>'
+    };
+
+    const result = namespaceScriptTags(c);
+    expect(result.fileContent).toBe(
+      '<script type="application/ld+json">{"@type":"Thing"}</script>\n' +
+      '<script type="importmap">{"imports":{}}</script>'
+    );
   });
 });

@@ -28,14 +28,17 @@ Output in the compiled HTML:
 
 Build scripts run as isolated Node.js ESM modules during transpilation. When a build script throws an exception, such as a missing file (`ENOENT`), a syntax error, or a failed network request, Bascik intercepts the error and reports it cleanly without crashing the dev server or CLI runner.
 
-### Terminal Error Formatting
+### Terminal Error Formatting & Stack Remapping
 
-When a script fails, Bascik prints the page file path along with the exact line and column number of the `<script data-bascik-build>` tag, followed by the error message or stack trace:
+When a build script fails, Bascik prints the page file path along with the exact line and column number of the `<script data-bascik-build>` tag. Bascik automatically intercepts child-process stack traces and remaps temporary execution files back to your source file and line offset:
 
 ```text
-[bascik] build script error in "pages/deploying.html" at (line 14, column 3):
-ENOENT: no such file or directory, open './content/deploying.md'
+[bascik] build script error in "src/pages/deploying.html" at (line 14, column 3):
+Error: Cannot find module 'marked'
+    at src/pages/deploying.html:18:12
 ```
+
+In VS Code or terminal emulators, you can `Cmd + Click` (or `Ctrl + Click`) the file reference directly in the error log to jump to the exact line in your source HTML file where the script failed.
 
 ### Configuring Error Behavior
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { htmlHasServerScripts, executeServerScripts } from "./server-scripts.js";
+import { htmlHasServerScripts, executeServerScripts, cleanStackTrace } from "./server-scripts.js";
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -399,7 +399,7 @@ describe("executeServerScripts", () => {
     resolveWith("");
     await executeServerScripts("<script data-bascik-server>console.log('hi')</script>", baseRequest);
     const written = (writeFile as ReturnType<typeof vi.fn>).mock.calls[0][1] as string;
-    expect(written).toBe("console.log('hi')");
+    expect(written).toContain("console.log('hi')");
     expect(written).not.toContain("escapeHtml");
   });
 
@@ -407,7 +407,7 @@ describe("executeServerScripts", () => {
     resolveWith("");
     await executeServerScripts("<script data-bascik-server>const x=1;</script>", baseRequest);
     const written = (writeFile as ReturnType<typeof vi.fn>).mock.calls[0][1] as string;
-    expect(written).toBe("const x=1;");
+    expect(written).toContain("const x=1;");
     expect(written.indexOf("escapeHtml")).toBe(-1);
   });
 
@@ -431,6 +431,18 @@ describe("executeServerScripts", () => {
     (BascikConfig as any).onScriptError = undefined;
   });
 
+  it("appends //# sourceURL comment with filePath when provided, or request path as fallback", async () => {
+    resolveWith("");
+    await executeServerScripts(
+      "<script data-bascik-server>x()</script>",
+      baseRequest,
+      30000,
+      "src/pages/dashboard.html",
+    );
+    const written = (writeFile as ReturnType<typeof vi.fn>).mock.calls[0][1] as string;
+    expect(written).toContain("//# sourceURL=src/pages/dashboard.html");
+  });
+
   it("respects onScriptError: error", async () => {
     (BascikConfig as any).onScriptError = "error";
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
@@ -440,5 +452,19 @@ describe("executeServerScripts", () => {
     expect(errorSpy).toHaveBeenCalled();
     errorSpy.mockRestore();
     (BascikConfig as any).onScriptError = undefined;
+  });
+});
+
+// ─── cleanStackTrace ─────────────────────────────────────────────────────────
+
+describe("server-scripts cleanStackTrace", () => {
+  it("replaces temporary file path and maps line numbers using lineOffset", () => {
+    const tmpPath = "/project/node_modules/.cache/bascik/server-123.mjs";
+    const realPath = "src/pages/about.html";
+    const lineOffset = 15;
+    const rawTrace = `Error: Server error\n    at ${tmpPath}:3:8`;
+
+    const cleaned = cleanStackTrace(rawTrace, tmpPath, realPath, lineOffset);
+    expect(cleaned).toBe(`Error: Server error\n    at ${realPath}:17:8`);
   });
 });

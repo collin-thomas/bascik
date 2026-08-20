@@ -7,7 +7,7 @@ import { BascikConfig, shouldLog } from "./config.js";
 import { minifyCss } from "./styles.js";
 import { minifyJs } from "./javascript.js";
 
-/** Resolve an absolute path to a `parentDir/...` relative path, normalising separators. */
+/** Resolve an absolute path to a `parentDir/...` relative path, normalizing separators. */
 export const getRelativePath = (path: string, parentDir: string): string => {
   const normalizedPath = path.replace(/\\/g, "/");
   const parentPath = (parentDir === "pages"
@@ -222,7 +222,7 @@ export const getDistPagePath = (pagePath: string): string => {
 
 /**
  * Resolve a source path (absolute or `pages/…`-relative) to its `dist/…`
- * counterpart.  Centralised so every caller — page removal, asset unlink,
+ * counterpart.  Centralized so every caller — page removal, asset unlink,
  * asset unlinkDir — resolves the same way regardless of whether the watcher
  * handed us an absolute or relative path.
  */

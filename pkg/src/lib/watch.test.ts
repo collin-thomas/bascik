@@ -149,6 +149,7 @@ import { eventEmitter } from "./events.js";
 beforeEach(() => {
   resetMocks();
   clearWatchers();
+  (BascikConfig as any).inlineStyles = false;
 });
 
 // ─── Helper: get a named event handler from a given watcher index ─────────────
@@ -236,6 +237,46 @@ describe("watchFiles – asset watcher (watcher 0)", () => {
   it("emits asset-changed when a file changes and not in build mode", async () => {
     const handler = getHandler(0, "change");
     await handler?.("/path/to/style.css");
+    expect(eventEmitter.emit).toHaveBeenCalledWith("asset-changed");
+  });
+
+  it("calls processAllPages when an inline stylesheet changes and inlineStyles is true", async () => {
+    (BascikConfig as any).inlineStyles = true;
+    mockProcessAllPages.mockClear();
+    mockEventEmit.mockClear();
+    const handler = getHandler(0, "change");
+    await handler?.("/path/to/style.css");
+    expect(processAllPages).toHaveBeenCalledTimes(1);
+    expect(eventEmitter.emit).not.toHaveBeenCalledWith("asset-changed");
+  });
+
+  it("calls processAllPages when an inline stylesheet is added and inlineStyles is true", async () => {
+    (BascikConfig as any).inlineStyles = true;
+    mockProcessAllPages.mockClear();
+    mockEventEmit.mockClear();
+    const handler = getHandler(0, "add");
+    await handler?.("/path/to/style.css");
+    expect(processAllPages).toHaveBeenCalledTimes(1);
+    expect(eventEmitter.emit).not.toHaveBeenCalledWith("asset-changed");
+  });
+
+  it("calls processAllPages when matching inlineStyles array on change", async () => {
+    (BascikConfig as any).inlineStyles = ["src/pages/css/styles.css"];
+    mockProcessAllPages.mockClear();
+    mockEventEmit.mockClear();
+    const handler = getHandler(0, "change");
+    await handler?.("/path/to/src/pages/css/styles.css");
+    expect(processAllPages).toHaveBeenCalledTimes(1);
+    expect(eventEmitter.emit).not.toHaveBeenCalledWith("asset-changed");
+  });
+
+  it("emits asset-changed when a non-matching stylesheet changes", async () => {
+    (BascikConfig as any).inlineStyles = ["src/pages/css/styles.css"];
+    mockProcessAllPages.mockClear();
+    mockEventEmit.mockClear();
+    const handler = getHandler(0, "change");
+    await handler?.("/path/to/src/pages/css/other.css");
+    expect(processAllPages).not.toHaveBeenCalled();
     expect(eventEmitter.emit).toHaveBeenCalledWith("asset-changed");
   });
 });

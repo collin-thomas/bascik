@@ -1,0 +1,8 @@
+<div class="source-map-component">
+  <button id="trigger-error-btn" data-testid="trigger-error-btn">Trigger Error</button>
+</div>
+<script>
+  document.getElementById("trigger-error-btn").addEventListener("click", () => {
+    throw new Error("test component error");
+  });
+</script>

@@ -491,6 +491,13 @@ export const build = defineConfig({
 
 Component scripts can then use TypeScript annotations freely. Bascik's scoping pipeline runs first (IIFE wrapping, selector rewriting), then `minify.js` strips the types. **Erasable syntax only:** `stripTypeScriptTypes` removes type annotations, interfaces, `as` casts, and `!` non-null assertions. Non-erasable syntax (`enum`, parameter properties, namespaces with runtime code) requires a separate compile step.
 
+### Debugging Component Scripts & Virtual Source Files
+
+When debugging component scripts in browser DevTools (Cmd+Option+I or F12), Bascik provides virtual source files and accurate stack traces:
+
+* **Virtual Source Files:** Bascik appends a `//# sourceURL=src/components/name.html` directive and preserves line-offset padding in every component client `<script>` block. In browser DevTools under the **Sources** (or Debugger) panel, your component scripts appear as virtual files matching your project folder structure (e.g., `src/components/card.html`).
+* **Console Logs & Breakpoints:** Because component scripts are listed as virtual files, you can search for them directly using `Cmd + P` or `Ctrl + P` in DevTools, set breakpoints, and step-debug. Runtime console logs and uncaught exceptions map directly to the original component file and line offset rather than the generated HTML page.
+
 ---
 
 ## 5. Dynamic Runtime Class Scoping & JS-Only Class Discovery
@@ -655,6 +662,7 @@ Components work inside `<head>` to organize metadata:
 * Build scripts run before component resolution, so their output can contain component tags.
 * All build scripts on a page execute concurrently via `Promise.all` (capped by a memory semaphore), and output is assembled in document order once all scripts complete.
 * On error, behavior is controlled by `onScriptError` in `bascik.config.ts`: `'warn'` (default in dev: log warning to stderr and replace tag with `""`), `'error'` (default in `--build` and `--serve`: log error to stderr and throw exception to stop build), or `'halt'` (alias for `'error'`).
+* **Stack Trace Remapping:** For both `<script data-bascik-build>` and `<script data-bascik-server>` blocks, Bascik automatically intercepts child-process stack traces and remaps temporary execution files back to your source HTML file and line offset (e.g., `src/pages/dashboard.html:25`). In VS Code or terminal emulators, you can Cmd+Click (or Ctrl+Click) the file reference in the error log to jump directly to the failing script's exact line.
 * **Hard error:** combining `data-bascik-build` and `data-bascik-server` on the same tag throws and aborts the build. A script runs at build time or at request time, not both.
 
 ### Build Script Environment Variables
@@ -1150,7 +1158,7 @@ Editors validate all `<script>` blocks in an HTML file as sharing one scope, cau
 { "html.validate.scripts": false }
 ```
 
-Commit this file so all contributors get the correct behaviour automatically. Alternatively, add `// @ts-nocheck` as the first line inside any individual script block that triggers the warning.
+Commit this file so all contributors get the correct behavior automatically. Alternatively, add `// @ts-nocheck` as the first line inside any individual script block that triggers the warning.
 
 #### 5. Inspecting `dist/` Output
 
@@ -1308,6 +1316,83 @@ test.describe('my-feature-test page', () => {
 ```
 
 There are 44 e2e test files covering CSS scoping, JS scoping, slots, props, attribute inheritance, animations, observers, SVG, and head components.
+
+### Debugging with VS Code and Node.js
+
+Bascik works smoothly with debuggers because it operates directly on vanilla HTML, CSS, and JavaScript without complex runtime abstractions or heavy bundle transformations.
+
+#### Source Location Preservation
+
+Debugging server-side scripts, build-time scripts, and browser component code in Bascik requires no special source map plugins or transpilation step:
+
+* **Server and Build Scripts:** Bascik automatically appends `//# sourceURL=${relPath}` comments to temporary script modules created during compilation (`<script data-bascik-build>` and `<script data-bascik-server>`). Stack traces and debugger breakpoints point directly back to your original source file paths.
+* **Client Component Scripts:** Bascik preserves newline padding when scoping component `<script>` tags. Line numbers reported in console errors or hit during step-debugging match the exact line numbers in your component `.html` source files.
+* **Native TypeScript Debugging:** Because Node 22.18.0+ natively executes TypeScript files by stripping type annotations, setting breakpoints in `.ts` modules pauses execution immediately with full access to local scope variables and call stacks.
+
+#### Pre-Configured VS Code Launch Configurations
+
+Projects created using `npm create bascik@latest` include a pre-configured `.vscode/launch.json` file focused on testing and debugging your application. You can start debugging immediately by pressing `F5` or selecting a profile from VS Code's **Run and Debug** panel:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Dev Server",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["bascik"],
+      "console": "integratedTerminal",
+      "restart": true,
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Debug Unit Tests",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vitest", "run"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Launch Chrome",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:8080",
+      "webRoot": "${workspaceFolder}"
+    }
+  ]
+}
+```
+
+#### Debugging Server Scripts and Build Steps
+
+To debug server scripts (`<script data-bascik-server>`), build-time scripts (`<script data-bascik-build>`), or custom server logic modules:
+
+1. Open your component `.html` file or imported `.ts` logic file in VS Code.
+2. Click to the left of any line number inside your script block or function to set a breakpoint.
+3. Select **Debug Dev Server** in the Run and Debug panel and press `F5`.
+4. Open your browser and navigate to the page triggering the request.
+5. Node.js pauses execution on your breakpoint inside VS Code. You can inspect variables, evaluate expressions in the Debug Console, step through functions, and view call stacks.
+
+#### Debugging Unit Tests in VS Code
+
+To step through unit test logic or component contract assertions in VS Code:
+
+1. Open your test file (such as `my-counter.test.ts`) and set a breakpoint inside an `it()` or `describe()` block.
+2. Select **Debug Unit Tests** from the Run and Debug panel and press `F5`.
+3. Vitest runs the test suite under the Node.js debugger and pauses at your breakpoint before assertions complete.
+
+#### Debugging Client Component Scripts in the Browser
+
+To debug interactive client component scripts in Google Chrome or Microsoft Edge directly from VS Code:
+
+1. Start the dev server using **Debug Dev Server** or `npm run dev`.
+2. Select **Launch Chrome** from the Run and Debug panel and press `F5`.
+3. VS Code launches a new Chrome window attached to the debugger.
+4. Set breakpoints directly in your component `.html` files in VS Code, or open Chrome DevTools (`F12`), press `Cmd + P` (or `Ctrl + P`), and open virtual source files like `src/components/my-counter.html`.
 
 ### Testing Site Logic in a Bascik Project
 

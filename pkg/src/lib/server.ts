@@ -398,7 +398,7 @@ export const createRequestHandler = () => {
           method: req.method ?? "GET",
           headers: requestHeaders,
           searchParams,
-        }, BascikConfig.serve?.scriptTimeout ?? DEFAULT_SCRIPT_TIMEOUT_MS);
+        }, BascikConfig.serve?.scriptTimeout ?? DEFAULT_SCRIPT_TIMEOUT_MS, page.absolutePagePath);
         const htmlBuf = Buffer.from(html);
         responseHeaders["cache-control"] = "private, no-store";
         responseHeaders["content-length"] = htmlBuf.byteLength;

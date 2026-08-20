@@ -377,7 +377,7 @@ describe("recursivelyTranspile – recursion guard", () => {
     //
     // Run 9999 unique non-recursive components — this terminates normally.
     // If the constant is accidentally reduced below 10000 this test would
-    // still pass; the point is to document the expected behaviour.
+    // still pass; the point is to document the expected behavior.
     const singleComponent = {
       "test-single": {
         fileName: "components/test-single.html",

@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "bascik",
     "build": "bascik --build",
-    "e2e": "playwright test --config e2e/playwright.config.ts",
+    "e2e": "playwright test --config e2e/playwright.config.ts --reporter=line",
     "pkg-dev": "node --inspect --watch-path=./bascik.config.ts --watch-path=../../pkg/src ../../pkg/src/transpile.ts",
     "generate:llms": "node scripts/generate-llms-txt.ts",
     "generate:search": "node scripts/generate-search-index.ts",

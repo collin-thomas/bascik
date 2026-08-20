@@ -62,7 +62,7 @@ beforeEach(() => {
 
 describe("minifyHtml – script hoisting (documents build-script ordering requirement)", () => {
   it("moves a <script> tag out of its container to end of the string", () => {
-    // This is intentional minifyHtml behaviour — it consolidates scripts at
+    // This is intentional minifyHtml behavior — it consolidates scripts at
     // the bottom. But it means executeBuildScripts MUST run before minifyHtml;
     // otherwise the script would be hoisted before it can be replaced.
     const html = "<aside><script data-bascik-build>gen()</script></aside>";

@@ -21,6 +21,7 @@ import {
   SITE_META_TEST,
   STYLES_CSS,
   VITE_CONFIG,
+  VSCODE_LAUNCH_JSON,
   aboutPage,
   contactPage,
   indexPage,
@@ -68,6 +69,12 @@ describe("validateProjectName", () => {
 
   it("rejects an empty string", () => {
     expect(validateProjectName("")).not.toBeNull();
+  });
+
+  it("rejects invalid directory names with special characters", () => {
+    const res = validateProjectName("my app*invalid");
+    expect(res).not.toBeNull();
+    expect(res).toContain("is not a valid directory name");
   });
 });
 
@@ -132,6 +139,16 @@ describe("E2E_APP_SPEC", () => {
 describe("BASCIK_CONFIG", () => {
   it("contains a link to the docs", () => {
     expect(BASCIK_CONFIG).toContain("bascik.dev/configuration");
+  });
+});
+
+describe("VSCODE_LAUNCH_JSON", () => {
+  it("is valid JSON and configures dev server and Chrome debugging", () => {
+    expect(() => JSON.parse(VSCODE_LAUNCH_JSON)).not.toThrow();
+    const config = JSON.parse(VSCODE_LAUNCH_JSON);
+    expect(config.version).toBe("0.2.0");
+    expect(config.configurations.some((c: { name: string }) => c.name.includes("Debug Dev Server"))).toBe(true);
+    expect(config.configurations.some((c: { name: string }) => c.name.includes("Launch Chrome"))).toBe(true);
   });
 });
 
@@ -374,9 +391,9 @@ describe("scaffold", () => {
     expect(dirs.some((d) => d.includes("site-meta"))).toBe(true);
   });
 
-  it("writes all 24 expected files", async () => {
+  it("writes all 25 expected files", async () => {
     await scaffold("my-app", "/tmp");
-    expect(mockWriteFile.mock.calls.length).toBe(24);
+    expect(mockWriteFile.mock.calls.length).toBe(25);
   });
 
   it("writes E2E config and spec files", async () => {
@@ -399,6 +416,7 @@ describe("scaffold", () => {
     expect(writtenTo("bascik.config.ts")).toBeDefined();
     expect(writtenTo("vite.config.js")).toBeDefined();
     expect(writtenTo(".gitignore")).toBeDefined();
+    expect(writtenTo(".vscode/launch.json")).toBeDefined();
   });
 
   it("writes all four pages", async () => {

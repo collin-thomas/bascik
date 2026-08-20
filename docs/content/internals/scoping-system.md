@@ -216,18 +216,23 @@ el.setAttribute("name", "bascik__site-nav__a1b2c3d4__email-field");
 
 ## Script Namespacing
 
-`namespaceScriptTags` wraps every inline script in an IIFE so that `var` declarations cannot leak between components:
+`namespaceScriptTags` wraps every inline script in an IIFE so that `var` declarations cannot leak between components. It also appends a `//# sourceURL` comment pointing to the relative component path and preserves line positioning relative to the component file, ensuring browser DevTools attribute errors and logs directly to the original component file and line number:
 
 ```js
-// Before
-var count = 0;
-document.querySelector(".btn").addEventListener("click", function() { count++; });
+// Before (in src/components/card.html at line 12)
+<script>
+  var count = 0;
+  document.querySelector(".btn").addEventListener("click", function() { count++; });
+</script>
 
 // After (simplified)
+<script>
 (function() {
   var count = 0;
-  document.querySelector(".bascik__my-comp__btn").addEventListener("click", function() { count++; });
+  document.querySelector(".bascik__card__btn").addEventListener("click", function() { count++; });
 })();
+//# sourceURL=src/components/card.html
+</script>
 ```
 
 ## Identifier Minification
@@ -262,9 +267,9 @@ This section documents the implementation trade-offs and constraint decisions be
 
 ### CSS `#id {}` selector detection
 
-The challenge is distinguishing a CSS ID selector from a hex colour value in property position, since both use the `#` character.
+The challenge is distinguishing a CSS ID selector from a hex color value in property position, since both use the `#` character.
 
-**Initial approach (abandoned):** A simple lookahead `/#([a-zA-Z][a-zA-Z0-9-_]*)(?=[\s{:,])/g` incorrectly matched hex colour values:
+**Initial approach (abandoned):** A simple lookahead `/#([a-zA-Z][a-zA-Z0-9-_]*)(?=[\s{:,])/g` incorrectly matched hex color values:
 
 ```css
 background: linear-gradient(#abc, #def)   /* ← comma triggered the match */

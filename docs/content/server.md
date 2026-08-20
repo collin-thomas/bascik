@@ -94,7 +94,7 @@ The script's working directory is your project root (`process.cwd()`), so relati
 
 - Scripts run on **every request** and are **never cached:** the output is always fresh.
 - During `bascik --build`, server script tags are **preserved as-is** in `dist/` and are NOT executed. Execution only happens when the page is served.
-- On error, Bascik logs a warning to stderr and replaces the script tag with an empty string rather than aborting the request. The rest of the page renders normally.
+- On error, Bascik logs an error or warning to stderr and replaces the script tag with an empty string rather than aborting the request. Stack traces are remapped back to the original source HTML file and line offset (for example, `src/pages/dashboard.html:25`) so clicking the terminal reference opens your source file at the exact failure line.
 - The script tag (including all its attributes and the closing `</script>` tag) is completely replaced by stdout output. Empty stdout means the tag slot becomes an empty string.
 - Anything written to stderr from within the script is forwarded to the server's stderr.
 

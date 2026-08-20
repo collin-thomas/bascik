@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { resolve } from "node:path";
-import { executeBuildScripts, extractScriptDeps, collectAllScriptDeps, SCRIPT_CACHE_VERSION } from "./build-scripts.js";
+import { executeBuildScripts, extractScriptDeps, collectAllScriptDeps, cleanStackTrace, SCRIPT_CACHE_VERSION } from "./build-scripts.js";
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -100,6 +100,13 @@ describe("executeBuildScripts", () => {
     expect(tmpPath).toMatch(process.cwd());
     expect(tmpPath).not.toMatch(/^\/tmp\//);
     expect(tmpPath).not.toMatch(/os\.tmpdir|bascik-build-scripts/);
+  });
+
+  it("appends //# sourceURL comment to temp script when filePath is provided", async () => {
+    resolveWith("");
+    await executeBuildScripts("<script data-bascik-build>x()</script>", "src/pages/index.html");
+    const written = (writeFile as ReturnType<typeof vi.fn>).mock.calls[0][1] as string;
+    expect(written).toContain("//# sourceURL=src/pages/index.html");
   });
 
   it("removes the temp file after execution", async () => {
@@ -404,7 +411,7 @@ describe("executeBuildScripts", () => {
 // ─── extractScriptDeps ───────────────────────────────────────────────────────
 
 describe("extractScriptDeps", () => {
-  it("returns an empty array for a script with no recognisable file references", () => {
+  it("returns an empty array for a script with no recognizable file references", () => {
     expect(extractScriptDeps("console.log('hello world')")).toEqual([]);
   });
 
@@ -643,5 +650,23 @@ describe("build-script output cache", () => {
     const jsonWrites = mockWriteFile.mock.calls.filter(([p]) => String(p).endsWith(".json"));
     expect(jsonWrites.length).toBe(0);
     (BascikConfig as Record<string, unknown>).buildScriptCache = true;
+  });
+});
+
+// ─── cleanStackTrace ─────────────────────────────────────────────────────────
+
+describe("cleanStackTrace", () => {
+  it("replaces temporary file path and maps line numbers using lineOffset", () => {
+    const tmpPath = "/project/node_modules/.cache/bascik/build-123.mjs";
+    const realPath = "src/pages/index.html";
+    const lineOffset = 10;
+    const rawTrace = `Error: Something failed\n    at ${tmpPath}:5:12`;
+
+    const cleaned = cleanStackTrace(rawTrace, tmpPath, realPath, lineOffset);
+    expect(cleaned).toBe(`Error: Something failed\n    at ${realPath}:14:12`);
+  });
+
+  it("handles empty or falsy stack traces safely", () => {
+    expect(cleanStackTrace("", "/tmp/file.mjs", "src/file.html", 1)).toBe("");
   });
 });

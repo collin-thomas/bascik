@@ -178,7 +178,7 @@ Replace `<Image>` from `next/image` with a standard `<img>` tag. Add `width`, `h
 
 ## next/link → Standard a
 
-Replace `<Link href="...">` with a standard `<a href="...">`. There is no client-side navigation in Bascik, every link triggers a full page load, which is standard browser behaviour for static sites.
+Replace `<Link href="...">` with a standard `<a href="...">`. There is no client-side navigation in Bascik, every link triggers a full page load, which is standard browser behavior for static sites.
 
 ## next/head → Inline head Tags
 

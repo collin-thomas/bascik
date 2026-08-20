@@ -53,11 +53,11 @@
     "update-e2e-coverage": "node bin/update-e2e-coverage.ts",
     "bench": "vitest bench",
     "typecheck": "tsc --noEmit",
-    "e2e": "playwright test --config e2e/playwright.config.ts",
-    "e2e:dev": "playwright test --config e2e/playwright.dev.config.ts",
+    "e2e": "playwright test --config e2e/playwright.config.ts --reporter=line",
+    "e2e:dev": "playwright test --config e2e/playwright.dev.config.ts --reporter=line",
     "e2e:prod": "yarn e2e:prod:http1 && yarn e2e:prod:http2",
-    "e2e:prod:http1": "playwright test --config e2e/playwright.server.config.ts",
-    "e2e:prod:http2": "playwright test --config e2e/playwright.server-http2.config.ts",
+    "e2e:prod:http1": "playwright test --config e2e/playwright.server.config.ts --reporter=line",
+    "e2e:prod:http2": "playwright test --config e2e/playwright.server-http2.config.ts --reporter=line",
     "dev": "bascik"
   }
 }

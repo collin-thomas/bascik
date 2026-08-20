@@ -41,6 +41,42 @@ export const PACKAGE_JSON = (name: string): string =>
     2,
   ) + "\n";
 
+export const VSCODE_LAUNCH_JSON = JSON.stringify(
+  {
+    version: "0.2.0",
+    configurations: [
+      {
+        name: "Debug Dev Server",
+        type: "node",
+        request: "launch",
+        runtimeExecutable: "npx",
+        runtimeArgs: ["bascik"],
+        console: "integratedTerminal",
+        restart: true,
+        skipFiles: ["<node_internals>/**"],
+      },
+      {
+        name: "Debug Unit Tests",
+        type: "node",
+        request: "launch",
+        runtimeExecutable: "npx",
+        runtimeArgs: ["vitest", "run"],
+        console: "integratedTerminal",
+        skipFiles: ["<node_internals>/**"],
+      },
+      {
+        name: "Launch Chrome",
+        type: "chrome",
+        request: "launch",
+        url: "http://localhost:8080",
+        webRoot: "${workspaceFolder}",
+      },
+    ],
+  },
+  null,
+  2,
+) + "\n";
+
 export const BASCIK_CONFIG = `// Bascik works out of the box — no config required.
 // Full reference: https://bascik.dev/configuration
 `;
@@ -796,6 +832,7 @@ export async function scaffold(
 
   // Create all directories up front
   await Promise.all([
+    mkdir(join(root, ".vscode"), { recursive: true }),
     mkdir(join(root, ".github", "skills", "bascik"), { recursive: true }),
     mkdir(join(root, ".claude", "skills", "bascik"), { recursive: true }),
     mkdir(join(root, "e2e"), { recursive: true }),
@@ -816,6 +853,7 @@ export async function scaffold(
     writeFile(join(root, "bascik.config.ts"), BASCIK_CONFIG, "utf8"),
     writeFile(join(root, "vite.config.js"), VITE_CONFIG, "utf8"),
     writeFile(join(root, ".gitignore"), GITIGNORE, "utf8"),
+    writeFile(join(root, ".vscode", "launch.json"), VSCODE_LAUNCH_JSON, "utf8"),
     writeFile(join(root, ".github", "skills", "bascik", "SKILL.md"), skillMd, "utf8"),
     writeFile(join(root, ".claude", "skills", "bascik", "SKILL.md"), skillMd, "utf8"),
 
