@@ -41,9 +41,9 @@ test.describe('Docs Component E2E Tests', () => {
   test('demo-counter increments and decrements count', async ({ page }) => {
     await page.goto('/scoped-javascript');
 
-    const incBtn = page.locator('button:has-text("+")').first();
-    const decBtn = page.locator('button:has-text("−")').first();
-    const countVal = incBtn.locator('../..').locator('span').nth(1);
+    const incBtn = page.getByTestId('counter-inc').first();
+    const decBtn = page.getByTestId('counter-dec').first();
+    const countVal = page.getByTestId('counter-count').first();
 
     await expect(countVal).toHaveText('0');
 
