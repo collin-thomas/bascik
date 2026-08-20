@@ -265,9 +265,15 @@ yarn docs:dev   # docs dev server (bascik-docs)
 
 The agent runs inside a VS Code sandbox. Commands that bind to a port or make outbound connections (Playwright E2E tests, `yarn dev`, `curl`) hang indefinitely when run inside the sandbox. Do **not** retry these commands with slight variations — they will all hang.
 
-- **Unit tests** (`npx vitest run`) work fine; no network is needed.
+- **Unit tests** (`yarn test:all` or `npx vitest run`) work fine; no network is needed.
 - **E2E tests** (`npx playwright test`) require network and must be run by the user in a normal terminal outside the sandbox. Tell the user to run them and report the output.
 - If a sandboxed terminal command hangs, accept it and move on. Do not loop.
+
+### Token-Efficient Test Execution
+
+- To run unit tests and typechecks across all monorepo packages (`pkg`, `docs`, `create`, `extensions/vscode-bascik`), use `yarn test:all`.
+- `vitest run` outputs an ultra-concise summary (under ~25 lines total for 1,200+ tests) when all tests pass, preserving context tokens.
+- If a test fails, Vitest displays the exact failure stack trace and error output while returning a non-zero exit code. Only inspect the output if an error occurs.
 
 ### Test Framework: Vitest 4
 
@@ -316,4 +322,4 @@ Favor the term vanilla HTML/JavaScript/CSS over plain HTML/JavaScript/CSS.
 - Maintain clean source code and documentation by running `codespell` to check for spelling errors.
 - Web standards are checked using `webhint`.
 - Recommended extensions are configured in `.vscode/extensions.json`. Install both `Codespell.ai` (`codespellai.codespellai-vscode`) and `webhint` (`webhint.vscode-webhint`) in VS Code for automated spelling and web quality checks.
-- Code spelling and quality checks are integrated into the pre-push workspace checklist `.github/prompts/pre-push.prompt.md`. Running `codespell` and `webhint` via CLI is part of the required pre-push routine.
+- Code spelling and quality checks are integrated into the pre-push workspace checklist `.github/prompts/pre-push.prompt.md`. Running `yarn check:spelling` (`codespell`) and `yarn check:standards` (`webhint`) via CLI is part of the required pre-push routine.

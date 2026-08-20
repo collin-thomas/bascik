@@ -68,6 +68,6 @@ This updates test coverage JSON files, updates `docs/src/pages/assets/SKILL.md` 
 
 The prompt calls:
 
-- `yarn all:update-coverage`
+- `yarn update-coverage:all`
 - The LLM updates the `SKILL.md` file based on changes in `docs/content/`.
 - `yarn create:prepack`
