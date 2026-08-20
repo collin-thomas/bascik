@@ -48,10 +48,10 @@ const displayRelativePath = (path: string): string => {
   return normalized.replace(/^\.\//, "").replace(/^\//, "").replace(/^dist\//, "");
 };
 
-/** Stream-hash a file using MD5. Only used for change detection — not security. */
+/** Stream-hash a file using SHA-256. Only used for change detection. */
 async function calculateFileHash(filePath: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const hash = createHash("md5");
+    const hash = createHash("sha256");
     const stream = createReadStream(filePath);
 
     stream.on("data", (chunk) => {
@@ -90,38 +90,46 @@ export async function copyReplicatePath(
     const minifyJsCfg = BascikConfig.minify?.js ?? false;
 
     if (isMinifyCss && src.endsWith(".css")) {
-      // Read, minify, and write CSS rather than doing a raw copy
-      const minifyFn = isMinifyCss === true ? minifyCss : isMinifyCss;
-      const minified = await minifyFn((await readFile(src)).toString());
-      const destHash = createHash("md5").update(await readFile(destPath).catch(() => "")).digest("hex");
-      const minifiedHash = createHash("md5").update(minified).digest("hex");
-      if (minifiedHash === destHash) return;
-      await writeFile(destPath, minified);
-      if (canLogDevEvent(BascikConfig.devServer?.logging?.copies, "info")) {
-        console.log("copied (minified):", displayRelativePath(src));
+      try {
+        const minifyFn = isMinifyCss === true ? minifyCss : isMinifyCss;
+        const minified = await minifyFn((await readFile(src)).toString());
+        const destHash = createHash("sha256").update(await readFile(destPath).catch(() => "")).digest("hex");
+        const minifiedHash = createHash("sha256").update(minified).digest("hex");
+        if (minifiedHash === destHash) return;
+        await writeFile(destPath, minified);
+        if (canLogDevEvent(BascikConfig.devServer?.logging?.copies, "info")) {
+          console.log("copied (minified):", displayRelativePath(src));
+        }
+        return;
+      } catch (minErr) {
+        console.warn("[bascik] CSS minification failed for %s, falling back to unminified copy:", src, minErr);
       }
     } else if (minifyJsCfg && src.endsWith(".js")) {
-      // Read, minify, and write JS rather than doing a raw copy
-      const minifyFn = minifyJsCfg === true ? minifyJs : minifyJsCfg;
-      const minified = await minifyFn((await readFile(src)).toString());
-      const destHash = createHash("md5").update(await readFile(destPath).catch(() => "")).digest("hex");
-      const minifiedHash = createHash("md5").update(minified).digest("hex");
-      if (minifiedHash === destHash) return;
-      await writeFile(destPath, minified);
-      if (canLogDevEvent(BascikConfig.devServer?.logging?.copies, "info")) {
-        console.log("copied (minified):", displayRelativePath(src));
+      try {
+        const minifyFn = minifyJsCfg === true ? minifyJs : minifyJsCfg;
+        const minified = await minifyFn((await readFile(src)).toString());
+        const destHash = createHash("sha256").update(await readFile(destPath).catch(() => "")).digest("hex");
+        const minifiedHash = createHash("sha256").update(minified).digest("hex");
+        if (minifiedHash === destHash) return;
+        await writeFile(destPath, minified);
+        if (canLogDevEvent(BascikConfig.devServer?.logging?.copies, "info")) {
+          console.log("copied (minified):", displayRelativePath(src));
+        }
+        return;
+      } catch (minErr) {
+        console.warn("[bascik] JS minification failed for %s, falling back to unminified copy:", src, minErr);
       }
-    } else {
-      const [srcHash, destHash] = await Promise.all([
-        calculateFileHash(src),
-        // The dest file might not exist, so return null
-        calculateFileHash(destPath).catch(() => null),
-      ]);
-      if (srcHash === destHash) return;
-      await copyFile(src, destPath);
-      if (canLogDevEvent(BascikConfig.devServer?.logging?.copies, "info")) {
-        console.log("copied:", displayRelativePath(src));
-      }
+    }
+
+    const [srcHash, destHash] = await Promise.all([
+      calculateFileHash(src),
+      // The dest file might not exist, so return null
+      calculateFileHash(destPath).catch(() => null),
+    ]);
+    if (srcHash === destHash) return;
+    await copyFile(src, destPath);
+    if (canLogDevEvent(BascikConfig.devServer?.logging?.copies, "info")) {
+      console.log("copied:", displayRelativePath(src));
     }
   } catch (err) {
     console.error("Failed to copy file:", src, err);
@@ -145,7 +153,7 @@ export const deepReadDir = async (dirPath: string): Promise<any[]> => {
       }),
     );
   } catch (error) {
-    console.error(`Failed to read directory ${dirPath}`, error);
+    console.error("Failed to read directory %s", dirPath, error);
     return [];
   }
 };

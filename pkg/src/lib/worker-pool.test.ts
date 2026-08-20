@@ -184,6 +184,22 @@ describe("WorkerPool", () => {
       expect(workers[1].terminate).toHaveBeenCalled();
     });
 
+    it("handles worker error event when no job is pending", async () => {
+      const pool = makePool(1);
+      expect(() => {
+        workers[0].emit("error", new Error("idle crash"));
+      }).not.toThrow();
+      await pool.terminate();
+    });
+
+    it("handles worker normal exit (code 0) without error", async () => {
+      const pool = makePool(1);
+      expect(() => {
+        workers[0].emit("exit", 0);
+      }).not.toThrow();
+      await pool.terminate();
+    });
+
     it("rejects run() calls made after terminate()", async () => {
       const pool = makePool(1);
       await pool.terminate();

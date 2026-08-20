@@ -364,7 +364,7 @@ export const getComponentCss = async (
   try {
     return removeCommentsFromCss((await readFile(cssFileName)).toString());
   } catch (error) {
-    console.warn(`warning: Failed to read css for ${htmlFileName}`, error);
+    console.warn("warning: Failed to read css for %s", htmlFileName, error);
   }
 };
 
@@ -415,17 +415,17 @@ export const scopeCssCustomProperties = (
     // Replace @property --original { declarations
     result = result.replace(
       new RegExp(`(@property\\s+)--${originalName}(?=\\s*\\{)`, "gm"),
-      `$1--${scopedName}`,
+      (_, p1) => `${p1}--${scopedName}`,
     );
     // Replace declarations:  --original:
     result = result.replace(
       new RegExp(`(?<!-)--${originalName}(?=\\s*:)`, "gm"),
-      `--${scopedName}`,
+      () => `--${scopedName}`,
     );
     // Replace var() references:  var(--original)  and  var(--original, fallback)
     result = result.replace(
       new RegExp(`var\\(\\s*--${originalName}(\\s*[,)])`, "gm"),
-      `var(--${scopedName}$1`,
+      (_, p1) => `var(--${scopedName}${p1}`,
     );
   });
   return result;
@@ -461,7 +461,7 @@ export const scopeLayerNames = (css: string, componentName: string): string => {
     );
     result = result.replace(
       new RegExp(`(?<=@layer[^{;]*)\\b${name}\\b`, "gm"),
-      scoped,
+      () => scoped,
     );
   });
   return result;
@@ -500,11 +500,11 @@ export const scopeContainerNames = (
     );
     result = result.replace(
       new RegExp(`(?<=@container\\s+)${name}(?=\\s*[({])`, "gm"),
-      scoped,
+      () => scoped,
     );
     result = result.replace(
       new RegExp(`(container(?:-name)?\\s*:\\s*)${name}`, "gm"),
-      `$1${scoped}`,
+      (_, p1) => `${p1}${scoped}`,
     );
   });
   return result;
@@ -541,7 +541,7 @@ export const scopeViewTransitionNames = (
     );
     result = result.replace(
       new RegExp(`(view-transition-name\\s*:\\s*)${name}\\b`, "gm"),
-      `$1${scoped}`,
+      (_, p1) => `${p1}${scoped}`,
     );
     for (const pseudo of [
       "view-transition-old",
@@ -551,7 +551,7 @@ export const scopeViewTransitionNames = (
     ]) {
       result = result.replace(
         new RegExp(`(::${pseudo}\\()${name}(\\))`, "gm"),
-        `$1${scoped}$2`,
+        (_, p1, p2) => `${p1}${scoped}${p2}`,
       );
     }
   });
@@ -599,17 +599,17 @@ export const scopeCounterStyleNames = (
     // Scope the @counter-style declaration
     result = result.replace(
       new RegExp(`(@counter-style\\s+)${escaped}(?=\\s*\\{)`, "gm"),
-      `$1${scoped}`,
+      (_, p1) => `${p1}${scoped}`,
     );
     // Scope list-style and list-style-type property references
     result = result.replace(
       new RegExp(`(list-style(?:-type)?\\s*:\\s*)${escaped}\\b`, "gm"),
-      `$1${scoped}`,
+      (_, p1) => `${p1}${scoped}`,
     );
     // Scope counter() second argument: counter(name, style)
     result = result.replace(
       new RegExp(`(counter\\([^,)]+,\\s*)${escaped}(?=[^)]*\\))`, "gm"),
-      `$1${scoped}`,
+      (_, p1) => `${p1}${scoped}`,
     );
     // Scope counters() third argument: counters(name, sep, style)
     result = result.replace(
@@ -617,7 +617,7 @@ export const scopeCounterStyleNames = (
         `(counters\\([^,)]+,\\s*[^,)]+,\\s*)${escaped}(?=[^)]*\\))`,
         "gm",
       ),
-      `$1${scoped}`,
+      (_, p1) => `${p1}${scoped}`,
     );
   });
   return result;
@@ -666,17 +666,17 @@ export const scopeAnchorNames = (
     // Scope anchor-name: --name declarations
     result = result.replace(
       new RegExp(`(anchor-name\\s*:\\s*)--${escaped}\\b`, "gm"),
-      `$1--${scoped}`,
+      (_, p1) => `${p1}--${scoped}`,
     );
     // Scope position-anchor: --name references
     result = result.replace(
       new RegExp(`(position-anchor\\s*:\\s*)--${escaped}\\b`, "gm"),
-      `$1--${scoped}`,
+      (_, p1) => `${p1}--${scoped}`,
     );
     // Scope @position-try --name { ... } at-rules
     result = result.replace(
       new RegExp(`(@position-try\\s+)--${escaped}(?=\\s*\\{)`, "gm"),
-      `$1--${scoped}`,
+      (_, p1) => `${p1}--${scoped}`,
     );
   });
   return result;

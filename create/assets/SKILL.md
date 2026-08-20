@@ -880,7 +880,7 @@ export default defineConfig({
     html: false,
     css: false,
     js: false,
-    identifiers: true, // hash class/id names to short hex strings
+    identifiers: true, // hash class/id names to short alphanumeric strings
   },
   inlineStyles: false, // false | true | ['src/pages/css/styles.css']
   cacheHttp: false, // dev default; automatically true in --serve mode

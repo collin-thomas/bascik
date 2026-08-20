@@ -32,7 +32,11 @@ vi.mock("node:fs/promises", () => ({
 }));
 
 vi.mock("node:child_process", () => ({
-  execFile: vi.fn((_cmd: string, _args: string[], cb: (err: Error | null, result: { stdout: string; stderr: string }) => void) => cb(null, { stdout: "", stderr: "" })),
+  exec: vi.fn((_cmd: string, cb: any) => cb(null, "", "")),
+  execFile: vi.fn((_cmd: string, _args: any, _opts: any, cb: any) => {
+    const callback = typeof cb === "function" ? cb : (typeof _opts === "function" ? _opts : _args);
+    callback(null, { stdout: "", stderr: "" });
+  }),
 }));
 
 vi.mock("./config.js", () => ({

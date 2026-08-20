@@ -164,7 +164,7 @@ export const resolveInlineStylesHtml = async (): Promise<string> => {
         const css = (await readFile(filePath)).toString();
         return cssMinifier ? await cssMinifier(css) : css;
       } catch (error) {
-        console.warn(`[bascik] inlineStyles: could not read "${filePath}":`, (error as Error).message);
+        console.warn("[bascik] inlineStyles: could not read %s:", filePath, (error as Error).message);
         return "";
       }
     }),
@@ -424,7 +424,7 @@ export const recursivelyTranspile = (
       }
       console.error(`${errorMsg}\n  Error: ${error instanceof Error ? error.stack || error.message : String(error)}`);
       if (component.content) {
-        transpiledHtmlBody = transpiledHtmlBody.replace(component.content, "");
+        transpiledHtmlBody = replaceTag(transpiledHtmlBody, component.name, "");
         substitutions++;
       } else {
         // No content to strip — replacing would be a no-op and the while(true)

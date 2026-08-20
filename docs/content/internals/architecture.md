@@ -62,7 +62,7 @@ All logic lives in `pkg/src/lib/`. Each file has a single, well-defined responsi
 | `live-reload.ts` | Injected client-side script that establishes an EventSource connection to the dev server to reload pages when they are updated. |
 | `mem.ts` | In-memory page store. Stores brotli-compressed page buffers keyed by HTTP path, and maintains a reverse index mapping each component name to the set of pages that use it. |
 | `mime.ts` | A static MIME type map used by the HTTP/2 server and the watch system's file-type filter. |
-| `names.ts` | Generates unique instance IDs (`getUniqueId`) and hashes long scoped names to short hex strings (`minifyAttributeName` via SHAKE-256) when identifier minification is enabled. |
+| `names.ts` | Generates unique instance IDs (`getUniqueId`) and hashes long scoped names to short alphanumeric strings (`minifyAttributeName` via SHA-256 with Base62 encoding) when identifier minification is enabled. |
 | `page-worker.ts` | Worker thread entry point. Receives a page path, calls `transpilePage()` (pure computation, no side effects), and posts the result back to the pool. |
 | `paths.ts` | Converts file-system paths to HTTP paths (stripping the `src/pages` prefix, removing `.html` extensions). |
 | `pki.ts` | Generates a self-signed TLS certificate (`bascik-cert.pem` / `bascik-privkey.pem`) via OpenSSL or PowerShell on Windows. |

@@ -1338,3 +1338,55 @@ describe("injectProps – adversarial prop values", () => {
     );
   });
 });
+
+describe("tagName Validation Guards", () => {
+  it("rejects malicious, unescaped, or non-conforming tagNames in findOpenTag, replaceTag, getTagContents, and getTag", () => {
+    const maliciousNames = [
+      "p(hello)",
+      "p; alert(1)",
+      "p[attr]",
+      "p*",
+      "a|b",
+      "a+b",
+      "p\\",
+      "p/a",
+      "div>",
+      "<script",
+      "\\w+",
+      "div\\s*",
+    ];
+
+    const html = "<div>content</div><span>other</span>";
+
+    for (const badName of maliciousNames) {
+      // replaceTag should return the input string unchanged
+      expect(replaceTag(html, badName, "REPLACED")).toBe(html);
+
+      // getTagContents should return an empty object
+      expect(getTagContents(html, badName)).toEqual({});
+
+      // getTag should return an empty object
+      expect(getTag(html, badName)).toEqual({});
+    }
+  });
+
+  it("filters out invalid component keys in getFirstComponent", () => {
+    const html = "<valid-comp>content</valid-comp>";
+    const invalidComponentList = {
+      "invalid(tag)": { fileName: "components/invalid.html", fileContent: "1" },
+      "valid-comp": { fileName: "components/valid.html", fileContent: "2" },
+    };
+
+    const result = getFirstComponent(html, invalidComponentList);
+    expect(result.name).toBe("valid-comp");
+  });
+
+  it("ignores non-alphanumeric/regex-like propNames in injectProps", () => {
+    const html = '<p data-bascik-prop-x>content</p>';
+    // Prop name with malicious regexp characters
+    const result = injectProps(html, { "x>": "injected", "x": "good" });
+    expect(result).toContain("good");
+    expect(result).not.toContain("injected");
+  });
+});
+

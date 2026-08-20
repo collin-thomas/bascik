@@ -1,12 +1,8 @@
-import { readFile, access } from "node:fs/promises";
-import { execFile as execFileCb } from "node:child_process";
-import { promisify } from "node:util";
-
-const execFile = promisify(execFileCb);
-import { resolve } from "node:path";
+import { readFile } from "node:fs/promises";
 import http2 from "node:http2";
 import type { ServerHttp2Stream, IncomingHttpHeaders } from "node:http2";
 import { BascikConfig } from "./config.js";
+import { ensureCertificates } from "./pki.js";
 import {
   createRequestHandler,
   isNetworkResetError,
@@ -62,65 +58,10 @@ export const adaptHttp2 = (stream: ServerHttp2Stream, headers: IncomingHttpHeade
 };
 
 export const startHttp2Server = async (): Promise<string> => {
-  const usingCustomCerts = !!(BascikConfig.serve?.keyFile || BascikConfig.serve?.certFile);
-  const keyPath = resolve(process.cwd(), BascikConfig.serve?.keyFile ?? "bascik-privkey.pem");
-  const certPath = resolve(process.cwd(), BascikConfig.serve?.certFile ?? "bascik-cert.pem");
-
-  // Auto-generate certs if they don't exist yet.
-  const certsPresent = await Promise.all([access(keyPath), access(certPath)])
-    .then(() => true)
-    .catch(() => false);
-
-  if (!certsPresent) {
-    if (usingCustomCerts) {
-      throw new Error(
-        "Custom TLS certificate files are configured but could not be found.\n" +
-        `  keyFile:  ${keyPath}\n` +
-        `  certFile: ${certPath}\n` +
-        "Ensure both files exist before starting the server.",
-      );
-    }
-    const env = {
-      ...process.env,
-      PATH: [
-        process.env.PATH,
-        "/opt/homebrew/bin",
-        "/usr/local/bin",
-      ].filter(Boolean).join(":"),
-    };
-
-    try {
-      const { stdout, stderr } = await execFile("mkcert", [
-        "-key-file", keyPath,
-        "-cert-file", certPath,
-        "localhost", "127.0.0.1", "::1",
-      ], { env });
-      if (stdout && stdout.trim()) {
-        console.log(stdout.trim());
-      }
-      if (stderr && stderr.trim()) {
-        console.log(stderr.trim());
-      }
-      console.log("SSL: generated trusted certs via mkcert");
-    } catch (mkcertErr) {
-      console.log(`SSL: mkcert not found or failed (${(mkcertErr as Error).message?.split("\n")[0]}), falling back to openssl`);
-      try {
-        await execFile("openssl", [
-          "req", "-x509", "-newkey", "rsa:2048",
-          "-keyout", keyPath,
-          "-out", certPath,
-          "-days", "365",
-          "-nodes",
-          "-subj", "/CN=localhost",
-        ]);
-        console.log("SSL: self-signed cert generated (install mkcert for no browser warning)");
-      } catch {
-        throw new Error(
-          "Could not generate SSL certificates. Please install mkcert (recommended) or openssl, or set serve.enableTls to false in bascik.config.ts to serve over plaintext HTTP instead."
-        );
-      }
-    }
-  }
+  const { keyPath, certPath } = await ensureCertificates({
+    keyFile: BascikConfig.serve?.keyFile,
+    certFile: BascikConfig.serve?.certFile,
+  });
 
   const key = await readFile(keyPath);
   const cert = await readFile(certPath);

@@ -42,9 +42,11 @@ export const loadUserConfig = async (
   try {
     await access(configPath);
     const mod = await importUserConfig(configPath);
+    const rawConfig = mod?.default;
+    const rawBuild = mod?.build;
     return {
-      config: mod.default ?? {},
-      build: mod.build ?? {},
+      config: (typeof rawConfig === "object" && rawConfig !== null) ? rawConfig : {},
+      build: (typeof rawBuild === "object" && rawBuild !== null) ? rawBuild : {},
     };
   } catch (err) {
     if ((err as NodeJS.ErrnoException)?.code === "ENOENT") {

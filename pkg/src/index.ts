@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 
-import { readFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { readFile, mkdir, appendFile } from "node:fs/promises";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { format } from "node:util";
 import { CLI_USAGE, resolveCliAction } from "./lib/cli.js";
 
-// Read the installed package version from package.json. The compiled output
-// lives in dist/, so package.json is one level up from this file; that also
-// holds when running from src/ (type-stripped) where it is two levels up.
-const readVersion = async (): Promise<string> => {
-  const here = dirname(fileURLToPath(import.meta.url));
+// Read the installed package version from package.json.
+export const readVersion = async (baseDir?: string): Promise<string> => {
+  const here = baseDir ?? dirname(fileURLToPath(import.meta.url));
   for (const candidate of [
     join(here, "../package.json"),
     join(here, "../../package.json"),
+    join(here, "package.json"),
   ]) {
     try {
       const raw = await readFile(candidate, "utf8");
@@ -25,87 +25,105 @@ const readVersion = async (): Promise<string> => {
   return "unknown";
 };
 
-const resolveBuildLogPath = (args: string[]): string | undefined => {
+export const resolveBuildLogPath = (args: string[]): string | undefined => {
   const logIndex = args.indexOf("--log");
   if (logIndex === -1) return undefined;
   const nextArg = args[logIndex + 1];
   return nextArg && !nextArg.startsWith("-") ? nextArg : ".bascik/build.log";
 };
 
-const main = async (): Promise<void> => {
-  const args = process.argv.slice(2);
+export const setupBuildLogging = async (buildLogPath: string): Promise<string> => {
+  const absoluteLogPath = resolve(process.cwd(), buildLogPath);
+  await mkdir(dirname(absoluteLogPath), { recursive: true });
+  process.env.BASCIK_BUILD_LOG = absoluteLogPath;
+
+  const original = {
+    log: console.log.bind(console),
+    warn: console.warn.bind(console),
+    error: console.error.bind(console),
+  };
+
+  const tee = (target: (...args: unknown[]) => void) => {
+    return (...args: unknown[]) => {
+      target(...args);
+      appendFile(absoluteLogPath, `${format(...args)}\n`, "utf8").catch(() => { });
+    };
+  };
+
+  console.log = tee(original.log) as typeof console.log;
+  console.warn = tee(original.warn) as typeof console.warn;
+  console.error = tee(original.error) as typeof console.error;
+  console.log(`[bascik] build log: ${absoluteLogPath}`);
+  return absoluteLogPath;
+};
+
+export const runCli = async (
+  args: string[] = process.argv.slice(2),
+  options: { exitOnFinish?: boolean } = {}
+): Promise<{ action: string; exitCode?: number }> => {
+  const exit = (code: number) => {
+    if (options.exitOnFinish !== false) {
+      process.exit(code);
+    }
+  };
+
   const decision = resolveCliAction(args);
   const buildLogPath = resolveBuildLogPath(args);
 
   if (decision.action === "build" && buildLogPath) {
-    const { mkdir, appendFile } = await import("node:fs/promises");
-    const { dirname, resolve } = await import("node:path");
-    const { format } = await import("node:util");
-
-    const absoluteLogPath = resolve(process.cwd(), buildLogPath);
-    await mkdir(dirname(absoluteLogPath), { recursive: true });
-    process.env.BASCIK_BUILD_LOG = absoluteLogPath;
-
-    const original = {
-      log: console.log.bind(console),
-      warn: console.warn.bind(console),
-      error: console.error.bind(console),
-    };
-
-    const tee = (method: keyof typeof original, target: (...args: unknown[]) => void) => {
-      return (...args: unknown[]) => {
-        target(...args);
-        appendFile(absoluteLogPath, `${format(...args)}\n`, "utf8").catch(() => { });
-      };
-    };
-
-    console.log = tee("log", original.log) as typeof console.log;
-    console.warn = tee("warn", original.warn) as typeof console.warn;
-    console.error = tee("error", original.error) as typeof console.error;
-    console.log(`[bascik] build log: ${absoluteLogPath}`);
+    await setupBuildLogging(buildLogPath);
   }
 
   switch (decision.action) {
     case "help":
       console.log(CLI_USAGE);
-      return;
+      return { action: "help", exitCode: 0 };
     case "version":
       console.log(await readVersion());
-      return;
+      return { action: "version", exitCode: 0 };
     case "error": {
       const flags = decision.unknownFlags ?? [];
       console.error(
         `Error: unknown flag${flags.length > 1 ? "s" : ""}: ${flags.join(", ")}\n`,
       );
       console.error(CLI_USAGE);
-      process.exit(1);
-      return;
+      exit(1);
+      return { action: "error", exitCode: 1 };
     }
     case "init": {
       const { initProject } = await import("./lib/init.js");
       console.log("\nInitializing Bascik project…\n");
       await initProject();
-      process.exit(0);
-      return;
+      exit(0);
+      return { action: "init", exitCode: 0 };
     }
     case "check": {
       const { checkProject } = await import("./lib/check.js");
       const ok = await checkProject();
-      process.exit(ok ? 0 : 1);
-      return;
+      exit(ok ? 0 : 1);
+      return { action: "check", exitCode: ok ? 0 : 1 };
     }
     case "prodServer": {
       const { serveProduction } = await import("./lib/serve.js");
       await serveProduction();
-      return;
+      return { action: "prodServer", exitCode: 0 };
     }
     case "dev":
     case "build":
-    default:
-      // Both the dev server and `bascik --build` run through transpile.js,
-      // which branches on BascikConfig.isBuild (set from process.argv/env).
-      await import("./transpile.js");
+    default: {
+      const { runTranspile } = await import("./transpile.js");
+      await runTranspile({ exitOnError: options.exitOnFinish !== false });
+      return { action: decision.action, exitCode: 0 };
+    }
   }
 };
 
-await main();
+const isMain =
+  process.argv[1] &&
+  (fileURLToPath(import.meta.url) === resolve(process.argv[1]) ||
+    process.argv[1].endsWith("bascik.js"));
+
+if (isMain) {
+  await runCli(process.argv.slice(2), { exitOnFinish: true });
+}
+

@@ -38,7 +38,14 @@ vi.mock("node:fs/promises", () => ({
 }));
 
 vi.mock("node:child_process", () => ({
-  execFile: vi.fn((_cmd: string, _args: string[], cb: (err: Error | null, result: { stdout: string; stderr: string }) => void) => cb(null, { stdout: "", stderr: "" })),
+  exec: vi.fn((...args: any[]) => {
+    const cb = args[args.length - 1];
+    if (typeof cb === "function") cb(null, "", "");
+  }),
+  execFile: vi.fn((...args: any[]) => {
+    const cb = args[args.length - 1];
+    if (typeof cb === "function") cb(null, { stdout: "", stderr: "" });
+  }),
 }));
 
 vi.mock("node:fs", () => ({
@@ -126,6 +133,7 @@ const makeStream = () => ({
   respond: vi.fn(),
   end: vi.fn(),
   write: vi.fn(),
+  close: vi.fn(),
   on: vi.fn(),
   destroyed: false,
   pipe: vi.fn(),
@@ -293,7 +301,10 @@ describe("startHttp2Server – stream handler", () => {
     const stream = makeStream();
     await handler(stream, makeHeaders("/about", "GET"));
     expect(stream.respond).toHaveBeenCalledWith(
-      expect.objectContaining({ ":status": 200 }),
+      expect.objectContaining({
+        ":status": 200,
+        etag: expect.stringMatching(/^"[A-Za-z0-9_-]{27}"$/),
+      }),
     );
     expect(stream.end).toHaveBeenCalledWith(page.content);
   });
@@ -789,13 +800,117 @@ describe("startHttp2Server – rate limiting", () => {
     for (let i = 0; i < 501; i++) {
       const s = { ...makeStream(), session: { socket: { remoteAddress: ip } } };
       await handler(s, makeHeaders("/about", "GET"));
+      if (i === 500) {
+        expect(s.respond).toHaveBeenCalledWith(
+          expect.objectContaining({ ":status": 429 }),
+        );
+      }
     }
+  });
+});
 
-    const throttledStream = { ...makeStream(), session: { socket: { remoteAddress: ip } } };
-    await handler(throttledStream, makeHeaders("/about", "GET"));
-    expect(throttledStream.respond).toHaveBeenCalledWith(
-      expect.objectContaining({ ":status": 429 }),
-    );
+describe("onError and server resiliency edge cases", () => {
+  it("ignores network reset errors in onError", async () => {
+    const { onError } = await import("./server.js");
+    const mockRes: any = {
+      headersSent: false,
+      destroyed: false,
+      respond: vi.fn(),
+      end: vi.fn(),
+    };
+    const netErr = new Error("Connection reset");
+    (netErr as any).code = "ECONNRESET";
+    onError(netErr, mockRes);
+
+    expect(mockRes.respond).not.toHaveBeenCalled();
+    expect(mockRes.end).not.toHaveBeenCalled();
+  });
+
+  it("responds 404 for ENOENT and 500 for generic error in onError", async () => {
+    const { onError } = await import("./server.js");
+    const mockRes1: any = {
+      headersSent: false,
+      respond: vi.fn(),
+      end: vi.fn(),
+    };
+    const enoentErr = new Error("File missing");
+    (enoentErr as any).code = "ENOENT";
+    onError(enoentErr, mockRes1);
+    expect(mockRes1.respond).toHaveBeenCalledWith(404, expect.any(Object));
+
+    const mockRes2: any = {
+      headersSent: false,
+      respond: vi.fn(),
+      end: vi.fn(),
+    };
+    onError(new Error("Database crash"), mockRes2);
+    expect(mockRes2.respond).toHaveBeenCalledWith(500, expect.any(Object));
+  });
+
+  it("handles exceptions thrown during res.respond in onError safely", async () => {
+    const { onError } = await import("./server.js");
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+    const mockRes: any = {
+      headersSent: false,
+      respond: vi.fn().mockImplementation(() => { throw new Error("Stream destroyed"); }),
+      end: vi.fn().mockImplementation(() => { throw new Error("End destroyed"); }),
+    };
+    onError(new Error("Fail"), mockRes);
+
+    expect(consoleSpy).toHaveBeenCalledWith("Error responding to stream/request:", expect.any(Error));
+    expect(consoleSpy).toHaveBeenCalledWith("Error ending stream/request:", expect.any(Error));
+  });
+
+  it("returns 400 for malformed percent encoding in request path", async () => {
+    await startHttp2Server();
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/%FF%FF", "GET"));
+
+    expect(stream.respond).toHaveBeenCalledWith(expect.objectContaining({ ":status": 400 }));
+    expect(stream.end).toHaveBeenCalledWith("Bad Request");
+  });
+
+  it("closes stream with NGHTTP2_INTERNAL_ERROR if fileStream errors after headersSent", async () => {
+    await startHttp2Server();
+    const fakeFileStream = { on: vi.fn().mockReturnThis(), pipe: vi.fn(), destroy: vi.fn() };
+    mockCreateReadStream.mockReturnValue(fakeFileStream);
+
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/style.css", "GET"));
+
+    const errCall = fakeFileStream.on.mock.calls.find((c: any[]) => c[0] === "error");
+    const closeSpy = vi.fn();
+    stream.close = closeSpy;
+    (stream as any).headersSent = true;
+
+    errCall?.[1]?.(new Error("Disk read error"));
+    expect(closeSpy).toHaveBeenCalledWith(2);
+  });
+
+  it("startServer starts HTTP server when enableTls is false", async () => {
+    const { startServer } = await import("./server.js");
+    const { BascikConfig } = await import("./config.js");
+    (BascikConfig as any).serve.enableTls = false;
+
+    const res = await startServer();
+    expect(res).toBeDefined();
+
+    (BascikConfig as any).serve.enableTls = true;
+  });
+});
+
+describe("startHttp2Server – rate limiting details", () => {
+  beforeEach(async () => {
+    const { BascikConfig } = await import("./config.js");
+    (BascikConfig as any).isProdServer = true;
+    await startHttp2Server();
+  });
+
+  afterEach(async () => {
+    const { BascikConfig } = await import("./config.js");
+    (BascikConfig as any).isProdServer = false;
   });
 
   it("allows requests from different IPs independently", async () => {
@@ -1839,5 +1954,25 @@ describe("startServerInstance signal handler cleanup", () => {
 
     expect(mockServerWithCloseAll.closeAllConnections).toHaveBeenCalled();
     mockExit.mockRestore();
+  });
+
+  it("rejects with RangeError if port search exceeds 65535", async () => {
+    let portAttempt = 65535;
+    const mockOverflowServer: any = {
+      once: vi.fn((event: string, cb: any) => {
+        if (event === "error") {
+          cb({ code: "EADDRINUSE" });
+        }
+        return mockOverflowServer;
+      }),
+      listen: vi.fn((port: number, _host: string, _cb?: () => void) => {
+        portAttempt = port;
+        return mockOverflowServer;
+      }),
+      on: vi.fn().mockReturnThis(),
+      removeListener: vi.fn().mockReturnThis(),
+    };
+
+    await expect(startServerInstance(mockOverflowServer, "http")).rejects.toThrow(RangeError);
   });
 });

@@ -2,12 +2,6 @@
 
 The `create/` folder is a small standalone package that scaffolds a fresh Bascik project. It is separate from the main package because it is meant to be run as a user-facing CLI, not as a workspace dependency.
 
-## Why it is separate
-
-The repo root uses Yarn workspaces. The package code lives in `pkg/`, while the scaffold lives in `create/` and is installed like a normal Node tool.
-
-That split keeps the monorepo dev flow simple and keeps the generated project familiar for normal users.
-
 ## Code structure
 
 The package has two source files with distinct responsibilities:

@@ -244,6 +244,16 @@ describe("minify user config overrides", () => {
 });
 
 describe("user config overrides", () => {
+  it("handles null or non-object userConfig gracefully without throwing", () => {
+    const { BascikConfig: cfg } = initBascikConfig(
+      null as any,
+      null as any,
+      { isBuild: false },
+    );
+    expect(cfg.scopeScriptBlocks).toBe(true);
+    expect(cfg.directory.pages).toMatch(/src[/\\]pages$/);
+  });
+
   it("lets userConfig win over build defaults", () => {
     const { BascikConfig: cfg } = initBascikConfig(
       { minify: { css: false, identifiers: false } },

@@ -44,6 +44,14 @@ describe("loadUserConfig", () => {
     expect(build).toEqual({});
   });
 
+  it("handles primitive or null exports cleanly", async () => {
+    const { loadUserConfig } = await import("./userConfig.js");
+    const p = await writeConfig(`export default null; export const build = "invalid";`);
+    const { config, build } = await loadUserConfig(p);
+    expect(config).toEqual({});
+    expect(build).toEqual({});
+  });
+
   it("returns empty config (with a warning) when the file does not exist", async () => {
     const { loadUserConfig } = await import("./userConfig.js");
     vi.spyOn(console, "warn").mockImplementation(() => { });
@@ -79,5 +87,11 @@ describe("loadUserConfig", () => {
     await writeFile(p, `const cfg: Record<string, unknown> = { scopeScriptBlocks: false }; export default cfg;`, "utf8");
     const { config } = await loadUserConfig(p);
     expect(config).toEqual({ scopeScriptBlocks: false });
+  });
+
+  it("handles non-Error exceptions when loading config file fails", async () => {
+    const { loadUserConfig } = await import("./userConfig.js");
+    const p = await writeConfig(`throw "custom string error";`);
+    await expect(loadUserConfig(p)).rejects.toThrow("custom string error");
   });
 });

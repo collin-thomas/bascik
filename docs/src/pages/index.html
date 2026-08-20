@@ -416,7 +416,7 @@
       text-transform: uppercase;
       letter-spacing: .1em;
       color: var(--accent);
-      margin-bottom: 10px;
+      margin: 0 0 10px;
     }
 
     .pillar h3 {
@@ -428,7 +428,7 @@
     .pillar p {
       margin: 0;
       font-size: 0.875rem;
-      color: var(--text-muted);
+      color: var(--pillar-text, var(--text-muted));
       line-height: 1.6;
     }
 
@@ -776,19 +776,19 @@
 
         <div class="pillars-grid">
           <div class="pillar">
-            <p class="pillar-label">Zero Configuration</p>
+            <div class="pillar-label">Zero Configuration</div>
             <h3>Works instantly</h3>
             <p>No bundler setups, complex configs, or transpiler chains. Run <code>bascik</code> and start building
               instantly with standard Node.js.</p>
           </div>
           <div class="pillar">
-            <p class="pillar-label">Zero Learning Curve</p>
+            <div class="pillar-label">Zero Learning Curve</div>
             <h3>Standard HTML &amp; CSS</h3>
             <p>No JSX, custom template syntax, or framework hooks. Write pure HTML and CSS with standard DOM
               APIs—everything you know just works.</p>
           </div>
           <div class="pillar">
-            <p class="pillar-label">Zero Runtime Overhead</p>
+            <div class="pillar-label">Zero Runtime Overhead</div>
             <h3>Automatic isolation</h3>
             <p>Component styles and DOM queries are scoped automatically at build time. Enjoy total component isolation
               with zero added JavaScript.</p>

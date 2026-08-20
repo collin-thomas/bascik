@@ -209,8 +209,10 @@ const readScriptCache = async (
 ): Promise<string | null> => {
   try {
     const raw = await readFile(join(cacheDir, `${key}.json`), "utf8");
-    const entry = JSON.parse(raw) as { v: number; output: string };
-    if (entry.v === SCRIPT_CACHE_VERSION) return entry.output;
+    const entry = JSON.parse(raw) as { v?: number; output?: string };
+    if (typeof entry === "object" && entry !== null && entry.v === SCRIPT_CACHE_VERSION && typeof entry.output === "string") {
+      return entry.output;
+    }
   } catch { /* cache miss */ }
   return null;
 };

@@ -342,7 +342,8 @@ describe("deepReadDir – error path", () => {
     const result = await deepReadDir("./secret");
     expect(result).toEqual([]);
     expect(console.error).toHaveBeenCalledWith(
-      "Failed to read directory ./secret",
+      "Failed to read directory %s",
+      "./secret",
       expect.any(Error),
     );
   });
@@ -457,6 +458,21 @@ describe("copyReplicatePath – JS minification", () => {
     await copyReplicatePath("pages/js/app.js", "dist");
 
     expect(writeFile).not.toHaveBeenCalled();
+  });
+
+  it("falls back to unminified copy when JS minification throws an error", async () => {
+    (BascikConfig as any).minify = { css: false, js: async () => { throw new Error("JS syntax error"); }, html: false };
+    vi.mocked(readFile).mockResolvedValueOnce("invalid js {{{" as any);
+    vi.spyOn(console, "warn").mockImplementation(() => { });
+
+    await copyReplicatePath("pages/js/app.js", "dist");
+
+    expect(console.warn).toHaveBeenCalledWith(
+      "[bascik] JS minification failed for %s, falling back to unminified copy:",
+      "pages/js/app.js",
+      expect.any(Error),
+    );
+    expect(copyFile).toHaveBeenCalledOnce();
   });
 
   it("calls minifyJs when minify.js is true", async () => {

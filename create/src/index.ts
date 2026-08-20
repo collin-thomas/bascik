@@ -46,15 +46,16 @@ if (yesFlag) {
 rl.close();
 
 const projectDir = join(process.cwd(), projectName);
+const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
 
 if (shouldInstall) {
   console.log("\nInstalling dependencies…\n");
-  spawnSync("npm", ["install"], { cwd: projectDir, stdio: "inherit", shell: true });
+  spawnSync(npmCmd, ["install"], { cwd: projectDir, stdio: "inherit" });
 }
 
 if (shouldDev) {
   console.log("\nStarting dev server…\n");
-  spawnSync("npm", ["run", "dev"], { cwd: projectDir, stdio: "inherit", shell: true });
+  spawnSync(npmCmd, ["run", "dev"], { cwd: projectDir, stdio: "inherit" });
   console.log(`\nTo start again:  cd ${projectName} && npm run dev\n`);
 } else {
   console.log("\nNext steps:\n");

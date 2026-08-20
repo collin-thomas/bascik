@@ -131,6 +131,58 @@ Prefetch is low-priority and only runs during idle time, so it never competes wi
 
 > **MDN reference.** [`<link rel="prefetch">`](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/prefetch) on MDN describes the priority model, browser support, and interaction with the HTTP cache.
 
+### Dynamic Prefetching on Hover and Focus
+
+While hardcoding `<link rel="prefetch">` tags works well for high-priority pages, you can dynamically prefetch navigation links as the user interacts with your site. This is how the Bascik documentation sidebar works under the hood.
+
+By listening for `pointerenter` (hover), `focus`, and `touchstart` events on link elements, you can append a `<link rel="prefetch">` element to your document `<head>` just as the user begins their navigation attempt. Since a typical user hovers over a link for about 100 to 300 milliseconds before clicking it, this simple script gives the browser a valuable head start to fetch and cache the next page.
+
+Here is a vanilla HTML/JavaScript/CSS pattern to implement dynamic prefetching on your links:
+
+```html
+<script>
+  (function () {
+    const preloaded = new Set();
+
+    function preload(href) {
+      if (!href || preloaded.has(href) || href.startsWith('#') || href.startsWith('http')) {
+        return;
+      }
+      preloaded.add(href);
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.href = href;
+      document.head.appendChild(link);
+    }
+
+    // Dynamic prefetching on all local navigation links
+    document.querySelectorAll('a').forEach((a) => {
+      const href = a.getAttribute('href');
+      if (!href) return;
+
+      let timer;
+      a.addEventListener('pointerenter', () => {
+        if (preloaded.has(href)) return;
+        // Wait 65ms to avoid prefetching on rapid pointer movements
+        timer = setTimeout(() => preload(href), 65);
+      });
+
+      a.addEventListener('pointerleave', () => {
+        if (timer) {
+          clearTimeout(timer);
+          timer = null;
+        }
+      });
+
+      a.addEventListener('focus', () => preload(href));
+      a.addEventListener('touchstart', () => preload(href), { passive: true });
+    });
+  })();
+</script>
+```
+
+This pattern costs almost nothing to run. The 65 millisecond delay on `pointerenter` prevents unnecessary prefetches when a cursor sweeps across the page. By the time the user presses down or releases their mouse button, the browser is already downloading the destination document. When they click, the page loads instantly from the disk or memory cache.
+
 ## DNS Prefetch & Preconnect
 
 Every external domain requires a DNS lookup, a TCP handshake, and a TLS negotiation before the first byte of data arrives. For critical third-party origins, fonts, analytics, a CDN, you can start that work as early as possible by adding one or two `<link>` tags to your `<head>`.
@@ -377,6 +429,40 @@ body {
 `font-display: swap` ensures text is visible immediately using the fallback font, then swaps to your custom font once it loads. The metric-override `@font-face` makes the fallback font's dimensions closely match your custom font, minimizing CLS during the swap.
 
 > **MDN reference.** [`@font-face`](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face) documents the full descriptor set including variable font ranges, and [`font-display`](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display) covers every swap strategy with timing diagrams.
+
+## Profiling with the Chrome DevTools Performance Tab
+
+While Lighthouse provides a high-level score and checklist, the **Performance** panel in Google Chrome DevTools is the definitive tool for diagnosing real-world performance. It lets you capture a precise timeline of your page load, locate CPU-bound bottlenecks, identify Layout Shifts, and inspect individual frame rendering times.
+
+### Recording a Performance Profile
+
+To capture and analyze a performance profile of your page:
+
+1. Open your page in Google Chrome. For accurate measurements, use an Incognito window to prevent browser extensions from polluting the results.
+2. Open DevTools by pressing `Cmd + Option + I` on macOS or `Ctrl + Shift + I` on Windows and Linux, then select the **Performance** tab.
+3. To profile a page load, click the **Start profiling and reload page** button (the circular arrow icon). DevTools will reload the page, record activity until the page is fully loaded and idle, and then stop recording automatically.
+4. To profile a dynamic interaction, click the **Record** button (the solid grey circle), perform the action on your page (such as opening a modal or sorting a list), and then click **Stop**.
+
+### Analyzing the Flame Chart and Tracks
+
+Once the recording completes, DevTools displays a comprehensive timeline. Here is what to focus on to improve your site's speed:
+
+* **The Frames Track and Screenshots:** Hover over the timeline to see filmstrip screenshots of what your user saw at each millisecond. Look for the exact point where content is first painted (First Contentful Paint) and when the largest element becomes visible (Largest Contentful Paint).
+* **The Experience Track (Layout Shifts):** Look for red bars in this track. Hovering over a layout shift bar highlights the exact DOM elements that moved, letting you know which image or container needs a fixed aspect ratio.
+* **The Main Thread Flame Graph:** This chart shows CPU activity. Each horizontal bar represents a function call, with deeper bars representing nested calls. 
+  * Look for **Long Tasks** (tasks taking longer than 50 milliseconds), which are flagged with a red top-right corner.
+  * Framework sites typically show a dense, colorful block of JavaScript execution during hydration that blocks the main thread.
+  * Bascik sites should show an incredibly clean, sparse Main thread, as they rely on vanilla HTML/JavaScript/CSS with no heavy runtime parsing.
+
+### Exporting and Sharing Performance Traces
+
+Performance profiles can be exported to share with teammates, compare against historical baselines, or analyze in external tools.
+
+1. Click the **Download profile** button (the downward-pointing arrow icon in the Performance panel toolbar).
+2. Save the resulting JSON file (typically named `Profile-YYYYMMDDTHHMMSS.json`).
+3. To view or analyze a saved profile later, or on another machine, open the Performance tab in DevTools and click the **Upload profile** button (the upward-pointing arrow icon), or drag and drop the JSON file directly into the Performance panel.
+
+You can also load these exported JSON files into third-party performance visualization tools or the online [Chrome DevTools Timeline Viewer](https://chromedevtools.github.io/timeline-viewer/) to inspect the trace details in a full-screen interface without having the source site running locally.
 
 ## Real-World Benchmarks: McMaster-Carr and Bring a Trailer
 
