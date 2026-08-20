@@ -24,6 +24,7 @@ vi.mock("node:http2", () => ({
 
 vi.mock("./http.js", () => ({
   startHttpServer: mockStartHttpServer,
+  adaptHttp1: vi.fn(() => ({ req: {}, res: {} })),
 }));
 
 vi.mock("node:fs/promises", () => ({
@@ -45,6 +46,7 @@ vi.mock("./config.js", () => ({
       enableTls: true,
     },
   },
+  shouldLog: vi.fn(() => true),
 }));
 
 import { startHttp2Server, adaptHttp2 } from "./http2.js";
@@ -56,7 +58,35 @@ describe("startHttp2Server", () => {
 
   it("creates a secure HTTP/2 server", async () => {
     await startHttp2Server();
-    expect(mockCreateSecureServer).toHaveBeenCalled();
+    expect(mockCreateSecureServer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        allowHTTP1: true,
+      })
+    );
+  });
+
+  it("handles HTTP/1.1 fallback requests via the 'request' listener and ignores HTTP/2 compatibility requests", async () => {
+    await startHttp2Server();
+
+    // Find the 'request' listener registered on the server
+    const requestCall = mockServer.on.mock.calls.find(c => c[0] === "request");
+    expect(requestCall).toBeDefined();
+    const requestListener = requestCall[1];
+
+    // Case 1: HTTP/2 request (should be ignored by request listener because it is already handled by 'stream')
+    const mockReqH2 = { httpVersion: "2.0" };
+    const mockResH2 = {};
+    const adaptHttp1Mock = vi.mocked(await import("./http.js")).adaptHttp1;
+    adaptHttp1Mock.mockClear();
+
+    await requestListener(mockReqH2, mockResH2);
+    expect(adaptHttp1Mock).not.toHaveBeenCalled();
+
+    // Case 2: HTTP/1.1 request (should be handled by request listener)
+    const mockReqH1 = { httpVersion: "1.1" };
+    const mockResH1 = {};
+    await requestListener(mockReqH1, mockResH1);
+    expect(adaptHttp1Mock).toHaveBeenCalledWith(mockReqH1, mockResH1);
   });
 });
 

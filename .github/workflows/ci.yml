@@ -33,7 +33,10 @@ jobs:
         run: npm install -g @cs-au-dk/jelly
 
       - name: Run Jelly Analysis on package
-        run: jelly --obj-spread pkg/src/index.ts
+        run: |
+          OUTPUT=$(jelly --obj-spread pkg/src/index.ts)
+          echo "$OUTPUT"
+          echo "$OUTPUT" | grep -q "Analysis errors: 0" || { echo "$OUTPUT"; exit 1; }
 
   unit-pkg:
     name: Framework Unit Tests

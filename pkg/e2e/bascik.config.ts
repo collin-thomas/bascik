@@ -10,6 +10,7 @@ export default defineConfig({
   siteUrl: 'http://localhost:4200',
   watch: ['src/content/'],
   useWorkers: true,
+  onScriptError: 'warn',
   minify: {
     identifiers: false,
     css: async (css) => {
