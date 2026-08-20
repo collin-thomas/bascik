@@ -54,6 +54,8 @@
     "bench": "vitest bench",
     "typecheck": "tsc --noEmit",
     "e2e": "playwright test --config e2e/playwright.config.ts",
+    "e2e:dev": "playwright test --config e2e/playwright.dev.config.ts",
+    "e2e:prod": "playwright test --config e2e/playwright.server.config.ts",
     "dev": "bascik"
   }
 }

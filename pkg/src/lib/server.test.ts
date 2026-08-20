@@ -811,7 +811,14 @@ describe("startHttp2Server – rate limiting", () => {
 
 describe("onError and server resiliency edge cases", () => {
   it("ignores network reset errors in onError", async () => {
-    const { onError } = await import("./server.js");
+    const { onError, isNetworkResetError } = await import("./server.js");
+    expect(isNetworkResetError({ code: "ECONNRESET" })).toBe(true);
+    expect(isNetworkResetError({ code: "EPIPE" })).toBe(true);
+    expect(isNetworkResetError({ code: "ECANCELED" })).toBe(true);
+    expect(isNetworkResetError({ code: "ERR_HTTP2_STREAM_CANCEL" })).toBe(true);
+    expect(isNetworkResetError({ code: "ERR_HTTP2_INVALID_STREAM" })).toBe(true);
+    expect(isNetworkResetError({ code: "500_INTERNAL" })).toBe(false);
+
     const mockRes: any = {
       headersSent: false,
       destroyed: false,
@@ -898,6 +905,54 @@ describe("onError and server resiliency edge cases", () => {
     expect(res).toBeDefined();
 
     (BascikConfig as any).serve.enableTls = true;
+  });
+
+  it("executes server scripts and sets private, no-store cache-control header", async () => {
+    const { executeServerScripts } = await import("./server-scripts.js");
+    const mockExecute = executeServerScripts as unknown as ReturnType<typeof vi.fn>;
+    mockExecute.mockResolvedValueOnce("<p>Server Script Result</p>");
+
+    const page = makePage({
+      content: Buffer.from("<script data-bascik-server>1</script>"),
+      hasServerScripts: true,
+    });
+    mockMem.getPage.mockReturnValue(page);
+
+    await startHttp2Server();
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+
+    await handler(
+      stream,
+      makeHeaders("/dashboard?user=alice&tab=overview", "GET", "", undefined, {
+        ":authority": "localhost:8443",
+        ":scheme": "https",
+        "cookie": "session=abc12345",
+        "x-custom-header": "test-val",
+      }),
+    );
+
+    expect(mockExecute).toHaveBeenCalledWith(
+      "<script data-bascik-server>1</script>",
+      {
+        path: "/dashboard",
+        method: "GET",
+        headers: expect.objectContaining({
+          "cookie": "session=abc12345",
+          "x-custom-header": "test-val",
+        }),
+        searchParams: { user: "alice", tab: "overview" },
+      },
+      expect.any(Number),
+    );
+
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ":status": 200,
+        "cache-control": "private, no-store",
+      }),
+    );
+    expect(stream.end).toHaveBeenCalledWith(Buffer.from("<p>Server Script Result</p>"));
   });
 });
 

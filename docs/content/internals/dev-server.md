@@ -172,3 +172,20 @@ This script is only present in dev mode. The build pipeline does not inject it d
 ## Build Mode Differences
 
 When `--build` is passed (or `BASCIK_BUILD=1` is set), the server is never started. The watch system still runs, but in non-persistent mode so chokidar exits after processing all initial file events. The live-reload script is not injected.
+
+## Dev Server E2E Testing
+
+The dev server behavior is verified in E2E tests using `playwright.dev.config.ts`:
+
+```sh
+yarn pkg:e2e:dev
+```
+
+This boots `bascik --dev` and tests:
+- Instant live-reload on page and component source edits
+- Multi-tab simultaneous SSE reloads
+- Static asset watch triggers
+- In-memory routing, trailing slash normalization, and 404s
+- Response security headers and HTTP method enforcement (405s, 400s)
+- On-demand `data-bascik-server` request script execution
+

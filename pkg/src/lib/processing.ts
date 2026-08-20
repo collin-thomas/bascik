@@ -461,37 +461,50 @@ export const processPageBatch = async (
   if (!componentList) componentList = await listComponents();
   if (globalStylesHtml === undefined) globalStylesHtml = await resolveInlineStylesHtml();
 
-  const sortedPaths = (() => {
-    if (BascikConfig.isBuild || pagePaths.length <= 1) return pagePaths;
-    const [open, rest] = partitionByOpenPages(pagePaths);
-    return [...open, ...rest];
-  })();
+  const [openPages, restPages] = partitionByOpenPages(pagePaths);
 
-  const results = await Promise.all(
-    sortedPaths.map((path) => transpilePage(path, componentList, globalStylesHtml)),
-  );
+  const results: (TranspilePageResult | null)[] = [];
 
-  // Store ALL transpiled pages in memory FIRST before emitting any reload events.
-  // This guarantees that when a browser tab reloads, any page it navigates to
-  // is already stored in memory and won't serve a stale version.
-  await Promise.all(
-    results.map(async (result) => {
-      if (!result) return;
-      if (!BascikConfig.isBuild) {
-        await mem.storePage({
-          relativePagePath: result.relativePagePath,
-          absolutePagePath: result.absolutePagePath,
-          pageContent: result.distHtml,
-          usedComponentsNames: result.usedComponentsNames,
-        });
+  // Transpile open pages first, store in memory, and emit transpiled reload event IMMEDIATELY.
+  // This ensures open browser tabs update near instantly without waiting for the rest of the site to finish.
+  if (openPages.length > 0) {
+    const openResults = await Promise.all(
+      openPages.map((path) => transpilePage(path, componentList, globalStylesHtml)),
+    );
+    for (const result of openResults) {
+      if (result) {
+        if (!BascikConfig.isBuild) {
+          await mem.storePage({
+            relativePagePath: result.relativePagePath,
+            absolutePagePath: result.absolutePagePath,
+            pageContent: result.distHtml,
+            usedComponentsNames: result.usedComponentsNames,
+          });
+        }
+        eventEmitter.emit("transpiled", { relativePagePath: result.relativePagePath });
+        results.push(result);
       }
-    })
-  );
+    }
+  }
 
-  // Now that ALL pages in memory are fresh and ready, notify browser connections
-  for (const result of results) {
-    if (result) {
-      eventEmitter.emit("transpiled", { relativePagePath: result.relativePagePath });
+  // Transpile remaining (closed) pages afterwards
+  if (restPages.length > 0) {
+    const restResults = await Promise.all(
+      restPages.map((path) => transpilePage(path, componentList, globalStylesHtml)),
+    );
+    for (const result of restResults) {
+      if (result) {
+        if (!BascikConfig.isBuild) {
+          await mem.storePage({
+            relativePagePath: result.relativePagePath,
+            absolutePagePath: result.absolutePagePath,
+            pageContent: result.distHtml,
+            usedComponentsNames: result.usedComponentsNames,
+          });
+        }
+        eventEmitter.emit("transpiled", { relativePagePath: result.relativePagePath });
+        results.push(result);
+      }
     }
   }
 
@@ -532,7 +545,7 @@ export const processAllPages = async (options?: { useWorkers?: boolean }) => {
   ]);
   const pageList = pages ?? [];
 
-  let results: (TranspilePageResult | null)[];
+  let relativePaths: string[] = [];
 
   if (useWorkers && pageList.length > 0) {
     const workerExt = import.meta.url.endsWith(".ts") ? ".ts" : ".js";
@@ -543,6 +556,7 @@ export const processAllPages = async (options?: { useWorkers?: boolean }) => {
       poolSize,
       { componentList, globalStylesHtml },
     );
+    let results: (TranspilePageResult | null)[];
     try {
       results = await Promise.all(pageList.map((path) => pool.run(path)));
     } finally {
@@ -550,39 +564,33 @@ export const processAllPages = async (options?: { useWorkers?: boolean }) => {
       // alive and the CLI hangs on exit instead of reporting the failure.
       await pool.terminate();
     }
-  } else {
-    const sortedPaths = (() => {
-      if (BascikConfig.isBuild || pageList.length <= 1) return pageList;
-      const [open, rest] = partitionByOpenPages(pageList);
-      return [...open, ...rest];
-    })();
-    results = await Promise.all(
-      sortedPaths.map((path) => transpilePage(path, componentList, globalStylesHtml)),
+
+    // Side effects that must happen on the main thread
+    await Promise.all(
+      results.map(async (result) => {
+        if (!result) return;
+        if (!BascikConfig.isBuild) {
+          await mem.storePage({
+            relativePagePath: result.relativePagePath,
+            absolutePagePath: result.absolutePagePath,
+            pageContent: result.distHtml,
+            usedComponentsNames: result.usedComponentsNames,
+          });
+        }
+      })
     );
-  }
 
-  // Side effects that must happen on the main thread
-  await Promise.all(
-    results.map(async (result) => {
-      if (!result) return;
-      if (!BascikConfig.isBuild) {
-        await mem.storePage({
-          relativePagePath: result.relativePagePath,
-          absolutePagePath: result.absolutePagePath,
-          pageContent: result.distHtml,
-          usedComponentsNames: result.usedComponentsNames,
-        });
+    for (const result of results) {
+      if (result) {
+        eventEmitter.emit("transpiled", { relativePagePath: result.relativePagePath });
       }
-    })
-  );
-
-  for (const result of results) {
-    if (result) {
-      eventEmitter.emit("transpiled", { relativePagePath: result.relativePagePath });
     }
+    relativePaths = results.map((r) => r?.relativePagePath ?? null).filter((p): p is string => p !== null);
+  } else {
+    relativePaths = await processPageBatch(pageList, componentList, globalStylesHtml);
   }
 
-  const count = results.filter(Boolean).length;
+  const count = relativePaths.length;
   const elapsed = Math.round(performance.now() - start);
 
   if (BascikConfig.isBuild) {
@@ -593,7 +601,7 @@ export const processAllPages = async (options?: { useWorkers?: boolean }) => {
     `\n✓ ${count} page${count !== 1 ? "s" : ""} transpiled in ${elapsed}ms`,
   );
 
-  return results.map((r) => r?.relativePagePath ?? null);
+  return relativePaths;
 };
 
 export const pageProcessing = async (

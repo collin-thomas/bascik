@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: Test (Node ${{ matrix.node }})
+    name: Unit Tests (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -32,8 +32,14 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Run tests with coverage
+      - name: Run framework unit tests with coverage
         run: yarn pkg:test:ci
+
+      - name: Run create-bascik unit tests
+        run: yarn workspace create-bascik test:ci
+
+      - name: Run docs unit tests
+        run: yarn docs:test
 
   e2e:
     name: E2E Tests (Node ${{ matrix.node }})
@@ -66,5 +72,45 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium
 
-      - name: Run E2E tests
+      - name: Run framework E2E tests (static)
         run: yarn pkg:e2e
+
+      - name: Run framework E2E tests (dev server)
+        run: yarn pkg:e2e:dev
+
+      - name: Run framework E2E tests (production server)
+        run: yarn pkg:e2e:prod
+
+      - name: Run docs E2E tests
+        run: yarn docs:e2e
+
+      - name: Run create-bascik scaffold generation test
+        run: yarn create:test-site
+
+  extension:
+    name: Extension Tests (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    strategy:
+      matrix:
+        node: [24]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Use Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run extension tests
+        run: xvfb-run -a yarn ext:test

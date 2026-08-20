@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Server Scripts Advanced Test</title>
+</head>
+
+<body>
+  <h1>Server Scripts Advanced</h1>
+
+  <!-- ESM Node.js built-in module imports & HTTP method -->
+  <script data-bascik-server>
+    import { basename } from 'node:path';
+    const req = JSON.parse(process.env.BASCIK_REQUEST);
+    process.stdout.write(`<p id="esm-import-output">ESM Import: ${basename(req.path)} | Method: ${req.method}</p>`);
+  </script>
+
+  <!-- Server script inside a component -->
+  <server-script-comp></server-script-comp>
+
+  <!-- ANSI escape code stripping check -->
+  <script data-bascik-server>
+    const ansiOutput = '\u001b[31m<p id="ansi-output">Clean HTML</p>\u001b[0m';
+    process.stdout.write(ansiOutput);
+  </script>
+</body>
+
+</html>

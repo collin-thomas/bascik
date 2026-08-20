@@ -200,6 +200,70 @@ describe("executeServerScripts", () => {
     expect(result).toBe("<div>hello\n</div><div>hello\n</div>");
   });
 
+  it("safely preserves dollar-sign regex replacement sequences ($1, $&, $$) in script stdout", async () => {
+    resolveWith("Price: $100 | Code: $& | Total: $$50");
+    const html = "<p><script data-bascik-server>console.log('dollar')</script></p>";
+    const result = await executeServerScripts(html, baseRequest);
+    expect(result).toBe("<p>Price: $100 | Code: $& | Total: $$50</p>");
+  });
+
+  it("throws an error when onScriptError is set to 'halt'", async () => {
+    (BascikConfig as any).onScriptError = "halt";
+    rejectWith("fatal crash");
+    const html = "<script data-bascik-server>throw new Error()</script>";
+    await expect(executeServerScripts(html, baseRequest)).rejects.toThrow(
+      /server script error/,
+    );
+    (BascikConfig as any).onScriptError = "error"; // restore default
+  });
+
+  it("logs a warning when onScriptError is set to 'warn'", async () => {
+    (BascikConfig as any).onScriptError = "warn";
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+    rejectWith("non-fatal error");
+    const html = "<script data-bascik-server>bad()</script>";
+    const result = await executeServerScripts(html, baseRequest);
+    expect(result).toBe("");
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("[bascik] server script error"),
+    );
+    warnSpy.mockRestore();
+    (BascikConfig as any).onScriptError = "error"; // restore default
+  });
+
+  it("forwards stderr output from the child process to process.stderr.write", async () => {
+    mockExecFile.mockImplementation((_cmd, _args, _opts, cb) => {
+      cb(null, "stdout-data", "stderr-debug-msg");
+    });
+    const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+    const html = "<script data-bascik-server>console.error('stderr-debug-msg')</script>";
+    const result = await executeServerScripts(html, baseRequest);
+    expect(result).toBe("stdout-data");
+    expect(stderrSpy).toHaveBeenCalledWith("stderr-debug-msg");
+    stderrSpy.mockRestore();
+  });
+
+  it("processes a large batch of server scripts on a single page sequentially in batches", async () => {
+    let scriptCount = 0;
+    mockExecFile.mockImplementation((_cmd, _args, _opts, cb) => {
+      scriptCount++;
+      cb(null, `[script-${scriptCount}]`, "");
+    });
+
+    const scriptTags = Array.from(
+      { length: 12 },
+      (_, i) => `<script data-bascik-server>console.log(${i})</script>`,
+    ).join("\n");
+    const html = `<main>${scriptTags}</main>`;
+
+    const result = await executeServerScripts(html, baseRequest);
+
+    expect(scriptCount).toBe(12);
+    expect(result).toContain("[script-1]");
+    expect(result).toContain("[script-12]");
+    expect(result).not.toContain("data-bascik-server");
+  });
+
   it("writes stderr to process.stderr when script emits stderr", async () => {
     const stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
     mockExecFile.mockImplementationOnce(

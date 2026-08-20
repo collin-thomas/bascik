@@ -1,15 +1,12 @@
 /**
- * Playwright config for server-script e2e tests.
+ * Playwright config for running E2E tests against the Bascik HTTP/2 Production Server (`bascik --serve`).
  *
- * These tests require the Bascik HTTP/2 production server (`bascik --serve`)
- * rather than the static file server used by the main e2e suite.  The server
- * uses a self-signed TLS certificate, so `ignoreHTTPSErrors` is set on both
- * the webServer health check and browser pages.
+ * Runs the full E2E test suite (scoping, slots, CSS, JS, components, DOM, etc.)
+ * plus `data-bascik-server` script execution and prod server HTTP/2 tests
+ * directly against `bascik --serve`.
  *
- * Workflow:
- *   1. Build the fixture site into dist/ with `bascik --build`.
- *   2. Start the HTTP/2 production server with `bascik --serve` on port 9443.
- *   3. Playwright tests connect to https://localhost:9443.
+ * Run with:
+ *   npx playwright test --config e2e/playwright.server.config.ts
  */
 import { defineConfig } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
@@ -20,7 +17,7 @@ const pkgDir = join(e2eDir, '..');
 
 export default defineConfig({
   testDir: './tests',
-  testMatch: '**/server-scripts.test.ts',
+  testIgnore: ['**/dev-server-reload.test.ts'],
   workers: 1,
   fullyParallel: false,
   retries: process.env.CI ? 1 : 0,
