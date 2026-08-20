@@ -33,6 +33,7 @@ export interface TranspilePageResult {
   absolutePagePath: string;
   distHtml: string;
   usedComponentsNames: string[];
+  fileDependencies?: string[];
 }
 export interface MinifyOptions {
   /**
@@ -305,6 +306,8 @@ export interface StoredPage {
   // compression finishes, in which case the server serves uncompressed.
   compressedContent: Buffer | undefined;
   usedComponentsSet: Set<string>;
+  /** Relative paths of local file dependencies referenced by build scripts on this page. */
+  fileDependenciesSet?: Set<string>;
   /** True when the stored HTML contains `data-bascik-server` script blocks. */
   hasServerScripts: boolean;
 }

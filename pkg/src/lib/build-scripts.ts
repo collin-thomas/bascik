@@ -139,6 +139,46 @@ const BUILD_SCRIPT_TIMEOUT = 60_000;
 // Bump to invalidate all existing disk cache entries (e.g. when key composition changes).
 export const SCRIPT_CACHE_VERSION = 3;
 
+/**
+ * Extract all local file dependencies referenced by `<script data-bascik-build>`
+ * blocks in `html`, recursively scanning referenced local JS/TS/MJS files.
+ */
+export const collectAllScriptDeps = async (html: string): Promise<string[]> => {
+  const matches = [...html.matchAll(new RegExp(BUILD_SCRIPT_RE.source, "gi"))];
+  if (matches.length === 0) return [];
+
+  const visited = new Set<string>();
+  const queue: string[] = [];
+
+  for (const match of matches) {
+    const script = match[1];
+    const deps = extractScriptDeps(script);
+    for (const d of deps) queue.push(d);
+  }
+
+  while (queue.length > 0) {
+    const rawDep = queue.shift()!;
+    const absPath = resolve(process.cwd(), rawDep);
+    const relKey = relative(process.cwd(), absPath).replace(/\\/g, "/");
+
+    if (visited.has(relKey)) continue;
+    visited.add(relKey);
+
+    try {
+      const content = await readFile(absPath, "utf8");
+      const fileDir = dirname(absPath);
+      const nested = extractScriptDeps(content, fileDir);
+      for (const n of nested) {
+        if (!visited.has(n)) queue.push(n);
+      }
+    } catch {
+      // ignore missing files or read errors
+    }
+  }
+
+  return [...visited];
+};
+
 // Extract relative paths the script depends on from quoted string literals:
 //   './content/foo.md', 'scripts/md-renderer.mjs', './data/items.json'
 export const extractScriptDeps = (script: string, baseDir: string = process.cwd()): string[] => {

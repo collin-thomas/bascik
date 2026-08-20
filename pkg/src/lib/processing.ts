@@ -87,7 +87,7 @@ import {
 import { namespaceScriptTags, prefixElementAttribute } from "./javascript.js";
 import { minifyJs } from "./js-minifier.js";
 import { deduplicateCss, minifyCss } from "./styles.js";
-import { executeBuildScripts } from "./build-scripts.js";
+import { executeBuildScripts, collectAllScriptDeps } from "./build-scripts.js";
 import { getUniqueId } from "./names.js";
 import { BascikConfig, shouldLog } from "./config.js";
 import { mem } from "./mem.js";
@@ -479,6 +479,7 @@ export const processPageBatch = async (
             absolutePagePath: result.absolutePagePath,
             pageContent: result.distHtml,
             usedComponentsNames: result.usedComponentsNames,
+            fileDependencies: result.fileDependencies,
           });
         }
         eventEmitter.emit("transpiled", { relativePagePath: result.relativePagePath });
@@ -500,6 +501,7 @@ export const processPageBatch = async (
             absolutePagePath: result.absolutePagePath,
             pageContent: result.distHtml,
             usedComponentsNames: result.usedComponentsNames,
+            fileDependencies: result.fileDependencies,
           });
         }
         eventEmitter.emit("transpiled", { relativePagePath: result.relativePagePath });
@@ -511,7 +513,7 @@ export const processPageBatch = async (
   return results.map((r) => r?.relativePagePath ?? null).filter((p): p is string => p !== null);
 };
 
-export const selectivelyProcessPagesForWatchPath = async (_changedPath?: string): Promise<void> => {
+export const selectivelyProcessPagesForWatchPath = async (changedPath?: string): Promise<void> => {
   invalidateComponentListCache();
   const [pages, componentList, globalStylesHtml] = await Promise.all([
     listPages(),
@@ -519,7 +521,16 @@ export const selectivelyProcessPagesForWatchPath = async (_changedPath?: string)
     resolveInlineStylesHtml(),
   ]);
   const pageList = pages ?? [];
-  await processPageBatch(pageList, componentList, globalStylesHtml);
+
+  let pagesToProcess = pageList;
+  if (changedPath) {
+    const dependentPages = mem.pagesDependentOnFile(changedPath);
+    if (dependentPages.length > 0) {
+      pagesToProcess = dependentPages;
+    }
+  }
+
+  await processPageBatch(pagesToProcess, componentList, globalStylesHtml);
 };
 
 export const selectivelyProcessPages = async (path: string): Promise<void> => {
@@ -781,6 +792,18 @@ export const transpilePage = async (
 
   const allUsedComponents = [...usedComponents, ...headUsedComponents];
 
+  const fileDependencies = await collectAllScriptDeps(rawHtml);
+  for (const comp of allUsedComponents) {
+    if (comp.fileContent) {
+      const compDeps = await collectAllScriptDeps(comp.fileContent);
+      for (const dep of compDeps) {
+        if (!fileDependencies.includes(dep)) {
+          fileDependencies.push(dep);
+        }
+      }
+    }
+  }
+
   // Only write to disk during build. Dev server serves from memory.
   if (BascikConfig.isBuild) {
     const directoryPath = getDirectoryPath(relativePagePath);
@@ -811,6 +834,7 @@ export const transpilePage = async (
     absolutePagePath: pagePath,
     distHtml,
     usedComponentsNames: allUsedComponents.map(({ name }) => name),
+    fileDependencies,
   };
 };
 

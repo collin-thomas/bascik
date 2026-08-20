@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { resolve } from "node:path";
-import { executeBuildScripts, extractScriptDeps, SCRIPT_CACHE_VERSION } from "./build-scripts.js";
+import { executeBuildScripts, extractScriptDeps, collectAllScriptDeps, SCRIPT_CACHE_VERSION } from "./build-scripts.js";
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
@@ -450,6 +450,27 @@ describe("extractScriptDeps", () => {
     const baseDir = resolve(process.cwd(), "docs/scripts");
     const deps = extractScriptDeps(fileContent, baseDir);
     expect(deps).toContain("docs/scripts/nav.ts");
+  });
+});
+
+// ─── collectAllScriptDeps ───────────────────────────────────────────────────
+
+describe("collectAllScriptDeps", () => {
+  it("returns an empty array when html has no build scripts", async () => {
+    const deps = await collectAllScriptDeps("<div>Hello world</div>");
+    expect(deps).toEqual([]);
+  });
+
+  it("collects file dependencies from <script data-bascik-build> tags in html", async () => {
+    const html = `
+      <script data-bascik-build>
+        import { renderMd } from './scripts/md-renderer.ts';
+        console.log(await renderMd('./content/cli.md'));
+      </script>
+    `;
+    const deps = await collectAllScriptDeps(html);
+    expect(deps).toContain("scripts/md-renderer.ts");
+    expect(deps).toContain("content/cli.md");
   });
 });
 

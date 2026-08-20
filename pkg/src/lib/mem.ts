@@ -1,4 +1,5 @@
 import zlib from "node:zlib";
+import { relative, resolve } from "node:path";
 import { getHttpPath } from "./paths.js";
 import { getRelativePath } from "./file-system.js";
 import { htmlHasServerScripts } from "./server-scripts.js";
@@ -10,17 +11,20 @@ interface StorePageArgs {
   absolutePagePath: string;
   pageContent: string;
   usedComponentsNames?: string[];
+  fileDependencies?: string[];
 }
 
 class MemoryStore {
   #files: Map<string, StoredPage>;
   #components: Map<string, Set<string>>;
+  #fileDependencies: Map<string, Set<string>>;
   /** HTTP paths of pages with an active SSE live-reload connection, with connection counts. */
   #openPages: Map<string, number>;
 
   constructor() {
     this.#files = new Map();
     this.#components = new Map();
+    this.#fileDependencies = new Map();
     this.#openPages = new Map();
   }
 
@@ -29,6 +33,7 @@ class MemoryStore {
     absolutePagePath,
     pageContent,
     usedComponentsNames = [],
+    fileDependencies = [],
   }: StorePageArgs): Promise<void> {
     const httpPath = getHttpPath(relativePagePath);
 
@@ -36,9 +41,17 @@ class MemoryStore {
     const buffer = Buffer.from(pageContent, "utf8");
 
     const usedComponentsSet = new Set(usedComponentsNames);
+    const fileDependenciesSet = new Set(
+      fileDependencies.map((dep) =>
+        relative(process.cwd(), resolve(process.cwd(), dep)).replace(/\\/g, "/"),
+      ),
+    );
 
     const originalUsedComponentSet = new Set(
       this.#files.get(httpPath)?.usedComponentsSet,
+    );
+    const originalFileDependenciesSet = new Set(
+      this.#files.get(httpPath)?.fileDependenciesSet,
     );
 
     // Store the raw content immediately so the page is servable right away.
@@ -51,6 +64,7 @@ class MemoryStore {
       content: buffer,
       compressedContent: undefined,
       usedComponentsSet,
+      fileDependenciesSet,
       hasServerScripts: htmlHasServerScripts(pageContent),
     });
 
@@ -71,6 +85,19 @@ class MemoryStore {
       .difference(usedComponentsSet)
       .forEach((unusedComponent: string) => {
         this.#components.get(unusedComponent)?.delete(absolutePagePath);
+      });
+
+    fileDependenciesSet.forEach((depPath: string) => {
+      if (!this.#fileDependencies.has(depPath)) {
+        this.#fileDependencies.set(depPath, new Set());
+      }
+      this.#fileDependencies.get(depPath)!.add(absolutePagePath);
+    });
+
+    originalFileDependenciesSet
+      .difference(fileDependenciesSet)
+      .forEach((unusedDep: string) => {
+        this.#fileDependencies.get(unusedDep)?.delete(absolutePagePath);
       });
 
     // Fire-and-forget: compress in the background and attach the result once
@@ -116,6 +143,9 @@ class MemoryStore {
     page.usedComponentsSet.forEach((componentName: string) => {
       this.#components.get(componentName)?.delete(absolutePagePath);
     });
+    page.fileDependenciesSet?.forEach((depPath: string) => {
+      this.#fileDependencies.get(depPath)?.delete(absolutePagePath);
+    });
 
     // Remove page from memory
     this.#files.delete(httpPath);
@@ -123,6 +153,14 @@ class MemoryStore {
 
   pagesThisComponentIsUsedOn(componentName: string): string[] {
     const pagesSet = this.#components.get(componentName);
+    if (pagesSet) return [...pagesSet];
+    return [];
+  }
+
+  pagesDependentOnFile(changedPath: string): string[] {
+    if (!changedPath) return [];
+    const normalized = relative(process.cwd(), resolve(process.cwd(), changedPath)).replace(/\\/g, "/");
+    const pagesSet = this.#fileDependencies.get(normalized);
     if (pagesSet) return [...pagesSet];
     return [];
   }

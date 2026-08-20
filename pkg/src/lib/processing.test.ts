@@ -53,6 +53,7 @@ vi.mock("node:fs/promises", () => ({
 
 vi.mock("./build-scripts.js", () => ({
   executeBuildScripts: vi.fn((html: string) => Promise.resolve(html)),
+  collectAllScriptDeps: vi.fn(async () => []),
 }));
 
 vi.mock("./sitemap.js", () => ({
@@ -63,6 +64,7 @@ vi.mock("./mem.js", () => ({
   mem: {
     storePage: vi.fn(),
     pagesThisComponentIsUsedOn: vi.fn(() => []),
+    pagesDependentOnFile: vi.fn(() => []),
     openPages: [] as string[],
     trackOpenPage: vi.fn(),
     untrackOpenPage: vi.fn(),
@@ -756,6 +758,7 @@ describe("selectivelyProcessPagesForWatchPath", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (BascikConfig as Record<string, unknown>).inlineStyles = false;
+    (mem.pagesDependentOnFile as ReturnType<typeof vi.fn>).mockReturnValue([]);
   });
 
   it("invalidates the component list cache before fetching components", async () => {
@@ -774,6 +777,20 @@ describe("selectivelyProcessPagesForWatchPath", () => {
     await selectivelyProcessPagesForWatchPath("scripts/nav.mjs");
     const { eventEmitter } = await import("./events.js");
     expect(eventEmitter.emit).toHaveBeenCalledTimes(pages.length);
+  });
+
+  it("rebuilds only the dependent pages when mem identifies specific page dependencies", async () => {
+    const pages = ["src/pages/cli.html", "src/pages/testing.html"];
+    (listPages as ReturnType<typeof vi.fn>).mockResolvedValue(pages);
+    (mem.pagesDependentOnFile as ReturnType<typeof vi.fn>).mockReturnValueOnce(["src/pages/cli.html"]);
+    (readFile as ReturnType<typeof vi.fn>).mockResolvedValue("<html><body>cli content</body></html>");
+
+    await selectivelyProcessPagesForWatchPath("content/cli.md");
+
+    const { eventEmitter } = await import("./events.js");
+    expect(mem.pagesDependentOnFile).toHaveBeenCalledWith("content/cli.md");
+    expect(eventEmitter.emit).toHaveBeenCalledTimes(1);
+    expect(eventEmitter.emit).toHaveBeenCalledWith("transpiled", { relativePagePath: "pages/cli.html" });
   });
 });
 
