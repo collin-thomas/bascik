@@ -106,8 +106,25 @@ test.describe('Production Server (`bascik --serve`) Engine', () => {
   });
 
   test('rejects path traversal attempts with 400 Bad Request', async ({ request }) => {
-    const res = await request.get('/../../../etc/passwd');
-    expect(res.status()).toBe(400);
+    const res1 = await request.get('/../../../etc/passwd');
+    expect(res1.status()).toBe(400);
+
+    const res2 = await request.get('/..%2f..%2f..%2fetc/passwd');
+    expect(res2.status()).toBe(400);
+  });
+
+  test('handles URL paths with null bytes safely without process crash', async ({ request }) => {
+    const res = await request.get('/scope-test%00.html');
+    expect([200, 400, 404]).toContain(res.status());
+  });
+
+  test('handles header flooding (100+ headers) without memory issues or server crashes', async ({ request }) => {
+    const floodedHeaders: Record<string, string> = {};
+    for (let i = 0; i < 100; i++) {
+      floodedHeaders[`x-flood-header-${i}`] = `value-data-${i}`;
+    }
+    const res = await request.get('/scope-test', { headers: floodedHeaders });
+    expect(res.status()).toBe(200);
   });
 
   test('returns 405 Method Not Allowed for PUT, DELETE, and PATCH methods', async ({ request }) => {

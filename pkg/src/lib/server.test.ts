@@ -954,6 +954,120 @@ describe("onError and server resiliency edge cases", () => {
     );
     expect(stream.end).toHaveBeenCalledWith(Buffer.from("<p>Server Script Result</p>"));
   });
+
+  it("returns 404 for /bascik-live-reload when isProdServer is true", async () => {
+    const { BascikConfig } = await import("./config.js");
+    (BascikConfig as any).isProdServer = true;
+
+    await startHttp2Server();
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    await handler(stream, makeHeaders("/bascik-live-reload", "GET"));
+
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({ ":status": 404 }),
+    );
+    expect(stream.end).toHaveBeenCalled();
+
+    (BascikConfig as any).isProdServer = false;
+  });
+
+  it("destroys fileStream on open if response stream was destroyed mid-request", async () => {
+    await startHttp2Server();
+    const fakeFileStream = {
+      on: vi.fn().mockReturnThis(),
+      pipe: vi.fn(),
+      destroy: vi.fn(),
+    };
+    mockCreateReadStream.mockReturnValue(fakeFileStream);
+
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    (stream as any).destroyed = true;
+
+    await handler(stream, makeHeaders("/style.css", "GET"));
+
+    const openCall = fakeFileStream.on.mock.calls.find((c: any[]) => c[0] === "open");
+    openCall?.[1]?.();
+
+    expect(fakeFileStream.destroy).toHaveBeenCalled();
+    expect(fakeFileStream.pipe).not.toHaveBeenCalled();
+  });
+
+  it("handles file stream error when headersSent is false by responding 500 or 404", async () => {
+    await startHttp2Server();
+    const fakeFileStream = {
+      on: vi.fn().mockReturnThis(),
+      pipe: vi.fn(),
+      destroy: vi.fn(),
+    };
+    mockCreateReadStream.mockReturnValue(fakeFileStream);
+
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+    (stream as any).headersSent = false;
+
+    await handler(stream, makeHeaders("/style.css", "GET"));
+
+    const errCall = fakeFileStream.on.mock.calls.find((c: any[]) => c[0] === "error");
+    const err = new Error("EACCES permission denied");
+    (err as any).code = "EACCES";
+    errCall?.[1]?.(err);
+
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ":status": 500,
+        "x-content-type-options": "nosniff",
+      }),
+    );
+    expect(stream.end).toHaveBeenCalledWith("Internal Server Error");
+  });
+
+  it("untracks open page when SSE live-reload stream closes", async () => {
+    await startHttp2Server();
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+
+    let closeCallback: (() => void) | undefined;
+    (stream as any).on = vi.fn().mockImplementation((event: string, cb: any) => {
+      if (event === "close") closeCallback = cb;
+      return stream;
+    });
+
+    await handler(
+      stream,
+      makeHeaders("/bascik-live-reload", "GET", "", "http://localhost:8443/about"),
+    );
+
+    expect(mockMem.trackOpenPage).toHaveBeenCalledWith("/about");
+    expect(closeCallback).toBeDefined();
+
+    closeCallback!();
+    expect(mockMem.untrackOpenPage).toHaveBeenCalledWith("/about");
+  });
+
+  it("serves boot page when server is booting and page is not yet stored", async () => {
+    mockMem.isBooting = true;
+    mockMem.getPage.mockReturnValue(undefined);
+
+    await startHttp2Server();
+    const handler = getStreamHandler()!;
+    const stream = makeStream();
+
+    await handler(stream, makeHeaders("/slow-page", "GET"));
+
+    expect(stream.respond).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ":status": 200,
+        "content-type": expect.stringContaining("text/html"),
+      }),
+    );
+    expect(stream.end).toHaveBeenCalledWith(expect.any(Buffer));
+    const sentBuf = stream.end.mock.calls[0][0] as Buffer;
+    expect(sentBuf.toString("utf8")).toContain("Building site");
+
+    mockMem.isBooting = false;
+  });
 });
 
 describe("startHttp2Server – rate limiting details", () => {
