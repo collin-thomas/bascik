@@ -28,6 +28,20 @@ export const watchFiles = async () => {
   const w = <T extends ReturnType<typeof chokidar.watch>>(watcher: T) => { watchers.push(watcher); return watcher; };
   registerShutdownHandler(() => Promise.all(watchers.map(watcher => watcher.close())).then(() => { }));
 
+  const isInlineStylesheet = (path: string): boolean => {
+    if (!BascikConfig.inlineStyles) return false;
+    if (!path.endsWith(".css")) return false;
+    if (BascikConfig.inlineStyles === true) return true;
+    if (Array.isArray(BascikConfig.inlineStyles)) {
+      const normalizedPath = path.replace(/\\/g, "/");
+      return BascikConfig.inlineStyles.some((stylePath) => {
+        const normalizedStyle = stylePath.replace(/\\/g, "/");
+        return normalizedPath.endsWith(normalizedStyle) || normalizedStyle.endsWith(normalizedPath);
+      });
+    }
+    return false;
+  };
+
   // Copy non-page files
   w(chokidar
     .watch([BascikConfig.directory.pages], {
@@ -43,7 +57,11 @@ export const watchFiles = async () => {
       try {
         await copyReplicatePath(path, "dist");
         if (!BascikConfig.isBuild) {
-          eventEmitter.emit("asset-changed");
+          if (isInlineStylesheet(path)) {
+            await processAllPages();
+          } else {
+            eventEmitter.emit("asset-changed");
+          }
         }
       } catch (err) { onWatchError(err); }
     })
@@ -52,7 +70,11 @@ export const watchFiles = async () => {
         await copyReplicatePath(path, "dist");
         // Reload any currently-open page when a static asset changes
         if (!BascikConfig.isBuild) {
-          eventEmitter.emit("asset-changed");
+          if (isInlineStylesheet(path)) {
+            await processAllPages();
+          } else {
+            eventEmitter.emit("asset-changed");
+          }
         }
       } catch (err) { onWatchError(err); }
     })

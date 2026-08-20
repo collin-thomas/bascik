@@ -1,52 +1,303 @@
-# Developer Experience
+# Developer Experience Guide
 
-Developer experience in Bascik is built around a single principle: removing unnecessary abstraction so you can stay in flow. You do not need to learn a custom template syntax, debug complex hydration stack traces, or configure multi-step toolchains just to build standard web applications.
+This hands-on guide walks through your daily workflow in Bascik: running the local environment, leveraging editor tools, debugging, running tests, and inspecting production builds.
 
-## The Local Development Loop
+## Local Development Flow
 
-Bascik provides an instant local feedback loop out of the box. Running the development command starts an integrated server with Server-Sent Events (SSE) live reloading.
+Start the local development server from your project root:
 
-```bash
-npx bascik
+```sh
+npm run dev
+# or directly: npx bascik
 ```
 
-When you edit HTML, CSS, or JavaScript files, Bascik processes changes incrementally and updates your browser immediately. Because components are auto-discovered from file paths, creating a component is as simple as creating a file.
+### What You See in the Terminal
 
-> **Zero Configuration.** You do not need a complex build config file to start developing. Bascik discovers components, pages, and assets automatically.
+When you launch the dev server, Bascik transpiles pages and components, starts the HTTP server, and opens a live Server-Sent Events (SSE) connection:
 
-## Standard Web Primitives
+```terminal
+transpiled: pages/index.html
+transpiled: pages/about.html
 
-Instead of introducing proprietary template languages or JSX DSLs, Bascik relies on standard HTML, CSS, and JavaScript primitives.
+✓ 2 pages transpiled in 18ms
+Server running at http://localhost:8080
+```
 
-- **Standard HTML syntax:** Write normal HTML elements, attributes, and slots without learning framework-specific directives like `v-if` or `*ngIf`.
-- **Standard CSS scoping:** Write plain CSS inside component files. Bascik automatically scopes your selectors at build time so styles never leak across components.
-- **Standard JavaScript:** Use standard `<script>` tags for component or page scripts without requiring framework lifecycle wrappers.
+### Daily Edit-and-Save Loop
 
-Because everything is standard web code, standard browser DevTools and linters work without special extensions or workarounds.
+Edit any file and save. Bascik re-transpiles only the affected files in milliseconds and updates your browser automatically without full page reloads:
 
-## Editor and AI Tooling
+```terminal
+transpiled: pages/index.html (modified component: <user-badge>)
+```
 
-Bascik integrates directly into your modern development environment.
+Drop a new component file at `src/components/user-badge/user-badge.html` and use `<user-badge></user-badge>` in your pages immediately without writing import statements or registering tags.
 
-- **VS Code Extension:** The official extension provides syntax highlighting, auto-completion for component tags, and instant navigation between component files and usages.
-- **Copilot Agent Skill:** Bascik includes a dedicated agent skill (`SKILL.md`) that equips AI coding assistants with deep knowledge of Bascik conventions, scoping rules, and component patterns.
+> **Deep Dive:** Read [CLI Dev Server](/cli#starting-the-dev-server) for server options, or explore [Dev Server Internals](/internals/dev-server) for live reload mechanics.
 
-> **Learn More.** Read the [VS Code Extension docs](/tools/vscode-extension) and [Agent Skill guide](/tools/agent-skill) to set up your environment.
+## VS Code Editor Ergonomics
 
-## Predictable Debugging and Inspection
+Install the official Bascik extension to get code navigation, autocompletion, and real-time warnings directly in VS Code:
 
-Debugging in traditional web frameworks often means inspecting deeply nested synthetic wrapper elements, stepping through minified virtual DOM diffing logic, or resolving client-server hydration mismatches.
+```sh
+# Search for "bascik" in VS Code Extensions (Cmd+Shift+X or Ctrl+Shift+X)
+```
 
-Bascik eliminates these pain points by resolving components ahead of time:
+### Cmd/Ctrl + Click Code Navigation
 
-1. **Clean DOM Tree:** The rendered HTML in your browser matches your source components directly, without synthetic container divs or framework runtime nodes.
-2. **Readable Scoped Class Names:** CSS scoping attributes use clear, predictable prefixes so you can immediately trace any element in browser DevTools back to its source component file.
-3. **No Hydration Stack Traces:** Because Bascik outputs vanilla HTML and standard JavaScript without a client-side framework runtime, browser stack traces point directly to your actual script execution lines.
+Hover over any custom component tag in your page HTML, hold `Cmd` (macOS) or `Ctrl` (Windows/Linux), and click to jump straight to the component definition file:
 
-## Next Steps
+```html
+<!-- Hold Cmd/Ctrl and click <user-card> to open src/components/user-card/user-card.html -->
+<user-card data-bascik-prop-role="Lead Engineer">
+  <span slot="name">Sarah Chen</span>
+</user-card>
+```
 
-To explore how Bascik compares to traditional frameworks or to set up your first project, dive into the surrounding documentation guides:
+### Structural & Scoping Warnings in the Problems Panel
 
-- Learn how Bascik differs from runtime frameworks in [Bascik vs Frameworks](/vs-frameworks).
-- See how Bascik achieves top performance in [Lighthouse 100s](/performance).
-- Follow the quick setup guide in [Getting Started](/getting-started).
+The extension catches invalid tags or unsafe scoping patterns in real time as you type:
+
+```css
+/* Flagged in VS Code Problems panel: [id] selectors cannot be scoped safely */
+[id] {
+  color: red;
+}
+```
+
+> **Deep Dive:** See setup details and feature guides in [Code Navigation](/tools/vscode-extension#1-code-navigation) and [Structural Warnings](/tools/vscode-extension#2-markup-and-script-structural-warnings).
+
+## Component Authoring Pleasantries
+
+Authoring UI in Bascik keeps your file structure clean and eliminates framework boilerplate.
+
+### Co-located Component Directory
+
+Everything related to a UI component lives together in a dedicated folder:
+
+```text
+src/components/user-card/
+  user-card.html      ← HTML markup, scoped <style>, and client <script>
+  user-card.test.ts    ← Co-located Vitest unit test
+```
+
+### Clean Component Authoring (`src/components/user-card/user-card.html`)
+
+Write standard HTML, plain CSS, and standard JavaScript in one file:
+
+```html
+<article class="card">
+  <h3 class="name"><slot name="name">Guest User</slot></h3>
+  <p class="role" data-bascik-prop-role></p>
+</article>
+
+<style>
+  .card { padding: 16px; border: 1px solid #3a3d40; border-radius: 8px; }
+  .name { margin: 0 0 8px 0; font-size: 1.1rem; }
+  .role { margin: 0; color: #a0a0a0; font-size: 0.875rem; }
+</style>
+```
+
+### Zero-Import Page Usage (`src/pages/index.html`)
+
+Use custom tags anywhere in your pages without `import` statements or component registration steps:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Team Directory</title></head>
+<body>
+  <!-- Bascik auto-discovers <user-card> from src/components/user-card/user-card.html -->
+  <user-card data-bascik-prop-role="Lead Engineer">
+    <span slot="name">Sarah Chen</span>
+  </user-card>
+</body>
+</html>
+```
+
+> **Deep Dive:** Read [Components](/components) for folder conventions, [Props](/props) for data passing, [Slots](/slots) for content insertion, and [Scoped Styles](/scoped-styles) for CSS scoping.
+
+## Debugging Workflow
+
+Because Bascik resolves components ahead of time, the HTML and CSS that run in the browser match your source files directly.
+
+### Source vs DevTools Inspection
+
+Compare source template code with what appears when inspecting elements in browser DevTools:
+
+**Your Source Code (`src/pages/index.html`):**
+```html
+<user-card data-bascik-prop-role="Lead Engineer">
+  <span slot="name">Sarah Chen</span>
+</user-card>
+```
+
+**Inspected Element in Browser DevTools (`Cmd+Option+I`):**
+```html
+<article class="bascik__user-card__card">
+  <h3 class="bascik__user-card__name">
+    <span>Sarah Chen</span>
+  </h3>
+  <p class="bascik__user-card__role">Lead Engineer</p>
+</article>
+```
+
+Notice the clean output: no synthetic wrapper `<div>` elements, no framework runtime attributes, and clear class prefixes (`.bascik__user-card__card`) that tell you exactly which component file owns each style rule.
+
+### Client Script Breakpoints
+
+Open the DevTools **Sources** tab to set breakpoints in component scripts. Because Bascik outputs standard JavaScript, browser breakpoints pause directly on your actual source line numbers without virtual DOM stack traces:
+
+```html
+<!-- Inside src/components/counter/counter.html -->
+<script>
+  document.querySelector('.counter-btn').addEventListener('click', (e) => {
+    // Set a breakpoint directly on this line in browser DevTools
+    const count = parseInt(e.target.dataset.count || '0', 10) + 1;
+    e.target.dataset.count = String(count);
+  });
+</script>
+```
+
+### VS Code Debugging (`F5`)
+
+To debug `bascik.config.ts` or custom build scripts, press `F5` in VS Code. Node 24 native TypeScript support allows VS Code to attach directly to `.ts` files:
+
+```json
+// .vscode/launch.json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Bascik Build",
+      "program": "${workspaceFolder}/node_modules/.bin/bascik",
+      "args": ["--build"]
+    }
+  ]
+}
+```
+
+> **Deep Dive:** Read [CLI Transpilation and Build Errors](/cli#transpilation-and-build-errors) to learn how Bascik reports syntax issues, or explore [Architecture](/internals/architecture) to see how transpilation works under the hood.
+
+## Testing Your Workflow
+
+Every scaffolded Bascik project includes co-located unit tests, Playwright end-to-end tests, and static checks.
+
+### Co-located Unit Testing (`src/components/user-card/user-card.test.ts`)
+
+Test component template contracts right next to the component HTML file:
+
+```ts
+import { describe, it, expect } from 'vitest';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+describe('user-card contract', () => {
+  const filePath = join(process.cwd(), 'src/components/user-card/user-card.html');
+
+  it('defines slot and prop placeholders correctly', async () => {
+    const html = await readFile(filePath, 'utf8');
+    expect(html).toContain('<slot name="name">');
+    expect(html).toContain('data-bascik-prop-role');
+  });
+});
+```
+
+Run unit tests during development:
+
+```sh
+npm run test:watch
+```
+
+### End-to-End Testing (`e2e/app.spec.ts`)
+
+Test user interactions in real browsers using Playwright:
+
+```ts
+import { test, expect } from '@playwright/test';
+
+test('renders user card with expanded slot content', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('.bascik__user-card__card')).toBeVisible();
+  await expect(page.locator('.bascik__user-card__role')).toHaveText('Lead Engineer');
+});
+```
+
+Run Playwright browser tests:
+
+```sh
+npm run e2e
+```
+
+### Static Analysis
+
+Validate custom tag references and page structure across your workspace before opening a pull request:
+
+```sh
+npx bascik --check
+```
+
+Output:
+```terminal
+✓ Checked 4 pages and 12 components in 14ms (0 errors, 0 warnings)
+```
+
+> **Deep Dive:** Read [Component Template Contract Testing](/testing#component-template-contract-testing) and [End-to-End Browser Testing](/testing#end-to-end-browser-testing-playwright) for complete testing guidelines.
+
+## Production Build & Inspection
+
+Preview and inspect static production assets before deploying.
+
+### Running the Production Build
+
+```sh
+npm run build
+# or: npx bascik --build
+```
+
+Terminal Output:
+```terminal
+transpiled: pages/index.html -> dist/index.html
+transpiled: pages/about.html -> dist/about.html
+extracted: dist/css/styles.css (minified)
+
+✓ Build completed in 34ms
+```
+
+### Inspecting Output Files (`dist/index.html`)
+
+Open `dist/index.html` to see the compiled result. Custom component tags are fully expanded, and component CSS is extracted into minified stylesheets:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Team Directory</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <article class="bascik__user-card__card">
+    <h3 class="bascik__user-card__name"><span>Sarah Chen</span></h3>
+    <p class="bascik__user-card__role">Lead Engineer</p>
+  </article>
+</body>
+</html>
+```
+
+### Local Production Preview
+
+Serve the compiled `dist/` directory locally over HTTP:
+
+```sh
+npx bascik --serve
+```
+
+Terminal Output:
+```terminal
+Serving dist/ at http://localhost:8080
+```
+
+> **Deep Dive:** Read [Deploying](/deploying) for deployment targets and [Production Server](/server) for server options.
+

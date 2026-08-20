@@ -17,6 +17,8 @@ my-project/
   bascik.config.ts
   vite.config.js
   .gitignore
+  .vscode/
+    launch.json
   .github/skills/bascik/SKILL.md
   .claude/skills/bascik/SKILL.md
   e2e/

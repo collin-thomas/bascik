@@ -327,6 +327,83 @@ Choosing between unit tests and E2E browser tests depends on what you need to ve
 - **Use Playwright E2E tests** when you need to verify that clicking a button opens a modal, toggling a panel changes text, incrementing a counter updates the screen, or navigating links loads the correct page.
 - **Use Vitest unit tests** for instant local feedback when refactoring HTML templates, preventing accidental removal of accessibility attributes (`aria-expanded`, `aria-label`), ensuring pure CSS components stay script-free, or testing pure JavaScript/TypeScript calculation functions.
 
+## Debugging with VS Code and Node.js
+
+Bascik works smoothly with debuggers because it operates directly on vanilla HTML, CSS, and JavaScript without complex runtime abstractions or heavy bundle transformations.
+
+### Source Location Preservation
+
+Debugging server-side scripts, build-time scripts, and browser component code in Bascik requires no special source map plugins or transpilation step:
+
+- **Server and Build Scripts**: Bascik automatically appends `//# sourceURL=${relPath}` comments to temporary script modules created during compilation (`<script data-bascik-build>` and `<script data-bascik-server>`). Stack traces and debugger breakpoints point directly back to your original source file paths.
+- **Client Component Scripts**: Bascik preserves newline padding when scoping component `<script>` tags. Line numbers reported in console errors or hit during step-debugging match the exact line numbers in your component `.html` source files.
+- **Native TypeScript Debugging**: Because Node 22.18.0+ natively executes TypeScript files by stripping type annotations, setting breakpoints in `.ts` modules pauses execution immediately with full access to local scope variables and call stacks.
+
+### Pre-Configured VS Code Launch Configurations
+
+Projects created using `npm create bascik@latest` include a pre-configured `.vscode/launch.json` file focused on testing and debugging your application. You can start debugging immediately by pressing `F5` or selecting a profile from VS Code's **Run and Debug** panel:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Dev Server",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["bascik"],
+      "console": "integratedTerminal",
+      "restart": true,
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Debug Unit Tests",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vitest", "run"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Launch Chrome",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:8080",
+      "webRoot": "${workspaceFolder}"
+    }
+  ]
+}
+```
+
+### Debugging Server Scripts and Build Steps
+
+To debug server scripts (`<script data-bascik-server>`), build-time scripts (`<script data-bascik-build>`), or custom server logic modules:
+
+1. Open your component `.html` file or imported `.ts` logic file in VS Code.
+2. Click to the left of any line number inside your script block or function to set a breakpoint.
+3. Select **Debug Dev Server** in the Run and Debug panel and press `F5`.
+4. Open your browser and navigate to the page triggering the request.
+5. Node.js pauses execution on your breakpoint inside VS Code. You can inspect variables, evaluate expressions in the Debug Console, step through functions, and view call stacks.
+
+### Debugging Unit Tests in VS Code
+
+To step through unit test logic or component contract assertions in VS Code:
+
+1. Open your test file (such as `my-counter.test.ts`) and set a breakpoint inside an `it()` or `describe()` block.
+2. Select **Debug Unit Tests** from the Run and Debug panel and press `F5`.
+3. Vitest runs the test suite under the Node.js debugger and pauses at your breakpoint before assertions complete.
+
+### Debugging Client Component Scripts in the Browser
+
+To debug interactive client component scripts in Google Chrome or Microsoft Edge directly from VS Code:
+
+1. Start the dev server using **Debug Dev Server** or `npm run dev`.
+2. Select **Launch Chrome** from the Run and Debug panel and press `F5`.
+3. VS Code launches a new Chrome window attached to the debugger.
+4. Set breakpoints directly in your component `.html` files in VS Code, or open Chrome DevTools (`F12`), press `Cmd + P` (or `Ctrl + P`), and open virtual source files like `src/components/my-counter.html`.
+
 ## Reference Implementations
 
 The Bascik documentation site (`docs/`) includes both E2E browser tests and unit tests to ensure all components functionally work and stay tested:
