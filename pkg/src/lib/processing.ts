@@ -164,7 +164,7 @@ export const resolveInlineStylesHtml = async (): Promise<string> => {
         const css = (await readFile(filePath)).toString();
         return cssMinifier ? await cssMinifier(css) : css;
       } catch (error) {
-        console.warn(`[bascik] inlineStyles: could not read "${filePath}":`, (error as Error).message);
+        console.warn("[bascik] inlineStyles: could not read %s:", filePath, (error as Error).message);
         return "";
       }
     }),

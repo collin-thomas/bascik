@@ -700,8 +700,9 @@ describe("pageProcessing – inlineStyles", () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
     await pageProcessing(PAGE_PATH, {});
     expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[bascik] inlineStyles: could not read "missing.css"'),
-      expect.any(String),
+      "[bascik] inlineStyles: could not read %s:",
+      "missing.css",
+      "ENOENT",
     );
     warnSpy.mockRestore();
   });

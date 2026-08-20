@@ -301,7 +301,10 @@ describe("startHttp2Server – stream handler", () => {
     const stream = makeStream();
     await handler(stream, makeHeaders("/about", "GET"));
     expect(stream.respond).toHaveBeenCalledWith(
-      expect.objectContaining({ ":status": 200 }),
+      expect.objectContaining({
+        ":status": 200,
+        etag: expect.stringMatching(/^"[A-Za-z0-9_-]{27}"$/),
+      }),
     );
     expect(stream.end).toHaveBeenCalledWith(page.content);
   });

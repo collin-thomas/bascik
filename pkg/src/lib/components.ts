@@ -173,7 +173,7 @@ export const listComponents = async (): Promise<ComponentList> => {
         }
         return component;
       } catch (e) {
-        console.warn(`warning: Failed to process ${fileName}`, e);
+        console.warn("warning: Failed to process %s", fileName, e);
         return {};
       }
     }),
@@ -256,6 +256,7 @@ export const replaceTag = (
   tagName: string,
   transpiledTag: string,
 ): string => {
+  const tn = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   // Try paired tags first: <tagName ...>...</tagName>
   // Use findMatchingClose (a depth counter) instead of a lazy regex so nested
   // same-name elements pair with the correct (balanced) closing tag, e.g.
@@ -264,7 +265,7 @@ export const replaceTag = (
   if (openTag && !/\/\s*>$/.test(openTag.openTag)) {
     const closeIndex = findMatchingClose(htmlString, tagName, openTag.end);
     if (closeIndex !== -1) {
-      const closeTagRegexp = new RegExp(`^<\\/${tagName}\\s*>`, "i");
+      const closeTagRegexp = new RegExp(`^<\\/${tn}\\s*>`, "i");
       const closeTagMatch = closeTagRegexp.exec(htmlString.slice(closeIndex));
       if (closeTagMatch) {
         // Splice by index so that `$` characters in transpiledTag (e.g.
@@ -284,7 +285,7 @@ export const replaceTag = (
   // Use a replacement function for the same `$`-safety reason.
   // Search the masked string so a literal tag inside <script>/<style>/<textarea>
   // content is never replaced; splice by index into the original string.
-  const selfClosingRegexp = new RegExp(`<${tagName}(?:${ATTR_VALUE})\\s*\\/?>`, "i");
+  const selfClosingRegexp = new RegExp(`<${tn}(?:${ATTR_VALUE})\\s*\\/?>`, "i");
   const selfClosingMatch = selfClosingRegexp.exec(maskRawTextContent(htmlString));
   if (!selfClosingMatch) return htmlString;
   return (
@@ -298,8 +299,9 @@ export const getTagContents = (
   htmlString: string,
   tagName: string,
 ): { content?: string; innerContent?: string } => {
+  const tn = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const regexp = new RegExp(
-    `(?<content><${tagName}[^>]*>(?<innerContent>([\\s\\S]*?))<\/${tagName}>)`,
+    `(?<content><${tn}[^>]*>(?<innerContent>([\\s\\S]*?))<\\/${tn}>)`,
     "i",
   );
   const match = htmlString.match(regexp);
@@ -317,9 +319,10 @@ export const getFirstComponent = (
   // Meaning, it will find test-comp-clone before test-comp,
   // because reverse, the longer tag will be first in the regexp, and therefore match first.
   // It's like how an ingress controller works.
-  const componentNames = Object.keys(componentList).sort(
-    (a, b) => b.length - a.length,
-  );
+  const componentNames = Object.keys(componentList)
+    .map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .sort((a, b) => b.length - a.length);
+  if (componentNames.length === 0) return {};
   const matchComponentName = new RegExp(
     `<\\b(${componentNames.join("|")})\\b[\\s\\S]*?>`,
     "i",
@@ -343,6 +346,7 @@ export const getTag = (
   tagName: string,
   componentList?: ComponentList,
 ): Partial<BascikComponent> => {
+  const tn = tagName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   // Try paired tags: <tagName ...>content</tagName>
   // Use findMatchingClose (a depth counter) instead of a lazy regex so nested
   // same-name elements pair with the correct (balanced) closing tag, e.g.
@@ -351,7 +355,7 @@ export const getTag = (
   if (openTag && !/\/\s*>$/.test(openTag.openTag)) {
     const closeIndex = findMatchingClose(htmlString, tagName, openTag.end);
     if (closeIndex !== -1) {
-      const closeTagRegexp = new RegExp(`^<\\/${tagName}\\s*>`, "i");
+      const closeTagRegexp = new RegExp(`^<\\/${tn}\\s*>`, "i");
       const closeTagMatch = closeTagRegexp.exec(htmlString.slice(closeIndex));
       if (closeTagMatch) {
         const returnObj = {
@@ -370,7 +374,7 @@ export const getTag = (
   // Try self-closing: <tagName ... /> or <tagName/>
   // Search the masked string so literal tag text inside raw-text elements is skipped.
   const selfClosingPattern = new RegExp(
-    `<${tagName}([\\s\\S]*?)\\/?>`,
+    `<${tn}([\\s\\S]*?)\\/?>`,
     "i",
   );
   const selfClosingMatch = selfClosingPattern.exec(maskRawTextContent(htmlString));

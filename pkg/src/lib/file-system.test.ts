@@ -342,7 +342,8 @@ describe("deepReadDir – error path", () => {
     const result = await deepReadDir("./secret");
     expect(result).toEqual([]);
     expect(console.error).toHaveBeenCalledWith(
-      "Failed to read directory ./secret",
+      "Failed to read directory %s",
+      "./secret",
       expect.any(Error),
     );
   });
@@ -467,7 +468,8 @@ describe("copyReplicatePath – JS minification", () => {
     await copyReplicatePath("pages/js/app.js", "dist");
 
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining("JS minification failed for pages/js/app.js"),
+      "[bascik] JS minification failed for %s, falling back to unminified copy:",
+      "pages/js/app.js",
       expect.any(Error),
     );
     expect(copyFile).toHaveBeenCalledOnce();

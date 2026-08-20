@@ -19,9 +19,9 @@ export const SECURITY_HEADERS: Record<string, string> = {
   "permissions-policy": "interest-cohort=()",
 };
 
-// Strong ETag from a content buffer
+// Strong ETag from a content buffer (uses sha256 truncated for fast, collision-resistant ETags)
 export const makeEtag = (buf: Buffer): string =>
-  `"${createHash("sha1").update(buf).digest("base64url").slice(0, 27)}"`;
+  `"${createHash("sha256").update(buf).digest("base64url").slice(0, 27)}"`;
 
 // Weak stat-based ETag for static files: no extra file read needed
 export const makeStatEtag = (mtimeMs: number, size: number): string =>
