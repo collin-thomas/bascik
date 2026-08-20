@@ -213,12 +213,22 @@ export interface BascikConfigOptions {
    * fails during execution.
    *
    * - `"warn"`  — Log a warning via `console.warn` and proceed, replacing the tag with an empty string.
-   * - `"error"` — Log an error via `console.error` and proceed, replacing the tag with an empty string.
-   * - `"halt"`  — Throw an error and halt/abort compilation.
+   * - `"error"` — Log an error via `console.error` and throw an exception to halt compilation.
+   * - `"halt"`  — Throw an error and halt compilation (alias for `"error"`).
    *
-   * Defaults to `"error"`.
+   * Defaults to `"warn"` during development (`bascik`) and `"error"` during build/prod-server (`bascik --build` / `bascik --serve`).
    */
   onScriptError?: "warn" | "error" | "halt";
+  /**
+   * Action to take when minification (HTML, CSS, or JS) fails due to invalid syntax or execution error.
+   *
+   * - `"warn"`  — Log a warning via `console.warn` and proceed with unminified content.
+   * - `"error"` — Log an error via `console.error` and throw an exception to halt compilation.
+   * - `"halt"`  — Throw an error and halt compilation (alias for `"error"`).
+   *
+   * Defaults to `"warn"` during development (`bascik`) and `"error"` during build/prod-server (`bascik --build` / `bascik --serve`).
+   */
+  onMinifyError?: "warn" | "error" | "halt";
   isBuild?: boolean;
   isProdServer?: boolean;
   /**

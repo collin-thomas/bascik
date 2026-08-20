@@ -219,4 +219,76 @@ describe("BYOMinifier (Bring Your Own Minifier) – real library integrations", 
     expect(html).not.toContain("componentSecret"); // dead variable inlined/mangled by esbuild
     expect(html).toContain('console.log("secret_value")');
   });
+
+  it("logs failure to console and throws an exception when JS minification fails on invalid syntax", async () => {
+    (BascikConfig.minify as any).js = async (code: string) => {
+      await transform(code, { loader: "js", minify: true });
+    };
+
+    const pageHtml = `<!DOCTYPE html><html><head></head><body>
+      <script>const bad = ;</script>
+    </body></html>`;
+    vi.mocked(readFile).mockResolvedValue(pageHtml);
+
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+
+    await expect(transpilePage("src/pages/index.html", {})).rejects.toThrow();
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining("JS minification failed"),
+      expect.any(Error)
+    );
+
+    errorSpy.mockRestore();
+  });
+
+  it("logs failure to console and throws an exception when CSS minification fails on invalid syntax", async () => {
+    (BascikConfig.minify as any).css = async () => {
+      throw new Error("CSS Syntax Error");
+    };
+
+    const pageHtml = `<!DOCTYPE html><html><head></head><body><broken-css></broken-css></body></html>`;
+    vi.mocked(readFile).mockResolvedValue(pageHtml);
+
+    const componentList = {
+      "broken-css": {
+        fileName: "components/broken-css.html",
+        fileContent: `<style>.card { color: red; }</style><div>Bad CSS</div>`,
+      },
+    };
+
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+
+    await expect(transpilePage("src/pages/index.html", componentList)).rejects.toThrow("CSS Syntax Error");
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining("CSS minification failed"),
+      expect.any(Error)
+    );
+
+    errorSpy.mockRestore();
+  });
+
+  it("logs warning and proceeds unminified when onMinifyError is set to 'warn'", async () => {
+    (BascikConfig as any).onMinifyError = "warn";
+    (BascikConfig.minify as any).js = async () => {
+      throw new Error("JS Syntax Error");
+    };
+
+    const pageHtml = `<!DOCTYPE html><html><head></head><body>
+      <script>const x = 1;</script>
+    </body></html>`;
+    vi.mocked(readFile).mockResolvedValue(pageHtml);
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
+
+    const result = await transpilePage("src/pages/index.html", {});
+    expect(result).not.toBeNull();
+    expect(result!.distHtml).toContain("const x = 1;");
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("JS minification failed"),
+      expect.any(Error)
+    );
+
+    warnSpy.mockRestore();
+    (BascikConfig as any).onMinifyError = "error";
+  });
 });

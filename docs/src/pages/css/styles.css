@@ -295,6 +295,10 @@ code {
   overflow-wrap: break-word;
 }
 
+h1 code, h2 code, h3 code, h4 code {
+  font-size: 1em;
+}
+
 pre {
   background: var(--pre-bg);
   border: 1px solid var(--border);

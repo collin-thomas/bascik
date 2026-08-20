@@ -21,6 +21,8 @@ process.env.BASCIK_PROD_SERVER = isProdServer ? "1" : "0";
 // override any of them in bascik.config.ts.
 const prodServerDefaultConfig: Partial<Omit<BascikConfigOptions, "isBuild" | "isProdServer">> = {
   cacheHttp: true,
+  onScriptError: "error",
+  onMinifyError: "error",
   minify: {
     html: true,
     css: true,
@@ -37,6 +39,8 @@ const prodServerDefaultConfig: Partial<Omit<BascikConfigOptions, "isBuild" | "is
 export const buildDefaultConfig: Partial<
   Omit<BascikConfigOptions, "isBuild" | "isProdServer">
 > = {
+  onScriptError: "error",
+  onMinifyError: "error",
   minify: {
     html: true,
     css: true,
@@ -74,7 +78,8 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild" | "isProdServer"
   inlineStyles: false,
   useWorkers: false,
   buildScriptCache: true,
-  onScriptError: "error",
+  onScriptError: "warn",
+  onMinifyError: "warn",
   devServer: {
     logging: {
       level: "info",

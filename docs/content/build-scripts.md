@@ -50,9 +50,9 @@ export default {
 
 Bascik supports three error modes:
 
-- `'error'` (default): Logs the error to `stderr` and replaces the failing script tag with an empty string. Transpilation continues for all other pages.
-- `'warn'`: Logs a warning to `stderr` and replaces the script tag with an empty string.
-- `'halt'`: Throws an exception and immediately stops the build. This is recommended for CI/CD pipelines so broken build scripts fail the build step.
+- `'warn'` (default in dev): Logs a warning to `stderr` and replaces the failing script tag with an empty string so the dev server stays active while you edit.
+- `'error'` (default in `--build` and `--serve`): Logs the error to `stderr` and throws an exception to immediately stop the build/transpilation step.
+- `'halt'`: Alias for `'error'`. Throws an exception and stops compilation immediately.
 
 ### Conflict Errors
 

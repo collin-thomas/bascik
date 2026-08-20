@@ -151,7 +151,19 @@ const resolveCssMinifier = (): ((code: string) => Promise<string>) | null => {
   const cfg = BascikConfig.minify?.css ?? false;
   if (!cfg) return null;
   const fn = cfg === true ? minifyCss : cfg;
-  return async (code: string) => fn(code);
+  return async (code: string) => {
+    try {
+      return await fn(code);
+    } catch (err) {
+      const behavior = BascikConfig.onMinifyError ?? "error";
+      if (behavior === "halt" || behavior === "error") {
+        console.error("[bascik] CSS minification failed:", err);
+        throw err;
+      }
+      console.warn("[bascik] CSS minification failed, falling back to unminified CSS:", err);
+      return code;
+    }
+  };
 };
 
 export const resolveInlineStylesHtml = async (): Promise<string> => {
@@ -160,13 +172,14 @@ export const resolveInlineStylesHtml = async (): Promise<string> => {
   const cssMinifier = resolveCssMinifier();
   const sheets = await Promise.all(
     inlineStyles.map(async (filePath) => {
+      let css: string;
       try {
-        const css = (await readFile(filePath)).toString();
-        return cssMinifier ? await cssMinifier(css) : css;
+        css = (await readFile(filePath)).toString();
       } catch (error) {
         console.warn("[bascik] inlineStyles: could not read %s:", filePath, (error as Error).message);
         return "";
       }
+      return cssMinifier ? await cssMinifier(css) : css;
     }),
   );
   const combined = sheets.filter(Boolean).join(" ");
@@ -185,7 +198,19 @@ const resolveScriptMinifier = (): ((code: string) => Promise<string>) | null => 
   const cfg = BascikConfig.minify?.js ?? false;
   if (!cfg) return null;
   const fn = cfg === true ? minifyJs : cfg;
-  return async (code: string) => fn(code);
+  return async (code: string) => {
+    try {
+      return await fn(code);
+    } catch (err) {
+      const behavior = BascikConfig.onMinifyError ?? "error";
+      if (behavior === "halt" || behavior === "error") {
+        console.error("[bascik] JS minification failed:", err);
+        throw err;
+      }
+      console.warn("[bascik] JS minification failed, falling back to unminified JS:", err);
+      return code;
+    }
+  };
 };
 
 /**
@@ -777,7 +802,16 @@ export const transpilePage = async (
   // Minify the body AFTER component resolution so that <pre> blocks from resolved
   // components (e.g. <code-block> → <pre><code>…</code></pre>) are preserved intact.
   if (isMinifyHtml) {
-    transpiledHtmlBody = minifyHtml(transpiledHtmlBody);
+    try {
+      transpiledHtmlBody = minifyHtml(transpiledHtmlBody);
+    } catch (err) {
+      const behavior = BascikConfig.onMinifyError ?? "error";
+      if (behavior === "halt" || behavior === "error") {
+        console.error(`[bascik] HTML minification failed for "${relativePagePath}":`, err);
+        throw err;
+      }
+      console.warn(`[bascik] HTML minification failed for "${relativePagePath}", proceeding unminified:`, err);
+    }
   }
 
   // Minify inline <script> content when configured.

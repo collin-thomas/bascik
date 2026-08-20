@@ -180,10 +180,9 @@ export const executeServerScripts = async (
           const msg = err instanceof Error ? err.message : String(err);
           const errorMsg = `[bascik] server script error at "${request.path}":\n${msg}`;
           const behavior = BascikConfig.onScriptError ?? "error";
-          if (behavior === "halt") {
-            throw new Error(errorMsg);
-          } else if (behavior === "error") {
+          if (behavior === "halt" || behavior === "error") {
             console.error(errorMsg);
+            throw new Error(errorMsg);
           } else {
             console.warn(errorMsg);
           }

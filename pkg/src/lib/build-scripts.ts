@@ -348,10 +348,9 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
         errorMsg += ` in "${getRelativePath(filePath, "pages")}" at (line ${lines.length}, column ${lines[lines.length - 1].length + 1})`;
       }
       const behavior = BascikConfig.onScriptError ?? "error";
-      if (behavior === "halt") {
-        throw new Error(`${errorMsg}:\n${msg}`);
-      } else if (behavior === "error") {
+      if (behavior === "halt" || behavior === "error") {
         console.error(`${errorMsg}:\n${msg}`);
+        throw new Error(`${errorMsg}:\n${msg}`);
       } else {
         console.warn(`${errorMsg}:\n${msg}`);
       }

@@ -80,7 +80,7 @@ export const build = defineConfig({
 });
 ```
 
-## Options Reference
+## Configuration Reference
 
 ### `directory`
 
@@ -362,12 +362,24 @@ Set to `false` when debugging a script that reads external state not covered by 
 
 Action to take when a `<script data-bascik-build>` or `<script data-bascik-server>` block fails to execute.
 
-- `"error"` (default): Log a detailed compilation error with line and column numbers to `console.error` and continue transpilation, replacing the script tag's output with an empty string.
-- `"warn"`: Log a detailed warning to `console.warn` and continue transpilation, replacing the script tag's output with an empty string.
-- `"halt"`: Throw an error and halt compilation immediately, aborting the build or request.
+- `"warn"` (default in dev): Log a detailed warning to `console.warn` and continue transpilation, replacing the script tag's output with an empty string so the dev server stays running.
+- `"error"` (default in `--build` and `--serve`): Log a detailed compilation error with line and column numbers to `console.error` and throw an exception to halt compilation.
+- `"halt"`: Alias for `"error"`. Throws an exception and halts compilation immediately.
 
 ```ts
-onScriptError: "error" // default
+onScriptError: "warn" // default in dev; "error" in build/prod-server
+```
+
+### `onMinifyError`
+
+Action to take when minification (HTML, CSS, or JS) fails due to invalid syntax or execution error.
+
+- `"warn"` (default in dev): Log a warning to `console.warn` and proceed with unminified content so the dev server stays running.
+- `"error"` (default in `--build` and `--serve`): Log a failure message to `console.error` and throw an exception to halt compilation immediately.
+- `"halt"`: Alias for `"error"`. Throws an exception and halts compilation immediately.
+
+```ts
+onMinifyError: "warn" // default in dev; "error" in build/prod-server
 ```
 
 ## `build`
