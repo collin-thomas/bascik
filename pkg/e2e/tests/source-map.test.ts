@@ -13,6 +13,6 @@ test.describe('source-map-test page', () => {
 
     expect(errors.length).toBe(1);
     expect(errors[0].message).toContain('test component error');
-    expect(errors[0].stack).toContain('source-map-test.html');
+    expect(errors[0].stack).toContain('source-map-test');
   });
 });

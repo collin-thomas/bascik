@@ -7,13 +7,16 @@ Run these steps in order before pushing.
 
 1. Do a pre-review of this branch's committed and uncommitted changes. If you spot anything suspicious, fragile, or a code smell, use Test-Driven Development (TDD) to write failing unit or integration tests to probe your suspicions. This will then enable you to make better choices on if there is a real problem or not. If you need to fix something, the tests are something to validate against.
 2. Check if documentation files (such as `docs/content/`, internal docs, and architecture guides) and README files across the workspace (`README.md`, `pkg/README.md`, `create/README.md`, etc.) need to be updated to reflect any new features, API changes, architectural updates, or fixes on this branch.
-3. Check spelling and web standards across the workspace to prevent typos and compatibility regressions:
+3. Check spelling, web standards, and static analysis across the workspace to prevent typos, security flaws, and compatibility regressions:
    - Run `yarn check:spelling` to verify American English spelling with codespell.
    - Run `yarn check:standards` to check web standards with webhint.
-4. Run unit tests and typechecks across all monorepo packages:
+   - Run Jelly static analysis (`jelly --obj-spread pkg/src/index.ts`) and Semgrep (`semgrep --config p/default`) if installed locally to catch static analysis and security issues before pushing.
+4. Run unit tests, E2E tests, and typechecks across all monorepo packages using token-efficient reporters:
    - Run `yarn test:all` to verify unit tests and TypeScript compilation across pkg, docs, create, and extensions/vscode-bascik.
+   - Run `yarn e2e:all` (or `yarn pkg:e2e:all`) to run Playwright E2E integration tests (configured with concise `--reporter=line` output).
+   - Parse test results efficiently: check the pass/fail status first. If all tests pass, do NOT read or summarize individual passing test lines. If any test fails, inspect ONLY the failure stack traces and error messages.
 5. `yarn update-coverage:all`
 6. Read `docs/src/pages/assets/SKILL.md` and review changes in `docs/content/` on this branch. Update SKILL.md to reflect any new, changed, or removed APIs and patterns based on documentation updates. Keep entries concise and practical - only change what the review reveals needs changing.
 7. `yarn create:prepack`
 
-Confirm which sections of SKILL.md were added, changed, or removed, whether coverage files were updated, and that codespell and webhint checks passed cleanly.
+Confirm which sections of SKILL.md were added, changed, or removed, whether coverage files were updated, and that codespell, webhint, and static analysis checks passed cleanly.

@@ -58,20 +58,10 @@ After any `pkg/src/` change, rebuild the package and the docs server will pick i
 
 ### Updating Dynamic Documentation Assets
 
-Before committing changes that edited source code, tests, or any `docs/content/*.md`, run this custom prompt:
+Before committing changes that edited source code, tests, or documentation, run this custom prompt:
 
 ```sh
 /pre-push
 ```
 
-This runs a pre-review of committed and uncommitted changes using TDD for any code smells, checks if docs and READMEs need updates, checks spelling and web standards, verifies all unit tests, updates coverage JSON files, updates `docs/src/pages/assets/SKILL.md` based on documentation changes, and propagates assets.
-
-The prompt calls:
-
-- Pre-review of branch changes and TDD for smells or edge cases
-- Check if documentation (`docs/content/`) and README files need updates
-- `yarn check:spelling` and `yarn check:standards`
-- `yarn test:all`
-- `yarn update-coverage:all`
-- Updates `SKILL.md` based on changes in `docs/content/`
-- `yarn create:prepack`
+This runs a comprehensive pre-push checklist covering code review, documentation updates, spelling/web standards, test execution, coverage updates, and skill file synchronization.

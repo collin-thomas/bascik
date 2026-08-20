@@ -21,6 +21,8 @@
     "pkg:e2e:prod": "yarn workspace @bascik/bascik e2e:prod",
     "pkg:e2e:prod:http1": "yarn workspace @bascik/bascik e2e:prod:http1",
     "pkg:e2e:prod:http2": "yarn workspace @bascik/bascik e2e:prod:http2",
+    "pkg:e2e:all": "yarn pkg:e2e && yarn pkg:e2e:prod",
+    "e2e:all": "yarn pkg:e2e && yarn pkg:e2e:prod && yarn docs:e2e",
     "pkg:bench": "yarn workspace @bascik/bascik bench",
     "docs:build": "yarn workspace bascik-docs build",
     "docs:preview": "npx http-server docs/dist",
