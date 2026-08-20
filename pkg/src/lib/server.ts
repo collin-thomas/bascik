@@ -285,7 +285,10 @@ export const createRequestHandler = () => {
         // Parse the referer once at connection time for path-matching and open-page tracking.
         let openPagePath: string | null = null;
         try {
-          if (req.headers.referer) openPagePath = new URL(req.headers.referer as string).pathname;
+          if (req.headers.referer) {
+            const rawPath = new URL(req.headers.referer as string).pathname;
+            openPagePath = getHttpPath(rawPath);
+          }
         } catch { }
         if (openPagePath) mem.trackOpenPage(openPagePath);
 

@@ -171,6 +171,11 @@ describe("toDistPath", () => {
     expect(toDistPath("pages/css/styles.css")).toBe("dist/css/styles.css");
   });
 
+  it("handles paths already starting with pages/ or components/ even when config directory differs", () => {
+    expect(getRelativePath("pages/cli.html", "pages")).toBe("pages/cli.html");
+    expect(getRelativePath("components/card/card.html", "components")).toBe("components/card/card.html");
+  });
+
   it("resolves absolute pages paths to dist paths", () => {
     expect(toDistPath("/workspace/project/pages/about.html")).toBe("dist/about.html");
     expect(toDistPath("/workspace/project/pages/css/styles.css")).toBe("dist/css/styles.css");

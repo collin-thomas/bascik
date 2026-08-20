@@ -10,12 +10,15 @@ import { minifyJs } from "./javascript.js";
 /** Resolve an absolute path to a `parentDir/...` relative path, normalising separators. */
 export const getRelativePath = (path: string, parentDir: string): string => {
   const normalizedPath = path.replace(/\\/g, "/");
-  // Normalise the configured directory too — on Windows `resolve()` produces
-  // backslash separators which would never match the chokidar-style path.
   const parentPath = (parentDir === "pages"
     ? BascikConfig.directory.pages
     : BascikConfig.directory.components
   ).replace(/\\/g, "/");
+
+  if (normalizedPath.startsWith(`${parentDir}/`)) {
+    const relative = normalizedPath.slice(parentDir.length + 1).replace(/^\.?\//, "").replace(/^\//, "");
+    return relative ? `${parentDir}/${relative}`.replace(/\/+/g, "/") : parentDir;
+  }
 
   const suffix = normalizedPath.includes(`${parentPath}/`)
     ? normalizedPath.split(`${parentPath}/`)[1]

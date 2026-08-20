@@ -443,11 +443,13 @@ export const recursivelyTranspile = (
 export const partitionByOpenPages = (pageList: string[]): [string[], string[]] => {
   const openSet = new Set(mem.openPages);
   if (openSet.size === 0) return [[], pageList];
+  const strip = (p: string) => p.replace(/\/$/, "") || "/";
+  const openNormalizedSet = new Set([...openSet].map(strip));
   const open: string[] = [];
   const rest: string[] = [];
   for (const path of pageList) {
     const httpPath = getHttpPath(getRelativePath(path, "pages"));
-    (openSet.has(httpPath) ? open : rest).push(path);
+    (openNormalizedSet.has(strip(httpPath)) ? open : rest).push(path);
   }
   return [open, rest];
 };

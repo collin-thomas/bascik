@@ -37,4 +37,16 @@ describe("getHttpPath", () => {
     expect(getHttpPath("pages\\blog\\post.html")).toBe("/blog/post");
     expect(getHttpPath("pages\\sub\\index.html")).toBe("/sub/");
   });
+
+  it("handles paths starting with src/pages or absolute paths", () => {
+    expect(getHttpPath("src/pages/cli.html")).toBe("/cli");
+    expect(getHttpPath("/Users/collin/project/src/pages/cli.html")).toBe("/cli");
+    expect(getHttpPath("src/pages/index.html")).toBe("/");
+    expect(getHttpPath("src/pages/sub/index.html")).toBe("/sub/");
+  });
+
+  it("handles bare filenames or paths missing pages prefix", () => {
+    expect(getHttpPath("cli.html")).toBe("/cli");
+    expect(getHttpPath("/cli.html")).toBe("/cli");
+  });
 });
