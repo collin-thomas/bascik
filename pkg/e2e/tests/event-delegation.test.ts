@@ -15,13 +15,13 @@
  * The fixture is built with `minify.identifiers: false` so scoped names
  * are readable (e.g. `bascik__event-delegate__btn`).
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getInstances(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
+function getInstances(page: Page) {
   return {
     a: page.locator('.bascik__event-delegate__container').nth(0),
     b: page.locator('.bascik__event-delegate__container').nth(1),

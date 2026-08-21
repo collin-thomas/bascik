@@ -15,13 +15,13 @@
  *   - Props passed to the slotted component are applied
  *   - Fallback content renders when no slot content is provided
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getCard(page: Parameters<Parameters<typeof test>[1]>[0]['page'], n: number): Locator {
+function getCard(page: Page, n: number): Locator {
   return page.locator('.bascik__slot-card__card').nth(n);
 }
 

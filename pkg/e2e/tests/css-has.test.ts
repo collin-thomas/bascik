@@ -8,13 +8,13 @@
  *   - Dynamic class toggles via buttons work correctly with scoped names
  *   - Instance isolation: each instance has independent state
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function inst(page: Parameters<Parameters<typeof test>[1]>[0]['page'], n: number): Locator {
+function inst(page: Page, n: number): Locator {
   return page.locator('.bascik__css-has__wrapper').nth(n);
 }
 

@@ -10,13 +10,13 @@
  *   - reset-btn removes the inline property
  *   - Instance isolation: each instance has independent inline styles and state
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function inst(page: Parameters<Parameters<typeof test>[1]>[0]['page'], n: number): Locator {
+function inst(page: Page, n: number): Locator {
   return page.locator('.bascik__runtime-vars__wrapper').nth(n);
 }
 

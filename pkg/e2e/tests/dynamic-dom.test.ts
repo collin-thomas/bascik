@@ -18,13 +18,13 @@
  * The fixture is built with `minify.identifiers: false` so scoped class
  * and id names are readable (e.g. `bascik__dynamic-dom__item`).
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getInstances(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
+function getInstances(page: Page) {
   return {
     a: page.locator('.bascik__dynamic-dom__wrapper').nth(0),
     b: page.locator('.bascik__dynamic-dom__wrapper').nth(1),

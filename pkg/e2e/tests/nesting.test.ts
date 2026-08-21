@@ -20,13 +20,13 @@
  * The fixture is built with `minify.identifiers: false` so scoped names
  * are readable: e.g. `bascik__nesting-test__card`.
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function card(page: Parameters<Parameters<typeof test>[1]>[0]['page'], n: number): Locator {
+function card(page: Page, n: number): Locator {
   return page.locator('.bascik__nesting-test__card').nth(n);
 }
 

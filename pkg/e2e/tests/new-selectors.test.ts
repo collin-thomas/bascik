@@ -9,13 +9,13 @@
  *     are scoped by injecting bascik__...__el__<tag> onto matching HTML elements
  *   - Both instances render correctly (instance isolation)
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function inst(page: Parameters<Parameters<typeof test>[1]>[0]['page'], n: number): Locator {
+function inst(page: Page, n: number): Locator {
   return page.locator('.bascik__new-selectors__wrapper').nth(n);
 }
 

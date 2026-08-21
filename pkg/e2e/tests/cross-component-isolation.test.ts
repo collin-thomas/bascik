@@ -11,22 +11,22 @@
  * The fixture page renders two instances of each component so multi-instance
  * behaviour can also be confirmed.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-const redCard = (page: Parameters<Parameters<typeof test>[1]>[0]['page'], n: number) =>
+const redCard = (page: Page, n: number) =>
   page.locator('.bascik__red-card__card').nth(n);
 
-const blueCard = (page: Parameters<Parameters<typeof test>[1]>[0]['page'], n: number) =>
+const blueCard = (page: Page, n: number) =>
   page.locator('.bascik__blue-card__card').nth(n);
 
-const redTitle = (page: Parameters<Parameters<typeof test>[1]>[0]['page'], n: number) =>
+const redTitle = (page: Page, n: number) =>
   page.locator('.bascik__red-card__title').nth(n);
 
-const blueTitle = (page: Parameters<Parameters<typeof test>[1]>[0]['page'], n: number) =>
+const blueTitle = (page: Page, n: number) =>
   page.locator('.bascik__blue-card__title').nth(n);
 
 // ---------------------------------------------------------------------------

@@ -11,13 +11,13 @@
  * The fixture is built with `minify.identifiers: false` so scoped names
  * are readable (e.g. `bascik__css-transition__wrapper`).
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getInstance(page: Parameters<Parameters<typeof test>[1]>[0]['page'], n: number) {
+function getInstance(page: Page, n: number) {
   return page.locator('.bascik__css-transition__wrapper').nth(n);
 }
 

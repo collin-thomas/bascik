@@ -14,14 +14,14 @@
  * The fixture is built with `minify.identifiers: false` so scoped names
  * are readable: e.g. `bascik__attr-inherit__card`.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 /** Returns the root element of the nth <attr-inherit> instance (0-based). */
-function getRoot(page: Parameters<Parameters<typeof test>[1]>[0]['page'], n: number) {
+function getRoot(page: Page, n: number) {
   return page.locator('.bascik__attr-inherit__card').nth(n);
 }
 

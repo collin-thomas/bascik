@@ -8,13 +8,13 @@
  *   - :not() argument class names are scoped
  *   - Both instances render correctly (instance isolation)
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getInstance(page: Parameters<Parameters<typeof test>[1]>[0]['page'], n: number): Locator {
+function getInstance(page: Page, n: number): Locator {
   return page.locator('.bascik__css-complex__wrapper').nth(n);
 }
 

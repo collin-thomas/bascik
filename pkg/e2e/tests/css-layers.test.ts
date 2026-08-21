@@ -9,7 +9,7 @@
  *   - Both instances render correctly
  *   - Component CSS is injected exactly once on the page
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Scoped name constants (from actual build output)
@@ -23,7 +23,7 @@ const SCOPED_CONTAINER_TARGET = 'bascik__css-layers__container-target';
 // Helpers
 // ---------------------------------------------------------------------------
 
-function card(page: Parameters<Parameters<typeof test>[1]>[0]['page'], n: number): Locator {
+function card(page: Page, n: number): Locator {
   return page.locator(`.${SCOPED_CARD}`).nth(n);
 }
 
