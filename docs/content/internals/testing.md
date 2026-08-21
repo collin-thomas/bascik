@@ -110,7 +110,7 @@ import { defineConfig } from '@bascik/bascik/config';
 export default defineConfig({
   siteUrl: 'http://localhost:4200',
   useWorkers: true,
-  serve: { port: 9443 },
+  prodServer: { port: 9443 },
 });
 ```
 

@@ -121,7 +121,7 @@ export const createRequestHandler = () => {
     const logAccess = () => {
       if (responseStatus === 0) return;
       const logging = BascikConfig.isProdServer
-        ? (BascikConfig.serve?.logging ?? { level: "info", requests: true })
+        ? (BascikConfig.prodServer?.logging ?? { level: "info", requests: true })
         : (BascikConfig.devServer?.logging ?? { level: "info", requests: true });
       if (logging.requests === false) return;
       if (!shouldLog(logging.level ?? "info", "info")) return;
@@ -135,7 +135,7 @@ export const createRequestHandler = () => {
 
     try {
       // ── Rate limiting ────────────────────────────────────────────────────
-      if (BascikConfig.isProdServer && isRateLimited(req.remoteIp)) {
+      if (BascikConfig.isProdServer && BascikConfig.prodServer?.rateLimit !== false && isRateLimited(req.remoteIp)) {
         responseStatus = 429;
         res.respond(429, { "retry-after": String(RATE_WINDOW_MS / 1000), ...SECURITY_HEADERS });
         res.end("Too Many Requests");
@@ -398,7 +398,7 @@ export const createRequestHandler = () => {
           method: req.method ?? "GET",
           headers: requestHeaders,
           searchParams,
-        }, BascikConfig.serve?.scriptTimeout ?? DEFAULT_SCRIPT_TIMEOUT_MS, page.absolutePagePath);
+        }, BascikConfig.prodServer?.scriptTimeout ?? DEFAULT_SCRIPT_TIMEOUT_MS, page.absolutePagePath);
         const htmlBuf = Buffer.from(html);
         responseHeaders["cache-control"] = "private, no-store";
         responseHeaders["content-length"] = htmlBuf.byteLength;
@@ -444,9 +444,9 @@ export const startServerInstance = async (
   protocol: "http" | "https",
   onShutdown?: () => void
 ): Promise<string> => {
-  const hostname = BascikConfig.serve?.hostname ?? "localhost";
+  const hostname = BascikConfig.prodServer?.hostname ?? "localhost";
   const defaultPort = protocol === "https" ? 8443 : 8080;
-  const startPort = BascikConfig.serve?.port ?? defaultPort;
+  const startPort = BascikConfig.prodServer?.port ?? defaultPort;
   let origin = "";
 
   // Find the first available port, incrementing if the preferred one is in use.
@@ -525,7 +525,7 @@ export const startServerInstance = async (
 };
 
 export const startServer = async (): Promise<string> => {
-  const enableTls = !!BascikConfig.serve?.enableTls;
+  const enableTls = !!BascikConfig.prodServer?.enableTls;
   if (enableTls) {
     const { createSelfSignedCert } = await import("./pki.js");
     await createSelfSignedCert();

@@ -6,6 +6,16 @@ var list = document.querySelector('.search-results');
 var empty = document.querySelector('.search-empty');
 var hint = document.querySelector('.search-hint');
 var lastFocused = null;
+var preloaded = new Set();
+
+function preload(href) {
+  if (!href || preloaded.has(href) || href.startsWith('#') || href.startsWith('http')) return;
+  preloaded.add(href);
+  var link = document.createElement('link');
+  link.rel = 'prefetch';
+  link.href = href;
+  document.head.appendChild(link);
+}
 
 // Portal to <body> so position:fixed escapes the nav's backdrop-filter stacking context
 document.body.appendChild(overlay);
@@ -71,6 +81,35 @@ function runSearch(query) {
       + '<span class="sr-label">' + label + '</span>'
       + snipHtml + '</a></li>';
   }).join('');
+
+  var links = Array.from(list.querySelectorAll('.sr-link'));
+  links.forEach(function (a) {
+    var href = a.getAttribute('href');
+    if (!href) return;
+
+    var timer;
+    a.addEventListener('pointerenter', function () {
+      if (preloaded.has(href)) return;
+      timer = setTimeout(function () {
+        preload(href);
+      }, 65);
+    });
+
+    a.addEventListener('pointerleave', function () {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    });
+
+    a.addEventListener('focus', function () {
+      preload(href);
+    });
+
+    a.addEventListener('touchstart', function () {
+      preload(href);
+    }, { passive: true });
+  });
 }
 
 btn.addEventListener('click', open);

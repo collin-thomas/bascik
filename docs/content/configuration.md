@@ -76,7 +76,7 @@ export default defineConfig({
     },
   },
 
-  serve: {
+  prodServer: {
     port: 8080,           // default (8080 HTTP, 8443 HTTPS)
     hostname: 'localhost', // use '0.0.0.0' to bind all interfaces
     enableTls: false,     // default; set true for HTTP/2 HTTPS
@@ -248,15 +248,16 @@ devServer: {
 
 Use `level: 'warn'` or `level: 'silent'` to suppress the high-volume status lines when you are focused on application logic rather than build output.
 
-### `serve`
+### `prodServer`
 
-Configure the HTTP server started by `bascik --serve` and `bascik` (dev mode). `port`, `hostname`, `enableTls`, `scriptTimeout`, `keyFile`, and `certFile` are read in both modes. `bascik --build` does not start a server and ignores this block.
+Configure the HTTP server started by `bascik --serve` and `bascik` (dev mode). `port`, `hostname`, `enableTls`, `rateLimit`, `scriptTimeout`, `keyFile`, and `certFile` are read in both modes. `bascik --build` does not start a server and ignores this block.
 
 ```ts
-serve: {
+prodServer: {
   port: 8080,              // default (8080 for HTTP, 8443 for HTTPS)
   hostname: 'localhost',   // default; set '0.0.0.0' to bind all interfaces
   enableTls: false,        // default; set true for encrypted HTTP/2 (HTTPS)
+  rateLimit: true,         // default; enable per-IP rate limiting (500 req / 10s)
   scriptTimeout: 30000,    // max execution time (ms) per server script (default: 30000)
   keyFile: 'bascik-privkey.pem',  // path to TLS private key when enableTls: true
   certFile: 'bascik-cert.pem',    // path to TLS certificate when enableTls: true

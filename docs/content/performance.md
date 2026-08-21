@@ -133,7 +133,7 @@ Prefetch is low-priority and only runs during idle time, so it never competes wi
 
 ### Dynamic Prefetching on Hover and Focus
 
-While hardcoding `<link rel="prefetch">` tags works well for high-priority pages, you can dynamically prefetch navigation links as the user interacts with your site. This is how the Bascik documentation sidebar works under the hood.
+While hardcoding `<link rel="prefetch">` tags works well for high-priority pages, you can dynamically prefetch navigation links as the user interacts with your site. This is how the Bascik documentation sidebar and search results work under the hood.
 
 By listening for `pointerenter` (hover), `focus`, and `touchstart` events on link elements, you can append a `<link rel="prefetch">` element to your document `<head>` just as the user begins their navigation attempt. Since a typical user hovers over a link for about 100 to 300 milliseconds before clicking it, this simple script gives the browser a valuable head start to fetch and cache the next page.
 

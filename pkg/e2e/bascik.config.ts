@@ -25,7 +25,7 @@ export default defineConfig({
   exec: [
     { script: 'scripts/generate-manifest.ts' },
   ],
-  serve: {
+  prodServer: {
     port: Number(process.env.BASCIK_SERVE_PORT) || 9443,
     enableTls: process.env.BASCIK_ENABLE_TLS === 'true',
   },

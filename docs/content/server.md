@@ -212,13 +212,13 @@ npm install pg
 
 ## Server configuration
 
-Configure the production server in `bascik.config.ts` under the `serve` key.
+Configure the production server in `bascik.config.ts` under the `prodServer` key.
 
 ```ts
 // bascik.config.ts
 export default {
   cacheHttp: true,     // default in --serve; false in dev
-  serve: {
+  prodServer: {
     port: 8080,         // default (8080 for HTTP, 8443 for HTTPS)
     hostname: 'localhost',  // default; use '0.0.0.0' to bind all interfaces
     enableTls: false,   // default; set to true for encrypted HTTP/2 (HTTPS)
@@ -232,7 +232,7 @@ export default {
 };
 ```
 
-The `serve.logging.level` setting controls the request log threshold, and `requests: false` disables the per-request `GET / ...` lines without suppressing warnings or errors.
+The `prodServer.logging.level` setting controls the request log threshold, and `requests: false` disables the per-request `GET / ...` lines without suppressing warnings or errors.
 
 Bascik increments the port automatically if the preferred port is already in use.
 
@@ -278,7 +278,7 @@ These are sent on HTML pages, static assets, and error responses in both dev and
 
 ### Rate limiting
 
-In `--serve` mode the server enforces a per-IP request limit of **500 requests per 10 seconds**. Clients that exceed the limit receive `429 Too Many Requests` with a `Retry-After` header. The limit resets automatically after the window expires. Rate limiting is not active in the dev server.
+In `--serve` mode the server enforces a per-IP request limit of **500 requests per 10 seconds** by default. Clients that exceed the limit receive `429 Too Many Requests` with a `Retry-After` header. The limit resets automatically after the window expires. Rate limiting is not active in the dev server, and can be disabled on the production server by setting `prodServer: { rateLimit: false }` in `bascik.config.ts`.
 
 ### Graceful shutdown
 

@@ -51,9 +51,10 @@ describe("defaultConfig", () => {
     expect(defaultConfig.devServer?.logging?.transpiles).toBe(true);
   });
 
-  it("has default serve logging options", () => {
-    expect(defaultConfig.serve?.logging?.level).toBe("info");
-    expect(defaultConfig.serve?.logging?.requests).toBe(true);
+  it("has default prodServer logging options and rateLimit enabled", () => {
+    expect(defaultConfig.prodServer?.logging?.level).toBe("info");
+    expect(defaultConfig.prodServer?.logging?.requests).toBe(true);
+    expect(defaultConfig.prodServer?.rateLimit).toBe(true);
   });
 
   it("has deduplicateCss: true", () => {
@@ -82,7 +83,7 @@ describe("BascikConfig", () => {
     expect(Object.isFrozen(BascikConfig.directory)).toBe(true);
     expect(Object.isFrozen(BascikConfig.scopeAttribute)).toBe(true);
     expect(Object.isFrozen(BascikConfig.generate)).toBe(true);
-    expect(Object.isFrozen(BascikConfig.serve)).toBe(true);
+    expect(Object.isFrozen(BascikConfig.prodServer)).toBe(true);
     expect(Object.isFrozen(BascikConfig.watch)).toBe(true);
     expect(Object.isFrozen(BascikConfig.skipTranspilingElementContents)).toBe(
       true,
@@ -320,35 +321,35 @@ describe("user config overrides", () => {
   });
 });
 
-describe("buildOverrideConfig.serve merge", () => {
-  it("merges buildOverrideConfig.serve over user serve config during --build", () => {
+describe("buildOverrideConfig.prodServer merge", () => {
+  it("merges buildOverrideConfig.prodServer over user prodServer config during --build", () => {
     const { BascikConfig: cfg } = initBascikConfig(
-      { serve: { port: 9000, hostname: "example.test" } },
-      { serve: { port: 443 } },
+      { prodServer: { port: 9000, hostname: "example.test" } },
+      { prodServer: { port: 443 } },
       { isBuild: true },
     );
-    expect(cfg.serve?.port).toBe(443);
+    expect(cfg.prodServer?.port).toBe(443);
     // Keys not overridden by the build config keep the user value.
-    expect(cfg.serve?.hostname).toBe("example.test");
+    expect(cfg.prodServer?.hostname).toBe("example.test");
   });
 
-  it("merges buildOverrideConfig.serve over user serve config during --serve", () => {
+  it("merges buildOverrideConfig.prodServer over user prodServer config during --serve", () => {
     const { BascikConfig: cfg } = initBascikConfig(
-      { serve: { port: 9000, hostname: "example.test" } },
-      { serve: { port: 443 } },
+      { prodServer: { port: 9000, hostname: "example.test" } },
+      { prodServer: { port: 443 } },
       { isProdServer: true },
     );
-    expect(cfg.serve?.port).toBe(443);
-    expect(cfg.serve?.hostname).toBe("example.test");
+    expect(cfg.prodServer?.port).toBe(443);
+    expect(cfg.prodServer?.hostname).toBe("example.test");
   });
 
-  it("does not apply buildOverrideConfig.serve in dev mode", () => {
+  it("does not apply buildOverrideConfig.prodServer in dev mode", () => {
     const { BascikConfig: cfg } = initBascikConfig(
-      { serve: { port: 9000 } },
-      { serve: { port: 443 } },
+      { prodServer: { port: 9000 } },
+      { prodServer: { port: 443 } },
       { isBuild: false },
     );
-    expect(cfg.serve?.port).toBe(9000);
+    expect(cfg.prodServer?.port).toBe(9000);
   });
 
   it("merges devServer logging config from user config", () => {
@@ -362,10 +363,18 @@ describe("buildOverrideConfig.serve merge", () => {
     expect(cfg.devServer?.logging?.deletes).toBe(true);
   });
 
-  it("falls back to the default serve config when nothing overrides it", () => {
-    expect(BascikConfig.serve?.port).toBeUndefined();
-    expect(BascikConfig.serve?.hostname).toBe("localhost");
-    expect(BascikConfig.serve?.logging?.level).toBe("info");
-    expect(BascikConfig.serve?.logging?.requests).toBe(true);
+  it("falls back to the default prodServer config when nothing overrides it", () => {
+    expect(BascikConfig.prodServer?.port).toBeUndefined();
+    expect(BascikConfig.prodServer?.hostname).toBe("localhost");
+    expect(BascikConfig.prodServer?.logging?.level).toBe("info");
+    expect(BascikConfig.prodServer?.logging?.requests).toBe(true);
+    expect(BascikConfig.prodServer?.rateLimit).toBe(true);
+  });
+
+  it("allows rateLimit to be disabled in prodServer config", () => {
+    const { BascikConfig: cfg } = initBascikConfig({
+      prodServer: { rateLimit: false },
+    });
+    expect(cfg.prodServer?.rateLimit).toBe(false);
   });
 });

@@ -62,7 +62,7 @@ vi.mock("./config.js", () => ({
     cacheHttp: false,
     isProdServer: false,
     directory: { pages: "src/pages", components: "src/components" },
-    serve: {
+    prodServer: {
       enableTls: true, // Maintain HTTP/2 mock-stream behavior as default in test
     },
   },
@@ -807,6 +807,25 @@ describe("startHttp2Server – rate limiting", () => {
       }
     }
   });
+
+  it("does not throttle requests when rateLimit is disabled in prodServer config", async () => {
+    const { BascikConfig } = await import("./config.js");
+    (BascikConfig as any).prodServer.rateLimit = false;
+    mockMem.getPage.mockReturnValue(makePage());
+    const handler = getStreamHandler()!;
+
+    const ip = "10.0.0.100";
+    for (let i = 0; i < 501; i++) {
+      const s = { ...makeStream(), session: { socket: { remoteAddress: ip } } };
+      await handler(s, makeHeaders("/about", "GET"));
+      if (i === 500) {
+        expect(s.respond).toHaveBeenCalledWith(
+          expect.objectContaining({ ":status": 200 }),
+        );
+      }
+    }
+    (BascikConfig as any).prodServer.rateLimit = true;
+  });
 });
 
 describe("onError and server resiliency edge cases", () => {
@@ -901,12 +920,12 @@ describe("onError and server resiliency edge cases", () => {
     const { BascikConfig } = await import("./config.js");
 
     // HTTP/1.1 mode
-    (BascikConfig as any).serve.enableTls = false;
+    (BascikConfig as any).prodServer.enableTls = false;
     const http1Origin = await startServer();
     expect(http1Origin).toBeDefined();
 
     // HTTP/2 TLS mode
-    (BascikConfig as any).serve.enableTls = true;
+    (BascikConfig as any).prodServer.enableTls = true;
     const http2Origin = await startServer();
     expect(http2Origin).toBeDefined();
   });
@@ -1847,8 +1866,8 @@ describe("startHttp2Server – server-scripts execution", () => {
 describe("startHttp2Server – custom cert config error", () => {
   it("throws when custom cert files are configured but missing", async () => {
     const { BascikConfig } = await import("./config.js");
-    (BascikConfig as any).serve = {
-      ...BascikConfig.serve,
+    (BascikConfig as any).prodServer = {
+      ...BascikConfig.prodServer,
       certFile: "custom-cert.pem",
       keyFile: "custom-key.pem",
       enableTls: true,
@@ -1857,7 +1876,7 @@ describe("startHttp2Server – custom cert config error", () => {
     (access as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("ENOENT"));
 
     await expect(startHttp2Server()).rejects.toThrow("Custom TLS certificate files");
-    (BascikConfig as any).serve = { port: 8443, hostname: "localhost", enableTls: true };
+    (BascikConfig as any).prodServer = { port: 8443, hostname: "localhost", enableTls: true };
     (access as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
   });
 });

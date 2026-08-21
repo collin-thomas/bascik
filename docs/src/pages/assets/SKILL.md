@@ -915,7 +915,7 @@ export default defineConfig({
       transpiles: true,
     },
   },
-  serve: {
+  prodServer: {
     enableTls: false,     // default; set true for HTTP/2 HTTPS
     port: 8080,           // default (8080 HTTP, 8443 HTTPS)
     hostname: 'localhost', // use '0.0.0.0' to bind all interfaces (containers/proxies)
@@ -1025,11 +1025,11 @@ bascik --check                # static analysis: validate pages and components w
 
 **`bascik --serve`:** starts the HTTP/2 server against a pre-built `dist/` directory. **Only needed when the site uses `data-bascik-server` scripts** for per-request dynamic content (personalized dashboards, user-specific data, server-rendered pagination). Sites with no server scripts can be deployed to any static host with no runtime server required. Run `bascik --build` first, then `bascik --serve`. Unlike the dev server, `--serve` does not watch files or inject live-reload. `data-bascik-server` scripts execute per-request in both modes.
 
-**`serve` config block:** configure the production server in `bascik.config.ts`:
+**`prodServer` config block:** configure the production server in `bascik.config.ts`:
 ```ts
 export default {
   cacheHttp: true,       // default in --serve; false in dev
-  serve: {
+  prodServer: {
     port: 8080,            // default (8080 HTTP, 8443 HTTPS)
     hostname: 'localhost', // set '0.0.0.0' to bind all interfaces
     enableTls: false,      // default; set true for HTTP/2 HTTPS
