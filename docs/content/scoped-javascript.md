@@ -296,13 +296,13 @@ The scoping format:
 ```
 
 <!-- demo:source-js -->
-```js
-const count = document.getElementById('count');
-const dec   = document.getElementById('dec');
-const inc   = document.getElementById('inc');
-let n = 0;
-dec.addEventListener('click', () => { n--; count.textContent = n; });
-inc.addEventListener('click', () => { n++; count.textContent = n; });
+```ts
+const count = document.getElementById('count') as HTMLElement;
+const dec   = document.getElementById('dec') as HTMLButtonElement;
+const inc   = document.getElementById('inc') as HTMLButtonElement;
+let n: number = 0;
+dec.addEventListener('click', () => { n--; count.textContent = String(n); });
+inc.addEventListener('click', () => { n++; count.textContent = String(n); });
 ```
 
 <!-- demo:output-html -->

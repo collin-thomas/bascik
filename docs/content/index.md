@@ -102,17 +102,18 @@ The same component used twice on one page. Each instance gets its own namespace,
 ```html
 <!-- src/components/demo-counter.html -->
 <div class="ctr">
-  <span class="ctr-label" data-bascik-prop-label></span>
+  <span class="ctr-label" data-bascik-prop-label>Counter</span>
   <span class="ctr-count" id="count">0</span>
   <div class="ctr-btns">
-    <button class="ctr-dec">−</button>
-    <button class="ctr-inc">+</button>
+    <button class="ctr-dec" id="dec">−</button>
+    <button class="ctr-inc" id="inc">+</button>
   </div>
 </div>
 ```
 
 <!-- demo:home-counter-css -->
 ```css
+/* src/components/demo-counter.css */
 .ctr {
   display: flex;
   flex-direction: column;
@@ -131,19 +132,70 @@ The same component used twice on one page. Each instance gets its own namespace,
   cursor: pointer;
 }
 ```
+
 <!-- demo:home-counter-js -->
-```js
-// Plain JavaScript. No framework APIs, no special
-// syntax. Bascik scopes the selectors at build time
-// so each instance stays fully isolated.
-const count = document.getElementById('count');
-const dec = document.querySelector('.ctr-dec');
-const inc = document.querySelector('.ctr-inc');
-let n = 0;
+```ts
+const count = document.getElementById('count') as HTMLElement;
+const dec   = document.getElementById('dec') as HTMLButtonElement;
+const inc   = document.getElementById('inc') as HTMLButtonElement;
+let n: number = 0;
+
 dec.addEventListener('click', () => {
-  n--; count.textContent = n;
+  n--;
+  count.textContent = String(n);
 });
 inc.addEventListener('click', () => {
-  n++; count.textContent = n;
+  n++;
+  count.textContent = String(n);
 });
+```
+
+<!-- demo:home-counter-output-html -->
+```html
+<div class="bascik__demo-counter__ctr">
+  <span class="bascik__demo-counter__ctr-label">Instance A</span>
+  <span class="bascik__demo-counter__ctr-count"
+        id="bascik__demo-counter__a1b2__count">0</span>
+  <div class="bascik__demo-counter__ctr-btns">
+    <button class="bascik__demo-counter__ctr-dec"
+            id="bascik__demo-counter__a1b2__dec">−</button>
+    <button class="bascik__demo-counter__ctr-inc"
+            id="bascik__demo-counter__a1b2__inc">+</button>
+  </div>
+</div>
+```
+
+<!-- demo:home-counter-output-css -->
+```css
+.bascik__demo-counter__ctr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.bascik__demo-counter__ctr-count {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #d3ff8d;
+}
+.bascik__demo-counter__ctr-dec,
+.bascik__demo-counter__ctr-inc {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+/* CSS class names are shared across all instances of demo-counter */
+```
+
+<!-- demo:home-counter-output-js -->
+```js
+(function() {
+  const count = document.getElementById("bascik__demo-counter__a1b2__count");
+  const dec   = document.getElementById("bascik__demo-counter__a1b2__dec");
+  const inc   = document.getElementById("bascik__demo-counter__a1b2__inc");
+  let n = 0;
+  dec.addEventListener("click", () => { n--; count.textContent = String(n); });
+  inc.addEventListener("click", () => { n++; count.textContent = String(n); });
+})();
 ```
