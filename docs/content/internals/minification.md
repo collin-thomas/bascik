@@ -1,4 +1,4 @@
-# Minification & Asset Optimization
+# Minification
 
 Bascik features zero-dependency minifiers for HTML, CSS, and JavaScript, deterministic identifier hashing for scoped selectors, and custom minifier extensibility.
 
