@@ -131,10 +131,18 @@ function extractMetaFromMd(
       continue;
     }
 
-    paragraphLines.push(trimmed);
+    paragraphLines.push(line); // Preserve original line content (including backticks)
   }
 
-  const description = stripMd(paragraphLines.join(' ')) || 'HTML components. Zero runtime.';
+  // Preserve raw content with inline backticks, just strip other block MD structures
+  const description = paragraphLines.join(' ')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*\n]+)\*/g, '$1')
+    .replace(/^>\s*/gm, '')
+    .replace(/\s+/g, ' ')
+    .trim() || 'HTML components. Zero runtime.';
 
   // 2. Extract first fenced code block in the entire document
   let codeSnippet: string | undefined;
@@ -157,6 +165,24 @@ function extractMetaFromMd(
   }
 
   return { title, description, codeSnippet, codeLang };
+}
+
+function formatTextWithCodeStyles(line: string, fill = '#a0a6b5'): string {
+  // Regex to match `code` backtick sections
+  const parts = line.split(/(`[^`]+`)/g);
+  let xml = '';
+
+  for (const part of parts) {
+    if (part.startsWith('`') && part.endsWith('`')) {
+      const codeText = part.slice(1, -1);
+      // Clean, recognizable inline code styling: Monospace font with lime-green color (#d3ff8d)
+      xml += `<tspan font-family="'SF Mono', Menlo, Monaco, monospace" font-weight="700" fill="#d3ff8d">${escapeXml(codeText)}</tspan>`;
+    } else {
+      xml += `<tspan font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-weight="400" fill="${fill}">${escapeXml(part)}</tspan>`;
+    }
+  }
+
+  return xml;
 }
 
 function wrapDescription(text: string, maxCharsPerLine = 52, maxLines = 3): string[] {
@@ -271,8 +297,8 @@ export function renderOgSvg(
 
   // 1. Regular documentation page layout
   const sectionUpper = section.toUpperCase();
-  const badgeCharWidth = 10.5;
-  const badgeWidth = Math.max(90, Math.round(sectionUpper.length * badgeCharWidth + 36));
+  const badgeCharWidth = 10;
+  const badgeWidth = Math.max(90, Math.round(sectionUpper.length * badgeCharWidth + 24));
 
   const titleLines = wrapText(title, 24, 2);
   const descLines = wrapDescription(description, 48, 3);
@@ -317,7 +343,7 @@ export function renderOgSvg(
     <!-- Skewed Section Badge (Exact same dx = 10 slant as Logo) -->
     <g transform="translate(166, 0)">
       <polygon points="10,0 ${badgeWidth + 10},0 ${badgeWidth},40 0,40" fill="rgba(211,255,141,0.12)" stroke="rgba(211,255,141,0.28)" stroke-width="1.5" />
-      <text x="20" y="26" font-family="'SF Mono', Menlo, Monaco, monospace" font-size="15" font-weight="700" fill="#d3ff8d" letter-spacing="1.5">${escapeXml(sectionUpper)}</text>
+      <text x="${Math.round((badgeWidth + 10) / 2)}" y="26" text-anchor="middle" font-family="'SF Mono', Menlo, Monaco, monospace" font-size="15" font-weight="700" fill="#d3ff8d" letter-spacing="1.5">${escapeXml(sectionUpper)}</text>
     </g>
   </g>
 
@@ -330,8 +356,8 @@ export function renderOgSvg(
 
   <!-- Verbatim Subtitle / Description -->
   <g transform="translate(80, ${descStartY})">
-    <text font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="28" font-weight="400" fill="#a0a6b5" letter-spacing="-0.01em">
-      ${descLines.map((line, i) => `<tspan x="0" y="${i * descLineHeight}">${escapeXml(line)}</tspan>`).join('')}
+    <text font-size="28" font-weight="400" fill="#a0a6b5" letter-spacing="-0.01em">
+      ${descLines.map((line, i) => `<tspan x="0" y="${i * descLineHeight}">${formatTextWithCodeStyles(line, '#a0a6b5')}</tspan>`).join('')}
     </text>
   </g>
 
