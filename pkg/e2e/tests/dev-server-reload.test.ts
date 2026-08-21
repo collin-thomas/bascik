@@ -21,6 +21,7 @@ import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 
 const e2eDir = fileURLToPath(new URL('..', import.meta.url));
+const pkgDir = join(e2eDir, '..');
 const pagePath = join(e2eDir, 'src/pages/scope-test.html');
 const secondPagePath = join(e2eDir, 'src/pages/isolation-test.html');
 const componentPath = join(e2eDir, 'src/components/scope-test/scope-test.html');
