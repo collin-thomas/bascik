@@ -65,25 +65,6 @@
   }
   </script>
   <style>
-    /* Animatable gradient positions (must be @property to interpolate inside gradients) */
-    @property --hero-x {
-      syntax: '<percentage>';
-      inherits: false;
-      initial-value: 50%;
-    }
-
-    @property --hero-y {
-      syntax: '<percentage>';
-      inherits: false;
-      initial-value: -5%;
-    }
-
-    @property --orb2-x {
-      syntax: '<percentage>';
-      inherits: false;
-      initial-value: 18%;
-    }
-
     /* ── Hero ── */
     .hero {
       position: relative;
@@ -96,40 +77,39 @@
     .hero::before {
       content: '';
       position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse 85% 60% at var(--hero-x) var(--hero-y), var(--hero-glow), transparent);
+      inset: -15%;
+      background: radial-gradient(ellipse 85% 60% at 50% 10%, var(--hero-glow), transparent);
       animation: hero-drift 9s ease-in-out infinite, hero-pulse 2.2s ease-in-out infinite;
       pointer-events: none;
       z-index: -1;
+      will-change: transform;
     }
 
     /* Secondary accent orb drifting in from the bottom-left corner */
     .hero::after {
       content: '';
       position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse 35% 28% at var(--orb2-x) 108%, var(--hero-glow-2), transparent);
+      inset: -15%;
+      background: radial-gradient(ellipse 35% 28% at 18% 95%, var(--hero-glow-2), transparent);
       animation: hero-orb2 14s ease-in-out infinite;
       pointer-events: none;
       z-index: -1;
+      will-change: transform;
     }
 
     @keyframes hero-drift {
 
       0%,
       100% {
-        --hero-x: 50%;
-        --hero-y: -5%;
+        transform: translate3d(0, 0, 0);
       }
 
       30% {
-        --hero-x: 63%;
-        --hero-y: 8%;
+        transform: translate3d(12%, 8%, 0);
       }
 
       60% {
-        --hero-x: 42%;
-        --hero-y: 3%;
+        transform: translate3d(-7%, 5%, 0);
       }
     }
 
@@ -137,15 +117,15 @@
 
       0%,
       100% {
-        --orb2-x: 18%;
+        transform: translate3d(0, 0, 0);
       }
 
       40% {
-        --orb2-x: 32%;
+        transform: translate3d(14%, 0, 0);
       }
 
       70% {
-        --orb2-x: 12%;
+        transform: translate3d(-6%, 0, 0);
       }
     }
 

@@ -1,5 +1,6 @@
 /**
- * Generates docs/lighthouse/lighthouserc.all.json dynamically from docs/scripts/nav.ts.
+ * Generates docs/lighthouse/lighthouserc.all.json and docs/lighthouse/lighthouserc.all-light.json
+ * dynamically from docs/scripts/nav.ts.
  *
  * Run with:
  *   node docs/lighthouse/generate-config.ts
@@ -22,6 +23,7 @@ export async function generateLighthouseAllConfig(baseUrl = 'http://localhost:80
   // Combine and deduplicate
   const allRoutes = Array.from(new Set([...extraPages, ...navHrefs])).sort();
   const allUrls = allRoutes.map((route) => `${baseUrl}${route === '/' ? '/' : route}`);
+  const lightUrls = allRoutes.map((route) => `${baseUrl}${route === '/' ? '/?theme=light' : `${route}?theme=light`}`);
 
   const config = {
     ci: {
@@ -50,8 +52,36 @@ export async function generateLighthouseAllConfig(baseUrl = 'http://localhost:80
     },
   };
 
+  const lightConfig = {
+    ci: {
+      collect: {
+        startServerCommand: 'bascik --serve',
+        startServerReadyPattern: 'Loaded \\d+ pages? from dist/',
+        url: lightUrls,
+        numberOfRuns: 1,
+        settings: {
+          chromeFlags: '--no-sandbox --headless',
+          onlyCategories: ['accessibility'],
+        },
+      },
+      assert: {
+        assertions: {
+          'categories:accessibility': ['error', { minScore: 1.0 }],
+        },
+      },
+      upload: {
+        target: 'filesystem',
+        outputDir: './.lighthouseci-light',
+      },
+    },
+  };
+
   const outPath = join(lighthouseDir, 'lighthouserc.all.json');
   await writeFile(outPath, JSON.stringify(config, null, 2) + '\n', 'utf8');
+
+  const lightOutPath = join(lighthouseDir, 'lighthouserc.all-light.json');
+  await writeFile(lightOutPath, JSON.stringify(lightConfig, null, 2) + '\n', 'utf8');
+
   return allUrls;
 }
 
@@ -61,5 +91,7 @@ const isMain =
 
 if (isMain) {
   const urls = await generateLighthouseAllConfig();
-  console.log(`[generate-lighthouse-config] Generated lighthouserc.all.json with ${urls.length} URLs from nav.ts`);
+  console.log(
+    `[generate-lighthouse-config] Generated lighthouserc.all.json and lighthouserc.all-light.json with ${urls.length} URLs from nav.ts`
+  );
 }

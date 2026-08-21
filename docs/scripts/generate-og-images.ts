@@ -167,6 +167,16 @@ function extractMetaFromMd(
   return { title, description, codeSnippet, codeLang };
 }
 
+function extractMetaFromHtml(html: string): { title: string; description: string } | null {
+  const titleMatch = html.match(/<title>(.*?)<\/title>/i);
+  const descMatch = html.match(/<meta\s+name=["']description["']\s+content=["'](.*?)["']/i);
+  if (!titleMatch && !descMatch) return null;
+  return {
+    title: titleMatch ? titleMatch[1].replace(/\s*-\s*Bascik Docs$/, '').trim() : '',
+    description: descMatch ? descMatch[1].trim() : '',
+  };
+}
+
 function formatTextWithCodeStyles(line: string, fill = '#a0a6b5'): string {
   // Regex to match `code` backtick sections
   const parts = line.split(/(`[^`]+`)/g);

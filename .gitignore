@@ -76,7 +76,9 @@ pkg/test-results
 test-results
 hint-report/
 .lighthouseci
+.lighthouseci-light
 docs/lighthouse/lighthouserc.all.json
+docs/lighthouse/lighthouserc.all-light.json
 
 # pnpm local store (created by sandboxed installs; normally lives in ~/.local/share/pnpm)
 .pnpm-store
