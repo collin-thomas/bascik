@@ -14,13 +14,18 @@
     "pkg-dev": "node --inspect --watch-path=./bascik.config.ts --watch-path=../../pkg/src ../../pkg/src/transpile.ts",
     "generate:llms": "node scripts/generate-llms-txt.ts",
     "generate:search": "node scripts/generate-search-index.ts",
+    "typecheck": "tsc --noEmit",
+    "unit": "vitest run",
     "test": "vitest run",
+    "coverage": "vitest run --coverage.enabled && node scripts/update-coverage.ts",
+    "cover": "yarn coverage",
     "update-coverage": "vitest run --coverage.enabled && node scripts/update-coverage.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.0",
     "@types/node": "^24.0.0",
     "@vitest/coverage-v8": "^4.1.10",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.10"
   },
   "dependencies": {

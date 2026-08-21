@@ -43,3 +43,14 @@ npm run dev
 ```
 
 Your site will be live at `http://localhost:8080`.
+
+## Development & Testing
+
+From the repository root:
+
+```sh
+yarn create:build      # compile build output
+yarn create:typecheck  # TypeScript type check
+yarn create:unit       # run unit tests
+yarn create:coverage   # run unit tests with coverage report
+```

@@ -49,9 +49,21 @@ yarn install
 ```sh
 yarn pkg:build      # build the package (start here)
 yarn pkg:typecheck  # TypeScript type check
-yarn pkg:e2e        # run e2e tests
+yarn pkg:unit       # unit tests (single run)
 yarn pkg:test       # unit tests in watch mode
+yarn pkg:e2e        # run e2e tests
 yarn docs:dev       # start docs dev server
+```
+
+### Workspace-wide test commands
+
+```sh
+yarn typecheck:all  # typecheck all packages (pkg, create, docs, extension)
+yarn check:all      # spelling (codespell) and web standards (webhint)
+yarn unit:all       # unit tests across all packages
+yarn e2e:all        # E2E tests across all packages
+yarn coverage:all   # update coverage across all packages
+yarn test:all       # run typechecks, checks, unit tests, and E2E tests
 ```
 
 After any `pkg/src/` change, rebuild the package and the docs server will pick it up automatically (it watches for changes).

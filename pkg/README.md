@@ -152,7 +152,7 @@ The `if:` condition on each workflow job ensures only the relevant package is pu
 
 1. **Update version** in `pkg/package.json` following [Semantic Versioning](https://semver.org/).
 2. **Update `CHANGELOG.md`** — move entries from `[Unreleased]` to the new version with today's date.
-3. **Run tests locally** with `yarn pkg:test:ci`.
+3. **Run tests locally** with `yarn pkg:unit` or `yarn pkg:test:ci`.
 4. **Commit and tag**:
    ```sh
    git add pkg/package.json CHANGELOG.md
@@ -200,10 +200,12 @@ Requires Node.js ≥ 24. Run `yarn install` from the repo root.
 
 ```sh
 yarn pkg:build        # compile dist/
-yarn pkg:test --run   # unit tests, single run
+yarn pkg:unit         # unit tests, single run
+yarn pkg:test         # unit tests in watch mode
 yarn pkg:test:ci      # unit tests + coverage summary (used in CI)
 yarn pkg:e2e          # E2E tests
 yarn pkg:typecheck    # JSDoc/TypeScript type check
+yarn pkg:coverage     # update unit & E2E coverage
 yarn pkg:bench        # micro-benchmarks
 ```
 
@@ -211,9 +213,9 @@ yarn pkg:bench        # micro-benchmarks
 
 ```sh
 yarn pkg:test           # watch mode
-yarn pkg:test --run     # single run
+yarn pkg:unit           # single run
 yarn pkg:test:ci        # single run + coverage summary (used in CI)
-yarn pkg:test:coverage  # full coverage report → coverage/
+yarn pkg:coverage       # full coverage report → coverage/
 ```
 
 ### Type checking (JSDoc + checkJs)
@@ -374,7 +376,7 @@ const buildScopingPipeline = (instanceId: string): ComponentTransform[] =>
 
 1. Fork the repo and create a branch from `main`.
 2. Write tests for new functionality (TDD preferred).
-3. Run `yarn pkg:test --run` and `yarn pkg:typecheck` (both must pass).
+3. Run `yarn pkg:unit` and `yarn pkg:typecheck` (both must pass).
 4. Run `yarn pkg:bench` if touching the transpile pipeline, including numbers in the PR description.
 5. Update `CHANGELOG.md` under `[Unreleased]`.
 6. Open a PR against `main`.

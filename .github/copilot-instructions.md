@@ -252,7 +252,7 @@ This project runs on **Node 24**. Node natively strips TypeScript types, with no
 
 ### Use Root Scripts or `yarn workspace <pkg> <script>`
 
-Commands can be run directly from the root using helper scripts (`yarn build`, `yarn dev`, `yarn test`, `yarn typecheck`, `yarn pkg:build`, `yarn docs:dev`, etc.) or using `yarn workspace <pkg> <script>`.
+Commands can be run directly from the root using helper scripts (`yarn test:all`, `yarn unit:all`, `yarn typecheck:all`, `yarn pkg:build`, `yarn docs:dev`, etc.) or using `yarn workspace <pkg> <script>`.
 
 The repo uses **Modern Yarn 4** (`yarn@4.6.0`) with `nodeLinker: node-modules`. Ctrl+C on interactive watch mode commands exits cleanly with code 0/130 and zero `ELIFECYCLE` error messages.
 
@@ -265,13 +265,13 @@ yarn docs:dev   # docs dev server (bascik-docs)
 
 The agent runs inside a VS Code sandbox. Commands that bind to a port or make outbound connections (Playwright E2E tests, `yarn dev`, `curl`) hang indefinitely when run inside the sandbox. Do **not** retry these commands with slight variations — they will all hang.
 
-- **Unit tests** (`yarn test:all` or `npx vitest run`) work fine; no network is needed.
+- **Unit tests** (`yarn unit:all` or `npx vitest run`) work fine; no network is needed.
 - **E2E tests** (`npx playwright test`) require network and must be run by the user in a normal terminal outside the sandbox. Tell the user to run them and report the output.
 - If a sandboxed terminal command hangs, accept it and move on. Do not loop.
 
 ### Token-Efficient Test Execution & Output Parsing
 
-- **Unit tests and typechecks**: To run unit tests and typechecks across all monorepo packages (`pkg`, `docs`, `create`, `extensions/vscode-bascik`), use `yarn test:all`.
+- **Unit tests, typechecks, checks, and E2E**: To run all tests across all monorepo packages (`pkg`, `docs`, `create`, `extensions/vscode-bascik`), use `yarn test:all`. For unit tests only, use `yarn unit:all`.
 - **E2E tests**: Playwright E2E tests are configured in package scripts (`yarn pkg:e2e`, `yarn pkg:e2e:prod`, `yarn e2e:all`) with `--reporter=line` output to preserve context tokens.
 - **Efficient output parsing**:
   - Always check the overall status first: **Did it pass or fail?**

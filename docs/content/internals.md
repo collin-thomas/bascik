@@ -31,10 +31,16 @@ corepack enable
 yarn install
 ```
 
-Run the test suite:
+Run the test suite across all packages:
 
 ```sh
-yarn pkg:test
+yarn test:all
+```
+
+Or run package-specific unit tests:
+
+```sh
+yarn pkg:unit
 ```
 
 Build the package (compiles TypeScript to `pkg/dist/`):

@@ -1264,14 +1264,27 @@ Trade-off: with `class: false`, Bascik no longer isolates component class names.
 
 ## 13. Testing
 
-Bascik has two test suites, both run from `pkg/`.
+Bascik provides per-package commands and workspace-wide aggregators run from the root.
+
+### Monorepo Aggregators
+
+```sh
+yarn typecheck:all     # typecheck pkg, create, docs, ext
+yarn check:all         # spelling and web standards
+yarn unit:all          # unit tests across all packages
+yarn e2e:all           # Playwright E2E suites across all packages
+yarn coverage:all      # update coverage across all packages
+yarn test:all          # typecheck:all + check:all + unit:all + e2e:all
+```
 
 ### Unit Tests (Vitest)
 
 ```sh
+yarn pkg:unit          # single run (@bascik/bascik)
 yarn pkg:test          # watch mode
-yarn pkg:test:ci       # single run (CI)
-yarn pkg:test:coverage # with coverage report
+yarn create:unit       # create-bascik unit tests
+yarn docs:unit         # bascik-docs unit tests
+yarn ext:unit          # bascik-vscode unit tests
 yarn pkg:bench         # benchmarks
 ```
 
