@@ -38,7 +38,7 @@
     "create:update-coverage": "yarn create:coverage",
     "docs:build": "yarn workspace bascik-docs build",
     "docs:dev": "yarn workspace bascik-docs dev",
-    "docs:preview": "npx http-server docs/dist",
+    "docs:preview": "yarn workspace bascik-docs preview",
     "docs:typecheck": "yarn workspace bascik-docs typecheck",
     "docs:unit": "yarn workspace bascik-docs unit",
     "docs:e2e": "yarn workspace bascik-docs e2e",

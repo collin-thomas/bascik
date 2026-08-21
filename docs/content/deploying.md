@@ -14,7 +14,13 @@ The output uses root-relative paths (e.g. `/css/styles.css`). Files must be serv
 
 ### Previewing static builds locally
 
-To preview your static build locally before deploying, run a lightweight HTTP server in `dist/`:
+To preview your built site locally before deploying, run Bascik's built-in production server:
+
+```sh
+bascik --serve
+```
+
+Or preview with any third-party static HTTP server:
 
 ```sh
 npx http-server dist

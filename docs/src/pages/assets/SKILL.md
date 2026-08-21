@@ -1016,9 +1016,9 @@ Then run `bascik init` to scaffold the starter files and folder structure, or ad
 
 ```sh
 bascik                        # dev: transpile, start plaintext HTTP server at http://localhost:8080, watch
-bascik --build                # production: transpile to dist/ only (preview locally with `npx http-server dist`)
+bascik --build                # production: transpile to dist/ only
 bascik --build --log [path]   # write build output to a log file (default: .bascik/build.log)
-bascik --serve                # production server: serve a pre-built dist/ with HTTP
+bascik --serve                # production preview/server: serve a pre-built dist/ folder
 bascik --check                # static analysis: validate pages and components without building
 ```
 
