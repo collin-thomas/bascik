@@ -1,0 +1,17 @@
+{
+  "extends": [
+    "development"
+  ],
+  "ignoredUrls": [
+    {
+      "domain": ".*",
+      "path": ".*"
+    }
+  ],
+  "hints": {
+    "apple-touch-icons": "off",
+    "meta-viewport": "off",
+    "meta-charset-utf-8": "off",
+    "html-checker": "off"
+  }
+}

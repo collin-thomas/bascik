@@ -2,8 +2,26 @@
   "extends": [
     "development"
   ],
+  "ignoredUrls": [
+    {
+      "domain": ".*components.*",
+      "hints": [
+        "*"
+      ]
+    }
+  ],
   "hints": {
+    "apple-touch-icons": "off",
     "meta-viewport": "off",
+    "compat-api/html": [
+      "default",
+      {
+        "ignore": [
+          "apple-touch-icon",
+          "link[rel=apple-touch-icon]"
+        ]
+      }
+    ],
     "compat-api/css": [
       "default",
       {
