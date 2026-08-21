@@ -14,7 +14,7 @@ Yes. In fact some of my earliest exposure to programming was to TI-Basic on my f
 
 ## What is Bascik?
 
-Bascik is a build tool for HTML components. You write reusable components in vanilla HTML, CSS, and JavaScript. At build time, Bascik resolves your custom tags to their component source, scopes CSS and JavaScript so they never collide across instances, and outputs a directory of vanilla HTML files. Zero JavaScript is added to your pages, every script in the output was written by you.
+Bascik is a build tool for HTML components with automatically scoped CSS and JS. Zero runtime. The code that ships is the code you wrote. You write reusable components in vanilla HTML, CSS, and JavaScript. At build time, Bascik resolves your custom tags to their component source, scopes CSS and JavaScript so they never collide across instances, and outputs a directory of vanilla HTML files.
 
 By default the output is fully static and can be hosted anywhere. If you need per-request dynamic content, the [production server](/server) lets you run server-side scripts that inject into specific sections of a page at request time, while everything else stays static.
 
