@@ -208,8 +208,8 @@ export function renderOgSvg(
     const titleLines = wrapText("HTML components. Zero runtime.", 20, 2);
     const descLines = wrapDescription(description, 52, 4);
 
-    const titleStartY = 175;
-    const descStartY = 325;
+    const titleStartY = 205; // Pushed down from 175 to add more vertical breathing room below logo
+    const descStartY = 355; // Adjusted to match new title position
     const descLineHeight = 38;
 
     return `<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
@@ -277,9 +277,9 @@ export function renderOgSvg(
   const titleLines = wrapText(title, 24, 2);
   const descLines = wrapDescription(description, 48, 3);
 
-  const titleStartY = 180;
+  const titleStartY = 210; // Pushed down from 180 to add more vertical space below the logo header
   const titleLineHeight = 70;
-  const descStartY = titleStartY + titleLines.length * titleLineHeight - 2;
+  const descStartY = titleStartY + titleLines.length * titleLineHeight + 12; // Snug vertical spacing
   const descLineHeight = 38;
 
   return `<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
