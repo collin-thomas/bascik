@@ -161,7 +161,7 @@ describe("index.ts CLI runner functions", () => {
 
     const initSpy = vi.spyOn(await import("./lib/init.js"), "initProject").mockResolvedValueOnce(undefined);
     const checkSpy = vi.spyOn(await import("./lib/check.js"), "checkProject").mockResolvedValueOnce(true);
-    const serveSpy = vi.spyOn(await import("./lib/serve.js"), "serveProduction").mockResolvedValueOnce(undefined);
+    const serveSpy = vi.spyOn(await import("./lib/serve.js"), "serveProduction").mockResolvedValueOnce("http://localhost:8080");
     const transpileSpy = vi.spyOn(await import("./transpile.js"), "runTranspile").mockResolvedValue(undefined);
 
     const initRes = await runCli(["init"], { exitOnFinish: false });

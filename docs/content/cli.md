@@ -255,7 +255,13 @@ export default {
 
 When `enableTls` is true and `keyFile` / `certFile` are omitted, Bascik generates certificates automatically using `mkcert` (if installed) or `openssl` as a fallback.
 
-To preview the production build with a third-party HTTP server:
+To preview the production build locally with Bascik's built-in production server:
+
+```sh
+bascik --serve
+```
+
+Or with any third-party HTTP server:
 
 ```sh
 npx http-server dist

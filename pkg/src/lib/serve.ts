@@ -91,8 +91,10 @@ const loadDistIntoMemory = async (): Promise<void> => {
  * Entry point for `bascik --serve`.
  * Loads `dist/` into memory and starts the production HTTP/2 server.
  */
-export const serveProduction = async (): Promise<void> => {
+export const serveProduction = async (): Promise<string> => {
   await loadDistIntoMemory();
   const { startServer } = await import("./server.js");
-  await startServer();
+  const url = await startServer();
+  if (url) console.log(`Server running at ${url}`);
+  return url;
 };

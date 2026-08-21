@@ -10,10 +10,16 @@
   "scripts": {
     "dev": "bascik",
     "build": "bascik --build",
+    "serve": "bascik --serve",
+    "preview": "bascik --serve",
     "e2e": "playwright test --config e2e/playwright.config.ts --reporter=line",
     "pkg-dev": "node --inspect --watch-path=./bascik.config.ts --watch-path=../../pkg/src ../../pkg/src/transpile.ts",
     "generate:llms": "node scripts/generate-llms-txt.ts",
     "generate:search": "node scripts/generate-search-index.ts",
+    "lhci": "lhci",
+    "lighthouse": "bascik --build && lhci autorun --config=./lighthouse/lighthouserc.json",
+    "lighthouse:all": "bascik --build && node lighthouse/generate-config.ts && lhci autorun --config=./lighthouse/lighthouserc.all.json",
+    "lighthouse:ci": "bascik --build && lhci autorun --config=./lighthouse/lighthouserc.json",
     "typecheck": "tsc --noEmit",
     "unit": "vitest run",
     "test": "vitest run",
@@ -22,9 +28,11 @@
     "update-coverage": "vitest run --coverage.enabled && node scripts/update-coverage.ts"
   },
   "devDependencies": {
+    "@lhci/cli": "^0.14.0",
     "@playwright/test": "^1.62.0",
     "@types/node": "^24.0.0",
     "@vitest/coverage-v8": "^4.1.10",
+    "lighthouse": "^12.4.0",
     "typescript": "^7.0.2",
     "vitest": "^4.1.10"
   },

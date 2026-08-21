@@ -268,12 +268,14 @@ Choosing between unit tests and E2E browser tests depends on what you need to ve
 | Testing Tier | Tool | Focus & Purpose | Execution Speed |
 | --- | --- | --- | --- |
 | **E2E Browser Tests** | Playwright | **Primary test for functionality.** Validates DOM events, user clicks, visual state transitions, CSS `:has()` rules, and multi-page workflows in real browser engines. | Seconds (runs against built server) |
+| **Lighthouse CLI Audits** | Lighthouse / LHCI | **Automated quality gate.** Audits performance, accessibility, best practices, and SEO scores locally across routes. | Seconds (runs against built server) |
 | **Component Contract Unit Tests** | Vitest | **Fast structural guardrails.** Validates HTML markup contracts, ARIA accessibility attributes, slot/prop placeholders, and ensures zero runtime JavaScript is shipped when CSS handles state transitions. | Sub-second (~100ms) |
 | **Pure Logic Unit Tests** | Vitest | **Fast business logic checks.** Validates scoring, tokenization, search indexing, data transformations, and server script helper functions. | Sub-second (~10ms) |
 
 ### When to Use Each
 
 - **Use Playwright E2E tests** when you need to verify that clicking a button opens a modal, toggling a panel changes text, incrementing a counter updates the screen, or navigating links loads the correct page.
+- **Use Lighthouse CLI audits** (`yarn docs:lighthouse`) to catch accessibility, performance, best practices, and SEO regressions locally before pushing changes.
 - **Use Vitest unit tests** for instant local feedback when refactoring HTML templates, preventing accidental removal of accessibility attributes (`aria-expanded`, `aria-label`), ensuring pure CSS components stay script-free, or testing pure JavaScript/TypeScript calculation functions.
 
 ## Debugging with VS Code and Node.js

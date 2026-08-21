@@ -75,6 +75,8 @@ extensions/vscode-bascik/dist
 pkg/test-results
 test-results
 hint-report/
+.lighthouseci
+docs/lighthouse/lighthouserc.all.json
 
 # pnpm local store (created by sandboxed installs; normally lives in ~/.local/share/pnpm)
 .pnpm-store

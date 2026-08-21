@@ -13,7 +13,6 @@ yarn unit:all
 # Package-specific unit tests (single run)
 yarn pkg:unit       # @bascik/bascik
 yarn create:unit    # create-bascik
-yarn docs:unit      # bascik-docs
 yarn ext:unit       # bascik-vscode
 
 # Interactive watch mode (pkg)
@@ -22,7 +21,6 @@ yarn pkg:test
 # Single run with coverage
 yarn pkg:coverage
 yarn create:coverage
-yarn docs:coverage
 yarn ext:coverage
 yarn coverage:all   # update coverage across all packages
 
@@ -118,14 +116,11 @@ export default defineConfig({
 
 Each fixture page renders two or more instances of the component under test so isolation can be verified, changes to instance A must not affect instance B.
 
-### Compiler Verification vs. Application Functional Tests
+### Compiler Verification
 
-When designing and updating end-to-end tests, a clear distinction must be maintained between the compiler-level assertions and application-level behavior tests:
+When designing and updating end-to-end tests, these tests explicitly verify that Bascik's scoping and compilation rules transpile and rewrite selectors correctly. As a result, they deliberately select and assert against exact compiled class names (e.g., `.bascik__my-comp__wrapper`) and rewritten component IDs (e.g., `[id$="__btn"]`). They must not use `data-testid` properties because doing so would bypass the verification of the scoping engine itself.
 
-* **Compiler Verification (`pkg/e2e/tests/`):** These tests explicitly verify that Bascik's scoping and compilation rules transpile and rewrite selectors correctly. As a result, they deliberately select and assert against exact compiled class names (e.g., `.bascik__my-comp__wrapper`) and rewritten component IDs (e.g., `[id$="__btn"]`). They must not use `data-testid` properties because doing so would bypass the verification of the scoping engine itself.
-* **Application Functional Tests (`docs/e2e/`):** These tests verify that application widgets (like the documentation site's interactive demos, counters, and search panel) perform user-facing actions correctly. Because the documentation site is built in production mode with identifier minification enabled (`minify.identifiers: true`), raw classes and IDs are hashed and compressed. To prevent brittle tests that break upon minification, these tests must target elements using standard `data-testid` attributes or accessible roles (e.g., `page.getByTestId(...)`, `page.getByRole(...)`).
-
-## Test Files
+## E2E Test Files
 
 Each test file is paired with a fixture page. See the full list on [GitHub](https://github.com/bascikdev/bascik/tree/main/pkg/e2e/tests).
 
@@ -183,7 +178,7 @@ export default defineConfig({
 
 Coverage is collected via V8 and written to `pkg/coverage/`. The CI script uses `text-summary` only. The full HTML report at `coverage/index.html` is useful locally.
 
-## Test Files
+## Unit Test Files
 
 Each library module has a paired test file. See the full list on [GitHub](https://github.com/bascikdev/bascik/tree/main/pkg/src/lib).
 
@@ -218,9 +213,7 @@ describe("prefixElementAttribute", () => {
 });
 ```
 
-<div class="callout">
-<p><strong>Important:</strong> Always import the module under test <em>after</em> calling <code>vi.mock</code>. Vitest hoists mock calls to the top of the file, but the import order still matters for ensuring the mock is in place when the module initializes its dependencies.</p>
-</div>
+> **Important.** Always import the module under test *after* calling `vi.mock`. Vitest hoists mock calls to the top of the file, but the import order still matters for ensuring the mock is in place when the module initializes its dependencies.
 
 ## Benchmarks
 
@@ -252,7 +245,6 @@ yarn typecheck:all
 # Package-specific type checks
 yarn pkg:typecheck
 yarn create:typecheck
-yarn docs:typecheck
 yarn ext:typecheck
 ```
 
@@ -260,12 +252,12 @@ yarn ext:typecheck
 
 The root `package.json` provides aggregated tasks across all projects:
 
-* `yarn typecheck:all`: runs typechecks across `pkg`, `create`, `docs`, and `extensions/vscode-bascik`
+* `yarn typecheck:all`: runs typechecks across all packages in the workspace
 * `yarn check:all`: runs spelling (`check:spelling`) and web standards (`check:standards`)
 * `yarn unit:all`: runs unit test suites across all packages
-* `yarn e2e:all`: runs Playwright E2E suites (`pkg:e2e:all` and `docs:e2e`)
+* `yarn e2e:all`: runs Playwright E2E suites across the workspace
 * `yarn coverage:all`: generates and updates coverage reports across all packages
-* `yarn test:all`: runs `typecheck:all`, `check:all`, `unit:all`, and `e2e:all` in sequence (coverage excluded)
+* `yarn test:all`: runs typechecks, spelling/standards checks, unit tests, and E2E suites in sequence (coverage excluded)
 
 ## Contributing a Fix
 

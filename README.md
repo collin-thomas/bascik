@@ -63,7 +63,7 @@ yarn check:all      # spelling (codespell) and web standards (webhint)
 yarn unit:all       # unit tests across all packages
 yarn e2e:all        # E2E tests across all packages
 yarn coverage:all   # update coverage across all packages
-yarn test:all       # run typechecks, checks, unit tests, and E2E tests
+yarn test:all       # run typechecks, checks, unit tests, E2E tests, and Lighthouse CLI audits
 ```
 
 After any `pkg/src/` change, rebuild the package and the docs server will pick it up automatically (it watches for changes).

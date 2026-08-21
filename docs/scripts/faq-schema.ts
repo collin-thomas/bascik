@@ -17,7 +17,9 @@ function stripMd(text: string): string {
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')  // [text](url) → text
     .replace(/`([^`]+)`/g, '$1')               // `code` → code
     .replace(/\*\*([^*]+)\*\*/g, '$1')         // **bold** → bold
-    .replace(/\*([^*]+)\*/g, '$1');            // *italic* → italic
+    .replace(/\*([^*]+)\*/g, '$1')             // *italic* → italic
+    .replace(/</g, '&lt;')                     // < → &lt;
+    .replace(/>/g, '&gt;');                    // > → &gt;
 }
 
 export async function faqSchema(mdPath: string): Promise<string> {
@@ -59,5 +61,5 @@ export async function faqSchema(mdPath: string): Promise<string> {
     })),
   };
 
-  return `<script type="application/ld+json">\n${JSON.stringify(schema, null, 2)}\n</script>`;
+  return `<script type="application/ld+json">\n${JSON.stringify(schema, null, 2).replace(/</g, '\\u003c')}\n</script>`;
 }

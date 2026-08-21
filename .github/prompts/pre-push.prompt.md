@@ -1,6 +1,6 @@
 ---
 agent: agent
-description: Pre-push checklist: code review & TDD, doc/README updates, check spelling/standards, test workspace, update coverage, update SKILL.md, and propagate.
+description: Pre-push checklist: code review & TDD, doc/README updates, check spelling/standards, test workspace (including Lighthouse CLI), update coverage, update SKILL.md, and propagate.
 ---
 
 Run these steps in order before pushing.
@@ -11,9 +11,10 @@ Run these steps in order before pushing.
    - Run `yarn check:spelling` to verify American English spelling with codespell.
    - Run `yarn check:standards` to check web standards with webhint.
    - Run Jelly static analysis (`jelly --obj-spread pkg/src/index.ts`) and Semgrep (`semgrep --config p/default`) if installed locally to catch static analysis and security issues before pushing.
-4. Run typechecks, checks, unit tests, and Playwright E2E tests across all monorepo packages using token-efficient reporters:
-   - Run `yarn test:all` to verify typechecks (`typecheck:all`), web standards (`check:all`), unit tests (`unit:all`), and E2E tests (`e2e:all`) across pkg, docs, create, and extensions/vscode-bascik. Playwright E2E tests are configured with concise `--reporter=line` output.
-   - Parse test results efficiently: check the pass/fail status first. If all tests pass, do NOT read or summarize individual passing test lines. If any test fails, inspect ONLY the failure stack traces and error messages.
+4. Run typechecks, checks, unit tests, Playwright E2E tests, and Lighthouse CLI audits across all monorepo packages using token-efficient reporters:
+   - Run `yarn test:all` to verify typechecks (`typecheck:all`), web standards (`check:all`), unit tests (`unit:all`), E2E tests (`e2e:all`), and Lighthouse audits (`docs:lighthouse`) across pkg, docs, create, and extensions/vscode-bascik. Playwright E2E tests are configured with concise `--reporter=line` output.
+   - Lighthouse CLI (`docs:lighthouse`) runs the same underlying engine (axe-core / Chrome Lighthouse) as DevTools. Review Lighthouse output and reports in `.lighthouseci/`.
+   - Parse test results efficiently: check pass/fail status first. If any audit or test fails or drops below threshold, inspect and fix all flagged issues before pushing—including ARIA role/children attributes, color contrast ratios, console errors, broken schema scripts, and performance bottlenecks.
 5. `yarn coverage:all`
 6. Read `docs/src/pages/assets/SKILL.md` and review changes in `docs/content/` on this branch. Update SKILL.md to reflect any new, changed, or removed APIs and patterns based on documentation updates. Keep entries concise and practical - only change what the review reveals needs changing.
 7. `yarn create:prepack`
