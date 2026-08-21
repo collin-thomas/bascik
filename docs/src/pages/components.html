@@ -112,16 +112,6 @@
               </script>
             </code-block>
           </div>
-          <div data-bascik-slot="output-css">
-            <code-block data-bascik-prop-lang="css">
-              <script data-bascik-build>
-                import { join } from 'node:path';
-                import { pathToFileURL } from 'node:url';
-                const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
-                console.log(await extractDemoBlock('./content/components.md', 'output-css-hello'));
-              </script>
-            </code-block>
-          </div>
         </component-demo>
 
         <!-- Section: HTML with CSS -->
