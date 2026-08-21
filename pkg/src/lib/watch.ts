@@ -49,7 +49,10 @@ export const watchFiles = async () => {
         const hasFileExt = Array.from(MIME_MAP.keys()).some((ext) =>
           ext.startsWith(".") && path.endsWith(ext),
         );
-        return !!(stats?.isFile() && !hasFileExt);
+        return !!(
+          stats?.isFile() &&
+          (!hasFileExt || path.endsWith(".ts") || /\.(test|spec)\.[a-zA-Z0-9]+$/.test(path))
+        );
       },
       ignoreInitial: true,
       persistent: !BascikConfig.isBuild,

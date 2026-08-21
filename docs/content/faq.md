@@ -63,13 +63,26 @@ Yes. Bascik's output is vanilla HTML. Any library that works with HTML works wit
 
 No. Bascik is a build-time tool. The output is vanilla HTML, CSS, and exactly the JavaScript you wrote. No runtime script is injected into your pages.
 
-## How do companion `.js`, `.ts`, or `.mjs` script files work in a component directory?
+## How do local script references (`<script src="...">`) work inside a component?
 
-Just like companion `.css` files, Bascik automatically discovers companion `.ts`, `.js`, and `.mjs` script files located in a component directory.
+When a component `.html` file includes a `<script src="counter.ts"></script>` tag pointing to a local file in its component directory, Bascik resolves and inlines that script at build time.
 
-Bascik inlines them as `<script>` tags (or replaces matching `<script src="...">` tags if explicitly referenced in your component HTML), automatically wraps them in isolated IIFEs, rewrites DOM selector calls for scoping, and attaches DevTools `//# sourceURL` directives mapping directly back to your source `.ts`/`.js` files. You can include as many companion script files in a component folder as you need.
+It automatically wraps the script in an isolated IIFE, rewrites DOM selector calls for scoping, and attaches DevTools `//# sourceURL` directives mapping directly back to your source `.ts`/`.js` file.
 
-External `<script src="...">` links pointing to third-party CDNs or global assets are left untouched and passed through to the page output.
+Unreferenced local files are ignored so Node build/server helpers are never accidentally bundled into client code. External `<script src="...">` links pointing to CDNs or global assets are left untouched and passed through to the page output.
+
+## What happens if I place other files or helper modules in my component directory?
+
+Nothing gets copied to `dist/`.
+
+The `src/components/` directory is treated strictly as source-only files:
+- Component `.html` templates are resolved and inlined into pages at build time.
+- Companion `.css` files are scoped and deduplicated into page `<style>` blocks.
+- Client `.ts`, `.js`, or `.mjs` scripts referenced via `<script src="...">` are inlined and scoped into page `<script>` blocks.
+- Build-time (`data-bascik-build`) and server-time (`data-bascik-server`) scripts run in Node.js, and their stdout replaces the script tag.
+- Any other files (helper modules, JSON data files, tests, READMEs) stay in `src/components/` and are never copied to `dist/`.
+
+Static assets intended to be served directly as public URLs (such as images, web fonts, or global stylesheets) should be placed in `src/pages/` instead.
 
 ## Do I need to restart the dev server when I add a new component?
 

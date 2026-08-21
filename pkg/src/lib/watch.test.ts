@@ -375,20 +375,23 @@ describe("watchFiles – ignored predicates", () => {
     await watchFiles();
   });
 
-  it("watcher 0: returns false for a file with a known extension", () => {
+  it("watcher 0: returns false for a file with a known static asset extension", () => {
     const ignored = mockWatch.mock.calls[0][1].ignored as (
       p: string,
       s?: { isFile: () => boolean },
     ) => boolean;
     expect(ignored("/path/to/style.css", { isFile: () => true })).toBe(false);
+    expect(ignored("/path/to/app.js", { isFile: () => true })).toBe(false);
   });
 
-  it("watcher 0: returns true for a file with an unknown extension", () => {
+  it("watcher 0: returns true for .ts and test files or files with an unknown extension", () => {
     const ignored = mockWatch.mock.calls[0][1].ignored as (
       p: string,
       s?: { isFile: () => boolean },
     ) => boolean;
     expect(ignored("/path/to/file.txt", { isFile: () => true })).toBe(true);
+    expect(ignored("/path/to/helper.ts", { isFile: () => true })).toBe(true);
+    expect(ignored("/path/to/app.test.js", { isFile: () => true })).toBe(true);
   });
 
   it("watcher 0: returns false when stats is undefined", () => {

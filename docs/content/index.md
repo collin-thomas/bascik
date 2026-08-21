@@ -126,6 +126,7 @@ The same component used twice on one page. Each instance gets its own namespace,
     <button class="ctr-inc" id="inc">+</button>
   </div>
 </div>
+<script src="demo-counter.ts"></script>
 ```
 
 <!-- demo:home-counter-css -->

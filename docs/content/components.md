@@ -317,7 +317,7 @@ All three can live in a single file. A `<style>` block, the markup, and a `<scri
 
 Choosing between inline `<style>` or `<script>` blocks and companion `.css` or `.ts`/`.js`/`.mjs` files is a matter of personal preference.
 
-Create a `.css` file or companion script files alongside the `.html` file if you prefer to keep your styles or JavaScript separate. Bascik automatically discovers companion `.ts`, `.js`, `.mjs`, and `.css` files in the component directory, inlines them as `<script>` or `<style>` blocks, and applies the exact same scoping and IIFE wrapping pipeline.
+Create a `.css` file or companion script files alongside the `.html` file if you prefer to keep your styles or JavaScript separate. Companion `.css` files are merged into the component automatically, while companion scripts referenced via `<script src="counter.ts"></script>` are resolved, inlined, and scoped at build time.
 
 <!-- demo:source-usage-card -->
 ```html

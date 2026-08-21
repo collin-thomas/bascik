@@ -45,8 +45,8 @@
  */
 
 import { execFile } from "node:child_process";
-import { writeFile, unlink, mkdir } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { readFile, writeFile, unlink, mkdir } from "node:fs/promises";
+import { dirname, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import os from "node:os";
 import { BascikConfig } from "./config.js";
@@ -156,6 +156,7 @@ export const executeServerScripts = async (
   interface ScriptJob {
     fullTag: string;
     scriptContent: string;
+    openTag: string;
     index: number;
     length: number;
     startLine: number;
@@ -180,6 +181,7 @@ export const executeServerScripts = async (
     return {
       fullTag,
       scriptContent,
+      openTag,
       index,
       length,
       startLine,
@@ -195,6 +197,20 @@ export const executeServerScripts = async (
           `server-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
         );
 
+        let codeToExecute = job.scriptContent.trim();
+        if (!codeToExecute) {
+          const srcMatch = job.openTag.match(/\bsrc=["']([^"']+)["']/i);
+          if (srcMatch) {
+            const srcPath = srcMatch[1];
+            const resolvedPath = filePath ? resolve(dirname(filePath), srcPath) : resolve(process.cwd(), srcPath);
+            try {
+              codeToExecute = await readFile(resolvedPath, "utf8");
+            } catch (err) {
+              console.warn(`[bascik] warning: Failed to read server script src "${srcPath}":`, err);
+            }
+          }
+        }
+
         let sourceUrlComment = "";
         if (filePath) {
           const relPath = relative(process.cwd(), filePath).replace(/\\/g, "/");
@@ -204,7 +220,7 @@ export const executeServerScripts = async (
         }
 
         try {
-          await writeFile(tmpPath, job.scriptContent.trim() + sourceUrlComment, "utf8");
+          await writeFile(tmpPath, codeToExecute + sourceUrlComment, "utf8");
           const { stdout, stderr } = await runModule(tmpPath, request, timeoutMs);
           if (stderr) process.stderr.write(stderr);
           job.output = stripAnsiEscapeCodes(stdout);

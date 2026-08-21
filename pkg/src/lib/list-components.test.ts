@@ -280,19 +280,19 @@ describe("listComponents – companion scripts", () => {
     expect(result["demo-counter"].fileContent).not.toContain('src="demo-counter.ts"');
   });
 
-  it("appends companion script blocks when no <script> tag is present in component HTML", async () => {
+  it("does not auto-inline companion scripts unless explicitly referenced with <script src=\"...\">", async () => {
     mockDeepReadDirFlat.mockResolvedValue([
       "src/components/my-counter/my-counter.html",
-      "src/components/my-counter/my-counter.ts",
+      "src/components/my-counter/helper.ts",
     ]);
     mockReadFile
       .mockResolvedValueOnce(Buffer.from('<div class="ctr"></div>'))
-      .mockResolvedValueOnce(Buffer.from('let count = 0;'));
+      .mockResolvedValueOnce(Buffer.from('export function help() {}'));
 
     const result = await listComponents();
 
     expect(result["my-counter"]).toBeDefined();
-    expect(result["my-counter"].fileContent).toContain("let count = 0;");
+    expect(result["my-counter"].fileContent).not.toContain("help");
   });
 
   it("ignores .test.ts and .spec.js companion files", async () => {

@@ -177,15 +177,12 @@ export const listComponents = async (): Promise<ComponentList> => {
       let resolvedContent = await executeBuildScripts(rawContent, fileName);
 
       if (companionScripts && companionScripts.scriptMap.size > 0) {
-        const consumedPaths = new Set<string>();
-
         resolvedContent = resolvedContent.replace(
           /<script\b([^>]*)\bsrc=["']([^"']+)["']([^>]*)>\s*<\/script>/gi,
           (match, preSrc, srcVal, postSrc) => {
             const baseSrc = basename(srcVal);
             const scriptInfo = companionScripts!.scriptMap.get(baseSrc) ?? companionScripts!.scriptMap.get(srcVal);
             if (scriptInfo) {
-              consumedPaths.add(scriptInfo.relPath);
               const otherAttrs = `${preSrc}${postSrc}`.replace(/\s+/g, " ").trim();
               const attrStr = otherAttrs ? ` ${otherAttrs}` : "";
               return `<script${attrStr} data-bascik-source="${scriptInfo.relPath}">\n${scriptInfo.code}\n</script>`;
@@ -193,18 +190,6 @@ export const listComponents = async (): Promise<ComponentList> => {
             return match;
           },
         );
-
-        const remainingScripts: string[] = [];
-        for (const scriptInfo of companionScripts.scriptMap.values()) {
-          if (!consumedPaths.has(scriptInfo.relPath)) {
-            consumedPaths.add(scriptInfo.relPath);
-            remainingScripts.push(`<script data-bascik-source="${scriptInfo.relPath}">\n${scriptInfo.code}\n</script>`);
-          }
-        }
-
-        if (remainingScripts.length > 0) {
-          resolvedContent = `${resolvedContent}\n${remainingScripts.join("\n")}`;
-        }
       }
       const { html: cleanedContent, css: inlineCss } = extractInlineStyles(resolvedContent);
       const combinedCss = [cssFileContent, inlineCss].filter(Boolean).join("\n");

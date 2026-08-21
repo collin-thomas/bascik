@@ -294,6 +294,13 @@ describe("executeServerScripts", () => {
     expect(result).toBe("<p>Price: $100 for $& items ($1)\n</p>");
   });
 
+  it("reads script content from src file when server script tag body is empty", async () => {
+    const html = '<script data-bascik-server src="server-helper.ts"></script>';
+    resolveWith("<p>Welcome user</p>");
+    const result = await executeServerScripts(html, baseRequest, 30000, "src/pages/dashboard.html");
+    expect(result).toBe("<p>Welcome user</p>");
+  });
+
   it("processes multiple server scripts in parallel", async () => {
     mockExecFile
       .mockImplementationOnce(
