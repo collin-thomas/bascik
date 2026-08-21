@@ -11,6 +11,40 @@ You can define component CSS in either of these places:
 
 Both approaches are fully equivalent in functionality. At build time, Bascik extracts inline `<style>` tags from component HTML files, applies the full scoping pipeline, deduplicates the CSS across all instances on the page, and injects the compiled styles into the page `<head>`. Component markup in the `<body>` stays clean with no `<style>` tags left behind.
 
+<!-- demo:style-hoisting-example -->
+```html
+<!-- src/components/site-card.html -->
+<style>
+  .card { padding: 20px; border: 1px solid #3a3d40; }
+</style>
+<article class="card">
+  <div data-bascik-slot></div>
+</article>
+
+<!-- src/pages/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<body>
+  <site-card><p>Card content</p></site-card>
+</body>
+</html>
+
+<!-- dist/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>
+    .bascik__site-card__card { padding: 20px; border: 1px solid #3a3d40; }
+  </style>
+</head>
+<body>
+  <article class="bascik__site-card__card">
+    <p>Card content</p>
+  </article>
+</body>
+</html>
+```
+
 If a component contains multiple `<style>` tags or both a paired `.css` file and inline `<style>` tags, Bascik combines all stylesheets before scoping.
 
 > **Readability & Maintainability:** While Bascik supports multiple `<style>` tags in a single component file, using multiple `<style>` tags (or mixing an inline `<style>` tag with a companion `.css` file) is not recommended for readability and maintainability. Choose one stylesheet pattern per component.
