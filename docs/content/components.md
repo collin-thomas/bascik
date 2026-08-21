@@ -317,7 +317,9 @@ All three can live in a single file. A `<style>` block, the markup, and a `<scri
 
 Choosing between inline `<style>` or `<script>` blocks and companion `.css` or `.ts`/`.js`/`.mjs` files is a matter of personal preference.
 
-Create a `.css` file or companion script files alongside the `.html` file if you prefer to keep your styles or JavaScript separate. Companion `.css` files are merged into the component automatically, while companion scripts referenced via `<script src="counter.ts"></script>` are resolved, inlined, and scoped at build time.
+Create a `.css` file or companion script files alongside the `.html` file if you prefer to keep your styles or JavaScript separate. Companion `.css` files in the same component directory are merged automatically. Companion script files explicitly referenced via `<script src="counter.ts"></script>` are resolved, inlined, and scoped at build time.
+
+> **Directory Isolation Rule:** Path resolution for companion files is strictly scoped to the component's directory or base filename. A component inside `src/components/demo-counter/` can only reference script or style files located inside its own folder. It cannot access files across other component directories.
 
 <!-- demo:source-usage-card -->
 ```html

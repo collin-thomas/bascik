@@ -119,7 +119,9 @@ The same component used twice on one page. Each instance gets its own namespace,
 ```html
 <!-- src/components/demo-counter/demo-counter.html -->
 <div class="ctr">
-  <span class="ctr-label" data-bascik-prop-label>Counter</span>
+  <span class="ctr-label" data-bascik-prop-label>
+    Counter
+  </span>
   <span class="ctr-count" id="count">0</span>
   <div class="ctr-btns">
     <button class="ctr-dec" id="dec">−</button>
@@ -153,7 +155,7 @@ The same component used twice on one page. Each instance gets its own namespace,
 
 <!-- demo:home-counter-js -->
 ```ts
-<!-- src/components/demo-counter/demo-counter.ts -->
+// src/components/demo-counter/demo-counter.ts
 const count = document.getElementById('count') as HTMLElement;
 const dec   = document.getElementById('dec') as HTMLButtonElement;
 const inc   = document.getElementById('inc') as HTMLButtonElement;
