@@ -1,6 +1,8 @@
 # Why Bascik
 
-The guiding principle behind Bascik is simple: use what already exists. Do not invent new syntax, do not add a runtime, do not get in the way. HTML, CSS, and JavaScript are enough.
+Bascik is a build tool for HTML components with automatically scoped CSS and JS. Zero runtime. The code that ships is the code you wrote.
+
+The guiding principle behind Bascik is simple: use what already exists. Do not invent new syntax, do not add a runtime, do not get in the way. Modern HTML, CSS, and JavaScript are enough.
 
 ## See it in action
 

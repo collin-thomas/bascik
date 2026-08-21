@@ -206,12 +206,11 @@ export function renderOgSvg(
   if (isHome) {
     // 2. Special full-screen Hero layout for the home page (fallback card style)
     const titleLines = wrapText("HTML components. Zero runtime.", 20, 2);
-    const descLines = wrapDescription(description, 46, 3);
+    const descLines = wrapDescription(description, 52, 4);
 
-    const titleLineHeight = 84;
-    const titleStartY = 205; // Margins matching regular doc pages
-    const descStartY = titleStartY + titleLines.length * titleLineHeight + 12;
-    const descLineHeight = 42;
+    const titleStartY = 175;
+    const descStartY = 325;
+    const descLineHeight = 38;
 
     return `<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -238,40 +237,34 @@ export function renderOgSvg(
   <!-- Top Parallelogram Accent Line -->
   <polygon points="40,40 1160,40 1160,45 40,45" fill="#d3ff8d" />
 
-  <!-- Header: Bascik Skewed Polygon Logo + Section Badge (Overview) -->
-  <g transform="translate(80, 80)">
+  <!-- Header: Bascik Skewed Polygon Logo -->
+  <g transform="translate(80, 75)">
     <!-- Actual Bascik Skewed Logo Polygon Mark (Slant: dx = 10 over height = 40) -->
     <polygon points="10,0 150,0 140,40 0,40" fill="#d3ff8d" />
     <rect x="22" y="11" width="3" height="18" rx="1.5" fill="#0e0f10" />
     <text x="33" y="27" font-family="'Courier New', Courier, monospace" font-size="22" font-weight="800" fill="#0e0f10" letter-spacing="2.5">BASCIK</text>
-
-    <!-- Skewed Section Badge (Overview) -->
-    <g transform="translate(166, 0)">
-      <polygon points="10,0 130,0 120,40 0,40" fill="rgba(211,255,141,0.12)" stroke="rgba(211,255,141,0.28)" stroke-width="1.5" />
-      <text x="20" y="26" font-family="'SF Mono', Menlo, Monaco, monospace" font-size="15" font-weight="700" fill="#d3ff8d" letter-spacing="1.5">OVERVIEW</text>
-    </g>
   </g>
 
   <!-- Big Hero Title: split into "HTML components." (white) and "Zero runtime." (lime-green) -->
   <g transform="translate(80, ${titleStartY})">
-    <text font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="78" font-weight="800" fill="#f8fafc" letter-spacing="-0.025em">
+    <text font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="72" font-weight="800" fill="#f8fafc" letter-spacing="-0.025em">
       <tspan x="0" y="0">HTML components.</tspan>
-      <tspan x="0" y="84" fill="#d3ff8d">Zero runtime.</tspan>
+      <tspan x="0" y="78" fill="#d3ff8d">Zero runtime.</tspan>
     </text>
   </g>
 
   <!-- Verbatim Description / Paragraph -->
   <g transform="translate(80, ${descStartY})">
-    <text font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="30" font-weight="400" fill="#a0a6b5" letter-spacing="-0.01em">
+    <text font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="28" font-weight="400" fill="#a0a6b5" letter-spacing="-0.01em">
       ${descLines.map((line, i) => `<tspan x="0" y="${i * descLineHeight}">${escapeXml(line)}</tspan>`).join('')}
     </text>
   </g>
 
   <!-- Footer -->
-  <g transform="translate(80, 528)">
-    <line x1="0" y1="-32" x2="1040" y2="-32" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" />
-    <text x="0" y="8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="26" font-weight="800" fill="#d3ff8d" letter-spacing="-0.02em">HTML components. Zero runtime.</text>
-    <text x="1040" y="8" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="26" font-weight="700" fill="#d3ff8d">bascik.dev</text>
+  <g transform="translate(80, 520)">
+    <line x1="0" y1="-25" x2="1040" y2="-25" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" />
+    <text x="0" y="27" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="26" font-weight="800" fill="#d3ff8d" letter-spacing="-0.02em">HTML components. Zero runtime.</text>
+    <text x="1040" y="27" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="26" font-weight="700" fill="#d3ff8d">bascik.dev</text>
   </g>
 </svg>`;
   }
@@ -282,12 +275,12 @@ export function renderOgSvg(
   const badgeWidth = Math.max(90, Math.round(sectionUpper.length * badgeCharWidth + 36));
 
   const titleLines = wrapText(title, 24, 2);
-  const descLines = wrapDescription(description, 46, 3);
+  const descLines = wrapDescription(description, 48, 3);
 
-  const titleStartY = 205; // Pushed down from 160 to prevent overlap with logo header
-  const titleLineHeight = 72;
-  const descStartY = titleStartY + titleLines.length * titleLineHeight + 12; // Moved closer (from 16 to 12)
-  const descLineHeight = 38; // Slightly tighter (from 42 to 38)
+  const titleStartY = 180;
+  const titleLineHeight = 70;
+  const descStartY = titleStartY + titleLines.length * titleLineHeight - 2;
+  const descLineHeight = 38;
 
   return `<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -315,7 +308,7 @@ export function renderOgSvg(
   <polygon points="40,40 1160,40 1160,45 40,45" fill="#d3ff8d" />
 
   <!-- Header: Bascik Skewed Polygon Logo + Section Badge -->
-  <g transform="translate(80, 80)">
+  <g transform="translate(80, 75)">
     <!-- Actual Bascik Skewed Logo Polygon Mark (Slant: dx = 10 over height = 40) -->
     <polygon points="10,0 150,0 140,40 0,40" fill="#d3ff8d" />
     <rect x="22" y="11" width="3" height="18" rx="1.5" fill="#0e0f10" />
@@ -337,7 +330,7 @@ export function renderOgSvg(
 
   <!-- Verbatim Subtitle / Description -->
   <g transform="translate(80, ${descStartY})">
-    <text font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="30" font-weight="400" fill="#a0a6b5" letter-spacing="-0.01em">
+    <text font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="28" font-weight="400" fill="#a0a6b5" letter-spacing="-0.01em">
       ${descLines.map((line, i) => `<tspan x="0" y="${i * descLineHeight}">${escapeXml(line)}</tspan>`).join('')}
     </text>
   </g>
@@ -345,8 +338,8 @@ export function renderOgSvg(
   <!-- Footer -->
   <g transform="translate(80, 520)">
     <line x1="0" y1="-25" x2="1040" y2="-25" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" />
-    <text x="0" y="22" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="26" font-weight="800" fill="#d3ff8d" letter-spacing="-0.02em">HTML components. Zero runtime.</text>
-    <text x="1040" y="22" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="26" font-weight="700" fill="#d3ff8d">bascik.dev</text>
+    <text x="0" y="27" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="26" font-weight="800" fill="#d3ff8d" letter-spacing="-0.02em">HTML components. Zero runtime.</text>
+    <text x="1040" y="27" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="26" font-weight="700" fill="#d3ff8d">bascik.dev</text>
   </g>
 </svg>`;
 }
