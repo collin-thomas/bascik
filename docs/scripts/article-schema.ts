@@ -33,8 +33,8 @@ export async function articleSchema(): Promise<string> {
     html.match(/<meta\b[^>]*\bcontent=["']([^"']+)["'][^>]*\bname=["']description["']/i);
   if (!titleMatch || !descMatch) return '';
 
-  const headline = titleMatch[1].trim();
-  const description = descMatch[1].trim();
+  const headline = titleMatch[1].trim().replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const description = descMatch[1].trim().replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
   const relPath = pageFile.startsWith(pagesDir)
     ? pageFile.slice(pagesDir.length).replace(/^[\\/]/, '').replace(/\\/g, '/')

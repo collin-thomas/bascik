@@ -48,12 +48,14 @@ export async function breadcrumbLd(): Promise<string> {
   }
   const titleM = html.match(/<title[^>]*>([^<]+)<\/title>/);
   // Strip " - Bascik Docs" / " - Bascik Developer Guide" / " - Bascik" suffixes
-  const pageLabel = titleM
+  const rawPageLabel = titleM
     ? titleM[1].replace(/ - Bascik.*$/, '').trim()
     : parts[parts.length - 1];
+  const pageLabel = rawPageLabel.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-  const sectionLabel = SECTION_LABELS[section]
+  const rawSectionLabel = SECTION_LABELS[section]
     ?? (section[0].toUpperCase() + section.slice(1));
+  const sectionLabel = rawSectionLabel.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
   const items: Array<{ '@type': string; position: number; name: string; item?: string }> = [
     { '@type': 'ListItem', position: 1, name: 'Bascik', item: `${siteUrl}/` },

@@ -57,4 +57,22 @@ It transpiles HTML templates at build time.
     const result = await faqSchema('empty.md');
     expect(result).toBe('');
   });
+
+  it('escapes HTML tags (< and >) to &lt; and &gt; to prevent breaking the script tag', async () => {
+    const mdContent = `
+# FAQ Header
+
+## How do local script references (\`<script src="...">\`) work?
+
+When a component \`.html\` file includes a \`<script src="counter.ts"></script>\` tag.
+`;
+    const mdFile = join(tempDir, 'faq.md');
+    await writeFile(mdFile, mdContent);
+    process.chdir(tempDir);
+
+    const result = await faqSchema('faq.md');
+    const parsed = JSON.parse(result.replace(/<script[^>]*>/, '').replace(/<\/script>/, ''));
+    expect(parsed.mainEntity[0].name).toBe('How do local script references (&lt;script src="..."&gt;) work?');
+    expect(parsed.mainEntity[0].acceptedAnswer.text).toBe('When a component .html file includes a &lt;script src="counter.ts"&gt;&lt;/script&gt; tag.');
+  });
 });

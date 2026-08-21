@@ -17,7 +17,9 @@ function stripMd(text: string): string {
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')  // [text](url) → text
     .replace(/`([^`]+)`/g, '$1')               // `code` → code
     .replace(/\*\*([^*]+)\*\*/g, '$1')         // **bold** → bold
-    .replace(/\*([^*]+)\*/g, '$1');            // *italic* → italic
+    .replace(/\*([^*]+)\*/g, '$1')             // *italic* → italic
+    .replace(/</g, '&lt;')                     // < → &lt;
+    .replace(/>/g, '&gt;');                    // > → &gt;
 }
 
 export async function faqSchema(mdPath: string): Promise<string> {

@@ -43,6 +43,7 @@
     "docs:unit": "yarn workspace bascik-docs unit",
     "docs:e2e": "yarn workspace bascik-docs e2e",
     "docs:lighthouse": "yarn workspace bascik-docs lighthouse",
+    "docs:lighthouse:all": "yarn workspace bascik-docs lighthouse:all",
     "docs:coverage": "yarn workspace bascik-docs coverage",
     "docs:cover": "yarn docs:coverage",
     "docs:test": "yarn workspace bascik-docs test",
