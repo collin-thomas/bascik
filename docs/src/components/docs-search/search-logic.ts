@@ -38,7 +38,7 @@ export function score(e: SearchEntry, q: string, toks: string[]): number {
 
   // Tier 1 (>=2000): Category (section) match, outranks page title, heading, and text
   if (sec) {
-    var secMatch = sec === q || sec.startsWith(q) || sec.includes(q) || (toks.length > 0 && secHits === toks.length) || secHits > 0;
+    var secMatch = sec === q || sec.startsWith(q) || sec.includes(q) || (toks.length > 0 && secHits === toks.length);
     if (secMatch) {
       var isPage = e.heading === null;
       var secBase = isPage ? 2000 : 1800;
@@ -48,7 +48,6 @@ export function score(e: SearchEntry, q: string, toks: string[]): number {
       if (sec.startsWith(q)) return secBase + 400 + secHits + bonus;
       if (sec.includes(q)) return secBase + 200 + secHits + bonus;
       if (toks.length > 0 && secHits === toks.length) return secBase + 100 + secHits + bonus;
-      if (secHits > 0) return secBase + secHits * 10 + bonus;
     }
   }
 
@@ -104,7 +103,7 @@ export function buildResults(index: SearchEntry[], q: string, toks: string[], li
     .filter(function (x) { return x.s > 0; })
     .sort(function (a, b) { return b.s - a.s; });
 
-  var pageMatches = scored.filter(function (x) { return x.e.heading === null && x.s >= 1100 && x.s < 2000; });
+  var pageMatches = scored.filter(function (x) { return x.e.heading === null && x.s >= 1100; });
   var bestPage = pageMatches.length === 1 ? pageMatches[0]
     : (pageMatches.length > 1 && pageMatches[0].s > pageMatches[1].s) ? pageMatches[0]
       : null;

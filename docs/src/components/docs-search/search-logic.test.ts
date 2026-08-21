@@ -75,6 +75,14 @@ describe('score', () => {
       expect(score(entry({ section: 'Recipes', navLabel: 'Markdown', heading: null }), q, tokens(q))).toBeGreaterThanOrEqual(2600);
     });
 
+    it('does not trigger category match for multi-word query when section only contains one token', () => {
+      const q = 'scoped styles';
+      const toks = tokens(q);
+      const e = entry({ section: 'Styles & Scripts', navLabel: 'Scoped Styles', heading: null });
+      // Should match navLabel tier 2 (>=1200) rather than failing category match
+      expect(score(e, q, toks)).toBeGreaterThanOrEqual(1200);
+    });
+
     it('returns category matches above page title matches', () => {
       const q = 'recipes';
       const catScore = score(entry({ section: 'Recipes', navLabel: 'Markdown', heading: null }), q, tokens(q));

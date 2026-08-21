@@ -1662,10 +1662,10 @@ describe("startHttp2Server – logAccess skip conditions", () => {
     (BascikConfig as any).devServer = { logging: { level: "info", requests: true } };
   });
 
-  it("uses serve.logging config when isProdServer is true", async () => {
+  it("uses prodServer.logging config when isProdServer is true", async () => {
     const { BascikConfig } = await import("./config.js");
     (BascikConfig as any).isProdServer = true;
-    (BascikConfig as any).serve = { logging: { level: "info", requests: true } };
+    (BascikConfig as any).prodServer = { logging: { level: "info", requests: true } };
     mockMem.getPage.mockReturnValue(makePage());
     const handler = getStreamHandler()!;
     const stream = makeStream();

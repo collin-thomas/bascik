@@ -13,7 +13,7 @@ function preload(href) {
   preloaded.add(href);
   var link = document.createElement('link');
   link.rel = 'prefetch';
-  link.href = href;
+  link.setAttribute('href', href);
   document.head.appendChild(link);
 }
 
@@ -50,7 +50,9 @@ async function loadIndex() {
   try {
     index = await (await fetch('/assets/search-index.json')).json();
     if (input.value.trim()) runSearch(input.value);
-  } catch (e) { }
+  } catch (e) {
+    console.error('[docs-search] loadIndex error:', e);
+  }
 }
 
 function esc(s) {
@@ -82,24 +84,13 @@ function runSearch(query) {
       + snipHtml + '</a></li>';
   }).join('');
 
-  var links = Array.from(list.querySelectorAll('.sr-link'));
+  var links = Array.from(list.querySelectorAll('a[href]'));
   links.forEach(function (a) {
     var href = a.getAttribute('href');
     if (!href) return;
 
-    var timer;
-    a.addEventListener('pointerenter', function () {
-      if (preloaded.has(href)) return;
-      timer = setTimeout(function () {
-        preload(href);
-      }, 65);
-    });
-
-    a.addEventListener('pointerleave', function () {
-      if (timer) {
-        clearTimeout(timer);
-        timer = null;
-      }
+    a.addEventListener('mouseenter', function () {
+      preload(href);
     });
 
     a.addEventListener('focus', function () {
@@ -111,6 +102,20 @@ function runSearch(query) {
     }, { passive: true });
   });
 }
+
+list.addEventListener('focusin', function (e) {
+  var a = e.target && e.target.closest && e.target.closest('a[href]');
+  if (!a) return;
+  var href = a.getAttribute('href');
+  if (href) preload(href);
+});
+
+list.addEventListener('touchstart', function (e) {
+  var a = e.target && e.target.closest && e.target.closest('a[href]');
+  if (!a) return;
+  var href = a.getAttribute('href');
+  if (href) preload(href);
+}, { passive: true });
 
 btn.addEventListener('click', open);
 backdrop.addEventListener('click', close);
@@ -140,7 +145,7 @@ document.addEventListener('keydown', function (e) {
   }
   if (!overlay.hidden && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
     e.preventDefault();
-    var links = Array.from(list.querySelectorAll('.sr-link'));
+    var links = Array.from(list.querySelectorAll('a[href]'));
     if (!links.length) return;
     var cur = document.activeElement;
     var idx = links.indexOf(cur);

@@ -32,7 +32,7 @@ Components have always been a JavaScript thing. Web Components tried to make it 
 
 That might seem like a big undertaking, but the web standards are so well defined that you have an obtainable target. It'll just take some effort. So that's what I did.
 
-Then I saw the rise of AI-assisted coding and thought, this tool I've been building is going to be perfect for that. Web development frameworks and tooling primarily exists to make tasks easier for developers. But when the tools starts to get in the way, giving an LLM a tool that doesn't impose its own rules and instead uses the fundamental web languages is going to be great for both developers and AI-assisted coding.
+Then I saw the rise of AI-assisted coding and thought, this tool I've been building is going to be perfect for that. Web development frameworks and tooling primarily exists to make tasks easier for developers. But when the levels of abstraction start getting in the way, a tool that doesn't impose its own rules and instead uses the fundamental web languages is going to be great for both developers and AI-assisted coding.
 
 ## What happens if I name a component after a native HTML element?
 

@@ -91,7 +91,7 @@ html[data-theme="light"] {
   --accent:       #d3ff8d;
   --accent-dim:   rgba(211,255,141,0.28);
   --text:         #18191b;
-  --text-muted:   #525d6a;
+  --text-muted:   #475569;
   --pillar-text:  var(--text-muted);
   --nav-bg:       rgba(242,243,240,0.92);
   --pre-bg:       var(--elevated);

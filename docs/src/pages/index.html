@@ -364,7 +364,7 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: .1em;
-      color: var(--accent);
+      color: var(--badge-color);
       margin: 0 0 10px;
     }
 
@@ -513,7 +513,7 @@
 
     .metric-label {
       font-size: 0.85rem;
-      color: #a0a6b4;
+      color: var(--pillar-text);
     }
 
     /* ── Install CTA ── */
@@ -544,6 +544,24 @@
       margin-bottom: 32px;
     }
 
+    .docs-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 960px) {
+      .docs-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .docs-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .docs-card-link {
       text-decoration: none;
     }
@@ -558,7 +576,7 @@
     }
 
     .highlight-text {
-      color: var(--brand, #d3ff8d);
+      color: var(--badge-color);
     }
 
     @media (max-width: 820px) {
@@ -871,7 +889,7 @@
         <p class="section-sub docs-grid-sub">Each feature has a dedicated page with examples and a complete
           reference.</p>
 
-        <div class="grid-3">
+        <div class="docs-grid">
           <a href="/components" class="card docs-card-link">
             <p class="section-label">Core</p>
             <h3 class="docs-card-title">Components</h3>

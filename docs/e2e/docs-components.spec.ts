@@ -98,12 +98,13 @@ test.describe('Docs Component E2E Tests', () => {
     // Open search modal via button click
     await searchBtn.click();
     await expect(modal).toBeVisible();
+    await expect(input).toBeFocused();
 
     // Type query
     await input.fill('scoped styles');
 
     // Locate the first result's link
-    const link = resultsList.locator('a.sr-link').first();
+    const link = resultsList.getByRole('link').first();
     await expect(link).toBeVisible();
 
     const href = await link.getAttribute('href');
