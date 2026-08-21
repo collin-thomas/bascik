@@ -36,6 +36,7 @@ yarn docs:build                      # write dist/
 yarn docs:typecheck                  # TypeScript type check
 yarn docs:unit                       # Vitest unit tests
 yarn docs:e2e                        # Playwright E2E tests
+yarn docs:lighthouse                 # Lighthouse CLI performance and accessibility audits
 yarn docs:coverage                   # unit tests with coverage report
 ```
 

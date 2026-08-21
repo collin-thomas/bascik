@@ -38,6 +38,9 @@ End-to-end tests are run via:
 # Static production server suite
 yarn pkg:e2e
 
+# Documentation site Lighthouse CLI audit suite
+yarn docs:lighthouse
+
 # Dev server suite (runs full E2E test suite + live-reload tests against bascik --dev)
 yarn pkg:e2e:dev
 

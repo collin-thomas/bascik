@@ -808,6 +808,29 @@ Lighthouse 13.3 introduced a new **Agentic Browsing** category that audits how w
 
 > **Bascik sites score 3/3 on Agentic Browsing without any configuration.** Correct HTML, zero layout shift, and a well-formed `llms.txt` are natural properties of a statically built site. Frameworks that hydrate on the client introduce layout shift during hydration and often produce an accessibility tree that differs from the initial server-rendered HTML, both of which hurt this score.
 
+## Local Auditing with Lighthouse CLI
+
+Catching performance, accessibility, best practices, and SEO regressions locally before deployment is essential for maintaining high quality.
+
+The documentation site includes Lighthouse CI CLI (`@lhci/cli`) and Lighthouse CLI pre-configured in `lighthouserc.json`. It builds the production bundle, starts Bascik's production server, audits key documentation routes, and asserts minimum score thresholds.
+
+```sh
+# Run automated Lighthouse CLI audits across key documentation routes
+yarn docs:lighthouse
+
+# Or run directly from the docs workspace
+yarn workspace bascik-docs lighthouse
+```
+
+The audit configuration in `lighthouserc.json` verifies scores across core categories:
+
+- **Performance:** Warning threshold at 0.90
+- **Accessibility:** Error threshold at 0.95
+- **Best Practices:** Error threshold at 0.95
+- **SEO:** Error threshold at 0.95
+
+Detailed audit reports are saved to `.lighthouseci` locally so you can open full HTML reports in your browser to inspect any flagged issues.
+
 ## The Kitchen Sink: Complete Head Template
 
 Here is a complete `<head>` combining every technique on this page. Copy it as a starting point for any Bascik page and fill in the values specific to your site.
