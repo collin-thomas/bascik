@@ -159,119 +159,149 @@ function extractMetaFromMd(
   return { title, description, codeSnippet, codeLang };
 }
 
-function highlightCodeLine(line: string): string {
-  // Truncate line if longer than 48 chars
-  const truncated = line.length > 48 ? line.slice(0, 47) + '…' : line;
+function wrapDescription(text: string, maxCharsPerLine = 52, maxLines = 3): string[] {
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return [];
 
-  // Preserve exact leading whitespace with non-breaking spaces
-  const leadingSpaces = truncated.match(/^[\s\t]*/)?.[0] ?? '';
-  const content = truncated.slice(leadingSpaces.length);
-  const indentSvg = leadingSpaces.replace(/ /g, '&#160;').replace(/\t/g, '&#160;&#160;');
+  const lines: string[] = [];
+  let currentLine = '';
+  let truncated = false;
 
-  if (!content) {
-    return `<tspan fill="#f0f1f2">${indentSvg}</tspan>`;
-  }
-
-  // Handle full line comments
-  if (/^\s*(<!--|\/\*|\/\/)/.test(content)) {
-    return `<tspan fill="#f0f1f2">${indentSvg}</tspan><tspan fill="#7e8190">${escapeXml(content)}</tspan>`;
-  }
-
-  // Tokenize line content
-  const tokenRegex = /(".*?"|'[^']*'|`.*?`|<\/?[a-zA-Z0-9_-]+|\/?>|data-bascik-[a-zA-Z0-9_-]+|\.[a-zA-Z0-9_-]+|\b(?:const|let|var|function|import|export|from|return|await|npm|npx|yarn|git)\b|[a-zA-Z0-9_-]+(?=\s*=)|[a-zA-Z0-9_-]+(?=\s*:))/g;
-
-  let result = `<tspan fill="#f0f1f2">${indentSvg}</tspan>`;
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-
-  while ((match = tokenRegex.exec(content)) !== null) {
-    if (match.index > lastIndex) {
-      result += `<tspan fill="#f0f1f2">${escapeXml(content.slice(lastIndex, match.index))}</tspan>`;
-    }
-
-    const token = match[0];
-    lastIndex = tokenRegex.lastIndex;
-
-    if (/^["'`].*["'`]$/.test(token)) {
-      // String
-      result += `<tspan fill="#a6e3a1">${escapeXml(token)}</tspan>`;
-    } else if (token.startsWith('</') || token.startsWith('<')) {
-      // Tag start: e.g. <section or </p
-      const isClose = token.startsWith('</');
-      const bracket = isClose ? '&lt;/' : '&lt;';
-      const tagName = isClose ? token.slice(2) : token.slice(1);
-      result += `<tspan fill="#89b4fa">${bracket}</tspan><tspan fill="#89ddff">${escapeXml(tagName)}</tspan>`;
-    } else if (token === '>' || token === '/>') {
-      // Tag end
-      result += `<tspan fill="#89b4fa">${escapeXml(token)}</tspan>`;
-    } else if (token.startsWith('data-bascik-')) {
-      // Bascik attribute
-      result += `<tspan fill="#d3ff8d">${escapeXml(token)}</tspan>`;
-    } else if (token.startsWith('.')) {
-      // CSS class selector
-      result += `<tspan fill="#d3ff8d">${escapeXml(token)}</tspan>`;
-    } else if (/^(?:const|let|var|function|import|export|from|return|await|npm|npx|yarn|git)$/.test(token)) {
-      // Keyword
-      result += `<tspan fill="#cba6f7">${escapeXml(token)}</tspan>`;
-    } else if (content[match.index + token.length] === '=') {
-      // HTML attribute name
-      result += `<tspan fill="#89ddff">${escapeXml(token)}</tspan>`;
-    } else if (content[match.index + token.length] === ':') {
-      // CSS property name
-      result += `<tspan fill="#cba6f7">${escapeXml(token)}</tspan>`;
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    if (!currentLine) {
+      currentLine = word;
+    } else if ((currentLine + ' ' + word).length <= maxCharsPerLine) {
+      currentLine += ' ' + word;
     } else {
-      result += `<tspan fill="#f0f1f2">${escapeXml(token)}</tspan>`;
+      lines.push(currentLine);
+      if (lines.length === maxLines) {
+        truncated = true;
+        currentLine = word;
+        break;
+      }
+      currentLine = word;
     }
   }
 
-  if (lastIndex < content.length) {
-    result += `<tspan fill="#f0f1f2">${escapeXml(content.slice(lastIndex))}</tspan>`;
+  if (lines.length < maxLines && currentLine) {
+    lines.push(currentLine);
+  } else if (lines.length === maxLines && truncated) {
+    let last = lines[lines.length - 1];
+    if (last.length + 3 > maxCharsPerLine) {
+      last = last.slice(0, maxCharsPerLine - 3).trim();
+    }
+    lines[lines.length - 1] = last.replace(/[.,;!?]+$/, '') + '...';
   }
 
-  return result;
+  return lines;
 }
 
 export function renderOgSvg(
   title: string,
   section: string,
   description: string,
-  fileName = 'src/components/card.html',
-  codeSnippet?: string
+  isHome = false
 ): string {
+  if (isHome) {
+    // 2. Special full-screen Hero layout for the home page (fallback card style)
+    const titleLines = wrapText("HTML components. Zero runtime.", 20, 2);
+    const descLines = wrapDescription(description, 46, 3);
+
+    const titleLineHeight = 84;
+    const titleStartY = 205; // Margins matching regular doc pages
+    const descStartY = titleStartY + titleLines.length * titleLineHeight + 12;
+    const descLineHeight = 42;
+
+    return `<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Bascik Dark Theme Background (#18191b -> #121314) -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#18191b" />
+      <stop offset="100%" stop-color="#121314" />
+    </linearGradient>
+
+    <!-- Lime Glow Radial Gradient - Large immersive background orb -->
+    <radialGradient id="hero-lime-glow" cx="45%" cy="-5%" r="75%">
+      <stop offset="0%" stop-color="#d3ff8d" stop-opacity="0.14" />
+      <stop offset="100%" stop-color="#d3ff8d" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Base Backgrounds -->
+  <rect width="1200" height="630" fill="url(#bg-grad)" />
+  <rect width="1200" height="630" fill="url(#hero-lime-glow)" />
+
+  <!-- Outer Card Frame (Bascik surface #1e2022) -->
+  <rect x="40" y="40" width="1120" height="550" rx="20" fill="#1e2022" fill-opacity="0.25" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1.5" />
+
+  <!-- Top Parallelogram Accent Line -->
+  <polygon points="40,40 1160,40 1160,45 40,45" fill="#d3ff8d" />
+
+  <!-- Header: Bascik Skewed Polygon Logo + Section Badge (Overview) -->
+  <g transform="translate(80, 80)">
+    <!-- Actual Bascik Skewed Logo Polygon Mark (Slant: dx = 10 over height = 40) -->
+    <polygon points="10,0 150,0 140,40 0,40" fill="#d3ff8d" />
+    <rect x="22" y="11" width="3" height="18" rx="1.5" fill="#0e0f10" />
+    <text x="33" y="27" font-family="'Courier New', Courier, monospace" font-size="22" font-weight="800" fill="#0e0f10" letter-spacing="2.5">BASCIK</text>
+
+    <!-- Skewed Section Badge (Overview) -->
+    <g transform="translate(166, 0)">
+      <polygon points="10,0 130,0 120,40 0,40" fill="rgba(211,255,141,0.12)" stroke="rgba(211,255,141,0.28)" stroke-width="1.5" />
+      <text x="20" y="26" font-family="'SF Mono', Menlo, Monaco, monospace" font-size="15" font-weight="700" fill="#d3ff8d" letter-spacing="1.5">OVERVIEW</text>
+    </g>
+  </g>
+
+  <!-- Big Hero Title: split into "HTML components." (white) and "Zero runtime." (lime-green) -->
+  <g transform="translate(80, ${titleStartY})">
+    <text font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="78" font-weight="800" fill="#f8fafc" letter-spacing="-0.025em">
+      <tspan x="0" y="0">HTML components.</tspan>
+      <tspan x="0" y="84" fill="#d3ff8d">Zero runtime.</tspan>
+    </text>
+  </g>
+
+  <!-- Verbatim Description / Paragraph -->
+  <g transform="translate(80, ${descStartY})">
+    <text font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="30" font-weight="400" fill="#a0a6b5" letter-spacing="-0.01em">
+      ${descLines.map((line, i) => `<tspan x="0" y="${i * descLineHeight}">${escapeXml(line)}</tspan>`).join('')}
+    </text>
+  </g>
+
+  <!-- Footer -->
+  <g transform="translate(80, 528)">
+    <line x1="0" y1="-32" x2="1040" y2="-32" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" />
+    <text x="0" y="8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="26" font-weight="800" fill="#d3ff8d" letter-spacing="-0.02em">HTML components. Zero runtime.</text>
+    <text x="1040" y="8" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="26" font-weight="700" fill="#d3ff8d">bascik.dev</text>
+  </g>
+</svg>`;
+  }
+
+  // 1. Regular documentation page layout
   const sectionUpper = section.toUpperCase();
-  const badgeCharWidth = 8.5;
-  const badgeWidth = Math.max(80, Math.round(sectionUpper.length * badgeCharWidth + 28));
+  const badgeCharWidth = 10.5;
+  const badgeWidth = Math.max(90, Math.round(sectionUpper.length * badgeCharWidth + 36));
 
-  const titleLines = wrapText(title, 26, 3);
-  const descLines = wrapText(description, 45);
+  const titleLines = wrapText(title, 24, 2);
+  const descLines = wrapDescription(description, 46, 3);
 
-  const titleStartY = 180;
-  const titleLineHeight = 52;
-  const descStartY = titleStartY + titleLines.length * titleLineHeight + 16;
-  const descLineHeight = 30;
-
-  // Format code snippet lines into SVG tspans
-  const rawSnippet = codeSnippet || `<article class="card">\n  <h3 class="title">HTML Component</h3>\n  <div data-bascik-slot></div>\n</article>\n<style>\n  .card { background: var(--surface); }\n  .title { color: var(--accent); }\n</style>`;
-  const snippetLines = rawSnippet.split('\n').slice(0, 10);
+  const titleStartY = 205; // Pushed down from 160 to prevent overlap with logo header
+  const titleLineHeight = 72;
+  const descStartY = titleStartY + titleLines.length * titleLineHeight + 12; // Moved closer (from 16 to 12)
+  const descLineHeight = 38; // Slightly tighter (from 42 to 38)
 
   return `<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Bascik Dark Theme Background (#18191b) -->
+    <!-- Bascik Dark Theme Background (#18191b -> #121314) -->
     <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#18191b" />
       <stop offset="100%" stop-color="#121314" />
     </linearGradient>
 
     <!-- Lime Glow Gradient (#d3ff8d) -->
-    <radialGradient id="lime-glow" cx="80%" cy="20%" r="55%">
-      <stop offset="0%" stop-color="#d3ff8d" stop-opacity="0.14" />
+    <radialGradient id="lime-glow" cx="85%" cy="15%" r="60%">
+      <stop offset="0%" stop-color="#d3ff8d" stop-opacity="0.16" />
       <stop offset="100%" stop-color="#d3ff8d" stop-opacity="0" />
     </radialGradient>
-
-    <!-- Code Window Clip Path -->
-    <clipPath id="code-clip">
-      <rect x="0" y="-15" width="390" height="280" />
-    </clipPath>
   </defs>
 
   <!-- Base Backgrounds -->
@@ -279,61 +309,44 @@ export function renderOgSvg(
   <rect width="1200" height="630" fill="url(#lime-glow)" />
 
   <!-- Outer Card Frame (Bascik surface #1e2022) -->
-  <rect x="40" y="40" width="1120" height="550" rx="16" fill="#1e2022" stroke="rgba(255, 255, 255, 0.07)" stroke-width="1.5" />
+  <rect x="40" y="40" width="1120" height="550" rx="20" fill="#1e2022" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1.5" />
 
   <!-- Top Parallelogram Accent Line -->
-  <polygon points="40,40 1160,40 1160,44 40,44" fill="#d3ff8d" />
+  <polygon points="40,40 1160,40 1160,45 40,45" fill="#d3ff8d" />
 
   <!-- Header: Bascik Skewed Polygon Logo + Section Badge -->
-  <g transform="translate(80, 85)">
-    <!-- Actual Bascik Skewed Logo Polygon Mark -->
-    <polygon points="5,0 95,0 88,24 0,24" fill="#d3ff8d" />
-    <rect x="15" y="7" width="2" height="10" rx="1" fill="#0e0f10" />
-    <text x="22" y="17" font-family="'Courier New', Courier, monospace" font-size="14" font-weight="800" fill="#0e0f10" letter-spacing="2">BASCIK</text>
+  <g transform="translate(80, 80)">
+    <!-- Actual Bascik Skewed Logo Polygon Mark (Slant: dx = 10 over height = 40) -->
+    <polygon points="10,0 150,0 140,40 0,40" fill="#d3ff8d" />
+    <rect x="22" y="11" width="3" height="18" rx="1.5" fill="#0e0f10" />
+    <text x="33" y="27" font-family="'Courier New', Courier, monospace" font-size="22" font-weight="800" fill="#0e0f10" letter-spacing="2.5">BASCIK</text>
 
-    <!-- Skewed Section Badge -->
-    <g transform="translate(112, -1)">
-      <polygon points="4,0 ${badgeWidth},0 ${badgeWidth - 4},26 0,26" fill="rgba(211,255,141,0.12)" stroke="rgba(211,255,141,0.22)" stroke-width="1" />
-      <text x="12" y="17" font-family="'SF Mono', Menlo, Monaco, monospace" font-size="12" font-weight="700" fill="#d3ff8d" letter-spacing="1">${escapeXml(sectionUpper)}</text>
+    <!-- Skewed Section Badge (Exact same dx = 10 slant as Logo) -->
+    <g transform="translate(166, 0)">
+      <polygon points="10,0 ${badgeWidth + 10},0 ${badgeWidth},40 0,40" fill="rgba(211,255,141,0.12)" stroke="rgba(211,255,141,0.28)" stroke-width="1.5" />
+      <text x="20" y="26" font-family="'SF Mono', Menlo, Monaco, monospace" font-size="15" font-weight="700" fill="#d3ff8d" letter-spacing="1.5">${escapeXml(sectionUpper)}</text>
     </g>
   </g>
 
-  <!-- Left Column: Title & Description -->
+  <!-- Main Title (Big, Bold, Hero-style for Mobile & iMessage Previews) -->
   <g transform="translate(80, ${titleStartY})">
-    <text font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="42" font-weight="800" fill="#f0f1f2">
+    <text font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="64" font-weight="800" fill="#f8fafc" letter-spacing="-0.025em">
       ${titleLines.map((line, i) => `<tspan x="0" y="${i * titleLineHeight}">${escapeXml(line)}</tspan>`).join('')}
     </text>
   </g>
 
+  <!-- Verbatim Subtitle / Description -->
   <g transform="translate(80, ${descStartY})">
-    <text font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="20" font-weight="400" fill="#8d929e">
+    <text font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="30" font-weight="400" fill="#a0a6b5" letter-spacing="-0.01em">
       ${descLines.map((line, i) => `<tspan x="0" y="${i * descLineHeight}">${escapeXml(line)}</tspan>`).join('')}
     </text>
   </g>
 
-  <!-- Right Column: Code Window Preview Component -->
-  <g transform="translate(650, 130)">
-    <!-- Window Container (#0d0e0f code bg) -->
-    <rect width="430" height="350" rx="10" fill="#0d0e0f" stroke="rgba(255,255,255,0.08)" stroke-width="1" />
-    
-    <!-- Window Header Bar -->
-    <rect width="430" height="34" rx="10" fill="rgba(255,255,255,0.04)" />
-    <circle cx="20" cy="17" r="5" fill="#ff5f56" />
-    <circle cx="36" cy="17" r="5" fill="#ffbd2e" />
-    <circle cx="52" cy="17" r="5" fill="#27c93f" />
-    <text x="215" y="22" text-anchor="middle" font-family="'SF Mono', Menlo, Monaco, monospace" font-size="12" fill="#8d929e">${escapeXml(fileName)}</text>
-
-    <!-- Code Snippet -->
-    <g transform="translate(20, 68)" font-family="'SF Mono', 'Fira Code', Menlo, monospace" font-size="12" xml:space="preserve" clip-path="url(#code-clip)">
-      ${snippetLines.map((line, i) => `<text y="${i * 24}">${highlightCodeLine(line)}</text>`).join('\n      ')}
-    </g>
-  </g>
-
   <!-- Footer -->
   <g transform="translate(80, 520)">
-    <line x1="0" y1="-20" x2="1040" y2="-20" stroke="rgba(255,255,255,0.07)" stroke-width="1" />
-    <text x="0" y="5" font-family="'SF Mono', Menlo, Monaco, monospace" font-size="14" font-weight="600" fill="#d3ff8d">HTML components. Zero runtime.</text>
-    <text x="1040" y="5" text-anchor="end" font-family="'SF Mono', Menlo, Monaco, monospace" font-size="15" font-weight="700" fill="#d3ff8d">bascik.dev</text>
+    <line x1="0" y1="-25" x2="1040" y2="-25" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" />
+    <text x="0" y="22" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="26" font-weight="800" fill="#d3ff8d" letter-spacing="-0.02em">HTML components. Zero runtime.</text>
+    <text x="1040" y="22" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="26" font-weight="700" fill="#d3ff8d">bascik.dev</text>
   </g>
 </svg>`;
 }
@@ -373,8 +386,10 @@ export async function generateOgImages(): Promise<void> {
     const md = await readMd(href);
     const mdMeta = md ? extractMetaFromMd(md, label) : { title: label, description: 'HTML components. Zero runtime.' };
 
-    const title = mdMeta.title || htmlMeta?.title || label;
-    const description = mdMeta.description || htmlMeta?.description || 'HTML components. Zero runtime.';
+    const title = href === '/' ? 'Bascik' : (mdMeta.title || htmlMeta?.title || label);
+    const description = href === '/'
+      ? "Bascik is a build tool for HTML components with automatically scoped CSS and JS. Zero runtime. The code that ships is the code you wrote."
+      : (mdMeta.description || htmlMeta?.description || 'HTML components. Zero runtime.');
     const codeSnippet = mdMeta.codeSnippet;
     const fileName = `docs/content${href === '/' ? '/overview' : href}.md`;
 
@@ -382,8 +397,9 @@ export async function generateOgImages(): Promise<void> {
   }
 
   // Render and write SVG for each documentation page
-  for (const [slug, { section, title, description, fileName, codeSnippet }] of pagesMap) {
-    const svg = renderOgSvg(title, section, description, fileName, codeSnippet);
+  for (const [slug, { section, title, description }] of pagesMap) {
+    const isHome = slug === 'home';
+    const svg = renderOgSvg(title, section, description, isHome);
     const outFile = join(distOgDir, `${slug}.svg`);
     await writeFile(outFile, svg, 'utf8');
   }
