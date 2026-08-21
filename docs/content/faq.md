@@ -26,11 +26,11 @@ Bascik was created by [Collin Thomas](https://github.com/collin-thomas).
 
 ## Why did you build Bascik?
 
-I started building Bascik in late 2022. I wanted to build the fastest websites. As soon as you have for than a single page website, you need components. I thought modern HTML, CSS, and JavaScript have gotten so good and widely adopted by browsers that I don't need or want any abstraction layer from a framework getting in the way. I definitely didn't want JavaScript as a runtime bottleneck.
+I started building Bascik in late 2022. I wanted to build the fastest websites. As soon as you have more than just a single page, you need components to share elements, like a nav or footer, across pages. I thought modern HTML, CSS, and JavaScript have gotten so good and widely adopted by browsers that I don't need or want any abstraction layer from a framework getting in the way. I definitely didn't want JavaScript as a runtime bottleneck.
 
-Components have always been a JavaScript thing. Web Components tried to make it native but it's still JavaScript. There's always Shadow DOM or virtual DOM involved. I decided we don't need any of that. Think about it, you can write HTML, CSS, and JavaScript and use it in multiple places on a site, you just need to copy it and scope it. That's really all it is, just a bunch of regex to make it happen.
+Components have always been a JavaScript thing. Web Components tried to make it native but it's still JavaScript. There's always shadow DOM or virtual DOM involved with components. I decided we don't need any of that. Think about it, you can write HTML, CSS, and JavaScript and use it in multiple places on a site, you just need to copy it and scope it. To automate that, at it's core, it's just a bunch of regular expressions.
 
-It seems like a big undertaking but the web standards are so well defined that you have an obtainable target. It'll just take some effort. So that's what I did.
+That might seem like a big undertaking, but the web standards are so well defined that you have an obtainable target. It'll just take some effort. So that's what I did.
 
 Then I saw the rise of AI-assisted coding and thought, this tool I've been building is going to be perfect for that. Web development frameworks and tooling primarily exists to make tasks easier for developers. But when the tools starts to get in the way, giving an LLM a tool that doesn't impose its own rules and instead uses the fundamental web languages is going to be great for both developers and AI-assisted coding.
 
