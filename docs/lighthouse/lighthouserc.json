@@ -1,7 +1,7 @@
 {
   "ci": {
     "collect": {
-      "startServerCommand": "yarn docs:build && node ../pkg/dist/index.js --serve",
+      "startServerCommand": "bascik --serve",
       "startServerReadyPattern": "Loaded \\d+ pages? from dist/",
       "url": [
         "http://localhost:8080/",

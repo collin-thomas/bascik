@@ -18,7 +18,7 @@
     "generate:search": "node scripts/generate-search-index.ts",
     "lhci": "lhci",
     "lighthouse": "bascik --build && lhci autorun --config=./lighthouse/lighthouserc.json",
-    "lighthouse:ci": "lhci autorun --config=./lighthouse/lighthouserc.json",
+    "lighthouse:ci": "bascik --build && lhci autorun --config=./lighthouse/lighthouserc.json",
     "typecheck": "tsc --noEmit",
     "unit": "vitest run",
     "test": "vitest run",

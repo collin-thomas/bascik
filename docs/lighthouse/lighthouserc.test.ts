@@ -18,7 +18,7 @@ describe('Lighthouse CI configuration', () => {
     const config = JSON.parse(raw);
 
     const collect = config.ci.collect;
-    expect(collect.startServerCommand).toContain('node ../pkg/dist/index.js --serve');
+    expect(collect.startServerCommand).toBe('bascik --serve');
     expect(Array.isArray(collect.url)).toBe(true);
     expect(collect.url.length).toBeGreaterThan(0);
     expect(collect.url).toContain('http://localhost:8080/');
