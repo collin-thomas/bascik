@@ -26,13 +26,13 @@ Bascik was created by [Collin Thomas](https://github.com/collin-thomas).
 
 ## Why did you build Bascik?
 
-I started building Bascik in late 2022. I wanted the fastest websites and dashboards but I needed components. I wanted to use the foundational languages without any abstraction layer, using the HTML, CSS, and JS I already knew, and avoiding JavaScript at runtime as a bottleneck.
+I started building Bascik in late 2022. I wanted to build the fastest websites. As soon as you have for than a single page website, you need components. I thought modern HTML, CSS, and JavaScript have gotten so good and widely adopted by browsers that I don't need or want any abstraction layer from a framework getting in the way. I definitely didn't want JavaScript as a runtime bottleneck.
 
-Components have always been a JavaScript thing. Web Components tried to make it native but it's still JavaScript, and there's always Shadow DOM or virtual DOM involved. We don't need any of that. You can write HTML, CSS, and JavaScript and use it in multiple places on a site, you just need to copy it and scope it. That's really all it is, just a bunch of regex to make it happen.
+Components have always been a JavaScript thing. Web Components tried to make it native but it's still JavaScript. There's always Shadow DOM or virtual DOM involved. I decided we don't need any of that. Think about it, you can write HTML, CSS, and JavaScript and use it in multiple places on a site, you just need to copy it and scope it. That's really all it is, just a bunch of regex to make it happen.
 
 It seems like a big undertaking but the web standards are so well defined that you have an obtainable target. It'll just take some effort. So that's what I did.
 
-Then I saw the rise of AI-assisted coding and thought, this tool I've been building is going to be perfect for that. Our tooling primarily exists for humans to use, to make tasks easier. But when the tools start to get in the way, giving an LLM a tool that doesn't impose its own rules and just lets you write the fundamental web languages is going to be great for both developers and AI-assisted coding.
+Then I saw the rise of AI-assisted coding and thought, this tool I've been building is going to be perfect for that. Web development frameworks and tooling primarily exists to make tasks easier for developers. But when the tools starts to get in the way, giving an LLM a tool that doesn't impose its own rules and instead uses the fundamental web languages is going to be great for both developers and AI-assisted coding.
 
 ## What happens if I name a component after a native HTML element?
 
