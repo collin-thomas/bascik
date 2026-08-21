@@ -215,9 +215,9 @@ body {
 .tab-btn.active::before { background: var(--accent); }
 
 /* ── Layout ── */
-.container  { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
+.container  { max-width: 1140px; margin: 0 auto; padding: 0 28px; }
 .docs-layout { display: grid; grid-template-columns: 220px 1fr; gap: 0; min-height: 80vh; }
-.docs-content { padding: 38px 40px 80px; max-width: 780px; min-width: 0; overflow-x: hidden; }
+.docs-content { padding: 38px 40px 80px; max-width: 840px; min-width: 0; overflow-x: hidden; }
 
 /* ── Typography ── */
 h1,h2,h3,h4 { margin-top: 0; line-height: 1.2; font-weight: 700; }
@@ -364,6 +364,8 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
 }
 .page-intro,
 .docs-content h1 + p { font-size: 1.05rem; max-width: 600px; margin-bottom: 40px; }
+.page-intro:has(+ p),
+.docs-content h1 + p:has(+ p) { margin-bottom: 20px; }
 .step {
   display: flex; gap: 16px; margin-bottom: 24px;
 }
@@ -554,7 +556,7 @@ pre code { background: none; border: none; padding: 0; color: #cdd6f4; font-size
 }
 
 .dfooter-container {
-  max-width: 1100px;
+  max-width: 1140px;
   margin: 0 auto;
   padding: 0 28px;
 }

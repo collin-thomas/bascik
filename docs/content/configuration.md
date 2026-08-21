@@ -6,17 +6,6 @@ However, Bascik is also **highly configurable** for both development and product
 
 To override any default behaviors, create a `bascik.config.ts` file in your project root. Import `defineConfig` for full autocomplete and type checking on every option. Your editor will surface valid values, flag typos, and show inline docs as you type. A plain `bascik.config.js` also works and takes precedence if both files exist.
 
-## The Power of Preference
-
-Here are just a few ways Bascik puts architectural choices back in your hands:
-
-- **Style Deduplication (`deduplicateCss`):** Choose between clean, single-definition scoped stylesheets for optimal payload sizes, or individual per-instance styling for seamless local script querying.
-- **Custom Minification (`minify`):** Toggle HTML, CSS, and JS minifiers independently. You can even plug in your own custom async minifiers (like esbuild or terser) or configure Node's built-in type stripper for native TypeScript compilation.
-- **Granular Attribute Scoping (`scopeAttribute`):** Control exactly which attributes (classes, IDs, or name attributes) are scoped. If you are using Tailwind CSS, you can disable class scoping entirely while keeping ID scoping active.
-- **Parallel Builds (`useWorkers`):** Optimize build speeds on larger sites by opting into a multi-core CPU worker pool, or stick to main-thread processing for smaller projects.
-- **Error Behavior (`onScriptError`):** Choose whether to halt the entire build on template script errors, or output inline compiler warnings and keep going.
-- **Environment Overrides (`build`):** Easily define production-only overrides (such as minifying identifier names or inlining stylesheets) while keeping development logs detailed and verbose.
-
 ## Default Configuration Example
 
 Because Bascik is zero-config, you do not need a `bascik.config.ts` file to use these settings. The example below displays all available configuration options populated with their built-in default values for illustrative purposes.
@@ -99,6 +88,17 @@ export const build = defineConfig({
   },
 });
 ```
+
+## The Power of Preference
+
+Here are just a few ways Bascik puts architectural choices back in your hands:
+
+- **Style Deduplication (`deduplicateCss`):** Choose between clean, single-definition scoped stylesheets for optimal payload sizes, or individual per-instance styling for seamless local script querying.
+- **Custom Minification (`minify`):** Toggle HTML, CSS, and JS minifiers independently. You can even plug in your own custom async minifiers (like esbuild or terser) or configure Node's built-in type stripper for native TypeScript compilation.
+- **Granular Attribute Scoping (`scopeAttribute`):** Control exactly which attributes (classes, IDs, or name attributes) are scoped. If you are using Tailwind CSS, you can disable class scoping entirely while keeping ID scoping active.
+- **Parallel Builds (`useWorkers`):** Optimize build speeds on larger sites by opting into a multi-core CPU worker pool, or stick to main-thread processing for smaller projects.
+- **Error Behavior (`onScriptError`):** Choose whether to halt the entire build on template script errors, or output inline compiler warnings and keep going.
+- **Environment Overrides (`build`):** Easily define production-only overrides (such as minifying identifier names or inlining stylesheets) while keeping development logs detailed and verbose.
 
 ## Configuration Reference
 
