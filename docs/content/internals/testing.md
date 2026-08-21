@@ -268,7 +268,7 @@ The root `package.json` provides aggregated tasks across all projects:
 * `yarn unit:all`: runs unit test suites across all packages
 * `yarn e2e:all`: runs Playwright E2E suites (`pkg:e2e:all` and `docs:e2e`)
 * `yarn coverage:all`: generates and updates coverage reports across all packages
-* `yarn test:all`: runs `typecheck:all`, `check:all`, `unit:all`, and `e2e:all` in sequence (coverage excluded)
+* `yarn test:all`: runs `typecheck:all`, `check:all`, `unit:all`, `e2e:all`, and `docs:lighthouse` in sequence (coverage excluded)
 
 ## Contributing a Fix
 

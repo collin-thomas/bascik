@@ -271,7 +271,7 @@ The agent runs inside a VS Code sandbox. Commands that bind to a port or make ou
 
 ### Token-Efficient Test Execution & Output Parsing
 
-- **Unit tests, typechecks, checks, and E2E**: To run all tests across all monorepo packages (`pkg`, `docs`, `create`, `extensions/vscode-bascik`), use `yarn test:all`. For unit tests only, use `yarn unit:all`.
+- **Unit tests, typechecks, checks, E2E, and Lighthouse**: To run all tests across all monorepo packages (`pkg`, `docs`, `create`, `extensions/vscode-bascik`), use `yarn test:all`. For unit tests only, use `yarn unit:all`.
 - **E2E tests**: Playwright E2E tests are configured in package scripts (`yarn pkg:e2e`, `yarn pkg:e2e:prod`, `yarn e2e:all`) with `--reporter=line` output to preserve context tokens.
 - **Efficient output parsing**:
   - Always check the overall status first: **Did it pass or fail?**

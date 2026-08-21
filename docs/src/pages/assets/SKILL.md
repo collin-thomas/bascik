@@ -1274,7 +1274,7 @@ yarn check:all         # spelling and web standards
 yarn unit:all          # unit tests across all packages
 yarn e2e:all           # Playwright E2E suites across all packages
 yarn coverage:all      # update coverage across all packages
-yarn test:all          # typecheck:all + check:all + unit:all + e2e:all
+yarn test:all          # typecheck:all + check:all + unit:all + e2e:all + docs:lighthouse
 ```
 
 ### Unit Tests (Vitest)
