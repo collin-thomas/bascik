@@ -39,10 +39,10 @@ Error [ERR_MODULE_NOT_FOUND]: Cannot find module './does-not-exist' imported fro
     at moduleResolve (node:internal/modules/esm/resolve:865:10)
     at TracingChannel.tracePromise (node:diagnostics_channel:362:14) {
   code: 'ERR_MODULE_NOT_FOUND',
-  url: 'file:///Users/collin/github/bascik/docs/scripts/does-not-exist.ts'
+  url: 'file:///project/docs/scripts/does-not-exist.ts'
 }`;
 
     const cleaned = cleanStackTrace(rawTrace, tmpPath, realPath, lineOffset);
-    expect(cleaned).toBe(`Error [ERR_MODULE_NOT_FOUND]: Cannot find module './does-not-exist' imported from ${realPath}:6:4 {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///Users/collin/github/bascik/docs/scripts/does-not-exist.ts'\n}`);
+    expect(cleaned).toBe(`Error [ERR_MODULE_NOT_FOUND]: Cannot find module './does-not-exist' imported from ${realPath}:6:4 {\n  code: 'ERR_MODULE_NOT_FOUND',\n  url: 'file:///project/docs/scripts/does-not-exist.ts'\n}`);
   });
 });
