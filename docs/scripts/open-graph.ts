@@ -13,6 +13,7 @@
  *   console.log(await openGraph());
  */
 import { readFile } from 'node:fs/promises';
+import { NAV } from './nav.ts';
 
 function escapeHtmlAttr(value: string): string {
   return value
@@ -54,7 +55,7 @@ export async function openGraph(): Promise<string> {
     console.warn(`[open-graph] Warning: Could not read page file "${pageFile}": ${(err as Error).message}`);
     return '';
   }
-  const title = extractTitle(html);
+  const rawTitle = extractTitle(html);
   const description = extractDescription(html);
 
   const relPath = pageFile.startsWith(pagesDir)
@@ -65,19 +66,42 @@ export async function openGraph(): Promise<string> {
   const urlPath = routePath ? `/${routePath}` : '/';
   const url = `${siteUrl}${urlPath}`;
 
+  // TN3156: Do not put site name/branding in og:title (use og:site_name instead).
+  const cleanTitle = withoutExt === 'index'
+    ? (rawTitle.replace(/^Bascik\s*-\s*/i, '').trim() || 'HTML components. Zero runtime.')
+    : (rawTitle.replace(/\s*-\s*Bascik Docs$/i, '').replace(/\s*-\s*Bascik$/i, '').trim() || rawTitle);
+
+  const isNavOrHome = urlPath === '/' || NAV.some((sec) => sec.pages.some((p) => p.href === urlPath));
+
   const tags = [
     `<meta property="og:type" content="website" />`,
     `<meta property="og:site_name" content="Bascik" />`,
     `<meta property="og:url" content="${escapeHtmlAttr(url)}" />`,
   ];
-  if (title) tags.push(`<meta property="og:title" content="${escapeHtmlAttr(title)}" />`);
+  if (cleanTitle) tags.push(`<meta property="og:title" content="${escapeHtmlAttr(cleanTitle)}" />`);
   if (description) {
     tags.push(`<meta property="og:description" content="${escapeHtmlAttr(description)}" />`);
   }
-  tags.push(`<meta name="twitter:card" content="summary" />`);
-  if (title) tags.push(`<meta name="twitter:title" content="${escapeHtmlAttr(title)}" />`);
-  if (description) {
-    tags.push(`<meta name="twitter:description" content="${escapeHtmlAttr(description)}" />`);
+
+  if (isNavOrHome) {
+    const imageSlug = withoutExt === 'index' ? 'home' : withoutExt.replace(/\//g, '-');
+    const imageUrl = `${siteUrl}/assets/og/${imageSlug}.svg`;
+    tags.push(`<meta property="og:image" content="${escapeHtmlAttr(imageUrl)}" />`);
+    tags.push(`<meta property="og:image:type" content="image/svg+xml" />`);
+    tags.push(`<meta property="og:image:width" content="1200" />`);
+    tags.push(`<meta property="og:image:height" content="630" />`);
+    tags.push(`<meta name="twitter:card" content="summary_large_image" />`);
+    if (cleanTitle) tags.push(`<meta name="twitter:title" content="${escapeHtmlAttr(cleanTitle)}" />`);
+    if (description) {
+      tags.push(`<meta name="twitter:description" content="${escapeHtmlAttr(description)}" />`);
+    }
+    tags.push(`<meta name="twitter:image" content="${escapeHtmlAttr(imageUrl)}" />`);
+  } else {
+    tags.push(`<meta name="twitter:card" content="summary" />`);
+    if (cleanTitle) tags.push(`<meta name="twitter:title" content="${escapeHtmlAttr(cleanTitle)}" />`);
+    if (description) {
+      tags.push(`<meta name="twitter:description" content="${escapeHtmlAttr(description)}" />`);
+    }
   }
 
   return tags.join('\n');

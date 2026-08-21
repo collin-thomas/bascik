@@ -876,7 +876,8 @@ export default defineConfig({
   watch: [], // re-transpile all pages when these paths change (dev only)
   exec: [
     // { script: 'scripts/generate-search-index.ts', watch: ['content/'] }, // runs sequentially in array order before page transpilation during --build; in dev, runs on startup and watched file changes
-    // { script: 'scripts/generate-llms-txt.ts' },                          // build-only: skipped in dev
+    // { script: 'scripts/generate-llms-txt.ts', watch: ['content/'] },      // lifecycle script generating llms.txt in dist/
+    // { script: 'scripts/generate-og-images.ts', watch: ['content/'] },     // lifecycle script generating social card SVGs in dist/assets/og/
   ],
   // Recommended: lifecycle scripts registered in `exec` should write generated artifacts directly to your output directory (such as `dist/` or `dist/assets/`) rather than `src/` to prevent polluting your source tree with build artifacts.
   scopeScriptBlocks: true,

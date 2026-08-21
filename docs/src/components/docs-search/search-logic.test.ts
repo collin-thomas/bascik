@@ -69,7 +69,21 @@ describe('basePath', () => {
 // ---------------------------------------------------------------------------
 
 describe('score', () => {
-  describe('tier 1 — navLabel match (≥1000)', () => {
+  describe('tier 1 - category (section) match (>=2000)', () => {
+    it('returns >=2600 for an exact category match on a page-level entry', () => {
+      const q = 'recipes';
+      expect(score(entry({ section: 'Recipes', navLabel: 'Markdown', heading: null }), q, tokens(q))).toBeGreaterThanOrEqual(2600);
+    });
+
+    it('returns category matches above page title matches', () => {
+      const q = 'recipes';
+      const catScore = score(entry({ section: 'Recipes', navLabel: 'Markdown', heading: null }), q, tokens(q));
+      const pageScore = score(entry({ section: 'Other', navLabel: 'Recipes', heading: null }), q, tokens(q));
+      expect(catScore).toBeGreaterThan(pageScore);
+    });
+  });
+
+  describe('tier 2 - navLabel match (1000-1999)', () => {
     it('returns 1600 for an exact navLabel match', () => {
       const q = 'props';
       expect(score(entry({ navLabel: 'Props' }), q, tokens(q))).toBe(1600);
@@ -99,14 +113,14 @@ describe('score', () => {
     });
   });
 
-  describe('tier 2 — heading match (100–999)', () => {
+  describe('tier 3 - heading match (100-999)', () => {
     it('returns 600 for an exact heading match', () => {
       const q = 'passing props';
       const e = entry({ navLabel: 'Unrelated', heading: 'Passing Props' });
       expect(score(e, q, tokens(q))).toBe(600);
     });
 
-    it('returns ≥400 when heading contains the phrase', () => {
+    it('returns >=400 when heading contains the phrase', () => {
       const q = 'passing';
       const e = entry({ navLabel: 'Unrelated', heading: 'Passing Props' });
       expect(score(e, q, tokens(q))).toBeGreaterThanOrEqual(400);
@@ -119,7 +133,7 @@ describe('score', () => {
     });
   });
 
-  describe('tier 3 — text-only match (1–99)', () => {
+  describe('tier 4 - text-only match (1-99)', () => {
     it('returns ≥80 for a phrase match in text', () => {
       const q = 'define and use';
       const e = entry({ navLabel: 'Other', text: 'Define and use props here.' });
@@ -134,6 +148,14 @@ describe('score', () => {
   });
 
   describe('tier ordering guarantees', () => {
+    it('category match always beats navLabel match', () => {
+      const q = 'recipes';
+      const toks = tokens(q);
+      const cat = score(entry({ section: 'Recipes', navLabel: 'Markdown', heading: null }), q, toks);
+      const nl = score(entry({ section: 'Other', navLabel: 'Recipes', heading: null }), q, toks);
+      expect(cat).toBeGreaterThan(nl);
+    });
+
     it('navLabel match always beats heading match', () => {
       const q = 'foo';
       const toks = tokens(q);
@@ -265,6 +287,22 @@ describe('buildResults', () => {
     expect(results[1].heading).toBe('deduplicateCss Trade-Off Comparison');
     expect(results[2].heading).toBe('Class Selectors in Component Scripts');
     expect(results[3].heading).toBe('CSS Deduplication');
+  });
+
+  it('returns category pages in document order when searching by category name', () => {
+    const q = 'recipes';
+    const toks = tokens(q);
+    const testIndex = [
+      entry({ navLabel: 'Markdown', heading: null, section: 'Recipes', path: '/recipes/markdown' }),
+      entry({ navLabel: 'Page-Aware Scripts', heading: null, section: 'Recipes', path: '/recipes/page-aware-scripts' }),
+      entry({ navLabel: 'Server Scripts', heading: null, section: 'Recipes', text: 'These recipes show common patterns.', path: '/recipes/server-scripts' }),
+      entry({ navLabel: 'Templating', heading: null, section: 'Recipes', path: '/recipes/templating' }),
+      entry({ navLabel: 'Props', heading: null, section: 'Features', path: '/props' }),
+    ];
+
+    const results = buildResults(testIndex, q, toks, 13);
+    expect(results.map(r => r.navLabel)).toEqual(['Markdown', 'Page-Aware Scripts', 'Server Scripts', 'Templating']);
+    expect(results[0].navLabel).toBe('Markdown');
   });
 
   it('opens up to searching page content when page names/headings do not fill result limit', () => {

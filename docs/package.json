@@ -15,6 +15,7 @@
     "e2e": "playwright test --config e2e/playwright.config.ts --reporter=line",
     "pkg-dev": "node --inspect --watch-path=./bascik.config.ts --watch-path=../../pkg/src ../../pkg/src/transpile.ts",
     "generate:llms": "node scripts/generate-llms-txt.ts",
+    "generate:og": "node scripts/generate-og-images.ts",
     "generate:search": "node scripts/generate-search-index.ts",
     "lhci": "lhci",
     "lighthouse": "bascik --build && lhci autorun --config=./lighthouse/lighthouserc.json",

@@ -26,14 +26,14 @@ describe('openGraph', () => {
     expect(result).toBe('');
   });
 
-  it('generates OG and Twitter tags from page title and description', async () => {
-    const pageFile = join(tempDir, 'about.html');
+  it('generates OG and Twitter card tags with image for NAV documentation pages', async () => {
+    const pageFile = join(tempDir, 'getting-started.html');
     await writeFile(
       pageFile,
       `<!DOCTYPE html>
 <html>
 <head>
-  <title>About Bascik &amp; Features</title>
+  <title>Getting Started - Bascik Docs</title>
   <meta name="description" content="Learn all about Bascik static site generator." />
 </head>
 <body></body>
@@ -47,22 +47,27 @@ describe('openGraph', () => {
     const result = await openGraph();
     expect(result).toContain('<meta property="og:type" content="website" />');
     expect(result).toContain('<meta property="og:site_name" content="Bascik" />');
-    expect(result).toContain('<meta property="og:url" content="https://bascik.dev/about" />');
-    expect(result).toContain('<meta property="og:title" content="About Bascik &amp;amp; Features" />');
+    expect(result).toContain('<meta property="og:url" content="https://bascik.dev/getting-started" />');
+    expect(result).toContain('<meta property="og:title" content="Getting Started" />');
     expect(result).toContain('<meta property="og:description" content="Learn all about Bascik static site generator." />');
-    expect(result).toContain('<meta name="twitter:card" content="summary" />');
-    expect(result).toContain('<meta name="twitter:title" content="About Bascik &amp;amp; Features" />');
+    expect(result).toContain('<meta property="og:image" content="https://bascik.dev/assets/og/getting-started.svg" />');
+    expect(result).toContain('<meta property="og:image:type" content="image/svg+xml" />');
+    expect(result).toContain('<meta property="og:image:width" content="1200" />');
+    expect(result).toContain('<meta property="og:image:height" content="630" />');
+    expect(result).toContain('<meta name="twitter:card" content="summary_large_image" />');
+    expect(result).toContain('<meta name="twitter:title" content="Getting Started" />');
+    expect(result).toContain('<meta name="twitter:image" content="https://bascik.dev/assets/og/getting-started.svg" />');
   });
 
-  it('extracts description correctly when single quotes are used in meta tag', async () => {
-    const pageFile = join(tempDir, 'topic.html');
+  it('omits og:image for non-documentation utility pages like search or 404', async () => {
+    const pageFile = join(tempDir, 'search.html');
     await writeFile(
       pageFile,
       `<!DOCTYPE html>
 <html>
 <head>
-  <title>Single Quote Test</title>
-  <meta name='description' content='Single quoted description content' />
+  <title>Search - Bascik Docs</title>
+  <meta name="description" content="Search the Bascik documentation." />
 </head>
 <body></body>
 </html>`,
@@ -73,6 +78,33 @@ describe('openGraph', () => {
     process.env.BASCIK_SITE_URL = 'https://bascik.dev';
 
     const result = await openGraph();
-    expect(result).toContain('<meta property="og:description" content="Single quoted description content" />');
+    expect(result).toContain('<meta property="og:title" content="Search" />');
+    expect(result).toContain('<meta name="twitter:card" content="summary" />');
+    expect(result).not.toContain('og:image');
+    expect(result).not.toContain('twitter:image');
+  });
+
+  it('cleans site branding from og:title per Apple TN3156 guidelines', async () => {
+    const pageFile = join(tempDir, 'getting-started.html');
+    await writeFile(
+      pageFile,
+      `<!DOCTYPE html>
+<html>
+<head>
+  <title>Getting Started - Bascik Docs</title>
+  <meta name="description" content="Get started with Bascik." />
+</head>
+<body></body>
+</html>`,
+    );
+
+    process.env.BASCIK_PAGE_FILE = pageFile;
+    process.env.BASCIK_PAGES_DIR = tempDir;
+    process.env.BASCIK_SITE_URL = 'https://bascik.dev';
+
+    const result = await openGraph();
+    expect(result).toContain('<meta property="og:title" content="Getting Started" />');
+    expect(result).toContain('<meta property="og:site_name" content="Bascik" />');
+    expect(result).toContain('<meta name="twitter:title" content="Getting Started" />');
   });
 });
