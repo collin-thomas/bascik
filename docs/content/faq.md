@@ -63,11 +63,13 @@ Yes. Bascik's output is vanilla HTML. Any library that works with HTML works wit
 
 No. Bascik is a build-time tool. The output is vanilla HTML, CSS, and exactly the JavaScript you wrote. No runtime script is injected into your pages.
 
-## Does Bascik process external `<script src="...">` links for component selector scoping?
+## How do companion `.js`, `.ts`, or `.mjs` script files work in a component directory?
 
-No. Bascik does **not** process external `<script src="...">` links for component selector scoping. Component scripts must be inline `<script>` tags (including inline TypeScript `<script>` blocks) inside the component's `.html` file so Bascik's scoping engine can rewrite DOM selector references and wrap the script in an isolated IIFE.
+Just like companion `.css` files, Bascik automatically discovers companion `.ts`, `.js`, and `.mjs` script files located in a component directory.
 
-External `<script src="...">` tags (such as CDN scripts or global static assets) are passed through to the page output untouched.
+Bascik inlines them as `<script>` tags (or replaces matching `<script src="...">` tags if explicitly referenced in your component HTML), automatically wraps them in isolated IIFEs, rewrites DOM selector calls for scoping, and attaches DevTools `//# sourceURL` directives mapping directly back to your source `.ts`/`.js` files. You can include as many companion script files in a component folder as you need.
+
+External `<script src="...">` links pointing to third-party CDNs or global assets are left untouched and passed through to the page output.
 
 ## Do I need to restart the dev server when I add a new component?
 

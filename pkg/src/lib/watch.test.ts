@@ -439,12 +439,13 @@ describe("watchFiles – ignored predicates", () => {
     expect(ignored("/path/to/comp.css", { isFile: () => true })).toBe(false);
   });
 
-  it("watcher 2: returns true for a non-.html/.css file (covers line 73)", () => {
+  it("watcher 2: returns true for a non-.html/.css/.js/.ts/.mjs file (covers line 73)", () => {
     const ignored = mockWatch.mock.calls[2][1].ignored as (
       p: string,
       s?: { isFile: () => boolean },
     ) => boolean;
-    expect(ignored("/path/to/script.ts", { isFile: () => true })).toBe(true);
+    expect(ignored("/path/to/data.json", { isFile: () => true })).toBe(true);
+    expect(ignored("/path/to/script.ts", { isFile: () => true })).toBe(false);
   });
 
   it("watcher 2: returns false when stats is undefined", () => {

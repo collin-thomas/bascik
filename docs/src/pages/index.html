@@ -577,6 +577,10 @@
       font-size: 0.875rem;
     }
 
+    .highlight-text {
+      color: var(--brand, #d3ff8d);
+    }
+
     @media (max-width: 820px) {
       .how-split {
         grid-template-columns: 1fr;
@@ -716,7 +720,7 @@
           website is a prime example: every single one of its 50 pages executes custom Node.js build-time scripts to
           convert Markdown, extract code blocks, and construct structured search schemas, yet, on a 2020 M1 MacBook air,
           the entire site
-          compiles in under <b>1.8 seconds.</b></p>
+          compiles in under <b class="highlight-text">1.8 seconds.</b></p>
         <div class="speed-grid">
           <div class="speed-terminal">
             <div class="speed-terminal-bar">
@@ -814,26 +818,6 @@
                   import { pathToFileURL } from 'node:url';
                   const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
                   console.log(await extractDemoBlock('./content/index.md', 'home-counter-output-html'));
-                </script>
-              </code-block>
-            </div>
-            <div data-bascik-slot="output-css">
-              <code-block data-bascik-prop-lang="css">
-                <script data-bascik-build>
-                  import { join } from 'node:path';
-                  import { pathToFileURL } from 'node:url';
-                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
-                  console.log(await extractDemoBlock('./content/index.md', 'home-counter-output-css'));
-                </script>
-              </code-block>
-            </div>
-            <div data-bascik-slot="output-js">
-              <code-block data-bascik-prop-lang="js">
-                <script data-bascik-build>
-                  import { join } from 'node:path';
-                  import { pathToFileURL } from 'node:url';
-                  const { extractDemoBlock } = await import(pathToFileURL(join(process.cwd(), 'scripts/md-renderer.ts')).href);
-                  console.log(await extractDemoBlock('./content/index.md', 'home-counter-output-js'));
                 </script>
               </code-block>
             </div>

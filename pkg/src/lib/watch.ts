@@ -111,7 +111,7 @@ export const watchFiles = async () => {
     .watch([BascikConfig.directory.components], {
       ignored: (path: string, stats?: Stats): boolean => {
         return !!(
-          stats?.isFile() && !(path.endsWith(".html") || path.endsWith(".css"))
+          stats?.isFile() && !(path.endsWith(".html") || path.endsWith(".css") || path.endsWith(".js") || path.endsWith(".ts") || path.endsWith(".mjs"))
         );
       },
       ignoreInitial: true,

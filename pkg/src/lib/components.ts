@@ -1,5 +1,7 @@
 import { readFile } from "node:fs/promises";
+import { basename } from "node:path";
 import { getComponentCss, extractInlineStyles } from "./styles.js";
+import { getComponentScripts } from "./javascript.js";
 import { deepReadDirFlat } from "./file-system.js";
 import { BascikConfig } from "./config.js";
 import { executeBuildScripts } from "./build-scripts.js";
@@ -133,13 +135,16 @@ export const listComponents = async (): Promise<ComponentList> => {
   const componentFileNames =
     (await deepReadDirFlat(
       BascikConfig.directory.components,
-      /\.(html|css)$/,
+      /\.(html|css|js|ts|mjs)$/,
     )) ?? [];
   const componentHtmlFileNames = (componentFileNames as string[]).filter(
-    (fileName) => fileName.match(/\.(html)$/),
+    (fileName) => fileName.match(/\.html$/) && !fileName.match(/\.(test|spec)\.html$/),
   );
   const componentCssFileNames = (componentFileNames as string[]).filter(
-    (fileName) => fileName.match(/\.(css)$/),
+    (fileName) => fileName.match(/\.css$/) && !fileName.match(/\.(test|spec)\.css$/),
+  );
+  const componentScriptFileNames = (componentFileNames as string[]).filter(
+    (fileName) => fileName.match(/\.(js|ts|mjs)$/) && !fileName.match(/\.(test|spec)\.(js|ts|mjs)$/),
   );
   const components = await Promise.all(
     componentHtmlFileNames.map(async (fileName) => {
@@ -154,20 +159,53 @@ export const listComponents = async (): Promise<ComponentList> => {
       }
       let fileContentBuffer: Buffer;
       let cssFileContent: string | undefined;
+      let companionScripts: Awaited<ReturnType<typeof getComponentScripts>> | undefined;
       try {
-        [fileContentBuffer, cssFileContent] = await Promise.all([
+        [fileContentBuffer, cssFileContent, companionScripts] = await Promise.all([
           readFile(fileName),
           getComponentCss(fileName, componentCssFileNames),
+          getComponentScripts(fileName, componentScriptFileNames),
         ]);
       } catch (e) {
         console.warn("warning: Failed to process %s", fileName, e);
         return {};
       }
 
+      const rawContent = fileContentBuffer.toString();
       // Run build scripts before minification so that generated content
       // stays in its original position (minifyHtml moves <script> tags).
-      const rawContent = fileContentBuffer.toString();
-      const resolvedContent = await executeBuildScripts(rawContent, fileName);
+      let resolvedContent = await executeBuildScripts(rawContent, fileName);
+
+      if (companionScripts && companionScripts.scriptMap.size > 0) {
+        const consumedPaths = new Set<string>();
+
+        resolvedContent = resolvedContent.replace(
+          /<script\b([^>]*)\bsrc=["']([^"']+)["']([^>]*)>\s*<\/script>/gi,
+          (match, preSrc, srcVal, postSrc) => {
+            const baseSrc = basename(srcVal);
+            const scriptInfo = companionScripts!.scriptMap.get(baseSrc) ?? companionScripts!.scriptMap.get(srcVal);
+            if (scriptInfo) {
+              consumedPaths.add(scriptInfo.relPath);
+              const otherAttrs = `${preSrc}${postSrc}`.replace(/\s+/g, " ").trim();
+              const attrStr = otherAttrs ? ` ${otherAttrs}` : "";
+              return `<script${attrStr} data-bascik-source="${scriptInfo.relPath}">\n${scriptInfo.code}\n</script>`;
+            }
+            return match;
+          },
+        );
+
+        const remainingScripts: string[] = [];
+        for (const scriptInfo of companionScripts.scriptMap.values()) {
+          if (!consumedPaths.has(scriptInfo.relPath)) {
+            consumedPaths.add(scriptInfo.relPath);
+            remainingScripts.push(`<script data-bascik-source="${scriptInfo.relPath}">\n${scriptInfo.code}\n</script>`);
+          }
+        }
+
+        if (remainingScripts.length > 0) {
+          resolvedContent = `${resolvedContent}\n${remainingScripts.join("\n")}`;
+        }
+      }
       const { html: cleanedContent, css: inlineCss } = extractInlineStyles(resolvedContent);
       const combinedCss = [cssFileContent, inlineCss].filter(Boolean).join("\n");
       let minifiedContent: string;

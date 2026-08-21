@@ -258,3 +258,55 @@ describe("listComponents – native HTML element name warning", () => {
     warnSpy.mockRestore();
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// listComponents – companion scripts
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("listComponents – companion scripts", () => {
+  it("inlines <script src=\"...\"> tags matching companion script files", async () => {
+    mockDeepReadDirFlat.mockResolvedValue([
+      "src/components/demo-counter/demo-counter.html",
+      "src/components/demo-counter/demo-counter.ts",
+    ]);
+    mockReadFile
+      .mockResolvedValueOnce(Buffer.from('<div class="ctr"></div><script src="demo-counter.ts"></script>'))
+      .mockResolvedValueOnce(Buffer.from('const x = 1;'));
+
+    const result = await listComponents();
+
+    expect(result["demo-counter"]).toBeDefined();
+    expect(result["demo-counter"].fileContent).toContain("const x = 1;");
+    expect(result["demo-counter"].fileContent).not.toContain('src="demo-counter.ts"');
+  });
+
+  it("appends companion script blocks when no <script> tag is present in component HTML", async () => {
+    mockDeepReadDirFlat.mockResolvedValue([
+      "src/components/my-counter/my-counter.html",
+      "src/components/my-counter/my-counter.ts",
+    ]);
+    mockReadFile
+      .mockResolvedValueOnce(Buffer.from('<div class="ctr"></div>'))
+      .mockResolvedValueOnce(Buffer.from('let count = 0;'));
+
+    const result = await listComponents();
+
+    expect(result["my-counter"]).toBeDefined();
+    expect(result["my-counter"].fileContent).toContain("let count = 0;");
+  });
+
+  it("ignores .test.ts and .spec.js companion files", async () => {
+    mockDeepReadDirFlat.mockResolvedValue([
+      "src/components/my-btn/my-btn.html",
+      "src/components/my-btn/my-btn.test.ts",
+      "src/components/my-btn/my-btn.spec.js",
+    ]);
+    mockReadFile.mockResolvedValue(Buffer.from("<button>Click</button>"));
+
+    const result = await listComponents();
+
+    expect(result["my-btn"]).toBeDefined();
+    expect(result["my-btn"].fileContent).not.toContain("test");
+    expect(result["my-btn"].fileContent).not.toContain("spec");
+  });
+});
