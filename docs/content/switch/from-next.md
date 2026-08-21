@@ -145,20 +145,20 @@ import { marked } from 'marked';
 const posts = await readdir('./content/posts');
 await mkdir('./src/pages/blog', { recursive: true });
 
+// Read the HTML template
+const template = await readFile('./scripts/blog-template.html', 'utf8');
+
 for (const file of posts.filter(f => f.endsWith('.md'))) {
   const slug = file.replace('.md', '');
   const md = await readFile(`./content/posts/${file}`, 'utf8');
   const body = marked(md);
-  await writeFile(`./src/pages/blog/${slug}.html`, `
-<!DOCTYPE html>
-<html lang="en">
-<head><title>${slug} - Blog</title></head>
-<body>
-  <site-nav></site-nav>
-  <main>${body}</main>
-  <site-footer></site-footer>
-</body>
-</html>`);
+  
+  // Replace placeholders in the template
+  const html = template
+    .replaceAll('{{title}}', `${slug} - Blog`)
+    .replaceAll('{{body}}', body);
+
+  await writeFile(`./src/pages/blog/${slug}.html`, html);
 }
 ```
 

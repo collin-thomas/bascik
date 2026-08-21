@@ -4,19 +4,29 @@ Bascik has two separate test suites: **unit tests** (Vitest) that verify individ
 
 ## Running Unit Tests
 
-All commands can be run from the repository root:
+Commands can be run per-package or across the workspace from the repository root:
 
 ```sh
-# Interactive watch mode (re-runs on file changes)
+# Workspace-wide unit tests
+yarn unit:all
+
+# Package-specific unit tests (single run)
+yarn pkg:unit       # @bascik/bascik
+yarn create:unit    # create-bascik
+yarn docs:unit      # bascik-docs
+yarn ext:unit       # bascik-vscode
+
+# Interactive watch mode (pkg)
 yarn pkg:test
 
-# Single run (used in CI)
-yarn pkg:test:ci
+# Single run with coverage
+yarn pkg:coverage
+yarn create:coverage
+yarn docs:coverage
+yarn ext:coverage
+yarn coverage:all   # update coverage across all packages
 
-# Single run with full coverage report
-yarn pkg:test:coverage
-
-# Run benchmarks
+# Benchmarks
 yarn pkg:bench
 ```
 
@@ -149,8 +159,6 @@ test.describe('my-feature-test page', () => {
 
 > **Rebuild before testing.** Playwright tests run against `e2e/dist/`, which is built from the current `pkg/dist/`. If you change `pkg/src/`, run `yarn build` before `yarn e2e` so the fixture picks up the latest transpiler.
 
-
-
 ## Test Configuration
 
 Vitest is configured in `pkg/vite.config.js`:
@@ -235,28 +243,35 @@ describe("recursivelyTranspile", () => {
 
 ## TypeScript Checking
 
-The package uses two tsconfig files:
-
-- `tsconfig.json`: used by Vitest; includes test files (`src/**/*.test.ts`, `bench/**/*.bench.ts`).
-- `tsconfig.build.json`: used by `tsc` for production builds; excludes test files and emits to `dist/`.
-
-Run type checking without emitting output:
+Run type checking across all packages or for individual packages from the repository root:
 
 ```sh
-yarn typecheck
+# Type check all packages
+yarn typecheck:all
+
+# Package-specific type checks
+yarn pkg:typecheck
+yarn create:typecheck
+yarn docs:typecheck
+yarn ext:typecheck
 ```
 
-The `docs/` package also has a `tsconfig.json` covering `docs/scripts/`. It uses the TypeScript from `pkg/` (docs has no own typescript package):
+## Monorepo Aggregator Commands
 
-```sh
-npx --prefix pkg tsc -p docs/tsconfig.json --noEmit
-```
+The root `package.json` provides aggregated tasks across all projects:
+
+* `yarn typecheck:all`: runs typechecks across `pkg`, `create`, `docs`, and `extensions/vscode-bascik`
+* `yarn check:all`: runs spelling (`check:spelling`) and web standards (`check:standards`)
+* `yarn unit:all`: runs unit test suites across all packages
+* `yarn e2e:all`: runs Playwright E2E suites (`pkg:e2e:all` and `docs:e2e`)
+* `yarn coverage:all`: generates and updates coverage reports across all packages
+* `yarn test:all`: runs `typecheck:all`, `check:all`, `unit:all`, and `e2e:all` in sequence (coverage excluded)
 
 ## Contributing a Fix
 
 1. Fork the repository and create a branch.
 2. Make your changes in `pkg/src/`.
 3. Add or update tests in the paired `*.test.ts` file.
-4. Run `yarn test` and ensure all tests pass.
-5. Run `yarn typecheck` to confirm there are no TypeScript errors.
+4. Run `yarn pkg:unit` and ensure all tests pass.
+5. Run `yarn pkg:typecheck` to confirm there are no TypeScript errors.
 6. Open a pull request against `main`.

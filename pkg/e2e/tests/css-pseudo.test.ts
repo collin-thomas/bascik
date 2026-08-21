@@ -9,13 +9,13 @@
  *   - CSS & nesting: .title inside .card has correct scoped color
  *   - Instance A and B both receive correct styles independently
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getInstances(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
+function getInstances(page: Page) {
   return {
     a: page.locator('.bascik__css-pseudo__card').nth(0),
     b: page.locator('.bascik__css-pseudo__card').nth(1),

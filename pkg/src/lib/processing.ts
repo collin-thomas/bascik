@@ -56,7 +56,7 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import { cpus } from "node:os";
-import { basename } from "node:path";
+import { basename, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   listPages,
@@ -562,7 +562,7 @@ export const selectivelyProcessPagesForWatchPath = async (changedPath?: string):
 
 export const selectivelyProcessPages = async (path: string): Promise<void> => {
   invalidateComponentListCache();
-  const rawFileName = path.replace(/^.*[\\/]/, "");
+  const rawFileName = basename(path);
   if (!rawFileName || rawFileName.startsWith(".")) return;
   const componentName = rawFileName.split(".")[0].toLowerCase();
   if (!componentName) return;

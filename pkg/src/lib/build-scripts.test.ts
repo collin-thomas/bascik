@@ -396,6 +396,17 @@ describe("executeBuildScripts", () => {
     (BascikConfig as any).onScriptError = undefined;
   });
 
+  it("reads script content from src file when script tag body is empty", async () => {
+    mockReadFile.mockResolvedValueOnce('console.log("<h1>External Build Header</h1>");');
+    resolveWith("<h1>External Build Header</h1>");
+
+    const html = '<script data-bascik-build src="helper.ts"></script>';
+    const result = await executeBuildScripts(html, "src/components/my-comp.html");
+
+    expect(mockReadFile).toHaveBeenCalled();
+    expect(result).toBe("<h1>External Build Header</h1>");
+  });
+
   it("respects onScriptError: error", async () => {
     (BascikConfig as any).onScriptError = "error";
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
@@ -403,6 +414,37 @@ describe("executeBuildScripts", () => {
     const html = "<script data-bascik-build>bad()</script>";
     await expect(executeBuildScripts(html)).rejects.toThrow(/build script error/);
     expect(errorSpy).toHaveBeenCalled();
+    errorSpy.mockRestore();
+    (BascikConfig as any).onScriptError = undefined;
+  });
+
+  it("formats the error messages cleanly, removing command failure and node internals", async () => {
+    (BascikConfig as any).onScriptError = "error";
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+
+    mockExecFile.mockImplementation(
+      (
+        _cmd: unknown,
+        _args: unknown,
+        _opts: unknown,
+        cb: (err: Error) => void,
+      ) => {
+        const err = new Error("Command failed: node ...\nnode:internal/modules/esm/resolve:271\n    throw new ERR_MODULE_NOT_FOUND(\n          ^\nError [ERR_MODULE_NOT_FOUND]: Cannot find module './does-not-exist'");
+        cb(err);
+      },
+    );
+
+    const html = "<script data-bascik-build>import './does-not-exist'</script>";
+    await expect(executeBuildScripts(html)).rejects.toThrow(/Error \[ERR_MODULE_NOT_FOUND\]/);
+    await expect(executeBuildScripts(html)).rejects.not.toThrow(/Command failed/);
+    await expect(executeBuildScripts(html)).rejects.not.toThrow(/node:internal/);
+
+    expect(errorSpy).toHaveBeenCalled();
+    const errorLog = errorSpy.mock.calls[0][0];
+    expect(errorLog).toContain("Error [ERR_MODULE_NOT_FOUND]");
+    expect(errorLog).not.toContain("Command failed");
+    expect(errorLog).not.toContain("node:internal");
+
     errorSpy.mockRestore();
     (BascikConfig as any).onScriptError = undefined;
   });

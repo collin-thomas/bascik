@@ -10,13 +10,13 @@
  *   - Variables declared in block 1 are NOT accessible from block 2
  *   - Both instances are independent of each other
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getInstance(page: Parameters<Parameters<typeof test>[1]>[0]['page'], n: number): Locator {
+function getInstance(page: Page, n: number): Locator {
   return page.locator('.bascik__css-supports__wrapper').nth(n);
 }
 

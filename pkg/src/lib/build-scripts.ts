@@ -314,7 +314,20 @@ export const executeBuildScripts = async (html: string, filePath?: string): Prom
       throw new Error(`${errorMsg}. A script can only run at build time or at request time — not both. Remove one of the attributes.`);
     }
 
-    const trimmedScript = scriptContent.trim();
+    let trimmedScript = scriptContent.trim();
+    if (!trimmedScript) {
+      const srcMatch = openTag.match(/\bsrc=["']([^"']+)["']/i);
+      if (srcMatch) {
+        const srcPath = srcMatch[1];
+        const resolvedPath = filePath ? resolve(dirname(filePath), srcPath) : resolve(process.cwd(), srcPath);
+        try {
+          trimmedScript = await readFile(resolvedPath, "utf8");
+        } catch (err) {
+          console.warn(`[bascik] warning: Failed to read build script src "${srcPath}":`, err);
+        }
+      }
+    }
+
     const useCache = BascikConfig.buildScriptCache !== false;
     const pageFile = filePath ?? "";
     const siteUrl = BascikConfig.siteUrl ?? "";

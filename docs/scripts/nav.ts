@@ -46,8 +46,8 @@ export const NAV: NavSection[] = [
       { href: '/cli', label: 'CLI / Command Line' },
       { href: '/configuration', label: 'Configuration' },
       { href: '/compatibility', label: 'Scoping Compatibility' },
-      { href: '/deploying', label: 'Deploying' },
       { href: '/testing', label: 'Testing' },
+      { href: '/deploying', label: 'Deploying' },
     ]
   },
   {
@@ -70,7 +70,9 @@ export const NAV: NavSection[] = [
       { href: '/internals/architecture', label: 'Architecture' },
       { href: '/internals/transpilation-pipeline', label: 'Transpilation Pipeline' },
       { href: '/internals/scoping-system', label: 'Scoping System' },
-      { href: '/internals/dev-server', label: 'Dev Server' },
+      { href: '/internals/server', label: 'Server Architecture' },
+      { href: '/internals/diagnostics', label: 'Diagnostics Engine' },
+      { href: '/internals/minification', label: 'Minification & Asset Optimization' },
       { href: '/internals/testing', label: 'Testing Internals' },
       { href: '/internals/create-app', label: 'Create App' },
       { href: '/internals/ci-cd', label: 'CI / CD' },

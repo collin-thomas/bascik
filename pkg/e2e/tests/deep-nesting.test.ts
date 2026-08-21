@@ -15,13 +15,13 @@
  *   - CSS scoping is applied at each level (background colors)
  *   - Instances at the same level are independent (no prop bleed-through)
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function levelA(page: Parameters<Parameters<typeof test>[1]>[0]['page'], n: number): Locator {
+function levelA(page: Page, n: number): Locator {
   return page.locator('.bascik__level-a__page-section').nth(n);
 }
 

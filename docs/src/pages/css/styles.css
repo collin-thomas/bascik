@@ -204,7 +204,6 @@ body {
   inset: 0;
   clip-path: polygon(7px 0%, 100% 0%, calc(100% - 7px) 100%, 0% 100%);
   z-index: -1;
-  transition: background .15s;
 }
 
 @media (hover: hover) {

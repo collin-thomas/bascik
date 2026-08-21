@@ -10,13 +10,13 @@
  *   - Props are applied per-instance; fallbacks work when no prop supplied
  *   - Instance isolation: different prop values on each instance
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function inst(page: Parameters<Parameters<typeof test>[1]>[0]['page'], n: number): Locator {
+function inst(page: Page, n: number): Locator {
   return page.locator('.bascik__css-grid__grid-wrapper').nth(n);
 }
 

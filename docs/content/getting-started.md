@@ -28,6 +28,7 @@ Run `bascik init` to create the starter directory structure, or add `"dev": "bas
 
 <!-- demo:component-html -->
 ```html
+<!-- src/components/site-nav.html -->
 <nav class="nav">
   <a href="/">Home</a>
   <a href="/about">About</a>
@@ -36,11 +37,30 @@ Run `bascik init` to create the starter directory structure, or add `"dev": "bas
 
 <!-- demo:page-html -->
 ```html
+<!-- src/pages/index.html -->
 <!DOCTYPE html>
 <html>
 <head><title>Home</title></head>
 <body>
   <site-nav></site-nav>
+  <h1>Hello world</h1>
+</body>
+</html>
+```
+
+At build time, Bascik resolves `<site-nav>` into its component markup and scopes the class names into `dist/index.html`:
+
+<!-- demo:page-output-html -->
+```html
+<!-- dist/index.html -->
+<!DOCTYPE html>
+<html>
+<head><title>Home</title></head>
+<body>
+  <nav class="bascik__site-nav__nav">
+    <a href="/">Home</a>
+    <a href="/about">About</a>
+  </nav>
   <h1>Hello world</h1>
 </body>
 </html>

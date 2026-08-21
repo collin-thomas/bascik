@@ -188,7 +188,11 @@ src/components/
   alert-box/
     alert-box.html
     alert-box.css
+    alert-box.ts    ← inlined and scoped via <script src="alert-box.ts"></script>
 ```
+
+### Companion CSS and Script Files
+Companion `.css` files in the component directory are merged automatically. Companion script files (`.ts`, `.js`, `.mjs`) explicitly referenced via `<script src="counter.ts"></script>` inside component HTML are resolved, inlined, and scoped at build time. Path resolution is strictly scoped to the component directory or base filename.
 
 ### Multiple Root Elements
 Unlike other frameworks that require a single wrapper element or fragment, Bascik component templates support multiple top-level HTML elements in a single `.html` file. All root elements are inserted in order. If non-`data-bascik-*` attributes are passed on a usage tag, Bascik merges them onto the first root HTML element.
@@ -662,7 +666,7 @@ Components work inside `<head>` to organize metadata:
 * Build scripts run before component resolution, so their output can contain component tags.
 * All build scripts on a page execute concurrently via `Promise.all` (capped by a memory semaphore), and output is assembled in document order once all scripts complete.
 * On error, behavior is controlled by `onScriptError` in `bascik.config.ts`: `'warn'` (default in dev: log warning to stderr and replace tag with `""`), `'error'` (default in `--build` and `--serve`: log error to stderr and throw exception to stop build), or `'halt'` (alias for `'error'`).
-* **Stack Trace Remapping:** For both `<script data-bascik-build>` and `<script data-bascik-server>` blocks, Bascik automatically intercepts child-process stack traces and remaps temporary execution files back to your source HTML file and line offset (e.g., `src/pages/dashboard.html:25`). In VS Code or terminal emulators, you can Cmd+Click (or Ctrl+Click) the file reference in the error log to jump directly to the failing script's exact line.
+* **Stack Trace Remapping:** For both `<script data-bascik-build>` and `<script data-bascik-server>` blocks, Bascik automatically intercepts child-process stack traces, filters out noisy Node.js internal files, stack frames, and `Command failed:` headers, and remaps temporary execution files back to your source HTML file and line offset (e.g., `src/pages/dashboard.html:25`). This filters out the noise of internal V8 loader frames and child process execution headers, leaving only the clean, actionable stack trace of your template and helper scripts. In VS Code or terminal emulators, you can Cmd+Click (or Ctrl+Click) the file reference in the error log to jump directly to the failing script's exact line.
 * **Hard error:** combining `data-bascik-build` and `data-bascik-server` on the same tag throws and aborts the build. A script runs at build time or at request time, not both.
 
 ### Build Script Environment Variables
@@ -1260,14 +1264,27 @@ Trade-off: with `class: false`, Bascik no longer isolates component class names.
 
 ## 13. Testing
 
-Bascik has two test suites, both run from `pkg/`.
+Bascik provides per-package commands and workspace-wide aggregators run from the root.
+
+### Monorepo Aggregators
+
+```sh
+yarn typecheck:all     # typecheck pkg, create, docs, ext
+yarn check:all         # spelling and web standards
+yarn unit:all          # unit tests across all packages
+yarn e2e:all           # Playwright E2E suites across all packages
+yarn coverage:all      # update coverage across all packages
+yarn test:all          # typecheck:all + check:all + unit:all + e2e:all
+```
 
 ### Unit Tests (Vitest)
 
 ```sh
+yarn pkg:unit          # single run (@bascik/bascik)
 yarn pkg:test          # watch mode
-yarn pkg:test:ci       # single run (CI)
-yarn pkg:test:coverage # with coverage report
+yarn create:unit       # create-bascik unit tests
+yarn docs:unit         # bascik-docs unit tests
+yarn ext:unit          # bascik-vscode unit tests
 yarn pkg:bench         # benchmarks
 ```
 

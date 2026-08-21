@@ -228,7 +228,7 @@ describe("copyReplicatePath", () => {
 });
 
 describe("copyStaticAssets", () => {
-  it("copies non-HTML static assets and ignores HTML files", async () => {
+  it("copies non-HTML static assets and ignores HTML, TS, and test files", async () => {
     vi.mocked(readFile)
       .mockResolvedValueOnce("body { color: red; }" as any)
       .mockRejectedValueOnce(new Error("ENOENT"));

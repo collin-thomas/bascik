@@ -16,13 +16,13 @@
  *   - Usage 2: only `subtitle` provided; `title` uses the fallback in all 3 spots
  *   - Usage 3: no props at all; all elements use fallback content
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getInstance(page: Parameters<Parameters<typeof test>[1]>[0]['page'], n: number) {
+function getInstance(page: Page, n: number) {
   return page.locator('.bascik__attr-props__ap-card').nth(n);
 }
 

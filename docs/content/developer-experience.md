@@ -33,7 +33,7 @@ transpiled: pages/index.html (modified component: <user-badge>)
 
 Drop a new component file at `src/components/user-badge/user-badge.html` and use `<user-badge></user-badge>` in your pages immediately without writing import statements or registering tags.
 
-> **Deep Dive:** Read [CLI Dev Server](/cli#starting-the-dev-server) for server options, or explore [Dev Server Internals](/internals/dev-server) for live reload mechanics.
+> **Deep Dive:** Read [CLI Dev Server](/cli#starting-the-dev-server) for server options, or explore [Server Architecture Internals](/internals/server) for live reload mechanics.
 
 ## VS Code Editor Ergonomics
 
@@ -159,6 +159,17 @@ Open the DevTools **Sources** tab to set breakpoints in component scripts. Becau
 </script>
 ```
 
+### Stack Remapping and Click-to-Line Diagnostics
+
+When a build-time script or server script throws an exception, Bascik filters out internal Node.js runtime noise and remaps stack trace lines back to your original source HTML template and line offsets.
+
+Because the terminal prints clean `filename:line:column` references, you can hold `Cmd` (macOS) or `Ctrl` (Windows/Linux) and click directly on the error line in your terminal output to jump straight to the exact line in your source template:
+
+```terminal
+[bascik] build script error in "src/pages/cli.html" at (line 6, column 3):
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module './does-not-exist' imported from src/pages/cli.html:6:4
+```
+
 ### VS Code Debugging (`F5`)
 
 To debug `bascik.config.ts` or custom build scripts, press `F5` in VS Code. Node 24 native TypeScript support allows VS Code to attach directly to `.ts` files:
@@ -179,7 +190,7 @@ To debug `bascik.config.ts` or custom build scripts, press `F5` in VS Code. Node
 }
 ```
 
-> **Deep Dive:** Read [CLI Transpilation and Build Errors](/cli#transpilation-and-build-errors) to learn how Bascik reports syntax issues, or explore [Architecture](/internals/architecture) to see how transpilation works under the hood.
+> **Deep Dive:** Read [Debugging with VS Code and Node.js](/testing#debugging-with-vs-code-and-nodejs) for step-debugging launch configurations, [CLI Transpilation and Build Errors](/cli#transpilation-and-build-errors) to learn how Bascik reports syntax issues, or explore [Architecture](/internals/architecture) to see how transpilation works under the hood.
 
 ## Testing Your Workflow
 

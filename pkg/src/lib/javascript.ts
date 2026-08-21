@@ -73,8 +73,10 @@
  * that variables declared inside one component cannot leak into another.
  */
 
-import { relative } from "node:path";
+import { readFile } from "node:fs/promises";
+import { basename, dirname, relative } from "node:path";
 import { getUniqueId, minifyAttributeName } from "./names.js";
+import { BascikConfig } from "./config.js";
 import {
   addElementClassesInHtml,
   addIdClassesInHtml,
@@ -567,6 +569,84 @@ export const prefixElementAttribute = (
   return component;
 };
 
+export interface ComponentScriptInfo {
+  relPath: string;
+  code: string;
+}
+
+export interface ComponentScriptsResult {
+  scripts: string;
+  scriptMap: Map<string, ComponentScriptInfo>;
+}
+
+export const getComponentScripts = async (
+  htmlFileName: string,
+  scriptFileNames: string[],
+): Promise<ComponentScriptsResult> => {
+  const scriptMap = new Map<string, ComponentScriptInfo>();
+  if (!htmlFileName || !Array.isArray(scriptFileNames) || scriptFileNames.length === 0) {
+    return { scripts: "", scriptMap };
+  }
+
+  const htmlDir = dirname(htmlFileName);
+  const compDir = BascikConfig.directory.components;
+  const isSubfolder = htmlDir !== compDir && htmlDir.startsWith(compDir);
+  const componentBaseName = basename(htmlFileName, ".html").toLowerCase();
+
+  const matchingScriptFiles = scriptFileNames.filter((scriptPath) => {
+    const scriptDir = dirname(scriptPath);
+    if (isSubfolder) {
+      return scriptDir === htmlDir || scriptDir.startsWith(htmlDir + "/");
+    } else {
+      const scriptBaseName = basename(scriptPath);
+      const nameWithoutExt = scriptBaseName.replace(/\.(js|ts|mjs)$/, "").toLowerCase();
+      return (
+        nameWithoutExt === componentBaseName ||
+        nameWithoutExt.startsWith(`${componentBaseName}.`) ||
+        nameWithoutExt.startsWith(`${componentBaseName}-`) ||
+        nameWithoutExt.startsWith(`${componentBaseName}_`)
+      );
+    }
+  });
+
+  matchingScriptFiles.sort((a, b) => {
+    const aBase = basename(a).toLowerCase();
+    const bBase = basename(b).toLowerCase();
+    const aMain = aBase.replace(/\.(js|ts|mjs)$/, "") === componentBaseName;
+    const bMain = bBase.replace(/\.(js|ts|mjs)$/, "") === componentBaseName;
+    if (aMain && !bMain) return -1;
+    if (!aMain && bMain) return 1;
+    return a.localeCompare(b);
+  });
+
+  const scriptBlocks: string[] = [];
+
+  for (const scriptPath of matchingScriptFiles) {
+    try {
+      const code = (await readFile(scriptPath)).toString();
+      const relPath = relative(process.cwd(), scriptPath).replace(/\\/g, "/");
+      const baseName = basename(scriptPath);
+      const info: ComponentScriptInfo = { relPath, code };
+
+      scriptMap.set(baseName, info);
+      scriptMap.set(`./${baseName}`, info);
+      scriptMap.set(relPath, info);
+
+      const isModule = /^\s*(?:import|export)\b/m.test(code);
+      const typeAttr = isModule ? ' type="module"' : '';
+      const safeRelPath = relPath.replace(/"/g, "&quot;");
+      scriptBlocks.push(`<script${typeAttr} data-bascik-source="${safeRelPath}">\n${code}\n</script>`);
+    } catch (err) {
+      console.warn("warning: Failed to read script for %s", scriptPath, err);
+    }
+  }
+
+  return {
+    scripts: scriptBlocks.join("\n"),
+    scriptMap,
+  };
+};
+
 export const namespaceScriptTags = (
   component: BascikComponent,
 ): BascikComponent => {
@@ -577,8 +657,15 @@ export const namespaceScriptTags = (
       // Server scripts run in Node.js at request time — never wrap in browser IIFE
       if (/\bdata-bascik-server\b/i.test(open)) return match;
 
+      // Extract data-bascik-source attribute if present
+      const sourceAttrMatch = open.match(/\bdata-bascik-source=["']([^"']+)["']/i);
+      const customSourcePath = sourceAttrMatch ? sourceAttrMatch[1] : null;
+
+      // Clean data-bascik-source attribute from open tag
+      const cleanOpen = open.replace(/\s*data-bascik-source=["']([^"']+)["']/i, "");
+
       // Check for type attribute
-      const typeMatch = open.match(/type\s*=\s*["']?([^"'>\s]+)["']?/i);
+      const typeMatch = cleanOpen.match(/type\s*=\s*["']?([^"'>\s]+)["']?/i);
       const isJsType = !typeMatch || [
         "text/javascript",
         "module",
@@ -589,13 +676,14 @@ export const namespaceScriptTags = (
 
       const shouldWrap = !typeMatch || typeMatch[1].toLowerCase() === "text/javascript";
 
+      const targetPath = customSourcePath || (component.fileName ? relative(process.cwd(), component.fileName).replace(/\\/g, "/") : null);
+
       if (!shouldWrap) {
         // If type is present and not text/javascript, leave unchanged.
         // If it is a JS type (like module), still add sourceURL if possible.
-        if (isJsType && component.fileName) {
-          const relPath = relative(process.cwd(), component.fileName).replace(/\\/g, "/");
-          const sourceUrlComment = `\n//# sourceURL=${relPath}`;
-          return `${open}${code}${sourceUrlComment}${close}`;
+        if (isJsType && targetPath) {
+          const sourceUrlComment = `\n//# sourceURL=${targetPath}`;
+          return `${cleanOpen}${code}${sourceUrlComment}${close}`;
         }
         return match;
       }
@@ -603,12 +691,11 @@ export const namespaceScriptTags = (
       const leading = code.startsWith("\n") ? "" : "\n";
       const trailing = code.endsWith("\n") ? "" : "\n";
 
-      if (component.fileName) {
-        const relPath = relative(process.cwd(), component.fileName).replace(/\\/g, "/");
-        const sourceUrlComment = `\n//# sourceURL=${relPath}`;
-        return `${open}(function() {${leading}${code}${trailing}})();${sourceUrlComment}${close}`;
+      if (targetPath) {
+        const sourceUrlComment = `\n//# sourceURL=${targetPath}`;
+        return `${cleanOpen}(function() {${leading}${code}${trailing}})();${sourceUrlComment}${close}`;
       } else {
-        return `${open}(function() {${leading}${code}${trailing}})();${close}`;
+        return `${cleanOpen}(function() {${leading}${code}${trailing}})();${close}`;
       }
     },
   );

@@ -21,8 +21,13 @@
     "watch": "tsc -watch -p ./tsconfig.json",
     "vscode:prepublish": "npm run compile",
     "pretest": "npm run compile",
+    "typecheck": "tsc -p ./tsconfig.json --noEmit",
+    "unit": "vitest run",
+    "e2e": "npm run compile && vscode-test --config .vscode-test.cjs",
     "test": "npm run compile && vscode-test --config .vscode-test.cjs",
     "test:unit": "vitest run",
+    "coverage": "vitest run --coverage && node bin/update-coverage.ts",
+    "cover": "yarn coverage",
     "update-coverage": "vitest run --coverage && node bin/update-coverage.ts"
   },
   "devDependencies": {

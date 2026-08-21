@@ -21,13 +21,13 @@
  * The fixture is built with `minify.identifiers: false` so scoped class and id
  * names are readable (e.g. `bascik__observer-test__wrapper`).
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getInstances(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
+function getInstances(page: Page) {
   return {
     a: page.locator('.bascik__observer-test__wrapper').nth(0),
     b: page.locator('.bascik__observer-test__wrapper').nth(1),
@@ -169,9 +169,7 @@ test.describe('observer-test page', () => {
   test('instance isolation: ResizeObserver per-instance (sizes are independent)', async ({ page }) => {
     const { a, b } = getInstances(page);
     // Both should report a valid width; the key thing is each has its own observer
-    const textA = await sizeDisplay(a).textContent();
-    const textB = await sizeDisplay(b).textContent();
-    expect(textA).toMatch(/^width: \d+px$/);
-    expect(textB).toMatch(/^width: \d+px$/);
+    await expect(sizeDisplay(a)).toHaveText(/^width: \d+px$/);
+    await expect(sizeDisplay(b)).toHaveText(/^width: \d+px$/);
   });
 });

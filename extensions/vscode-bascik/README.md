@@ -26,14 +26,19 @@ The extension uses `@vscode/test-cli` and `@vscode/test-electron` to run integra
 From the repository root:
 
 ```sh
-yarn ext:test
+yarn ext:typecheck   # TypeScript type check
+yarn ext:unit        # Vitest unit tests
+yarn ext:e2e         # VS Code extension host integration tests
+yarn ext:coverage    # Vitest unit tests with coverage report
 ```
 
 Or from the extension directory:
 
 ```sh
 cd extensions/vscode-bascik
-npm test
+npm run typecheck
+npm run unit
+npm test             # integration tests
 ```
 
 ### Test structure

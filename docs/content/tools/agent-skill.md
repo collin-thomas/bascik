@@ -33,6 +33,24 @@ mkdir -p .claude/skills/bascik && curl -L -o .claude/skills/bascik/SKILL.md http
 
 Download the Bascik [SKILL.md](https://bascik.dev/assets/SKILL.md) directly.
 
+## Keeping the Skill Updated
+
+An easy way to keep the skill file current is to simply instruct your AI assistant or agent to update itself from time to time.
+
+Since the skill file is hosted at a stable static URL (`https://bascik.dev/assets/SKILL.md`), you can add a brief instruction to your agent's system prompt or workspace instructions (such as a `.prompt.md`, `.instructions.md`, or your assistant's rules) telling it to keep the file updated.
+
+### Recommended Prompt for Your Agent
+
+Add an instruction like the following to your agent configuration files:
+
+> When working in this repository, check if the Bascik skill file (`SKILL.md`) is present and up to date. If you need to update it, run the following download command to fetch the latest version of the guidelines:
+> 
+> ```sh
+> curl -L -o .github/skills/bascik/SKILL.md https://bascik.dev/assets/SKILL.md
+> ```
+
+This ensures your AI assistant always operates with the most up-to-date syntax, conventions, and compatibility guidelines with zero manual effort required from you.
+
 ## What's inside
 
 The skill covers:

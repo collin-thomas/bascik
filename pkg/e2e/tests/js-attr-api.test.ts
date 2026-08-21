@@ -8,13 +8,13 @@
  *   - dataset.theme is readable and data-* values are not scoped
  *   - Instance A and B operate independently
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getInstances(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
+function getInstances(page: Page) {
   return {
     a: page.locator('.bascik__attr-api__wrapper').nth(0),
     b: page.locator('.bascik__attr-api__wrapper').nth(1),

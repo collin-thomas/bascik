@@ -11,13 +11,13 @@
  * The fixture is built with `minify.identifiers: false` so readable scoped
  * names like `bascik__form-test__9c332cac__username` appear in the DOM.
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getInstances(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
+function getInstances(page: Page) {
   return {
     a: page.locator('.bascik__form-test__form').nth(0),
     b: page.locator('.bascik__form-test__form').nth(1),

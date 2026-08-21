@@ -8,13 +8,13 @@
  *   - JS classList.toggle/remove on an SVG element uses scoped class names
  *   - Instance A interactions do not affect Instance B (isolation)
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getInstances(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
+function getInstances(page: Page) {
   return {
     a: page.locator('.bascik__svg-test__wrapper').nth(0),
     b: page.locator('.bascik__svg-test__wrapper').nth(1),

@@ -12,22 +12,26 @@ Testing a Bascik application is structured into three main tiers:
 2. **TypeScript Logic Testing**: Validates pure, exported functions from server scripts (`<script data-bascik-server>`) and browser component logic modules.
 3. **End-to-End Browser Testing**: Validates full browser workflows, user interactions, form submissions, and routing in real browser engines using Playwright.
 
-## High-Value Component Testing vs Contrived Tests
+### Pre-Configured Testing with `create-bascik`
 
-When writing component tests, focus on verifying actual component behavior, accessibility contracts, and compiled outputs rather than writing low-value assertions.
+If your project was scaffolded using the `npm create bascik` (or `yarn create bascik`) template, the entire testing stack is already pre-configured with Vitest, Playwright, and V8 code coverage. You do not need to install additional packages or manually write config files.
 
-### What to Avoid: Trivial Source Matching
+You can run your tests immediately using the following commands:
 
-Reading a raw component `.html` template file with `readFile` simply to assert that a string like `class="my-card"` exists in the source text is a low-value test. It only verifies that static text exists in a file on disk. It does not verify that Bascik compiles the component, that props or slots resolve properly, or that embedded scripts behave correctly.
+```sh
+# Run all unit and component contract tests
+npm test
 
-### What to Test Instead
+# Run unit tests with a coverage summary and HTML reports
+npm run test:coverage
 
-High-value component tests verify specific failure modes and structural contracts:
+# Run end-to-end browser tests
+npm run e2e
+```
 
-- **Compiled Output Validation**: Inspect the compiled `dist/` pages after building to verify that custom component tags expanded completely, props substituted correctly, slots received their content, and no raw `data-bascik-prop-*` or `data-bascik-slot` attributes remain in the final HTML.
-- **Accessibility and Markup Contracts**: Assert that interactive controls have explicit `type="button"` attributes, mandatory `aria-expanded` or `aria-label` attributes, and proper semantic HTML tags.
-- **Instance Safety and Scope Isolation**: Ensure component scripts use instance-safe DOM lookup patterns (such as `getElementById` or scoped queries) and do not leak variables into the global scope.
-- **Script Efficiency**: Verify that pure CSS components (such as radio-based tabs or `:has()` toggles) do not ship unnecessary runtime client `<script>` tags.
+> **Debugging with VS Code.** Scaffolded projects also include pre-configured `.vscode/launch.json` debug profiles to step through unit tests, server scripts, and browser component logic. See [Debugging with VS Code and Node.js](#debugging-with-vs-code-and-nodejs).
+
+If you are adding testing manually to an existing or custom project structure, refer to the [Manual Test Runner Setup](#manual-test-runner-setup) section at the bottom of this page.
 
 ## Testing Compiled Build Output
 
@@ -66,7 +70,7 @@ describe('Compiled index page', () => {
 
 When testing individual `.html` component templates before transpilation, test the component's structural contracts, accessibility standards, and script discipline.
 
-### Directory structure
+### Template Directory Structure
 
 ```text
 src/components/component-demo/
@@ -98,6 +102,80 @@ describe('component-demo component contract', () => {
   });
 });
 ```
+
+## Server Script Testing
+
+Server scripts (`<script data-bascik-server>`) execute in Node.js on every request. Non-trivial request logic should be extracted into standalone TypeScript modules for isolated unit testing.
+
+### Component file layout
+
+```text
+src/components/my-widget/
+  my-widget.html          ← component HTML template
+  widget-logic.ts         ← pure functions (TypeScript), exported
+  widget-logic.test.ts    ← unit tests (TypeScript)
+```
+
+### Server script usage
+
+```html
+<script data-bascik-server>
+  import { myPureFunction } from './widget-logic.js';
+  // Execute myPureFunction within the request handler
+</script>
+```
+
+> **ESM Import Convention.** Standard ES module resolution under Node 24+ allows importing local TypeScript files using either runtime `.js` specifiers or `.ts` specifiers during testing.
+
+### Unit test implementation
+
+```ts
+import { describe, it, expect } from 'vitest';
+import { myPureFunction } from './widget-logic.ts';
+
+describe('myPureFunction', () => {
+  it('returns the expected value', () => {
+    expect(myPureFunction('input')).toBe('expected output');
+  });
+});
+```
+
+## Browser Component Script Testing
+
+Browser component scripts run in an IIFE scope and cannot be directly imported as standard ES modules. Testing browser script logic requires separating pure functions from DOM event wiring.
+
+### Browser Script Directory Structure
+
+```text
+src/components/my-widget/
+  my-widget.html         ← HTML template and build script
+  widget-logic.ts        ← pure functions (TypeScript), exported
+  widget-logic-dom.js    ← DOM event listeners and wiring
+  widget-logic.test.ts   ← unit tests (TypeScript)
+```
+
+### Build script integration
+
+A build script (`<script data-bascik-build>`) in the component template combines the logic and DOM modules into a single IIFE block at build time:
+
+```html
+<script data-bascik-build>
+  import { readFile } from 'node:fs/promises';
+  import { join } from 'node:path';
+  const base = join(process.cwd(), 'src/components/my-widget');
+  const logic = await readFile(join(base, 'widget-logic.ts'), 'utf8');
+  const dom   = await readFile(join(base, 'widget-logic-dom.js'), 'utf8');
+  const fns = logic
+    .replace(/:\s*(?:string|number|boolean|any)/g, '')
+    .replace(/^export function /gm, 'function ')
+    .replace(/^export const /gm, 'var ');
+  console.log('<script>\n(function () {\n' + fns.trim() + '\n\n' + dom.trim() + '\n})();\n</scr' + 'ipt>');
+</script>
+```
+
+Bascik executes the build script during compilation and replaces the tag with the resulting `<script>` IIFE output.
+
+> **Single Source of Truth.** The `widget-logic.ts` file remains the single source of truth for both unit tests and production browser output.
 
 ## End-to-End Browser Testing (Playwright)
 
@@ -183,141 +261,12 @@ test.describe('Docs Component Functional E2E Tests', () => {
 });
 ```
 
-## Server Script Testing
-
-Server scripts (`<script data-bascik-server>`) execute in Node.js on every request. Non-trivial request logic should be extracted into standalone TypeScript modules for isolated unit testing.
-
-### Component file layout
-
-```text
-src/components/my-widget/
-  my-widget.html          ← component HTML template
-  widget-logic.ts         ← pure functions (TypeScript), exported
-  widget-logic.test.ts    ← unit tests (TypeScript)
-```
-
-### Server script usage
-
-```html
-<script data-bascik-server>
-  import { myPureFunction } from './widget-logic.js';
-  // Execute myPureFunction within the request handler
-</script>
-```
-
-> **ESM Import Convention.** Standard ES module resolution under Node 24+ allows importing local TypeScript files using either runtime `.js` specifiers or `.ts` specifiers during testing.
-
-### Unit test implementation
-
-```ts
-import { describe, it, expect } from 'vitest';
-import { myPureFunction } from './widget-logic.ts';
-
-describe('myPureFunction', () => {
-  it('returns the expected value', () => {
-    expect(myPureFunction('input')).toBe('expected output');
-  });
-});
-```
-
-## Browser Component Script Testing
-
-Browser component scripts run in an IIFE scope and cannot be directly imported as standard ES modules. Testing browser script logic requires separating pure functions from DOM event wiring.
-
-### Directory structure
-
-```text
-src/components/my-widget/
-  my-widget.html         ← HTML template and build script
-  widget-logic.ts        ← pure functions (TypeScript), exported
-  widget-logic-dom.js    ← DOM event listeners and wiring
-  widget-logic.test.ts   ← unit tests (TypeScript)
-```
-
-### Build script integration
-
-A build script (`<script data-bascik-build>`) in the component template combines the logic and DOM modules into a single IIFE block at build time:
-
-```html
-<script data-bascik-build>
-  import { readFile } from 'node:fs/promises';
-  import { join } from 'node:path';
-  const base = join(process.cwd(), 'src/components/my-widget');
-  const logic = await readFile(join(base, 'widget-logic.ts'), 'utf8');
-  const dom   = await readFile(join(base, 'widget-logic-dom.js'), 'utf8');
-  const fns = logic
-    .replace(/:\s*(?:string|number|boolean|any)/g, '')
-    .replace(/^export function /gm, 'function ')
-    .replace(/^export const /gm, 'var ');
-  console.log('<script>\n(function () {\n' + fns.trim() + '\n\n' + dom.trim() + '\n})();\n</scr' + 'ipt>');
-</script>
-```
-
-Bascik executes the build script during compilation and replaces the tag with the resulting `<script>` IIFE output.
-
-> **Single Source of Truth.** The `widget-logic.ts` file remains the single source of truth for both unit tests and production browser output.
-
-## Test Runner Setup
-
-Projects created via `npm create bascik` come pre-configured with Vitest, Playwright, V8 code coverage, `vite.config.js`, unit tests for every scaffolded component, and E2E browser tests in `e2e/app.spec.ts` out of the box.
-
-For existing projects, install Vitest, V8 coverage, and Playwright:
-
-```sh
-npm install -D vitest @vitest/coverage-v8 @playwright/test
-```
-
-Create `vite.config.js` in the project root:
-
-```js
-import { defineConfig } from 'vite';
-
-export default defineConfig({
-  test: {
-    include: ['src/**/*.test.ts'],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-    },
-  },
-});
-```
-
-Add the test commands to `package.json`:
-
-```json
-"scripts": {
-  "test": "vitest run",
-  "test:watch": "vitest",
-  "test:coverage": "vitest run --coverage",
-  "e2e": "playwright test --config e2e/playwright.config.ts"
-}
-```
-
-Execute tests using:
-
-```sh
-npm test
-npm run test:coverage
-npm run e2e
-```
-
-### Code Coverage Reporting
-
-With `@vitest/coverage-v8` installed and configured in `vite.config.js`, running `npm run test:coverage` analyzes all TypeScript source files across components, server logic, and utilities.
-
-- **Terminal output**: displays an inline summary of statement, branch, function, and line coverage percentages.
-- **HTML reports**: generated in `coverage/index.html` for interactive per-file drill-downs in any web browser.
-- **JSON artifacts**: saved in `coverage/coverage-final.json` for integration into CI/CD quality gates.
-
-The `coverage/` output directory is automatically ignored by `.gitignore` in scaffolded Bascik projects.
-
 ## Testing Boundaries and Guidance
 
 Choosing between unit tests and E2E browser tests depends on what you need to verify:
 
 | Testing Tier | Tool | Focus & Purpose | Execution Speed |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **E2E Browser Tests** | Playwright | **Primary test for functionality.** Validates DOM events, user clicks, visual state transitions, CSS `:has()` rules, and multi-page workflows in real browser engines. | Seconds (runs against built server) |
 | **Component Contract Unit Tests** | Vitest | **Fast structural guardrails.** Validates HTML markup contracts, ARIA accessibility attributes, slot/prop placeholders, and ensures zero runtime JavaScript is shipped when CSS handles state transitions. | Sub-second (~100ms) |
 | **Pure Logic Unit Tests** | Vitest | **Fast business logic checks.** Validates scoring, tokenization, search indexing, data transformations, and server script helper functions. | Sub-second (~10ms) |
@@ -404,6 +353,23 @@ To debug interactive client component scripts in Google Chrome or Microsoft Edge
 3. VS Code launches a new Chrome window attached to the debugger.
 4. Set breakpoints directly in your component `.html` files in VS Code, or open Chrome DevTools (`F12`), press `Cmd + P` (or `Ctrl + P`), and open virtual source files like `src/components/my-counter.html`.
 
+## High-Value Component Testing vs Contrived Tests
+
+When writing component tests, focus on verifying actual component behavior, accessibility contracts, and compiled outputs rather than writing low-value assertions.
+
+### What to Avoid: Trivial Source Matching
+
+Reading a raw component `.html` template file with `readFile` simply to assert that a string like `class="my-card"` exists in the source text is a low-value test. It only verifies that static text exists in a file on disk. It does not verify that Bascik compiles the component, that props or slots resolve properly, or that embedded scripts behave correctly.
+
+### What to Test Instead
+
+High-value component tests verify specific failure modes and structural contracts:
+
+- **Compiled Output Validation**: Inspect the compiled `dist/` pages after building to verify that custom component tags expanded completely, props substituted correctly, slots received their content, and no raw `data-bascik-prop-*` or `data-bascik-slot` attributes remain in the final HTML.
+- **Accessibility and Markup Contracts**: Assert that interactive controls have explicit `type="button"` attributes, mandatory `aria-expanded` or `aria-label` attributes, and proper semantic HTML tags.
+- **Instance Safety and Scope Isolation**: Ensure component scripts use instance-safe DOM lookup patterns (such as `getElementById` or scoped queries) and do not leak variables into the global scope.
+- **Script Efficiency**: Verify that pure CSS components (such as radio-based tabs or `:has()` toggles) do not ship unnecessary runtime client `<script>` tags.
+
 ## Reference Implementations
 
 The Bascik documentation site (`docs/`) includes both E2E browser tests and unit tests to ensure all components functionally work and stay tested:
@@ -420,3 +386,77 @@ yarn workspace bascik-docs test
 # Run E2E browser tests (Playwright)
 yarn workspace bascik-docs e2e
 ```
+
+## Manual Test Runner Setup
+
+If you are not using a template scaffolded by `npm create bascik`, you can manually set up Vitest, Playwright, and V8 coverage.
+
+### 1. Install Dependencies
+
+Install Vitest, V8 coverage, and Playwright:
+
+```sh
+npm install -D vitest @vitest/coverage-v8 @playwright/test
+```
+
+### 2. Configure Vitest (`vite.config.js`)
+
+Create a `vite.config.js` file in your project root to specify test directory filters and code coverage reports:
+
+```js
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  test: {
+    include: ['src/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+    },
+  },
+});
+```
+
+### 3. Configure Playwright (`e2e/playwright.config.ts`)
+
+Create `e2e/playwright.config.ts` to build and serve the compiled Bascik site automatically on a test port before running your E2E specs:
+
+```ts
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './e2e',
+  use: {
+    baseURL: 'http://localhost:8080',
+    headless: true,
+  },
+  webServer: {
+    command: 'npx bascik --build && npx bascik --serve',
+    url: 'http://localhost:8080',
+    reuseExistingServer: !process.env.CI,
+  },
+});
+```
+
+### 4. Add Package Scripts (`package.json`)
+
+Add the test commands to the `scripts` block inside your `package.json`:
+
+```json
+"scripts": {
+  "test": "vitest run",
+  "test:watch": "vitest",
+  "test:coverage": "vitest run --coverage",
+  "e2e": "playwright test --config e2e/playwright.config.ts"
+}
+```
+
+### 5. Code Coverage Reporting
+
+With `@vitest/coverage-v8` installed and configured in `vite.config.js`, running `npm run test:coverage` analyzes all TypeScript source files across components, server logic, and utilities.
+
+- **Terminal output**: Displays an inline summary of statement, branch, function, and line coverage percentages.
+- **HTML reports**: Generated in `coverage/index.html` for interactive per-file drill-downs in any web browser.
+- **JSON artifacts**: Saved in `coverage/coverage-final.json` for integration into CI/CD quality gates.
+
+Ensure that the `coverage/` output directory is added to your `.gitignore` file.

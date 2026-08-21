@@ -33,6 +33,10 @@ yarn install
 yarn pkg:build                       # build the package first
 yarn docs:dev                        # dev server at http://localhost:8080
 yarn docs:build                      # write dist/
+yarn docs:typecheck                  # TypeScript type check
+yarn docs:unit                       # Vitest unit tests
+yarn docs:e2e                        # Playwright E2E tests
+yarn docs:coverage                   # unit tests with coverage report
 ```
 
 ## Package Development (linked source)

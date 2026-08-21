@@ -49,8 +49,12 @@ export const watchFiles = async () => {
         const hasFileExt = Array.from(MIME_MAP.keys()).some((ext) =>
           ext.startsWith(".") && path.endsWith(ext),
         );
-        return !!(stats?.isFile() && !hasFileExt);
+        return !!(
+          stats?.isFile() &&
+          (!hasFileExt || path.endsWith(".ts") || /\.(test|spec)\.[a-zA-Z0-9]+$/.test(path))
+        );
       },
+      ignoreInitial: true,
       persistent: !BascikConfig.isBuild,
     })
     .on("add", async (path) => {
@@ -101,7 +105,7 @@ export const watchFiles = async () => {
       .on("unlinkDir", (path: string, _stats?: Stats) => deleteDistDir(path).catch(onWatchError))
       .on("ready", () => {
         initialScanDone = true;
-        processAllPages().then(() => resolve()).catch(reject);
+        Promise.all([copyStaticAssets(), processAllPages()]).then(() => resolve()).catch(reject);
       }));
   });
 
@@ -110,7 +114,7 @@ export const watchFiles = async () => {
     .watch([BascikConfig.directory.components], {
       ignored: (path: string, stats?: Stats): boolean => {
         return !!(
-          stats?.isFile() && !(path.endsWith(".html") || path.endsWith(".css"))
+          stats?.isFile() && !(path.endsWith(".html") || path.endsWith(".css") || path.endsWith(".js") || path.endsWith(".ts") || path.endsWith(".mjs"))
         );
       },
       ignoreInitial: true,

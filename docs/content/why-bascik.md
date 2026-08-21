@@ -8,7 +8,12 @@ Create one HTML file, then use its filename as a tag anywhere, with no registrat
 
 <!-- demo:source-usage -->
 ```html
-<hello-card />
+<!DOCTYPE html>
+<html lang="en">
+<body>
+  <hello-card />
+</body>
+</html>
 ```
 
 <!-- demo:source-html -->
@@ -34,23 +39,29 @@ Create one HTML file, then use its filename as a tag anywhere, with no registrat
 
 <!-- demo:output-html -->
 ```html
-<article class="bascik__hello-card__hello-card">
-  <p class="bascik__hello-card__hello-card-kicker">One file. One tag.</p>
-  <h3 class="bascik__hello-card__hello-card-title">Plain HTML, ready to reuse.</h3>
-  <p class="bascik__hello-card__hello-card-body">
-    Bascik replaces the custom tag at build time and ships the finished markup.
-  </p>
-</article>
-```
-
-<!-- demo:output-css -->
-```css
-.bascik__hello-card__hello-card {
-  padding: 24px;
-  background: #242628;
-  border: 1px solid #3a3d40;
-  border-top: 3px solid #d3ff8d;
-}
+<!-- dist/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>
+    .bascik__hello-card__hello-card {
+      padding: 24px;
+      background: #242628;
+      border: 1px solid #3a3d40;
+      border-top: 3px solid #d3ff8d;
+    }
+  </style>
+</head>
+<body>
+  <article class="bascik__hello-card__hello-card">
+    <p class="bascik__hello-card__hello-card-kicker">One file. One tag.</p>
+    <h3 class="bascik__hello-card__hello-card-title">Plain HTML, ready to reuse.</h3>
+    <p class="bascik__hello-card__hello-card-body">
+      Bascik replaces the custom tag at build time and ships the finished markup.
+    </p>
+  </article>
+</body>
+</html>
 ```
 
 ## The Problem Bascik Solves
@@ -61,7 +72,7 @@ Building a website has never been simpler at the language level. HTML structures
 
 The problem is organization, not language. Once a project grows past a handful of pages, copy-pasting the same navigation markup into every file becomes painful. Styles that were meant to be local start bleeding across the page. Script variables in one section collide with variables in another.
 
-Frameworks like React and Vue solve this problem well, for interactive applications that genuinely need component state, client-side routing, and reactive data binding. Most websites are not that. A marketing site, a documentation portal, a portfolio, a blog, these are mostly static documents with a handful of interactive moments sprinkled in. Reaching for a full framework for these projects means paying the runtime cost, the build complexity, and the mental overhead of an entire abstraction layer when the underlying platform already has everything needed.
+Frameworks like React and Vue solve this problem well, for interactive applications that genuinely need component state, client-side routing, and reactive data binding. Most websites are not that. A marketing site, a documentation portal, a portfolio, a blog, an account dashboard, these are mostly static documents with a handful of interactive moments sprinkled in. Reaching for a full framework for these projects means paying the runtime cost, the build complexity, and the mental overhead of an entire abstraction layer when the underlying platform already has everything needed.
 
 > Frameworks were built for people writing large interactive applications. Bascik was built for everyone else, and for the tools that write code on their behalf.
 
@@ -122,7 +133,5 @@ This is the opposite of a full-stack framework, which tends to control the entir
 Every decision in Bascik follows from one rule: use what already exists. Do not invent a template language. Do not add a reactive data system. Do not require a runtime. Do not get between the developer and the browser.
 
 Bascik is a find-and-replace at build time. Custom component tags are resolved to their source HTML. CSS class names are scoped so they cannot collide. Script variables are isolated so they cannot leak. The output is a directory of vanilla HTML files that any server can host, any browser can render, and any tool can inspect without knowing Bascik exists.
-
-If the web platform ever ships a native, zero-runtime, build-time component model that does exactly this, Bascik becomes unnecessary. Until then, it stays out of the way and lets you write the web the way it was designed to be written.
 
 > **Next:** Read the [Getting Started guide](/getting-started) to install Bascik and write your first component in under five minutes. Or jump to [Scoping Compatibility](/compatibility) to see exactly what CSS and JavaScript patterns are supported.

@@ -112,8 +112,19 @@ export const runCli = async (
     case "build":
     default: {
       const { runTranspile } = await import("./transpile.js");
-      await runTranspile({ exitOnError: options.exitOnFinish !== false });
-      return { action: decision.action, exitCode: 0 };
+      try {
+        await runTranspile({ exitOnError: options.exitOnFinish !== false });
+        return { action: decision.action, exitCode: 0 };
+      } catch (err) {
+        if (options.exitOnFinish !== false) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          if (!errMsg.includes("[bascik] build script error") && !errMsg.includes("[bascik] server script error")) {
+            console.error(errMsg);
+          }
+          process.exit(1);
+        }
+        throw err;
+      }
     }
   }
 };

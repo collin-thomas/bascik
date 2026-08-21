@@ -9,13 +9,13 @@
  *                                      CSS rules never fire
  *   4. Cross-instance isolation      — Instance A changes must not affect B
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function getInstances(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
+function getInstances(page: Page) {
   return {
     a: page.locator('.bascik__classname-multi__wrapper').nth(0),
     b: page.locator('.bascik__classname-multi__wrapper').nth(1),

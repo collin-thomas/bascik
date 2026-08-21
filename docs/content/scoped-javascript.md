@@ -19,9 +19,12 @@ Open Source → JS in the counter demo to see ordinary event listeners and `getE
 Component templates can contain multiple `<script>` tags. Bascik processes each script tag according to its attributes:
 
 - **Client scripts:** Standard JavaScript blocks are each wrapped in an isolated IIFE `(function() { ... })();` when `scopeScriptBlocks` is enabled. If you include multiple client `<script>` tags in a single component, each runs in its own IIFE so local variables do not collide.
-- **Build scripts (`<script data-bascik-build>`):** Executed during build/dev time in Node.js to generate dynamic markup.
-- **Server scripts (`<script data-bascik-server>`):** Executed on the server at request time in Node.js.
+- **Local script files (`<script src="counter.ts">`):** References to local `.ts`, `.js`, or `.mjs` files inside the component's directory are resolved and inlined at build time, then scoped and wrapped as client scripts.
+- **Build scripts (`<script data-bascik-build>`):** Executed during build/dev time in Node.js to generate dynamic markup. Can also use `src="..."` to run a local script file.
+- **Server scripts (`<script data-bascik-server>`):** Executed on the server at request time in Node.js. Can also use `src="..."` to run a local script file.
 - **Data scripts (e.g. `type="application/ld+json"`):** Left untouched without IIFE wrapping or minification.
+
+> **Directory Isolation Rule:** Local `src="..."` script references are strictly confined to the component's own folder. A component in `src/components/demo-counter/` can only reference script files inside `src/components/demo-counter/`. It cannot access files across other component directories.
 
 > **Recommended Pattern:** Keeping separate, unrelated logic in dedicated `<script>` tags (such as one script block for form validation and another for UI animation) is recommended for clean, readable code. You don't need to break code into tiny scripts arbitrarily, but isolating independent concerns into separate script blocks keeps your component's JavaScript organized and prevents variable name collisions.
 
@@ -296,13 +299,13 @@ The scoping format:
 ```
 
 <!-- demo:source-js -->
-```js
-const count = document.getElementById('count');
-const dec   = document.getElementById('dec');
-const inc   = document.getElementById('inc');
-let n = 0;
-dec.addEventListener('click', () => { n--; count.textContent = n; });
-inc.addEventListener('click', () => { n++; count.textContent = n; });
+```ts
+const count = document.getElementById('count') as HTMLElement;
+const dec   = document.getElementById('dec') as HTMLButtonElement;
+const inc   = document.getElementById('inc') as HTMLButtonElement;
+let n: number = 0;
+dec.addEventListener('click', () => { n--; count.textContent = String(n); });
+inc.addEventListener('click', () => { n++; count.textContent = String(n); });
 ```
 
 <!-- demo:output-html -->

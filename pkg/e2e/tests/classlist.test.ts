@@ -10,7 +10,7 @@
  * Tests match on `/bascik__scope-test__/` patterns so they don't break if the
  * scope-separator format ever changes.
  */
-import { test, expect, type Locator } from '@playwright/test';
+import { test, expect, type Page, type Locator } from '@playwright/test';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -23,7 +23,7 @@ import { test, expect, type Locator } from '@playwright/test';
  * time — no shadow DOM, no custom element registry. Each instance's content is
  * wrapped in a div with the scoped wrapper class. We locate by that class.
  */
-function getInstances(page: Parameters<Parameters<typeof test>[1]>[0]['page']) {
+function getInstances(page: Page) {
   return {
     a: page.locator('.bascik__scope-test__wrapper').nth(0),
     b: page.locator('.bascik__scope-test__wrapper').nth(1),

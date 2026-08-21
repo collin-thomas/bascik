@@ -1,6 +1,6 @@
 import fc from "fast-check";
 import { describe, it, expect, vi } from "vitest";
-import { prefixElementAttribute, namespaceScriptTags, minifyJs } from "./javascript.js";
+import { prefixElementAttribute, namespaceScriptTags, getComponentScripts, minifyJs } from "./javascript.js";
 
 vi.mock("./config.js", () => ({
   BascikConfig: {
@@ -1294,5 +1294,28 @@ describe("namespaceScriptTags – line-offset padding and sourceURL", () => {
       '<script type="application/ld+json">{"@type":"Thing"}</script>\n' +
       '<script type="importmap">{"imports":{}}</script>'
     );
+  });
+
+  it("uses data-bascik-source path for sourceURL and cleans data-bascik-source attribute", () => {
+    const c = {
+      name: "demo-counter",
+      fileName: "src/components/demo-counter/demo-counter.html",
+      fileContent:
+        '<script data-bascik-source="src/components/demo-counter/demo-counter.ts">\n' +
+        'const a = 1;\n' +
+        '</script>'
+    };
+
+    const result = namespaceScriptTags(c);
+    expect(result.fileContent).toContain("//# sourceURL=src/components/demo-counter/demo-counter.ts");
+    expect(result.fileContent).not.toContain("data-bascik-source");
+  });
+});
+
+describe("getComponentScripts", () => {
+  it("returns empty scripts for empty file list", async () => {
+    const res = await getComponentScripts("src/components/my-comp.html", []);
+    expect(res.scripts).toBe("");
+    expect(res.scriptMap.size).toBe(0);
   });
 });

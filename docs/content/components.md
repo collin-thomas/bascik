@@ -8,7 +8,12 @@ The simplest component is just markup. No CSS, no JavaScript required.
 
 <!-- demo:source-usage-hello -->
 ```html
-<hello-card />
+<!DOCTYPE html>
+<html lang="en">
+<body>
+  <hello-card />
+</body>
+</html>
 ```
 
 <!-- demo:source-html-hello -->
@@ -24,45 +29,29 @@ The simplest component is just markup. No CSS, no JavaScript required.
 
 <!-- demo:output-html-hello -->
 ```html
-<article class="bascik__hello-card__hello-card">
-  <p class="bascik__hello-card__hello-card-kicker">One file. One tag.</p>
-  <h3 class="bascik__hello-card__hello-card-title">Plain HTML, ready to reuse.</h3>
-  <p class="bascik__hello-card__hello-card-body">Bascik replaces the custom tag at build time and ships the finished markup.</p>
-</article>
-```
-
-<!-- demo:output-css-hello -->
-```css
-.bascik__hello-card__hello-card {
-  width: min(100%, 32rem);
-  padding: 24px;
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  border-top: 3px solid var(--accent);
-  border-radius: 6px;
-}
-
-.bascik__hello-card__hello-card-kicker {
-  margin: 0 0 10px;
-  color: var(--accent);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
-.bascik__hello-card__hello-card-title {
-  margin: 0 0 8px;
-  color: var(--text);
-  font-size: 1.1rem;
-}
-
-.bascik__hello-card__hello-card-body {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
+<!-- dist/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>
+    .bascik__hello-card__hello-card {
+      width: min(100%, 32rem);
+      padding: 24px;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--accent);
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <article class="bascik__hello-card__hello-card">
+    <p class="bascik__hello-card__hello-card-kicker">One file. One tag.</p>
+    <h3 class="bascik__hello-card__hello-card-title">Plain HTML, ready to reuse.</h3>
+    <p class="hello-card-body">Bascik replaces the custom tag at build time and ships the finished markup.</p>
+  </article>
+</body>
+</html>
 ```
 
 Components can appear in other components too. If `site-layout.html` uses `<page-footer></page-footer>`, every page that uses `<site-layout>` gets the footer automatically.
@@ -270,17 +259,51 @@ All three can live in a single file. A `<style>` block, the markup, and a `<scri
 
 <!-- demo:output-html-alert -->
 ```html
-<div class="bascik__comp-alert__alert" id="bascik__comp-alert__a1b__alert">
-  <p class="bascik__comp-alert__alert-body">Scheduled maintenance Sunday, 2am–4am UTC.</p>
-  <button id="bascik__comp-alert__a1b__close" class="bascik__comp-alert__alert-close" aria-label="Dismiss">×</button>
-</div>
-<script>
-  (function(){
-  document.getElementById('bascik__comp-alert__a1b__close').addEventListener('click', () => {
-    document.getElementById('bascik__comp-alert__a1b__alert').hidden = true;
-  });
-  })();
-</script>
+<!-- dist/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>
+    .bascik__comp-alert__alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1px solid #f59e0b;
+      border-radius: 8px;
+      background: #fffbeb;
+    }
+    .bascik__comp-alert__alert-body {
+      flex: 1;
+      margin: 0;
+      font-size: 0.9rem;
+      color: #92400e;
+    }
+    .bascik__comp-alert__alert-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #b45309;
+      font-size: 1.2rem;
+      line-height: 1;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="bascik__comp-alert__alert" id="bascik__comp-alert__a1b__alert">
+    <p class="bascik__comp-alert__alert-body">Scheduled maintenance Sunday, 2am–4am UTC.</p>
+    <button id="bascik__comp-alert__a1b__close" class="bascik__comp-alert__alert-close" aria-label="Dismiss">×</button>
+  </div>
+  <script>
+    (function(){
+      document.getElementById('bascik__comp-alert__a1b__close').addEventListener('click', () => {
+        document.getElementById('bascik__comp-alert__a1b__alert').hidden = true;
+      });
+    })();
+  </script>
+</body>
+</html>
 ```
 
 <!-- demo:output-css-alert -->
@@ -313,9 +336,13 @@ All three can live in a single file. A `<style>` block, the markup, and a `<scri
 }
 ```
 
-## Companion CSS Files
+## Companion CSS and Script Files
 
-Choosing between inline `<style>` blocks and companion `.css` files is a matter of personal preference. Create a `.css` file with the same base name alongside the `.html` file if you prefer to keep your styles separate. Both approaches are fully equivalent; Bascik applies the same scoping either way.
+Choosing between inline `<style>` or `<script>` blocks and companion `.css` or `.ts`/`.js`/`.mjs` files is a matter of personal preference.
+
+Create a `.css` file or companion script files alongside the `.html` file if you prefer to keep your styles or JavaScript separate. Companion `.css` files in the same component directory are merged automatically. Companion script files explicitly referenced via `<script src="counter.ts"></script>` are resolved, inlined, and scoped at build time.
+
+> **Directory Isolation Rule:** Path resolution for companion files is strictly scoped to the component's directory or base filename. A component inside `src/components/demo-counter/` can only reference script or style files located inside its own folder. It cannot access files across other component directories.
 
 <!-- demo:source-usage-card -->
 ```html
