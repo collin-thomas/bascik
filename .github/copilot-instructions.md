@@ -1,4 +1,4 @@
-# Bascik Docs — Copilot Instructions
+# Bascik Docs: Copilot Instructions
 
 This file applies to all work inside `/docs/`. Read it before creating or editing docs pages.
 
@@ -13,7 +13,7 @@ The Markdown files serve three purposes simultaneously:
 
 **When adding or updating docs content:**
 - Write the prose and code examples in the appropriate `docs/content/topic.md` file
-- The HTML page is a shell — edit it only for page-specific chrome (custom styles, decorative UI, score grids, etc.)
+- The HTML page is a shell: edit it only for page-specific chrome (custom styles, decorative UI, score grids, etc.)
 - Never duplicate prose between the MD file and the HTML file
 
 ## How Pages Render from MD
@@ -22,7 +22,7 @@ Each docs page that has a corresponding MD file uses a `<script data-bascik-buil
 
 ```html
 <!-- Content rendered from docs/content/topic.md at build time.
-     To update page content, edit the MD file — not this file. -->
+     To update page content, edit the MD file, not this file. -->
 <script data-bascik-build>
   import { join } from 'node:path';
   import { pathToFileURL } from 'node:url';
@@ -82,7 +82,7 @@ The `renderMd` helper (`docs/scripts/md-renderer.ts`) applies these transformati
 - Section headings: `##` (h2), sub-sections: `###` (h3)
 - Code examples: fenced code blocks with a language tag (` ```html `, ` ```css `, ` ```js `, etc.)
 - Callout/tip boxes: Markdown blockquote (`> **Label.** body text`)
-- No inline HTML in MD files — keep MD pure Markdown
+- No inline HTML in MD files: keep MD pure Markdown
 
 ## Updating SKILL.md and create/assets/SKILL.md
 
@@ -98,13 +98,24 @@ yarn create:prepack
 
 These files must stay in sync. A content change that lands in `docs/content/*.md` but not `SKILL.md` (or vice versa) means Copilot is working from stale guidance, which is how bugs like "use `querySelector` for per-instance elements" go undetected.
 
+### Skill Authoring & Best Practices (agentskills.io)
+
+When updating `SKILL.md`, follow the official Agent Skills best practices (https://agentskills.io/skill-creation/best-practices):
+
+- **Illustrative vs. Literal Code Examples:** Frame code blocks and configuration options (such as `exec` script arrays, BYOMinifier custom transformers, or page-aware canonical helpers) with explicit commentary indicating they are illustrative examples. AI agents must understand what capabilities exist without copying example script paths or filenames literally.
+- **Add What the Agent Lacks, Omit What It Knows:** Focus on Bascik-specific mechanics, transforms, scoping rules, and gotchas. Omit generic explanations of HTML, CSS, JavaScript, or standard web concepts.
+- **Provide Defaults, Not Menus:** Always highlight the primary default pattern first (e.g. `getElementById` for per-instance DOM selection, or `deduplicateCss: true` in `bascik.config.ts`), and list alternative options concisely as escape hatches.
+- **Calibrate Control:** Be prescriptive where operations are fragile or critical (e.g. using `getElementById` for per-instance script isolation, writing `exec` outputs to `dist/`, placing `<style>` above and `<script>` below HTML), and explain the rationale when providing procedural steps.
+- **Gotchas and Constraints:** Keep non-obvious traps upfront and explicit (e.g. `querySelector('.cls')` targeting only the first instance under shared scoping, `innerHTML` class scanning limitations, or `data-bascik-build` and `data-bascik-server` being mutually exclusive).
+- **Writing Style:** Keep entries concise, structured, and free of em-dashes. Use standard American English.
+
 ## Sidebar
 
 Add new pages to `docs/src/components/docs-sidebar/docs-sidebar.html`. Group under the appropriate `<p class="sidebar-heading">` section.
 
 ## Code in HTML Slots (component-demo pattern)
 
-Interactive demos use `<component-demo>` with named slots. **Code examples inside those slots must come from MD files** — not written inline as `&lt;`/`&gt;` entities in the HTML page.
+Interactive demos use `<component-demo>` with named slots. **Code examples inside those slots must come from MD files**, not written inline as `&lt;`/`&gt;` entities in the HTML page.
 
 ### Why MD-first
 
@@ -127,7 +138,7 @@ Marker IDs are arbitrary strings (e.g. `source-html`, `output-css`, `code`, `out
 
 ### How to use it in an HTML slot
 
-Use `extractDemoBlock` from `scripts/md-renderer.ts` inside a `data-bascik-build` script. Bascik trims slot content at build time, so normal indentation around the `<script>` tag is fine — no collapsed one-liner is needed.
+Use `extractDemoBlock` from `scripts/md-renderer.ts` inside a `data-bascik-build` script. Bascik trims slot content at build time, so normal indentation around the `<script>` tag is fine: no collapsed one-liner is needed.
 
 ```html
 <div data-bascik-slot="source-html">
@@ -150,7 +161,7 @@ This repo is the **bascik package itself** (`pkg/`). When a rendering or build i
 
 ## Keeping SEO Meta in Sync with Content
 
-Each docs page has a `<title>` and `<meta name="description">` hardcoded in its HTML file. These are **not** generated from the Markdown — they are maintained manually.
+Each docs page has a `<title>` and `<meta name="description">` hardcoded in its HTML file. These are **not** generated from the Markdown; they are maintained manually.
 
 **When editing a `docs/content/*.md` file**, check whether the h1 or intro paragraph changed in a way that should be reflected in the corresponding HTML page's `<title>` or `<meta name="description">`. If so, update both together.
 
@@ -158,7 +169,7 @@ The mapping is straightforward: `docs/content/topic.md` corresponds to `docs/src
 
 ## Keeping the Changelog Up to Date
 
-`CHANGELOG.md` is not actively maintained during pre-1.0 development — the 1.0.0 release entry will be written as a high-level announcement. **Once 1.0.0 ships**, resume normal changelog discipline: add an entry to `[Unreleased]` whenever you add a feature, fix a bug, or make any user-visible change to `pkg/src/`. One bullet per change, grouped under `### Added`, `### Fixed`, or `### Changed`.
+`CHANGELOG.md` is not actively maintained during pre-1.0 development: the 1.0.0 release entry will be written as a high-level announcement. **Once 1.0.0 ships**, resume normal changelog discipline: add an entry to `[Unreleased]` whenever you add a feature, fix a bug, or make any user-visible change to `pkg/src/`. One bullet per change, grouped under `### Added`, `### Fixed`, or `### Changed`.
 
 ## Keeping the Compatibility Doc Up to Date
 
@@ -199,7 +210,7 @@ Then inspect the relevant `docs/dist/` output to confirm the pkg change has the 
 **When changing server components in `pkg/src/lib/` (or adding to the live-reload / SSE / watch / request script systems):**
 Update `docs/content/internals/server.md` to reflect the change. This page is the source of truth for how the server architecture works across dev and production modes.
 
-**General principle:** the three files that must stay in sync are `llms.txt`, `SKILL.md`, and the relevant `docs/content/internals/*.md`. The copilot-instructions file is the enforcement mechanism — add notes here when a new sync relationship is created.
+**General principle:** the three files that must stay in sync are `llms.txt`, `SKILL.md`, and the relevant `docs/content/internals/*.md`. The copilot-instructions file is the enforcement mechanism: add notes here when a new sync relationship is created.
 
 ### Testing Philosophy & Bug Prevention
 
@@ -236,13 +247,13 @@ The license lives in **three places** that must stay in sync:
 
 Do **not** delete the root `LICENSE`: GitHub reads it for repo-level license detection. Do not edit `pkg/LICENSE` or `create/LICENSE` directly; they are derived files.
 
-## Node 24 — Native TypeScript Support
+## Node 24: Native TypeScript Support
 
 This project runs on **Node 24**. Node natively strips TypeScript types, with no transpiler or extra flags needed for erasable syntax.
 
 - `node example.ts` works directly (Node 22.18+ with only erasable syntax, no flags required).
 - Erasable syntax: type annotations, interfaces, type aliases, `import type`. These are stripped at runtime.
-- Non-erasable syntax (`enum`, parameter properties, namespaces with runtime code) is **not** supported — a separate transpile step is required for those.
+- Non-erasable syntax (`enum`, parameter properties, namespaces with runtime code) is **not** supported: a separate transpile step is required for those.
 - Node does **not** type-check. Run `npx tsc --noEmit` separately for type checking.
 - No `tsconfig.json` is needed for Node to run `.ts` files.
 
@@ -261,9 +272,9 @@ yarn test       # vitest watch mode (@bascik/bascik)
 yarn docs:dev   # docs dev server (bascik-docs)
 ```
 
-### VS Code Sandbox — Commands That Need Network Will Hang
+### VS Code Sandbox: Commands That Need Network Will Hang
 
-The agent runs inside a VS Code sandbox. Commands that bind to a port or make outbound connections (Playwright E2E tests, `yarn dev`, `curl`) hang indefinitely when run inside the sandbox. Do **not** retry these commands with slight variations — they will all hang.
+The agent runs inside a VS Code sandbox. Commands that bind to a port or make outbound connections (Playwright E2E tests, `yarn dev`, `curl`) hang indefinitely when run inside the sandbox. Do **not** retry these commands with slight variations: they will all hang.
 
 - **Unit tests** (`yarn unit:all` or `npx vitest run`) work fine; no network is needed.
 - **E2E tests** (`npx playwright test`) require network and must be run by the user in a normal terminal outside the sandbox. Tell the user to run them and report the output.
@@ -275,7 +286,7 @@ The agent runs inside a VS Code sandbox. Commands that bind to a port or make ou
 - **E2E tests**: Playwright E2E tests are configured in package scripts (`yarn pkg:e2e`, `yarn pkg:e2e:prod`, `yarn e2e:all`) with `--reporter=line` output to preserve context tokens.
 - **Efficient output parsing**:
   - Always check the overall status first: **Did it pass or fail?**
-  - If all tests pass, stop immediately — do NOT read or print out lists of passing test names.
+  - If all tests pass, stop immediately: do NOT read or print out lists of passing test names.
   - If a test fails, parse and inspect ONLY the specific failure stack trace, expected vs received values, and error line numbers. Ignore all preceding passing output.
 
 ### Test Framework: Vitest 4
