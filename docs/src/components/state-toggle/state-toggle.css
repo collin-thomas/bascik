@@ -32,11 +32,11 @@
 .state-toggle-panel {
   margin-top: 16px;
   padding: 16px;
-  color: var(--text-muted);
+  color: #a0a6b4;
   background: var(--bg-muted);
   border: 1px dashed var(--border);
   border-radius: 4px;
-  opacity: 0.85;
+  opacity: 1;
   transform: translateY(2px);
   transition: opacity 160ms, transform 160ms, border-color 160ms;
 }
