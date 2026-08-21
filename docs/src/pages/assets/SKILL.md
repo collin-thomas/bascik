@@ -188,7 +188,11 @@ src/components/
   alert-box/
     alert-box.html
     alert-box.css
+    alert-box.ts    ← inlined and scoped via <script src="alert-box.ts"></script>
 ```
+
+### Companion CSS and Script Files
+Companion `.css` files in the component directory are merged automatically. Companion script files (`.ts`, `.js`, `.mjs`) explicitly referenced via `<script src="counter.ts"></script>` inside component HTML are resolved, inlined, and scoped at build time. Path resolution is strictly scoped to the component directory or base filename.
 
 ### Multiple Root Elements
 Unlike other frameworks that require a single wrapper element or fragment, Bascik component templates support multiple top-level HTML elements in a single `.html` file. All root elements are inserted in order. If non-`data-bascik-*` attributes are passed on a usage tag, Bascik merges them onto the first root HTML element.

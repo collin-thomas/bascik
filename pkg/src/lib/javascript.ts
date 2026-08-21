@@ -634,7 +634,8 @@ export const getComponentScripts = async (
 
       const isModule = /^\s*(?:import|export)\b/m.test(code);
       const typeAttr = isModule ? ' type="module"' : '';
-      scriptBlocks.push(`<script${typeAttr} data-bascik-source="${relPath}">\n${code}\n</script>`);
+      const safeRelPath = relPath.replace(/"/g, "&quot;");
+      scriptBlocks.push(`<script${typeAttr} data-bascik-source="${safeRelPath}">\n${code}\n</script>`);
     } catch (err) {
       console.warn("warning: Failed to read script for %s", scriptPath, err);
     }
