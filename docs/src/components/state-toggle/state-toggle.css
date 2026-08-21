@@ -36,7 +36,7 @@
   background: var(--bg-muted);
   border: 1px dashed var(--border);
   border-radius: 4px;
-  opacity: 0.55;
+  opacity: 0.85;
   transform: translateY(2px);
   transition: opacity 160ms, transform 160ms, border-color 160ms;
 }

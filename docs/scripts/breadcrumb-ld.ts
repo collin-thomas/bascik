@@ -75,5 +75,5 @@ export async function breadcrumbLd(): Promise<string> {
     itemListElement: items,
   };
 
-  return `<script type="application/ld+json">\n${JSON.stringify(schema, null, 2)}\n</script>`;
+  return `<script type="application/ld+json">\n${JSON.stringify(schema, null, 2).replace(/</g, '\\u003c')}\n</script>`;
 }

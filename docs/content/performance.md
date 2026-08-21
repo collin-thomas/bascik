@@ -812,7 +812,7 @@ Lighthouse 13.3 introduced a new **Agentic Browsing** category that audits how w
 
 Catching performance, accessibility, best practices, and SEO regressions locally before deployment is essential for maintaining high quality.
 
-The documentation site includes Lighthouse CI CLI (`@lhci/cli`) and Lighthouse CLI pre-configured in `lighthouserc.json`. It builds the production bundle, starts Bascik's production server, audits key documentation routes, and asserts minimum score thresholds.
+The documentation site includes Lighthouse CI CLI (`@lhci/cli`) and Lighthouse CLI pre-configured in `lighthouse/lighthouserc.json`. It builds the production bundle, starts Bascik's production server, audits key documentation routes, and asserts minimum score thresholds.
 
 ```sh
 # Run automated Lighthouse CLI audits across key documentation routes
@@ -822,7 +822,7 @@ yarn docs:lighthouse
 yarn workspace bascik-docs lighthouse
 ```
 
-The audit configuration in `lighthouserc.json` verifies scores across core categories:
+The audit configuration in `lighthouse/lighthouserc.json` verifies scores across core categories:
 
 - **Performance:** Warning threshold at 0.90
 - **Accessibility:** Error threshold at 0.95

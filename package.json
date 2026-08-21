@@ -26,7 +26,6 @@
     "pkg:test": "yarn workspace @bascik/bascik test",
     "pkg:test:ci": "yarn workspace @bascik/bascik test:ci",
     "pkg:test:coverage": "yarn workspace @bascik/bascik test:coverage",
-
     "create:build": "yarn workspace create-bascik build",
     "create:prepack": "yarn workspace create-bascik prepack",
     "create:test-site": "yarn create:build && node create/dist/index.js my-site -y",
@@ -37,7 +36,6 @@
     "create:test": "yarn workspace create-bascik test",
     "create:test:ci": "yarn workspace create-bascik test:ci",
     "create:update-coverage": "yarn create:coverage",
-
     "docs:build": "yarn workspace bascik-docs build",
     "docs:dev": "yarn workspace bascik-docs dev",
     "docs:preview": "npx http-server docs/dist",
@@ -51,7 +49,6 @@
     "docs:update-coverage": "yarn workspace @bascik/bascik update-coverage",
     "docs:update-e2e-coverage": "yarn workspace @bascik/bascik update-e2e-coverage",
     "docs:update-scripts-coverage": "yarn workspace bascik-docs update-coverage",
-
     "ext:compile": "yarn workspace bascik-vscode compile",
     "ext:typecheck": "yarn workspace bascik-vscode typecheck",
     "ext:unit": "yarn workspace bascik-vscode unit",
@@ -60,18 +57,15 @@
     "ext:cover": "yarn ext:coverage",
     "ext:test": "yarn workspace bascik-vscode test",
     "ext:update-coverage": "yarn ext:coverage",
-
     "check:spelling": "codespell --builtin \"clear,rare,en-GB_to_en-US\" pkg/src docs/content docs/src create/src",
     "check:standards": "npx hint docs/src/pages",
     "check:all": "yarn check:spelling && yarn check:standards",
-
     "typecheck:all": "yarn pkg:typecheck && yarn create:typecheck && yarn docs:typecheck && yarn ext:typecheck",
     "unit:all": "yarn pkg:unit && yarn create:unit && yarn docs:unit && yarn ext:unit",
     "e2e:all": "yarn pkg:e2e:all && yarn docs:e2e",
     "coverage:all": "yarn pkg:coverage && yarn create:coverage && yarn docs:coverage && yarn ext:coverage",
     "cover:all": "yarn coverage:all",
     "update-coverage:all": "yarn coverage:all",
-
     "test:all": "yarn typecheck:all && yarn check:all && yarn unit:all && yarn e2e:all && yarn docs:lighthouse"
   }
 }

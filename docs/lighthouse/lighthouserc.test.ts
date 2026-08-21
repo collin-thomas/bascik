@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 describe('Lighthouse CI configuration', () => {
-  const configPath = join(process.cwd(), 'lighthouserc.json');
+  const configPath = join(process.cwd(), 'lighthouse/lighthouserc.json');
 
   it('contains valid Lighthouse CI configuration JSON', async () => {
     const raw = await readFile(configPath, 'utf8');
