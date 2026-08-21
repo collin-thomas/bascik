@@ -59,7 +59,7 @@ describe('openGraph', () => {
     expect(result).toContain('<meta name="twitter:image" content="https://bascik.dev/assets/og/getting-started.svg" />');
   });
 
-  it('omits og:image for non-documentation utility pages like search or 404', async () => {
+  it('falls back to home.svg og:image for non-documentation utility pages like search or 404', async () => {
     const pageFile = join(tempDir, 'search.html');
     await writeFile(
       pageFile,
@@ -79,9 +79,8 @@ describe('openGraph', () => {
 
     const result = await openGraph();
     expect(result).toContain('<meta property="og:title" content="Search" />');
-    expect(result).toContain('<meta name="twitter:card" content="summary" />');
-    expect(result).not.toContain('og:image');
-    expect(result).not.toContain('twitter:image');
+    expect(result).toContain('<meta property="og:image" content="https://bascik.dev/assets/og/home.svg" />');
+    expect(result).toContain('<meta name="twitter:image" content="https://bascik.dev/assets/og/home.svg" />');
   });
 
   it('cleans site branding from og:title per Apple TN3156 guidelines', async () => {
