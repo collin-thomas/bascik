@@ -197,7 +197,7 @@ inc.addEventListener('click', () => {
       cursor: pointer;
     }
   </style>
-<head>
+</head>
 <body>
   <div class="bascik__demo-counter__ctr">
     <span class="bascik__demo-counter__ctr-label">Instance A</span>
@@ -220,6 +220,6 @@ inc.addEventListener('click', () => {
       inc.addEventListener("click", () => { n++; count.textContent = String(n); });
     })();
   </script>
-<body>
+</body>
 </html>
 ```
