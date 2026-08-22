@@ -30,6 +30,11 @@ Running `npx create-bascik <name>` writes this structure:
     app.spec.ts
   src/
     pages/
+      favicon.ico
+      assets/
+        favicon-32x32.png
+        favicon.svg
+        apple-touch-icon.png
       index.html
       about.html
       contact.html

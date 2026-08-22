@@ -391,9 +391,9 @@ describe("scaffold", () => {
     expect(dirs.some((d) => d.includes("site-meta"))).toBe(true);
   });
 
-  it("writes all 25 expected files", async () => {
+  it("writes all 28 expected files", async () => {
     await scaffold("my-app", "/tmp");
-    expect(mockWriteFile.mock.calls.length).toBe(25);
+    expect(mockWriteFile.mock.calls.length).toBe(28);
   });
 
   it("writes E2E config and spec files", async () => {
@@ -445,11 +445,12 @@ describe("scaffold", () => {
     expect(writtenTo("styles.css")).toBeDefined();
   });
 
-  it("writes favicon.svg into assets", async () => {
+  it("writes favicon assets", async () => {
     await scaffold("my-app", "/tmp");
-    const faviconPath = allWrittenPaths().find((p) => p.endsWith("favicon.svg"));
-    expect(faviconPath).toBeDefined();
-    expect(faviconPath).toContain("assets");
+    expect(allWrittenPaths().some((p) => p.endsWith("favicon.ico"))).toBe(true);
+    expect(allWrittenPaths().some((p) => p.endsWith("favicon-32x32.png"))).toBe(true);
+    expect(allWrittenPaths().some((p) => p.endsWith("apple-touch-icon.png"))).toBe(true);
+    expect(allWrittenPaths().some((p) => p.endsWith("favicon.svg"))).toBe(true);
   });
 
   it("scopes everything under targetDir/projectName", async () => {

@@ -10,7 +10,10 @@ describe('docs-head component', () => {
 
     expect(html).toContain('charset="UTF-8"');
     expect(html).toContain('name="viewport"');
+    expect(html).toContain('href="/favicon.ico"');
+    expect(html).toContain('href="/assets/favicon-32x32.png"');
     expect(html).toContain('href="/assets/favicon.svg"');
+    expect(html).toContain('href="/assets/apple-touch-icon.png"');
     expect(html).toContain('sessionStorage.getItem(\'theme\')');
   });
 });
