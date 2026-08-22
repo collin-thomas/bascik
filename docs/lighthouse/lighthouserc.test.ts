@@ -5,6 +5,7 @@ import { generateLighthouseAllConfig } from './generate-config.ts';
 
 describe('Lighthouse CI configuration', () => {
   const configPath = join(process.cwd(), 'lighthouse/lighthouserc.json');
+  const lightConfigPath = join(process.cwd(), 'lighthouse/lighthouserc.light.json');
 
   it('contains valid Lighthouse CI configuration JSON', async () => {
     const raw = await readFile(configPath, 'utf8');
@@ -28,7 +29,28 @@ describe('Lighthouse CI configuration', () => {
     ]);
   });
 
-  it('generates lighthouserc.all.json dynamically from nav.ts', async () => {
+  it('contains valid light theme Lighthouse CI configuration JSON with a11y category only', async () => {
+    const raw = await readFile(lightConfigPath, 'utf8');
+    const config = JSON.parse(raw);
+
+    expect(config).toBeDefined();
+    expect(config.ci).toBeDefined();
+
+    const collect = config.ci.collect;
+    expect(collect.startServerCommand).toBe('bascik --serve');
+    expect(collect.url).toEqual([
+      'http://localhost:8080/?theme=light',
+      'http://localhost:8080/getting-started?theme=light',
+      'http://localhost:8080/components?theme=light',
+    ]);
+    expect(collect.settings.onlyCategories).toEqual(['accessibility']);
+
+    const assertions = config.ci.assert.assertions;
+    expect(assertions['categories:accessibility']).toBeDefined();
+    expect(assertions['categories:performance']).toBeUndefined();
+  });
+
+  it('generates lighthouserc.all.json and lighthouserc.all-light.json dynamically from nav.ts', async () => {
     const urls = await generateLighthouseAllConfig();
     expect(urls.length).toBeGreaterThan(40);
     expect(urls).toContain('http://localhost:8080/');
@@ -39,6 +61,12 @@ describe('Lighthouse CI configuration', () => {
     const allConfigRaw = await readFile(join(process.cwd(), 'lighthouse/lighthouserc.all.json'), 'utf8');
     const allConfig = JSON.parse(allConfigRaw);
     expect(allConfig.ci.collect.url).toHaveLength(urls.length);
+
+    const allLightConfigRaw = await readFile(join(process.cwd(), 'lighthouse/lighthouserc.all-light.json'), 'utf8');
+    const allLightConfig = JSON.parse(allLightConfigRaw);
+    expect(allLightConfig.ci.collect.url).toHaveLength(urls.length);
+    expect(allLightConfig.ci.collect.url[0]).toContain('?theme=light');
+    expect(allLightConfig.ci.collect.settings.onlyCategories).toEqual(['accessibility']);
   });
 
   it('defines assertion score thresholds for Lighthouse categories', async () => {

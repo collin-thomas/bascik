@@ -5,6 +5,7 @@ export default defineConfig({
   exec: [
     { script: 'scripts/generate-search-index.ts', watch: ['content/'] },
     { script: 'scripts/generate-llms-txt.ts', watch: ['content/'] },
+    { script: 'scripts/generate-og-images.ts', watch: ['content/'] },
   ],
   siteUrl: 'https://bascik.dev',
   inlineStyles: ['src/pages/css/styles.css'],

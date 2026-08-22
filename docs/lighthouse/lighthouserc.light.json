@@ -1,0 +1,27 @@
+{
+  "ci": {
+    "collect": {
+      "startServerCommand": "bascik --serve",
+      "startServerReadyPattern": "Loaded \\d+ pages? from dist/",
+      "url": [
+        "http://localhost:8080/?theme=light",
+        "http://localhost:8080/getting-started?theme=light",
+        "http://localhost:8080/components?theme=light"
+      ],
+      "numberOfRuns": 1,
+      "settings": {
+        "chromeFlags": "--no-sandbox --headless",
+        "onlyCategories": ["accessibility"]
+      }
+    },
+    "assert": {
+      "assertions": {
+        "categories:accessibility": ["error", { "minScore": 1.0 }]
+      }
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": "./.lighthouseci-light"
+    }
+  }
+}

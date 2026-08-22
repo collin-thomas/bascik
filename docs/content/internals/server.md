@@ -51,7 +51,7 @@ For production HTTP/2 protocol parity during local development, enable TLS in `b
 
 ```ts
 export default {
-  serve: {
+  prodServer: {
     enableTls: true, // Server boots over https://localhost:8443 (HTTP/2)
   },
 };
@@ -118,7 +118,7 @@ Production mode enables `cacheHttp: true` by default:
 
 ### Production rate limiting
 
-Production mode enforces a rate limit of **500 requests per 10-second window per IP address**. Clients exceeding the limit receive `429 Too Many Requests` with a `Retry-After` header. Rate limiting is inactive during development mode.
+Production mode enforces a rate limit of **500 requests per 10-second window per IP address** by default. Clients exceeding the limit receive `429 Too Many Requests` with a `Retry-After` header. Rate limiting is inactive during development mode, and can be disabled via `prodServer: { rateLimit: false }` in `bascik.config.ts`.
 
 ## Development vs Production Comparison
 

@@ -200,7 +200,7 @@ body {
 main { flex: 1; }
 
 /* ── Layout ── */
-.container { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
+.container { max-width: 1140px; margin: 0 auto; padding: 0 28px; }
 .section    { padding: 72px 0; }
 .section + .section { border-top: 1px solid var(--border); }
 
@@ -325,7 +325,7 @@ export const SITE_HEADER_CSS = `.header {
   border-bottom: 1px solid var(--border);
 }
 
-.container { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
+.container { max-width: 1140px; margin: 0 auto; padding: 0 28px; }
 
 .nav {
   display: flex;
@@ -436,7 +436,7 @@ export const SITE_FOOTER_CSS = `.footer {
   padding: 28px 0;
 }
 
-.container { max-width: 1100px; margin: 0 auto; padding: 0 28px; }
+.container { max-width: 1140px; margin: 0 auto; padding: 0 28px; }
 
 .footer-inner {
   display: flex;

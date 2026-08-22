@@ -3,6 +3,7 @@
     "development"
   ],
   "hints": {
+    "apple-touch-icons": "off",
     "meta-viewport": "off",
     "compat-api/css": [
       "default",

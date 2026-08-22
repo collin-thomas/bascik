@@ -6,6 +6,16 @@ var list = document.querySelector('.search-results');
 var empty = document.querySelector('.search-empty');
 var hint = document.querySelector('.search-hint');
 var lastFocused = null;
+var preloaded = new Set();
+
+function preload(href) {
+  if (!href || preloaded.has(href) || href.startsWith('#') || href.startsWith('http')) return;
+  preloaded.add(href);
+  var link = document.createElement('link');
+  link.rel = 'prefetch';
+  link.setAttribute('href', href);
+  document.head.appendChild(link);
+}
 
 // Portal to <body> so position:fixed escapes the nav's backdrop-filter stacking context
 document.body.appendChild(overlay);
@@ -40,7 +50,9 @@ async function loadIndex() {
   try {
     index = await (await fetch('/assets/search-index.json')).json();
     if (input.value.trim()) runSearch(input.value);
-  } catch (e) { }
+  } catch (e) {
+    console.error('[docs-search] loadIndex error:', e);
+  }
 }
 
 function esc(s) {
@@ -71,7 +83,39 @@ function runSearch(query) {
       + '<span class="sr-label">' + label + '</span>'
       + snipHtml + '</a></li>';
   }).join('');
+
+  var links = Array.from(list.querySelectorAll('a[href]'));
+  links.forEach(function (a) {
+    var href = a.getAttribute('href');
+    if (!href) return;
+
+    a.addEventListener('mouseenter', function () {
+      preload(href);
+    });
+
+    a.addEventListener('focus', function () {
+      preload(href);
+    });
+
+    a.addEventListener('touchstart', function () {
+      preload(href);
+    }, { passive: true });
+  });
 }
+
+list.addEventListener('focusin', function (e) {
+  var a = e.target && e.target.closest && e.target.closest('a[href]');
+  if (!a) return;
+  var href = a.getAttribute('href');
+  if (href) preload(href);
+});
+
+list.addEventListener('touchstart', function (e) {
+  var a = e.target && e.target.closest && e.target.closest('a[href]');
+  if (!a) return;
+  var href = a.getAttribute('href');
+  if (href) preload(href);
+}, { passive: true });
 
 btn.addEventListener('click', open);
 backdrop.addEventListener('click', close);
@@ -101,7 +145,7 @@ document.addEventListener('keydown', function (e) {
   }
   if (!overlay.hidden && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
     e.preventDefault();
-    var links = Array.from(list.querySelectorAll('.sr-link'));
+    var links = Array.from(list.querySelectorAll('a[href]'));
     if (!links.length) return;
     var cur = document.activeElement;
     var idx = links.indexOf(cur);

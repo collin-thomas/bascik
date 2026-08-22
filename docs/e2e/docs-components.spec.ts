@@ -87,6 +87,40 @@ test.describe('Docs Component E2E Tests', () => {
     await expect(modal).toBeHidden();
   });
 
+  test('docs-search prefetches a result on hover', async ({ page }) => {
+    await page.goto('/');
+
+    const searchBtn = page.getByRole('button', { name: 'Search docs' }).first();
+    const modal = page.getByTestId('search-overlay').first();
+    const input = page.getByPlaceholder('Search docs…');
+    const resultsList = page.getByRole('listbox', { name: 'Search results' });
+
+    // Open search modal via button click
+    await searchBtn.click();
+    await expect(modal).toBeVisible();
+    await expect(input).toBeFocused();
+
+    // Type query
+    await input.fill('scoped styles');
+
+    // Locate the first result's link
+    const link = resultsList.getByRole('link').first();
+    await expect(link).toBeVisible();
+
+    const href = await link.getAttribute('href');
+    expect(href).toBeTruthy();
+
+    // Verify link is not already preloaded/prefetched
+    const prefetchLocator = page.locator(`head link[rel="prefetch"][href="${href}"]`);
+    await expect(prefetchLocator).not.toBeAttached();
+
+    // Hover over the search result link
+    await link.hover();
+
+    // Verify that the prefetch link is attached to head
+    await expect(prefetchLocator).toBeAttached();
+  });
+
   test('comp-alert dismisses when clicking close button', async ({ page }) => {
     await page.goto('/components');
 

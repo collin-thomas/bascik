@@ -1266,7 +1266,7 @@ describe("namespaceScriptTags – line-offset padding and sourceURL", () => {
   it("adds sourceURL when fileName is present", () => {
     const c = {
       name: "my-comp",
-      fileName: "/Users/collin/github/bascik/src/components/my-comp.html",
+      fileName: "src/components/my-comp.html",
       fileContent:
         "<div class=\"box\"></div>\n" + // line 1
         "<script>\n" +                 // line 2

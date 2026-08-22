@@ -29,6 +29,9 @@ const prodServerDefaultConfig: Partial<Omit<BascikConfigOptions, "isBuild" | "is
     js: true,
     identifiers: true,
   },
+  prodServer: {
+    rateLimit: true,
+  },
 };
 
 // Applied on top of defaultConfig (and prodServerDefaultConfig) when --build is
@@ -89,9 +92,10 @@ export const defaultConfig: Omit<BascikConfigOptions, "isBuild" | "isProdServer"
       transpiles: true,
     },
   },
-  serve: {
+  prodServer: {
     hostname: "localhost",
     enableTls: false,
+    rateLimit: true,
     logging: {
       level: "info",
       requests: true,
@@ -230,14 +234,16 @@ export const initBascikConfig = (
         ...(safeUserConfig.devServer?.logging ?? {}),
       },
     },
-    serve: {
-      ...defaultConfig.serve,
-      ...(safeUserConfig.serve ?? {}),
-      ...((isBuild || isProdServer) ? (safeBuildOverride.serve ?? {}) : {}),
+    prodServer: {
+      ...defaultConfig.prodServer,
+      ...(isProdServer ? prodServerDefaultConfig.prodServer : {}),
+      ...(safeUserConfig.prodServer ?? {}),
+      ...((isBuild || isProdServer) ? (safeBuildOverride.prodServer ?? {}) : {}),
       logging: {
-        ...defaultConfig.serve?.logging,
-        ...((safeUserConfig.serve ?? {}).logging ?? {}),
-        ...((((isBuild || isProdServer) ? (safeBuildOverride.serve ?? {}) : {}).logging) ?? {}),
+        ...defaultConfig.prodServer?.logging,
+        ...(isProdServer ? prodServerDefaultConfig.prodServer?.logging : {}),
+        ...((safeUserConfig.prodServer ?? {}).logging ?? {}),
+        ...((((isBuild || isProdServer) ? (safeBuildOverride.prodServer ?? {}) : {}).logging) ?? {}),
       },
     },
     isBuild,

@@ -25,21 +25,41 @@ export function basePath(path: string): string {
 export function score(e: SearchEntry, q: string, toks: string[]): number {
   q = (q || '').toLowerCase();
   toks = (toks || []).map(function (tok) { return tok.toLowerCase(); });
-  var nl = (e.navLabel || '').toLowerCase();
+  var sec = (e.section || '').toLowerCase();
+  var nl = (e.navLabel || e.title || '').toLowerCase();
+  var title = (e.title || '').toLowerCase();
   var h = (e.heading || '').toLowerCase();
   var t = (e.text || '').toLowerCase();
-  var nlHits = toks.reduce(function (n, tok) { return n + (nl.includes(tok) ? 1 : 0); }, 0);
 
-  // Tier 1 (≥1000): navLabel match — always outranks heading/text matches
-  if (nl === q) return 1600;
-  if (nl.startsWith(q)) return 1400 + nlHits;
-  if (nl.includes(q)) return 1200 + nlHits;
+  var secHits = sec ? toks.reduce(function (n, tok) { return n + (sec.includes(tok) ? 1 : 0); }, 0) : 0;
+  var nlHits = toks.reduce(function (n, tok) { return n + (nl.includes(tok) || (title && title.includes(tok)) ? 1 : 0); }, 0);
+  var hHits = h ? toks.reduce(function (n, tok) { return n + (h.includes(tok) ? 1 : 0); }, 0) : 0;
+  var tHits = toks.reduce(function (n, tok) { return n + (t.includes(tok) ? 1 : 0); }, 0);
+
+  // Tier 1 (>=2000): Category (section) match, outranks page title, heading, and text
+  if (sec) {
+    var secMatch = sec === q || sec.startsWith(q) || sec.includes(q) || (toks.length > 0 && secHits === toks.length);
+    if (secMatch) {
+      var isPage = e.heading === null;
+      var secBase = isPage ? 2000 : 1800;
+      var bonus = (nlHits > 0 ? 50 : 0) + (hHits > 0 ? 20 : 0);
+
+      if (sec === q) return secBase + 600 + bonus;
+      if (sec.startsWith(q)) return secBase + 400 + secHits + bonus;
+      if (sec.includes(q)) return secBase + 200 + secHits + bonus;
+      if (toks.length > 0 && secHits === toks.length) return secBase + 100 + secHits + bonus;
+    }
+  }
+
+  // Tier 2 (1000-1999): Page title (navLabel / title) match, outranks heading and text
+  if (nl === q || (title && title === q)) return 1600;
+  if (nl.startsWith(q) || (title && title.startsWith(q))) return 1400 + nlHits;
+  if (nl.includes(q) || (title && title.includes(q))) return 1200 + nlHits;
   if (toks.length > 0 && nlHits === toks.length) return 1100 + nlHits;
   if (nlHits > 0) return 1000 + nlHits * 10;
 
-  // Tier 2 (100–999): heading match — always outranks text-only matches
+  // Tier 3 (100-999): Heading match, outranks text-only matches
   if (h) {
-    var hHits = toks.reduce(function (n, tok) { return n + (h.includes(tok) ? 1 : 0); }, 0);
     if (h === q) return 600;
     if (h.startsWith(q)) return 500 + hHits;
     if (h.includes(q)) return 400 + hHits;
@@ -47,8 +67,7 @@ export function score(e: SearchEntry, q: string, toks: string[]): number {
     if (hHits > 0) return 100 + hHits * 10;
   }
 
-  // Tier 3 (1–99): text/content match only
-  var tHits = toks.reduce(function (n, tok) { return n + (t.includes(tok) ? 1 : 0); }, 0);
+  // Tier 4 (1-99): Text/content match only
   if (t.includes(q)) return 80 + tHits;
   if (toks.length > 0 && tHits === toks.length) return 50 + tHits;
   if (tHits > 0) return tHits * 10;
@@ -74,9 +93,9 @@ export function snippet(text: string | null | undefined, q: string, toks: string
 
 /**
  * Returns an ordered array of up to `limit` result entries.
- * When the query unambiguously identifies one page (its navLabel scores ≥1100
- * and no other page ties it), that page's entries are grouped first in document
- * order (page entry, then h2s). Remaining slots fill from score-ordered results.
+ * When the query unambiguously identifies one page (its navLabel scores >=1100
+ * and < 2000, and no other page ties it), that page's entries are grouped first
+ * in document order (page entry, then h2s). Remaining slots fill from score-ordered results.
  */
 export function buildResults(index: SearchEntry[], q: string, toks: string[], limit: number): SearchEntry[] {
   var scored = index

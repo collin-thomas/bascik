@@ -85,7 +85,7 @@ bascik --serve   # start the HTTP server; runs server scripts per request
 
 See [Production Server](/server) for full documentation on server scripts and the request context API.
 
-> **Plaintext HTTP by default.** Bascik's server runs as a plaintext HTTP/1.1 server by default on port `8080`. Most cloud platforms (Heroku, Fly.io, AWS ECS, Render, etc.) terminate TLS at the edge and forward cleartext HTTP to your container. If your platform passes TLS through to the container or you want HTTP/2, set `enableTls: true` under `serve` in your `bascik.config.ts`.
+> **Plaintext HTTP by default.** Bascik's server runs as a plaintext HTTP/1.1 server by default on port `8080`. Most cloud platforms (Heroku, Fly.io, AWS ECS, Render, etc.) terminate TLS at the edge and forward cleartext HTTP to your container. If your platform passes TLS through to the container or you want HTTP/2, set `enableTls: true` under `prodServer` in your `bascik.config.ts`.
 
 ### Server configuration
 
@@ -93,7 +93,7 @@ Configure the port and TLS in `bascik.config.ts` before building:
 
 ```ts
 export default {
-  serve: {
+  prodServer: {
     port: 8080,
     hostname: '0.0.0.0',    // bind all interfaces; required in containers
     enableTls: false,       // set to true for TLS-enabled HTTP/2

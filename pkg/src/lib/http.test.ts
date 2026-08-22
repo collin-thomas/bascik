@@ -22,7 +22,7 @@ vi.mock("node:http", () => ({
 
 vi.mock("./config.js", () => ({
   BascikConfig: {
-    serve: {
+    prodServer: {
       hostname: "localhost",
       port: 8443,
     },

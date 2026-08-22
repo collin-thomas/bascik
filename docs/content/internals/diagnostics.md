@@ -1,4 +1,4 @@
-# Diagnostics Engine
+# Diagnostics
 
 Bascik includes a static analysis engine for project diagnostics (`bascik --check`) and a stack trace remapping utility (`stack-trace.ts`) that links runtime script errors back to source HTML files.
 

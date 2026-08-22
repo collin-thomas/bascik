@@ -15,10 +15,10 @@ describe('docs-nav component', () => {
     expect(html).toContain('scripts/nav.ts');
   });
 
-  it('constrains banner and dnav-inner to max-width 1100px', async () => {
+  it('constrains banner and dnav-inner to max-width 1140px', async () => {
     const css = await readFile(cssPath, 'utf8');
 
-    expect(css).toContain('.dnav-banner {\n  max-width: 1100px;\n  margin: 0 auto;');
-    expect(css).toContain('.dnav-inner {\n  max-width: 1100px;\n  margin: 0 auto;');
+    expect(css).toContain('.dnav-banner {\n  max-width: 1140px;\n  margin: 0 auto;');
+    expect(css).toContain('.dnav-inner {\n  max-width: 1140px;\n  margin: 0 auto;');
   });
 });

@@ -40,7 +40,7 @@ describe("getHttpPath", () => {
 
   it("handles paths starting with src/pages or absolute paths", () => {
     expect(getHttpPath("src/pages/cli.html")).toBe("/cli");
-    expect(getHttpPath("/Users/collin/project/src/pages/cli.html")).toBe("/cli");
+    expect(getHttpPath("/project/src/pages/cli.html")).toBe("/cli");
     expect(getHttpPath("src/pages/index.html")).toBe("/");
     expect(getHttpPath("src/pages/sub/index.html")).toBe("/sub/");
   });

@@ -264,12 +264,12 @@ export interface BascikConfigOptions {
     };
   };
   /**
-   * HTTP server configuration used in both dev and production (`bascik --serve`) modes.
+   * HTTP server configuration used for the production server (`bascik --serve`).
    *
    * @example
    * // bascik.config.ts
    * export const bascikConfig = {
-   *   serve: {
+   *   prodServer: {
    *     port: 443,
    *     hostname: '0.0.0.0',
    *     keyFile: '/etc/ssl/private/site.key',
@@ -278,7 +278,7 @@ export interface BascikConfigOptions {
    *   },
    * };
    */
-  serve?: {
+  prodServer?: {
     /** Port to listen on. Defaults to `8443`. */
     port?: number;
     /**
@@ -293,6 +293,11 @@ export interface BascikConfigOptions {
     certFile?: string;
     /** Enable TLS (HTTPS) and serve over HTTP/2. Defaults to `false` (plain HTTP/1.1 is default). */
     enableTls?: boolean;
+    /**
+     * Enable per-IP rate limiting (500 requests per 10s window) on the production server.
+     * Defaults to `true`. Set to `false` to disable rate limiting in `--serve` mode.
+     */
+    rateLimit?: boolean;
     /**
      * Maximum execution time (ms) for each `data-bascik-server` child process.
      * Scripts that exceed this deadline are killed and their output is dropped.

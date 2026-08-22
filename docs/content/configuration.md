@@ -1,21 +1,10 @@
 # Configuration
 
-Bascik is **completely zero configuration** by default. You do not need a config file of any kind to start building. Running `bascik` or `bascik --build` works immediately right out of the box, resolving components, scoping CSS and JS, minifying files, and managing routing using sensible, production ready defaults. 
+Bascik is **completely zero configuration** by default. You do not need a config file of any kind to start building. Running `bascik` or `bascik --build` works immediately right out of the box, resolving components, scoping CSS and JS, minifying files, and managing routing using sensible, production ready defaults.
 
 However, Bascik is also **highly configurable** for both development and production. Rather than forcing a single architectural opinion on your project, Bascik is designed to put control directly in your hands. Whenever a technical choice involves trade-offs, Bascik exposes fine-grained preferences so you can tailor the build pipeline to your exact workflow.
 
 To override any default behaviors, create a `bascik.config.ts` file in your project root. Import `defineConfig` for full autocomplete and type checking on every option. Your editor will surface valid values, flag typos, and show inline docs as you type. A plain `bascik.config.js` also works and takes precedence if both files exist.
-
-## The Power of Preference
-
-Here are just a few ways Bascik puts architectural choices back in your hands:
-
-- **Style Deduplication (`deduplicateCss`):** Choose between clean, single-definition scoped stylesheets for optimal payload sizes, or individual per-instance styling for seamless local script querying.
-- **Custom Minification (`minify`):** Toggle HTML, CSS, and JS minifiers independently. You can even plug in your own custom async minifiers (like esbuild or terser) or configure Node's built-in type stripper for native TypeScript compilation.
-- **Granular Attribute Scoping (`scopeAttribute`):** Control exactly which attributes (classes, IDs, or name attributes) are scoped. If you are using Tailwind CSS, you can disable class scoping entirely while keeping ID scoping active.
-- **Parallel Builds (`useWorkers`):** Optimize build speeds on larger sites by opting into a multi-core CPU worker pool, or stick to main-thread processing for smaller projects.
-- **Error Behavior (`onScriptError`):** Choose whether to halt the entire build on template script errors, or output inline compiler warnings and keep going.
-- **Environment Overrides (`build`):** Easily define production-only overrides (such as minifying identifier names or inlining stylesheets) while keeping development logs detailed and verbose.
 
 ## Default Configuration Example
 
@@ -76,7 +65,7 @@ export default defineConfig({
     },
   },
 
-  serve: {
+  prodServer: {
     port: 8080,           // default (8080 HTTP, 8443 HTTPS)
     hostname: 'localhost', // use '0.0.0.0' to bind all interfaces
     enableTls: false,     // default; set true for HTTP/2 HTTPS
@@ -99,6 +88,17 @@ export const build = defineConfig({
   },
 });
 ```
+
+## The Power of Preference
+
+Here are just a few ways Bascik puts architectural choices back in your hands:
+
+- **Style Deduplication (`deduplicateCss`):** Choose between clean, single-definition scoped stylesheets for optimal payload sizes, or individual per-instance styling for seamless local script querying.
+- **Custom Minification (`minify`):** Toggle HTML, CSS, and JS minifiers independently. You can even plug in your own custom async minifiers (like esbuild or terser) or configure Node's built-in type stripper for native TypeScript compilation.
+- **Granular Attribute Scoping (`scopeAttribute`):** Control exactly which attributes (classes, IDs, or name attributes) are scoped. If you are using Tailwind CSS, you can disable class scoping entirely while keeping ID scoping active.
+- **Parallel Builds (`useWorkers`):** Optimize build speeds on larger sites by opting into a multi-core CPU worker pool, or stick to main-thread processing for smaller projects.
+- **Error Behavior (`onScriptError`):** Choose whether to halt the entire build on template script errors, or output inline compiler warnings and keep going.
+- **Environment Overrides (`build`):** Easily define production-only overrides (such as minifying identifier names or inlining stylesheets) while keeping development logs detailed and verbose.
 
 ## Configuration Reference
 
@@ -248,15 +248,16 @@ devServer: {
 
 Use `level: 'warn'` or `level: 'silent'` to suppress the high-volume status lines when you are focused on application logic rather than build output.
 
-### `serve`
+### `prodServer`
 
-Configure the HTTP server started by `bascik --serve` and `bascik` (dev mode). `port`, `hostname`, `enableTls`, `scriptTimeout`, `keyFile`, and `certFile` are read in both modes. `bascik --build` does not start a server and ignores this block.
+Configure the HTTP server started by `bascik --serve` and `bascik` (dev mode). `port`, `hostname`, `enableTls`, `rateLimit`, `scriptTimeout`, `keyFile`, and `certFile` are read in both modes. `bascik --build` does not start a server and ignores this block.
 
 ```ts
-serve: {
+prodServer: {
   port: 8080,              // default (8080 for HTTP, 8443 for HTTPS)
   hostname: 'localhost',   // default; set '0.0.0.0' to bind all interfaces
   enableTls: false,        // default; set true for encrypted HTTP/2 (HTTPS)
+  rateLimit: true,         // default; enable per-IP rate limiting (500 req / 10s)
   scriptTimeout: 30000,    // max execution time (ms) per server script (default: 30000)
   keyFile: 'bascik-privkey.pem',  // path to TLS private key when enableTls: true
   certFile: 'bascik-cert.pem',    // path to TLS certificate when enableTls: true
