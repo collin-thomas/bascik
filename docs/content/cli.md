@@ -26,8 +26,11 @@ my-project/
     app.spec.ts
   src/
     pages/
+      favicon.ico
       assets/
+        favicon-32x32.png
         favicon.svg
+        apple-touch-icon.png
       css/
         styles.css
       index.html
