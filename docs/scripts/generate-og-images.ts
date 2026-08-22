@@ -189,9 +189,9 @@ function formatTextWithCodeStyles(line: string, fill = '#a0a6b5'): string {
     if (part.startsWith('`') && part.endsWith('`')) {
       const codeText = part.slice(1, -1);
       // Clean, recognizable inline code styling: Monospace font with lime-green color (#d3ff8d)
-      xml += `<tspan font-family="Courier New, Courier, monospace" font-weight="700" fill="#d3ff8d">${escapeXml(codeText)}</tspan>`;
+      xml += `<tspan font-family="'Fira Code', monospace" font-weight="700" fill="#d3ff8d">${escapeXml(codeText)}</tspan>`;
     } else {
-      xml += `<tspan font-family="Helvetica, Arial, sans-serif" font-weight="400" fill="${fill}">${escapeXml(part)}</tspan>`;
+      xml += `<tspan font-family="Inter, sans-serif" font-weight="400" fill="${fill}">${escapeXml(part)}</tspan>`;
     }
   }
 
@@ -281,7 +281,7 @@ export function renderOgSvg(
     <!-- Actual Bascik Skewed Logo Polygon Mark (Slant: dx = 10 over height = 40) -->
     <polygon points="10,0 150,0 140,40 0,40" fill="#d3ff8d" />
     <rect x="22" y="11" width="3" height="18" rx="1.5" fill="#0e0f10" />
-    <text x="33" y="27" font-family="'Courier New', Courier, monospace" font-size="22" font-weight="800" fill="#0e0f10" letter-spacing="2.5">BASCIK</text>
+    <text x="33" y="27" font-family="'Courier Prime', 'Courier New', Courier, monospace" font-size="22" font-weight="800" fill="#0e0f10" letter-spacing="2.5">BASCIK</text>
   </g>
 
   <!-- Big Hero Title: split into "HTML components." (white) and "Zero runtime." (lime-green) -->
@@ -351,12 +351,12 @@ export function renderOgSvg(
     <!-- Actual Bascik Skewed Logo Polygon Mark (Slant: dx = 10 over height = 40) -->
     <polygon points="10,0 150,0 140,40 0,40" fill="#d3ff8d" />
     <rect x="22" y="11" width="3" height="18" rx="1.5" fill="#0e0f10" />
-    <text x="33" y="27" font-family="'Courier New', Courier, monospace" font-size="22" font-weight="800" fill="#0e0f10" letter-spacing="2.5">BASCIK</text>
+    <text x="33" y="27" font-family="'Courier Prime', 'Courier New', Courier, monospace" font-size="22" font-weight="800" fill="#0e0f10" letter-spacing="2.5">BASCIK</text>
 
     <!-- Skewed Section Badge (Exact same dx = 10 slant as Logo) -->
     <g transform="translate(166, 0)">
       <polygon points="10,0 ${badgeWidth + 10},0 ${badgeWidth},40 0,40" fill="rgba(211,255,141,0.12)" stroke="rgba(211,255,141,0.28)" stroke-width="1.5" />
-      <text x="${Math.round((badgeWidth + 10) / 2)}" y="26" text-anchor="middle" font-family="Courier New, Courier, monospace" font-size="15" font-weight="700" fill="#d3ff8d" letter-spacing="1.5">${escapeXml(sectionUpper)}</text>
+      <text x="${Math.round((badgeWidth + 10) / 2)}" y="26" text-anchor="middle" font-family="'Courier Prime', 'Courier New', Courier, monospace" font-size="15" font-weight="700" fill="#d3ff8d" letter-spacing="1.5">${escapeXml(sectionUpper)}</text>
     </g>
   </g>
 
@@ -428,6 +428,18 @@ export async function generateOgImages(): Promise<void> {
     pagesMap.set(slug, { slug, section, title, description, fileName, codeSnippet });
   }
 
+  // Load embedded font buffers so card rendering is 100% deterministic
+  // across all build environments (macOS, Linux CI/Netlify, Windows, Docker).
+  const fontsDir = join(__dirname, 'fonts');
+  const fontBuffers = await Promise.all([
+    readFile(join(fontsDir, 'Inter-400.woff')),
+    readFile(join(fontsDir, 'Inter-700.woff')),
+    readFile(join(fontsDir, 'Inter-900.woff')),
+    readFile(join(fontsDir, 'FiraCode-700.woff')),
+    readFile(join(fontsDir, 'CourierPrime-400.woff')),
+    readFile(join(fontsDir, 'CourierPrime-700.woff')),
+  ]);
+
   // Render SVG and convert to optimized JPEG for each documentation page
   await Promise.all(
     Array.from(pagesMap.entries()).map(async ([slug, { section, title, description }]) => {
@@ -437,8 +449,11 @@ export async function generateOgImages(): Promise<void> {
       const resvg = new Resvg(svg, {
         fitTo: { mode: 'width', value: 1200 },
         font: {
-          loadSystemFonts: true,
-          defaultFontFamily: 'sans-serif',
+          fontBuffers,
+          defaultFontFamily: 'Inter',
+          sansSerifFamily: 'Inter',
+          monospaceFamily: 'Fira Code',
+          loadSystemFonts: false,
         },
       });
       const pngBuffer = resvg.render().asPng();
