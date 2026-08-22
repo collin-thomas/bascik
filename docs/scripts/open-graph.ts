@@ -79,6 +79,7 @@ export async function openGraph(): Promise<string> {
     `<meta property="og:type" content="website" />`,
     `<meta property="og:site_name" content="Bascik" />`,
     `<meta property="og:url" content="${escapeHtmlAttr(url)}" />`,
+    `<meta property="og:locale" content="en_US" />`,
   ];
   if (cleanTitle) tags.push(`<meta property="og:title" content="${escapeHtmlAttr(cleanTitle)}" />`);
   if (description) {
@@ -88,7 +89,11 @@ export async function openGraph(): Promise<string> {
   tags.push(`<meta property="og:image:type" content="image/jpeg" />`);
   tags.push(`<meta property="og:image:width" content="1200" />`);
   tags.push(`<meta property="og:image:height" content="630" />`);
+  if (cleanTitle) {
+    tags.push(`<meta property="og:image:alt" content="${escapeHtmlAttr(cleanTitle)} open graph social card" />`);
+  }
   tags.push(`<meta name="twitter:card" content="summary_large_image" />`);
+  tags.push(`<meta name="twitter:site" content="@bascikdev" />`);
   if (cleanTitle) tags.push(`<meta name="twitter:title" content="${escapeHtmlAttr(cleanTitle)}" />`);
   if (description) {
     tags.push(`<meta name="twitter:description" content="${escapeHtmlAttr(description)}" />`);
