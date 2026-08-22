@@ -48,13 +48,16 @@ describe('openGraph', () => {
     expect(result).toContain('<meta property="og:type" content="website" />');
     expect(result).toContain('<meta property="og:site_name" content="Bascik" />');
     expect(result).toContain('<meta property="og:url" content="https://bascik.dev/getting-started" />');
+    expect(result).toContain('<meta property="og:locale" content="en_US" />');
     expect(result).toContain('<meta property="og:title" content="Getting Started" />');
     expect(result).toContain('<meta property="og:description" content="Learn all about Bascik static site generator." />');
     expect(result).toContain('<meta property="og:image" content="https://bascik.dev/assets/og/getting-started.jpg" />');
     expect(result).toContain('<meta property="og:image:type" content="image/jpeg" />');
     expect(result).toContain('<meta property="og:image:width" content="1200" />');
     expect(result).toContain('<meta property="og:image:height" content="630" />');
+    expect(result).toContain('<meta property="og:image:alt" content="Getting Started open graph social card" />');
     expect(result).toContain('<meta name="twitter:card" content="summary_large_image" />');
+    expect(result).toContain('<meta name="twitter:site" content="@basickdev" />');
     expect(result).toContain('<meta name="twitter:title" content="Getting Started" />');
     expect(result).toContain('<meta name="twitter:image" content="https://bascik.dev/assets/og/getting-started.jpg" />');
   });

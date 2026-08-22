@@ -1,0 +1,21 @@
+{
+  "name": "Bascik Documentation",
+  "short_name": "Bascik Docs",
+  "description": "Bascik static site generator documentation. Zero runtime.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#18191b",
+  "theme_color": "#18191b",
+  "icons": [
+    {
+      "src": "/assets/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

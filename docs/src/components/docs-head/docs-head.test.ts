@@ -10,6 +10,8 @@ describe('docs-head component', () => {
 
     expect(html).toContain('charset="UTF-8"');
     expect(html).toContain('name="viewport"');
+    expect(html).toContain('name="theme-color"');
+    expect(html).toContain('href="/site.webmanifest"');
     expect(html).toContain('href="/favicon.ico"');
     expect(html).toContain('href="/assets/favicon-32x32.png"');
     expect(html).toContain('href="/assets/favicon.svg"');
