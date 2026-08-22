@@ -31,9 +31,11 @@
   "devDependencies": {
     "@lhci/cli": "^0.14.0",
     "@playwright/test": "^1.62.0",
+    "@resvg/resvg-js": "^2.6.2",
     "@types/node": "^24.0.0",
     "@vitest/coverage-v8": "^4.1.10",
     "lighthouse": "^12.4.0",
+    "sharp": "^0.35.3",
     "typescript": "^7.0.2",
     "vitest": "^4.1.10"
   },

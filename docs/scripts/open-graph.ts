@@ -73,7 +73,7 @@ export async function openGraph(): Promise<string> {
 
   const isNavOrHome = urlPath === '/' || NAV.some((sec) => sec.pages.some((p) => p.href === urlPath));
   const imageSlug = (isNavOrHome && withoutExt !== 'index') ? withoutExt.replace(/\//g, '-') : 'home';
-  const imageUrl = `${siteUrl}/assets/og/${imageSlug}.svg`;
+  const imageUrl = `${siteUrl}/assets/og/${imageSlug}.jpg`;
 
   const tags = [
     `<meta property="og:type" content="website" />`,
@@ -85,7 +85,7 @@ export async function openGraph(): Promise<string> {
     tags.push(`<meta property="og:description" content="${escapeHtmlAttr(description)}" />`);
   }
   tags.push(`<meta property="og:image" content="${escapeHtmlAttr(imageUrl)}" />`);
-  tags.push(`<meta property="og:image:type" content="image/svg+xml" />`);
+  tags.push(`<meta property="og:image:type" content="image/jpeg" />`);
   tags.push(`<meta property="og:image:width" content="1200" />`);
   tags.push(`<meta property="og:image:height" content="630" />`);
   tags.push(`<meta name="twitter:card" content="summary_large_image" />`);

@@ -50,16 +50,16 @@ describe('openGraph', () => {
     expect(result).toContain('<meta property="og:url" content="https://bascik.dev/getting-started" />');
     expect(result).toContain('<meta property="og:title" content="Getting Started" />');
     expect(result).toContain('<meta property="og:description" content="Learn all about Bascik static site generator." />');
-    expect(result).toContain('<meta property="og:image" content="https://bascik.dev/assets/og/getting-started.svg" />');
-    expect(result).toContain('<meta property="og:image:type" content="image/svg+xml" />');
+    expect(result).toContain('<meta property="og:image" content="https://bascik.dev/assets/og/getting-started.jpg" />');
+    expect(result).toContain('<meta property="og:image:type" content="image/jpeg" />');
     expect(result).toContain('<meta property="og:image:width" content="1200" />');
     expect(result).toContain('<meta property="og:image:height" content="630" />');
     expect(result).toContain('<meta name="twitter:card" content="summary_large_image" />');
     expect(result).toContain('<meta name="twitter:title" content="Getting Started" />');
-    expect(result).toContain('<meta name="twitter:image" content="https://bascik.dev/assets/og/getting-started.svg" />');
+    expect(result).toContain('<meta name="twitter:image" content="https://bascik.dev/assets/og/getting-started.jpg" />');
   });
 
-  it('falls back to home.svg og:image for non-documentation utility pages like search or 404', async () => {
+  it('falls back to home.jpg og:image for non-documentation utility pages like search or 404', async () => {
     const pageFile = join(tempDir, 'search.html');
     await writeFile(
       pageFile,
@@ -79,8 +79,8 @@ describe('openGraph', () => {
 
     const result = await openGraph();
     expect(result).toContain('<meta property="og:title" content="Search" />');
-    expect(result).toContain('<meta property="og:image" content="https://bascik.dev/assets/og/home.svg" />');
-    expect(result).toContain('<meta name="twitter:image" content="https://bascik.dev/assets/og/home.svg" />');
+    expect(result).toContain('<meta property="og:image" content="https://bascik.dev/assets/og/home.jpg" />');
+    expect(result).toContain('<meta name="twitter:image" content="https://bascik.dev/assets/og/home.jpg" />');
   });
 
   it('cleans site branding from og:title per Apple TN3156 guidelines', async () => {

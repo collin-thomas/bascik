@@ -2,11 +2,12 @@
 /**
  * generate-og-images.ts
  *
- * Generates 1200x630 SVG Open Graph social cards for all docs pages directly into
- * docs/dist/assets/og/[slug].svg.
+ * Generates 1200x630 Open Graph social cards (JPEG) for all docs pages directly into
+ * docs/dist/assets/og/[slug].jpg.
  *
  * It reads page structure from nav.ts, extracts metadata from content Markdown
- * files (or src/pages/*.html fallback), and builds clean vector cards.
+ * files (or src/pages/*.html fallback), renders vector card SVG, and converts it
+ * to optimized JPEG via @resvg/resvg-js and sharp.
  *
  * Run via:
  *   node scripts/generate-og-images.ts
@@ -18,6 +19,8 @@
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { Resvg } from '@resvg/resvg-js';
+import sharp from 'sharp';
 import { NAV } from './nav.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -425,13 +428,22 @@ export async function generateOgImages(): Promise<void> {
     pagesMap.set(slug, { slug, section, title, description, fileName, codeSnippet });
   }
 
-  // Render and write SVG for each documentation page
-  for (const [slug, { section, title, description }] of pagesMap) {
-    const isHome = slug === 'home';
-    const svg = renderOgSvg(title, section, description, isHome);
-    const outFile = join(distOgDir, `${slug}.svg`);
-    await writeFile(outFile, svg, 'utf8');
-  }
+  // Render SVG and convert to optimized JPEG for each documentation page
+  await Promise.all(
+    Array.from(pagesMap.entries()).map(async ([slug, { section, title, description }]) => {
+      const isHome = slug === 'home';
+      const svg = renderOgSvg(title, section, description, isHome);
+
+      const resvg = new Resvg(svg, { fitTo: { mode: 'width', value: 1200 } });
+      const pngBuffer = resvg.render().asPng();
+      const jpgBuffer = await sharp(pngBuffer)
+        .jpeg({ quality: 85, progressive: true, mozjpeg: true, chromaSubsampling: '4:4:4' })
+        .toBuffer();
+
+      const outFile = join(distOgDir, `${slug}.jpg`);
+      await writeFile(outFile, jpgBuffer);
+    })
+  );
 }
 
 // Auto-run when executed directly

@@ -15,20 +15,20 @@ describe('generate-og-images', () => {
     expect(svg).toContain('bascik.dev');
   });
 
-  it('generates dist/assets/og/*.svg files for all pages', async () => {
+  it('generates dist/assets/og/*.jpg files for all pages', async () => {
     await generateOgImages();
 
     const ogDir = path.resolve(import.meta.dirname, '../dist/assets/og');
-    const homeSvg = await fs.readFile(path.join(ogDir, 'home.svg'), 'utf8');
-    expect(homeSvg).toContain('<svg');
-    expect(homeSvg).toContain('Bascik');
+    const homeJpg = await fs.readFile(path.join(ogDir, 'home.jpg'));
+    expect(homeJpg.length).toBeGreaterThan(0);
+    expect(homeJpg.subarray(0, 3)).toEqual(Buffer.from([0xff, 0xd8, 0xff]));
 
-    const gettingStartedSvg = await fs.readFile(path.join(ogDir, 'getting-started.svg'), 'utf8');
-    expect(gettingStartedSvg).toContain('<svg');
-    expect(gettingStartedSvg).toContain('Getting Started');
+    const gettingStartedJpg = await fs.readFile(path.join(ogDir, 'getting-started.jpg'));
+    expect(gettingStartedJpg.length).toBeGreaterThan(0);
+    expect(gettingStartedJpg.subarray(0, 3)).toEqual(Buffer.from([0xff, 0xd8, 0xff]));
 
-    const markdownSvg = await fs.readFile(path.join(ogDir, 'recipes-markdown.svg'), 'utf8');
-    expect(markdownSvg).toContain('<svg');
-    expect(markdownSvg).toContain('RECIPES');
-  });
+    const markdownJpg = await fs.readFile(path.join(ogDir, 'recipes-markdown.jpg'));
+    expect(markdownJpg.length).toBeGreaterThan(0);
+    expect(markdownJpg.subarray(0, 3)).toEqual(Buffer.from([0xff, 0xd8, 0xff]));
+  }, 30000);
 });
