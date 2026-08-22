@@ -93,7 +93,7 @@ export async function openGraph(): Promise<string> {
     tags.push(`<meta property="og:image:alt" content="${escapeHtmlAttr(cleanTitle)} open graph social card" />`);
   }
   tags.push(`<meta name="twitter:card" content="summary_large_image" />`);
-  tags.push(`<meta name="twitter:site" content="@basickdev" />`);
+  tags.push(`<meta name="twitter:site" content="@bascikdev" />`);
   if (cleanTitle) tags.push(`<meta name="twitter:title" content="${escapeHtmlAttr(cleanTitle)}" />`);
   if (description) {
     tags.push(`<meta name="twitter:description" content="${escapeHtmlAttr(description)}" />`);

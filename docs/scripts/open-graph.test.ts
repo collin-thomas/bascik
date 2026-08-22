@@ -57,7 +57,7 @@ describe('openGraph', () => {
     expect(result).toContain('<meta property="og:image:height" content="630" />');
     expect(result).toContain('<meta property="og:image:alt" content="Getting Started open graph social card" />');
     expect(result).toContain('<meta name="twitter:card" content="summary_large_image" />');
-    expect(result).toContain('<meta name="twitter:site" content="@basickdev" />');
+    expect(result).toContain('<meta name="twitter:site" content="@bascikdev" />');
     expect(result).toContain('<meta name="twitter:title" content="Getting Started" />');
     expect(result).toContain('<meta name="twitter:image" content="https://bascik.dev/assets/og/getting-started.jpg" />');
   });
